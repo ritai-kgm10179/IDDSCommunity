@@ -1,0 +1,27 @@
+using System.Resources;
+
+namespace Cyberarms.IntrusionDetection.Shared.Localization;
+
+public static class Strings
+{
+    private static ResourceManager? _resourceManager;
+
+    public static ResourceManager ResourceManager
+    {
+        get
+        {
+            _resourceManager ??= new ResourceManager("Cyberarms.IntrusionDetection.Shared.Localization.Strings", typeof(Strings).Assembly);
+            return _resourceManager;
+        }
+    }
+
+    public static string AppTitle => LanguageManager.Instance.GetString(nameof(AppTitle), "Cyberarms Intrusion Detection");
+    public static string StatusRunning => LanguageManager.Instance.GetString(nameof(StatusRunning), "Running");
+    public static string StatusStopped => LanguageManager.Instance.GetString(nameof(StatusStopped), "Stopped");
+    public static string StatusPaused => LanguageManager.Instance.GetString(nameof(StatusPaused), "Paused");
+    public static string AttackDetected => LanguageManager.Instance.GetString(nameof(AttackDetected), "Attack Detected");
+    public static string SoftLockApplied => LanguageManager.Instance.GetString(nameof(SoftLockApplied), "Soft Lock Applied");
+    public static string HardLockApplied => LanguageManager.Instance.GetString(nameof(HardLockApplied), "Hard Lock Applied");
+    public static string IPUnlocked => LanguageManager.Instance.GetString(nameof(IPUnlocked), "IP Unlocked");
+    public static string ConfigurationSaved => LanguageManager.Instance.GetString(nameof(ConfigurationSaved), "Configuration Saved Successfully");
+}
