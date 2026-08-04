@@ -7,6 +7,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 public class ReportScheduler
 {
     private readonly TimeProvider timeProvider;
+    private readonly NotificationSettings notificationSettings;
     private CancellationTokenSource? cancellation;
 
     /// <summary>
@@ -22,7 +23,7 @@ public class ReportScheduler
     /// Initializes a new instance of the <see cref="ReportScheduler"/> class.
     /// </summary>
 
-    private ReportScheduler() : this(TimeProvider.System)
+    private ReportScheduler() : this(TimeProvider.System, NotificationSettings.Instance)
     {
     }
 
@@ -30,7 +31,22 @@ public class ReportScheduler
     /// Initializes a scheduler with an explicit time source for deterministic tests.
     /// </summary>
     /// <param name="timeProvider">The source of current time and timer ticks.</param>
-    internal ReportScheduler(TimeProvider timeProvider) => this.timeProvider = timeProvider;
+    internal ReportScheduler(TimeProvider timeProvider) : this(timeProvider, NotificationSettings.Instance)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a scheduler with explicit time and notification dependencies.
+    /// </summary>
+    /// <param name="timeProvider">The source of current time and timer ticks.</param>
+    /// <param name="notificationSettings">The persisted report settings and checkpoints.</param>
+    public ReportScheduler(TimeProvider timeProvider, NotificationSettings notificationSettings)
+    {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentNullException.ThrowIfNull(notificationSettings);
+        this.timeProvider = timeProvider;
+        this.notificationSettings = notificationSettings;
+    }
 
     private static ReportScheduler? _instance;
     public static ReportScheduler Instance
@@ -43,8 +59,6 @@ public class ReportScheduler
             }
             return _instance;
         }
-
-        set => _instance = value;
     }
 
     /// <summary>
@@ -82,12 +96,12 @@ public class ReportScheduler
         {
             while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                NotificationSettings.Reload();
+                notificationSettings.Reload();
                 try
                 {
-                    if (NotificationSettings.Instance.SummaryReportDaily) await CheckDailyReportAsync(cancellationToken).ConfigureAwait(false);
-                    if (NotificationSettings.Instance.SummaryReportWeekly) await CheckWeeklyReportAsync(cancellationToken).ConfigureAwait(false);
-                    if (NotificationSettings.Instance.SummaryReportMonthly) await CheckMonthlyReportAsync(cancellationToken).ConfigureAwait(false);
+                    if (notificationSettings.SummaryReportDaily) await CheckDailyReportAsync(cancellationToken).ConfigureAwait(false);
+                    if (notificationSettings.SummaryReportWeekly) await CheckWeeklyReportAsync(cancellationToken).ConfigureAwait(false);
+                    if (notificationSettings.SummaryReportMonthly) await CheckMonthlyReportAsync(cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception) when (!cancellationToken.IsCancellationRequested)
                 {
@@ -106,15 +120,15 @@ public class ReportScheduler
 
     public async Task CheckDailyReportAsync(CancellationToken cancellationToken = default)
     {
-        NotificationSettings.Reload();
+        notificationSettings.Reload();
         DateTime d = timeProvider.GetLocalNow().DateTime.AddDays(-1);
         string dailyReportTime = string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day);
-        if (!string.Equals(dailyReportTime, NotificationSettings.LastDailyReport))
+        if (!string.Equals(dailyReportTime, notificationSettings.LastDailyReport))
         {
             // run daily report
             await InvokeAsync(RunDailyReportAsync, cancellationToken).ConfigureAwait(false);
-            NotificationSettings.LastDailyReport = dailyReportTime;
-            NotificationSettings.Save();
+            notificationSettings.LastDailyReport = dailyReportTime;
+            notificationSettings.Save();
         }
     }
 
@@ -126,16 +140,16 @@ public class ReportScheduler
 
     public async Task CheckWeeklyReportAsync(CancellationToken cancellationToken = default)
     {
-        NotificationSettings.Reload();
+        notificationSettings.Reload();
         DateTime now = timeProvider.GetLocalNow().DateTime;
         DateTime d = now.AddDays(-1);
         string weeklyReportTime = GetWeekOfYearString(d);
-        if (GetWeekOfYear(d) != GetWeekOfYear(now) && !string.Equals(weeklyReportTime, NotificationSettings.LastWeeklyReport))
+        if (GetWeekOfYear(d) != GetWeekOfYear(now) && !string.Equals(weeklyReportTime, notificationSettings.LastWeeklyReport))
         {
             // run weekly report
             await InvokeAsync(RunWeeklyReportAsync, cancellationToken).ConfigureAwait(false);
-            NotificationSettings.LastWeeklyReport = weeklyReportTime;
-            NotificationSettings.Save();
+            notificationSettings.LastWeeklyReport = weeklyReportTime;
+            notificationSettings.Save();
         }
     }
 
@@ -147,16 +161,16 @@ public class ReportScheduler
 
     public async Task CheckMonthlyReportAsync(CancellationToken cancellationToken = default)
     {
-        NotificationSettings.Reload();
+        notificationSettings.Reload();
         DateTime now = timeProvider.GetLocalNow().DateTime;
         DateTime d = now.AddDays(-1);
         string monthlyReportTime = string.Format("{0}-{1}", d.Year, d.Month);
-        if (d.Month != now.Month && !string.Equals(monthlyReportTime, NotificationSettings.LastMonthlyReport))
+        if (d.Month != now.Month && !string.Equals(monthlyReportTime, notificationSettings.LastMonthlyReport))
         {
             // run monthly report
             await InvokeAsync(RunMonthlyReportAsync, cancellationToken).ConfigureAwait(false);
-            NotificationSettings.LastMonthlyReport = monthlyReportTime;
-            NotificationSettings.Save();
+            notificationSettings.LastMonthlyReport = monthlyReportTime;
+            notificationSettings.Save();
         }
     }
 

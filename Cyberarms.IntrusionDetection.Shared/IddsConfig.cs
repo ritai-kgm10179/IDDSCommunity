@@ -35,8 +35,6 @@ public class IddsConfig
             }
             return _instance;
         }
-
-        set => _instance = value;
     }
 
     private string? _pluginsDirectory;
@@ -321,7 +319,7 @@ public class IddsConfig
     /// Initializes a new instance of the <see cref="IddsConfig"/> class.
     /// </summary>
 
-    private IddsConfig()
+    public IddsConfig()
     {
     }
 

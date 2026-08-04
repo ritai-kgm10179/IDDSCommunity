@@ -8,12 +8,23 @@ public class Statistics
 {
     private readonly List<Guid> _agentIds = [];
     private readonly Lock _lock = new();
+    private readonly Database database;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Statistics"/> class.
     /// </summary>
 
-    private Statistics() { }
+    private Statistics() : this(Database.Instance) { }
+
+    /// <summary>
+    /// Initializes statistics persistence with an explicit database dependency.
+    /// </summary>
+    /// <param name="database">The statistics database.</param>
+    public Statistics(Database database)
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        this.database = database;
+    }
 
     private static Statistics? _instance;
     public static Statistics Instance => _instance ??= new();
@@ -52,11 +63,11 @@ public class Statistics
     public void ConfigureStatistics(SecurityAgent agent)
     {
         string sqlString = "select count(*) from AgentStatistics where AgentId=@p0";
-        object? result = Database.Instance.ExecuteScalar(sqlString, agent.Id);
+        object? result = database.ExecuteScalar(sqlString, agent.Id);
         if (Db.DbValueConverter.ToInt(result) < 1)
         {
             sqlString = "insert into AgentStatistics(AgentId, FailedLogins, SoftLocks, HardLocks) values (@p0,0,0,0)";
-            Database.Instance.ExecuteNonQuery(sqlString, agent.Id);
+            database.ExecuteNonQuery(sqlString, agent.Id);
         }
         if (!_agentIds.Contains(agent.Id))
         {
@@ -81,9 +92,9 @@ public class Statistics
     /// <param name="agent">The agent value.</param>
     /// <param name="statisticsColumn">The statistics column value.</param>
 
-    public static void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
+    public void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
     {
         string sqlString = $"Update AgentStatistics set {statisticsColumn}={statisticsColumn}+1 where AgentId=@p0";
-        Database.Instance.ExecuteNonQuery(sqlString, agent.Id);
+        database.ExecuteNonQuery(sqlString, agent.Id);
     }
 }

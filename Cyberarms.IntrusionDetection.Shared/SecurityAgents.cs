@@ -10,12 +10,28 @@ namespace Cyberarms.IntrusionDetection.Shared;
 [Serializable]
 public class SecurityAgents : List<SecurityAgent>
 {
+    private readonly Database database;
+    private readonly IddsConfig configuration;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SecurityAgents"/> class.
     /// </summary>
 
-    private SecurityAgents()
+    private SecurityAgents() : this(Database.Instance, IddsConfig.Instance)
     {
+    }
+
+    /// <summary>
+    /// Initializes an agent collection with explicit persistence and configuration dependencies.
+    /// </summary>
+    /// <param name="database">The agent configuration database.</param>
+    /// <param name="configuration">The application and plug-in configuration.</param>
+    public SecurityAgents(Database database, IddsConfig configuration)
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        ArgumentNullException.ThrowIfNull(configuration);
+        this.database = database;
+        this.configuration = configuration;
     }
 
 
@@ -40,12 +56,12 @@ public class SecurityAgents : List<SecurityAgent>
     public void InitializeAgents()
     {
         Clear();
-        if (!Database.Instance.IsConfigured)
+        if (!database.IsConfigured)
         {
             throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
 
-        IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents");
+        IDataReader rdr = database.ExecuteReader("select * from securityAgents");
         // load all agents
         while (rdr.Read())
         {
@@ -77,7 +93,7 @@ public class SecurityAgents : List<SecurityAgent>
 
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
-        if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Application is not initialized."));
+        if (string.IsNullOrEmpty(configuration.PluginsDirectory)) throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Application is not initialized."));
         List<SecurityAgent> result = [];
 #if NETFRAMEWORK
         AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
@@ -87,12 +103,12 @@ public class SecurityAgents : List<SecurityAgent>
         CurrentDomain = AppDomain.CurrentDomain;
 #endif
 
-        if (!Directory.Exists(IddsConfig.Instance.PluginsDirectory))
+        if (!Directory.Exists(configuration.PluginsDirectory))
         {
-            Directory.CreateDirectory(IddsConfig.Instance.PluginsDirectory);
+            Directory.CreateDirectory(configuration.PluginsDirectory);
         }
 
-        foreach (string fileName in Directory.EnumerateFiles(IddsConfig.Instance.PluginsDirectory, "*.dll"))
+        foreach (string fileName in Directory.EnumerateFiles(configuration.PluginsDirectory, "*.dll"))
         {
             if (!fileName.Contains(".Api.dll"))
             {

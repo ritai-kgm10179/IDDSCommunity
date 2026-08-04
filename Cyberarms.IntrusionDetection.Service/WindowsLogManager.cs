@@ -4,7 +4,7 @@ using Cyberarms.IntrusionDetection.Shared;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal class WindowsLogManager
+internal sealed class WindowsLogManager : IDisposable
 {
     // public override event AttackDetectedHandler AttackDetected;
 
@@ -49,11 +49,20 @@ internal class WindowsLogManager
 
 
     /// <summary>
-    /// Keep it private to avoid multiple instances
+    /// Initializes a logger whose lifetime is managed by the Host container.
     /// </summary>
-    private WindowsLogManager()
+    public WindowsLogManager()
     {
 
+    }
+
+    /// <summary>
+    /// Releases the cached Windows Event Log handle.
+    /// </summary>
+    public void Dispose()
+    {
+        eventLogCyberarms?.Dispose();
+        eventLogCyberarms = null;
     }
 
 

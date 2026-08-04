@@ -19,13 +19,7 @@ internal static class Program
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddWindowsService(options => options.ServiceName = "Cyberarms Intrusion Detection Service");
             builder.Services.AddCyberarmsOptions(builder.Configuration);
-            builder.Services.AddSingleton<IFirewallPolicy>(_ => FirewallPolicyManager.Instance);
-            builder.Services.AddSingleton(provider => new Service(
-                provider.GetRequiredService<IFirewallPolicy>(),
-                provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseOptions>>(),
-                provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PluginOptions>>(),
-                provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReportOptions>>()));
-            builder.Services.AddSingleton<IIntrusionDetectionRuntime>(provider => provider.GetRequiredService<Service>());
+            builder.Services.AddCyberarmsRuntime();
             builder.Services.AddHostedService<PaladinWorker>();
             using IHost host = builder.Build();
             await host.RunAsync().ConfigureAwait(false);
