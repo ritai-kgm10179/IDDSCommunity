@@ -97,7 +97,7 @@
             this.smartLabel7.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel7.Size = new System.Drawing.Size(97, 13);
             this.smartLabel7.TabIndex = 1;
-            this.smartLabel7.Text = "Automatic Unlock";
+            this.smartLabel7.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Automatic Unlock");
             // 
             // smartLabel6
             // 
@@ -110,7 +110,7 @@
             this.smartLabel6.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel6.Size = new System.Drawing.Size(71, 13);
             this.smartLabel6.TabIndex = 1;
-            this.smartLabel6.Text = "Date of Lock";
+            this.smartLabel6.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Date of Lock");
             // 
             // smartLabel5
             // 
@@ -123,7 +123,7 @@
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(133, 13);
             this.smartLabel5.TabIndex = 1;
-            this.smartLabel5.Text = "Agent / Attacked System";
+            this.smartLabel5.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent / Attacked System");
             // 
             // smartLabel4
             // 
@@ -136,7 +136,7 @@
             this.smartLabel4.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel4.Size = new System.Drawing.Size(61, 13);
             this.smartLabel4.TabIndex = 1;
-            this.smartLabel4.Text = "IP-Address";
+            this.smartLabel4.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP-Address");
             // 
             // smartLabel2
             // 
@@ -149,7 +149,7 @@
             this.smartLabel2.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel2.Size = new System.Drawing.Size(32, 13);
             this.smartLabel2.TabIndex = 1;
-            this.smartLabel2.Text = "Type";
+            this.smartLabel2.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             // 
             // checkBoxSelectAllLocks
             // 
@@ -265,7 +265,7 @@
             this.actionMenuUnlock.SelectedColor = System.Drawing.Color.Empty;
             this.actionMenuUnlock.Size = new System.Drawing.Size(94, 13);
             this.actionMenuUnlock.TabIndex = 2;
-            this.actionMenuUnlock.Text = "Unlock IP address";
+            this.actionMenuUnlock.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unlock IP address");
             this.actionMenuUnlock.Click += new System.EventHandler(this.actionMenuUnlock_Click);
             // 
             // panel2
@@ -291,7 +291,7 @@
             this.smartLabelHardLock.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelHardLock.Size = new System.Drawing.Size(106, 13);
             this.smartLabelHardLock.TabIndex = 2;
-            this.smartLabelHardLock.Text = "Hard lock IP address";
+            this.smartLabelHardLock.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock IP address");
             this.smartLabelHardLock.Visible = false;
             // 
             // pictureBox5
@@ -324,7 +324,7 @@
             this.labelCurrentLocksSoftLocks.Name = "labelCurrentLocksSoftLocks";
             this.labelCurrentLocksSoftLocks.Size = new System.Drawing.Size(61, 13);
             this.labelCurrentLocksSoftLocks.TabIndex = 8;
-            this.labelCurrentLocksSoftLocks.Text = "0 soft locks";
+            this.labelCurrentLocksSoftLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("0 soft locks");
             // 
             // smartLabel3
             // 
@@ -338,7 +338,7 @@
             this.smartLabel3.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel3.Size = new System.Drawing.Size(123, 20);
             this.smartLabel3.TabIndex = 7;
-            this.smartLabel3.Text = "CURRENT LOCKS";
+            this.smartLabel3.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("CURRENT LOCKS");
             this.smartLabel3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // labelCurrentLocksHardLocks
@@ -349,7 +349,7 @@
             this.labelCurrentLocksHardLocks.Name = "labelCurrentLocksHardLocks";
             this.labelCurrentLocksHardLocks.Size = new System.Drawing.Size(65, 13);
             this.labelCurrentLocksHardLocks.TabIndex = 9;
-            this.labelCurrentLocksHardLocks.Text = "0 hard locks";
+            this.labelCurrentLocksHardLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("0 hard locks");
             // 
             // pictureBox3
             // 
@@ -379,7 +379,7 @@
             // 
             // dataGridViewColumnTypeName
             // 
-            this.dataGridViewColumnTypeName.HeaderText = "Type";
+            this.dataGridViewColumnTypeName.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             this.dataGridViewColumnTypeName.Name = "dataGridViewColumnTypeName";
             this.dataGridViewColumnTypeName.ReadOnly = true;
             this.dataGridViewColumnTypeName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -388,7 +388,7 @@
             // 
             // dataGridViewColumnIpAddress
             // 
-            this.dataGridViewColumnIpAddress.HeaderText = "IP-Address";
+            this.dataGridViewColumnIpAddress.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP-Address");
             this.dataGridViewColumnIpAddress.Name = "dataGridViewColumnIpAddress";
             this.dataGridViewColumnIpAddress.ReadOnly = true;
             this.dataGridViewColumnIpAddress.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -396,7 +396,7 @@
             // 
             // dataGridViewColumnAgent
             // 
-            this.dataGridViewColumnAgent.HeaderText = "Agent / Attacked System";
+            this.dataGridViewColumnAgent.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent / Attacked System");
             this.dataGridViewColumnAgent.Name = "dataGridViewColumnAgent";
             this.dataGridViewColumnAgent.ReadOnly = true;
             this.dataGridViewColumnAgent.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -405,7 +405,7 @@
             // 
             // dataGridViewColumnLockDate
             // 
-            this.dataGridViewColumnLockDate.HeaderText = "Date of Lock";
+            this.dataGridViewColumnLockDate.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Date of Lock");
             this.dataGridViewColumnLockDate.Name = "dataGridViewColumnLockDate";
             this.dataGridViewColumnLockDate.ReadOnly = true;
             this.dataGridViewColumnLockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -414,7 +414,7 @@
             // 
             // dataGridViewColumnUnlockDate
             // 
-            this.dataGridViewColumnUnlockDate.HeaderText = "Date of planned unlock";
+            this.dataGridViewColumnUnlockDate.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Date of planned unlock");
             this.dataGridViewColumnUnlockDate.Name = "dataGridViewColumnUnlockDate";
             this.dataGridViewColumnUnlockDate.ReadOnly = true;
             this.dataGridViewColumnUnlockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -423,13 +423,13 @@
             // 
             // LockId
             // 
-            this.LockId.HeaderText = "LockId";
+            this.LockId.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("LockId");
             this.LockId.Name = "LockId";
             this.LockId.Visible = false;
             // 
             // Status
             // 
-            this.Status.HeaderText = "Status";
+            this.Status.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Status");
             this.Status.Name = "Status";
             this.Status.Visible = false;
             // 

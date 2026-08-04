@@ -51,7 +51,7 @@
             this.smartLabelAgentName.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelAgentName.Size = new System.Drawing.Size(247, 20);
             this.smartLabelAgentName.TabIndex = 1;
-            this.smartLabelAgentName.Text = "AgentName";
+            this.smartLabelAgentName.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("AgentName");
             this.smartLabelAgentName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.smartLabelAgentName.Click += new System.EventHandler(this.CyberarmsSettingsNavigationItem_Click);
             this.smartLabelAgentName.MouseDown += new System.Windows.Forms.MouseEventHandler(this.CyberarmsSettingsNavigationItem_MouseDown);

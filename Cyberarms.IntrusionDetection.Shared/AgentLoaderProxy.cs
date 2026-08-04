@@ -29,7 +29,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                 {
                     try
                     {
-                        string typeName = type.FullName ?? throw new InvalidOperationException("Agent type has no full name.");
+                        string typeName = type.FullName ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent type has no full name."));
                         object? instance = Activator.CreateInstanceFrom(fileName, typeName)?.Unwrap();
                         if (instance is IAgentPlugin agentPlugin)
                         {

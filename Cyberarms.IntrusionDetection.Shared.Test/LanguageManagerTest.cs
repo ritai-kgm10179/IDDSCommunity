@@ -1,6 +1,12 @@
 ﻿using System.Globalization;
 using Cyberarms.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace Cyberarms.IntrusionDetection.Shared.Test;
 
@@ -58,5 +64,54 @@ public class LanguageManagerTest
         LanguageManager.Instance.Initialize("en");
         string val = LanguageManager.Instance.GetString("NonExistentKey", "DefaultFallback");
         Assert.AreEqual("DefaultFallback", val);
+    }
+
+    [TestMethod]
+    public void ResourceCulturesHaveMatchingKeys()
+    {
+        string root = FindRepositoryRoot();
+        HashSet<string> neutral = LoadResourceKeys(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.resx"));
+        HashSet<string> traditionalChinese = LoadResourceKeys(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.zh-TW.resx"));
+        CollectionAssert.AreEquivalent(neutral.ToArray(), traditionalChinese.ToArray());
+    }
+
+    [TestMethod]
+    public void ProductionSourcesDoNotContainHardCodedUserFacingMessages()
+    {
+        string root = FindRepositoryRoot();
+        Regex forbidden = new("throw new [A-Za-z0-9_.<>]+Exception\\(\\s*\"|MessageBox\\.Show\\(\\s*\"|Console\\.Write(?:Line)?\\(\\s*\"|WindowsLogManager\\.Instance\\.WriteEntry\\(\\s*\"", RegexOptions.Compiled);
+        Regex designerText = new("\\.(?:Text|HeaderText|ToolTipText)\\s*=\\s*\"(?<value>[^\"]*)\"", RegexOptions.Compiled);
+        List<string> violations = [];
+
+        foreach (string file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+                     .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                                    && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                                    && !Regex.IsMatch(path, @"\\[^\\]*(?:\.Test|Test)\\", RegexOptions.IgnoreCase)))
+        {
+            string source = File.ReadAllText(file);
+            if (source.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .Any(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal) && forbidden.IsMatch(line)))
+            {
+                violations.Add(Path.GetRelativePath(root, file));
+            }
+            if (!file.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) continue;
+            foreach (Match match in designerText.Matches(source))
+            {
+                string value = match.Groups["value"].Value;
+                if (value is not ("" or "0" or "|")) violations.Add(Path.GetRelativePath(root, file));
+            }
+        }
+
+        Assert.AreEqual(0, violations.Distinct(StringComparer.OrdinalIgnoreCase).Count(), string.Join(Environment.NewLine, violations.Distinct()));
+    }
+
+    private static HashSet<string> LoadResourceKeys(string path) => XDocument.Load(path).Root!.Elements("data")
+        .Select(element => (string)element.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
+
+    private static string FindRepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Cyberarms.slnx"))) directory = directory.Parent;
+        return directory?.FullName ?? throw new DirectoryNotFoundException("Cyberarms repository root was not found.");
     }
 }

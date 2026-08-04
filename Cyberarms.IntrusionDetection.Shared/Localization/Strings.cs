@@ -15,6 +15,13 @@ public static class Strings
         }
     }
 
+    /// <summary>
+    /// Gets a localized user-facing string from the shared string resources.
+    /// </summary>
+    /// <param name="key">The invariant resource key.</param>
+    /// <returns>The localized value, or <paramref name="key"/> when the resource is missing.</returns>
+    public static string Get(string key) => LanguageManager.Instance.GetString(key, key);
+
     public static string AppTitle => LanguageManager.Instance.GetString(nameof(AppTitle), "Cyberarms Intrusion Detection");
     public static string StatusRunning => LanguageManager.Instance.GetString(nameof(StatusRunning), "Running");
     public static string StatusStopped => LanguageManager.Instance.GetString(nameof(StatusStopped), "Stopped");

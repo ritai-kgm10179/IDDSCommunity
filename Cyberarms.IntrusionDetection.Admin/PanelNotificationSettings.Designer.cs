@@ -54,7 +54,7 @@
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(187, 20);
             this.smartLabel5.TabIndex = 24;
-            this.smartLabel5.Text = "E-mail notification settings";
+            this.smartLabel5.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("E-mail notification settings");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // smartPanel1
@@ -89,7 +89,7 @@
             this.smartLabelSummary.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelSummary.Size = new System.Drawing.Size(138, 13);
             this.smartLabelSummary.TabIndex = 20;
-            this.smartLabelSummary.Text = "Reports (Pro edition only)";
+            this.smartLabelSummary.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Reports (Pro edition only)");
             // 
             // checkBoxOnUnlock
             // 
@@ -100,7 +100,7 @@
             this.checkBoxOnUnlock.Name = "checkBoxOnUnlock";
             this.checkBoxOnUnlock.Size = new System.Drawing.Size(116, 17);
             this.checkBoxOnUnlock.TabIndex = 19;
-            this.checkBoxOnUnlock.Text = "On unlock events";
+            this.checkBoxOnUnlock.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("On unlock events");
             this.checkBoxOnUnlock.UseVisualStyleBackColor = true;
             this.checkBoxOnUnlock.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -113,7 +113,7 @@
             this.checkBoxHardLocks.Name = "checkBoxHardLocks";
             this.checkBoxHardLocks.Size = new System.Drawing.Size(129, 17);
             this.checkBoxHardLocks.TabIndex = 19;
-            this.checkBoxHardLocks.Text = "On hard lock events";
+            this.checkBoxHardLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("On hard lock events");
             this.checkBoxHardLocks.UseVisualStyleBackColor = true;
             this.checkBoxHardLocks.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -127,7 +127,7 @@
             this.checkBoxMonthlyReport.Name = "checkBoxMonthlyReport";
             this.checkBoxMonthlyReport.Size = new System.Drawing.Size(104, 17);
             this.checkBoxMonthlyReport.TabIndex = 19;
-            this.checkBoxMonthlyReport.Text = "Monthly report";
+            this.checkBoxMonthlyReport.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Monthly report");
             this.checkBoxMonthlyReport.UseVisualStyleBackColor = true;
             this.checkBoxMonthlyReport.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -141,7 +141,7 @@
             this.checkBoxWeeklyReport.Name = "checkBoxWeeklyReport";
             this.checkBoxWeeklyReport.Size = new System.Drawing.Size(98, 17);
             this.checkBoxWeeklyReport.TabIndex = 19;
-            this.checkBoxWeeklyReport.Text = "Weekly report";
+            this.checkBoxWeeklyReport.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Weekly report");
             this.checkBoxWeeklyReport.UseVisualStyleBackColor = true;
             this.checkBoxWeeklyReport.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -155,7 +155,7 @@
             this.checkBoxDailySummary.Name = "checkBoxDailySummary";
             this.checkBoxDailySummary.Size = new System.Drawing.Size(86, 17);
             this.checkBoxDailySummary.TabIndex = 19;
-            this.checkBoxDailySummary.Text = "Daily report";
+            this.checkBoxDailySummary.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Daily report");
             this.checkBoxDailySummary.UseVisualStyleBackColor = true;
             this.checkBoxDailySummary.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -168,7 +168,7 @@
             this.checkBoxSoftLock.Name = "checkBoxSoftLock";
             this.checkBoxSoftLock.Size = new System.Drawing.Size(125, 17);
             this.checkBoxSoftLock.TabIndex = 19;
-            this.checkBoxSoftLock.Text = "On soft lock events";
+            this.checkBoxSoftLock.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("On soft lock events");
             this.checkBoxSoftLock.UseVisualStyleBackColor = true;
             this.checkBoxSoftLock.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -183,7 +183,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(96, 13);
             this.smartLabel1.TabIndex = 11;
-            this.smartLabel1.Text = "Basic notification";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Basic notification");
             // 
             // pictureBoxEdit
             // 
@@ -223,7 +223,7 @@
             this.buttonDiscard.Name = "buttonDiscard";
             this.buttonDiscard.Size = new System.Drawing.Size(102, 26);
             this.buttonDiscard.TabIndex = 30;
-            this.buttonDiscard.Text = "&Discard";
+            this.buttonDiscard.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
             this.buttonDiscard.UseVisualStyleBackColor = false;
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
             // 
@@ -237,7 +237,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
             this.buttonSave.TabIndex = 29;
-            this.buttonSave.Text = "&Save";
+            this.buttonSave.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 

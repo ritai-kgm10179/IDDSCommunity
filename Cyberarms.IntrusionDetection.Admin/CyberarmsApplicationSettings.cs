@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -12,6 +13,7 @@ public partial class CyberarmsApplicationSettings : UserControl
     public const string MENU_LICENSING = "Licensing";
     public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
     public const string MENU_SMTP_SETTINGS = "SMTP configuration";
+    public const string MENU_LANGUAGE_SETTINGS = "Language settings";
     public event EventHandler? ConfigurationChanged;
 
 
@@ -35,11 +37,12 @@ public partial class CyberarmsApplicationSettings : UserControl
     void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
         cyberarmsSettingsNavigation.NavigationChanged += new EventHandler(cyberarmsSettingsNavigation_NavigationChanged);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LOCK_OUT_CONFIGURATION, null!, null!);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SAFE_NETWORKS, null!, null!);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LICENSING, null!, null!);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_NOTIFICATION_SETTINGS, null!, null!);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SMTP_SETTINGS, null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LICENSING), null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);
     }
 
     private PanelLockoutConfiguration? _lockoutConfiguration;
@@ -129,6 +132,16 @@ public partial class CyberarmsApplicationSettings : UserControl
     void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelNotificationSettings? _panelNotificationSettings;
+    private PanelLanguageSettings? _panelLanguageSettings;
+
+    public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
+
+    private PanelLanguageSettings CreateLanguageSettingsPanel()
+    {
+        PanelLanguageSettings panel = new();
+        configurationPanel.Controls.Add(panel);
+        return panel;
+    }
     public PanelNotificationSettings PanelNotificationSettings
     {
         get
@@ -165,18 +178,21 @@ public partial class CyberarmsApplicationSettings : UserControl
         switch ((sender as CyberarmsSettingsNavigationItem)?.DisplayName)
         {
 
-            case MENU_LOCK_OUT_CONFIGURATION:
+            case var displayName when displayName == Strings.Get(MENU_LOCK_OUT_CONFIGURATION):
                 LockoutConfiguration.BringToFront();
                 break;
-            case MENU_NOTIFICATION_SETTINGS:
+            case var displayName when displayName == Strings.Get(MENU_NOTIFICATION_SETTINGS):
                 PanelNotificationSettings.BringToFront();
                 PanelNotificationSettings.LoadData();
                 break;
-            case MENU_SAFE_NETWORKS:
+            case var displayName when displayName == Strings.Get(MENU_SAFE_NETWORKS):
                 PanelSafeNetworks.BringToFront();
                 break;
-            case MENU_SMTP_SETTINGS:
+            case var displayName when displayName == Strings.Get(MENU_SMTP_SETTINGS):
                 PanelSmtpSettings.BringToFront();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_LANGUAGE_SETTINGS):
+                PanelLanguageSettings.BringToFront();
                 break;
         }
     }

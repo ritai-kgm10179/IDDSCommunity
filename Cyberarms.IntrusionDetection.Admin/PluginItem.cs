@@ -55,7 +55,7 @@ public partial class PluginItem : UserControl
     private SecurityAgent? _securityAgent;
     public SecurityAgent SecurityAgent
     {
-        get => _securityAgent ?? throw new InvalidOperationException("Security agent has not been assigned.");
+        get => _securityAgent ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
             _securityAgent = value;

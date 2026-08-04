@@ -13,7 +13,7 @@ public enum SupportedLanguage
     TraditionalChinese
 }
 
-public class LanguageManager
+public sealed class LanguageManager
 {
     public const string DEFAULT_CULTURE = "en-US";
     public const string TRADITIONAL_CHINESE_CULTURE = "zh-TW";
@@ -22,15 +22,8 @@ public class LanguageManager
     private CultureInfo _currentCulture = new(DEFAULT_CULTURE);
     private readonly Lock _lock = new();
 
-    private static LanguageManager? _instance;
-    public static LanguageManager Instance
-    {
-        get
-        {
-            _instance ??= new LanguageManager();
-            return _instance;
-        }
-    }
+    private static readonly Lazy<LanguageManager> LazyInstance = new(() => new LanguageManager(), true);
+    public static LanguageManager Instance => LazyInstance.Value;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LanguageManager"/> class.
@@ -72,6 +65,11 @@ public class LanguageManager
                      string.Equals(userLanguageSetting, "zh", StringComparison.OrdinalIgnoreCase))
             {
                 targetCulture = new CultureInfo(TRADITIONAL_CHINESE_CULTURE);
+            }
+            else if (string.Equals(userLanguageSetting, "en", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(userLanguageSetting, DEFAULT_CULTURE, StringComparison.OrdinalIgnoreCase))
+            {
+                targetCulture = new CultureInfo(DEFAULT_CULTURE);
             }
             else
             {
@@ -125,7 +123,10 @@ public class LanguageManager
                 string? val = resourceManager.GetString(key, _currentCulture);
                 if (!string.IsNullOrEmpty(val)) return val;
             }
-            catch { }
+            catch (MissingManifestResourceException)
+            {
+                return defaultValue ?? key;
+            }
         }
         return defaultValue ?? key;
     }

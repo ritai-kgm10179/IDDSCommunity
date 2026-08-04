@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -83,4 +83,419 @@
   <data name="ConfigurationSaved" xml:space="preserve">
     <value>Configuration Saved Successfully</value>
   </data>
+  <data name="&amp;Cancel" xml:space="preserve">
+    <value>&amp;Cancel</value>
+  </data>
+  <data name="&amp;Discard" xml:space="preserve">
+    <value>&amp;Discard</value>
+  </data>
+  <data name="&amp;OK" xml:space="preserve">
+    <value>&amp;OK</value>
+  </data>
+  <data name="&amp;Save" xml:space="preserve">
+    <value>&amp;Save</value>
+  </data>
+  <data name="# of incidents" xml:space="preserve">
+    <value># of incidents</value>
+  </data>
+  <data name="0 hard locks" xml:space="preserve">
+    <value>0 hard locks</value>
+  </data>
+  <data name="0 soft locks" xml:space="preserve">
+    <value>0 soft locks</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Agent / Attacked System" xml:space="preserve">
+    <value>Agent / Attacked System</value>
+  </data>
+  <data name="Agent configuration" xml:space="preserve">
+    <value>Agent configuration</value>
+  </data>
+  <data name="AgentId" xml:space="preserve">
+    <value>AgentId</value>
+  </data>
+  <data name="AgentName" xml:space="preserve">
+    <value>AgentName</value>
+  </data>
+  <data name="AGENTS" xml:space="preserve">
+    <value>AGENTS</value>
+  </data>
+  <data name="All Agents" xml:space="preserve">
+    <value>All Agents</value>
+  </data>
+  <data name="Automatic Unlock" xml:space="preserve">
+    <value>Automatic Unlock</value>
+  </data>
+  <data name="Basic notification" xml:space="preserve">
+    <value>Basic notification</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Configure safe networks (white list)" xml:space="preserve">
+    <value>Configure safe networks (white list)</value>
+  </data>
+  <data name="current hard locks" xml:space="preserve">
+    <value>current hard locks</value>
+  </data>
+  <data name="CURRENT LOCKS" xml:space="preserve">
+    <value>CURRENT LOCKS</value>
+  </data>
+  <data name="current soft locks" xml:space="preserve">
+    <value>current soft locks</value>
+  </data>
+  <data name="Cyberarms IDDS" xml:space="preserve">
+    <value>Cyberarms IDDS</value>
+  </data>
+  <data name="Cyberarms IDDS is starting..." xml:space="preserve">
+    <value>Cyberarms IDDS is starting...</value>
+  </data>
+  <data name="CYBERARMS SECURITY LOG" xml:space="preserve">
+    <value>CYBERARMS SECURITY LOG</value>
+  </data>
+  <data name="Daily report" xml:space="preserve">
+    <value>Daily report</value>
+  </data>
+  <data name="Date of Lock" xml:space="preserve">
+    <value>Date of Lock</value>
+  </data>
+  <data name="Date of planned unlock" xml:space="preserve">
+    <value>Date of planned unlock</value>
+  </data>
+  <data name="Don&apos;t have an online account? Register for free!" xml:space="preserve">
+    <value>Don&apos;t have an online account? Register for free!</value>
+  </data>
+  <data name="E-mail notification settings" xml:space="preserve">
+    <value>E-mail notification settings</value>
+  </data>
+  <data name="Edition" xml:space="preserve">
+    <value>Edition</value>
+  </data>
+  <data name="Enable this Security Agent" xml:space="preserve">
+    <value>Enable this Security Agent</value>
+  </data>
+  <data name="err" xml:space="preserve">
+    <value>err</value>
+  </data>
+  <data name="Examples:&#xD;&#xA;192.168.0.17&#xD;&#xA;192.168.0.0/24&#xD;&#xA;192.168.0.0/255.255.255.0" xml:space="preserve">
+    <value>Examples:&#xD;&#xA;192.168.0.17&#xD;&#xA;192.168.0.0/24&#xD;&#xA;192.168.0.0/255.255.255.0</value>
+  </data>
+  <data name="Extended configuration" xml:space="preserve">
+    <value>Extended configuration</value>
+  </data>
+  <data name="Failed logins" xml:space="preserve">
+    <value>Failed logins</value>
+  </data>
+  <data name="failed logins:" xml:space="preserve">
+    <value>failed logins:</value>
+  </data>
+  <data name="Hard lock duration (hours)" xml:space="preserve">
+    <value>Hard lock duration (hours)</value>
+  </data>
+  <data name="Hard lock forever" xml:space="preserve">
+    <value>Hard lock forever</value>
+  </data>
+  <data name="Hard lock IP address" xml:space="preserve">
+    <value>Hard lock IP address</value>
+  </data>
+  <data name="Hard lock threshold (unsuccessful logins)" xml:space="preserve">
+    <value>Hard lock threshold (unsuccessful logins)</value>
+  </data>
+  <data name="Hard locks" xml:space="preserve">
+    <value>Hard locks</value>
+  </data>
+  <data name="hard locks:" xml:space="preserve">
+    <value>hard locks:</value>
+  </data>
+  <data name="Installed agents" xml:space="preserve">
+    <value>Installed agents</value>
+  </data>
+  <data name="IP address" xml:space="preserve">
+    <value>IP address</value>
+  </data>
+  <data name="IP address or network" xml:space="preserve">
+    <value>IP address or network</value>
+  </data>
+  <data name="IP-Address" xml:space="preserve">
+    <value>IP-Address</value>
+  </data>
+  <data name="label1" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="last 24 hours" xml:space="preserve">
+    <value>last 24 hours</value>
+  </data>
+  <data name="Latest entry" xml:space="preserve">
+    <value>Latest entry</value>
+  </data>
+  <data name="LatestEntry" xml:space="preserve">
+    <value>LatestEntry</value>
+  </data>
+  <data name="Lock out configuration" xml:space="preserve">
+    <value>Lock out configuration</value>
+  </data>
+  <data name="LockId" xml:space="preserve">
+    <value>LockId</value>
+  </data>
+  <data name="Locks &amp;&amp; login attempts" xml:space="preserve">
+    <value>Locks &amp;&amp; login attempts</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Monthly report" xml:space="preserve">
+    <value>Monthly report</value>
+  </data>
+  <data name="Number of Events" xml:space="preserve">
+    <value>Number of Events</value>
+  </data>
+  <data name="On hard lock events" xml:space="preserve">
+    <value>On hard lock events</value>
+  </data>
+  <data name="On soft lock events" xml:space="preserve">
+    <value>On soft lock events</value>
+  </data>
+  <data name="On unlock events" xml:space="preserve">
+    <value>On unlock events</value>
+  </data>
+  <data name="ONLINE" xml:space="preserve">
+    <value>ONLINE</value>
+  </data>
+  <data name="Override configuration" xml:space="preserve">
+    <value>Override configuration</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="reading status...." xml:space="preserve">
+    <value>reading status....</value>
+  </data>
+  <data name="Recipient address" xml:space="preserve">
+    <value>Recipient address</value>
+  </data>
+  <data name="Register online" xml:space="preserve">
+    <value>Register online</value>
+  </data>
+  <data name="Reports (Pro edition only)" xml:space="preserve">
+    <value>Reports (Pro edition only)</value>
+  </data>
+  <data name="Safe networks (white list)" xml:space="preserve">
+    <value>Safe networks (white list)</value>
+  </data>
+  <data name="SECURITY LOG" xml:space="preserve">
+    <value>SECURITY LOG</value>
+  </data>
+  <data name="Sender address" xml:space="preserve">
+    <value>Sender address</value>
+  </data>
+  <data name="SETTINGS" xml:space="preserve">
+    <value>SETTINGS</value>
+  </data>
+  <data name="SmartForm" xml:space="preserve">
+    <value>SmartForm</value>
+  </data>
+  <data name="smartLabel1" xml:space="preserve">
+    <value>smartLabel1</value>
+  </data>
+  <data name="SMTP server" xml:space="preserve">
+    <value>SMTP server</value>
+  </data>
+  <data name="SMTP server configuration" xml:space="preserve">
+    <value>SMTP server configuration</value>
+  </data>
+  <data name="Smtp test error" xml:space="preserve">
+    <value>Smtp test error</value>
+  </data>
+  <data name="SMTP/SSL Port" xml:space="preserve">
+    <value>SMTP/SSL Port</value>
+  </data>
+  <data name="Soft lock duration (minutes)" xml:space="preserve">
+    <value>Soft lock duration (minutes)</value>
+  </data>
+  <data name="Soft lock threshold (unsuccessful logins)" xml:space="preserve">
+    <value>Soft lock threshold (unsuccessful logins)</value>
+  </data>
+  <data name="Soft locks" xml:space="preserve">
+    <value>Soft locks</value>
+  </data>
+  <data name="soft locks:" xml:space="preserve">
+    <value>soft locks:</value>
+  </data>
+  <data name="START" xml:space="preserve">
+    <value>START</value>
+  </data>
+  <data name="status" xml:space="preserve">
+    <value>status</value>
+  </data>
+  <data name="System messages" xml:space="preserve">
+    <value>System messages</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="This server requires authentication" xml:space="preserve">
+    <value>This server requires authentication</value>
+  </data>
+  <data name="total events:" xml:space="preserve">
+    <value>total events:</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Unlock IP address" xml:space="preserve">
+    <value>Unlock IP address</value>
+  </data>
+  <data name="unsuccessful login attempts&#xD;&#xA;(last 30 days)" xml:space="preserve">
+    <value>unsuccessful login attempts&#xD;&#xA;(last 30 days)</value>
+  </data>
+  <data name="Use SSL for communication" xml:space="preserve">
+    <value>Use SSL for communication</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="value must be a number" xml:space="preserve">
+    <value>value must be a number</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="Weekly report" xml:space="preserve">
+    <value>Weekly report</value>
+  </data>
+  <data name="Your Cyberarms online account" xml:space="preserve">
+    <value>Your Cyberarms online account</value>
+  </data>
+  <data name="This assembly already exists. Do you want to overwrite the existing?" xml:space="preserve">
+    <value>This assembly already exists. Do you want to overwrite the existing?</value>
+  </data>
+  <data name="Overwrite existing?" xml:space="preserve">
+    <value>Overwrite existing?</value>
+  </data>
+  <data name="Service not found!" xml:space="preserve">
+    <value>Service not found!</value>
+  </data>
+  <data name="Service is running" xml:space="preserve">
+    <value>Service is running</value>
+  </data>
+  <data name="Service is stopped" xml:space="preserve">
+    <value>Service is stopped</value>
+  </data>
+  <data name="Starting service..." xml:space="preserve">
+    <value>Starting service...</value>
+  </data>
+  <data name="Stopping service..." xml:space="preserve">
+    <value>Stopping service...</value>
+  </data>
+  <data name="Mail was sent successfully." xml:space="preserve">
+    <value>Mail was sent successfully.</value>
+  </data>
+  <data name="Version {0}" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="Loading components..." xml:space="preserve">
+    <value>Loading components...</value>
+  </data>
+  <data name="Unlimited edition" xml:space="preserve">
+    <value>Unlimited edition</value>
+  </data>
+  <data name="Configuring database..." xml:space="preserve">
+    <value>Configuring database...</value>
+  </data>
+  <data name="Checking database..." xml:space="preserve">
+    <value>Checking database...</value>
+  </data>
+  <data name="Setting environment variables..." xml:space="preserve">
+    <value>Setting environment variables...</value>
+  </data>
+  <data name="Loading configuration data..." xml:space="preserve">
+    <value>Loading configuration data...</value>
+  </data>
+  <data name="Loading agents..." xml:space="preserve">
+    <value>Loading agents...</value>
+  </data>
+  <data name="Loading application..." xml:space="preserve">
+    <value>Loading application...</value>
+  </data>
+  <data name="Agent " xml:space="preserve"><value>Agent </value></data>
+  <data name="Agent loader assembly has no full name." xml:space="preserve"><value>Agent loader assembly has no full name.</value></data>
+  <data name="Agent loader type has no full name." xml:space="preserve"><value>Agent loader type has no full name.</value></data>
+  <data name="Agent type has no full name." xml:space="preserve"><value>Agent type has no full name.</value></data>
+  <data name="An IP address is required." xml:space="preserve"><value>An IP address is required.</value></data>
+  <data name="Application is not initialized." xml:space="preserve"><value>Application is not initialized.</value></data>
+  <data name="Commands" xml:space="preserve"><value>Commands</value></data>
+  <data name="Database is not configured yet. Please configure database and re-try this operation!" xml:space="preserve"><value>Database is not configured yet. Please configure database and re-try this operation!</value></data>
+  <data name="Database not initialized" xml:space="preserve"><value>Database not initialized</value></data>
+  <data name="Error while accessing or creating the database" xml:space="preserve"><value>Error while accessing or creating the database</value></data>
+  <data name="Error while sending notification email: " xml:space="preserve"><value>Error while sending notification email: </value></data>
+  <data name="Error while sending notification email.&#xD;&#xA;" xml:space="preserve"><value>Error while sending notification email.&#xD;&#xA;</value></data>
+  <data name="File does not exist!" xml:space="preserve"><value>File does not exist!</value></data>
+  <data name="Intrusion Detection Service had a startup error. Details:" xml:space="preserve"><value>Intrusion Detection Service had a startup error. Details:</value></data>
+  <data name="Intrusion Detection Service had an error:" xml:space="preserve"><value>Intrusion Detection Service had an error:</value></data>
+  <data name="Intrusion Detection Service has continued securing your system." xml:space="preserve"><value>Intrusion Detection Service has continued securing your system.</value></data>
+  <data name="Intrusion Detection Service was initialized successfully." xml:space="preserve"><value>Intrusion Detection Service was initialized successfully.</value></data>
+  <data name="Intrusion Detection Service was paused." xml:space="preserve"><value>Intrusion Detection Service was paused.</value></data>
+  <data name="Intrusion Detection Service was started successfully." xml:space="preserve"><value>Intrusion Detection Service was started successfully.</value></data>
+  <data name="Intrusion Detection Service was stopped." xml:space="preserve"><value>Intrusion Detection Service was stopped.</value></data>
+  <data name="IntrusionLog table is not initialized." xml:space="preserve"><value>IntrusionLog table is not initialized.</value></data>
+  <data name="Invalid data" xml:space="preserve"><value>Invalid data</value></data>
+  <data name="Invalid subnet mask for IPv6 address. Please enter the subnet mask as number from 12 to 128!" xml:space="preserve"><value>Invalid subnet mask for IPv6 address. Please enter the subnet mask as number from 12 to 128!</value></data>
+  <data name="Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!" xml:space="preserve"><value>Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!</value></data>
+  <data name="IP address must be given in IP version 4 or IP version 6 format!" xml:space="preserve"><value>IP address must be given in IP version 4 or IP version 6 format!</value></data>
+  <data name="No valid IP address provided!" xml:space="preserve"><value>No valid IP address provided!</value></data>
+  <data name="No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!" xml:space="preserve"><value>No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!</value></data>
+  <data name="No valid subnet mask entered." xml:space="preserve"><value>No valid subnet mask entered.</value></data>
+  <data name="Operation not supported. EventArgs must be passed as NotificationEventArgs" xml:space="preserve"><value>Operation not supported. EventArgs must be passed as NotificationEventArgs</value></data>
+  <data name="Plugin error: the lock delegate was called, but notificationEventArgs must not be null!" xml:space="preserve"><value>Plugin error: the lock delegate was called, but notificationEventArgs must not be null!</value></data>
+  <data name="Received another request to lock IP address " xml:space="preserve"><value>Received another request to lock IP address </value></data>
+  <data name="Security agent has not been assigned." xml:space="preserve"><value>Security agent has not been assigned.</value></data>
+  <data name="Sorry, cannot return requested connection object. Please run Configure first to set database path." xml:space="preserve"><value>Sorry, cannot return requested connection object. Please run Configure first to set database path.</value></data>
+  <data name="Subnet mask bits must be contiguous." xml:space="preserve"><value>Subnet mask bits must be contiguous.</value></data>
+  <data name="Unable to create agent loader proxy." xml:space="preserve"><value>Unable to create agent loader proxy.</value></data>
+  <data name="    exportcsv &lt;file&gt;         export all data to file &lt;file&gt;" xml:space="preserve"><value>    exportcsv &lt;file&gt;         export all data to file &lt;file&gt;</value></data>
+  <data name="    exportcsv &lt;file&gt; &lt;seq&gt;   export data since sequence number &lt;seq&gt; to &lt;file&gt;" xml:space="preserve"><value>    exportcsv &lt;file&gt; &lt;seq&gt;   export data since sequence number &lt;seq&gt; to &lt;file&gt;</value></data>
+  <data name="    manualreport &lt;file&gt;      create report for the last month to &lt;file&gt; (html)" xml:space="preserve"><value>    manualreport &lt;file&gt;      create report for the last month to &lt;file&gt; (html)</value></data>
+  <data name="-----------------------------------------------------------------------" xml:space="preserve"><value>-----------------------------------------------------------------------</value></data>
+  <data name="(c) 2012 Cyberarms, isiCore" xml:space="preserve"><value>(c) 2012 Cyberarms, isiCore</value></data>
+  <data name="(c) 2013-2016 Cyberarms is a trademark of isicore" xml:space="preserve"><value>(c) 2013-2016 Cyberarms is a trademark of isicore</value></data>
+  <data name="Are you really sure? (y/N)" xml:space="preserve"><value>Are you really sure? (y/N)</value></data>
+  <data name="Are you sure that you want to continue? y/N" xml:space="preserve"><value>Are you sure that you want to continue? y/N</value></data>
+  <data name="Cyberarms Intrusion Detection Command line plugin test tool" xml:space="preserve"><value>Cyberarms Intrusion Detection Command line plugin test tool</value></data>
+  <data name="Cyberarms.IDDS.Management - iddsadmin.exe" xml:space="preserve"><value>Cyberarms.IDDS.Management - iddsadmin.exe</value></data>
+  <data name="CyberarmsIdsCmd -assemblyName=assembly-to-load.dll -startAgent=agent1 [-startAgent=agent2]" xml:space="preserve"><value>CyberarmsIdsCmd -assemblyName=assembly-to-load.dll -startAgent=agent1 [-startAgent=agent2]</value></data>
+  <data name="Directory: {0}" xml:space="preserve"><value>Directory: {0}</value></data>
+  <data name="Event Log &apos;Cyberarms&apos; was deleted. You might have to restart your computer" xml:space="preserve"><value>Event Log &apos;Cyberarms&apos; was deleted. You might have to restart your computer</value></data>
+  <data name="Event Log &apos;Cyberarms&apos; was not found on this computer." xml:space="preserve"><value>Event Log &apos;Cyberarms&apos; was not found on this computer.</value></data>
+  <data name="EventSource &apos;Cyberarms Intrusion Detection&apos; was deleted" xml:space="preserve"><value>EventSource &apos;Cyberarms Intrusion Detection&apos; was deleted</value></data>
+  <data name="EventSource &apos;Cyberarms Intrusion Detection&apos; was not found on this computer" xml:space="preserve"><value>EventSource &apos;Cyberarms Intrusion Detection&apos; was not found on this computer</value></data>
+  <data name="iddsadmin command [parameters]" xml:space="preserve"><value>iddsadmin command [parameters]</value></data>
+  <data name="One or some invalid parameters were passed" xml:space="preserve"><value>One or some invalid parameters were passed</value></data>
+  <data name="Please be sure to use this utility ONLY when advised by Cyberarms support personel." xml:space="preserve"><value>Please be sure to use this utility ONLY when advised by Cyberarms support personel.</value></data>
+  <data name="Please enter last sequence number as parameter." xml:space="preserve"><value>Please enter last sequence number as parameter.</value></data>
+  <data name="Please enter output filename as parameter." xml:space="preserve"><value>Please enter output filename as parameter.</value></data>
+  <data name="Sorry, we have a problem. Details:&#xD;&#xA;{0}" xml:space="preserve"><value>Sorry, we have a problem. Details:&#xD;&#xA;{0}</value></data>
+  <data name="The command has executed successfully" xml:space="preserve"><value>The command has executed successfully</value></data>
+  <data name="This program will remove the Cyberarms EventLog. This can not be undone." xml:space="preserve"><value>This program will remove the Cyberarms EventLog. This can not be undone.</value></data>
+  <data name="Usage:" xml:space="preserve"><value>Usage:</value></data>
+  <data name="Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately." xml:space="preserve"><value>Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately.</value></data>
+  <data name="Unlock selected IP Addresses" xml:space="preserve"><value>Unlock selected IP Addresses</value></data>
+  <data name="Cyberarms Intrusion Detection" xml:space="preserve"><value>Cyberarms Intrusion Detection</value></data>
+  <data name="Cyberarms IDDS is starting up..." xml:space="preserve"><value>Cyberarms IDDS is starting up...</value></data>
+  <data name="Safe networks" xml:space="preserve"><value>Safe networks</value></data>
+  <data name="Licensing" xml:space="preserve"><value>Licensing</value></data>
+  <data name="Notification settings" xml:space="preserve"><value>Notification settings</value></data>
+  <data name="SMTP configuration" xml:space="preserve"><value>SMTP configuration</value></data>
+  <data name="Language settings" xml:space="preserve"><value>Language settings</value></data>
+  <data name="Display language" xml:space="preserve"><value>Display language</value></data>
+  <data name="Restart the application after saving to apply the language to every open window." xml:space="preserve"><value>Restart the application after saving to apply the language to every open window.</value></data>
+  <data name="Use system language" xml:space="preserve"><value>Use system language</value></data>
+  <data name="Language setting was saved. Restart the application to apply it." xml:space="preserve"><value>Language setting was saved. Restart the application to apply it.</value></data>
 </root>

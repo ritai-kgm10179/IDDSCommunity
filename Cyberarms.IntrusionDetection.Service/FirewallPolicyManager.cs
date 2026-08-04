@@ -188,7 +188,7 @@ internal class FirewallPolicyManager
         }
         else
         {
-            throw new ArgumentOutOfRangeException("IP address must be given in IP version 4 or IP version 6 format!");
+            throw new ArgumentOutOfRangeException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP address must be given in IP version 4 or IP version 6 format!"));
         }
         // ipAddress = String.Format("{0}/255.255.255.255", ipAddress);
 

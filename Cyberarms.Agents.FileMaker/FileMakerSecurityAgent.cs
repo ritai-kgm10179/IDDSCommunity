@@ -140,7 +140,7 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get => "FileMaker Security Agent"; set => throw new NotSupportedException("DisplayName cannot be changed!");
+        get => Cyberarms.IntrusionDetection.Api.Localization.Strings.Get("FileMaker Security Agent"); set => throw new NotSupportedException(Cyberarms.IntrusionDetection.Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
     private Image _icon = FileMakerResource.agent15px_filemaker_dark;

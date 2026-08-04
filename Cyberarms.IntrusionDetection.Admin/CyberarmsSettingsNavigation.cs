@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -265,7 +266,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
             {
                 string assemblyName = fileName[(fileName.LastIndexOf('\\') + 1)..];
                 if (!File.Exists(pluginDirectory + assemblyName) ||
-                    MessageBox.Show("This assembly already exists. Do you want to overwrite the existing?", "Overwrite existing?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                    MessageBox.Show(Strings.Get("This assembly already exists. Do you want to overwrite the existing?"), Strings.Get("Overwrite existing?"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
                 {
                     try
                     {

@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Cyberarms.IntrusionDetection.Shared\Cyberarms.IntrusionDetection.Shared.csproj" />
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Api\Cyberarms.IntrusionDetection.Api.csproj" />
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Base\Cyberarms.IntrusionDetection.Base.Plugins.csproj" />
     <ProjectReference Include="..\DemoAgent\DemoAgent.csproj" />

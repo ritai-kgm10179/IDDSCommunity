@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IDDS.Management;
 
@@ -17,7 +18,7 @@ class Program
         string path = System.Reflection.Assembly.GetExecutingAssembly().Location;
         path = path[..(path.LastIndexOf('\\') + 1)];
 
-        // Console.WriteLine("Directory: {0}", path);
+        // Console.WriteLine(Strings.Get("Directory: {0}"), path);
         if (args.Length == 0 || args[0].ToLower() == "help")
         {
             ShowUsage();
@@ -35,7 +36,7 @@ class Program
                 case "manualreport":
                     if (args.Length < 2)
                     {
-                        Console.WriteLine("Please enter output filename as parameter.");
+                        Console.WriteLine(Strings.Get("Please enter output filename as parameter."));
                         return;
                     }
                     string report = ReportGenerator.Instance.GetReport(string.Format("Manual report, {0:MM/dd/yyyy}", DateTime.Now),
@@ -55,7 +56,7 @@ class Program
                 case "exportcsv":
                     if (args.Length < 2)
                     {
-                        Console.WriteLine("Please enter output filename as parameter.");
+                        Console.WriteLine(Strings.Get("Please enter output filename as parameter."));
                         return;
                     }
                     int lastSquenceNumber = 0;
@@ -63,7 +64,7 @@ class Program
                     {
                         if (!int.TryParse(args[2], out lastSquenceNumber))
                         {
-                            Console.WriteLine("Please enter last sequence number as parameter.");
+                            Console.WriteLine(Strings.Get("Please enter last sequence number as parameter."));
                         }
                     }
                     try
@@ -103,16 +104,16 @@ class Program
 
     static void ShowUsage()
     {
-        Console.WriteLine("Cyberarms.IDDS.Management - iddsadmin.exe");
-        Console.WriteLine("Usage:");
-        Console.WriteLine("iddsadmin command [parameters]");
-        Console.WriteLine("-----------------------------------------------------------------------");
-        Console.WriteLine("Commands");
-        Console.WriteLine("    manualreport <file>      create report for the last month to <file> (html)");
-        Console.WriteLine("    exportcsv <file>         export all data to file <file>");
-        Console.WriteLine("    exportcsv <file> <seq>   export data since sequence number <seq> to <file>");
-        Console.WriteLine("");
-        Console.WriteLine("(c) 2013-2016 Cyberarms is a trademark of isicore");
+        Console.WriteLine(Strings.Get("Cyberarms.IDDS.Management - iddsadmin.exe"));
+        Console.WriteLine(Strings.Get("Usage:"));
+        Console.WriteLine(Strings.Get("iddsadmin command [parameters]"));
+        Console.WriteLine(Strings.Get("-----------------------------------------------------------------------"));
+        Console.WriteLine(Strings.Get("Commands"));
+        Console.WriteLine(Strings.Get("    manualreport <file>      create report for the last month to <file> (html)"));
+        Console.WriteLine(Strings.Get("    exportcsv <file>         export all data to file <file>"));
+        Console.WriteLine(Strings.Get("    exportcsv <file> <seq>   export data since sequence number <seq> to <file>"));
+        Console.WriteLine(Strings.Get(""));
+        Console.WriteLine(Strings.Get("(c) 2013-2016 Cyberarms is a trademark of isicore"));
     }
 
 }

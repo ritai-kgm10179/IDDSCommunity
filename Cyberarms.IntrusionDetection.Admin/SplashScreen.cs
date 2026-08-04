@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -17,8 +18,8 @@ public partial class SplashScreen : Form
     public SplashScreen()
     {
         InitializeComponent();
-        smartLabelVersion.Text = "Version " + Application.ProductVersion;
-        smartLabelStatus.Text = "Loading components...";
+        smartLabelVersion.Text = string.Format(Strings.Get("Version {0}"), Application.ProductVersion);
+        smartLabelStatus.Text = Strings.Get("Loading components...");
         BackColor = Color.White;
         Load += new EventHandler(SplashScreen_Load);
     }
@@ -43,21 +44,22 @@ public partial class SplashScreen : Form
 
     public void StartupComponents()
     {
-        smartLabelEdition.Text = "Unlimited edition";
+        smartLabelEdition.Text = Strings.Get("Unlimited edition");
 
-        smartLabelStatus.Text = "Configuring database...";
+        smartLabelStatus.Text = Strings.Get("Configuring database...");
         Database.Instance.Configure(Application.StartupPath);
-        smartLabelStatus.Text = "Checking database...";
+        smartLabelStatus.Text = Strings.Get("Checking database...");
 
-        smartLabelStatus.Text = "Setting environment variables...";
+        smartLabelStatus.Text = Strings.Get("Setting environment variables...");
         IddsConfig.Instance.ApplicationPath = Application.StartupPath;
         IddsConfig.Instance.PluginsDirectory = Application.StartupPath + "\\Plugins\\";
-        smartLabelStatus.Text = "Loading configuration data...";
+        smartLabelStatus.Text = Strings.Get("Loading configuration data...");
         IddsConfig.Instance.Load();
-        smartLabelStatus.Text = "Loading agents...";
+        LanguageManager.Instance.Initialize(IddsConfig.Instance.Language);
+        smartLabelStatus.Text = Strings.Get("Loading agents...");
         SecurityAgents.Instance.RegisterSecurityAgents();
 
-        smartLabelStatus.Text = "Loading application...";
+        smartLabelStatus.Text = Strings.Get("Loading application...");
 
         IddsAdmin.Instance.PanelSecurityLog.Visible = true; // used to preload element
         IddsAdmin.Instance.InitAdmin();

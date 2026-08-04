@@ -99,7 +99,7 @@
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
             this.closeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
             this.closeToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
-            this.closeToolStripMenuItem.Text = "Close";
+            this.closeToolStripMenuItem.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Close");
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
             // labelFormText
@@ -113,7 +113,7 @@
             this.labelFormText.Name = "labelFormText";
             this.labelFormText.Size = new System.Drawing.Size(580, 24);
             this.labelFormText.TabIndex = 1;
-            this.labelFormText.Text = "SmartForm";
+            this.labelFormText.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SmartForm");
             this.labelFormText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelFormText.DoubleClick += new System.EventHandler(this.pictureBoxMaximizeButton_Click);
             this.labelFormText.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelWindowGrip_MouseDown);
@@ -392,7 +392,7 @@
             this.MinimumSize = new System.Drawing.Size(400, 300);
             this.Name = "SmartForm";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "Cyberarms Intrusion Detection";
+            this.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cyberarms Intrusion Detection");
             this.panelWindowGrip.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.contextMenuStripControlBox.ResumeLayout(false);

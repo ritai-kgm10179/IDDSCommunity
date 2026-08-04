@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 using MailKit.Security;
 
 namespace Cyberarms.IntrusionDetection.Service;
@@ -312,7 +313,7 @@ public partial class Service : ServiceBase
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry("Error while sending notification email.\r\n" + ex.Message,
+            WindowsLogManager.Instance.WriteEntry(Strings.Get("Error while sending notification email.\r\n") + ex.Message,
                         EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
         }
     }
@@ -354,7 +355,7 @@ public partial class Service : ServiceBase
         catch (Exception ex)
         {
             string safeMessage = ex.Message.Replace('\r', ' ').Replace('\n', ' ');
-            WindowsLogManager.Instance.WriteEntry("Error while sending notification email: " + safeMessage,
+            WindowsLogManager.Instance.WriteEntry(Strings.Get("Error while sending notification email: ") + safeMessage,
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
     }
@@ -371,7 +372,7 @@ public partial class Service : ServiceBase
         cleanupTimer.Interval = 1000;
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
         // restartTimer.Elapsed += new System.Timers.ElapsedEventHandler(restartTimer_Elapsed);
-        WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was initialized successfully.", EventLogEntryType.Information,
+        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was initialized successfully."), EventLogEntryType.Information,
            Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         isInitialized = true;
     }
@@ -443,7 +444,7 @@ public partial class Service : ServiceBase
             // TO DO: Hard Lock overrides Soft Lock!
             if (FirewallPolicyManager.Instance.IsLocked(lockItem.IpAddress))
             {
-                WindowsLogManager.Instance.WriteEntry("Received another request to lock IP address " + lockItem.IpAddress +
+                WindowsLogManager.Instance.WriteEntry(Strings.Get("Received another request to lock IP address ") + lockItem.IpAddress +
                             ". This IP address is already locked.", EventLogEntryType.Information, Globals.CYBERARMS_EVENT_ID_INFORMATION,
                             Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                 return;
@@ -451,7 +452,7 @@ public partial class Service : ServiceBase
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service had an error:" + ex.Message, EventLogEntryType.Error,
+            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had an error:") + ex.Message, EventLogEntryType.Error,
                   Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         WindowsLogManager.Instance.WriteEntry(string.Format("{0} lock: Unsuccessful login attempts from ip address {1} exceeded threshold. Firewall rule is being created to block the address specified.",
@@ -525,13 +526,13 @@ public partial class Service : ServiceBase
             LoadAgents();
             SecurityAgents.Instance.StartAgents();
             cleanupTimer.Enabled = true;
-            WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was started successfully.", EventLogEntryType.Information,
+            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service had a startup error. Details:" + ex.Message, EventLogEntryType.Error,
+            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
 Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
     }
@@ -545,7 +546,7 @@ Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_R
     {
         SecurityAgents.Instance.StopAgents();
         cleanupTimer.Enabled = false;
-        WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was stopped.", EventLogEntryType.Information,
+        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         UnloadAgents();
     }
@@ -559,7 +560,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         SecurityAgents.Instance.PauseAgents();
         //SecurityAgents.Instance.UnloadAgents();
         cleanupTimer.Enabled = false;
-        WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was paused.", EventLogEntryType.Information,
+        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was paused."), EventLogEntryType.Information,
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 
     }
@@ -573,7 +574,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         //SecurityAgents.Instance.LoadAgents();
         SecurityAgents.Instance.ContinueAgents();
         cleanupTimer.Enabled = true;
-        WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service has continued securing your system.", EventLogEntryType.Information,
+        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service has continued securing your system."), EventLogEntryType.Information,
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
     }
 
@@ -600,12 +601,12 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                 if (IddsConfig.Instance.IsDebug)
                 {
                     // the following error should just be thrown when running in debug mode.
-                    throw new ApplicationException("Operation not supported. EventArgs must be passed as NotificationEventArgs");
+                    throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Operation not supported. EventArgs must be passed as NotificationEventArgs"));
                 }
                 else
                 {
                     // otherwise write to the log file
-                    WindowsLogManager.Instance.WriteEntry("Plugin error: the lock delegate was called, but notificationEventArgs must not be null!",
+                    WindowsLogManager.Instance.WriteEntry(Strings.Get("Plugin error: the lock delegate was called, but notificationEventArgs must not be null!"),
                         EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
                     return;
                 }

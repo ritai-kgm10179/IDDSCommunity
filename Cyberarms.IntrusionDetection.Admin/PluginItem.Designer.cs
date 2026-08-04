@@ -54,7 +54,7 @@
             this.labelAgentName.SelectedColor = System.Drawing.Color.Empty;
             this.labelAgentName.Size = new System.Drawing.Size(38, 13);
             this.labelAgentName.TabIndex = 1;
-            this.labelAgentName.Text = "label1";
+            this.labelAgentName.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("label1");
             // 
             // labelFailedLogins
             // 
@@ -67,7 +67,7 @@
             this.labelFailedLogins.SelectedColor = System.Drawing.Color.Empty;
             this.labelFailedLogins.Size = new System.Drawing.Size(59, 12);
             this.labelFailedLogins.TabIndex = 1;
-            this.labelFailedLogins.Text = "failed logins:";
+            this.labelFailedLogins.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("failed logins:");
             // 
             // labelSoftLocks
             // 
@@ -80,7 +80,7 @@
             this.labelSoftLocks.SelectedColor = System.Drawing.Color.Empty;
             this.labelSoftLocks.Size = new System.Drawing.Size(48, 12);
             this.labelSoftLocks.TabIndex = 1;
-            this.labelSoftLocks.Text = "soft locks:";
+            this.labelSoftLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("soft locks:");
             // 
             // labelHardLocks
             // 
@@ -93,7 +93,7 @@
             this.labelHardLocks.SelectedColor = System.Drawing.Color.Empty;
             this.labelHardLocks.Size = new System.Drawing.Size(52, 12);
             this.labelHardLocks.TabIndex = 1;
-            this.labelHardLocks.Text = "hard locks:";
+            this.labelHardLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("hard locks:");
             // 
             // labelFailedLoginsValue
             // 

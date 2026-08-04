@@ -616,7 +616,7 @@ public class IddsConfig
     {
         if (int.TryParse(subnetMask, out int prefixLength) && prefixLength is >= 0 and <= 32) return prefixLength;
         if (!IPAddress.TryParse(subnetMask, out IPAddress? maskAddress) || maskAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
-            throw new ArgumentException("No valid subnet mask entered.", nameof(subnetMask));
+            throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("No valid subnet mask entered."), nameof(subnetMask));
 
         int result = 0;
         bool foundZero = false;
@@ -627,7 +627,7 @@ public class IddsConfig
                 bool isSet = (maskByte & (1 << bit)) != 0;
                 if (isSet)
                 {
-                    if (foundZero) throw new ArgumentException("Subnet mask bits must be contiguous.", nameof(subnetMask));
+                    if (foundZero) throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Subnet mask bits must be contiguous."), nameof(subnetMask));
                     result++;
                 }
                 else
@@ -691,7 +691,7 @@ public class IddsConfig
         {
             if (!IsValidIpAddress(ipAddressNetwork))
             {
-                throw new ArgumentException("No valid IP address provided!");
+                throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("No valid IP address provided!"));
             }
             return ipAddressNetwork + "/255.255.255.255";
         }
@@ -701,7 +701,7 @@ public class IddsConfig
             net = ipAddressNetwork.Split('/')[1];
             if (!IsValidIpAddress(ip))
             {
-                throw new ArgumentException("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!");
+                throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!"));
             }
             int subnetMaskBits;
             if (int.TryParse(net, out subnetMaskBits))
@@ -719,7 +719,7 @@ public class IddsConfig
                 {
                     if (subnetMaskBits < 12 || subnetMaskBits > 128)
                     {
-                        throw new ArgumentException("Invalid subnet mask for IPv6 address. Please enter the subnet mask as number from 12 to 128!");
+                        throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Invalid subnet mask for IPv6 address. Please enter the subnet mask as number from 12 to 128!"));
                     }
                 }
             }
@@ -728,7 +728,7 @@ public class IddsConfig
 
                 if (!IsValidSubnetMask(net))
                 {
-                    throw new ArgumentException("Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!");
+                    throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!"));
                 }
             }
             ip = IPAddress.Parse(ip).ToString();

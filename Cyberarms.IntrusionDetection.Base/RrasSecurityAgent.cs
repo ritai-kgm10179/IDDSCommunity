@@ -107,7 +107,7 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get => "RRAS Security Agent - Routing and Remote Access"; set => throw new NotSupportedException("DisplayName cannot be changed!");
+        get => Api.Localization.Strings.Get("RRAS Security Agent - Routing and Remote Access"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
     private Image _icon = Resources.agent15px_rras_dark;

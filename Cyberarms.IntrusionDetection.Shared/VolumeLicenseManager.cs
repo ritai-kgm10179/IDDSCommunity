@@ -69,7 +69,7 @@ public class VolumeLicenseManager
 
     public static byte[] GetBytes(string filename)
     {
-        if (!File.Exists(filename)) throw new ApplicationException("File does not exist!");
+        if (!File.Exists(filename)) throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("File does not exist!"));
         using FileStream fs = File.OpenRead(filename);
         byte[] result = new byte[fs.Length];
         fs.ReadExactly(result, 0, (int)fs.Length);

@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?><root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="DisplayName cannot be changed!" xml:space="preserve"><value>DisplayName cannot be changed!</value></data>
+  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>Agent is already running. Operation cancelled!</value></data>
+  <data name="Agent is not running." xml:space="preserve"><value>Agent is not running.</value></data>
+  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>Agent cannot be paused in this state</value></data>
+  <data name="Agent must be in paused state" xml:space="preserve"><value>Agent must be in paused state</value></data>
+  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker Security Agent</value></data>
+  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD Credential Validation Security Agent</value></data>
+  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos pre-authentication Security Agent</value></data>
+  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS Security Agent - Routing and Remote Access</value></data>
+  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows Base Security Agent</value></data>
+</root>

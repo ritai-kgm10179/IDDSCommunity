@@ -96,7 +96,7 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get => "Windows Base Security Agent"; set => throw new NotSupportedException("DisplayName cannot be changed!");
+        get => Api.Localization.Strings.Get("Windows Base Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
     private Image _icon = Resources.WindowsSecurityAgent_dark;

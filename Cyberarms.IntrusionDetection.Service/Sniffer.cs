@@ -45,7 +45,7 @@ public class Sniffer
         {
             byteData = new byte[128];
             if (ipAddressToMonitor is not IPAddress address)
-                throw new ArgumentException("An IP address is required.", nameof(ipAddressToMonitor));
+                throw new ArgumentException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("An IP address is required."), nameof(ipAddressToMonitor));
             IPAddress = address;
             ipSocket = new Socket(IPAddress.AddressFamily,
                 SocketType.Raw, ProtocolType.IP)

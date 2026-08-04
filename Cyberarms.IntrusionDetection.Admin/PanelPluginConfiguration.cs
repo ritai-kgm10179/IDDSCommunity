@@ -226,7 +226,7 @@ public partial class PanelPluginConfiguration : UserControl
     private SecurityAgent? _agent;
     public SecurityAgent Agent
     {
-        get => _agent ?? throw new InvalidOperationException("Security agent has not been assigned.");
+        get => _agent ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
             _agent = value;

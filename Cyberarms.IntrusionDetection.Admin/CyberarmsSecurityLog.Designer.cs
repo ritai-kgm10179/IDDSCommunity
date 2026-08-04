@@ -85,7 +85,7 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(65, 13);
             this.label4.TabIndex = 10;
-            this.label4.Text = "total events:";
+            this.label4.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("total events:");
             // 
             // labelFilter
             // 
@@ -95,7 +95,7 @@
             this.labelFilter.Name = "labelFilter";
             this.labelFilter.Size = new System.Drawing.Size(67, 13);
             this.labelFilter.TabIndex = 11;
-            this.labelFilter.Text = "last 24 hours";
+            this.labelFilter.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("last 24 hours");
             // 
             // pictureBox2
             // 
@@ -139,7 +139,7 @@
             this.smartLabelLatestEntry.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelLatestEntry.Size = new System.Drawing.Size(66, 13);
             this.smartLabelLatestEntry.TabIndex = 1;
-            this.smartLabelLatestEntry.Text = "Latest entry";
+            this.smartLabelLatestEntry.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Latest entry");
             // 
             // smartLabelMessage
             // 
@@ -152,7 +152,7 @@
             this.smartLabelMessage.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelMessage.Size = new System.Drawing.Size(52, 13);
             this.smartLabelMessage.TabIndex = 1;
-            this.smartLabelMessage.Text = "Message";
+            this.smartLabelMessage.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Message");
             // 
             // smartLabelNumberOfEvents
             // 
@@ -165,7 +165,7 @@
             this.smartLabelNumberOfEvents.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelNumberOfEvents.Size = new System.Drawing.Size(76, 13);
             this.smartLabelNumberOfEvents.TabIndex = 1;
-            this.smartLabelNumberOfEvents.Text = "# of incidents";
+            this.smartLabelNumberOfEvents.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("# of incidents");
             // 
             // smartLabelpAddress
             // 
@@ -178,7 +178,7 @@
             this.smartLabelpAddress.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelpAddress.Size = new System.Drawing.Size(59, 13);
             this.smartLabelpAddress.TabIndex = 1;
-            this.smartLabelpAddress.Text = "IP address";
+            this.smartLabelpAddress.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP address");
             // 
             // smartLabelType
             // 
@@ -191,7 +191,7 @@
             this.smartLabelType.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelType.Size = new System.Drawing.Size(32, 13);
             this.smartLabelType.TabIndex = 1;
-            this.smartLabelType.Text = "Type";
+            this.smartLabelType.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             // 
             // dataGridViewIntrusionLog
             // 
@@ -273,7 +273,7 @@
             this.comboBoxAgentSelection.Name = "comboBoxAgentSelection";
             this.comboBoxAgentSelection.Size = new System.Drawing.Size(219, 21);
             this.comboBoxAgentSelection.TabIndex = 4;
-            this.comboBoxAgentSelection.Text = "All Agents";
+            this.comboBoxAgentSelection.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("All Agents");
             this.comboBoxAgentSelection.SelectedIndexChanged += new System.EventHandler(this.CyberarmsSecurityLog_FilterSelectionChanged);
             // 
             // checkBoxSystemMessages
@@ -287,7 +287,7 @@
             this.checkBoxSystemMessages.Name = "checkBoxSystemMessages";
             this.checkBoxSystemMessages.Size = new System.Drawing.Size(113, 17);
             this.checkBoxSystemMessages.TabIndex = 3;
-            this.checkBoxSystemMessages.Text = "System messages";
+            this.checkBoxSystemMessages.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("System messages");
             this.checkBoxSystemMessages.UseVisualStyleBackColor = true;
             this.checkBoxSystemMessages.CheckedChanged += new System.EventHandler(this.CyberarmsSecurityLog_FilterSelectionChanged);
             // 
@@ -302,7 +302,7 @@
             this.checkBoxHardLocks.Name = "checkBoxHardLocks";
             this.checkBoxHardLocks.Size = new System.Drawing.Size(80, 17);
             this.checkBoxHardLocks.TabIndex = 3;
-            this.checkBoxHardLocks.Text = "Hard locks";
+            this.checkBoxHardLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Hard locks");
             this.checkBoxHardLocks.UseVisualStyleBackColor = true;
             this.checkBoxHardLocks.CheckedChanged += new System.EventHandler(this.CyberarmsSecurityLog_FilterSelectionChanged);
             // 
@@ -317,7 +317,7 @@
             this.checkBoxSoftLocks.Name = "checkBoxSoftLocks";
             this.checkBoxSoftLocks.Size = new System.Drawing.Size(76, 17);
             this.checkBoxSoftLocks.TabIndex = 3;
-            this.checkBoxSoftLocks.Text = "Soft locks";
+            this.checkBoxSoftLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Soft locks");
             this.checkBoxSoftLocks.UseVisualStyleBackColor = true;
             this.checkBoxSoftLocks.CheckedChanged += new System.EventHandler(this.CyberarmsSecurityLog_FilterSelectionChanged);
             // 
@@ -332,7 +332,7 @@
             this.checkBoxFailedLogins.Name = "checkBoxFailedLogins";
             this.checkBoxFailedLogins.Size = new System.Drawing.Size(92, 17);
             this.checkBoxFailedLogins.TabIndex = 3;
-            this.checkBoxFailedLogins.Text = "Failed logins";
+            this.checkBoxFailedLogins.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Failed logins");
             this.checkBoxFailedLogins.UseVisualStyleBackColor = true;
             this.checkBoxFailedLogins.CheckedChanged += new System.EventHandler(this.CyberarmsSecurityLog_FilterSelectionChanged);
             // 
@@ -348,7 +348,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(196, 20);
             this.smartLabel1.TabIndex = 9;
-            this.smartLabel1.Text = "CYBERARMS SECURITY LOG";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("CYBERARMS SECURITY LOG");
             this.smartLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // LogIcon
@@ -361,7 +361,7 @@
             // 
             // LogType
             // 
-            this.LogType.HeaderText = "Type";
+            this.LogType.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             this.LogType.Name = "LogType";
             this.LogType.ReadOnly = true;
             this.LogType.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -370,7 +370,7 @@
             // 
             // LatestEntry
             // 
-            this.LatestEntry.HeaderText = "LatestEntry";
+            this.LatestEntry.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("LatestEntry");
             this.LatestEntry.Name = "LatestEntry";
             this.LatestEntry.ReadOnly = true;
             this.LatestEntry.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -379,12 +379,12 @@
             // 
             // NumberOfEvents
             // 
-            this.NumberOfEvents.HeaderText = "Number of Events";
+            this.NumberOfEvents.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Number of Events");
             this.NumberOfEvents.Name = "NumberOfEvents";
             // 
             // IpAddress
             // 
-            this.IpAddress.HeaderText = "IP-Address";
+            this.IpAddress.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP-Address");
             this.IpAddress.Name = "IpAddress";
             this.IpAddress.ReadOnly = true;
             this.IpAddress.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -392,7 +392,7 @@
             // 
             // Agent
             // 
-            this.Agent.HeaderText = "Agent / Attacked System";
+            this.Agent.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent / Attacked System");
             this.Agent.Name = "Agent";
             this.Agent.ReadOnly = true;
             this.Agent.Resizable = System.Windows.Forms.DataGridViewTriState.False;
@@ -401,7 +401,7 @@
             // 
             // AgentId
             // 
-            this.AgentId.HeaderText = "AgentId";
+            this.AgentId.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("AgentId");
             this.AgentId.Name = "AgentId";
             this.AgentId.ReadOnly = true;
             this.AgentId.Visible = false;

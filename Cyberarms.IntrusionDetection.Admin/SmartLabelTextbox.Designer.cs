@@ -38,7 +38,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(68, 13);
             this.smartLabel1.TabIndex = 0;
-            this.smartLabel1.Text = "smartLabel1";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("smartLabel1");
             // 
             // textBox1
             // 
