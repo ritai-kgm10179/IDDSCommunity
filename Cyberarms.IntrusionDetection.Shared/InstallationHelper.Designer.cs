@@ -1,4 +1,4 @@
-#if NETFRAMEWORK
+﻿#if NETFRAMEWORK
 namespace Cyberarms.IntrusionDetection.Shared {
     partial class InstallationHelper {
         /// <summary>

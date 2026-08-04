@@ -66,6 +66,9 @@ public class LanguageManagerTest
         Assert.AreEqual("DefaultFallback", val);
     }
 
+    /// <summary>
+    /// Verifies that neutral and Traditional Chinese resources expose identical keys.
+    /// </summary>
     [TestMethod]
     public void ResourceCulturesHaveMatchingKeys()
     {
@@ -75,6 +78,9 @@ public class LanguageManagerTest
         CollectionAssert.AreEquivalent(neutral.ToArray(), traditionalChinese.ToArray());
     }
 
+    /// <summary>
+    /// Verifies that production sources do not reintroduce hard-coded user-facing messages.
+    /// </summary>
     [TestMethod]
     public void ProductionSourcesDoNotContainHardCodedUserFacingMessages()
     {
@@ -105,9 +111,18 @@ public class LanguageManagerTest
         Assert.AreEqual(0, violations.Distinct(StringComparer.OrdinalIgnoreCase).Count(), string.Join(Environment.NewLine, violations.Distinct()));
     }
 
+    /// <summary>
+    /// Loads resource keys from a resx file.
+    /// </summary>
+    /// <param name="path">The resx path.</param>
+    /// <returns>The unique resource keys.</returns>
     private static HashSet<string> LoadResourceKeys(string path) => XDocument.Load(path).Root!.Elements("data")
         .Select(element => (string)element.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Finds the repository root from the test output directory.
+    /// </summary>
+    /// <returns>The repository root path.</returns>
     private static string FindRepositoryRoot()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);

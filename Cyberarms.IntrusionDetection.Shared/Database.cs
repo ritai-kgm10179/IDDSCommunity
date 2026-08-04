@@ -276,8 +276,18 @@ public class Database
         return await connection.QueryAsync<T>(command).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Determines whether SQLite reported a transient busy or locked condition.
+    /// </summary>
+    /// <param name="exception">The SQLite exception.</param>
+    /// <returns><see langword="true"/> when retrying may succeed.</returns>
     private static bool IsTransient(SqliteException exception) => exception.SqliteErrorCode is 5 or 6;
 
+    /// <summary>
+    /// Calculates the bounded exponential retry delay.
+    /// </summary>
+    /// <param name="attempt">The zero-based retry attempt.</param>
+    /// <returns>The delay before the next attempt.</returns>
     private static TimeSpan GetRetryDelay(int attempt) => TimeSpan.FromMilliseconds(50 * (1 << Math.Min(attempt, 4)));
 
     /// <summary>

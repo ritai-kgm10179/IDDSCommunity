@@ -10,6 +10,11 @@ internal class CryptoHelper
     private const string YYHAU_SDBN = "usHN,:_ADs24adH:S";
     private static readonly byte[] OptionalEntropy = SHA256.HashData(Encoding.UTF8.GetBytes("Cyberarms.IntrusionDetection.SmtpPassword.v1"));
 
+    /// <summary>
+    /// Determines whether encrypted text uses the current protected-data format.
+    /// </summary>
+    /// <param name="cipherText">The encrypted text.</param>
+    /// <returns><see langword="true"/> when the current format prefix is present.</returns>
     internal static bool IsCurrentFormat(string cipherText) => cipherText.StartsWith(CurrentPrefix, StringComparison.Ordinal);
 
     /// <summary>
@@ -61,6 +66,12 @@ internal class CryptoHelper
         }
     }
 
+    /// <summary>
+    /// Decrypts a legacy TripleDES value solely for one-time migration to protected storage.
+    /// </summary>
+    /// <param name="cipherString">The legacy encrypted value.</param>
+    /// <param name="useHashing">Whether the legacy key used MD5 derivation.</param>
+    /// <returns>The decrypted legacy value.</returns>
     private static string LegacyDecrypt(string cipherString, bool useHashing)
     {
         byte[] keyArray;
