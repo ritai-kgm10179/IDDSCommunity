@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
 public class Statistics
 {
     private readonly List<Guid> _agentIds = [];
+    private readonly Lock _lock = new();
 
     private Statistics() { }
 
@@ -14,7 +16,10 @@ public class Statistics
 
     public void IncreaseFailedLoginStatistics(SecurityAgent agent)
     {
-        if (!_agentIds.Contains(agent.Id)) ConfigureStatistics(agent);
+        lock (_lock)
+        {
+            if (!_agentIds.Contains(agent.Id)) ConfigureStatistics(agent);
+        }
         agent.FailedLogins++;
         IncreaseStatistics(agent, "FailedLogins");
     }
@@ -34,7 +39,10 @@ public class Statistics
             sqlString = "insert into AgentStatistics(AgentId, FailedLogins, SoftLocks, HardLocks) values (@p0,0,0,0)";
             Database.Instance.ExecuteNonQuery(sqlString, agent.Id);
         }
-        _agentIds.Add(agent.Id);
+        if (!_agentIds.Contains(agent.Id))
+        {
+            _agentIds.Add(agent.Id);
+        }
     }
 
     public void IncreaseSoftLockStatistics(SecurityAgent agent)
