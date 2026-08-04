@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 namespace Cyberarms.IntrusionDetection.Cmd;
 
 class Program
@@ -34,7 +35,7 @@ class Program
         try
         {
             // Default: Load WindowsBaseSecurity
-            Console.WriteLine("Cyberarms Intrusion Detection Command line plugin test tool");
+            Console.WriteLine(Strings.Get("Cyberarms Intrusion Detection Command line plugin test tool"));
             var p = System.Diagnostics.Process.GetCurrentProcess();
             string executablePath = p.MainModule?.FileName ?? Environment.ProcessPath ?? string.Empty;
             Agents.Load(executablePath[..executablePath.LastIndexOf('\\')] + "\\Plugins\\Cyberarms.IntrusionDetection.Base.Plugins.dll");
@@ -79,11 +80,11 @@ class Program
 
     static void ShowUsage()
     {
-        Console.WriteLine("One or some invalid parameters were passed");
-        Console.WriteLine("Usage:");
-        Console.WriteLine("CyberarmsIdsCmd -assemblyName=assembly-to-load.dll -startAgent=agent1 [-startAgent=agent2]");
-        Console.WriteLine("");
-        Console.WriteLine("(c) 2012 Cyberarms, isiCore");
+        Console.WriteLine(Strings.Get("One or some invalid parameters were passed"));
+        Console.WriteLine(Strings.Get("Usage:"));
+        Console.WriteLine(Strings.Get("CyberarmsIdsCmd -assemblyName=assembly-to-load.dll -startAgent=agent1 [-startAgent=agent2]"));
+        Console.WriteLine(Strings.Get(""));
+        Console.WriteLine(Strings.Get("(c) 2012 Cyberarms, isiCore"));
     }
     /// <summary>
     /// Handles the attack detected event.

@@ -32,7 +32,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -54,7 +54,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -75,12 +75,12 @@ public class Locks
             }
             else
             {
-                throw new ApplicationException("Invalid data");
+                throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Invalid data"));
             }
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -151,7 +151,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -183,7 +183,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -212,7 +212,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -261,7 +261,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -279,7 +279,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -314,7 +314,7 @@ public class Locks
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 

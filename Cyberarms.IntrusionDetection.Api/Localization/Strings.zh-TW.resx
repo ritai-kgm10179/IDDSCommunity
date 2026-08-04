@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?><root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="DisplayName cannot be changed!" xml:space="preserve"><value>顯示名稱不可變更！</value></data>
+  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>代理程式已在執行，操作已取消！</value></data>
+  <data name="Agent is not running." xml:space="preserve"><value>代理程式尚未執行。</value></data>
+  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>代理程式目前狀態無法暫停</value></data>
+  <data name="Agent must be in paused state" xml:space="preserve"><value>代理程式必須處於暫停狀態</value></data>
+  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker 安全性代理程式</value></data>
+  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD 認證驗證安全性代理程式</value></data>
+  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性代理程式</value></data>
+  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 路由及遠端存取安全性代理程式</value></data>
+  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性代理程式</value></data>
+</root>

@@ -37,7 +37,7 @@
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonCancel.TabIndex = 1;
-            this.buttonCancel.Text = "&Cancel";
+            this.buttonCancel.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Cancel");
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
@@ -47,7 +47,7 @@
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(75, 23);
             this.buttonOK.TabIndex = 0;
-            this.buttonOK.Text = "&OK";
+            this.buttonOK.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&OK");
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
@@ -57,8 +57,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(281, 50);
             this.label1.TabIndex = 2;
-            this.label1.Text = "Do you really want to remove the selected addresses from your blocking list? Thes" +
-                "e addresses will have access to your server immediately.";
+            this.label1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately.");
             // 
             // pictureBox1
             // 
@@ -85,7 +84,7 @@
             this.MinimizeBox = false;
             this.Name = "RemoveLockForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Unlock selected IP Addresses";
+            this.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unlock selected IP Addresses");
             this.Load += new System.EventHandler(this.RemoveLockForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);

@@ -174,7 +174,7 @@ public class IntrusionLog
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -213,7 +213,7 @@ public class IntrusionLog
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -239,7 +239,7 @@ public class IntrusionLog
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -257,7 +257,7 @@ public class IntrusionLog
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -277,7 +277,7 @@ public class IntrusionLog
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -303,7 +303,7 @@ values (@p0,@p1,@p2,@p3,@p4)";
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 
@@ -324,7 +324,7 @@ values (@p0,@p1,@p2,@p3,@p4)";
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 }

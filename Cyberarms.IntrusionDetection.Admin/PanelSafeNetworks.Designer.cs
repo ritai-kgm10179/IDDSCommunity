@@ -57,7 +57,7 @@
             this.checkBoxConfigureSafeNetworks.Name = "checkBoxConfigureSafeNetworks";
             this.checkBoxConfigureSafeNetworks.Size = new System.Drawing.Size(209, 17);
             this.checkBoxConfigureSafeNetworks.TabIndex = 19;
-            this.checkBoxConfigureSafeNetworks.Text = "Configure safe networks (white list)";
+            this.checkBoxConfigureSafeNetworks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Configure safe networks (white list)");
             this.checkBoxConfigureSafeNetworks.UseVisualStyleBackColor = true;
             this.checkBoxConfigureSafeNetworks.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -135,7 +135,7 @@
             this.smartLabelInvalidNetwork.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelInvalidNetwork.Size = new System.Drawing.Size(307, 41);
             this.smartLabelInvalidNetwork.TabIndex = 12;
-            this.smartLabelInvalidNetwork.Text = "err";
+            this.smartLabelInvalidNetwork.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("err");
             this.smartLabelInvalidNetwork.Visible = false;
             // 
             // textBoxAddNetwork
@@ -159,7 +159,7 @@
             this.smartLabel2.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel2.Size = new System.Drawing.Size(283, 55);
             this.smartLabel2.TabIndex = 10;
-            this.smartLabel2.Text = "Examples:\r\n192.168.0.17\r\n192.168.0.0/24\r\n192.168.0.0/255.255.255.0";
+            this.smartLabel2.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Examples:\r\n192.168.0.17\r\n192.168.0.0/24\r\n192.168.0.0/255.255.255.0");
             // 
             // smartLabel1
             // 
@@ -172,7 +172,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(119, 13);
             this.smartLabel1.TabIndex = 10;
-            this.smartLabel1.Text = "IP address or network";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IP address or network");
             // 
             // button1
             // 
@@ -185,7 +185,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(102, 26);
             this.button1.TabIndex = 9;
-            this.button1.Text = "Cancel";
+            this.button1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cancel");
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -200,7 +200,7 @@
             this.buttonAddNetwork.Name = "buttonAddNetwork";
             this.buttonAddNetwork.Size = new System.Drawing.Size(102, 26);
             this.buttonAddNetwork.TabIndex = 9;
-            this.buttonAddNetwork.Text = "Add";
+            this.buttonAddNetwork.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Add");
             this.buttonAddNetwork.UseVisualStyleBackColor = false;
             this.buttonAddNetwork.Click += new System.EventHandler(this.buttonAddNetwork_Click);
             // 
@@ -256,7 +256,7 @@
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(174, 20);
             this.smartLabel5.TabIndex = 21;
-            this.smartLabel5.Text = "Safe networks (white list)";
+            this.smartLabel5.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Safe networks (white list)");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // buttonDiscard
@@ -270,7 +270,7 @@
             this.buttonDiscard.Name = "buttonDiscard";
             this.buttonDiscard.Size = new System.Drawing.Size(102, 26);
             this.buttonDiscard.TabIndex = 30;
-            this.buttonDiscard.Text = "&Discard";
+            this.buttonDiscard.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
             this.buttonDiscard.UseVisualStyleBackColor = false;
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
             // 
@@ -285,7 +285,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
             this.buttonSave.TabIndex = 29;
-            this.buttonSave.Text = "&Save";
+            this.buttonSave.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 

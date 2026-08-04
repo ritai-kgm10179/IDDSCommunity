@@ -130,7 +130,7 @@
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
             this.closeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
             this.closeToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
-            this.closeToolStripMenuItem.Text = "Close";
+            this.closeToolStripMenuItem.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Close");
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
             // labelFormText
@@ -146,7 +146,7 @@
             this.labelFormText.SelectedColor = System.Drawing.Color.Empty;
             this.labelFormText.Size = new System.Drawing.Size(559, 24);
             this.labelFormText.TabIndex = 1;
-            this.labelFormText.Text = "Cyberarms IDDS";
+            this.labelFormText.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cyberarms IDDS");
             this.labelFormText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelFormText.DoubleClick += new System.EventHandler(this.pictureBoxMaximizeButton_Click);
             this.labelFormText.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelWindowGrip_MouseDown);
@@ -275,7 +275,7 @@
             this.linkLabelRegisterOnline.Size = new System.Drawing.Size(85, 13);
             this.linkLabelRegisterOnline.TabIndex = 3;
             this.linkLabelRegisterOnline.TabStop = true;
-            this.linkLabelRegisterOnline.Text = "Register online";
+            this.linkLabelRegisterOnline.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Register online");
             this.linkLabelRegisterOnline.VisitedLinkColor = System.Drawing.Color.White;
             // 
             // buttonLogin
@@ -286,7 +286,7 @@
             this.buttonLogin.Name = "buttonLogin";
             this.buttonLogin.Size = new System.Drawing.Size(75, 23);
             this.buttonLogin.TabIndex = 2;
-            this.buttonLogin.Text = "Login";
+            this.buttonLogin.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Login");
             this.buttonLogin.UseVisualStyleBackColor = true;
             // 
             // textBox2
@@ -312,7 +312,7 @@
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(208, 30);
             this.label8.TabIndex = 0;
-            this.label8.Text = "Don\'t have an online account? Register for free!";
+            this.label8.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Don\'t have an online account? Register for free!");
             // 
             // label7
             // 
@@ -323,7 +323,7 @@
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(56, 13);
             this.label7.TabIndex = 0;
-            this.label7.Text = "Password";
+            this.label7.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Password");
             // 
             // label6
             // 
@@ -334,7 +334,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(199, 17);
             this.label6.TabIndex = 0;
-            this.label6.Text = "Your Cyberarms online account";
+            this.label6.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Your Cyberarms online account");
             // 
             // labelUsername
             // 
@@ -345,7 +345,7 @@
             this.labelUsername.Name = "labelUsername";
             this.labelUsername.Size = new System.Drawing.Size(58, 13);
             this.labelUsername.TabIndex = 0;
-            this.labelUsername.Text = "Username";
+            this.labelUsername.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Username");
             // 
             // panelStatusBar
             // 
@@ -403,7 +403,7 @@
             this.smartLabelServiceStatus.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelServiceStatus.Size = new System.Drawing.Size(163, 19);
             this.smartLabelServiceStatus.TabIndex = 2;
-            this.smartLabelServiceStatus.Text = "reading status....";
+            this.smartLabelServiceStatus.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("reading status....");
             this.smartLabelServiceStatus.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // pictureBoxStopService
@@ -446,7 +446,7 @@
             this.labelMenuSettings.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
             this.labelMenuSettings.Size = new System.Drawing.Size(88, 25);
             this.labelMenuSettings.TabIndex = 0;
-            this.labelMenuSettings.Text = "SETTINGS";
+            this.labelMenuSettings.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SETTINGS");
             this.labelMenuSettings.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuSettings.Click += new System.EventHandler(this.labelMenuSettings_Click);
             // 
@@ -462,7 +462,7 @@
             this.labelMenuAgents.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
             this.labelMenuAgents.Size = new System.Drawing.Size(83, 25);
             this.labelMenuAgents.TabIndex = 0;
-            this.labelMenuAgents.Text = "AGENTS";
+            this.labelMenuAgents.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("AGENTS");
             this.labelMenuAgents.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuAgents.Click += new System.EventHandler(this.labelMenuAgents_Click);
             // 
@@ -478,7 +478,7 @@
             this.labelMenuCurrentLocks.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
             this.labelMenuCurrentLocks.Size = new System.Drawing.Size(109, 25);
             this.labelMenuCurrentLocks.TabIndex = 0;
-            this.labelMenuCurrentLocks.Text = "CURRENT LOCKS";
+            this.labelMenuCurrentLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("CURRENT LOCKS");
             this.labelMenuCurrentLocks.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuCurrentLocks.Click += new System.EventHandler(this.labelMenuCurrentLocks_Click);
             // 
@@ -494,7 +494,7 @@
             this.labelMenuSecurityLog.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
             this.labelMenuSecurityLog.Size = new System.Drawing.Size(101, 25);
             this.labelMenuSecurityLog.TabIndex = 0;
-            this.labelMenuSecurityLog.Text = "SECURITY LOG";
+            this.labelMenuSecurityLog.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SECURITY LOG");
             this.labelMenuSecurityLog.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuSecurityLog.Click += new System.EventHandler(this.labelMenuSecurityLog_Click);
             // 
@@ -511,7 +511,7 @@
             this.labelMenuOnline.SelectedColor = System.Drawing.Color.Empty;
             this.labelMenuOnline.Size = new System.Drawing.Size(69, 26);
             this.labelMenuOnline.TabIndex = 0;
-            this.labelMenuOnline.Text = "ONLINE";
+            this.labelMenuOnline.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("ONLINE");
             this.labelMenuOnline.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuOnline.Visible = false;
             this.labelMenuOnline.Click += new System.EventHandler(this.labelMenuOnline_Click);
@@ -528,7 +528,7 @@
             this.labelMenuHome.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
             this.labelMenuHome.Size = new System.Drawing.Size(69, 25);
             this.labelMenuHome.TabIndex = 0;
-            this.labelMenuHome.Text = "START";
+            this.labelMenuHome.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("START");
             this.labelMenuHome.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuHome.Click += new System.EventHandler(this.labelMenuHome_Click);
             // 
@@ -661,7 +661,7 @@
             this.MinimumSize = new System.Drawing.Size(400, 300);
             this.Name = "IddsAdmin";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
-            this.Text = "Cyberarms Intrusion Detection";
+            this.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cyberarms Intrusion Detection");
             this.Load += new System.EventHandler(this.IddsAdmin_Load);
             this.Resize += new System.EventHandler(this.IddsAdmin_Resize);
             this.panelWindowGrip.ResumeLayout(false);

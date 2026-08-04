@@ -8,6 +8,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Cyberarms.IntrusionDetection.Shared\Cyberarms.IntrusionDetection.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
   </ItemGroup>
 </Project>

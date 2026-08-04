@@ -115,7 +115,7 @@ public class SecurityAgent : IAgentFilter
     {
         if (!Database.Instance.IsConfigured)
         {
-            throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
         if (Id.Equals(Guid.Empty)) return;
         IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id);

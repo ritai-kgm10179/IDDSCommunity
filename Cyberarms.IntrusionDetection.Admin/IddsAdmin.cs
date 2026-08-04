@@ -3,6 +3,7 @@ using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 using System.Diagnostics;
 
 namespace Cyberarms.IntrusionDetection.Admin;
@@ -261,7 +262,7 @@ public partial class IddsAdmin : Form
         serviceController?.Refresh();
         if (ServiceError)
         {
-            smartLabelServiceStatus.Text = "Service not found!";
+            smartLabelServiceStatus.Text = Strings.Get("Service not found!");
             smartLabelServiceStatus.ForeColor = Color.FromArgb(225, 50, 50);
             return;
         }
@@ -274,7 +275,7 @@ public partial class IddsAdmin : Form
                 pictureBoxStartService.Enabled = false;
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop;
                 pictureBoxStopService.Enabled = true;
-                smartLabelServiceStatus.Text = "Service is running";
+                smartLabelServiceStatus.Text = Strings.Get("Service is running");
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(0, 159, 227);
             }
             else if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
@@ -284,7 +285,7 @@ public partial class IddsAdmin : Form
                 pictureBoxStartService.Enabled = true;
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop_deactivated;
                 pictureBoxStopService.Enabled = false;
-                smartLabelServiceStatus.Text = "Service is stopped";
+                smartLabelServiceStatus.Text = Strings.Get("Service is stopped");
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(225, 50, 50);
             }
         }
@@ -1018,7 +1019,7 @@ public partial class IddsAdmin : Form
 
     private void StartService()
     {
-        smartLabelServiceStatus.Text = "Starting service...";
+        smartLabelServiceStatus.Text = Strings.Get("Starting service...");
         smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
         if (serviceController is not null && (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Paused ||
             serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped))
@@ -1034,7 +1035,7 @@ public partial class IddsAdmin : Form
 
     private void StopService()
     {
-        smartLabelServiceStatus.Text = "Stopping service...";
+        smartLabelServiceStatus.Text = Strings.Get("Stopping service...");
         smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
         if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Running)
         {

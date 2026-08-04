@@ -42,7 +42,7 @@ public class SecurityAgents : List<SecurityAgent>
         Clear();
         if (!Database.Instance.IsConfigured)
         {
-            throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
 
         IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents");
@@ -77,7 +77,7 @@ public class SecurityAgents : List<SecurityAgent>
 
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
-        if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException("Application is not initialized.");
+        if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Application is not initialized."));
         List<SecurityAgent> result = [];
 #if NETFRAMEWORK
         AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
@@ -97,10 +97,10 @@ public class SecurityAgents : List<SecurityAgent>
             if (!fileName.Contains(".Api.dll"))
             {
                 Type tProxy = typeof(AgentLoaderProxy);
-                string assemblyName = tProxy.Assembly.FullName ?? throw new InvalidOperationException("Agent loader assembly has no full name.");
-                string typeName = tProxy.FullName ?? throw new InvalidOperationException("Agent loader type has no full name.");
+                string assemblyName = tProxy.Assembly.FullName ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent loader assembly has no full name."));
+                string typeName = tProxy.FullName ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent loader type has no full name."));
                 var proxy = (AgentLoaderProxy?)CurrentDomain.CreateInstanceAndUnwrap(assemblyName, typeName)
-                    ?? throw new InvalidOperationException("Unable to create agent loader proxy.");
+                    ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unable to create agent loader proxy."));
                 List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
                 result.AddRange(agents);
 
@@ -213,7 +213,7 @@ public class SecurityAgents : List<SecurityAgent>
         }
         else
         {
-            throw new ApplicationException("Agent " + agent.DisplayName + " is not loaded.");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent ") + agent.DisplayName + " is not loaded.");
         }
     }
 

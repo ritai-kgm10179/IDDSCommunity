@@ -141,7 +141,7 @@ public partial class CyberarmsSecurityLog : UserControl
     public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
     {
         DataTable t = DataSetIntrusionLog.Tables["IntrusionLog"]
-            ?? throw new InvalidOperationException("IntrusionLog table is not initialized.");
+            ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("IntrusionLog table is not initialized."));
         DataRow row;
         DataRow[] rows = t.Select(string.Format("AgentId='{0}' and IpAddress='{1}' and logType='{2}' and action='{3}'", agentId, ipAddress, logType, action));
         if (rows != null && rows.Length > 0)

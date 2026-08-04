@@ -67,7 +67,7 @@ public class Database
         {
             if (_connection == null)
             {
-                throw new ApplicationException("Sorry, cannot return requested connection object. Please run Configure first to set database path.");
+                throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Sorry, cannot return requested connection object. Please run Configure first to set database path."));
             }
             if (_connection.State == ConnectionState.Broken || _connection.State == ConnectionState.Closed)
             {
@@ -350,7 +350,7 @@ public class Database
             }
             else
             {
-                throw new ApplicationException("Error while accessing or creating the database");
+                throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Error while accessing or creating the database"));
             }
         }
         else

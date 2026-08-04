@@ -52,7 +52,7 @@
             this.label2.SelectedColor = System.Drawing.Color.Empty;
             this.label2.Size = new System.Drawing.Size(144, 25);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Installed agents";
+            this.label2.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Installed agents");
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label1
@@ -67,7 +67,7 @@
             this.label1.SelectedColor = System.Drawing.Color.Empty;
             this.label1.Size = new System.Drawing.Size(204, 25);
             this.label1.TabIndex = 3;
-            this.label1.Text = "Locks && login attempts";
+            this.label1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Locks && login attempts");
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // panelSoftLocks
@@ -92,7 +92,7 @@
             this.labelSoftLocksName.SelectedColor = System.Drawing.Color.Empty;
             this.labelSoftLocksName.Size = new System.Drawing.Size(98, 15);
             this.labelSoftLocksName.TabIndex = 0;
-            this.labelSoftLocksName.Text = "current soft locks";
+            this.labelSoftLocksName.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("current soft locks");
             this.labelSoftLocksName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // labelSoftLocks
@@ -131,7 +131,7 @@
             this.labelUnsuccessfulLoginsName.SelectedColor = System.Drawing.Color.Empty;
             this.labelUnsuccessfulLoginsName.Size = new System.Drawing.Size(155, 30);
             this.labelUnsuccessfulLoginsName.TabIndex = 0;
-            this.labelUnsuccessfulLoginsName.Text = "unsuccessful login attempts\r\n(last 30 days)";
+            this.labelUnsuccessfulLoginsName.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("unsuccessful login attempts\r\n(last 30 days)");
             this.labelUnsuccessfulLoginsName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // labelUnsuccessfulLogins
@@ -184,7 +184,7 @@
             this.labelHardLocksName.SelectedColor = System.Drawing.Color.Empty;
             this.labelHardLocksName.Size = new System.Drawing.Size(102, 15);
             this.labelHardLocksName.TabIndex = 0;
-            this.labelHardLocksName.Text = "current hard locks";
+            this.labelHardLocksName.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("current hard locks");
             this.labelHardLocksName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // flowLayoutPanelPlugins

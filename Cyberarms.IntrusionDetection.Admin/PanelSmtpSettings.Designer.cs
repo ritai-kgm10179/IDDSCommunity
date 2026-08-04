@@ -63,7 +63,7 @@
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(182, 20);
             this.smartLabel5.TabIndex = 21;
-            this.smartLabel5.Text = "SMTP server configuration";
+            this.smartLabel5.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SMTP server configuration");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // textBoxUsername
@@ -119,7 +119,7 @@
             this.checkBoxAuthentication.Name = "checkBoxAuthentication";
             this.checkBoxAuthentication.Size = new System.Drawing.Size(203, 17);
             this.checkBoxAuthentication.TabIndex = 5;
-            this.checkBoxAuthentication.Text = "This server requires authentication";
+            this.checkBoxAuthentication.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("This server requires authentication");
             this.checkBoxAuthentication.UseVisualStyleBackColor = true;
             this.checkBoxAuthentication.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -134,7 +134,7 @@
             this.smartLabel4.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel4.Size = new System.Drawing.Size(58, 13);
             this.smartLabel4.TabIndex = 11;
-            this.smartLabel4.Text = "Username";
+            this.smartLabel4.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Username");
             // 
             // smartLabel3
             // 
@@ -147,7 +147,7 @@
             this.smartLabel3.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel3.Size = new System.Drawing.Size(67, 13);
             this.smartLabel3.TabIndex = 14;
-            this.smartLabel3.Text = "SMTP server";
+            this.smartLabel3.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SMTP server");
             // 
             // smartLabel2
             // 
@@ -160,7 +160,7 @@
             this.smartLabel2.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel2.Size = new System.Drawing.Size(98, 13);
             this.smartLabel2.TabIndex = 13;
-            this.smartLabel2.Text = "Recipient address";
+            this.smartLabel2.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Recipient address");
             // 
             // smartLabel1
             // 
@@ -173,7 +173,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(86, 13);
             this.smartLabel1.TabIndex = 12;
-            this.smartLabel1.Text = "Sender address";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Sender address");
             // 
             // pictureBoxEdit
             // 
@@ -212,7 +212,7 @@
             this.smartLabel6.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel6.Size = new System.Drawing.Size(56, 13);
             this.smartLabel6.TabIndex = 11;
-            this.smartLabel6.Text = "Password";
+            this.smartLabel6.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Password");
             // 
             // checkBoxUseSSL
             // 
@@ -223,7 +223,7 @@
             this.checkBoxUseSSL.Name = "checkBoxUseSSL";
             this.checkBoxUseSSL.Size = new System.Drawing.Size(165, 17);
             this.checkBoxUseSSL.TabIndex = 4;
-            this.checkBoxUseSSL.Text = "Use SSL for communication";
+            this.checkBoxUseSSL.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Use SSL for communication");
             this.checkBoxUseSSL.UseVisualStyleBackColor = true;
             this.checkBoxUseSSL.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             // 
@@ -238,7 +238,7 @@
             this.smartLabel8.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel8.Size = new System.Drawing.Size(79, 13);
             this.smartLabel8.TabIndex = 14;
-            this.smartLabel8.Text = "SMTP/SSL Port";
+            this.smartLabel8.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("SMTP/SSL Port");
             // 
             // textBoxSmtpPort
             // 
@@ -293,7 +293,7 @@
             this.buttonDiscard.Name = "buttonDiscard";
             this.buttonDiscard.Size = new System.Drawing.Size(102, 26);
             this.buttonDiscard.TabIndex = 30;
-            this.buttonDiscard.Text = "&Discard";
+            this.buttonDiscard.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
             this.buttonDiscard.UseVisualStyleBackColor = false;
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
             // 
@@ -307,7 +307,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
             this.buttonSave.TabIndex = 29;
-            this.buttonSave.Text = "&Save";
+            this.buttonSave.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
             // 
@@ -322,7 +322,7 @@
             this.smartLabelTestError.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelTestError.Size = new System.Drawing.Size(83, 13);
             this.smartLabelTestError.TabIndex = 15;
-            this.smartLabelTestError.Text = "Smtp test error";
+            this.smartLabelTestError.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Smtp test error");
             this.smartLabelTestError.Visible = false;
             // 
             // errSmtpPort
@@ -336,7 +336,7 @@
             this.errSmtpPort.SelectedColor = System.Drawing.Color.Empty;
             this.errSmtpPort.Size = new System.Drawing.Size(130, 13);
             this.errSmtpPort.TabIndex = 15;
-            this.errSmtpPort.Text = "value must be a number";
+            this.errSmtpPort.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSmtpPort.Visible = false;
             // 
             // buttonTestSmtpSettings
@@ -349,7 +349,7 @@
             this.buttonTestSmtpSettings.Name = "buttonTestSmtpSettings";
             this.buttonTestSmtpSettings.Size = new System.Drawing.Size(74, 26);
             this.buttonTestSmtpSettings.TabIndex = 8;
-            this.buttonTestSmtpSettings.Text = "Test";
+            this.buttonTestSmtpSettings.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Test");
             this.buttonTestSmtpSettings.UseVisualStyleBackColor = false;
             this.buttonTestSmtpSettings.Click += new System.EventHandler(this.buttonTestSmtpSettings_Click);
             // 

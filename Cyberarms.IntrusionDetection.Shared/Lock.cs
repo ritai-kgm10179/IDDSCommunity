@@ -44,7 +44,7 @@ public class Lock
         }
         else
         {
-            throw new ApplicationException("Database not initialized");
+            throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
 }

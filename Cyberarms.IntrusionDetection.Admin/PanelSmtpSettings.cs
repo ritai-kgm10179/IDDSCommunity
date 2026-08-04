@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Net.Mail;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 using MailKit.Security;
 
 namespace Cyberarms.IntrusionDetection.Admin;
@@ -167,7 +168,7 @@ public partial class PanelSmtpSettings : UserControl
                 await client.SendAsync(mimeMessage, timeout.Token);
                 await client.DisconnectAsync(true, timeout.Token);
 
-                MessageBox.Show("Mail was sent successfully.");
+                MessageBox.Show(Strings.Get("Mail was sent successfully."));
             }
             catch (Exception ex)
             {

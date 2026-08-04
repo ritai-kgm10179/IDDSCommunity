@@ -55,7 +55,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(257, 25);
             this.smartLabel1.TabIndex = 1;
-            this.smartLabel1.Text = "Cyberarms IDDS is starting...";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cyberarms IDDS is starting...");
             // 
             // smartLabelVersion
             // 
@@ -67,7 +67,7 @@
             this.smartLabelVersion.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelVersion.Size = new System.Drawing.Size(55, 19);
             this.smartLabelVersion.TabIndex = 2;
-            this.smartLabelVersion.Text = "Version";
+            this.smartLabelVersion.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Version");
             // 
             // smartLabelStatus
             // 
@@ -79,7 +79,7 @@
             this.smartLabelStatus.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelStatus.Size = new System.Drawing.Size(236, 37);
             this.smartLabelStatus.TabIndex = 3;
-            this.smartLabelStatus.Text = "status";
+            this.smartLabelStatus.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("status");
             // 
             // smartPanel1
             // 
@@ -105,7 +105,7 @@
             this.smartLabelEdition.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelEdition.Size = new System.Drawing.Size(41, 15);
             this.smartLabelEdition.TabIndex = 2;
-            this.smartLabelEdition.Text = "Edition";
+            this.smartLabelEdition.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Edition");
             // 
             // SplashScreen
             // 
@@ -119,7 +119,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "SplashScreen";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Cyberarms IDDS is starting up...";
+            this.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Cyberarms IDDS is starting up...");
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.smartPanel1.ResumeLayout(false);
             this.smartPanel1.PerformLayout();

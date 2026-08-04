@@ -54,7 +54,7 @@
             this.checkBoxLockForever.Name = "checkBoxLockForever";
             this.checkBoxLockForever.Size = new System.Drawing.Size(114, 17);
             this.checkBoxLockForever.TabIndex = 4;
-            this.checkBoxLockForever.Text = "Hard lock forever";
+            this.checkBoxLockForever.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock forever");
             this.checkBoxLockForever.UseVisualStyleBackColor = true;
             this.checkBoxLockForever.CheckedChanged += new System.EventHandler(this.checkBoxLockForever_CheckedChanged);
             // 
@@ -113,7 +113,7 @@
             this.errSoftLocks.SelectedColor = System.Drawing.Color.Empty;
             this.errSoftLocks.Size = new System.Drawing.Size(130, 13);
             this.errSoftLocks.TabIndex = 11;
-            this.errSoftLocks.Text = "value must be a number";
+            this.errSoftLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLocks.Visible = false;
             // 
             // errSoftLockDuration
@@ -127,7 +127,7 @@
             this.errSoftLockDuration.SelectedColor = System.Drawing.Color.Empty;
             this.errSoftLockDuration.Size = new System.Drawing.Size(130, 13);
             this.errSoftLockDuration.TabIndex = 11;
-            this.errSoftLockDuration.Text = "value must be a number";
+            this.errSoftLockDuration.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLockDuration.Visible = false;
             // 
             // errHardLocks
@@ -141,7 +141,7 @@
             this.errHardLocks.SelectedColor = System.Drawing.Color.Empty;
             this.errHardLocks.Size = new System.Drawing.Size(130, 13);
             this.errHardLocks.TabIndex = 11;
-            this.errHardLocks.Text = "value must be a number";
+            this.errHardLocks.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLocks.Visible = false;
             // 
             // errHardLockDuration
@@ -155,7 +155,7 @@
             this.errHardLockDuration.SelectedColor = System.Drawing.Color.Empty;
             this.errHardLockDuration.Size = new System.Drawing.Size(130, 13);
             this.errHardLockDuration.TabIndex = 11;
-            this.errHardLockDuration.Text = "value must be a number";
+            this.errHardLockDuration.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLockDuration.Visible = false;
             // 
             // pictureBoxSave
@@ -198,7 +198,7 @@
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(158, 20);
             this.smartLabel5.TabIndex = 10;
-            this.smartLabel5.Text = "Lock out configuration";
+            this.smartLabel5.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Lock out configuration");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // smartLabel4
@@ -212,7 +212,7 @@
             this.smartLabel4.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel4.Size = new System.Drawing.Size(143, 13);
             this.smartLabel4.TabIndex = 0;
-            this.smartLabel4.Text = "Hard lock duration (hours)";
+            this.smartLabel4.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock duration (hours)");
             // 
             // smartLabel3
             // 
@@ -225,7 +225,7 @@
             this.smartLabel3.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel3.Size = new System.Drawing.Size(219, 13);
             this.smartLabel3.TabIndex = 0;
-            this.smartLabel3.Text = "Hard lock threshold (unsuccessful logins)";
+            this.smartLabel3.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock threshold (unsuccessful logins)");
             // 
             // smartLabel2
             // 
@@ -238,7 +238,7 @@
             this.smartLabel2.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel2.Size = new System.Drawing.Size(150, 13);
             this.smartLabel2.TabIndex = 0;
-            this.smartLabel2.Text = "Soft lock duration (minutes)";
+            this.smartLabel2.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Soft lock duration (minutes)");
             // 
             // smartLabel1
             // 
@@ -251,7 +251,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(215, 13);
             this.smartLabel1.TabIndex = 0;
-            this.smartLabel1.Text = "Soft lock threshold (unsuccessful logins)";
+            this.smartLabel1.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Soft lock threshold (unsuccessful logins)");
             // 
             // buttonDiscard
             // 
@@ -263,7 +263,7 @@
             this.buttonDiscard.Name = "buttonDiscard";
             this.buttonDiscard.Size = new System.Drawing.Size(102, 26);
             this.buttonDiscard.TabIndex = 30;
-            this.buttonDiscard.Text = "&Discard";
+            this.buttonDiscard.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
             this.buttonDiscard.UseVisualStyleBackColor = false;
             this.buttonDiscard.Visible = false;
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
@@ -278,7 +278,7 @@
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
             this.buttonSave.TabIndex = 29;
-            this.buttonSave.Text = "&Save";
+            this.buttonSave.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Visible = false;
             this.buttonSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
