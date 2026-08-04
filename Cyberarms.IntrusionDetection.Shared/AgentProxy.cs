@@ -18,7 +18,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
             try {
                 agent = (IAgentPlugin)Activator.CreateInstanceFrom(assemblyFilename, typeName).Unwrap();
             } catch (Exception ex) {
-                throw ex;
+                throw;
             }
             agent.AttackDetected += new AttackDetectedHandler(agent_AttackDetected);
         }

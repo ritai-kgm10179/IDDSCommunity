@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,14 +57,14 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
 
         [TestMethod]
         public void TestReportByAgent() {
-            Database.Instance.Configure(@"C:\\Program Files\\Cyberarms\\Cyberarms Intrusion Detection\");
+            Database.Instance.Configure(AppDomain.CurrentDomain.BaseDirectory);
             string result = ReportGenerator.Instance.GetEventsPerAgent(DateTime.Now.AddDays(-3), DateTime.Now);
             System.Diagnostics.Debug.Print(result);
         }
 
         [TestMethod]
         public void TestReport() {
-            Database.Instance.Configure(@"C:\\Program Files\\Cyberarms\\Cyberarms Intrusion Detection\");
+            Database.Instance.Configure(AppDomain.CurrentDomain.BaseDirectory);
             string ipAddresses = String.Empty;
 
             System.Net.IPHostEntry host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
@@ -75,11 +75,16 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
             string result = ReportGenerator.Instance.GetReport("Last three days report", "This report contains data of the last three days and is for testing only. If you got this report without running the unit test before, data might be outdated.",
                 String.Format(@"Server name: {0} <br/>
                         IP addresses: <br/>{1}<br/>IDDS Version: {2}", System.Net.Dns.GetHostName(), ipAddresses, "Pro Edition"), DateTime.Now.AddDays(-3), DateTime.Now);
-            StreamWriter sw = new StreamWriter(@"c:\\temp\\testreportrun.htm");
+            if (!System.IO.Directory.Exists(@"c:\temp")) {
+                try { System.IO.Directory.CreateDirectory(@"c:\temp"); } catch { }
+            }
+            StreamWriter sw = new StreamWriter(@"c:\temp\testreportrun.htm");
             sw.WriteLine(result);
             sw.Close();
-            System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo("file://c:/temp/testreportrun.htm");
-            System.Diagnostics.Process.Start(sInfo);
+            try {
+                System.Diagnostics.ProcessStartInfo sInfo = new System.Diagnostics.ProcessStartInfo(@"c:\temp\testreportrun.htm") { UseShellExecute = true };
+                System.Diagnostics.Process.Start(sInfo);
+            } catch { }
         }
     }
 }

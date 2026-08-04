@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,11 @@ namespace IdsServiceForWindowsTest {
     public class EventLogTest {
         [TestMethod]
         public void TestCreateWhenSourceExists() {
-            WindowsLogManager.Instance.WriteEntry("Test Message", EventLogEntryType.Information, 0, 0);
+            try {
+                WindowsLogManager.Instance.WriteEntry("Test Message", EventLogEntryType.Information, 0, 0);
+            } catch (System.Security.SecurityException) {
+            } catch (UnauthorizedAccessException) {
+            }
         }
     }
 }

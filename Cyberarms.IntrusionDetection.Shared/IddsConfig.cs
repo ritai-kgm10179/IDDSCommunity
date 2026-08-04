@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -58,7 +58,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
 
             } catch (Exception ex) {
-                throw ex;
+                throw;
             }
         }
 
@@ -93,7 +93,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                 }
 
             } catch (Exception ex) {
-                throw ex;
+                throw;
             } finally {
                 if (reader != null && !reader.IsClosed) reader.Close();
             }
@@ -143,7 +143,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                 trans.Commit();
             } catch (Exception ex) {
                 trans.Rollback();
-                throw ex;
+                throw;
             } finally {
                 trans.Dispose();
             }
@@ -175,7 +175,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                 trans.Commit();
             } catch (Exception ex) {
                 trans.Rollback();
-                throw ex;
+                throw;
             }
         }
 
@@ -192,11 +192,10 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
 
         internal void configureDatabase() {
-            if (!String.IsNullOrEmpty(ApplicationPath)) {
-                Database.Instance.Configure(ApplicationPath);
-            } else {
-                throw new FieldAccessException("ApplicationPath not provided. Please configure application path!");
+            if (String.IsNullOrEmpty(ApplicationPath)) {
+                ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
             }
+            Database.Instance.Configure(ApplicationPath);
         }
 
 
@@ -522,7 +521,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
         //        Guid agentId;
         //        if (result != null && Guid.TryParse(result.ToString(), out agentId)) return agentId;
         //    } catch (Exception ex) {
-        //        throw ex;
+        //        throw;
         //    }
         //    return Guid.Empty;
         //}

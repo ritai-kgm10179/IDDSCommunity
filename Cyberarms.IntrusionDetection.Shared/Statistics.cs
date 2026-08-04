@@ -53,7 +53,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                 string sqlString = String.Format("Update AgentStatistics set {0}={0}+1 where AgentId=@p0", statisticsColumn);
                 Database.Instance.ExecuteNonQuery(sqlString, agent.Id);
             } catch(Exception ex) {
-                throw ex;
+                throw;
             }
         }
 

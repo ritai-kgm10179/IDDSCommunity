@@ -18,7 +18,7 @@ namespace Cyberarms.IntrusionDetection.Shared.Db {
             try {
                 cmd.ExecuteNonQuery();
             } catch (Exception ex) {
-                throw ex;
+                throw;
             }
 
         }

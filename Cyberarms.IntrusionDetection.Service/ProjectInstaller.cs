@@ -1,4 +1,5 @@
-﻿using System;
+#if NETFRAMEWORK
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -95,3 +96,5 @@ namespace Cyberarms.IntrusionDetection {
         }
     }
 }
+#endif
+

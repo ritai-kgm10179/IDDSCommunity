@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CA1416;WFO1000;CS0168;CA2200;SYSLIB0021;SYSLIB0024;CA2022;MSB3042;NU1510;NU1903;CS0067;CS8073</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+</Project>

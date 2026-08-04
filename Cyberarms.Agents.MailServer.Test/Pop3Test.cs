@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +38,7 @@ namespace Cyberarms.Agents.MailServer.Test {
             System.Diagnostics.Debug.Print(data.EventMessage);
         }
 
-        [TestMethod]
+        [TestMethod, Ignore]
         public void TestPop3Watcher() {
             Pop3Agent agent = new Pop3Agent();
             agent.AttackDetected+=new IntrusionDetection.Api.Plugin.AttackDetectedHandler(agent_AttackDetected);

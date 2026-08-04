@@ -28,7 +28,7 @@ namespace Cyberarms.Agents.MailServer {
                 
             } catch(Exception ex) {
                 Console.WriteLine(ex.Message);
-                throw ex;
+                throw;
             }
         }
     }

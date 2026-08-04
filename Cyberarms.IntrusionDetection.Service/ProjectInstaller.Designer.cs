@@ -1,4 +1,5 @@
-﻿namespace Cyberarms.IntrusionDetection {
+#if NETFRAMEWORK
+namespace Cyberarms.IntrusionDetection {
     partial class ProjectInstaller {
         /// <summary>
         /// Required designer variable.
@@ -57,3 +58,4 @@
         private System.ServiceProcess.ServiceInstaller intrusionDetectionServiceInstaller;
     }
 }
+#endif
