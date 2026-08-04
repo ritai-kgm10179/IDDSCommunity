@@ -18,6 +18,7 @@ internal static class Program
         {
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddWindowsService(options => options.ServiceName = "Cyberarms Intrusion Detection Service");
+            builder.Services.AddCyberarmsOptions(builder.Configuration);
             builder.Services.AddSingleton<Service>();
             builder.Services.AddHostedService<PaladinWorker>();
             using IHost host = builder.Build();
