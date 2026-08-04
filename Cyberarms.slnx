@@ -13,6 +13,8 @@
   <Project Path="Cyberarms.Agents.SqlServer/Cyberarms.Agents.SqlServer.csproj" />
   <Project Path="Cyberarms.Agents.TerminalServer/Cyberarms.Agents.TerminalServer.csproj" />
   <Project Path="Cyberarms.Agents.WebSecurity/Cyberarms.Agents.WebSecurity.csproj" />
+  <Project Path="Cyberarms.Agents.WindowsDns/Cyberarms.Agents.WindowsDns.csproj" />
+  <Project Path="Cyberarms.Agents.WindowsDns.Test/Cyberarms.Agents.WindowsDns.Test.csproj" />
   <Project Path="Cyberarms.IDDS.Management/Cyberarms.IDDS.Management.csproj" />
   <Project Path="Cyberarms.IntrusionDetection.Admin/Cyberarms.IntrusionDetection.Admin.csproj" />
   <Project Path="Cyberarms.IntrusionDetection.Api/Cyberarms.IntrusionDetection.Api.csproj" />
