@@ -1,10 +1,9 @@
 ﻿using Cyberarms.IntrusionDetection.Api.Plugin;
 
-namespace Cyberarms.Agents.Bind9
+namespace Cyberarms.Agents.Bind9;
+
+public class Bind9DDoSConfig : AgentConfigurationBase
 {
-    public class Bind9DDoSConfig : AgentConfigurationBase
-    {
-        [System.ComponentModel.DefaultValue(false)]
-        public bool RestartBindOnBlock { get; set; }
-    }
+    [System.ComponentModel.DefaultValue(false)]
+    public bool RestartBindOnBlock { get; set; }
 }

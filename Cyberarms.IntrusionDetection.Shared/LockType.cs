@@ -1,13 +1,12 @@
 ﻿using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection
+namespace Cyberarms.IntrusionDetection;
+
+public enum LockType
 {
-    public enum LockType
-    {
-        None = Lock.LOCK_STATUS_NONE,
-        SoftLockRequested = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED,
-        SoftLock = Lock.LOCK_STATUS_SOFTLOCK,
-        HardLockRequested = Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
-        HardLock = Lock.LOCK_STATUS_HARDLOCK
-    }
+    None = Lock.LOCK_STATUS_NONE,
+    SoftLockRequested = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED,
+    SoftLock = Lock.LOCK_STATUS_SOFTLOCK,
+    HardLockRequested = Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+    HardLock = Lock.LOCK_STATUS_HARDLOCK
 }

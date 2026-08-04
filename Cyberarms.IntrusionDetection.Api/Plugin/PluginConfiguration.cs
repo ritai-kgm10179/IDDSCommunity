@@ -1,26 +1,25 @@
 ﻿using System.Reflection;
 
-namespace Cyberarms.IntrusionDetection.Api.Plugin
+namespace Cyberarms.IntrusionDetection.Api.Plugin;
+
+/// <summary>
+/// Base class for plugin configuration settings
+/// </summary>
+public class PluginConfiguration
 {
     /// <summary>
-    /// Base class for plugin configuration settings
+    /// Clone from another PluginConfiguration of the same type
     /// </summary>
-    public class PluginConfiguration
+    /// <param name="source"></param>
+    public void CloneFrom(PluginConfiguration source)
     {
-        /// <summary>
-        /// Clone from another PluginConfiguration of the same type
-        /// </summary>
-        /// <param name="source"></param>
-        public void CloneFrom(PluginConfiguration source)
+        foreach (PropertyInfo pi in this.GetType().GetProperties())
         {
-            foreach (PropertyInfo pi in this.GetType().GetProperties())
+            if (pi.CanWrite)
             {
-                if (pi.CanWrite)
-                {
-                    pi.SetValue(this, pi.GetValue(source, null), null);
-                }
+                pi.SetValue(this, pi.GetValue(source, null), null);
             }
         }
-
     }
+
 }

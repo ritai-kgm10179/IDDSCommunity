@@ -1,7 +1,6 @@
-﻿namespace Cyberarms.IntrusionDetection.Api.Plugin
+﻿namespace Cyberarms.IntrusionDetection.Api.Plugin;
+
+public interface INetworkListener
 {
-    public interface INetworkListener
-    {
-        long TotalPackets { get; set; }
-    }
+    long TotalPackets { get; set; }
 }

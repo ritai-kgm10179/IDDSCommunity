@@ -1,18 +1,17 @@
 ﻿using Cyberarms.IntrusionDetection.Api.Plugin;
 
-namespace DemoAgent
+namespace DemoAgent;
+
+public class BadAgent : AgentPlugin
 {
-    public class BadAgent : AgentPlugin
+    public BadAgent()
     {
-        public BadAgent()
-        {
-        }
+    }
 
-        protected override void OnStartAgent()
-        {
-            base.OnStartAgent();
-            while (true) ;
+    protected override void OnStartAgent()
+    {
+        base.OnStartAgent();
+        while (true) ;
 
-        }
     }
 }

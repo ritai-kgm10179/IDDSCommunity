@@ -2,63 +2,62 @@
 using System.Diagnostics;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection
+namespace Cyberarms.IntrusionDetection;
+
+internal class WindowsLogManager
 {
-    internal class WindowsLogManager
+    private DateTime lastSearchDate;
+
+    // public override event AttackDetectedHandler AttackDetected;
+
+    private EventLog eventLogCyberarms = null;
+
+
+    private static WindowsLogManager _instance;
+    internal static WindowsLogManager Instance
     {
-        private DateTime lastSearchDate;
-
-        // public override event AttackDetectedHandler AttackDetected;
-
-        private EventLog eventLogCyberarms = null;
-
-
-        private static WindowsLogManager _instance;
-        internal static WindowsLogManager Instance
+        get
         {
-            get
+            if (_instance == null)
             {
-                if (_instance == null)
+                _instance = new WindowsLogManager
                 {
-                    _instance = new WindowsLogManager
-                    {
-                        lastSearchDate = DateTime.Now
-                    };
-                }
-                return _instance;
+                    lastSearchDate = DateTime.Now
+                };
             }
+            return _instance;
         }
+    }
 
 
-        internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
+    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
+    {
+        if (eventLogCyberarms == null)
         {
-            if (eventLogCyberarms == null)
-            {
-                //if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
-                //    // did somebody delete the eventlog with event viewer?
-                //    if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) && EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
-                //        // delete the source first
-                //        EventLog.DeleteEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
-                //    }
-                //    EventLog.CreateEventSource(new EventSourceCreationData(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME));
-                //}
-                eventLogCyberarms = new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME, ".", Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
-            }
-
-            eventLogCyberarms.WriteEntry(text, type, eventId, category);
+            //if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
+            //    // did somebody delete the eventlog with event viewer?
+            //    if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) && EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
+            //        // delete the source first
+            //        EventLog.DeleteEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
+            //    }
+            //    EventLog.CreateEventSource(new EventSourceCreationData(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME));
+            //}
+            eventLogCyberarms = new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME, ".", Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
         }
 
+        eventLogCyberarms.WriteEntry(text, type, eventId, category);
+    }
 
 
-        /// <summary>
-        /// Keep it private to avoid multiple instances
-        /// </summary>
-        private WindowsLogManager()
-        {
 
-        }
-
-
+    /// <summary>
+    /// Keep it private to avoid multiple instances
+    /// </summary>
+    private WindowsLogManager()
+    {
 
     }
+
+
+
 }

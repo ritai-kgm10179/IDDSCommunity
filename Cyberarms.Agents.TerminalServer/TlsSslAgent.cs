@@ -5,207 +5,206 @@ using System.Net;
 using System.Threading;
 using System.Drawing;
 
-namespace Cyberarms.Agents.TerminalServer
+namespace Cyberarms.Agents.TerminalServer;
+
+public class TlsSslAgent : AgentPlugin, IExtendedInformation
 {
-    public class TlsSslAgent : AgentPlugin, IExtendedInformation
+    public event EventHandler Trace;
+    public bool Tracing { get; set; }
+    ThreadStart ts;
+    Thread td;
+
+    List<Sniffer> sniffers = new();
+
+    public TlsSslAgent()
     {
-        public event EventHandler Trace;
-        public bool Tracing { get; set; }
-        ThreadStart ts;
-        Thread td;
+        this.Configuration.AgentSettings = new TslSslConfig();
+        Configuration.ConfigurationSettingsTypeName =
+            this.Configuration.AgentSettings.GetType().FullName;
+    }
 
-        List<Sniffer> sniffers = new();
+    protected override void OnStartAgent()
+    {
+        ts = new ThreadStart(RunWatcher);
+        td = new Thread(ts);
+        td.Start();
+        base.OnStartAgent();
+    }
 
-        public TlsSslAgent()
+    void RunWatcher()
+    {
+        IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
+        if (hostEntry.AddressList.Length > 0)
         {
-            this.Configuration.AgentSettings = new TslSslConfig();
-            Configuration.ConfigurationSettingsTypeName =
-                this.Configuration.AgentSettings.GetType().FullName;
-        }
-
-        protected override void OnStartAgent()
-        {
-            ts = new ThreadStart(RunWatcher);
-            td = new Thread(ts);
-            td.Start();
-            base.OnStartAgent();
-        }
-
-        void RunWatcher()
-        {
-            IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
-            if (hostEntry.AddressList.Length > 0)
+            foreach (IPAddress ip in hostEntry.AddressList)
             {
-                foreach (IPAddress ip in hostEntry.AddressList)
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                    {
-                        ParameterizedThreadStart pts = new(WatchAddress);
-                        pts.Invoke(ip);
-                    }
+                    ParameterizedThreadStart pts = new(WatchAddress);
+                    pts.Invoke(ip);
                 }
             }
         }
+    }
 
 
 
-        void WatchAddress(object ipAddress)
+    void WatchAddress(object ipAddress)
+    {
+        Sniffer s = new();
+        // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
+        s.IpPacketSent += new EventHandler(s_IpPacketSent);
+        s.TcpPort = ((TslSslConfig)Configuration.AgentSettings).RdpPort;
+        System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.TlsSslAgent", string.Format("Remote Desktop Security Agent is listening on port {0}", s.TcpPort));
+        s.WatchAddress((IPAddress)ipAddress);
+        sniffers.Add(s);
+    }
+
+    void s_IpPacketSent(object sender, EventArgs e)
+    {
+        IPHeader ipHeader = (IPHeader)sender;
+        if (ipHeader.ProtocolType == Protocol.Tcp)
         {
-            Sniffer s = new();
-            // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
-            s.IpPacketSent += new EventHandler(s_IpPacketSent);
-            s.TcpPort = ((TslSslConfig)Configuration.AgentSettings).RdpPort;
-            System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.TlsSslAgent", string.Format("Remote Desktop Security Agent is listening on port {0}", s.TcpPort));
-            s.WatchAddress((IPAddress)ipAddress);
-            sniffers.Add(s);
-        }
-
-        void s_IpPacketSent(object sender, EventArgs e)
-        {
-            IPHeader ipHeader = (IPHeader)sender;
-            if (ipHeader.ProtocolType == Protocol.Tcp)
+            try
             {
-                try
+                TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
+                int sourcePort;
+                if (int.TryParse(tcp.SourcePort, out sourcePort))
                 {
-                    TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                    int sourcePort;
-                    if (int.TryParse(tcp.SourcePort, out sourcePort))
+                    if (sourcePort == ((TslSslConfig)Configuration.AgentSettings).RdpPort)
                     {
-                        if (sourcePort == ((TslSslConfig)Configuration.AgentSettings).RdpPort)
+                        if (Tracing)
                         {
-                            if (Tracing)
-                            {
-                                OnTrace((IPHeader)sender);
-                            }
-                            if (tcp.Data.Length > 0)
-                            {
-                                AppLayerTlsSsl tls = new(tcp.Data, tcp.Data.Length);
-                                if (tls.TlsHeader.MinorVersion >= 1 && tls.TlsHeader.MinorVersion < 10 && tls.TlsHeader.MajorVersion >= 1 && tls.TlsHeader.MajorVersion < 10)
-                                {       // check if packet is tls/ssl
-                                    if (tls.TlsHeader.ContentType == AppLayerTlsSsl.CONTENT_TYPE_ENCRYPTED_ALERT)
-                                    {
-                                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                                    }
+                            OnTrace((IPHeader)sender);
+                        }
+                        if (tcp.Data.Length > 0)
+                        {
+                            AppLayerTlsSsl tls = new(tcp.Data, tcp.Data.Length);
+                            if (tls.TlsHeader.MinorVersion >= 1 && tls.TlsHeader.MinorVersion < 10 && tls.TlsHeader.MajorVersion >= 1 && tls.TlsHeader.MajorVersion < 10)
+                            {       // check if packet is tls/ssl
+                                if (tls.TlsHeader.ContentType == AppLayerTlsSsl.CONTENT_TYPE_ENCRYPTED_ALERT)
+                                {
+                                    UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                                 }
                             }
-
-                            // Console.WriteLine("Flags: {0}\tAck: {1}\tSeq:{2}", tcp.Flags, tcp.AcknowledgementNumber, tcp.SequenceNumber);
-                            // Console.WriteLine("Source: {0}:{1}\tDestination: {2}:{3}", ipHeader.SourceAddress, tcp.SourcePort, ipHeader.DestinationAddress, tcp.DestinationPort);
                         }
+
+                        // Console.WriteLine("Flags: {0}\tAck: {1}\tSeq:{2}", tcp.Flags, tcp.AcknowledgementNumber, tcp.SequenceNumber);
+                        // Console.WriteLine("Source: {0}:{1}\tDestination: {2}:{3}", ipHeader.SourceAddress, tcp.SourcePort, ipHeader.DestinationAddress, tcp.DestinationPort);
                     }
                 }
-                catch (Exception ex)
-                {
-                    Sniffer.LogTrace(ex);
-                }
-
             }
+            catch (Exception ex)
+            {
+                Sniffer.LogTrace(ex);
+            }
+
         }
+    }
 
-        private void OnTrace(IPHeader tlsPackage)
+    private void OnTrace(IPHeader tlsPackage)
+    {
+        if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
+    }
+
+    protected override void OnContinueAgent()
+    {
+        Start();
+        base.OnContinueAgent();
+    }
+
+    protected override void OnPauseAgent()
+    {
+        Stop();
+        base.OnPauseAgent();
+    }
+
+    protected override void OnStopAgent()
+    {
+        foreach (Sniffer s in sniffers)
         {
-            if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
+            s.Abort();
+            s.CloseSocket();
         }
+        sniffers.Clear();
+        base.OnStopAgent();
+    }
 
-        protected override void OnContinueAgent()
+    public override bool IsRunning
+    {
+        get
         {
-            Start();
-            base.OnContinueAgent();
+            return base.IsRunning;
         }
+    }
 
-        protected override void OnPauseAgent()
+    void UnsuccessfulLogin(string ipAddress)
+    {
+        NotificationEventArgs args = new()
         {
-            Stop();
-            base.OnPauseAgent();
+            CreateDate = DateTime.Now,
+            EventId = 9112,
+            EventMessage = "Remote desktop connection TLS/SSL authentication failure",
+            IpAddress = ipAddress
+        };
+        OnAttackDetected(this, args);
+    }
+
+
+    public string DisplayName
+    {
+        get
+        {
+            return "TLS/SSL Security Agent";
         }
-
-        protected override void OnStopAgent()
+        set
         {
-            foreach (Sniffer s in sniffers)
-            {
-                s.Abort();
-                s.CloseSocket();
-            }
-            sniffers.Clear();
-            base.OnStopAgent();
+
         }
+    }
 
-        public override bool IsRunning
+    public Image Icon
+    {
+        get
         {
-            get
-            {
-                return base.IsRunning;
-            }
+            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
         }
-
-        void UnsuccessfulLogin(string ipAddress)
+        set
         {
-            NotificationEventArgs args = new()
-            {
-                CreateDate = DateTime.Now,
-                EventId = 9112,
-                EventMessage = "Remote desktop connection TLS/SSL authentication failure",
-                IpAddress = ipAddress
-            };
-            OnAttackDetected(this, args);
+
         }
+    }
 
-
-        public string DisplayName
+    public Image SelectedIcon
+    {
+        get
         {
-            get
-            {
-                return "TLS/SSL Security Agent";
-            }
-            set
-            {
-
-            }
+            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_white;
         }
-
-        public Image Icon
+        set
         {
-            get
-            {
-                return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
-            }
-            set
-            {
 
-            }
         }
+    }
 
-        public Image SelectedIcon
+    public Image UnselectedIcon
+    {
+        get
         {
-            get
-            {
-                return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_white;
-            }
-            set
-            {
-
-            }
+            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
         }
-
-        public Image UnselectedIcon
+        set
         {
-            get
-            {
-                return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
-            }
-            set
-            {
 
-            }
         }
+    }
 
 
-        public Guid Id
+    public Guid Id
+    {
+        get
         {
-            get
-            {
-                return new Guid("{A682433B-852F-4150-ADF4-FB7F75090015}");
-            }
+            return new Guid("{A682433B-852F-4150-ADF4-FB7F75090015}");
         }
     }
 }

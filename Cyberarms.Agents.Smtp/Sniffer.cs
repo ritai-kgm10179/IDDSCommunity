@@ -3,122 +3,121 @@ using System.Net;
 using System.Net.Sockets;
 
 
-namespace Cyberarms.Agents.MailServer
+namespace Cyberarms.Agents.MailServer;
+
+public class Sniffer
 {
-    public class Sniffer
+    private Socket ipSocket;
+    byte[] byteData;
+
+    public event EventHandler IpPacketReceived;
+    public event EventHandler IpPacketSent;
+
+    private bool aborted = false;
+
+    public void Abort()
     {
-        private Socket ipSocket;
-        byte[] byteData;
+        aborted = true;
+    }
 
-        public event EventHandler IpPacketReceived;
-        public event EventHandler IpPacketSent;
+    public void Continue()
+    {
+        aborted = false;
+    }
 
-        private bool aborted = false;
+    public int? TcpPort { get; set; }
 
-        public void Abort()
+    public IPAddress IPAddress { get; set; }
+
+    public void WatchAddress(object ipAddressToMonitor)
+    {
+        byteData = new byte[128];
+        IPAddress = (IPAddress)ipAddressToMonitor;
+        ipSocket = new Socket(IPAddress.AddressFamily,
+            SocketType.Raw, ProtocolType.IP)
         {
-            aborted = true;
-        }
-
-        public void Continue()
-        {
-            aborted = false;
-        }
-
-        public int? TcpPort { get; set; }
-
-        public IPAddress IPAddress { get; set; }
-
-        public void WatchAddress(object ipAddressToMonitor)
-        {
-            byteData = new byte[128];
-            IPAddress = (IPAddress)ipAddressToMonitor;
-            ipSocket = new Socket(IPAddress.AddressFamily,
-                SocketType.Raw, ProtocolType.IP)
-            {
-                ExclusiveAddressUse = false
-            };
-            ipSocket.Bind(new IPEndPoint(IPAddress, TcpPort.HasValue ? TcpPort.Value : 25));
-            ipSocket.SetSocketOption(SocketOptionLevel.IP,
-                SocketOptionName.HeaderIncluded,
-                true);
-            byte[] byTrue = new byte[4] { 3, 0, 0, 0 };
-            byte[] byOut = new byte[4] { 1, 0, 0, 0 };  // capture outgoing packets
-            ipSocket.IOControl(IOControlCode.ReceiveAll,
-                byTrue, byOut);
-            ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
-                new AsyncCallback(OnReceive), null);
-
-        }
-
-        private void OnReceive(IAsyncResult ar)
-        {
-            if (!aborted)
-            {
-                try
-                {
-                    int length = ipSocket.EndReceive(ar);
-                    //ParseData(byteData, nReceived);
-                    IPHeader ipHeader = new(byteData, length);
-                    if (ipHeader.SourceAddress.Equals(IPAddress)) OnPacketSent(ipHeader);
-                    if (ipHeader.DestinationAddress.Equals(IPAddress)) OnPacketReceived(ipHeader);
-                    // OnPacketReceived(new NetworkPacket(byteData,length));
-
-
-                }
-                catch (Exception ex)
-                {
-                    // Sniffer.LogTrace(ex);
-                }
-                finally
-                {
-                    byteData = new byte[128];          // set to 16276 bytes
-                    // continue receiving
-                    ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
-                        new AsyncCallback(OnReceive), null);
-                }
-            }
-        }
-
-        private void OnPacketSent(IPHeader ipHeader)
-        {
-            if (IpPacketSent != null)
-            {
-                IpPacketSent(ipHeader, EventArgs.Empty);
-            }
-        }
-
-        private void OnPacketReceived(IPHeader ipHeader)
-        {
-            if (IpPacketReceived != null)
-            {
-                IpPacketReceived(ipHeader, EventArgs.Empty);
-            }
-        }
-
-
-        public void CloseSocket()
-        {
-            ipSocket.Close();
-        }
-
-        public static void LogTrace(Exception ex)
-        {
-            System.IO.StreamWriter sw = null;
-            try
-            {
-                sw = System.IO.File.AppendText(System.IO.Path.GetTempPath() + "\\Cyberarms.Agents.Smtp.ErrorLog.txt");
-                sw.WriteLine(string.Format("{0}\n{1}", ex.Message, ex.StackTrace));
-                sw.Flush();
-            }
-            catch { }
-            finally
-            {
-                if (sw != null) sw.Close();
-            }
-        }
+            ExclusiveAddressUse = false
+        };
+        ipSocket.Bind(new IPEndPoint(IPAddress, TcpPort.HasValue ? TcpPort.Value : 25));
+        ipSocket.SetSocketOption(SocketOptionLevel.IP,
+            SocketOptionName.HeaderIncluded,
+            true);
+        byte[] byTrue = new byte[4] { 3, 0, 0, 0 };
+        byte[] byOut = new byte[4] { 1, 0, 0, 0 };  // capture outgoing packets
+        ipSocket.IOControl(IOControlCode.ReceiveAll,
+            byTrue, byOut);
+        ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
+            new AsyncCallback(OnReceive), null);
 
     }
+
+    private void OnReceive(IAsyncResult ar)
+    {
+        if (!aborted)
+        {
+            try
+            {
+                int length = ipSocket.EndReceive(ar);
+                //ParseData(byteData, nReceived);
+                IPHeader ipHeader = new(byteData, length);
+                if (ipHeader.SourceAddress.Equals(IPAddress)) OnPacketSent(ipHeader);
+                if (ipHeader.DestinationAddress.Equals(IPAddress)) OnPacketReceived(ipHeader);
+                // OnPacketReceived(new NetworkPacket(byteData,length));
+
+
+            }
+            catch (Exception ex)
+            {
+                // Sniffer.LogTrace(ex);
+            }
+            finally
+            {
+                byteData = new byte[128];          // set to 16276 bytes
+                // continue receiving
+                ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
+                    new AsyncCallback(OnReceive), null);
+            }
+        }
+    }
+
+    private void OnPacketSent(IPHeader ipHeader)
+    {
+        if (IpPacketSent != null)
+        {
+            IpPacketSent(ipHeader, EventArgs.Empty);
+        }
+    }
+
+    private void OnPacketReceived(IPHeader ipHeader)
+    {
+        if (IpPacketReceived != null)
+        {
+            IpPacketReceived(ipHeader, EventArgs.Empty);
+        }
+    }
+
+
+    public void CloseSocket()
+    {
+        ipSocket.Close();
+    }
+
+    public static void LogTrace(Exception ex)
+    {
+        System.IO.StreamWriter sw = null;
+        try
+        {
+            sw = System.IO.File.AppendText(System.IO.Path.GetTempPath() + "\\Cyberarms.Agents.Smtp.ErrorLog.txt");
+            sw.WriteLine(string.Format("{0}\n{1}", ex.Message, ex.StackTrace));
+            sw.Flush();
+        }
+        catch { }
+        finally
+        {
+            if (sw != null) sw.Close();
+        }
+    }
+
 }
 
 

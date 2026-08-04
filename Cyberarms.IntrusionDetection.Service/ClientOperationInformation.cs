@@ -1,13 +1,12 @@
 ﻿using System;
 
-namespace Cyberarms.IntrusionDetection
+namespace Cyberarms.IntrusionDetection;
+
+internal class ClientOperationInformation
 {
-    internal class ClientOperationInformation
-    {
-        internal string IpAddress { get; set; }
-        internal Exception Exception { get; set; }
-        internal string Message { get; set; }
-        internal bool HasError { get; set; }
-        internal Guid AgentId { get; set; }
-    }
+    internal string IpAddress { get; set; }
+    internal Exception Exception { get; set; }
+    internal string Message { get; set; }
+    internal bool HasError { get; set; }
+    internal Guid AgentId { get; set; }
 }

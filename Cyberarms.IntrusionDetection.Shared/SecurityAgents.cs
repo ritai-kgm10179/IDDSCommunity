@@ -5,349 +5,347 @@ using System.IO;
 using System.Reflection;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 
-namespace Cyberarms.IntrusionDetection.Shared
+namespace Cyberarms.IntrusionDetection.Shared;
+
+[Serializable]
+public class SecurityAgents : List<SecurityAgent>
 {
-    [Serializable]
-    public class SecurityAgents : List<SecurityAgent>
+    private SecurityAgents()
     {
-        private SecurityAgents()
+    }
+
+
+    private static SecurityAgents _instance;
+    public static SecurityAgents Instance
+    {
+        get
         {
+            if (_instance == null)
+            {
+                _instance = new SecurityAgents();
+                _instance.InitializeAgents();
+            }
+            return _instance;
+        }
+    }
+
+    public void InitializeAgents()
+    {
+        this.Clear();
+        if (!Database.Instance.IsConfigured)
+        {
+            throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
         }
 
-
-        private static SecurityAgents _instance;
-        public static SecurityAgents Instance
+        IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents");
+        // load all agents
+        while (rdr.Read())
         {
-            get
+            SecurityAgent agent = new()
             {
-                if (_instance == null)
-                {
-                    _instance = new SecurityAgents();
-                    _instance.InitializeAgents();
-                }
-                return _instance;
-            }
+                Name = Db.DbValueConverter.ToString(rdr["Name"]),
+                AssemblyName = Db.DbValueConverter.ToString(rdr["AssemblyName"]),
+                Id = Db.DbValueConverter.ToGuid(rdr["AgentId"]),
+                HardLockAttempts = Db.DbValueConverter.ToInt(rdr["HardLockAttempts"]),
+                HardLockTimeHours = Db.DbValueConverter.ToInt(rdr["HardLockTimeHours"]),
+                LockForever = Db.DbValueConverter.ToBool(rdr["LockForever"]),
+                SoftLockAttempts = Db.DbValueConverter.ToInt(rdr["SoftLockAttempts"]),
+                SoftLockTimeMinutes = Db.DbValueConverter.ToInt(rdr["SoftLockTimeMinutes"]),
+                OverrideConfig = Db.DbValueConverter.ToBool(rdr["OverwriteConfiguration"]),
+                DisplayName = Db.DbValueConverter.ToString(rdr["DisplayName"]),
+                Enabled = Db.DbValueConverter.ToBool(rdr["Enabled"]),
+                Serial = Db.DbValueConverter.ToInt(rdr["Serial"])
+            };
+            //agent.LoadCustomConfig();
+            this.Add(agent);
         }
+        rdr.Close();
+    }
 
-        public void InitializeAgents()
-        {
-            this.Clear();
-            if (!Database.Instance.IsConfigured)
-            {
-                throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
-            }
-
-            IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents");
-            // load all agents
-            while (rdr.Read())
-            {
-                SecurityAgent agent = new()
-                {
-                    Name = Db.DbValueConverter.ToString(rdr["Name"]),
-                    AssemblyName = Db.DbValueConverter.ToString(rdr["AssemblyName"]),
-                    Id = Db.DbValueConverter.ToGuid(rdr["AgentId"]),
-                    HardLockAttempts = Db.DbValueConverter.ToInt(rdr["HardLockAttempts"]),
-                    HardLockTimeHours = Db.DbValueConverter.ToInt(rdr["HardLockTimeHours"]),
-                    LockForever = Db.DbValueConverter.ToBool(rdr["LockForever"]),
-                    SoftLockAttempts = Db.DbValueConverter.ToInt(rdr["SoftLockAttempts"]),
-                    SoftLockTimeMinutes = Db.DbValueConverter.ToInt(rdr["SoftLockTimeMinutes"]),
-                    OverrideConfig = Db.DbValueConverter.ToBool(rdr["OverwriteConfiguration"]),
-                    DisplayName = Db.DbValueConverter.ToString(rdr["DisplayName"]),
-                    Enabled = Db.DbValueConverter.ToBool(rdr["Enabled"]),
-                    Serial = Db.DbValueConverter.ToInt(rdr["Serial"])
-                };
-                //agent.LoadCustomConfig();
-                this.Add(agent);
-            }
-            rdr.Close();
-        }
-
-        public List<SecurityAgent> ReadAgentsFromDisk()
-        {
-            if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException("Application is not initialized.");
-            List<SecurityAgent> result = new();
+    public List<SecurityAgent> ReadAgentsFromDisk()
+    {
+        if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException("Application is not initialized.");
+        List<SecurityAgent> result = new();
 #if NETFRAMEWORK
-            AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
-            System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
-            CurrentDomain = AppDomain.CreateDomain("Cyberarms.Agents.Enumerator", adevidence, setup);
+        AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
+        System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
+        CurrentDomain = AppDomain.CreateDomain("Cyberarms.Agents.Enumerator", adevidence, setup);
 #else
-            CurrentDomain = AppDomain.CurrentDomain;
+        CurrentDomain = AppDomain.CurrentDomain;
 #endif
 
-            foreach (string fileName in Directory.EnumerateFiles(IddsConfig.Instance.PluginsDirectory, "*.dll"))
-            {
-                if (!fileName.Contains(".Api.dll"))
-                {
-                    Type tProxy = typeof(AgentLoaderProxy);
-                    AgentLoaderProxy proxy = (AgentLoaderProxy)CurrentDomain.CreateInstanceAndUnwrap(
-                        tProxy.Assembly.FullName,
-                        tProxy.FullName);
-                    List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
-                    result.AddRange(agents);
-
-                }
-            }
-            return result;
-        }
-
-        public AppDomain CurrentDomain { get; set; }
-
-        public SecurityAgent FindByDisplayName(string displayName)
+        foreach (string fileName in Directory.EnumerateFiles(IddsConfig.Instance.PluginsDirectory, "*.dll"))
         {
-            foreach (SecurityAgent agent in this)
+            if (!fileName.Contains(".Api.dll"))
             {
-                if (agent.DisplayName == displayName)
-                {
-                    return agent;
-                }
-            }
-            return null;
-        }
+                Type tProxy = typeof(AgentLoaderProxy);
+                AgentLoaderProxy proxy = (AgentLoaderProxy)CurrentDomain.CreateInstanceAndUnwrap(
+                    tProxy.Assembly.FullName,
+                    tProxy.FullName);
+                List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
+                result.AddRange(agents);
 
-        public SecurityAgent FindByName(string name)
+            }
+        }
+        return result;
+    }
+
+    public AppDomain CurrentDomain { get; set; }
+
+    public SecurityAgent FindByDisplayName(string displayName)
+    {
+        foreach (SecurityAgent agent in this)
         {
-            foreach (SecurityAgent agent in this)
+            if (agent.DisplayName == displayName)
             {
-                if (agent.Name == name)
-                {
-                    return agent;
-                }
+                return agent;
             }
-            return null;
         }
+        return null;
+    }
 
-        public string GetDisplayName(string agentId)
+    public SecurityAgent FindByName(string name)
+    {
+        foreach (SecurityAgent agent in this)
         {
-            if (Guid.Empty.ToString().Equals(agentId))
+            if (agent.Name == name)
             {
-                return "None";
+                return agent;
             }
-            foreach (SecurityAgent agent in this)
+        }
+        return null;
+    }
+
+    public string GetDisplayName(string agentId)
+    {
+        if (Guid.Empty.ToString().Equals(agentId))
+        {
+            return "None";
+        }
+        foreach (SecurityAgent agent in this)
+        {
+            if (agent.Id.ToString().Equals(agentId))
             {
-                if (agent.Id.ToString().Equals(agentId))
-                {
-                    return agent.DisplayName;
-                }
+                return agent.DisplayName;
             }
-            return string.Format("Agent {0} is not registered.", agentId);
         }
+        return string.Format("Agent {0} is not registered.", agentId);
+    }
 
-        public void RegisterSecurityAgents()
-        {
-            MergeDbInformation(ReadAgentsFromDisk());
-        }
+    public void RegisterSecurityAgents()
+    {
+        MergeDbInformation(ReadAgentsFromDisk());
+    }
 
-        public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; }
+    public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; }
 
-        public void UnloadAgents()
-        {
-            if (LoadedAgents == null) return;
+    public void UnloadAgents()
+    {
+        if (LoadedAgents == null) return;
 #if NETFRAMEWORK
-            AppDomainManager adm = new AppDomainManager();
+        AppDomainManager adm = new AppDomainManager();
 #endif
 
-            foreach (SecurityAgent agent in LoadedAgents.Keys)
-            {
-#if NETFRAMEWORK
-                AppDomain.Unload(agent.AppDomain);
-#endif
-            }
-            LoadedAgents.Clear();
-        }
-
-        public void UnloadAgent(SecurityAgent agent)
+        foreach (SecurityAgent agent in LoadedAgents.Keys)
         {
 #if NETFRAMEWORK
             AppDomain.Unload(agent.AppDomain);
 #endif
-            if (LoadedAgents.ContainsKey(agent))
-            {
-                LoadedAgents[agent] = null;
-                LoadedAgents.Remove(agent);
-            }
-            else
-            {
-                throw new ApplicationException("Agent " + agent.DisplayName + " is not loaded.");
-            }
         }
+        LoadedAgents.Clear();
+    }
 
-        void AppDomain_DomainUnload(object sender, EventArgs e)
-        {
-            System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
-        }
-
-        public void LoadAgents()
-        {
-            if (LoadedAgents == null) LoadedAgents = new Dictionary<SecurityAgent, AgentProxy>();
-            if (LoadedAgents.Count > 0) UnloadAgents();
-            foreach (SecurityAgent agent in this)
-            {
-                if (agent.Enabled)
-                {
-                    try
-                    {
+    public void UnloadAgent(SecurityAgent agent)
+    {
 #if NETFRAMEWORK
-                        AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
-                        System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
-                        AppDomain domain = AppDomain.CreateDomain("Cyberarms.Agents." + agent.Id, adevidence, setup);
-#else
-                        AppDomain domain = AppDomain.CurrentDomain;
+        AppDomain.Unload(agent.AppDomain);
 #endif
-                        AgentProxy proxy = new(agent.AssemblyFilename, agent.Name);
-                        proxy.Configuration.AgentName = agent.Name;
-                        proxy.Configuration.AssemblyName = agent.AssemblyName;
-                        proxy.Configuration.Enabled = agent.Enabled;
-                        proxy.Configuration.HardLockAttempts = agent.HardLockAttempts;
-                        proxy.Configuration.HardLockDurationHrs = agent.HardLockTimeHours;
-                        proxy.Configuration.NeverUnlock = agent.LockForever;
-                        proxy.Configuration.OverwriteConfiguration = agent.OverrideConfig;
-                        proxy.Configuration.SoftLockAttempts = agent.SoftLockAttempts;
-                        proxy.Configuration.SoftLockDurationMins = agent.SoftLockTimeMinutes;
-                        PluginConfiguration pc = proxy.Configuration.AgentSettings;
-                        if (pc != null)
+        if (LoadedAgents.ContainsKey(agent))
+        {
+            LoadedAgents[agent] = null;
+            LoadedAgents.Remove(agent);
+        }
+        else
+        {
+            throw new ApplicationException("Agent " + agent.DisplayName + " is not loaded.");
+        }
+    }
+
+    void AppDomain_DomainUnload(object sender, EventArgs e)
+    {
+        System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
+    }
+
+    public void LoadAgents()
+    {
+        if (LoadedAgents == null) LoadedAgents = new Dictionary<SecurityAgent, AgentProxy>();
+        if (LoadedAgents.Count > 0) UnloadAgents();
+        foreach (SecurityAgent agent in this)
+        {
+            if (agent.Enabled)
+            {
+                try
+                {
+#if NETFRAMEWORK
+                    AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
+                    System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
+                    AppDomain domain = AppDomain.CreateDomain("Cyberarms.Agents." + agent.Id, adevidence, setup);
+#else
+                    AppDomain domain = AppDomain.CurrentDomain;
+#endif
+                    AgentProxy proxy = new(agent.AssemblyFilename, agent.Name);
+                    proxy.Configuration.AgentName = agent.Name;
+                    proxy.Configuration.AssemblyName = agent.AssemblyName;
+                    proxy.Configuration.Enabled = agent.Enabled;
+                    proxy.Configuration.HardLockAttempts = agent.HardLockAttempts;
+                    proxy.Configuration.HardLockDurationHrs = agent.HardLockTimeHours;
+                    proxy.Configuration.NeverUnlock = agent.LockForever;
+                    proxy.Configuration.OverwriteConfiguration = agent.OverrideConfig;
+                    proxy.Configuration.SoftLockAttempts = agent.SoftLockAttempts;
+                    proxy.Configuration.SoftLockDurationMins = agent.SoftLockTimeMinutes;
+                    PluginConfiguration pc = proxy.Configuration.AgentSettings;
+                    if (pc != null)
+                    {
+                        foreach (PropertyInfo pi in pc.GetType().GetProperties())
                         {
-                            foreach (PropertyInfo pi in pc.GetType().GetProperties())
+                            if (agent.CustomConfiguration.ContainsKey(pi.Name))
                             {
-                                if (agent.CustomConfiguration.ContainsKey(pi.Name))
+                                if (pi.PropertyType == typeof(int))
                                 {
-                                    if (pi.PropertyType == typeof(int))
-                                    {
-                                        int result;
-                                        int.TryParse(agent.CustomConfiguration[pi.Name], out result);
-                                        pi.SetValue(pc, result, null);
-                                    }
+                                    int result;
+                                    int.TryParse(agent.CustomConfiguration[pi.Name], out result);
+                                    pi.SetValue(pc, result, null);
                                 }
                             }
                         }
-                        agent.AppDomain = domain;
-                        agent.Reload();
-                        LoadedAgents.Add(agent, proxy);
                     }
-                    catch (Exception ex)
-                    {
-                        throw;
-                    }
+                    agent.AppDomain = domain;
+                    agent.Reload();
+                    LoadedAgents.Add(agent, proxy);
+                }
+                catch (Exception ex)
+                {
+                    throw;
                 }
             }
         }
+    }
 
-        public void StartAgents()
+    public void StartAgents()
+    {
+        foreach (AgentProxy agent in LoadedAgents.Values)
         {
-            foreach (AgentProxy agent in LoadedAgents.Values)
-            {
-                agent.Start();
-            }
+            agent.Start();
         }
+    }
 
-        public void StopAgents()
+    public void StopAgents()
+    {
+        foreach (AgentProxy agent in LoadedAgents.Values)
         {
-            foreach (AgentProxy agent in LoadedAgents.Values)
+            agent.Stop();
+        }
+    }
+
+    public void PauseAgents()
+    {
+        foreach (AgentProxy agent in LoadedAgents.Values)
+        {
+            if (agent.CanPause())
+            {
+                agent.Pause();
+            }
+            else
             {
                 agent.Stop();
             }
         }
-
-        public void PauseAgents()
-        {
-            foreach (AgentProxy agent in LoadedAgents.Values)
-            {
-                if (agent.CanPause())
-                {
-                    agent.Pause();
-                }
-                else
-                {
-                    agent.Stop();
-                }
-            }
-        }
-
-        public void ContinueAgents()
-        {
-            foreach (AgentProxy agent in LoadedAgents.Values)
-            {
-                if (agent.CanContinue())
-                {
-                    agent.Continue();
-                }
-                else
-                {
-                    agent.Start();
-                }
-            }
-        }
-
-
-        public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
-        {
-            List<SecurityAgent> result = new();
-            result.AddRange(agents);
-            foreach (SecurityAgent agent in this)
-            {
-                int listIndex = GetListIndex(result, agent.Name);
-                SecurityAgent a = (SecurityAgent)result.Find(x => x.Id == agent.Id);
-                // fallback if previous installation was made
-                if (a == null) a = (SecurityAgent)result.Find(x => x.Name == agent.Name);
-
-                if (a != null)
-                {
-                    agent.AssemblyFilename = a.AssemblyFilename;
-                    agent.Icon = a.Icon;
-                    agent.SelectedIcon = a.SelectedIcon;
-                    agent.UnselectedIcon = a.UnselectedIcon;
-                    agent.DisplayName = a.DisplayName;
-                    agent.BinaryMissing = false;
-                    agent.CustomConfiguration = a.CustomConfiguration;
-                    agent.LoadCustomConfig();
-                    result.Remove(a);
-                }
-                else
-                {
-                    agent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-                    agent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_white;
-                    agent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-                    agent.BinaryMissing = true;
-                    agent.Enabled = false;
-                    this.Remove(a);
-                }
-                //int listIndex = GetListIndex(result, agent.Name);
-                //if (listIndex >= 0) {
-                //    agent.AssemblyFilename = result[listIndex].AssemblyFilename;
-                //    agent.Icon = result[listIndex].Icon;
-                //    agent.SelectedIcon = result[listIndex].SelectedIcon;
-                //    agent.UnselectedIcon = result[listIndex].UnselectedIcon;
-                //    agent.DisplayName = result[listIndex].DisplayName;
-                //    agent.BinaryMissing = false;
-                //    agent.CustomConfiguration = result[listIndex].CustomConfiguration;
-                //    agent.LoadCustomConfig();
-                //    result.RemoveAt(listIndex);
-                //} else {
-                //    agent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-                //    agent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_white;
-                //    agent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-                //    agent.BinaryMissing = true;
-                //    agent.Enabled = false;
-                //}
-            }
-            foreach (SecurityAgent agent in result)
-            {
-                agent.Enabled = false;
-            }
-            this.AddRange(result);
-            return (List<SecurityAgent>)this;
-        }
-
-        private int GetListIndex(List<SecurityAgent> list, string name)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                if (list[i].Name.Equals(name)) return i;
-            }
-            return -1;
-        }
-
-
-
     }
+
+    public void ContinueAgents()
+    {
+        foreach (AgentProxy agent in LoadedAgents.Values)
+        {
+            if (agent.CanContinue())
+            {
+                agent.Continue();
+            }
+            else
+            {
+                agent.Start();
+            }
+        }
+    }
+
+
+    public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
+    {
+        List<SecurityAgent> result = new();
+        result.AddRange(agents);
+        foreach (SecurityAgent agent in this)
+        {
+            int listIndex = GetListIndex(result, agent.Name);
+            SecurityAgent a = (SecurityAgent)result.Find(x => x.Id == agent.Id);
+            // fallback if previous installation was made
+            if (a == null) a = (SecurityAgent)result.Find(x => x.Name == agent.Name);
+
+            if (a != null)
+            {
+                agent.AssemblyFilename = a.AssemblyFilename;
+                agent.Icon = a.Icon;
+                agent.SelectedIcon = a.SelectedIcon;
+                agent.UnselectedIcon = a.UnselectedIcon;
+                agent.DisplayName = a.DisplayName;
+                agent.BinaryMissing = false;
+                agent.CustomConfiguration = a.CustomConfiguration;
+                agent.LoadCustomConfig();
+                result.Remove(a);
+            }
+            else
+            {
+                agent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
+                agent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_white;
+                agent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
+                agent.BinaryMissing = true;
+                agent.Enabled = false;
+                this.Remove(a);
+            }
+            //int listIndex = GetListIndex(result, agent.Name);
+            //if (listIndex >= 0) {
+            //    agent.AssemblyFilename = result[listIndex].AssemblyFilename;
+            //    agent.Icon = result[listIndex].Icon;
+            //    agent.SelectedIcon = result[listIndex].SelectedIcon;
+            //    agent.UnselectedIcon = result[listIndex].UnselectedIcon;
+            //    agent.DisplayName = result[listIndex].DisplayName;
+            //    agent.BinaryMissing = false;
+            //    agent.CustomConfiguration = result[listIndex].CustomConfiguration;
+            //    agent.LoadCustomConfig();
+            //    result.RemoveAt(listIndex);
+            //} else {
+            //    agent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
+            //    agent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_white;
+            //    agent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
+            //    agent.BinaryMissing = true;
+            //    agent.Enabled = false;
+            //}
+        }
+        foreach (SecurityAgent agent in result)
+        {
+            agent.Enabled = false;
+        }
+        this.AddRange(result);
+        return (List<SecurityAgent>)this;
+    }
+
+    private int GetListIndex(List<SecurityAgent> list, string name)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Name.Equals(name)) return i;
+        }
+        return -1;
+    }
+
+
 
 }

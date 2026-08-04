@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Cyberarms.IntrusionDetection.Shared
+namespace Cyberarms.IntrusionDetection.Shared;
+
+public interface IAgentFilter
 {
-    public interface IAgentFilter
-    {
-        Guid Id { get; set; }
-        string DisplayName { get; set; }
-    }
+    Guid Id { get; set; }
+    string DisplayName { get; set; }
 }
