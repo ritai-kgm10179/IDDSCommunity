@@ -10,16 +10,49 @@ namespace Cyberarms.IntrusionDetection.Shared;
 public sealed class RawSocketReceiver : IDisposable
 {
     private const int MaximumPacketSize = 65535;
+    private readonly int queueCapacity;
     private Socket? socket;
     private CancellationTokenSource? cancellation;
+    private BoundedPacketDispatcher? dispatcher;
+    private long subscriberFailureCount;
 
     public event EventHandler<RawPacketEventArgs>? PacketReceived;
     public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
 
     /// <summary>
+    /// Initializes a raw socket receiver with a bounded dispatch queue.
+    /// </summary>
+    /// <param name="queueCapacity">The maximum number of packets waiting for subscribers.</param>
+    public RawSocketReceiver(int queueCapacity = 1024)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueCapacity);
+        this.queueCapacity = queueCapacity;
+    }
+
+    /// <summary>
     /// Gets the active receive-loop task so callers can supervise its lifetime.
     /// </summary>
     public Task Completion { get; private set; } = Task.CompletedTask;
+
+    /// <summary>
+    /// Gets the number of packets offered to the dispatch queue during the current capture.
+    /// </summary>
+    public long ReceivedPacketCount => dispatcher?.ReceivedCount ?? 0;
+
+    /// <summary>
+    /// Gets the number of packets delivered to subscribers during the current capture.
+    /// </summary>
+    public long DispatchedPacketCount => dispatcher?.DispatchedCount ?? 0;
+
+    /// <summary>
+    /// Gets the number of newest packets dropped because the bounded queue was full.
+    /// </summary>
+    public long DroppedPacketCount => dispatcher?.DroppedCount ?? 0;
+
+    /// <summary>
+    /// Gets the number of packet subscriber callbacks that threw an exception.
+    /// </summary>
+    public long SubscriberFailureCount => Interlocked.Read(ref subscriberFailureCount);
 
     /// <summary>
     /// Starts capturing IPv4 packets on the specified local address.
@@ -38,7 +71,9 @@ public sealed class RawSocketReceiver : IDisposable
         socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.HeaderIncluded, true);
         socket.IOControl(IOControlCode.ReceiveAll, [3, 0, 0, 0], [3, 0, 0, 0]);
         cancellation = new CancellationTokenSource();
-        Completion = ReceiveLoopAsync(socket, cancellation.Token);
+        dispatcher = new BoundedPacketDispatcher(queueCapacity, NotifyPacketReceived);
+        Task receiveTask = ReceiveLoopAsync(socket, dispatcher, cancellation.Token);
+        Completion = Task.WhenAll(receiveTask, dispatcher.Completion);
     }
 
     /// <summary>
@@ -48,6 +83,7 @@ public sealed class RawSocketReceiver : IDisposable
     {
         cancellation?.Cancel();
         socket?.Dispose();
+        dispatcher?.Complete();
         socket = null;
         cancellation?.Dispose();
         cancellation = null;
@@ -58,7 +94,7 @@ public sealed class RawSocketReceiver : IDisposable
     /// </summary>
     public void Dispose() => Stop();
 
-    private async Task ReceiveLoopAsync(Socket activeSocket, CancellationToken cancellationToken)
+    private async Task ReceiveLoopAsync(Socket activeSocket, BoundedPacketDispatcher packetDispatcher, CancellationToken cancellationToken)
     {
         byte[] buffer = ArrayPool<byte>.Shared.Rent(MaximumPacketSize);
         try
@@ -69,7 +105,7 @@ public sealed class RawSocketReceiver : IDisposable
                 if (length <= 0)
                     continue;
                 byte[] packet = buffer.AsSpan(0, length).ToArray();
-                NotifyPacketReceived(new RawPacketEventArgs(packet));
+                packetDispatcher.TryEnqueue(packet);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
@@ -80,6 +116,7 @@ public sealed class RawSocketReceiver : IDisposable
         }
         finally
         {
+            packetDispatcher.Complete();
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
@@ -98,6 +135,7 @@ public sealed class RawSocketReceiver : IDisposable
             }
             catch (Exception ex)
             {
+                Interlocked.Increment(ref subscriberFailureCount);
                 NotifyCaptureFailed(ex);
             }
         }
