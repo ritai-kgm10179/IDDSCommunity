@@ -6,7 +6,7 @@ using Cyberarms.IntrusionDetection.Shared;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal class FirewallPolicyManager
+internal sealed class FirewallPolicyManager : IFirewallPolicy
 {
     private readonly INetFwPolicy2 firewallPolicyManager;
     private static FirewallPolicyManager? _instance;
@@ -42,7 +42,7 @@ internal class FirewallPolicyManager
     /// </summary>
     /// <param name="ipAddress">The ip address value.</param>
 
-    internal void Block(string ipAddress)
+    public void Block(string ipAddress)
     {
         try
         {
@@ -62,14 +62,14 @@ internal class FirewallPolicyManager
     /// <param name="ipAddress">The ip address value.</param>
     /// <returns><see langword="true"/> if locked; otherwise, <see langword="false"/>.</returns>
 
-    internal bool IsLocked(string ipAddress)
+    public bool IsLocked(string ipAddress)
     {
         try
         {
             INetFwRule? rule = GetRule(GetRuleName("BlockAttacker", 0));
             if (rule is null)
                 return false;
-            return rule.RemoteAddresses.Contains(ipAddress);
+            return ContainsAddress(rule.RemoteAddresses, ipAddress);
         }
         catch (Exception ex)
         {
@@ -83,13 +83,13 @@ internal class FirewallPolicyManager
     /// </summary>
     /// <param name="ipAddress">The ip address value.</param>
 
-    internal void RemoveIpAddressFromBlockList(string ipAddress)
+    public void RemoveIpAddressFromBlockList(string ipAddress)
     {
         string ruleName = GetRuleName("BlockAttacker", 0);
         INetFwRule? rule = GetRule(ruleName);
         if (rule is null)
             throw new ArgumentException($"Firewall rule {ruleName} was not found.", nameof(ipAddress));
-        if (!rule.RemoteAddresses.Contains(ipAddress))
+        if (!ContainsAddress(rule.RemoteAddresses, ipAddress))
         {
             throw new ArgumentException(string.Format(
                 "The IP address {0} is not blocked and might has been automatically removed by schedule. Please refresh the list to view current locks.", ipAddress));
@@ -138,6 +138,25 @@ internal class FirewallPolicyManager
             }
         }
         return result.ToString();
+    }
+
+    /// <summary>
+    /// Determines whether a firewall address list contains an exact IP address or matching host CIDR entry.
+    /// </summary>
+    /// <param name="addresses">The comma-delimited firewall address list.</param>
+    /// <param name="candidate">The IP address to locate.</param>
+    /// <returns><see langword="true"/> when an exact address entry exists.</returns>
+    internal static bool ContainsAddress(string addresses, string candidate)
+    {
+        if (!System.Net.IPAddress.TryParse(candidate.Trim(), out System.Net.IPAddress? expected))
+            return false;
+        foreach (string entry in addresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string host = entry.Split('/', 2, StringSplitOptions.TrimEntries)[0];
+            if (System.Net.IPAddress.TryParse(host, out System.Net.IPAddress? parsed) && parsed.Equals(expected))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>
