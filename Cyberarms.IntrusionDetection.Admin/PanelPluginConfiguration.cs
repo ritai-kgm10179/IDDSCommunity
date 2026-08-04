@@ -1,38 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using Cyberarms.IntrusionDetection.Shared;
-using System.Text;
 using System.Windows.Forms;
 
-namespace Cyberarms.IntrusionDetection.Admin {
-    public partial class PanelPluginConfiguration : UserControl {
+namespace Cyberarms.IntrusionDetection.Admin
+{
+    public partial class PanelPluginConfiguration : UserControl
+    {
         public event EventHandler AgentChanged;
         public event EventHandler AgentConfigurationChanged;
-        public PanelPluginConfiguration() {
+        public PanelPluginConfiguration()
+        {
             InitializeComponent();
             this.AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
         }
 
-        void PanelPluginConfiguration_AgentChanged(object sender, EventArgs e) {
+        void PanelPluginConfiguration_AgentChanged(object sender, EventArgs e)
+        {
             LoadData();
             smartLabelAgentName.Text = Agent.DisplayName;
             ClearErrors();
         }
 
-        private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) {
+        private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
+        {
             (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X + 1, (sender as PictureBox).Location.Y + 1);
         }
 
-        private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) {
+        private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
+        {
             (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X - 1, (sender as PictureBox).Location.Y - 1);
         }
 
         public bool IsInEditMode { get; set; }
 
-        private void LoadData() {
+        private void LoadData()
+        {
             if (IsInEditMode) ToggleEditMode();
             checkBoxLockForever.Checked = Agent.LockForever;
             textBoxHardLocks.Text = Agent.HardLockAttempts.ToString();
@@ -47,20 +50,27 @@ namespace Cyberarms.IntrusionDetection.Admin {
             SetEditMode(false);
         }
 
-        private void LoadCustomSettings() {
+        private void LoadCustomSettings()
+        {
             flowLayoutPanelCustomPluginSettings.Controls.Clear();
-            foreach (string propName in Agent.CustomConfiguration.Keys) {
-                SmartLabelTextbox ltx = new SmartLabelTextbox();
-                ltx.LabelText = propName;
-                ltx.TextBoxText = Agent.CustomConfiguration[propName];
+            foreach (string propName in Agent.CustomConfiguration.Keys)
+            {
+                SmartLabelTextbox ltx = new()
+                {
+                    LabelText = propName,
+                    TextBoxText = Agent.CustomConfiguration[propName]
+                };
                 flowLayoutPanelCustomPluginSettings.Controls.Add(ltx);
-                ltx.TextBoxKeyPress+=new KeyPressEventHandler(textBox_KeyPress);
+                ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
             }
         }
 
-        private void SaveCustomConfiguration() {
-            foreach (Control o in flowLayoutPanelCustomPluginSettings.Controls) {
-                if (o is SmartLabelTextbox) {
+        private void SaveCustomConfiguration()
+        {
+            foreach (Control o in flowLayoutPanelCustomPluginSettings.Controls)
+            {
+                if (o is SmartLabelTextbox)
+                {
                     string name = (o as SmartLabelTextbox).LabelText;
                     string value = (o as SmartLabelTextbox).TextBoxText;
                     Agent.CustomConfiguration[name] = value;
@@ -68,18 +78,21 @@ namespace Cyberarms.IntrusionDetection.Admin {
             }
         }
 
-        
-        private void pictureBoxEdit_Click(object sender, EventArgs e) {
+
+        private void pictureBoxEdit_Click(object sender, EventArgs e)
+        {
             if (IsInEditMode) LoadData(); else ToggleEditMode();
             ClearErrors();
         }
 
-        private void ToggleEditMode() {
+        private void ToggleEditMode()
+        {
             IsInEditMode = true;
             return;
         }
 
-        public void SetEnabledMode(bool enabled) {
+        public void SetEnabledMode(bool enabled)
+        {
             textBoxHardLockDuration.Enabled = enabled;
             textBoxHardLocks.Enabled = enabled;
             textBoxSoftLockDuration.Enabled = enabled;
@@ -87,34 +100,41 @@ namespace Cyberarms.IntrusionDetection.Admin {
             checkBoxLockForever.Enabled = enabled;
         }
 
-        private void ClearErrors() {
+        private void ClearErrors()
+        {
             errHardLockDuration.Visible = false;
             errHardLocks.Visible = false;
             errSoftLockDuration.Visible = false;
             errSoftLocks.Visible = false;
         }
 
-        private void pictureBoxSave_Click(object sender, EventArgs e) {
+        private void pictureBoxSave_Click(object sender, EventArgs e)
+        {
             int hardLocks = 10, softLocks = 3, hardLockDuration = 24, softLockDuration = 20;
             bool hasError = false;
             ClearErrors();
-            if (!int.TryParse(textBoxHardLocks.Text, out hardLocks)) {
+            if (!int.TryParse(textBoxHardLocks.Text, out hardLocks))
+            {
                 errHardLocks.Visible = true;
                 hasError = true;
             }
-            if (!int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration)) {
+            if (!int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration))
+            {
                 errHardLockDuration.Visible = true;
                 hasError = true;
             }
-            if (!int.TryParse(textBoxSoftLockDuration.Text, out softLockDuration)) {
+            if (!int.TryParse(textBoxSoftLockDuration.Text, out softLockDuration))
+            {
                 errSoftLockDuration.Visible = true;
                 hasError = true;
             }
-            if (!int.TryParse(textBoxSoftLocks.Text, out softLocks)) {
+            if (!int.TryParse(textBoxSoftLocks.Text, out softLocks))
+            {
                 errSoftLocks.Visible = true;
                 hasError = true;
             }
-            if (!hasError) {
+            if (!hasError)
+            {
                 Agent.LockForever = checkBoxLockForever.Checked;
                 Agent.HardLockAttempts = hardLocks;
                 Agent.HardLockTimeHours = hardLockDuration;
@@ -125,25 +145,30 @@ namespace Cyberarms.IntrusionDetection.Admin {
                 SaveCustomConfiguration();
                 Agent.Save();
                 OnAgentConfigurationChanged();
-             
+
             }
             SetEditMode(false);
         }
 
-        private void OnAgentConfigurationChanged() {
+        private void OnAgentConfigurationChanged()
+        {
             if (AgentConfigurationChanged != null) AgentConfigurationChanged(this, EventArgs.Empty);
         }
 
-        private void OnAgentChanged() {
+        private void OnAgentChanged()
+        {
             if (AgentChanged != null) AgentChanged(this, EventArgs.Empty);
         }
-        
+
         private SecurityAgent _agent;
-        public SecurityAgent Agent {
-            get {
+        public SecurityAgent Agent
+        {
+            get
+            {
                 return _agent;
             }
-            set {
+            set
+            {
                 _agent = value;
                 if (AgentChanged != null) AgentChanged(this, EventArgs.Empty);
             }
@@ -161,18 +186,21 @@ namespace Cyberarms.IntrusionDetection.Admin {
         }
 
 
-        private void textBox_KeyPress(object sender, KeyPressEventArgs e) {
+        private void textBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
             SetEditMode(true);
         }
 
-        private void SetEditMode(bool hasChanges) {
+        private void SetEditMode(bool hasChanges)
+        {
             buttonSave.Visible = hasChanges;
             buttonDiscard.Visible = hasChanges;
         }
 
-        private void checkBox_CheckedChanged(object sender, EventArgs e) {
+        private void checkBox_CheckedChanged(object sender, EventArgs e)
+        {
             SetEditMode(true);
         }
-        
+
     }
 }

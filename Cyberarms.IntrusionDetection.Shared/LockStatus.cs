@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 
-namespace Cyberarms.IntrusionDetection.Shared {
-    public enum LockStatus {
+namespace Cyberarms.IntrusionDetection.Shared
+{
+    public enum LockStatus
+    {
         None = Lock.LOCK_STATUS_NONE,
         SoftLockRequested = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED,
         SoftLocked = Lock.LOCK_STATUS_SOFTLOCK,
         SoftLockExpired = Lock.LOCK_STATUS_SOFTLOCK_EXPIRED,
         HardLockRequested = Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
         HardLocked = Lock.LOCK_STATUS_HARDLOCK,
-        HardLockExpired = Lock.LOCK_STATUS_HARDLOCK_EXPIRED,        
+        HardLockExpired = Lock.LOCK_STATUS_HARDLOCK_EXPIRED,
         Unlocked = Lock.LOCK_STATUS_UNLOCKED,
         ManuallyUnlocked = Lock.LOCK_STATUS_MANUAL,
         LockError = Lock.LOCK_STATUS_LOCK_ERROR,
@@ -20,11 +20,15 @@ namespace Cyberarms.IntrusionDetection.Shared {
         LicenseRequired = Lock.LOCK_STATUS_LICENSE_REQUIRED
     }
 
-    public class LockStatusAdapter {
+    public class LockStatusAdapter
+    {
         private static Dictionary<int, string> _lockStatusNames;
-        public static Dictionary<int, string> LockStatusNames {
-            get {
-                if (_lockStatusNames == null) {
+        public static Dictionary<int, string> LockStatusNames
+        {
+            get
+            {
+                if (_lockStatusNames == null)
+                {
                     _lockStatusNames = new Dictionary<int, string>();
                     _lockStatusNames.Add((int)LockStatus.None, "New");
                     _lockStatusNames.Add((int)LockStatus.SoftLockRequested, "Soft lock requested");
@@ -43,11 +47,15 @@ namespace Cyberarms.IntrusionDetection.Shared {
             }
         }
 
-        public static string GetLockStatusName(int status) {
-            if(LockStatusNames.ContainsKey(status)) {
+        public static string GetLockStatusName(int status)
+        {
+            if (LockStatusNames.ContainsKey(status))
+            {
                 return LockStatusNames[status];
-            } else {
-                return String.Format("Status {0} not found in LockStatusNames!", status);
+            }
+            else
+            {
+                return string.Format("Status {0} not found in LockStatusNames!", status);
             }
         }
     }

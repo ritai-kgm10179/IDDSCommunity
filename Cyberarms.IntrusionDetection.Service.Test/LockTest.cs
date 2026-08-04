@@ -1,18 +1,19 @@
-using System;
-using System.Text;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace IdsServiceForWindowsTest {
+namespace IdsServiceForWindowsTest
+{
     /// <summary>
     /// Summary description for LockTest
     /// </summary>
     [TestClass]
-    public class LockTest {
-        public LockTest() {
+    public class LockTest
+    {
+        public LockTest()
+        {
             //
             // TODO: Add constructor logic here
             //
@@ -24,11 +25,14 @@ namespace IdsServiceForWindowsTest {
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext {
-            get {
+        public TestContext TestContext
+        {
+            get
+            {
                 return testContextInstance;
             }
-            set {
+            set
+            {
                 testContextInstance = value;
             }
         }
@@ -55,14 +59,16 @@ namespace IdsServiceForWindowsTest {
         //
         #endregion
 
-        
+
 
         [TestMethod]
-        public void TestIpAddressLocal() {
+        public void TestIpAddressLocal()
+        {
             IddsConfig.Instance.ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(ip));
-            foreach (IPAddress address in getLocalIps()) {
+            foreach (IPAddress address in getLocalIps())
+            {
                 Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(address));
                 System.Diagnostics.Debug.Print(address.ToString());
             }
@@ -72,24 +78,31 @@ namespace IdsServiceForWindowsTest {
         }
 
         [TestMethod]
-        public void TestIsIpAddressLocalPerformanceTest() {
+        public void TestIsIpAddressLocalPerformanceTest()
+        {
             DateTime start = DateTime.Now;
-            for (int i = 0; i < 2000; i++) {
+            for (int i = 0; i < 2000; i++)
+            {
                 TestIpAddressLocal();
             }
-            if ((DateTime.Now - start).TotalSeconds > 1) {
+            if ((DateTime.Now - start).TotalSeconds > 1)
+            {
                 Assert.Fail("Time taken for 28.000 ip address comparisons: " + (DateTime.Now - start).TotalSeconds + " seconds!");
             }
         }
 
 
         private List<IPAddress> _localAddresses;
-        private List<IPAddress> getLocalIps() {
-            if (_localAddresses == null) {
+        private List<IPAddress> getLocalIps()
+        {
+            if (_localAddresses == null)
+            {
                 _localAddresses = new List<IPAddress>();
-                foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
+                foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                {
                     System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
-                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses) {
+                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses)
+                    {
                         _localAddresses.Add(IPAddress.Parse(info.Address.ToString()));
                     }
                 }

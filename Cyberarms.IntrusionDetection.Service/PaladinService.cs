@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using Cyberarms.IntrusionDetection.Api.Plugin;
@@ -23,7 +20,7 @@ namespace Cyberarms.IntrusionDetection
 
 
         // private LogAlerts logAlerts;
-        private System.Timers.Timer cleanupTimer = new System.Timers.Timer();
+        private System.Timers.Timer cleanupTimer = new();
 
 
         // private bool restartPending = false;
@@ -57,10 +54,10 @@ namespace Cyberarms.IntrusionDetection
             try
             {
                 DateTime end = DateTime.Now.AddDays(-1);
-                DateTime start = new DateTime(end.Year, end.Month, 1, 0, 0, 0);
-                string report = ReportGenerator.Instance.GetReport("Monthly Report", String.Format("Report for {0}/{1}", start.Month, start.Year), String.Format("Server: {0}", System.Net.Dns.GetHostName()),
+                DateTime start = new(end.Year, end.Month, 1, 0, 0, 0);
+                string report = ReportGenerator.Instance.GetReport("Monthly Report", string.Format("Report for {0}/{1}", start.Month, start.Year), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                     start, new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-                SendMail(String.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report);
+                SendMail(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report);
             }
             catch (Exception ex)
             {
@@ -74,9 +71,9 @@ namespace Cyberarms.IntrusionDetection
             {
                 DateTime end = DateTime.Now.AddDays(-1);
                 DateTime start = end.AddDays(-6);
-                string report = ReportGenerator.Instance.GetReport("Weekly Report", String.Format("Week of {0}-{1}-{2}", start.Year, start.Month, start.Day), String.Format("Server: {0}", System.Net.Dns.GetHostName()),
+                string report = ReportGenerator.Instance.GetReport("Weekly Report", string.Format("Week of {0}-{1}-{2}", start.Year, start.Month, start.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                     new DateTime(start.Year, start.Month, start.Day, 0, 0, 0), new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-                SendMail(String.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report);
+                SendMail(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report);
             }
             catch (Exception ex)
             {
@@ -89,9 +86,9 @@ namespace Cyberarms.IntrusionDetection
             try
             {
                 DateTime d = DateTime.Now.AddDays(-1);
-                string report = ReportGenerator.Instance.GetReport("Daily Report", String.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day), String.Format("Server: {0}", System.Net.Dns.GetHostName()),
+                string report = ReportGenerator.Instance.GetReport("Daily Report", string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                     new DateTime(d.Year, d.Month, d.Day, 0, 0, 0), new DateTime(d.Year, d.Month, d.Day, 23, 59, 59));
-                SendMail(String.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report);
+                SendMail(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report);
             }
             catch (Exception ex)
             {
@@ -155,9 +152,11 @@ namespace Cyberarms.IntrusionDetection
 
         private ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception ex, string info)
         {
-            ClientOperationInformation op = new ClientOperationInformation();
-            op.IpAddress = ipAddress;
-            op.Exception = ex;
+            ClientOperationInformation op = new()
+            {
+                IpAddress = ipAddress,
+                Exception = ex
+            };
             if (ex != null)
             {
                 op.HasError = true;
@@ -184,10 +183,12 @@ namespace Cyberarms.IntrusionDetection
         {
             if (ClientIpAddressUnlocked != null)
             {
-                ClientOperationInformation op = new ClientOperationInformation();
-                op.IpAddress = lockItem.IpAddress;
-                op.Exception = ex;
-                op.AgentId = IntrusionLog.GetSystemId();
+                ClientOperationInformation op = new()
+                {
+                    IpAddress = lockItem.IpAddress,
+                    Exception = ex,
+                    AgentId = IntrusionLog.GetSystemId()
+                };
                 if (ex != null)
                 {
                     op.HasError = true;
@@ -240,11 +241,13 @@ namespace Cyberarms.IntrusionDetection
         {
             try
             {
-                if (!String.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) && !String.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
-                    && !String.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
+                if (!string.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) && !string.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
+                    && !string.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
                 {
-                    SmtpClient server = new SmtpClient(IddsConfig.Instance.SmtpServer);
-                    server.Port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
+                    SmtpClient server = new(IddsConfig.Instance.SmtpServer)
+                    {
+                        Port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort
+                    };
                     if (IddsConfig.Instance.SmtpRequiresAuthentication)
                     {
                         server.Credentials = new System.Net.NetworkCredential(
@@ -252,11 +255,13 @@ namespace Cyberarms.IntrusionDetection
                             IddsConfig.Instance.GetSmtpPassword());
                     }
                     server.EnableSsl = IddsConfig.Instance.SmtpSslRequired;
-                    MailMessage msg = new MailMessage(IddsConfig.Instance.SenderEmailAddress,
-                        IddsConfig.Instance.NotificationEmailAddress, subject, message);
-                    msg.BodyEncoding = Encoding.UTF8;
-                    msg.IsBodyHtml = true;
-                    msg.SubjectEncoding = Encoding.UTF8;
+                    MailMessage msg = new(IddsConfig.Instance.SenderEmailAddress,
+                        IddsConfig.Instance.NotificationEmailAddress, subject, message)
+                    {
+                        BodyEncoding = Encoding.UTF8,
+                        IsBodyHtml = true,
+                        SubjectEncoding = Encoding.UTF8
+                    };
                     server.Send(msg);
                 }
             }
@@ -271,8 +276,8 @@ namespace Cyberarms.IntrusionDetection
             cleanupTimer.Interval = 1000;
             cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
             // restartTimer.Elapsed += new System.Timers.ElapsedEventHandler(restartTimer_Elapsed);
-                WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was initialized successfully.", EventLogEntryType.Information,
-                   Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service was initialized successfully.", EventLogEntryType.Information,
+               Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             isInitialized = true;
         }
 
@@ -298,7 +303,7 @@ namespace Cyberarms.IntrusionDetection
                 catch (Exception ex)
                 {
                     // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
-                    WindowsLogManager.Instance.WriteEntry(String.Format("IP address {0} cannot be unlocked. Error details: {1}",
+                    WindowsLogManager.Instance.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
                         l.IpAddress, ex.Message),
                         EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                     if (FirewallPolicyManager.Instance.IsLocked(l.IpAddress))
@@ -341,7 +346,7 @@ namespace Cyberarms.IntrusionDetection
                 WindowsLogManager.Instance.WriteEntry("Intrusion Detection Service had an error:" + ex.Message, EventLogEntryType.Error,
                       Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             }
-            WindowsLogManager.Instance.WriteEntry(String.Format("{0} lock: Unsuccessful login attempts from ip address {1} exceeded threshold. Firewall rule is being created to block the address specified.",
+            WindowsLogManager.Instance.WriteEntry(string.Format("{0} lock: Unsuccessful login attempts from ip address {1} exceeded threshold. Firewall rule is being created to block the address specified.",
                 lockType == LockType.HardLock ? "Hard" : "Soft", lockItem.IpAddress), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_FIREWALL_RULE_CREATED,
                         Globals.CYBERARMS_LOG_CATEGORY_SECURITY);
             // lockItem.Id = Locks.CreateLock(lockItem);
@@ -382,7 +387,7 @@ namespace Cyberarms.IntrusionDetection
 
         protected override void OnStart(string[] args)
         {
-            StartServiceDelegate serviceStarter = new StartServiceDelegate(StartService);
+            StartServiceDelegate serviceStarter = new(StartService);
             IAsyncResult result = serviceStarter.BeginInvoke(new AsyncCallback(StartServiceHandler), null);
         }
 
@@ -513,7 +518,7 @@ namespace Cyberarms.IntrusionDetection
                         }
                         catch (Exception ex)
                         {
-                            WindowsLogManager.Instance.WriteEntry(String.Format("Unrecoverable error: {0}",
+                            WindowsLogManager.Instance.WriteEntry(string.Format("Unrecoverable error: {0}",
                                     ex.Message), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
                                     Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                             // OnClientIpAddressSoftLocked(new Lock( new Client(notificationEventArgs.IpAddress), ex);
@@ -527,7 +532,7 @@ namespace Cyberarms.IntrusionDetection
             }
             catch (Exception ex)
             {
-                WindowsLogManager.Instance.WriteEntry(String.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", (sender != null ? sender.GetType().Name : "unknown"), ex.Message),
+                WindowsLogManager.Instance.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", (sender != null ? sender.GetType().Name : "unknown"), ex.Message),
                     EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
             }
         }

@@ -1,14 +1,11 @@
-using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Cyberarms.IntrusionDetection.Shared;
-using System.Diagnostics;
 
-namespace Cyberarms.IntrusionDetection.Shared.Test {
+namespace Cyberarms.IntrusionDetection.Shared.Test
+{
     [TestClass]
-    public class IddsConfigTest {
+    public class IddsConfigTest
+    {
 
         //[TestMethod]
         //public void IsActivatedTest() {
@@ -19,33 +16,38 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
         //        Debug.Print("Activation ID: {0}", IddsConfig.Instance.ActivationId);
         //        if(ex.InnerException is MissingFieldException) return;
         //    }
-            
+
         //    Assert.Fail("Activation did not report error!");
         //}
 
 
         [TestMethod, Ignore]
-        public void ActivateTrialKeyTest() {
+        public void ActivateTrialKeyTest()
+        {
             Assert.Fail("Not implemented");
         }
 
         [TestMethod, Ignore]
-        public void VariousProductActivationTest() {
+        public void VariousProductActivationTest()
+        {
             Assert.Fail("Not implemented");
         }
 
         [TestMethod, Ignore]
-        public void CreateEditionKeyTest() {
+        public void CreateEditionKeyTest()
+        {
             Assert.Fail("Not implemented");
         }
 
         [TestMethod, Ignore]
-        public void ActivateEditionKeyTest() {
+        public void ActivateEditionKeyTest()
+        {
             Assert.Fail("Not implemented");
         }
 
         [TestMethod]
-        public void SaveConfigTest() {
+        public void SaveConfigTest()
+        {
             IddsConfig.Instance.ApplicationPath = @"c:\\temp\\";
             IddsConfig.Instance.ConfigVersionNumber = 1;
             IddsConfig.Instance.CyberSheriffContributor = true;
@@ -66,7 +68,7 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
             IddsConfig.Instance.SoftLockTimeMinutes = 20;
             IddsConfig.Instance.UseSafeNetworkList = true;
             IddsConfig.Instance.WebBasedMonitoring = true;
-            
+
             IddsConfig.Instance.Save();
 
         }
@@ -89,15 +91,16 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
         //    agentConfig.SoftLockAttempts = 20;
         //    agentConfig.SoftLockDurationMins = 200;
         //    //IddsConfig.Instance.WriteAgentConfiguration(agentConfig);
-            
+
         //}
 
 
 
         [TestMethod]
-        public void ReadWriteAppConfigTest() {
+        public void ReadWriteAppConfigTest()
+        {
             IddsConfig.Instance.ApplicationPath = @"c:\\temp\\";
-            
+
             IddsConfig.Instance.GetConfigValue("TestConfigSetting1");
             IddsConfig.Instance.SetConfigValue("TestConfigSetting1", "Value1");
             IddsConfig.Instance.SetConfigValue("TestConfigSetting2", "Value2");
@@ -112,10 +115,11 @@ namespace Cyberarms.IntrusionDetection.Shared.Test {
         }
 
         [TestMethod]
-        public void ConfigIsInSafeNetworkTest() {
+        public void ConfigIsInSafeNetworkTest()
+        {
             Database.Instance.Configure(@"c:\\temp");
             IddsConfig.Instance.ApplicationPath = @"c:\\temp";
-            
+
             IddsConfig.Instance.SafeNetworks.Add(new IddsConfig.CSafeNetwork("192.168.1.1", "255.255.255.255"));
             Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("192.168.1.1"));
             Assert.IsFalse(IddsConfig.Instance.IsInSafeNetwork("192.168.1.2"));

@@ -1,18 +1,20 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Text;
 
-namespace Cyberarms.IntrusionDetection.Shared {
+namespace Cyberarms.IntrusionDetection.Shared
+{
 
-    public enum Protocol {
+    public enum Protocol
+    {
         Tcp = 6,
         Udp = 17,
         Tlsp = 56,
         Unknown = -1
     };
 
-    public class IPHeader {
+    public class IPHeader
+    {
         //IP Header fields
         private byte byVersionAndHeaderLength;   //Eight bits for version and header length
         private byte byDifferentiatedServices;    //Eight bits for differentiated services (TOS)
@@ -31,13 +33,15 @@ namespace Cyberarms.IntrusionDetection.Shared {
         private byte[] byIPData = new byte[128];  //Data carried by the datagram
 
 
-        public IPHeader(byte[] byBuffer, int nReceived) {
+        public IPHeader(byte[] byBuffer, int nReceived)
+        {
 
-            try {
+            try
+            {
                 //Create MemoryStream out of the received bytes
-                MemoryStream memoryStream = new MemoryStream(byBuffer, 0, nReceived);
+                MemoryStream memoryStream = new(byBuffer, 0, nReceived);
                 //Next we create a BinaryReader out of the MemoryStream
-                BinaryReader binaryReader = new BinaryReader(memoryStream);
+                BinaryReader binaryReader = new(memoryStream);
 
                 //The first eight bits of the IP header contain the version and
                 //header length so we read them
@@ -87,65 +91,89 @@ namespace Cyberarms.IntrusionDetection.Shared {
                            byHeaderLength,  //start copying from the end of the header
                            byIPData, 0,
                            usTotalLength - byHeaderLength);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 //Sniffer.LogTrace(ex);
             }
         }
 
-        public string Version {
-            get {
+        public string Version
+        {
+            get
+            {
                 //Calculate the IP version
 
                 //The four bits of the IP header contain the IP version
-                if ((byVersionAndHeaderLength >> 4) == 4) {
+                if ((byVersionAndHeaderLength >> 4) == 4)
+                {
                     return "IP v4";
-                } else if ((byVersionAndHeaderLength >> 4) == 6) {
+                }
+                else if ((byVersionAndHeaderLength >> 4) == 6)
+                {
                     return "IP v6";
-                } else {
+                }
+                else
+                {
                     return "Unknown";
                 }
             }
         }
 
-        public string HeaderLength {
-            get {
+        public string HeaderLength
+        {
+            get
+            {
                 return byHeaderLength.ToString();
             }
         }
 
-        public ushort MessageLength {
-            get {
+        public ushort MessageLength
+        {
+            get
+            {
                 //MessageLength = Total length of the datagram - Header length
                 return (ushort)(usTotalLength - byHeaderLength);
             }
         }
 
-        public string DifferentiatedServices {
-            get {
+        public string DifferentiatedServices
+        {
+            get
+            {
                 //Returns the differentiated services in hexadecimal format
                 return string.Format("0x{0:x2} ({1})", byDifferentiatedServices,
                     byDifferentiatedServices);
             }
         }
 
-        public string Flags {
-            get {
+        public string Flags
+        {
+            get
+            {
                 //The first three bits of the flags and fragmentation field 
                 //represent the flags (which indicate whether the data is 
                 //fragmented or not)
                 int nFlags = usFlagsAndOffset >> 13;
-                if (nFlags == 2) {
+                if (nFlags == 2)
+                {
                     return "Don't fragment";
-                } else if (nFlags == 1) {
+                }
+                else if (nFlags == 1)
+                {
                     return "More fragments to come";
-                } else {
+                }
+                else
+                {
                     return nFlags.ToString();
                 }
             }
         }
 
-        public string FragmentationOffset {
-            get {
+        public string FragmentationOffset
+        {
+            get
+            {
                 //The last thirteen bits of the flags and fragmentation field 
                 //contain the fragmentation offset
                 int nOffset = usFlagsAndOffset << 3;
@@ -155,17 +183,22 @@ namespace Cyberarms.IntrusionDetection.Shared {
             }
         }
 
-        public string TTL {
-            get {
+        public string TTL
+        {
+            get
+            {
                 return byTTL.ToString();
             }
         }
 
-        public Protocol ProtocolType {
-            get {
+        public Protocol ProtocolType
+        {
+            get
+            {
                 //The protocol field represents the protocol in the data portion
                 //of the datagram
-                switch (byProtocol) {
+                switch (byProtocol)
+                {
                     case 6:
                         return Protocol.Tcp;
                     case 17:
@@ -179,39 +212,51 @@ namespace Cyberarms.IntrusionDetection.Shared {
             }
         }
 
-        public string Checksum {
-            get {
+        public string Checksum
+        {
+            get
+            {
                 //Returns the checksum in hexadecimal format
                 return string.Format("0x{0:x2}", sChecksum);
             }
         }
 
-        public IPAddress SourceAddress {
-            get {
+        public IPAddress SourceAddress
+        {
+            get
+            {
                 return new IPAddress(uiSourceIPAddress);
             }
         }
 
-        public IPAddress DestinationAddress {
-            get {
+        public IPAddress DestinationAddress
+        {
+            get
+            {
                 return new IPAddress(uiDestinationIPAddress);
             }
         }
 
-        public string TotalLength {
-            get {
+        public string TotalLength
+        {
+            get
+            {
                 return usTotalLength.ToString();
             }
         }
 
-        public string Identification {
-            get {
+        public string Identification
+        {
+            get
+            {
                 return usIdentification.ToString();
             }
         }
 
-        public byte[] Data {
-            get {
+        public byte[] Data
+        {
+            get
+            {
                 return byIPData;
             }
         }

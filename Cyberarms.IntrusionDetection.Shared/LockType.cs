@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Cyberarms.IntrusionDetection.Shared;
-using System.Text;
+﻿using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection {
-    public enum LockType {
+namespace Cyberarms.IntrusionDetection
+{
+    public enum LockType
+    {
         None = Lock.LOCK_STATUS_NONE,
         SoftLockRequested = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED,
         SoftLock = Lock.LOCK_STATUS_SOFTLOCK,

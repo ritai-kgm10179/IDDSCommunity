@@ -1,28 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Cyberarms.IntrusionDetection.Admin {
-    public class SearchBox : Control {
+namespace Cyberarms.IntrusionDetection.Admin
+{
+    public class SearchBox : Control
+    {
 
         SearchTextBox textBoxSearch;
         Rectangle searchButtonPosition;
         Rectangle clearSearchButtonPosition;
         bool isEmpty;
 
-        public SearchBox() {
+        public SearchBox()
+        {
             InitializeComponents();
         }
 
 
-        public void InitializeComponents() {
+        public void InitializeComponents()
+        {
             textBoxSearch = new SearchTextBox();
             searchButtonPosition = new Rectangle();
             clearSearchButtonPosition = new Rectangle();
-            isEmpty = String.IsNullOrEmpty(Text);
+            isEmpty = string.IsNullOrEmpty(Text);
 
             textBoxSearch.BorderStyle = BorderStyle.None;
             textBoxSearch.BackColor = BackColor;
@@ -49,19 +50,24 @@ namespace Cyberarms.IntrusionDetection.Admin {
             textBoxSearch.TextChanged += new EventHandler(textBoxSearch_TextChanged);
         }
 
-        void textBoxSearch_TextChanged(object sender, EventArgs e) {
-            if ((String.IsNullOrEmpty(Text) && !isEmpty) || (!String.IsNullOrEmpty(Text) && isEmpty)) {
+        void textBoxSearch_TextChanged(object sender, EventArgs e)
+        {
+            if ((string.IsNullOrEmpty(Text) && !isEmpty) || (!string.IsNullOrEmpty(Text) && isEmpty))
+            {
                 Invalidate();
-                isEmpty = String.IsNullOrEmpty(Text);
+                isEmpty = string.IsNullOrEmpty(Text);
             }
         }
 
-        void SearchBox_FontChanged(object sender, EventArgs e) {
+        void SearchBox_FontChanged(object sender, EventArgs e)
+        {
             textBoxSearch.Font = Font;
         }
 
-        void textBoxSearch_KeyPress(object sender, KeyPressEventArgs e) {
-            switch (Convert.ToInt32(e.KeyChar)) {
+        void textBoxSearch_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            switch (Convert.ToInt32(e.KeyChar))
+            {
                 case 13:
                     OnSearch();
                     e.Handled = true;
@@ -73,7 +79,8 @@ namespace Cyberarms.IntrusionDetection.Admin {
             }
         }
 
-        void SearchBox_SizeChanged(object sender, EventArgs e) {
+        void SearchBox_SizeChanged(object sender, EventArgs e)
+        {
             textBoxSearch.Width = this.Width - 44;
             textBoxSearch.Height = this.Height;
             clearSearchButtonPosition.Location = new Point(Width - 42, 0);
@@ -81,65 +88,78 @@ namespace Cyberarms.IntrusionDetection.Admin {
         }
 
 
-        void SearchBox_BackColorChanged(object sender, EventArgs e) {
+        void SearchBox_BackColorChanged(object sender, EventArgs e)
+        {
             textBoxSearch.BackColor = BackColor;
         }
 
-        void SearchBox_ForeColorChanged(object sender, EventArgs e) {
+        void SearchBox_ForeColorChanged(object sender, EventArgs e)
+        {
             textBoxSearch.ForeColor = ForeColor;
         }
 
 
 
-        void SearchBox_Paint(object sender, PaintEventArgs e) {
+        void SearchBox_Paint(object sender, PaintEventArgs e)
+        {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
             if (SearchImage != null) e.Graphics.DrawImage(SearchImage, searchButtonPosition.Location);
-            if (ClearImage != null && !String.IsNullOrEmpty(Text)) e.Graphics.DrawImage(ClearImage, clearSearchButtonPosition.Location);
+            if (ClearImage != null && !string.IsNullOrEmpty(Text)) e.Graphics.DrawImage(ClearImage, clearSearchButtonPosition.Location);
 
         }
 
         public Image SearchImage { get; set; }
         public Image ClearImage { get; set; }
 
-        void SearchBox_Click(object sender, EventArgs e) {
+        void SearchBox_Click(object sender, EventArgs e)
+        {
             Point currentPosition = PointToClient(MousePosition);
             if (currentPosition.X > searchButtonPosition.X && currentPosition.X < searchButtonPosition.X + searchButtonPosition.Width &&
-                currentPosition.Y > searchButtonPosition.Y && currentPosition.Y < searchButtonPosition.Y + searchButtonPosition.Height) {
+                currentPosition.Y > searchButtonPosition.Y && currentPosition.Y < searchButtonPosition.Y + searchButtonPosition.Height)
+            {
                 OnSearch();
             }
             if (currentPosition.X > clearSearchButtonPosition.X && currentPosition.X < clearSearchButtonPosition.X + clearSearchButtonPosition.Width &&
-                currentPosition.Y > clearSearchButtonPosition.Y && currentPosition.Y < clearSearchButtonPosition.Y + clearSearchButtonPosition.Height) {
+                currentPosition.Y > clearSearchButtonPosition.Y && currentPosition.Y < clearSearchButtonPosition.Y + clearSearchButtonPosition.Height)
+            {
                 OnClearSearch();
             }
         }
 
 
-        private void OnSearch() {
+        private void OnSearch()
+        {
             if (Search != null) Search(this, EventArgs.Empty);
         }
 
-        private void OnClearSearch() {
+        private void OnClearSearch()
+        {
             this.Text = "";
             if (ClearSearch != null) ClearSearch(this, EventArgs.Empty);
 
         }
 
-        private void RemoveClearButton() {
+        private void RemoveClearButton()
+        {
             Graphics g = Graphics.FromHwnd(this.Handle);
             g.FillRectangle(new SolidBrush(BackColor), clearSearchButtonPosition);
         }
 
-        private void PaintClearButton() {
+        private void PaintClearButton()
+        {
             Graphics g = Graphics.FromHwnd(this.Handle);
             g.DrawImageUnscaled(ClearImage, clearSearchButtonPosition);
         }
 
-        public override string Text {
-            get {
+        public override string Text
+        {
+            get
+            {
                 return textBoxSearch.Text;
             }
-            set {
+            set
+            {
                 textBoxSearch.Text = value;
             }
         }
@@ -149,48 +169,61 @@ namespace Cyberarms.IntrusionDetection.Admin {
 
         public event EventHandler ClearSearch;
 
-        public string EmptyText { 
-            get {
+        public string EmptyText
+        {
+            get
+            {
                 return textBoxSearch.EmptyText;
             }
-            set {
+            set
+            {
                 textBoxSearch.EmptyText = value;
             }
         }
-        public Color EmptyTextColor { 
-            get {
+        public Color EmptyTextColor
+        {
+            get
+            {
                 return textBoxSearch.EmptyTextColor;
             }
-            set {
+            set
+            {
                 textBoxSearch.EmptyTextColor = value;
             }
         }
 
-        public Font EmptyFont {
-            get {
+        public Font EmptyFont
+        {
+            get
+            {
                 return textBoxSearch.EmptyFont;
             }
-            set {
+            set
+            {
                 textBoxSearch.EmptyFont = value;
             }
         }
 
 
-        public class SearchTextBox : TextBox {
-            public SearchTextBox() {
+        public class SearchTextBox : TextBox
+        {
+            public SearchTextBox()
+            {
                 this.TextChanged += new EventHandler(SearchTextBox_TextChanged);
             }
 
-            void SearchTextBox_TextChanged(object sender, EventArgs e) {
-                if (String.IsNullOrEmpty(Text)) {
+            void SearchTextBox_TextChanged(object sender, EventArgs e)
+            {
+                if (string.IsNullOrEmpty(Text))
+                {
                     Graphics.FromHwnd(this.Handle).DrawString(EmptyText, EmptyFont, new SolidBrush(EmptyTextColor), 5, 2);
                 }
             }
-            
+
             public Color EmptyTextColor { get; set; }
             public string EmptyText { get; set; }
             public Font EmptyFont { get; set; }
-            
+
 
         }
     }

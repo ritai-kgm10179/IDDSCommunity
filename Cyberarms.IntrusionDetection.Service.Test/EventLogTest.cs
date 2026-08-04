@@ -1,21 +1,25 @@
-using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using Cyberarms.IntrusionDetection;
-using Cyberarms.IntrusionDetection.Shared;
 
-namespace IdsServiceForWindowsTest {
+namespace IdsServiceForWindowsTest
+{
     [TestClass]
-    public class EventLogTest {
+    public class EventLogTest
+    {
         [TestMethod]
-        public void TestCreateWhenSourceExists() {
-            try {
+        public void TestCreateWhenSourceExists()
+        {
+            try
+            {
                 WindowsLogManager.Instance.WriteEntry("Test Message", EventLogEntryType.Information, 0, 0);
-            } catch (System.Security.SecurityException) {
-            } catch (UnauthorizedAccessException) {
+            }
+            catch (System.Security.SecurityException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
             }
         }
     }

@@ -1,6 +1,7 @@
-# EditorConfig file for Cyberarms solution
+# Cyberarms EditorConfig Specification (.NET 10 / C# 13)
 root = true
 
+# Top-level settings across all files
 [*]
 indent_style = space
 indent_size = 4
@@ -9,11 +10,67 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-# C# 原始碼、專案檔、資源檔、解決方案檔與 PowerShell 腳本：採用 UTF-8 with BOM (utf-8-bom)
-# 以維護 MSBuild / Roslyn (csc) / Visual Studio / Windows PowerShell 相容性與 CJK 字元正確解析
+# C# Source code, project files, resources, solution files, and PowerShell scripts: UTF-8 with BOM (utf-8-bom)
 [*.{cs,csproj,resx,sln,slnx,ps1}]
 charset = utf-8-bom
 
-# JSON, Markdown, YAML, Git 設定檔：採用標準 UTF-8 without BOM (utf-8)
+# JSON, Markdown, YAML, Git configuration: Standard UTF-8 without BOM (utf-8)
 [*.{json,md,yml,yaml,git*,.editorconfig}]
 charset = utf-8
+
+# C# Formatting and Style Rules
+[*.cs]
+# Indentation & Spacing
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_switch_labels = true
+
+# New Line Preferences
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+csharp_new_line_before_open_brace = all
+
+# C# Coding Style Preferences (.NET 10 / C# 13)
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = when_on_single_line:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_indexers = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+csharp_style_expression_bodied_lambdas = when_on_single_line:suggestion
+csharp_style_expression_bodied_local_functions = when_on_single_line:suggestion
+
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_style_null_coalescing_assignment = true:suggestion
+csharp_style_conditional_delegate_call = true:suggestion
+
+# Collection Expressions & Primary Constructors
+csharp_style_collection_expression = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
+
+# Var Preferences
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Parentheses Preferences
+dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:suggestion
+dotnet_style_parentheses_in_other_binary_operators = never_if_unnecessary:suggestion
+dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary:suggestion
+dotnet_style_parentheses_in_other_operators = never_if_unnecessary:suggestion
+
+# Qualification Preferences
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion

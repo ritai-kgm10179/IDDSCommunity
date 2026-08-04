@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 
-namespace Cyberarms.IntrusionDetection.Shared.Db {
+namespace Cyberarms.IntrusionDetection.Shared.Db
+{
 
 
-    public class Version_2_1 : DbUpgradeScript {
-        public override int INTERNAL_VERSION {
-            get {
+    public class Version_2_1 : DbUpgradeScript
+    {
+        public override int INTERNAL_VERSION
+        {
+            get
+            {
                 return 1;
             }
         }
@@ -131,12 +132,14 @@ CREATE TABLE AgentStatistics(
     HardLocks int not null default 0, 
     SoftLocks int not null default 0)";
 
-        public override void UpgradeDatabase(System.Data.IDbConnection connection) {
-            try {
+        public override void UpgradeDatabase(System.Data.IDbConnection connection)
+        {
+            try
+            {
                 RunCommand(connection, TABLE_DB_CONFIG);
                 RunCommand(connection, TABLE_CONFIGURATION);
                 RunCommand(connection, CREATE_DEFAULT_DB_CONFIGURATION);
-                RunCommand(connection, CREATE_DEFAULT_CONFIGURATION);                
+                RunCommand(connection, CREATE_DEFAULT_CONFIGURATION);
                 RunCommand(connection, TABLE_INTRUSION_LOG);
                 RunCommand(connection, TABLE_LOCKS);
                 RunCommand(connection, TABLE_SECURITY_AGENT_CONFIG);
@@ -145,12 +148,14 @@ CREATE TABLE AgentStatistics(
                 RunCommand(connection, TABLE_APP_CONFIG);
                 RunCommand(connection, TABLE_WHITE_LIST);
                 RunCommand(connection, TABLE_AGENT_STATISTICS);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 throw (ex);
             }
         }
 
-        
+
 
     }
 }

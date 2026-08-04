@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using Cyberarms.IntrusionDetection.Shared;
-using System.Text;
 using System.Windows.Forms;
 
 
@@ -62,10 +58,10 @@ namespace Cyberarms.IntrusionDetection.Admin
             checkBoxSoftLock.Enabled = IsInEditMode;
             checkBoxHardLocks.Enabled = IsInEditMode;
             checkBoxOnUnlock.Enabled = IsInEditMode;
-                checkBoxDailySummary.Enabled = IsInEditMode;
-                checkBoxWeeklyReport.Enabled = IsInEditMode;
-                checkBoxMonthlyReport.Enabled = IsInEditMode;
-            
+            checkBoxDailySummary.Enabled = IsInEditMode;
+            checkBoxWeeklyReport.Enabled = IsInEditMode;
+            checkBoxMonthlyReport.Enabled = IsInEditMode;
+
         }
 
         private void pictureBoxSave_Click(object sender, EventArgs e)
@@ -77,13 +73,13 @@ namespace Cyberarms.IntrusionDetection.Admin
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
-            Point loc = new Point((sender as Control).Location.X, (sender as Control).Location.Y);
+            Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
             (sender as Control).Location = new Point(loc.X + 1, loc.Y + 1);
         }
 
         private void pictureBox_MouseUp(object sender, MouseEventArgs e)
         {
-            Point loc = new Point((sender as Control).Location.X, (sender as Control).Location.Y);
+            Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
             (sender as Control).Location = new Point(loc.X - 1, loc.Y - 1);
         }
 

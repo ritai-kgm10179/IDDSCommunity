@@ -1,9 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Cyberarms.IntrusionDetection;
-using Cyberarms.IntrusionDetection.Api;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Net.Sockets;
@@ -12,7 +8,8 @@ using System.Drawing;
 
 namespace Cyberarms.Agents.FtpServer;
 
-public class FtpAgent : AgentPlugin, IExtendedInformation {
+public class FtpAgent : AgentPlugin, IExtendedInformation
+{
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
     private ThreadStart? ts;
@@ -20,23 +17,29 @@ public class FtpAgent : AgentPlugin, IExtendedInformation {
 
     private readonly List<Sniffer> sniffers = [];
 
-    public FtpAgent() {
+    public FtpAgent()
+    {
         Configuration.AgentSettings = new FtpConfig();
         Configuration.ConfigurationSettingsTypeName = Configuration.AgentSettings.GetType().FullName ?? string.Empty;
     }
 
-    protected override void OnStartAgent() {
+    protected override void OnStartAgent()
+    {
         ts = new ThreadStart(RunWatcher);
         td = new Thread(ts);
         td.Start();
         base.OnStartAgent();
     }
 
-    private void RunWatcher() {
+    private void RunWatcher()
+    {
         IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-        if (hostEntry.AddressList.Length > 0) {
-            foreach (IPAddress ip in hostEntry.AddressList) {
-                if (ip.AddressFamily == AddressFamily.InterNetwork) {
+        if (hostEntry.AddressList.Length > 0)
+        {
+            foreach (IPAddress ip in hostEntry.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
                     ParameterizedThreadStart pts = new(WatchAddress);
                     pts.Invoke(ip);
                 }
@@ -44,39 +47,54 @@ public class FtpAgent : AgentPlugin, IExtendedInformation {
         }
     }
 
-    private void WatchAddress(object? ipAddress) {
+    private void WatchAddress(object? ipAddress)
+    {
         if (ipAddress is not IPAddress address) return;
         Sniffer s = new();
         s.IpPacketSent += s_IpPacketSent;
         s.TcpPort = ((FtpConfig)Configuration.AgentSettings).FtpPort;
-        try {
+        try
+        {
             System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.FtpServer", $"Ftp Server Security Agent is listening on port {s.TcpPort}");
-        } catch { }
-        try {
+        }
+        catch { }
+        try
+        {
             s.WatchAddress(address);
-        } catch { }
+        }
+        catch { }
         sniffers.Add(s);
     }
 
-    private void s_IpPacketSent(object? sender, EventArgs e) {
+    private void s_IpPacketSent(object? sender, EventArgs e)
+    {
         if (sender is not IPHeader ipHeader) return;
-        if (ipHeader.ProtocolType == Protocol.Tcp) {
-            try {
+        if (ipHeader.ProtocolType == Protocol.Tcp)
+        {
+            try
+            {
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                if (int.TryParse(tcp.SourcePort, out int sourcePort)) {
-                    if (sourcePort == ((FtpConfig)Configuration.AgentSettings).FtpPort) {
-                        if (Tracing) {
+                if (int.TryParse(tcp.SourcePort, out int sourcePort))
+                {
+                    if (sourcePort == ((FtpConfig)Configuration.AgentSettings).FtpPort)
+                    {
+                        if (Tracing)
+                        {
                             OnTrace(ipHeader);
                         }
-                        if (tcp.Data.Length > 0) {
+                        if (tcp.Data.Length > 0)
+                        {
                             AppLayerFtp ftp = new(tcp.Data, tcp.Data.Length);
-                            if (ftp.FtpReplyCode == AppLayerFtp.FTP_REPLY_CODE_LOGIN_DENIED) {
+                            if (ftp.FtpReplyCode == AppLayerFtp.FTP_REPLY_CODE_LOGIN_DENIED)
+                            {
                                 UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                             }
                         }
                     }
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Sniffer.LogTrace(ex);
             }
         }
@@ -84,18 +102,22 @@ public class FtpAgent : AgentPlugin, IExtendedInformation {
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
-    protected override void OnContinueAgent() {
+    protected override void OnContinueAgent()
+    {
         Start();
         base.OnContinueAgent();
     }
 
-    protected override void OnPauseAgent() {
+    protected override void OnPauseAgent()
+    {
         Stop();
         base.OnPauseAgent();
     }
 
-    protected override void OnStopAgent() {
-        foreach (Sniffer s in sniffers) {
+    protected override void OnStopAgent()
+    {
+        foreach (Sniffer s in sniffers)
+        {
             s.Abort();
             s.CloseSocket();
         }
@@ -105,8 +127,10 @@ public class FtpAgent : AgentPlugin, IExtendedInformation {
 
     public override bool IsRunning => base.IsRunning;
 
-    private void UnsuccessfulLogin(string ipAddress) {
-        NotificationEventArgs args = new() {
+    private void UnsuccessfulLogin(string ipAddress)
+    {
+        NotificationEventArgs args = new()
+        {
             CreateDate = DateTime.Now,
             EventId = 9112,
             EventMessage = "FTP authentication failure",
@@ -115,22 +139,26 @@ public class FtpAgent : AgentPlugin, IExtendedInformation {
         OnAttackDetected(this, args);
     }
 
-    public string DisplayName {
+    public string DisplayName
+    {
         get => "FTP Security Agent";
         set { }
     }
 
-    public Image Icon {
+    public Image Icon
+    {
         get => Resource.agent15px_ftp_dark;
         set { }
     }
 
-    public Image SelectedIcon {
+    public Image SelectedIcon
+    {
         get => Resource.agent15px_ftp_white;
         set { }
     }
 
-    public Image UnselectedIcon {
+    public Image UnselectedIcon
+    {
         get => Resource.agent15px_ftp_dark;
         set { }
     }

@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Cyberarms.IntrusionDetection.Api.Plugin {
+﻿namespace Cyberarms.IntrusionDetection.Api.Plugin
+{
     /// <summary>
     /// Event handler for sending intrusion attempts to theIntrusion DetectionService
     /// </summary>
@@ -13,7 +9,8 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
     /// <summary>
     /// Interface for agents, must be implemented to create aIntrusion Detectionagent
     /// </summary>
-    public interface IAgentPlugin {        
+    public interface IAgentPlugin
+    {
         /// <summary>
         /// The AttackDetected Event, using AttackDetectedHandler
         /// </summary>

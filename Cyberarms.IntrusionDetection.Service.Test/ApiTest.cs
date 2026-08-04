@@ -1,18 +1,17 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Xml.Serialization;
 
-namespace IdsServiceForWindowsTest {
+namespace IdsServiceForWindowsTest
+{
     /// <summary>
     /// Summary description for ApiTest
     /// </summary>
     [TestClass]
-    public class ApiTest {
-        public ApiTest() {
+    public class ApiTest
+    {
+        public ApiTest()
+        {
             //
             // TODO: Add constructor logic here
             //
@@ -24,11 +23,14 @@ namespace IdsServiceForWindowsTest {
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext {
-            get {
+        public TestContext TestContext
+        {
+            get
+            {
                 return testContextInstance;
             }
-            set {
+            set
+            {
                 testContextInstance = value;
             }
         }
@@ -56,12 +58,15 @@ namespace IdsServiceForWindowsTest {
         #endregion
 
         [TestMethod]
-        public void TestSerialization() {
-            TestPluginConfig config = new TestPluginConfig();
-            config.Prop1 = "Test1";
-            config.Prop2 = "Test2";
-            XmlSerializer xs = new XmlSerializer(typeof(TestPluginConfig));
-            System.IO.StreamWriter sw = new System.IO.StreamWriter("c:\\temp\\pluginsettings.xml");
+        public void TestSerialization()
+        {
+            TestPluginConfig config = new()
+            {
+                Prop1 = "Test1",
+                Prop2 = "Test2"
+            };
+            XmlSerializer xs = new(typeof(TestPluginConfig));
+            System.IO.StreamWriter sw = new("c:\\temp\\pluginsettings.xml");
             xs.Serialize(sw, config);
             sw.Close();
         }
@@ -69,8 +74,9 @@ namespace IdsServiceForWindowsTest {
 
     }
 
-    
-    public class TestPluginConfig : PluginConfiguration {
+
+    public class TestPluginConfig : PluginConfiguration
+    {
         public string Prop1 { get; set; }
         public string Prop2 { get; set; }
     }

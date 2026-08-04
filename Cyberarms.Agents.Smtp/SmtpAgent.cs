@@ -1,43 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Cyberarms.IntrusionDetection;
-using Cyberarms.IntrusionDetection.Api;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Drawing;
 
-namespace Cyberarms.Agents.MailServer {
-    public class SmtpAgent : Cyberarms.IntrusionDetection.Api.Plugin.AgentPlugin, IExtendedInformation {
+namespace Cyberarms.Agents.MailServer
+{
+    public class SmtpAgent : AgentPlugin, IExtendedInformation
+    {
         public event EventHandler Trace;
         public bool Tracing { get; set; }
         ThreadStart ts;
         Thread td;
 
-        List<Sniffer> sniffers = new List<Sniffer>();
+        List<Sniffer> sniffers = new();
 
-        public SmtpAgent() {
+        public SmtpAgent()
+        {
             this.Configuration.AgentSettings = new SmtpConfig();
             Configuration.ConfigurationSettingsTypeName =
                 this.Configuration.AgentSettings.GetType().FullName;
         }
 
-        protected override void OnStartAgent() {
+        protected override void OnStartAgent()
+        {
             ts = new ThreadStart(RunWatcher);
             td = new Thread(ts);
             td.Start();
             base.OnStartAgent();
         }
 
-        void RunWatcher() {
+        void RunWatcher()
+        {
             IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
-            if (hostEntry.AddressList.Length > 0) {
-                foreach (IPAddress ip in hostEntry.AddressList) {
-                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
-                        ParameterizedThreadStart pts = new ParameterizedThreadStart(WatchAddress);
+            if (hostEntry.AddressList.Length > 0)
+            {
+                foreach (IPAddress ip in hostEntry.AddressList)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        ParameterizedThreadStart pts = new(WatchAddress);
                         pts.Invoke(ip);
                     }
                 }
@@ -46,30 +49,39 @@ namespace Cyberarms.Agents.MailServer {
 
 
 
-        void WatchAddress(object ipAddress) {
-            Sniffer s = new Sniffer();
+        void WatchAddress(object ipAddress)
+        {
+            Sniffer s = new();
             // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
             s.IpPacketSent += new EventHandler(s_IpPacketSent);
             s.TcpPort = ((SmtpConfig)Configuration.AgentSettings).SmtpPort;
-            System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.SmtpServer", String.Format("Smtp Server Security Agent is listening on port {0}", s.TcpPort));
+            System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.SmtpServer", string.Format("Smtp Server Security Agent is listening on port {0}", s.TcpPort));
             s.WatchAddress((IPAddress)ipAddress);
             sniffers.Add(s);
         }
 
-        void s_IpPacketSent(object sender, EventArgs e) {
+        void s_IpPacketSent(object sender, EventArgs e)
+        {
             IPHeader ipHeader = (IPHeader)sender;
-            if (ipHeader.ProtocolType == Protocol.Tcp) {
-                try {
-                    TCPHeader tcp = new TCPHeader(ipHeader.Data, ipHeader.MessageLength);
+            if (ipHeader.ProtocolType == Protocol.Tcp)
+            {
+                try
+                {
+                    TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                     int sourcePort;
-                    if (int.TryParse(tcp.SourcePort, out sourcePort)) {
-                        if (sourcePort == ((SmtpConfig)Configuration.AgentSettings).SmtpPort) {
-                            if (Tracing) {
+                    if (int.TryParse(tcp.SourcePort, out sourcePort))
+                    {
+                        if (sourcePort == ((SmtpConfig)Configuration.AgentSettings).SmtpPort)
+                        {
+                            if (Tracing)
+                            {
                                 OnTrace((IPHeader)sender);
                             }
-                            if (tcp.Data.Length > 0) {
-                                AppLayerSmtp ftp = new AppLayerSmtp(tcp.Data, tcp.Data.Length);
-                                if (ftp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_NEED_TO_AUTHENTICATE || ftp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED) {
+                            if (tcp.Data.Length > 0)
+                            {
+                                AppLayerSmtp ftp = new(tcp.Data, tcp.Data.Length);
+                                if (ftp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_NEED_TO_AUTHENTICATE || ftp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
+                                {
                                     UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                                 }
                             }
@@ -78,29 +90,36 @@ namespace Cyberarms.Agents.MailServer {
                             // Console.WriteLine("Source: {0}:{1}\tDestination: {2}:{3}", ipHeader.SourceAddress, tcp.SourcePort, ipHeader.DestinationAddress, tcp.DestinationPort);
                         }
                     }
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     Sniffer.LogTrace(ex);
                 }
 
             }
         }
 
-        private void OnTrace(IPHeader tlsPackage) {
+        private void OnTrace(IPHeader tlsPackage)
+        {
             if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
         }
 
-        protected override void OnContinueAgent() {
+        protected override void OnContinueAgent()
+        {
             Start();
             base.OnContinueAgent();
         }
 
-        protected override void OnPauseAgent() {
+        protected override void OnPauseAgent()
+        {
             Stop();
             base.OnPauseAgent();
         }
 
-        protected override void OnStopAgent() {
-            foreach (Sniffer s in sniffers) {
+        protected override void OnStopAgent()
+        {
+            foreach (Sniffer s in sniffers)
+            {
                 s.Abort();
                 s.CloseSocket();
             }
@@ -108,62 +127,81 @@ namespace Cyberarms.Agents.MailServer {
             base.OnStopAgent();
         }
 
-        public override bool IsRunning {
-            get {
+        public override bool IsRunning
+        {
+            get
+            {
                 return base.IsRunning;
             }
         }
 
-        void UnsuccessfulLogin(string ipAddress) {
-            NotificationEventArgs args = new NotificationEventArgs();
-            args.CreateDate = DateTime.Now;
-            args.EventId = 9112;
-            args.EventMessage = "SMTP authentication failure";
-            args.IpAddress = ipAddress;
+        void UnsuccessfulLogin(string ipAddress)
+        {
+            NotificationEventArgs args = new()
+            {
+                CreateDate = DateTime.Now,
+                EventId = 9112,
+                EventMessage = "SMTP authentication failure",
+                IpAddress = ipAddress
+            };
             OnAttackDetected(this, args);
         }
 
 
-        public string DisplayName {
-            get {
+        public string DisplayName
+        {
+            get
+            {
                 return "SMTP Security Agent";
             }
-            set {
+            set
+            {
 
             }
         }
 
-        public Image Icon {
-            get {
+        public Image Icon
+        {
+            get
+            {
                 return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_dark;
             }
-            set {
+            set
+            {
 
             }
         }
 
-        public Image SelectedIcon {
-            get {
+        public Image SelectedIcon
+        {
+            get
+            {
                 return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_white;
             }
-            set {
+            set
+            {
 
             }
         }
 
-        public Image UnselectedIcon {
-            get {
+        public Image UnselectedIcon
+        {
+            get
+            {
                 return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_dark;
             }
-            set {
+            set
+            {
 
             }
         }
 
 
-        
-        public Guid Id {
-            get {
+
+        public Guid Id
+        {
+            get
+            {
                 return new Guid("{EB69BF23-939C-4F89-97D0-50274306D018}");
             }
         }

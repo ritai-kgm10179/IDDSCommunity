@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Text;
 using System.IO;
 
-namespace Cyberarms.Agents.MailServer {
-    public class AppLayerPop3 {
+namespace Cyberarms.Agents.MailServer
+{
+    public class AppLayerPop3
+    {
         public const string POP3_REPLY_CODE_ERROR = "-ERR";
 
         public const string POP3_INTERACTION_CODE_APOP = "APOP";
@@ -17,29 +17,35 @@ namespace Cyberarms.Agents.MailServer {
         public const string POP3_INTERACTION_CODE_RETR = "RETR";
         public const string POP3_INTERACTION_CODE_RSET = "RSET";
         public const string POP3_INTERACTION_CODE_STAT = "STAT";
-        public const string POP3_INTERACTION_CODE_TOP  = "TOP ";
+        public const string POP3_INTERACTION_CODE_TOP = "TOP ";
         public const string POP3_INTERACTION_CODE_UIDL = "UIDL";
         public const string POP3_INTERACTION_CODE_USER = "USER";
 
 
         public string Pop3Code { get; set; }
 
-        public AppLayerPop3(byte[] byBuffer, int nReceived) {
-            try {
-                if (nReceived > 3) {
+        public AppLayerPop3(byte[] byBuffer, int nReceived)
+        {
+            try
+            {
+                if (nReceived > 3)
+                {
                     //Create MemoryStream out of the received bytes
-                    MemoryStream memoryStream = new MemoryStream(byBuffer, 0, nReceived);
+                    MemoryStream memoryStream = new(byBuffer, 0, nReceived);
                     //Next we create a BinaryReader out of the MemoryStream
-                    BinaryReader binaryReader = new BinaryReader(memoryStream);
+                    BinaryReader binaryReader = new(memoryStream);
                     char[] replyCodeChars = binaryReader.ReadChars(4);
-                    StringBuilder replyCode = new StringBuilder();
+                    StringBuilder replyCode = new();
 
-                    if (replyCodeChars.Length == 4) {
+                    if (replyCodeChars.Length == 4)
+                    {
                         for (int i = 0; i < 4; i++) replyCode.Append(replyCodeChars[i]);
                     }
                     Pop3Code = replyCode.ToString().ToUpper();
                 }
-            } catch(Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Console.WriteLine(ex.Message);
                 throw;
             }
