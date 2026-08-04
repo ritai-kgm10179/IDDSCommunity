@@ -15,6 +15,9 @@ public class NotificationSettings
     public const string LAST_DAILY_REPORT = "{78F53752-3167-4A81-BBC2-1CEFAF3211CE}";
     public const string LAST_WEEKLY_REPORT = "{10C8A9BC-A1CA-4BD5-818C-39A4696E9C80}";
     public const string LAST_MONTHLY_REPORT = "{4D3BC893-8C13-41ED-BEF8-35BEB768C7E8}";
+    public const string DAILY_REPORT_STATE = "Reports.Daily.State";
+    public const string WEEKLY_REPORT_STATE = "Reports.Weekly.State";
+    public const string MONTHLY_REPORT_STATE = "Reports.Monthly.State";
 
     private static NotificationSettings? _instance;
 
@@ -79,6 +82,24 @@ public class NotificationSettings
         get => configuration.GetConfigValue(LAST_MONTHLY_REPORT); set => configuration.SetConfigValue(LAST_MONTHLY_REPORT, value);
     }
 
+    public ReportDeliveryState DailyReportState
+    {
+        get => GetReportState(DAILY_REPORT_STATE);
+        set => configuration.SetConfigValue(DAILY_REPORT_STATE, value.ToString());
+    }
+
+    public ReportDeliveryState WeeklyReportState
+    {
+        get => GetReportState(WEEKLY_REPORT_STATE);
+        set => configuration.SetConfigValue(WEEKLY_REPORT_STATE, value.ToString());
+    }
+
+    public ReportDeliveryState MonthlyReportState
+    {
+        get => GetReportState(MONTHLY_REPORT_STATE);
+        set => configuration.SetConfigValue(MONTHLY_REPORT_STATE, value.ToString());
+    }
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationSettings"/> class.
@@ -101,6 +122,14 @@ public class NotificationSettings
         bool.TryParse(value, out bool result);
         return result;
     }
+
+    /// <summary>
+    /// Reads a persisted report delivery state and safely handles missing or invalid values.
+    /// </summary>
+    /// <param name="key">The report state key.</param>
+    /// <returns>The parsed state, or <see cref="ReportDeliveryState.None"/>.</returns>
+    private ReportDeliveryState GetReportState(string key) =>
+        Enum.TryParse(configuration.GetConfigValue(key), ignoreCase: true, out ReportDeliveryState state) ? state : ReportDeliveryState.None;
 
     /// <summary>
     /// Executes the reload operation.

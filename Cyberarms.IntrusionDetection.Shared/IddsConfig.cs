@@ -8,6 +8,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 
 public class IddsConfig
 {
+    private readonly Database database;
 
     public const int ENABLED_FEATURES_FREE = 1;
     public const int ENABLED_FEATURES_PRO = 2;
@@ -30,7 +31,7 @@ public class IddsConfig
         {
             if (_instance == null)
             {
-                _instance = new IddsConfig();
+                _instance = new IddsConfig(Database.Instance);
                 _instance.Load();
             }
             return _instance;
@@ -62,10 +63,10 @@ public class IddsConfig
     public void Save()
     {
         //throw new NotImplementedException("Save functionality not implemented yet");
-        if (!Database.Instance.IsConfigured) configureDatabase();
+        if (!database.IsConfigured) configureDatabase();
         try
         {
-            Database.Instance.ExecuteNonQuery(@"insert into Configuration(ConfigVersionDate,
+            database.ExecuteNonQuery(@"insert into Configuration(ConfigVersionDate,
                     HardLockAttempts, HardLockTimeHours, LockForever, SoftLockAttempts, SoftLockTimeMinutes,
                     UseSafeNetworkList, PluginDirectory, LicenseKey, ActivationId, SendInfoMail,
                 SmtpPort, SenderEmailAddress, SmtpRequiresAuthentication, NotificationEmailAddress, SmtpServer,
@@ -90,11 +91,11 @@ public class IddsConfig
 
     public void Load()
     {
-        if (!Database.Instance.IsConfigured) configureDatabase();
+        if (!database.IsConfigured) configureDatabase();
         IDataReader? reader = null;
         try
         {
-            reader = Database.Instance.ExecuteReader("select * from Configuration order by ConfigVersionNumber desc LIMIT 1");
+            reader = database.ExecuteReader("select * from Configuration order by ConfigVersionNumber desc LIMIT 1");
             if (reader.Read())
             {
                 HardLockAttempts = Db.DbValueConverter.ToInt(reader["HardLockAttempts"]);
@@ -119,7 +120,7 @@ public class IddsConfig
             }
             else
             {
-                Database.Instance.ExecuteNonQuery(Db.Version_2_1.CREATE_DEFAULT_CONFIGURATION);
+                database.ExecuteNonQuery(Db.Version_2_1.CREATE_DEFAULT_CONFIGURATION);
 
             }
 
@@ -189,21 +190,21 @@ public class IddsConfig
 
     public void SaveAppConfig()
     {
-        if (!Database.Instance.IsConfigured) configureDatabase();
-        IDbTransaction trans = Database.Instance.Connection.BeginTransaction();
+        if (!database.IsConfigured) configureDatabase();
+        IDbTransaction trans = database.Connection.BeginTransaction();
         try
         {
-            Database.Instance.ExecuteNonQuery("delete from AppConfig", trans);
+            database.ExecuteNonQuery("delete from AppConfig", trans);
             foreach (string key in AppConfig.Keys)
             {
-                object? exists = Database.Instance.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
+                object? exists = database.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
                 if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
                 {
-                    Database.Instance.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
+                    database.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
                 }
                 else
                 {
-                    Database.Instance.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
+                    database.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
                 }
             }
             trans.Commit();
@@ -227,9 +228,9 @@ public class IddsConfig
 
     private Dictionary<string, string> LoadConfig(string configTable)
     {
-        if (!Database.Instance.IsConfigured) configureDatabase();
+        if (!database.IsConfigured) configureDatabase();
         Dictionary<string, string> config = [];
-        IDataReader rdr = Database.Instance.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
+        IDataReader rdr = database.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
         while (rdr.Read())
         {
             config.Add(Db.DbValueConverter.ToString(rdr["ConfigKey"]), Db.DbValueConverter.ToString(rdr["ConfigValue"]));
@@ -250,14 +251,14 @@ public class IddsConfig
 
     public void SaveSafeNetworks()
     {
-        if (!Database.Instance.IsConfigured) configureDatabase();
-        IDbTransaction trans = Database.Instance.Connection.BeginTransaction();
+        if (!database.IsConfigured) configureDatabase();
+        IDbTransaction trans = database.Connection.BeginTransaction();
         try
         {
-            Database.Instance.ExecuteNonQuery("delete from WhiteList");
+            database.ExecuteNonQuery("delete from WhiteList");
             foreach (CSafeNetwork net in SafeNetworks)
             {
-                Database.Instance.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", net.IpAddress, net.SubnetMask);
+                database.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", net.IpAddress, net.SubnetMask);
             }
             trans.Commit();
         }
@@ -276,13 +277,13 @@ public class IddsConfig
 
     public CSafeNetworks LoadNetworkList(string list)
     {
-        if (!Database.Instance.IsConfigured) configureDatabase();
+        if (!database.IsConfigured) configureDatabase();
         if (!string.Equals(list, "WhiteList", StringComparison.Ordinal))
         {
             throw new ArgumentOutOfRangeException(nameof(list), "Only the configured safe-network table can be loaded.");
         }
         CSafeNetworks net = [];
-        IDataReader rdr = Database.Instance.ExecuteReader("Select IpAddress, NetworkMask from WhiteList");
+        IDataReader rdr = database.ExecuteReader("Select IpAddress, NetworkMask from WhiteList");
         while (rdr.Read())
         {
             net.Add(new CSafeNetwork(Db.DbValueConverter.ToString(rdr["IpAddress"]), Db.DbValueConverter.ToString(rdr["NetworkMask"])));
@@ -302,7 +303,7 @@ public class IddsConfig
         {
             ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
         }
-        Database.Instance.Configure(ApplicationPath);
+        database.Configure(ApplicationPath);
     }
 
 
@@ -319,8 +320,10 @@ public class IddsConfig
     /// Initializes a new instance of the <see cref="IddsConfig"/> class.
     /// </summary>
 
-    public IddsConfig()
+    public IddsConfig(Database database)
     {
+        ArgumentNullException.ThrowIfNull(database);
+        this.database = database;
     }
 
 
@@ -371,7 +374,7 @@ public class IddsConfig
 
     public static IddsConfig GetDefaultConfiguration()
     {
-        IddsConfig config = new()
+        IddsConfig config = new(Database.Instance)
         {
             HardLockAttempts = 10,
             SoftLockAttempts = 3,

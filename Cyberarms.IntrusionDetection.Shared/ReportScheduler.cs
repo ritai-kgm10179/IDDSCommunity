@@ -126,9 +126,11 @@ public class ReportScheduler
         if (!string.Equals(dailyReportTime, notificationSettings.LastDailyReport))
         {
             // run daily report
-            await InvokeAsync(RunDailyReportAsync, cancellationToken).ConfigureAwait(false);
-            notificationSettings.LastDailyReport = dailyReportTime;
-            notificationSettings.Save();
+            await DeliverAsync(
+                RunDailyReportAsync,
+                state => notificationSettings.DailyReportState = state,
+                () => notificationSettings.LastDailyReport = dailyReportTime,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -147,9 +149,11 @@ public class ReportScheduler
         if (GetWeekOfYear(d) != GetWeekOfYear(now) && !string.Equals(weeklyReportTime, notificationSettings.LastWeeklyReport))
         {
             // run weekly report
-            await InvokeAsync(RunWeeklyReportAsync, cancellationToken).ConfigureAwait(false);
-            notificationSettings.LastWeeklyReport = weeklyReportTime;
-            notificationSettings.Save();
+            await DeliverAsync(
+                RunWeeklyReportAsync,
+                state => notificationSettings.WeeklyReportState = state,
+                () => notificationSettings.LastWeeklyReport = weeklyReportTime,
+                cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -168,9 +172,44 @@ public class ReportScheduler
         if (d.Month != now.Month && !string.Equals(monthlyReportTime, notificationSettings.LastMonthlyReport))
         {
             // run monthly report
-            await InvokeAsync(RunMonthlyReportAsync, cancellationToken).ConfigureAwait(false);
-            notificationSettings.LastMonthlyReport = monthlyReportTime;
+            await DeliverAsync(
+                RunMonthlyReportAsync,
+                state => notificationSettings.MonthlyReportState = state,
+                () => notificationSettings.LastMonthlyReport = monthlyReportTime,
+                cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Persists report delivery transitions and advances the checkpoint only after successful delivery.
+    /// </summary>
+    /// <param name="handlers">The report delivery handlers.</param>
+    /// <param name="setState">Updates the report delivery state.</param>
+    /// <param name="advanceCheckpoint">Advances the successful report checkpoint.</param>
+    /// <param name="cancellationToken">Signals cancellation of delivery.</param>
+    /// <returns>A task that completes after the durable state is updated.</returns>
+    private async Task DeliverAsync(
+        Func<CancellationToken, Task>? handlers,
+        Action<ReportDeliveryState> setState,
+        Action advanceCheckpoint,
+        CancellationToken cancellationToken)
+    {
+        setState(ReportDeliveryState.Pending);
+        notificationSettings.Save();
+        setState(ReportDeliveryState.Sending);
+        notificationSettings.Save();
+        try
+        {
+            await InvokeAsync(handlers, cancellationToken).ConfigureAwait(false);
+            advanceCheckpoint();
+            setState(ReportDeliveryState.Succeeded);
             notificationSettings.Save();
+        }
+        catch
+        {
+            setState(ReportDeliveryState.Failed);
+            notificationSettings.Save();
+            throw;
         }
     }
 
