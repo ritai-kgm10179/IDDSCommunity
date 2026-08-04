@@ -9,6 +9,38 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 public class DatabaseUpgradeTest
 {
     /// <summary>
+    /// Verifies that asynchronous transaction failures roll back all writes.
+    /// </summary>
+    /// <returns>A task that completes after rollback is verified.</returns>
+    [TestMethod]
+    public async System.Threading.Tasks.Task ExecuteInTransactionAsync_WhenOperationFails_RollsBack()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "CyberarmsTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => database.ExecuteInTransactionAsync(async (connection, transaction, cancellationToken) =>
+            {
+                await using Microsoft.Data.Sqlite.SqliteCommand command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "INSERT INTO AppConfig(ConfigKey, ConfigValue) VALUES ('transaction-test', 'value')";
+                await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                throw new InvalidOperationException("rollback requested");
+            })).ConfigureAwait(false);
+
+            long? count = await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM AppConfig WHERE ConfigKey = 'transaction-test'").ConfigureAwait(false);
+            Assert.AreEqual(0L, count);
+        }
+        finally
+        {
+            database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Verifies that an incomplete legacy schema is rejected instead of being marked as migrated.
     /// </summary>
     [TestMethod]
