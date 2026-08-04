@@ -10,6 +10,10 @@ public partial class SplashScreen : Form
 
     readonly Timer t = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SplashScreen"/> class.
+    /// </summary>
+
     public SplashScreen()
     {
         InitializeComponent();
@@ -19,6 +23,12 @@ public partial class SplashScreen : Form
         Load += new EventHandler(SplashScreen_Load);
     }
 
+    /// <summary>
+    /// Handles the load event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void SplashScreen_Load(object? sender, EventArgs e)
     {
         t.Interval = 100;
@@ -26,6 +36,10 @@ public partial class SplashScreen : Form
         t.Tick += new EventHandler(t_Tick);
 
     }
+
+    /// <summary>
+    /// Starts up components.
+    /// </summary>
 
     public void StartupComponents()
     {
@@ -52,6 +66,12 @@ public partial class SplashScreen : Form
 
     public bool IsUpdating { get; set; }
 
+
+    /// <summary>
+    /// Handles the tick event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void t_Tick(object? sender, EventArgs e)
     {

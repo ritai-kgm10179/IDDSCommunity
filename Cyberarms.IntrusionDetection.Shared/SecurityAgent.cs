@@ -12,12 +12,36 @@ public class SecurityAgent : IAgentFilter
 
     public event EventHandler? StatisticsUpdated;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// </summary>
+
     public SecurityAgent() { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="id">The id value.</param>
 
     public SecurityAgent(string name, Guid id)
         : this(name) => Id = id;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+
     public SecurityAgent(string name) => Name = name;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="failedLogins">The failed logins value.</param>
+    /// <param name="hardLocks">The hard locks value.</param>
+    /// <param name="softLocks">The soft locks value.</param>
+    /// <param name="icon">The icon value.</param>
 
     public SecurityAgent(string name, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name)
@@ -29,8 +53,23 @@ public class SecurityAgent : IAgentFilter
     }
 
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="id">The id value.</param>
+    /// <param name="failedLogins">The failed logins value.</param>
+    /// <param name="hardLocks">The hard locks value.</param>
+    /// <param name="softLocks">The soft locks value.</param>
+    /// <param name="icon">The icon value.</param>
+
     public SecurityAgent(string name, Guid id, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name, failedLogins, hardLocks, softLocks, icon) => Id = id;
+
+    /// <summary>
+    /// Executes the check config version by id operation.
+    /// </summary>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
 
     public bool CheckConfigVersionById()
     {
@@ -48,6 +87,11 @@ public class SecurityAgent : IAgentFilter
         return false;
     }
 
+    /// <summary>
+    /// Executes the check config version by name operation.
+    /// </summary>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+
     public bool CheckConfigVersionByName()
     {
         string sqlCommand = "Select Serial from SecurityAgents where Name=@p0";
@@ -62,6 +106,10 @@ public class SecurityAgent : IAgentFilter
         }
         return false;
     }
+
+    /// <summary>
+    /// Executes the reload operation.
+    /// </summary>
 
     public void Reload()
     {
@@ -91,6 +139,10 @@ public class SecurityAgent : IAgentFilter
         LoadCustomConfig();
     }
 
+    /// <summary>
+    /// Loads custom config.
+    /// </summary>
+
     public void LoadCustomConfig()
     {
         IDataReader rdr = Database.Instance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id);
@@ -116,12 +168,24 @@ public class SecurityAgent : IAgentFilter
         get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
     }
 
+    /// <summary>
+    /// Executes the from image operation.
+    /// </summary>
+    /// <param name="value">The value to process.</param>
+    /// <returns>The from image result.</returns>
+
     private static byte[] FromImage(Image value)
     {
         MemoryStream ms = new();
         value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         return ms.ToArray();
     }
+
+    /// <summary>
+    /// Executes the from byte operation.
+    /// </summary>
+    /// <param name="value">The value to process.</param>
+    /// <returns>The from byte result.</returns>
 
     private static Image FromByte(byte[] value)
     {
@@ -142,6 +206,10 @@ public class SecurityAgent : IAgentFilter
     {
         get => FromByte(_icon); set => _icon = FromImage(value);
     }
+
+    /// <summary>
+    /// Saves requested operation.
+    /// </summary>
 
     public void Save()
     {
@@ -177,6 +245,12 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         }
     }
 
+    /// <summary>
+    /// Executes the does exist in db operation.
+    /// </summary>
+    /// <param name="id">The id value.</param>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+
     public static bool DoesExistInDb(Guid id)
     {
         string sqlString = "select AgentId from SecurityAgents where AgentId = @p0";
@@ -184,6 +258,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         if (result != null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId)) return true;
         return false;
     }
+
+    /// <summary>
+    /// Saves custom config.
+    /// </summary>
 
     public void SaveCustomConfig()
     {
@@ -204,6 +282,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             Database.Instance.ExecuteNonQuery(sql, CustomConfiguration[key], Id, key);
         }
     }
+
+    /// <summary>
+    /// Updates statistics.
+    /// </summary>
 
     public void UpdateStatistics()
     {
@@ -237,7 +319,16 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         catch { }
     }
 
+    /// <summary>
+    /// Processes the statistics updated notification.
+    /// </summary>
+
     private void OnStatisticsUpdated() => StatisticsUpdated?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Gets id.
+    /// </summary>
+    /// <returns>The get id result.</returns>
 
     public Guid GetId()
     {
@@ -271,6 +362,12 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public string AssemblyFilename { get; set; } = string.Empty;
     public bool BinaryMissing { get; set; }
     public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
+
+    /// <summary>
+    /// Gets current lock type.
+    /// </summary>
+    /// <param name="IpAddress">The ip address value.</param>
+    /// <returns>The get current lock type result.</returns>
 
     public LockType GetCurrentLockType(string IpAddress)
     {

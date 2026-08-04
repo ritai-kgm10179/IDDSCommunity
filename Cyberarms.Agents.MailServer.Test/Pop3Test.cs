@@ -5,6 +5,10 @@ namespace Cyberarms.Agents.MailServer.Test;
 [TestClass]
 public class Pop3Test
 {
+    /// <summary>
+    /// Executes the test pop3 parser operation.
+    /// </summary>
+
     [TestMethod]
     public void TestPop3Parser()
     {
@@ -16,6 +20,10 @@ public class Pop3Test
             Assert.AreEqual(Pop3Message.PASS, agent.CurrentClients[key].LastMessage);
         }
     }
+
+    /// <summary>
+    /// Executes the test pop3 err msg operation.
+    /// </summary>
 
     [TestMethod]
     public void TestPop3ErrMsg()
@@ -34,11 +42,21 @@ public class Pop3Test
 
     bool attackDetected = false;
 
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="data">The event data.</param>
+
     void agent_AttackDetected(object sender, IntrusionDetection.Api.Plugin.INotificationEventArgs data)
     {
         attackDetected = true;
         System.Diagnostics.Debug.Print(data.EventMessage);
     }
+
+    /// <summary>
+    /// Executes the test pop3 watcher operation.
+    /// </summary>
 
     [TestMethod, Ignore]
     public void TestPop3Watcher()

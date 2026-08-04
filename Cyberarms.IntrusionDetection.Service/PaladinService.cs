@@ -27,6 +27,10 @@ public partial class Service : ServiceBase
     // private System.Timers.Timer restartTimer = new System.Timers.Timer(2000);
     private bool isInitialized;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Service"/> class.
+    /// </summary>
+
     public Service()
     {
         InitializeComponent();
@@ -49,6 +53,12 @@ public partial class Service : ServiceBase
 
     }
 
+    /// <summary>
+    /// Handles the run monthly report event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void Instance_RunMonthlyReport(object? sender, EventArgs e)
     {
         try
@@ -64,6 +74,12 @@ public partial class Service : ServiceBase
             WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
     }
+
+    /// <summary>
+    /// Handles the run weekly report event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void Instance_RunWeeklyReport(object? sender, EventArgs e)
     {
@@ -81,6 +97,12 @@ public partial class Service : ServiceBase
         }
     }
 
+    /// <summary>
+    /// Handles the run daily report event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void Instance_RunDailyReport(object? sender, EventArgs e)
     {
         try
@@ -97,6 +119,10 @@ public partial class Service : ServiceBase
     }
 
 
+    /// <summary>
+    /// Configures system.
+    /// </summary>
+
     static void ConfigureSystem()
     {
         Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
@@ -112,6 +138,12 @@ public partial class Service : ServiceBase
     //    restartTimer.Enabled = true;
     //}
 
+    /// <summary>
+    /// Handles the client ip address hard locked event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void Service_ClientIpAddressHardLocked(object? sender, EventArgs e)
     {
         if (sender is not ClientOperationInformation op)
@@ -119,6 +151,12 @@ public partial class Service : ServiceBase
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
         SendInfoMail(op, LockType.HardLock);
     }
+
+    /// <summary>
+    /// Handles the client ip address unlocked event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void Service_ClientIpAddressUnlocked(object? sender, EventArgs e)
     {
@@ -135,6 +173,12 @@ public partial class Service : ServiceBase
         SendInfoMail(op, LockType.None);
     }
 
+    /// <summary>
+    /// Handles the client ip address soft locked event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void Service_ClientIpAddressSoftLocked(object? sender, EventArgs e)
     {
         if (sender is not ClientOperationInformation op)
@@ -142,6 +186,13 @@ public partial class Service : ServiceBase
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
         SendInfoMail(op, LockType.SoftLock);
     }
+
+    /// <summary>
+    /// Processes the client ip address hard locked notification.
+    /// </summary>
+    /// <param name="lockItem">The lock item value.</param>
+    /// <param name="ex">The exception associated with the operation.</param>
+    /// <param name="agentId">The agent id value.</param>
 
     void OnClientIpAddressHardLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
@@ -152,6 +203,14 @@ public partial class Service : ServiceBase
             ClientIpAddressHardLocked(co, EventArgs.Empty);
         }
     }
+
+    /// <summary>
+    /// Gets client operation information.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ex">The exception associated with the operation.</param>
+    /// <param name="info">The info value.</param>
+    /// <returns>The get client operation information result.</returns>
 
     private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception? ex, string info)
     {
@@ -172,6 +231,13 @@ public partial class Service : ServiceBase
         return op;
     }
 
+    /// <summary>
+    /// Processes the client ip address soft locked notification.
+    /// </summary>
+    /// <param name="lockItem">The lock item value.</param>
+    /// <param name="ex">The exception associated with the operation.</param>
+    /// <param name="agentId">The agent id value.</param>
+
     void OnClientIpAddressSoftLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
         if (ClientIpAddressSoftLocked != null)
@@ -181,6 +247,12 @@ public partial class Service : ServiceBase
             ClientIpAddressSoftLocked(co, EventArgs.Empty);
         }
     }
+
+    /// <summary>
+    /// Processes the client ip address unlocked notification.
+    /// </summary>
+    /// <param name="lockItem">The lock item value.</param>
+    /// <param name="ex">The exception associated with the operation.</param>
 
     void OnClientIpAddressUnlocked(Lock lockItem, Exception? ex)
     {
@@ -205,6 +277,12 @@ public partial class Service : ServiceBase
         }
     }
 
+
+    /// <summary>
+    /// Sends info mail.
+    /// </summary>
+    /// <param name="o">The o value.</param>
+    /// <param name="lockOperation">The lock operation value.</param>
 
     void SendInfoMail(object o, LockType lockOperation)
     {
@@ -240,6 +318,12 @@ public partial class Service : ServiceBase
         }
     }
 
+    /// <summary>
+    /// Sends mail.
+    /// </summary>
+    /// <param name="subject">The subject value.</param>
+    /// <param name="message">The message value.</param>
+
     static void SendMail(string subject, string message)
     {
         try
@@ -271,6 +355,10 @@ public partial class Service : ServiceBase
 
 
 
+    /// <summary>
+    /// Executes the init operation.
+    /// </summary>
+
     private void Init()
     {
 
@@ -283,6 +371,12 @@ public partial class Service : ServiceBase
     }
 
 
+
+    /// <summary>
+    /// Handles the elapsed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
@@ -326,6 +420,13 @@ public partial class Service : ServiceBase
 
 
     public bool LimitMailSent { get; set; }
+
+    /// <summary>
+    /// Executes the lock down ip operation.
+    /// </summary>
+    /// <param name="lockItem">The lock item value.</param>
+    /// <param name="lockType">The lock type value.</param>
+    /// <param name="reportingAgent">The reporting agent value.</param>
 
     void LockDownIp(Lock lockItem, LockType lockType, SecurityAgent reportingAgent)
     {
@@ -386,16 +487,30 @@ public partial class Service : ServiceBase
 
 
 
+    /// <summary>
+    /// Processes the start notification.
+    /// </summary>
+    /// <param name="args">The event data.</param>
+
     protected override void OnStart(string[] args)
     {
         StartServiceDelegate serviceStarter = new(StartService);
         IAsyncResult result = serviceStarter.BeginInvoke(new AsyncCallback(StartServiceHandler), null);
     }
 
+    /// <summary>
+    /// Starts service handler.
+    /// </summary>
+    /// <param name="result">The result value.</param>
+
     void StartServiceHandler(IAsyncResult result)
     {
         // service started
     }
+
+    /// <summary>
+    /// Starts service.
+    /// </summary>
 
     void StartService()
     {
@@ -419,6 +534,10 @@ Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_R
     }
 
 
+    /// <summary>
+    /// Processes the stop notification.
+    /// </summary>
+
     protected override void OnStop()
     {
         SecurityAgents.Instance.StopAgents();
@@ -427,6 +546,10 @@ Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_R
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         UnloadAgents();
     }
+
+    /// <summary>
+    /// Processes the pause notification.
+    /// </summary>
 
     protected override void OnPause()
     {
@@ -438,6 +561,10 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 
     }
 
+    /// <summary>
+    /// Processes the continue notification.
+    /// </summary>
+
     protected override void OnContinue()
     {
         //SecurityAgents.Instance.LoadAgents();
@@ -447,9 +574,19 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
     }
 
+    /// <summary>
+    /// Executes the init agent configuration operation.
+    /// </summary>
+
     private static void InitAgentConfiguration() => SecurityAgents.Instance.RegisterSecurityAgents();
 
 
+
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="notificationEventArgs">The event data.</param>
 
     void Service_AttackDetected(object sender, INotificationEventArgs notificationEventArgs)
     {
@@ -540,6 +677,10 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 
 
 
+    /// <summary>
+    /// Loads agents.
+    /// </summary>
+
     private void LoadAgents()
     {
         SecurityAgents.Instance.LoadAgents();
@@ -553,6 +694,10 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
     }
 
+
+    /// <summary>
+    /// Executes the unload agents operation.
+    /// </summary>
 
     private static void UnloadAgents() => SecurityAgents.Instance.UnloadAgents();
 

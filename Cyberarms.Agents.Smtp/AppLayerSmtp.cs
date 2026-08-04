@@ -12,6 +12,12 @@ public class AppLayerSmtp
 
     public string SmtpReplyCode { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AppLayerSmtp"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public AppLayerSmtp(byte[] byBuffer, int nReceived)
     {
         try

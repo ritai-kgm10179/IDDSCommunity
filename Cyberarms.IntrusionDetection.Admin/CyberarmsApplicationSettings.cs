@@ -15,12 +15,22 @@ public partial class CyberarmsApplicationSettings : UserControl
     public event EventHandler? ConfigurationChanged;
 
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsApplicationSettings"/> class.
+    /// </summary>
+
     public CyberarmsApplicationSettings()
     {
         InitializeComponent();
         BackColor = Color.White;
         Load += new EventHandler(CyberamsApplicationSettings_Load);
     }
+
+    /// <summary>
+    /// Handles the load event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
@@ -51,6 +61,12 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the lockout configuration changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _lockoutConfiguration_LockoutConfigurationChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
 
@@ -77,6 +93,12 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the safe networks changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelSafeNetworks_SafeNetworksChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelSmtpSettings? _panelSmtpSettings;
@@ -98,6 +120,12 @@ public partial class CyberarmsApplicationSettings : UserControl
 
     }
 
+    /// <summary>
+    /// Handles the smtp settings changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelNotificationSettings? _panelNotificationSettings;
@@ -118,7 +146,19 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the notification settings changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
+
+    /// <summary>
+    /// Handles the navigation changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void cyberarmsSettingsNavigation_NavigationChanged(object? sender, EventArgs? e)
     {
@@ -140,6 +180,10 @@ public partial class CyberarmsApplicationSettings : UserControl
                 break;
         }
     }
+
+    /// <summary>
+    /// Processes the configuration changed notification.
+    /// </summary>
 
     private void OnConfigurationChanged() => ConfigurationChanged?.Invoke(this, EventArgs.Empty);
 

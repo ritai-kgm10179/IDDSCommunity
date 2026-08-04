@@ -6,6 +6,10 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 [TestClass]
 public class UnitTest1
 {
+    /// <summary>
+    /// Executes the test event log reader operation.
+    /// </summary>
+
     [TestMethod]
     public void TestEventLogReader()
     {
@@ -51,6 +55,10 @@ public class UnitTest1
     }
 
 
+
+    /// <summary>
+    /// Writes event log test.
+    /// </summary>
 
     [TestMethod]
     public void WriteEventLogTest()

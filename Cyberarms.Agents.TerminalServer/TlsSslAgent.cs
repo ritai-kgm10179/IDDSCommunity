@@ -16,12 +16,20 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     readonly List<Sniffer> sniffers = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TlsSslAgent"/> class.
+    /// </summary>
+
     public TlsSslAgent()
     {
         TslSslConfig settings = new();
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
+
+    /// <summary>
+    /// Processes the start agent notification.
+    /// </summary>
 
     protected override void OnStartAgent()
     {
@@ -30,6 +38,10 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         td.Start();
         base.OnStartAgent();
     }
+
+    /// <summary>
+    /// Executes the run watcher operation.
+    /// </summary>
 
     void RunWatcher()
     {
@@ -49,6 +61,11 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
 
 
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+
     void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not TslSslConfig settings) return;
@@ -60,6 +77,12 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         s.WatchAddress(address);
         sniffers.Add(s);
     }
+
+    /// <summary>
+    /// Handles the ip packet sent event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void s_IpPacketSent(object? sender, EventArgs e)
     {
@@ -102,7 +125,16 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// Processes the trace notification.
+    /// </summary>
+    /// <param name="tlsPackage">The tls package value.</param>
+
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the continue agent notification.
+    /// </summary>
 
     protected override void OnContinueAgent()
     {
@@ -110,11 +142,19 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         base.OnContinueAgent();
     }
 
+    /// <summary>
+    /// Processes the pause agent notification.
+    /// </summary>
+
     protected override void OnPauseAgent()
     {
         Stop();
         base.OnPauseAgent();
     }
+
+    /// <summary>
+    /// Processes the stop agent notification.
+    /// </summary>
 
     protected override void OnStopAgent()
     {
@@ -128,6 +168,11 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     public override bool IsRunning => base.IsRunning;
+
+    /// <summary>
+    /// Executes the unsuccessful login operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     void UnsuccessfulLogin(string ipAddress)
     {

@@ -7,7 +7,15 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class IntrusionLogTest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IntrusionLogTest"/> class.
+    /// </summary>
+
     public IntrusionLogTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
+
+    /// <summary>
+    /// Reads interval test.
+    /// </summary>
 
     [TestMethod]
     public void ReadIntervalTest()
@@ -23,15 +31,27 @@ public class IntrusionLogTest
 
     }
 
+    /// <summary>
+    /// Determines whether s updates test.
+    /// </summary>
+
     [TestMethod]
     public void HasUpdatesTest()
     {
     }
 
+    /// <summary>
+    /// Reads differential test.
+    /// </summary>
+
     [TestMethod]
     public void ReadDifferentialTest()
     {
     }
+
+    /// <summary>
+    /// Executes the prepare intrusion log operation.
+    /// </summary>
 
     private static void prepareIntrusionLog()
     {

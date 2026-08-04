@@ -10,6 +10,10 @@ public partial class PanelLockoutConfiguration : UserControl
 
     public event EventHandler? LockoutConfigurationChanged;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PanelLockoutConfiguration"/> class.
+    /// </summary>
+
     public PanelLockoutConfiguration()
     {
         InitializeComponent();
@@ -17,11 +21,27 @@ public partial class PanelLockoutConfiguration : UserControl
         LoadData();
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X + 1, pictureBoxEdit.Location.Y + 1);
+
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
 
     public bool IsInEditMode { get; set; }
+
+    /// <summary>
+    /// Loads data.
+    /// </summary>
 
     private void LoadData()
     {
@@ -33,12 +53,22 @@ public partial class PanelLockoutConfiguration : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         //if (IsInEditMode) LoadData();
         //ToggleEditMode();
         //ClearErrors();
     }
+
+    /// <summary>
+    /// Executes the toggle edit mode operation.
+    /// </summary>
 
     private static void ToggleEditMode()
     {
@@ -57,6 +87,10 @@ public partial class PanelLockoutConfiguration : UserControl
         //checkBoxLockForever.Enabled = IsInEditMode;
     }
 
+    /// <summary>
+    /// Clears errors.
+    /// </summary>
+
     private void ClearErrors()
     {
         errHardLockDuration.Visible = false;
@@ -64,6 +98,12 @@ public partial class PanelLockoutConfiguration : UserControl
         errSoftLockDuration.Visible = false;
         errSoftLocks.Visible = false;
     }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
@@ -103,7 +143,17 @@ public partial class PanelLockoutConfiguration : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Processes the lockout configuration changed notification.
+    /// </summary>
+
     private void OnLockoutConfigurationChanged() => LockoutConfigurationChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e)
     {
@@ -111,13 +161,30 @@ public partial class PanelLockoutConfiguration : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void textBoxSoftLocks_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    /// <summary>
+    /// Sets edit mode.
+    /// </summary>
+    /// <param name="hasChanges">A value indicating whether s changes.</param>
 
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBoxLockForever_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 }

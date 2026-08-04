@@ -10,6 +10,12 @@ public class Locks
 
 
 
+    /// <summary>
+    /// Determines whether s updates.
+    /// </summary>
+    /// <param name="lastUpdate">The last update value.</param>
+    /// <returns><see langword="true"/> if s updates; otherwise, <see langword="false"/>.</returns>
+
     public static bool HasUpdates(DateTime lastUpdate)
     {
         if (Database.Instance.IsConfigured)
@@ -32,6 +38,11 @@ public class Locks
 
 
 
+    /// <summary>
+    /// Reads locks.
+    /// </summary>
+    /// <returns>The read locks result.</returns>
+
     public static IDataReader ReadLocks()
     {
         if (Database.Instance.IsConfigured)
@@ -46,6 +57,11 @@ public class Locks
             throw new ApplicationException("Database not initialized");
         }
     }
+
+    /// <summary>
+    /// Executes the today operation.
+    /// </summary>
+    /// <returns>The today result.</returns>
 
     public static int Today()
     {
@@ -68,12 +84,22 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// Reads current soft locks.
+    /// </summary>
+    /// <returns>The read current soft locks result.</returns>
+
     public static int ReadCurrentSoftLocks()
     {
         object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0) ", (int)LockStatus.SoftLocked);
         int.TryParse(result?.ToString(), out int softLocks);
         return softLocks;
     }
+
+    /// <summary>
+    /// Reads current hard locks.
+    /// </summary>
+    /// <returns>The read current hard locks result.</returns>
 
     public static int ReadCurrentHardLocks()
     {
@@ -82,12 +108,23 @@ public class Locks
         return hardLocks;
     }
 
+    /// <summary>
+    /// Reads unsuccessful login attempts.
+    /// </summary>
+    /// <param name="startDate">The start date value.</param>
+    /// <returns>The read unsuccessful login attempts result.</returns>
+
     public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
     {
         object? result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
         int.TryParse(result?.ToString(), out int intrusionAttempts);
         return intrusionAttempts;
     }
+
+    /// <summary>
+    /// Gets current locks.
+    /// </summary>
+    /// <returns>The get current locks result.</returns>
 
     public static List<Lock> GetCurrentLocks()
     {
@@ -118,6 +155,12 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// Gets lock by id.
+    /// </summary>
+    /// <param name="id">The id value.</param>
+    /// <returns>The get lock by id result.</returns>
+
     public static Lock GetLockById(long id)
     {
         if (Database.Instance.IsConfigured)
@@ -144,6 +187,12 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// Executes the lock exists operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+
     public static bool LockExists(string ipAddress)
     {
         if (Database.Instance.IsConfigured)
@@ -167,6 +216,17 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// Creates lock.
+    /// </summary>
+    /// <param name="lockDate">The lock date value.</param>
+    /// <param name="unlockDate">The unlock date value.</param>
+    /// <param name="triggerIncident">The trigger incident value.</param>
+    /// <param name="status">The status value.</param>
+    /// <param name="port">The port value.</param>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <returns>The create lock result.</returns>
+
     public static Lock CreateLock(DateTime lockDate, DateTime unlockDate, long triggerIncident, int status, int port, string ipAddress)
     {
         Lock l = new()
@@ -181,6 +241,12 @@ public class Locks
         l.Id = CreateLock(l);
         return l;
     }
+
+    /// <summary>
+    /// Creates lock.
+    /// </summary>
+    /// <param name="l">The l value.</param>
+    /// <returns>The create lock result.</returns>
 
     public static long CreateLock(Lock l)
     {
@@ -199,6 +265,11 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// Updates lock.
+    /// </summary>
+    /// <param name="l">The l value.</param>
+
     public static void UpdateLock(Lock l)
     {
         if (Database.Instance.IsConfigured)
@@ -211,6 +282,11 @@ public class Locks
             throw new ApplicationException("Database not initialized");
         }
     }
+
+    /// <summary>
+    /// Gets unlock list.
+    /// </summary>
+    /// <returns>The get unlock list result.</returns>
 
     public static List<Lock> GetUnlockList()
     {

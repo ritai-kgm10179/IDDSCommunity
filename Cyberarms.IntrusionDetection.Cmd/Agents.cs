@@ -7,6 +7,11 @@ namespace Cyberarms.IntrusionDetection.Cmd;
 
 internal class Agents : List<Agent>
 {
+    /// <summary>
+    /// Loads requested operation.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+
     internal void Load(string assemblyName)
     {
         Type pInterfaceType = typeof(IAgentPlugin);
@@ -32,6 +37,11 @@ internal class Agents : List<Agent>
             }
         }
     }
+
+    /// <summary>
+    /// Loads all.
+    /// </summary>
+    /// <param name="configFilename">The config filename value.</param>
 
     internal static void LoadAll(string configFilename) { }
 }

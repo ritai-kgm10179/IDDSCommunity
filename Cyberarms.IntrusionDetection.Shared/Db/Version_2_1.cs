@@ -126,6 +126,11 @@ CREATE TABLE AgentStatistics(
     HardLocks int not null default 0, 
     SoftLocks int not null default 0)";
 
+    /// <summary>
+    /// Executes the upgrade database operation.
+    /// </summary>
+    /// <param name="connection">The connection value.</param>
+
     public override void UpgradeDatabase(System.Data.IDbConnection connection)
     {
         try

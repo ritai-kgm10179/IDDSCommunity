@@ -71,6 +71,11 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         query = null;
     }
 
+    /// <summary>
+    /// Sets watcher enabled.
+    /// </summary>
+    /// <param name="enabled">The enabled value.</param>
+
     private void SetWatcherEnabled(bool enabled)
     {
         if (watcher is not null)
@@ -78,6 +83,12 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
             watcher.Enabled = enabled;
         }
     }
+
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {

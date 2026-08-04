@@ -19,6 +19,12 @@ public class TCPHeader
     private readonly ushort usMessageLength;
     private readonly byte[] byTCPData = new byte[128];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TCPHeader"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public TCPHeader(byte[] byBuffer, int nReceived)
     {
         using MemoryStream memoryStream = new(byBuffer, 0, nReceived);

@@ -13,8 +13,16 @@ public class SearchBox : Control
     Rectangle clearSearchButtonPosition;
     bool isEmpty;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SearchBox"/> class.
+    /// </summary>
+
     public SearchBox() => InitializeComponents();
 
+
+    /// <summary>
+    /// Executes the initialize components operation.
+    /// </summary>
 
     public void InitializeComponents()
     {
@@ -48,6 +56,12 @@ public class SearchBox : Control
         textBoxSearch.TextChanged += new EventHandler(textBoxSearch_TextChanged);
     }
 
+    /// <summary>
+    /// Handles the text changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void textBoxSearch_TextChanged(object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(Text) && !isEmpty || !string.IsNullOrEmpty(Text) && isEmpty)
@@ -57,7 +71,19 @@ public class SearchBox : Control
         }
     }
 
+    /// <summary>
+    /// Handles the font changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void SearchBox_FontChanged(object? sender, EventArgs e) => textBoxSearch.Font = Font;
+
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void textBoxSearch_KeyPress(object? sender, KeyPressEventArgs e)
     {
@@ -74,6 +100,12 @@ public class SearchBox : Control
         }
     }
 
+    /// <summary>
+    /// Handles the size changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void SearchBox_SizeChanged(object? sender, EventArgs e)
     {
         textBoxSearch.Width = Width - 44;
@@ -83,11 +115,29 @@ public class SearchBox : Control
     }
 
 
+    /// <summary>
+    /// Handles the back color changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void SearchBox_BackColorChanged(object? sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
+
+    /// <summary>
+    /// Handles the fore color changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void SearchBox_ForeColorChanged(object? sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
 
 
+
+    /// <summary>
+    /// Handles the paint event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void SearchBox_Paint(object? sender, PaintEventArgs e)
     {
@@ -100,6 +150,12 @@ public class SearchBox : Control
 
     public Image? SearchImage { get; set; }
     public Image? ClearImage { get; set; }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void SearchBox_Click(object? sender, EventArgs e)
     {
@@ -117,7 +173,15 @@ public class SearchBox : Control
     }
 
 
+    /// <summary>
+    /// Processes the search notification.
+    /// </summary>
+
     private void OnSearch() => Search?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the clear search notification.
+    /// </summary>
 
     private void OnClearSearch()
     {
@@ -126,11 +190,19 @@ public class SearchBox : Control
 
     }
 
+    /// <summary>
+    /// Removes clear button.
+    /// </summary>
+
     private void RemoveClearButton()
     {
         var g = Graphics.FromHwnd(Handle);
         g.FillRectangle(new SolidBrush(BackColor), clearSearchButtonPosition);
     }
+
+    /// <summary>
+    /// Executes the paint clear button operation.
+    /// </summary>
 
     private void PaintClearButton()
     {
@@ -166,7 +238,17 @@ public class SearchBox : Control
 
     public class SearchTextBox : TextBox
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchTextBox"/> class.
+        /// </summary>
+
         public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
+
+        /// <summary>
+        /// Handles the text changed event.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
 
         void SearchTextBox_TextChanged(object? sender, EventArgs e)
         {

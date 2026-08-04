@@ -19,12 +19,25 @@ public class Sniffer
 
     private bool isPaused = false;
 
+    /// <summary>
+    /// Executes the pause operation.
+    /// </summary>
+
     public void Pause() => isPaused = true;
+
+    /// <summary>
+    /// Executes the continue operation.
+    /// </summary>
 
     public void Continue() => isPaused = false;
 
 
     public IPAddress IPAddress { get; set; } = IPAddress.Loopback;
+
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddressToMonitor">The ip address to monitor value.</param>
 
     public void WatchAddress(object? ipAddressToMonitor)
     {
@@ -58,6 +71,11 @@ public class Sniffer
 
     }
 
+    /// <summary>
+    /// Processes the receive notification.
+    /// </summary>
+    /// <param name="ar">The ar value.</param>
+
     private void OnReceive(IAsyncResult ar)
     {
         if (!isPaused)
@@ -90,12 +108,22 @@ public class Sniffer
         }
     }
 
+    /// <summary>
+    /// Processes the packet sent notification.
+    /// </summary>
+    /// <param name="ipHeader">The ip header value.</param>
+
     private void OnPacketSent(IPHeader ipHeader)
     {
         IpPacketSent?.Invoke(ipHeader, EventArgs.Empty);
         TCPHeader tcpHeader = new(ipHeader.Data, ipHeader.MessageLength);
         TcpPacketSent?.Invoke(tcpHeader, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Processes the packet received notification.
+    /// </summary>
+    /// <param name="ipHeader">The ip header value.</param>
 
     private void OnPacketReceived(IPHeader ipHeader)
     {
@@ -105,7 +133,16 @@ public class Sniffer
     }
 
 
+    /// <summary>
+    /// Closes socket.
+    /// </summary>
+
     public void CloseSocket() => ipSocket?.Close();
+
+    /// <summary>
+    /// Executes the log trace operation.
+    /// </summary>
+    /// <param name="ex">The exception associated with the operation.</param>
 
     public static void LogTrace(Exception ex)
     {

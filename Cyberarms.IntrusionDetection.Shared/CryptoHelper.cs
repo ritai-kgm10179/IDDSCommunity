@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Security.Cryptography;
 
@@ -7,6 +7,13 @@ namespace Cyberarms.IntrusionDetection.Shared;
 internal class CryptoHelper
 {
     private const string YYHAU_SDBN = "usHN,:_ADs24adH:S";
+
+    /// <summary>
+    /// Executes the encrypt operation.
+    /// </summary>
+    /// <param name="toEncrypt">The to encrypt value.</param>
+    /// <param name="useHashing">The use hashing value.</param>
+    /// <returns>The encrypt result.</returns>
 
     internal static string Encrypt(string toEncrypt, bool useHashing)
     {
@@ -33,6 +40,13 @@ internal class CryptoHelper
         byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
         return Convert.ToBase64String(resultArray, 0, resultArray.Length);
     }
+
+    /// <summary>
+    /// Executes the decrypt operation.
+    /// </summary>
+    /// <param name="cipherString">The cipher string value.</param>
+    /// <param name="useHashing">The use hashing value.</param>
+    /// <returns>The decrypt result.</returns>
 
     internal static string Decrypt(string cipherString, bool useHashing)
     {

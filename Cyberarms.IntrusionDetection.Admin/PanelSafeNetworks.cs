@@ -11,6 +11,10 @@ public partial class PanelSafeNetworks : UserControl
 
     public event EventHandler? SafeNetworksChanged;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PanelSafeNetworks"/> class.
+    /// </summary>
+
     public PanelSafeNetworks()
     {
         InitializeComponent();
@@ -20,7 +24,19 @@ public partial class PanelSafeNetworks : UserControl
         Load += new EventHandler(PanelSafeNetworks_Load);
     }
 
+    /// <summary>
+    /// Handles the load event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void PanelSafeNetworks_Load(object? sender, EventArgs e) => LoadData();
+
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void textBoxAddNetwork_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -35,6 +51,10 @@ public partial class PanelSafeNetworks : UserControl
             e.Handled = true;
         }
     }
+
+    /// <summary>
+    /// Adds network.
+    /// </summary>
 
     private void AddNetwork()
     {
@@ -61,11 +81,19 @@ public partial class PanelSafeNetworks : UserControl
         }
     }
 
+    /// <summary>
+    /// Executes the show add network panel operation.
+    /// </summary>
+
     private void ShowAddNetworkPanel()
     {
         smartPanelAdd.Visible = true;
         textBoxAddNetwork.Focus();
     }
+
+    /// <summary>
+    /// Executes the hide network panel operation.
+    /// </summary>
 
     private void HideNetworkPanel()
     {
@@ -74,11 +102,23 @@ public partial class PanelSafeNetworks : UserControl
         smartPanelAdd.Visible = false;
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
         ShowAddNetworkPanel();
         SetEditMode(true);
     }
+
+    /// <summary>
+    /// Handles the double click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void listBoxSafeNetworks_DoubleClick(object sender, EventArgs e)
     {
@@ -89,6 +129,12 @@ public partial class PanelSafeNetworks : UserControl
             ShowAddNetworkPanel();
         }
     }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxDelete_Click(object sender, EventArgs e)
     {
@@ -104,9 +150,27 @@ public partial class PanelSafeNetworks : UserControl
         SetEditMode(true);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void button1_Click(object sender, EventArgs e) => HideNetworkPanel();
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void buttonAddNetwork_Click(object sender, EventArgs e) => AddNetwork();
+
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void listBoxSafeNetworks_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -122,9 +186,19 @@ public partial class PanelSafeNetworks : UserControl
         }
     }
 
+    /// <summary>
+    /// Processes the safe networks changed notification.
+    /// </summary>
+
     private void OnSafeNetworksChanged() => SafeNetworksChanged?.Invoke(this, EventArgs.Empty);
 
     public bool EditExisting { get; set; }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
@@ -133,6 +207,12 @@ public partial class PanelSafeNetworks : UserControl
         control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -140,10 +220,20 @@ public partial class PanelSafeNetworks : UserControl
         control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
 
     }
+
+    /// <summary>
+    /// Loads data.
+    /// </summary>
 
     private void LoadData()
     {
@@ -156,6 +246,12 @@ public partial class PanelSafeNetworks : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         if (IsInEditMode) LoadData();
@@ -163,6 +259,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     public bool IsInEditMode { get; set; }
+
+    /// <summary>
+    /// Executes the toggle edit mode operation.
+    /// </summary>
 
     private void ToggleEditMode()
     {
@@ -183,7 +283,19 @@ public partial class PanelSafeNetworks : UserControl
         checkBoxConfigureSafeNetworks.Enabled = IsInEditMode;
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
@@ -204,13 +316,30 @@ public partial class PanelSafeNetworks : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    /// <summary>
+    /// Sets edit mode.
+    /// </summary>
+    /// <param name="hasChanges">A value indicating whether s changes.</param>
 
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 

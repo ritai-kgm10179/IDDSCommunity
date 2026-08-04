@@ -1,4 +1,4 @@
-using System.Resources;
+﻿using System.Resources;
 
 namespace Cyberarms.IntrusionDetection.Shared.Localization;
 

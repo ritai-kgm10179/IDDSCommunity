@@ -72,6 +72,11 @@ public class AgentConfigurationBase : IAgentConfiguration
     public bool NeverUnlock { get; set; }
     public string FileName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Executes the clone from operation.
+    /// </summary>
+    /// <param name="source">The source value.</param>
+
     public void CloneFrom(IAgentConfiguration source)
     {
         AssemblyName = source.AssemblyName;
@@ -94,6 +99,11 @@ public class AgentConfigurationBase : IAgentConfiguration
             }
         }
     }
+
+    /// <summary>
+    /// Gets configuration type.
+    /// </summary>
+    /// <returns>The get configuration type result.</returns>
 
     public Type? GetConfigurationType()
     {

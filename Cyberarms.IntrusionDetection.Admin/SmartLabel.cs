@@ -5,7 +5,16 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class SmartLabel : Label
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SmartLabel"/> class.
+    /// </summary>
+
     public SmartLabel() => InitializeComponent();
+
+    /// <summary>
+    /// Handles the on paint event.
+    /// </summary>
+    /// <param name="e">The event data.</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {

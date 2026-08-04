@@ -22,6 +22,11 @@ public class IntrusionLog
     public const int STATUS_LICENSE_REQUIRED = 999;
     public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
 
+    /// <summary>
+    /// Gets system id.
+    /// </summary>
+    /// <returns>The get system id result.</returns>
+
     public static Guid GetSystemId() => new(SYSTEM_ID);
 
     private static Dictionary<int, string>? _statusNames;
@@ -101,6 +106,12 @@ public class IntrusionLog
         }
     }
 
+    /// <summary>
+    /// Gets status icon.
+    /// </summary>
+    /// <param name="status">The status value.</param>
+    /// <returns>The get status icon result.</returns>
+
     public static Image GetStatusIcon(int status)
     {
         if (StatusIcons.TryGetValue(status, out Image? value))
@@ -112,6 +123,12 @@ public class IntrusionLog
             return Resources.logIcon_systemMessage;
         }
     }
+
+    /// <summary>
+    /// Gets status class.
+    /// </summary>
+    /// <param name="status">The status value.</param>
+    /// <returns>The get status class result.</returns>
 
     public static string GetStatusClass(int status)
     {
@@ -125,6 +142,12 @@ public class IntrusionLog
         }
     }
 
+    /// <summary>
+    /// Gets status name.
+    /// </summary>
+    /// <param name="status">The status value.</param>
+    /// <returns>The get status name result.</returns>
+
     public static string GetStatusName(int status)
     {
         if (StatusNames.TryGetValue(status, out string? value))
@@ -136,6 +159,12 @@ public class IntrusionLog
             return string.Format("Display name for status {0} was not found.", status);
         }
     }
+
+    /// <summary>
+    /// Reads interval.
+    /// </summary>
+    /// <param name="timeSpan">The time span value.</param>
+    /// <returns>The read interval result.</returns>
 
     public static IDataReader ReadInterval(TimeSpan timeSpan)
     {
@@ -149,6 +178,11 @@ public class IntrusionLog
         }
     }
 
+
+    /// <summary>
+    /// Gets last log id.
+    /// </summary>
+    /// <returns>The get last log id result.</returns>
 
     public static int GetLastLogId()
     {
@@ -165,6 +199,12 @@ public class IntrusionLog
     //Action int null,
     //ActionTriggeredByUser bit null
 
+    /// <summary>
+    /// Reads interval grouped.
+    /// </summary>
+    /// <param name="timeSpan">The time span value.</param>
+    /// <returns>The read interval grouped result.</returns>
+
     public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
     {
         if (Database.Instance.IsConfigured)
@@ -176,6 +216,12 @@ public class IntrusionLog
             throw new ApplicationException("Database not initialized");
         }
     }
+
+    /// <summary>
+    /// Determines whether s updates.
+    /// </summary>
+    /// <param name="lastSequenceNumber">The last sequence number value.</param>
+    /// <returns><see langword="true"/> if s updates; otherwise, <see langword="false"/>.</returns>
 
     public static bool HasUpdates(int lastSequenceNumber)
     {
@@ -197,6 +243,12 @@ public class IntrusionLog
         }
     }
 
+    /// <summary>
+    /// Reads differential.
+    /// </summary>
+    /// <param name="lastSequenceNumber">The last sequence number value.</param>
+    /// <returns>The read differential result.</returns>
+
     public static IDataReader ReadDifferential(int lastSequenceNumber)
     {
         if (Database.Instance.IsConfigured)
@@ -210,6 +262,12 @@ public class IntrusionLog
     }
 
 
+    /// <summary>
+    /// Reads unsuccessful attempts.
+    /// </summary>
+    /// <param name="startDate">The start date value.</param>
+    /// <returns>The read unsuccessful attempts result.</returns>
+
     public static int ReadUnsuccessfulAttempts(DateTime startDate)
     {
         if (Database.Instance.IsConfigured)
@@ -222,6 +280,16 @@ public class IntrusionLog
             throw new ApplicationException("Database not initialized");
         }
     }
+
+    /// <summary>
+    /// Adds entry.
+    /// </summary>
+    /// <param name="incidentTime">The incident time value.</param>
+    /// <param name="agentId">The agent id value.</param>
+    /// <param name="clientIp">The client ip value.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="actionTriggeredByUser">The action triggered by user value.</param>
+    /// <returns>The add entry result.</returns>
 
     public static long AddEntry(DateTime incidentTime, Guid agentId, string clientIp, int action, bool actionTriggeredByUser)
     {
@@ -238,6 +306,13 @@ values (@p0,@p1,@p2,@p3,@p4)";
             throw new ApplicationException("Database not initialized");
         }
     }
+
+    /// <summary>
+    /// Gets incidents by agent id.
+    /// </summary>
+    /// <param name="agentId">The agent id value.</param>
+    /// <param name="IpAddress">The ip address value.</param>
+    /// <returns>The get incidents by agent id result.</returns>
 
     public static int GetIncidentsByAgentId(Guid agentId, string IpAddress)
     {

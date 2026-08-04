@@ -11,6 +11,10 @@ public partial class SmartForm : Form
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
     readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SmartForm"/> class.
+    /// </summary>
+
     public SmartForm()
     {
         InitializeComponent();
@@ -20,7 +24,19 @@ public partial class SmartForm : Form
     }
 
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
@@ -30,7 +46,19 @@ public partial class SmartForm : Form
 
     public bool IsMoving { get; set; }
     public Point MoveStartPoint { get; set; }
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
+
+    /// <summary>
+    /// Handles the mouse move event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
@@ -42,15 +70,45 @@ public partial class SmartForm : Form
     }
 
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(pictureBox1.Location));
 
     public event EventHandler? HelpClicked;
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxHelpButon_Click(object sender, EventArgs e) => HelpClicked?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
@@ -67,13 +125,42 @@ public partial class SmartForm : Form
     }
 
 
+    /// <summary>
+    /// Handles the mouse enter event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
+
+    /// <summary>
+    /// Handles the mouse leave event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
+
+    /// <summary>
+    /// Executes the resize form operation.
+    /// </summary>
+    /// <param name="mouseLocation">The mouse location value.</param>
 
     private void resizeForm(Point mouseLocation)
     {
@@ -105,18 +192,42 @@ public partial class SmartForm : Form
         Left
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void panelContent_MouseDown(object sender, MouseEventArgs e)
     {
         isResizing = (resizeDirection == ResizeDirection.None) ? false : true;
         if (isResizing) resizeStartLocation = e.Location;
     }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void panelContent_MouseUp(object sender, MouseEventArgs e) => isResizing = false;
+
+    /// <summary>
+    /// Handles the mouse leave event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelContent_MouseLeave(object sender, EventArgs e)
     {
         if (!isResizing) resizeDirection = ResizeDirection.None;
     }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderN_MouseDown(object sender, MouseEventArgs e)
     {
@@ -125,12 +236,24 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderE_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Right;
         resizeStartLocation = e.Location;
         isResizing = true;
     }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderS_MouseDown(object sender, MouseEventArgs e)
     {
@@ -139,6 +262,12 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left;
@@ -146,7 +275,19 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderNE_MouseDown(object sender, MouseEventArgs e) => resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderSE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -155,6 +296,12 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderSW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Bottom;
@@ -162,12 +309,24 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderNW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Top;
         resizeStartLocation = e.Location;
         isResizing = true;
     }
+
+    /// <summary>
+    /// Handles the mouse move event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void border_MouseMove(object sender, MouseEventArgs e)
     {

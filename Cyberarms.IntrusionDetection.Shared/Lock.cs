@@ -31,6 +31,10 @@ public class Lock
     public int NumberOfSoftLocks { get; set; }
     public long TriggerIncident { get; set; }
 
+    /// <summary>
+    /// Saves requested operation.
+    /// </summary>
+
     public void Save()
     {
         if (Database.Instance.IsConfigured)

@@ -17,6 +17,10 @@ public class Pop3Agent : AgentPlugin
 
     readonly List<Sniffer> sniffers = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Pop3Agent"/> class.
+    /// </summary>
+
     public Pop3Agent()
     {
 
@@ -30,6 +34,12 @@ public class Pop3Agent : AgentPlugin
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
     }
 
+    /// <summary>
+    /// Handles the elapsed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         //for (int i = CurrentClients.Keys.Max(); i > 0; i--) {
@@ -41,6 +51,10 @@ public class Pop3Agent : AgentPlugin
         }
     }
 
+    /// <summary>
+    /// Processes the start agent notification.
+    /// </summary>
+
     protected override void OnStartAgent()
     {
         ts = new ThreadStart(RunWatcher);
@@ -48,6 +62,10 @@ public class Pop3Agent : AgentPlugin
         td.Start();
         base.OnStartAgent();
     }
+
+    /// <summary>
+    /// Executes the run watcher operation.
+    /// </summary>
 
     void RunWatcher()
     {
@@ -66,6 +84,11 @@ public class Pop3Agent : AgentPlugin
     }
 
 
+
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     void WatchAddress(object? ipAddress)
     {
@@ -97,17 +120,33 @@ public class Pop3Agent : AgentPlugin
         sniffers.Add(s);
     }
 
+    /// <summary>
+    /// Executes the test receive operation.
+    /// </summary>
+    /// <param name="data">The data value.</param>
+
     public void TestReceive(byte[] data)
     {
         IPHeader hdr = new(data, data.Length);
         s_IpPacketReceived(hdr, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Executes the test send operation.
+    /// </summary>
+    /// <param name="data">The data value.</param>
+
     public void TestSend(byte[] data)
     {
         IPHeader hdr = new(data, data.Length);
         s_IpPacketSent(hdr, EventArgs.Empty);
     }
+
+    /// <summary>
+    /// Handles the ip packet received event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void s_IpPacketReceived(object? sender, EventArgs e)
     {
@@ -176,6 +215,12 @@ public class Pop3Agent : AgentPlugin
         }
     }
 
+    /// <summary>
+    /// Handles the ip packet sent event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void s_IpPacketSent(object? sender, EventArgs e)
     {
         if (sender is not IPHeader ipHeader) return;
@@ -229,7 +274,16 @@ public class Pop3Agent : AgentPlugin
         set => _currentClients = value;
     }
 
+    /// <summary>
+    /// Processes the trace notification.
+    /// </summary>
+    /// <param name="tlsPackage">The tls package value.</param>
+
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the continue agent notification.
+    /// </summary>
 
     protected override void OnContinueAgent()
     {
@@ -237,11 +291,19 @@ public class Pop3Agent : AgentPlugin
         base.OnContinueAgent();
     }
 
+    /// <summary>
+    /// Processes the pause agent notification.
+    /// </summary>
+
     protected override void OnPauseAgent()
     {
         Stop();
         base.OnPauseAgent();
     }
+
+    /// <summary>
+    /// Processes the stop agent notification.
+    /// </summary>
 
     protected override void OnStopAgent()
     {
@@ -255,6 +317,11 @@ public class Pop3Agent : AgentPlugin
     }
 
     public override bool IsRunning => base.IsRunning;
+
+    /// <summary>
+    /// Executes the unsuccessful login operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     void UnsuccessfulLogin(string ipAddress)
     {

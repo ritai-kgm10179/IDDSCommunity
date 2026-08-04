@@ -10,6 +10,10 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class ReportTest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportTest"/> class.
+    /// </summary>
+
     public ReportTest()
     {
         //
@@ -50,6 +54,10 @@ public class ReportTest
     //
     #endregion
 
+    /// <summary>
+    /// Executes the test report by agent operation.
+    /// </summary>
+
     [TestMethod]
     public void TestReportByAgent()
     {
@@ -57,6 +65,10 @@ public class ReportTest
         string result = ReportGenerator.Instance.GetEventsPerAgent(DateTime.Now.AddDays(-3), DateTime.Now);
         System.Diagnostics.Debug.Print(result);
     }
+
+    /// <summary>
+    /// Executes the test report operation.
+    /// </summary>
 
     [TestMethod]
     public void TestReport()

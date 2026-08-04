@@ -12,6 +12,10 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 [TestClass]
 public class LockTest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LockTest"/> class.
+    /// </summary>
+
     public LockTest()
     {
         //
@@ -54,6 +58,10 @@ public class LockTest
 
 
 
+    /// <summary>
+    /// Executes the test ip address local operation.
+    /// </summary>
+
     [TestMethod]
     public void TestIpAddressLocal()
     {
@@ -69,6 +77,10 @@ public class LockTest
         Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("192.168.13.1")));
         Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("73.24.12.42")));
     }
+
+    /// <summary>
+    /// Executes the test is ip address local performance test operation.
+    /// </summary>
 
     [TestMethod]
     public void TestIsIpAddressLocalPerformanceTest()
@@ -86,6 +98,11 @@ public class LockTest
 
 
     private List<IPAddress>? _localAddresses;
+    /// <summary>
+    /// Executes the get local ips operation.
+    /// </summary>
+    /// <returns>The get local ips result.</returns>
+
     private List<IPAddress> getLocalIps()
     {
         if (_localAddresses == null)

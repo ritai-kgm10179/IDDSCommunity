@@ -57,6 +57,10 @@ public class IddsConfig
 
 
 
+    /// <summary>
+    /// Saves requested operation.
+    /// </summary>
+
     public void Save()
     {
         //throw new NotImplementedException("Save functionality not implemented yet");
@@ -81,6 +85,10 @@ public class IddsConfig
             throw;
         }
     }
+
+    /// <summary>
+    /// Loads requested operation.
+    /// </summary>
 
     public void Load()
     {
@@ -141,13 +149,29 @@ public class IddsConfig
         }
     }
 
+    /// <summary>
+    /// Loads app config.
+    /// </summary>
+
     public void LoadAppConfig() => _appConfig = LoadConfig("AppConfig");
+
+    /// <summary>
+    /// Gets config value.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <returns>The get config value result.</returns>
 
     public string GetConfigValue(string key)
     {
         if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
         return AppConfig[key];
     }
+
+    /// <summary>
+    /// Sets config value.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="value">The value to process.</param>
 
     public void SetConfigValue(string key, string value)
     {
@@ -160,6 +184,10 @@ public class IddsConfig
             AppConfig.Add(key, value);
         }
     }
+
+    /// <summary>
+    /// Saves app config.
+    /// </summary>
 
     public void SaveAppConfig()
     {
@@ -193,6 +221,12 @@ public class IddsConfig
         }
     }
 
+    /// <summary>
+    /// Loads config.
+    /// </summary>
+    /// <param name="configTable">The config table value.</param>
+    /// <returns>The load config result.</returns>
+
     private Dictionary<string, string> LoadConfig(string configTable)
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
@@ -206,7 +240,15 @@ public class IddsConfig
         return config;
     }
 
+    /// <summary>
+    /// Loads safe networks.
+    /// </summary>
+
     public void LoadSafeNetworks() => SafeNetworks = LoadNetworkList("WhiteList");
+
+    /// <summary>
+    /// Saves safe networks.
+    /// </summary>
 
     public void SaveSafeNetworks()
     {
@@ -228,6 +270,12 @@ public class IddsConfig
         }
     }
 
+    /// <summary>
+    /// Loads network list.
+    /// </summary>
+    /// <param name="list">The list value.</param>
+    /// <returns>The load network list result.</returns>
+
     public CSafeNetworks LoadNetworkList(string list)
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
@@ -241,6 +289,10 @@ public class IddsConfig
         return net;
     }
 
+
+    /// <summary>
+    /// Executes the configure database operation.
+    /// </summary>
 
     internal void configureDatabase()
     {
@@ -260,6 +312,10 @@ public class IddsConfig
     public DateTime? Expires { get; set; }
     public string Edition { get; set; } = string.Empty;
 
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IddsConfig"/> class.
+    /// </summary>
 
     private IddsConfig()
     {
@@ -306,6 +362,11 @@ public class IddsConfig
         set => _safeNetworks = value;
     }
 
+    /// <summary>
+    /// Gets default configuration.
+    /// </summary>
+    /// <returns>The get default configuration result.</returns>
+
     public static IddsConfig GetDefaultConfiguration()
     {
         IddsConfig config = new()
@@ -330,9 +391,19 @@ public class IddsConfig
         public string IpAddress { get; set; } = string.Empty;
         public string SubnetMask { get; set; } = string.Empty;
         public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CSafeNetwork"/> class.
+        /// </summary>
+
         public CSafeNetwork()
         {
         }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CSafeNetwork"/> class.
+        /// </summary>
+        /// <param name="ipAddress">The ip address value.</param>
+        /// <param name="subnetmask">The subnetmask value.</param>
+
         public CSafeNetwork(string ipAddress, string subnetmask)
         {
             IpAddress = ipAddress;
@@ -401,6 +472,11 @@ public class IddsConfig
     }
 
 
+    /// <summary>
+    /// Gets smtp password.
+    /// </summary>
+    /// <returns>The get smtp password result.</returns>
+
     public string GetSmtpPassword()
     {
         string smtpPassword = string.Empty;
@@ -410,6 +486,12 @@ public class IddsConfig
         }
         return smtpPassword;
     }
+
+    /// <summary>
+    /// Determines whether in safe network.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <returns><see langword="true"/> if in safe network; otherwise, <see langword="false"/>.</returns>
 
     public bool IsInSafeNetwork(string ipAddress)
     {
@@ -448,7 +530,24 @@ public class IddsConfig
     }
 
 
+    /// <summary>
+    /// Determines whether ip4 in network.
+    /// </summary>
+    /// <param name="address">The address value.</param>
+    /// <param name="networkAddress">The network address value.</param>
+    /// <param name="subnetMask">The subnet mask value.</param>
+    /// <returns><see langword="true"/> if ip4 in network; otherwise, <see langword="false"/>.</returns>
+
     public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) => IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
+
+    /// <summary>
+    /// Determines whether ip in network.
+    /// </summary>
+    /// <param name="address">The address value.</param>
+    /// <param name="networkAddress">The network address value.</param>
+    /// <param name="maskBits">The mask bits value.</param>
+    /// <param name="addressLength">The address length value.</param>
+    /// <returns><see langword="true"/> if ip in network; otherwise, <see langword="false"/>.</returns>
 
     public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
@@ -478,6 +577,12 @@ public class IddsConfig
     private List<IPAddress>? _localAddresses;
 
 
+    /// <summary>
+    /// Determines whether ip address local.
+    /// </summary>
+    /// <param name="address">The address value.</param>
+    /// <returns><see langword="true"/> if ip address local; otherwise, <see langword="false"/>.</returns>
+
     public bool IsIpAddressLocal(IPAddress address)
     {
         if (_localAddresses == null)
@@ -495,6 +600,12 @@ public class IddsConfig
         return _localAddresses.Contains(address);
     }
 
+
+    /// <summary>
+    /// Gets subnet mask bits.
+    /// </summary>
+    /// <param name="subnetMask">The subnet mask value.</param>
+    /// <returns>The get subnet mask bits result.</returns>
 
     public static int GetSubnetMaskBits(string subnetMask)
     {
@@ -523,12 +634,38 @@ public class IddsConfig
         throw new ArgumentException("Error while parsing subnet mask");
     }
 
+    /// <summary>
+    /// Determines whether ip6 in network.
+    /// </summary>
+    /// <param name="address">The address value.</param>
+    /// <param name="networkAddress">The network address value.</param>
+    /// <param name="subnetMask">The subnet mask value.</param>
+    /// <returns><see langword="true"/> if ip6 in network; otherwise, <see langword="false"/>.</returns>
+
     public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
 
+    /// <summary>
+    /// Determines whether valid ip address.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <returns><see langword="true"/> if valid ip address; otherwise, <see langword="false"/>.</returns>
+
     public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
 
+    /// <summary>
+    /// Determines whether valid subnet mask.
+    /// </summary>
+    /// <param name="subnetMask">The subnet mask value.</param>
+    /// <returns><see langword="true"/> if valid subnet mask; otherwise, <see langword="false"/>.</returns>
+
     public static bool IsValidSubnetMask(string subnetMask) => IsValidIpAddress(subnetMask);
+
+    /// <summary>
+    /// Converts string to ip address network.
+    /// </summary>
+    /// <param name="ipAddressNetwork">The ip address network value.</param>
+    /// <returns>The convert string to ip address network result.</returns>
 
     public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
     {
@@ -588,6 +725,11 @@ public class IddsConfig
 
 
 
+    /// <summary>
+    /// Sets smtp password.
+    /// </summary>
+    /// <param name="password">The password value.</param>
+
     public void SetSmtpPassword(string password) => SmtpPassword = CryptoHelper.Encrypt(password, true);
 
 
@@ -624,6 +766,12 @@ public class IddsConfig
     //    return Guid.Empty;
     //}
 
+    /// <summary>
+    /// Gets soft lock minutes.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
+    /// <returns>The get soft lock minutes result.</returns>
+
     public int GetSoftLockMinutes(SecurityAgent agent)
     {
         if (agent.OverrideConfig)
@@ -633,6 +781,12 @@ public class IddsConfig
         return SoftLockTimeMinutes;
     }
 
+
+    /// <summary>
+    /// Gets hard lock hours.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
+    /// <returns>The get hard lock hours result.</returns>
 
     public int GetHardLockHours(SecurityAgent agent)
     {

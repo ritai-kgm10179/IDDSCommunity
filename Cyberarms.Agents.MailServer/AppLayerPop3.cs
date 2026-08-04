@@ -24,6 +24,12 @@ public class AppLayerPop3
 
     public string Pop3Code { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AppLayerPop3"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public AppLayerPop3(byte[] byBuffer, int nReceived)
     {
         try

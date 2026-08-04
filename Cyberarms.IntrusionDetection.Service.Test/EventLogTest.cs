@@ -7,6 +7,10 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 [TestClass]
 public class EventLogTest
 {
+    /// <summary>
+    /// Executes the test create when source exists operation.
+    /// </summary>
+
     [TestMethod]
     public void TestCreateWhenSourceExists()
     {
