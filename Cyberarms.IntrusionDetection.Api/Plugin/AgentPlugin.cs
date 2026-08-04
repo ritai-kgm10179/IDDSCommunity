@@ -7,6 +7,9 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin;
 /// </summary>
 public class AgentPlugin : IAgentPlugin
 {
+    private readonly object lifecycleSync = new();
+    private bool isPaused;
+    private bool isRunning;
     public event AttackDetectedHandler? AttackDetected;
 
     /// <summary>
@@ -23,11 +26,11 @@ public class AgentPlugin : IAgentPlugin
 
     protected void OnAttackDetected(object sender, INotificationEventArgs data)
     {
-        if (AttackDetected is not null)
+        foreach (AttackDetectedHandler handler in AttackDetected?.GetInvocationList() ?? [])
         {
             try
             {
-                AttackDetected(this, data);
+                handler(this, data);
             }
             catch (Exception ex)
             {
@@ -46,14 +49,13 @@ public class AgentPlugin : IAgentPlugin
 
     public void Start()
     {
-        if (!IsRunning)
+        lock (lifecycleSync)
         {
+            if (isRunning)
+                throw new InvalidOperationException(Localization.Strings.Get("Agent is already running. Operation cancelled!"));
             OnStartAgent();
-            IsRunning = true;
-        }
-        else
-        {
-            throw new InvalidOperationException(Localization.Strings.Get("Agent is already running. Operation cancelled!"));
+            isRunning = true;
+            isPaused = false;
         }
     }
 
@@ -63,14 +65,13 @@ public class AgentPlugin : IAgentPlugin
 
     public void Stop()
     {
-        if (IsRunning)
+        lock (lifecycleSync)
         {
+            if (!isRunning)
+                throw new InvalidOperationException(Localization.Strings.Get("Agent is not running."));
             OnStopAgent();
-            IsRunning = false;
-        }
-        else
-        {
-            throw new InvalidOperationException(Localization.Strings.Get("Agent is not running."));
+            isRunning = false;
+            isPaused = false;
         }
     }
 
@@ -80,14 +81,12 @@ public class AgentPlugin : IAgentPlugin
 
     public void Pause()
     {
-        if (CanPause())
+        lock (lifecycleSync)
         {
+            if (isPaused || !isRunning)
+                throw new InvalidOperationException(Localization.Strings.Get("Agent cannot be paused in this state"));
             OnPauseAgent();
-            IsPaused = true;
-        }
-        else
-        {
-            throw new InvalidOperationException(Localization.Strings.Get("Agent cannot be paused in this state"));
+            isPaused = true;
         }
     }
 
@@ -97,14 +96,12 @@ public class AgentPlugin : IAgentPlugin
 
     public void Continue()
     {
-        if (CanContinue())
+        lock (lifecycleSync)
         {
+            if (!isPaused || !isRunning)
+                throw new InvalidOperationException(Localization.Strings.Get("Agent must be in paused state"));
             OnContinueAgent();
-            IsPaused = false;
-        }
-        else
-        {
-            throw new InvalidOperationException(Localization.Strings.Get("Agent must be in paused state"));
+            isPaused = false;
         }
     }
 
@@ -113,16 +110,44 @@ public class AgentPlugin : IAgentPlugin
     /// </summary>
     /// <returns><see langword="true"/> if n pause; otherwise, <see langword="false"/>.</returns>
 
-    public bool CanPause() => !IsPaused && IsRunning;
+    public bool CanPause()
+    {
+        lock (lifecycleSync)
+            return !isPaused && isRunning;
+    }
     /// <summary>
     /// Determines whether n continue.
     /// </summary>
     /// <returns><see langword="true"/> if n continue; otherwise, <see langword="false"/>.</returns>
 
-    public bool CanContinue() => IsPaused;
+    public bool CanContinue()
+    {
+        lock (lifecycleSync)
+            return isPaused && isRunning;
+    }
 
-    public bool IsPaused { get; set; }
-    public virtual bool IsRunning { get; private set; }
+    public bool IsPaused
+    {
+        get
+        {
+            lock (lifecycleSync)
+                return isPaused;
+        }
+        set
+        {
+            lock (lifecycleSync)
+                isPaused = value;
+        }
+    }
+
+    public virtual bool IsRunning
+    {
+        get
+        {
+            lock (lifecycleSync)
+                return isRunning;
+        }
+    }
 
     private IAgentConfiguration? _configuration;
     public IAgentConfiguration Configuration

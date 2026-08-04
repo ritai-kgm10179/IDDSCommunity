@@ -22,6 +22,41 @@ public enum Pop3Message
 
 public class Pop3Client
 {
-    public Pop3Message LastMessage { get; set; }
-    public DateTime LastInteraction { get; set; }
+    private readonly object sync = new();
+    private Pop3Message lastMessage;
+    private DateTime lastInteraction;
+
+    /// <summary>
+    /// Gets or sets the most recent POP3 command observed for this connection.
+    /// </summary>
+    public Pop3Message LastMessage
+    {
+        get
+        {
+            lock (sync)
+                return lastMessage;
+        }
+        set
+        {
+            lock (sync)
+                lastMessage = value;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the timestamp of the most recent packet observed for this connection.
+    /// </summary>
+    public DateTime LastInteraction
+    {
+        get
+        {
+            lock (sync)
+                return lastInteraction;
+        }
+        set
+        {
+            lock (sync)
+                lastInteraction = value;
+        }
+    }
 }

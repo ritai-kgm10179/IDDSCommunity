@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Drawing;
 
 namespace Cyberarms.Agents.FtpServer;
@@ -12,9 +11,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 {
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
-    private ThreadStart? ts;
-    private Thread? td;
-
     private readonly List<Sniffer> sniffers = [];
 
     /// <summary>
@@ -34,9 +30,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnStartAgent()
     {
-        ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts) { IsBackground = true };
-        td.Start();
+        RunWatcher();
         base.OnStartAgent();
     }
 
@@ -53,8 +47,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    ParameterizedThreadStart pts = new(WatchAddress);
-                    pts.Invoke(ip);
+                    WatchAddress(ip);
                 }
             }
         }
@@ -138,7 +131,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnContinueAgent()
     {
-        Start();
+        OnStartAgent();
         base.OnContinueAgent();
     }
 
@@ -148,7 +141,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnPauseAgent()
     {
-        Stop();
+        OnStopAgent();
         base.OnPauseAgent();
     }
 
