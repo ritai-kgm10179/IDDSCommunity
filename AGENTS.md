@@ -22,7 +22,9 @@
 ## 3. 檔案換行字元與文字編碼規範
 
 - **換行字元 (CRLF)**：Windows 環境下所有程式碼與文字檔案換行字元必須統一使用 `CRLF` (`\r\n`)，遵照 Git AutoCRLF 規範（已定義於 [`.gitattributes`](file:///d:/Dev/Project/Application/Cyberarms/.gitattributes) `* text=auto eol=crlf`）。
-- **文字編碼 (UTF-8)**：所有原始碼、組態檔與文件一律採用 UTF-8 編碼（已定義於 [`.editorconfig`](file:///d:/Dev/Project/Application/Cyberarms/.editorconfig) `charset = utf-8`）。
+- **文字編碼 (UTF-8 / UTF-8 with BOM)**：
+  - **C# 原始碼與專案資源 (`*.cs`, `*.csproj`, `*.resx`, `*.sln`, `*.slnx`, `*.ps1`)**：統一採用 `UTF-8 with BOM` (`utf-8-bom`)，確保 MSBuild、Roslyn (`csc`)、Visual Studio 與 Windows PowerShell 能無誤解析 CJK 雙位元組字元。
+  - **標準設定與數據文件 (`*.json`, `*.md`, `*.yml`, `*.yaml`, `.git*`, `.editorconfig`)**：統一採用無 BOM 之標準 `UTF-8` (`utf-8`)，遵守 RFC 8259 及現代 Web 工具規範。
 
 ---
 
