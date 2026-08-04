@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -25,7 +25,7 @@ public class SmtpAgent : AgentPlugin
     protected override void OnStartAgent()
     {
         ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts);
+        td = new Thread(ts) { IsBackground = true };
         td.Start();
         base.OnStartAgent();
     }
