@@ -1,26 +1,25 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace Cyberarms.IntrusionDetection.Admin
+namespace Cyberarms.IntrusionDetection.Admin;
+
+public class SmartPanel : Panel
 {
-    public class SmartPanel : Panel
+
+    public SmartPanel()
     {
+        BorderColor = ForeColor;
+    }
 
-        public SmartPanel()
+    public Color BorderColor { get; set; }
+    public bool PaintBorder { get; set; }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        if (PaintBorder)
         {
-            BorderColor = ForeColor;
-        }
-
-        public Color BorderColor { get; set; }
-        public bool PaintBorder { get; set; }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            if (PaintBorder)
-            {
-                e.Graphics.DrawRectangle(new Pen(BorderColor), new Rectangle(0, 0, Width - 1, Height - 1));
-            }
+            e.Graphics.DrawRectangle(new Pen(BorderColor), new Rectangle(0, 0, Width - 1, Height - 1));
         }
     }
 }

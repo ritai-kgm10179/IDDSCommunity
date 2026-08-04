@@ -1,13 +1,12 @@
-﻿namespace Cyberarms.IntrusionDetection.Api.Plugin
+﻿namespace Cyberarms.IntrusionDetection.Api.Plugin;
+
+/// <summary>
+/// Internal class needed for naming
+/// </summary>
+public class Names
 {
     /// <summary>
-    /// Internal class needed for naming
+    /// Returns display names 
     /// </summary>
-    public class Names
-    {
-        /// <summary>
-        /// Returns display names 
-        /// </summary>
-        public static readonly string[] pluginTypeNames = new string[2] { "Agent", "NotificationListener" };
-    }
+    public static readonly string[] pluginTypeNames = new string[2] { "Agent", "NotificationListener" };
 }

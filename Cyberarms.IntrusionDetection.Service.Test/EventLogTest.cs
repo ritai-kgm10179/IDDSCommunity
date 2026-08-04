@@ -3,24 +3,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using Cyberarms.IntrusionDetection;
 
-namespace IdsServiceForWindowsTest
+namespace IdsServiceForWindowsTest;
+
+[TestClass]
+public class EventLogTest
 {
-    [TestClass]
-    public class EventLogTest
+    [TestMethod]
+    public void TestCreateWhenSourceExists()
     {
-        [TestMethod]
-        public void TestCreateWhenSourceExists()
+        try
         {
-            try
-            {
-                WindowsLogManager.Instance.WriteEntry("Test Message", EventLogEntryType.Information, 0, 0);
-            }
-            catch (System.Security.SecurityException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
+            WindowsLogManager.Instance.WriteEntry("Test Message", EventLogEntryType.Information, 0, 0);
+        }
+        catch (System.Security.SecurityException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 }

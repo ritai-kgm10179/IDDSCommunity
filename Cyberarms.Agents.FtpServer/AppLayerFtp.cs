@@ -2,38 +2,37 @@
 using System.Text;
 using System.IO;
 
-namespace Cyberarms.Agents.FtpServer
+namespace Cyberarms.Agents.FtpServer;
+
+public class AppLayerFtp
 {
-    public class AppLayerFtp
+
+    public const string FTP_REPLY_CODE_LOGIN_DENIED = "530";
+
+    public string FtpReplyCode { get; set; }
+
+    public AppLayerFtp(byte[] byBuffer, int nReceived)
     {
-
-        public const string FTP_REPLY_CODE_LOGIN_DENIED = "530";
-
-        public string FtpReplyCode { get; set; }
-
-        public AppLayerFtp(byte[] byBuffer, int nReceived)
+        try
         {
-            try
-            {
-                //Create MemoryStream out of the received bytes
-                MemoryStream memoryStream = new(byBuffer, 0, nReceived);
-                //Next we create a BinaryReader out of the MemoryStream
-                BinaryReader binaryReader = new(memoryStream);
-                char[] replyCodeChars = binaryReader.ReadChars(3);
-                StringBuilder replyCode = new();
+            //Create MemoryStream out of the received bytes
+            MemoryStream memoryStream = new(byBuffer, 0, nReceived);
+            //Next we create a BinaryReader out of the MemoryStream
+            BinaryReader binaryReader = new(memoryStream);
+            char[] replyCodeChars = binaryReader.ReadChars(3);
+            StringBuilder replyCode = new();
 
-                if (replyCodeChars.Length == 3)
-                {
-                    for (int i = 0; i < 3; i++) replyCode.Append(replyCodeChars[i]);
-                }
-                FtpReplyCode = replyCode.ToString();
-
-            }
-            catch (Exception ex)
+            if (replyCodeChars.Length == 3)
             {
-                Console.WriteLine(ex.Message);
-                throw;
+                for (int i = 0; i < 3; i++) replyCode.Append(replyCodeChars[i]);
             }
+            FtpReplyCode = replyCode.ToString();
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw;
         }
     }
 }

@@ -2,82 +2,81 @@
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Xml.Serialization;
 
-namespace IdsServiceForWindowsTest
+namespace IdsServiceForWindowsTest;
+
+/// <summary>
+/// Summary description for ApiTest
+/// </summary>
+[TestClass]
+public class ApiTest
 {
+    public ApiTest()
+    {
+        //
+        // TODO: Add constructor logic here
+        //
+    }
+
+    private TestContext testContextInstance;
+
     /// <summary>
-    /// Summary description for ApiTest
-    /// </summary>
-    [TestClass]
-    public class ApiTest
+    ///Gets or sets the test context which provides
+    ///information about and functionality for the current test run.
+    ///</summary>
+    public TestContext TestContext
     {
-        public ApiTest()
+        get
         {
-            //
-            // TODO: Add constructor logic here
-            //
+            return testContextInstance;
         }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
+        set
         {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
+            testContextInstance = value;
         }
+    }
 
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
+    #region Additional test attributes
+    //
+    // You can use the following additional attributes as you write your tests:
+    //
+    // Use ClassInitialize to run code before running the first test in the class
+    // [ClassInitialize()]
+    // public static void MyClassInitialize(TestContext testContext) { }
+    //
+    // Use ClassCleanup to run code after all tests in a class have run
+    // [ClassCleanup()]
+    // public static void MyClassCleanup() { }
+    //
+    // Use TestInitialize to run code before running each test 
+    // [TestInitialize()]
+    // public void MyTestInitialize() { }
+    //
+    // Use TestCleanup to run code after each test has run
+    // [TestCleanup()]
+    // public void MyTestCleanup() { }
+    //
+    #endregion
 
-        [TestMethod]
-        public void TestSerialization()
+    [TestMethod]
+    public void TestSerialization()
+    {
+        TestPluginConfig config = new()
         {
-            TestPluginConfig config = new()
-            {
-                Prop1 = "Test1",
-                Prop2 = "Test2"
-            };
-            XmlSerializer xs = new(typeof(TestPluginConfig));
-            System.IO.StreamWriter sw = new("c:\\temp\\pluginsettings.xml");
-            xs.Serialize(sw, config);
-            sw.Close();
-        }
-
-
+            Prop1 = "Test1",
+            Prop2 = "Test2"
+        };
+        XmlSerializer xs = new(typeof(TestPluginConfig));
+        System.IO.StreamWriter sw = new("c:\\temp\\pluginsettings.xml");
+        xs.Serialize(sw, config);
+        sw.Close();
     }
 
 
-    public class TestPluginConfig : PluginConfiguration
-    {
-        public string Prop1 { get; set; }
-        public string Prop2 { get; set; }
-    }
+}
+
+
+public class TestPluginConfig : PluginConfiguration
+{
+    public string Prop1 { get; set; }
+    public string Prop2 { get; set; }
 }

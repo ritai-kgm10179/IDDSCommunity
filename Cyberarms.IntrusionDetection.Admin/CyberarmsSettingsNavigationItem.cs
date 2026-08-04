@@ -2,81 +2,80 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Cyberarms.IntrusionDetection.Admin
+namespace Cyberarms.IntrusionDetection.Admin;
+
+public partial class CyberarmsSettingsNavigationItem : UserControl
 {
-    public partial class CyberarmsSettingsNavigationItem : UserControl
+
+    public event EventHandler NavigationClicked;
+
+    public CyberarmsSettingsNavigationItem()
     {
+        InitializeComponent();
+    }
 
-        public event EventHandler NavigationClicked;
+    public bool IsSelected { get; set; }
 
-        public CyberarmsSettingsNavigationItem()
+    public Image SelectedIcon { get; set; }
+
+    public Image UnselectedIcon { get; set; }
+
+    public string DisplayName
+    {
+        get
         {
-            InitializeComponent();
+            return smartLabelAgentName.Text;
         }
-
-        public bool IsSelected { get; set; }
-
-        public Image SelectedIcon { get; set; }
-
-        public Image UnselectedIcon { get; set; }
-
-        public string DisplayName
+        set
         {
-            get
-            {
-                return smartLabelAgentName.Text;
-            }
-            set
-            {
-                smartLabelAgentName.Text = value;
-            }
+            smartLabelAgentName.Text = value;
         }
+    }
 
-        protected override void OnPaint(PaintEventArgs e)
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        if (IsSelected)
         {
-            if (IsSelected)
-            {
-                this.BackColor = Color.FromArgb(4, 46, 100);
-                smartLabelAgentName.ForeColor = Color.White;
-                pictureBoxNavigationIcon.Image = SelectedIcon;
-            }
-            else
-            {
-                this.BackColor = Color.White;
-                smartLabelAgentName.ForeColor = Color.FromArgb(0x666666);
-                pictureBoxNavigationIcon.Image = UnselectedIcon;
-            }
-            base.OnPaint(e);
+            this.BackColor = Color.FromArgb(4, 46, 100);
+            smartLabelAgentName.ForeColor = Color.White;
+            pictureBoxNavigationIcon.Image = SelectedIcon;
         }
-
-
-
-        private void CyberarmsSettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
+        else
         {
-            pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
-            smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X + 1, smartLabelAgentName.Location.Y + 1);
+            this.BackColor = Color.White;
+            smartLabelAgentName.ForeColor = Color.FromArgb(0x666666);
+            pictureBoxNavigationIcon.Image = UnselectedIcon;
         }
-
-        private void CyberarmsSettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
-        {
-            pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X - 1, pictureBoxNavigationIcon.Location.Y - 1);
-            smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X - 1, smartLabelAgentName.Location.Y - 1);
-        }
+        base.OnPaint(e);
+    }
 
 
 
-        private void CyberarmsSettingsNavigationItem_Click(object sender, EventArgs e)
-        {
-            OnNavigationClicked();
+    private void CyberarmsSettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
+    {
+        pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
+        smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X + 1, smartLabelAgentName.Location.Y + 1);
+    }
 
-        }
+    private void CyberarmsSettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
+    {
+        pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X - 1, pictureBoxNavigationIcon.Location.Y - 1);
+        smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X - 1, smartLabelAgentName.Location.Y - 1);
+    }
 
-        private void OnNavigationClicked()
-        {
-            if (NavigationClicked != null) NavigationClicked(this, EventArgs.Empty);
-        }
 
 
+    private void CyberarmsSettingsNavigationItem_Click(object sender, EventArgs e)
+    {
+        OnNavigationClicked();
 
     }
+
+    private void OnNavigationClicked()
+    {
+        if (NavigationClicked != null) NavigationClicked(this, EventArgs.Empty);
+    }
+
+
+
 }
