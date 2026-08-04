@@ -1,119 +1,76 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Timers;
 
-namespace Cyberarms.IntrusionDetection.Shared {
-    public class AgentProxy : MarshalByRefObject, IAgentPlugin{
-        public event AttackDetectedHandler AttackDetected;
+namespace Cyberarms.IntrusionDetection.Shared;
 
-        Timer watchdog;
-        TimeSpan lastCpuTime = new TimeSpan(0);
-        long lastPackets;
+public class AgentProxy : MarshalByRefObject, IAgentPlugin {
+    public event AttackDetectedHandler? AttackDetected;
 
-        IAgentPlugin agent;
-        public AgentProxy(string assemblyFilename, string typeName) {
-            try {
-                agent = (IAgentPlugin)Activator.CreateInstanceFrom(assemblyFilename, typeName).Unwrap();
-            } catch (Exception ex) {
-                throw;
-            }
-            agent.AttackDetected += new AttackDetectedHandler(agent_AttackDetected);
-        }
+    private Timer? _watchdog;
+    private TimeSpan _lastCpuTime = TimeSpan.Zero;
+    private long _lastPackets;
 
-        void agent_AttackDetected(object sender, INotificationEventArgs data) {
-            if (this.AttackDetected != null) this.AttackDetected(sender, data);
-        }
+    private readonly IAgentPlugin _agent;
 
+    public AgentProxy(string assemblyFilename, string typeName) {
+        _agent = (IAgentPlugin)Activator.CreateInstanceFrom(assemblyFilename, typeName).Unwrap();
+        _agent.AttackDetected += agent_AttackDetected;
+    }
 
-        public void Start() {
-            agent.Start();
-        }
+    private void agent_AttackDetected(object sender, INotificationEventArgs data) => AttackDetected?.Invoke(sender, data);
 
-        public void Stop() {
-            agent.Stop();
-        }
+    public void Start() => _agent.Start();
+    public void Stop() => _agent.Stop();
+    public void Pause() => _agent.Pause();
+    public void Continue() => _agent.Continue();
 
-        public void Pause() {
-            agent.Pause();
-        }
+    public bool CanPause() => _agent.CanPause();
+    public bool CanContinue() => _agent.CanContinue();
 
-        public void Continue() {
-            agent.Continue();
-        }
+    public bool IsPaused {
+        get => _agent.IsPaused;
+        set => _agent.IsPaused = value;
+    }
 
-        public bool CanPause() {
-            return agent.CanPause();
-        }
+    public bool IsRunning => _agent.IsRunning;
 
-        public bool CanContinue() {
-            return agent.CanContinue();
-        }
+    public IAgentConfiguration Configuration {
+        get => _agent.Configuration;
+        set => _agent.Configuration = value;
+    }
 
-        public bool IsPaused {
-            get {
-                return agent.IsPaused;
-            }
-            set {
-                agent.IsPaused = value;
-            }
-        }
+    public long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 
-        public bool IsRunning {
-            get { return agent.IsRunning; }
-        }
+    public TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
 
-        public IAgentConfiguration Configuration {
-            get {
-                return agent.Configuration;
-            }
-            set {
-                agent.Configuration = value;
-            }
-        }
+    public void EnableMonitoring() {
+        _watchdog = new Timer { Interval = 1000 };
+        _watchdog.Elapsed += watchdog_Elapsed;
+        _lastCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
+        if (_agent is INetworkListener netListener) _lastPackets = netListener.TotalPackets;
+        _watchdog.Start();
+        AppDomain.MonitoringIsEnabled = true;
+    }
 
-        public long GetMemoryUsage() {
-            return AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
-        }
+    public List<AgentPerformanceRecord> PerformanceRecords { get; set; } = [];
 
-        public TimeSpan GetCpuTime() {
-            return AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-        }
+    private void watchdog_Elapsed(object? sender, ElapsedEventArgs e) {
+        AgentPerformanceRecord rcd = new() {
+            DateTime = DateTime.Now,
+            MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize,
+            CpuUsage = AppDomain.CurrentDomain.MonitoringTotalProcessorTime.Subtract(_lastCpuTime)
+        };
+        if (_agent is INetworkListener netListener) rcd.Packets = netListener.TotalPackets - _lastPackets;
+        PerformanceRecords.Add(rcd);
+    }
 
-        public void EnableMonitoring() {
-            watchdog = new Timer();
-            watchdog.Interval = 1000;
-            watchdog.Elapsed += new ElapsedEventHandler(watchdog_Elapsed);
-            lastCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-            if (agent is INetworkListener) lastPackets = (agent as INetworkListener).TotalPackets;
-            watchdog.Start();
-            AppDomain.MonitoringIsEnabled = true;
-        }
+    public void DisableMonitoring() => _watchdog = null;
 
-        public List<AgentPerformanceRecord> PerformanceRecords { get; set; }
-
-        void watchdog_Elapsed(object sender, ElapsedEventArgs e) {
-            AgentPerformanceRecord rcd = new AgentPerformanceRecord();
-            rcd.DateTime = DateTime.Now;
-            rcd.MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
-            rcd.CpuUsage = AppDomain.CurrentDomain.MonitoringTotalProcessorTime.Subtract(lastCpuTime);
-            if (agent is INetworkListener) rcd.Packets = (agent as INetworkListener).TotalPackets - lastPackets;
-            PerformanceRecords.Add(rcd);
-        }
-
-        public void DisableMonitoring() {
-            watchdog = null;
-        }
-
-
-        public void Dispose() {
-            this.Dispose();
-        }
-
-        
-        
-
+    public void Dispose() {
+        GC.SuppressFinalize(this);
     }
 }
