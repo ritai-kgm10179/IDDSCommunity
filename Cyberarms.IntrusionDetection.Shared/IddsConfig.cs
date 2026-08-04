@@ -41,7 +41,19 @@ public class IddsConfig
         }
     }
 
-    public string PluginsDirectory { get; set; }
+    private string? _pluginsDirectory;
+    public string PluginsDirectory
+    {
+        get => _pluginsDirectory ?? string.Empty;
+        set
+        {
+            _pluginsDirectory = value;
+            if (!string.IsNullOrEmpty(_pluginsDirectory) && !System.IO.Directory.Exists(_pluginsDirectory))
+            {
+                try { System.IO.Directory.CreateDirectory(_pluginsDirectory); } catch { }
+            }
+        }
+    }
 
 
 
