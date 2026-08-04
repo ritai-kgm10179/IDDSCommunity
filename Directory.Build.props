@@ -3,7 +3,4 @@
     <Nullable>enable</Nullable>
     <NoWarn>$(NoWarn);CA1416;WFO1000;CS0168;CA2200;SYSLIB0021;SYSLIB0024;CA2022;MSB3042;NU1510;NU1903;CS0067;CS8073;CS8632;CS8618;CS8602;CS8604;CS8600;CS8603;CS0414</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-  </ItemGroup>
 </Project>

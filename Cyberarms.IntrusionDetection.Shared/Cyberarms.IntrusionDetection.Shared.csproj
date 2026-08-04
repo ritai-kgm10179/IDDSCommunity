@@ -11,7 +11,7 @@
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Api\Cyberarms.IntrusionDetection.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.2" />
     <PackageReference Include="System.Management" Version="10.0.10" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.10" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
