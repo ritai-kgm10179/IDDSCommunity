@@ -9,6 +9,11 @@ public class DbUpgrader
 
 
 
+    /// <summary>
+    /// Executes the run upgrade scripts operation.
+    /// </summary>
+    /// <param name="connection">The connection value.</param>
+
     public void RunUpgradeScripts(System.Data.IDbConnection connection)
     {
         System.Data.IDbCommand cmd = connection.CreateCommand();
@@ -40,6 +45,12 @@ public class DbUpgrader
         UpgradeAll(connection, latestVersion);
     }
 
+    /// <summary>
+    /// Executes the upgrade all operation.
+    /// </summary>
+    /// <param name="connection">The connection value.</param>
+    /// <param name="latestVersionNumber">The latest version number value.</param>
+
     public void UpgradeAll(System.Data.IDbConnection connection, int latestVersionNumber)
     {
         foreach (int key in upgradeScripts.Keys)
@@ -54,6 +65,10 @@ public class DbUpgrader
 
     private SortedList<int, DbUpgradeScript> upgradeScripts = [];
 
+    /// <summary>
+    /// Executes the init scripts operation.
+    /// </summary>
+
     private void InitScripts()
     {
         upgradeScripts = new SortedList<int, DbUpgradeScript>
@@ -61,6 +76,10 @@ public class DbUpgrader
             { 1, new Version_2_1() }
         };
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DbUpgrader"/> class.
+    /// </summary>
 
     public DbUpgrader()
     {

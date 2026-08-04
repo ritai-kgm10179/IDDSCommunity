@@ -10,6 +10,10 @@ public class IddsConfigTest
 
     public TestContext TestContext { get; set; } = null!;
 
+    /// <summary>
+    /// Configures test database.
+    /// </summary>
+
     [TestInitialize]
     public void ConfigureTestDatabase()
     {
@@ -31,17 +35,37 @@ public class IddsConfigTest
     //}
 
 
+    /// <summary>
+    /// Executes the activate trial key test operation.
+    /// </summary>
+
     [TestMethod, Ignore]
     public void ActivateTrialKeyTest() => Assert.Fail("Not implemented");
+
+    /// <summary>
+    /// Executes the various product activation test operation.
+    /// </summary>
 
     [TestMethod, Ignore]
     public void VariousProductActivationTest() => Assert.Fail("Not implemented");
 
+    /// <summary>
+    /// Creates edition key test.
+    /// </summary>
+
     [TestMethod, Ignore]
     public void CreateEditionKeyTest() => Assert.Fail("Not implemented");
 
+    /// <summary>
+    /// Executes the activate edition key test operation.
+    /// </summary>
+
     [TestMethod, Ignore]
     public void ActivateEditionKeyTest() => Assert.Fail("Not implemented");
+
+    /// <summary>
+    /// Saves config test.
+    /// </summary>
 
     [TestMethod]
     public void SaveConfigTest()
@@ -93,6 +117,10 @@ public class IddsConfigTest
 
 
 
+    /// <summary>
+    /// Reads write app config test.
+    /// </summary>
+
     [TestMethod]
     public void ReadWriteAppConfigTest()
     {
@@ -108,6 +136,10 @@ public class IddsConfigTest
         IddsConfig.Instance.AppConfig.Remove("TestConfigSetting2");
         IddsConfig.Instance.SaveAppConfig();
     }
+
+    /// <summary>
+    /// Executes the config is in safe network test operation.
+    /// </summary>
 
     [TestMethod]
     public void ConfigIsInSafeNetworkTest()

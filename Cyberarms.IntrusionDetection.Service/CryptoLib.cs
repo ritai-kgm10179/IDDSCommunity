@@ -8,6 +8,13 @@ internal class CryptoLib
 {
     private const string YYHSK_DNRTF = "62Hd_cn$a0)8_fnS";
 
+    /// <summary>
+    /// Executes the encrypt operation.
+    /// </summary>
+    /// <param name="toEncrypt">The to encrypt value.</param>
+    /// <param name="useHashing">The use hashing value.</param>
+    /// <returns>The encrypt result.</returns>
+
     internal static string Encrypt(string toEncrypt, bool useHashing)
     {
         byte[] keyArray;
@@ -33,6 +40,13 @@ internal class CryptoLib
         byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
         return Convert.ToBase64String(resultArray, 0, resultArray.Length);
     }
+
+    /// <summary>
+    /// Executes the decrypt operation.
+    /// </summary>
+    /// <param name="cipherString">The cipher string value.</param>
+    /// <param name="useHashing">The use hashing value.</param>
+    /// <returns>The decrypt result.</returns>
 
     internal static string Decrypt(string cipherString, bool useHashing)
     {

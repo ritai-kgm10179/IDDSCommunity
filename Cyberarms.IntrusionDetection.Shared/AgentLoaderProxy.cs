@@ -8,6 +8,12 @@ namespace Cyberarms.IntrusionDetection.Shared;
 [Serializable]
 public class AgentLoaderProxy : MarshalByRefObject
 {
+    /// <summary>
+    /// Gets security agents.
+    /// </summary>
+    /// <param name="fileName">The file name value.</param>
+    /// <returns>The get security agents result.</returns>
+
     public List<SecurityAgent> GetSecurityAgents(string fileName)
     {
         var assembly = Assembly.LoadFile(fileName);
@@ -77,6 +83,12 @@ public class AgentLoaderProxy : MarshalByRefObject
         return result;
     }
 
+
+    /// <summary>
+    /// Gets custom configuration objects.
+    /// </summary>
+    /// <param name="config">The config value.</param>
+    /// <returns>The get custom configuration objects result.</returns>
 
     public static Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
     {

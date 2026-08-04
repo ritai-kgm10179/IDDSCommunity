@@ -1,4 +1,4 @@
-#if NETFRAMEWORK
+﻿#if NETFRAMEWORK
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;

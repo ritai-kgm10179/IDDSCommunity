@@ -22,6 +22,10 @@ public partial class IddsAdmin : Form
 
     System.ServiceProcess.ServiceController? serviceController;
     private EventLog? eventLogCyberarms;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IddsAdmin"/> class.
+    /// </summary>
+
     public IddsAdmin()
     {
         InitializeComponent();
@@ -40,9 +44,9 @@ public partial class IddsAdmin : Form
         get
         {
             _instance ??= new IddsAdmin
-                {
-                    Visible = false
-                };
+            {
+                Visible = false
+            };
             return _instance;
         }
     }
@@ -66,6 +70,12 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Handles the configuration changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => RestartService();
 
     public CyberarmsAgentConfiguration PanelAgentConfiguration
@@ -86,9 +96,25 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Handles the agent settings changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => RestartService();
 
+    /// <summary>
+    /// Handles the plugins changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _panelAgentConfiguration_PluginsChanged(object? sender, EventArgs e) => InitAgentSettings();//RestartService();
+
+    /// <summary>
+    /// Executes the restart service operation.
+    /// </summary>
 
     public void RestartService()
     {
@@ -153,6 +179,11 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Executes the fill log operation.
+    /// </summary>
+    /// <param name="rdr">The rdr value.</param>
+
     private static void FillLog(IDataReader rdr)
     {
     }
@@ -190,6 +221,12 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Handles the security agent configuration request event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _dashboard_SecurityAgentConfigurationRequest(object? sender, EventArgs e)
     {
         if (sender != null && sender is SecurityAgent)
@@ -204,10 +241,20 @@ public partial class IddsAdmin : Form
 
     public bool IsServiceRunning { get; set; }
 
+    /// <summary>
+    /// Handles the tick event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void serviceReader_Tick(object? sender, EventArgs e) => RefreshServiceStatus();
 
 
     public bool ServiceError { get; set; }
+
+    /// <summary>
+    /// Executes the refresh service status operation.
+    /// </summary>
 
     public void RefreshServiceStatus()
     {
@@ -250,6 +297,13 @@ public partial class IddsAdmin : Form
 
     public bool IsUpdating { get; set; }
 
+    /// <summary>
+    /// Gets log message.
+    /// </summary>
+    /// <param name="agentId">The agent id value.</param>
+    /// <param name="action">The action value.</param>
+    /// <returns>The get log message result.</returns>
+
     public static string GetLogMessage(string agentId, int action)
     {
         string agentName = SecurityAgents.Instance.GetDisplayName(agentId);
@@ -260,6 +314,12 @@ public partial class IddsAdmin : Form
         }
         return string.Format("{0}{1}", message, IntrusionLog.GetStatusName(action));
     }
+
+    /// <summary>
+    /// Handles the tick event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void logReader_Tick(object? sender, EventArgs e)
     {
@@ -337,8 +397,18 @@ public partial class IddsAdmin : Form
 
     public DateTime LastLockUpdate { get; set; }
 
+    /// <summary>
+    /// Handles the invalidated event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void panelContent_Invalidated(object sender, InvalidateEventArgs e) => paintPanelTopBorder();
 
+
+    /// <summary>
+    /// Executes the paint panel top border operation.
+    /// </summary>
 
     void paintPanelTopBorder()
     {
@@ -355,7 +425,19 @@ public partial class IddsAdmin : Form
     }
 
     #region Form basics
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
@@ -365,7 +447,19 @@ public partial class IddsAdmin : Form
 
     public bool IsMoving { get; set; }
     public Point MoveStartPoint { get; set; }
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
+
+    /// <summary>
+    /// Handles the mouse move event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
@@ -376,6 +470,12 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void labelMenuHome_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuHome);
@@ -383,6 +483,11 @@ public partial class IddsAdmin : Form
         panelOnlineServices.Hide();
     }
 
+
+    /// <summary>
+    /// Executes the show menu operation.
+    /// </summary>
+    /// <param name="newMenu">The new menu value.</param>
 
     private void ShowMenu(SmartLabel newMenu)
     {
@@ -400,6 +505,12 @@ public partial class IddsAdmin : Form
 
     public SmartLabel? CurrentMenu { get; set; }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void labelMenuSecurityLog_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuSecurityLog);
@@ -409,12 +520,24 @@ public partial class IddsAdmin : Form
 
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void labelMenuAgents_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuAgents);
         PanelAgentConfiguration.BringToFront();
         panelOnlineServices.Hide();
     }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void labelMenuSettings_Click(object sender, EventArgs e)
     {
@@ -425,9 +548,27 @@ public partial class IddsAdmin : Form
 
 
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
@@ -435,7 +576,19 @@ public partial class IddsAdmin : Form
         Process.Start(sInfo);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
@@ -452,23 +605,63 @@ public partial class IddsAdmin : Form
     }
 
 
+    /// <summary>
+    /// Handles the mouse enter event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
+
+    /// <summary>
+    /// Handles the mouse leave event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void panelUnsuccessfulLogins_Click(object sender, EventArgs e)
     {
 
     }
 
+    /// <summary>
+    /// Handles the load event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void IddsAdmin_Load(object? sender, EventArgs e) =>
 
         //@DEMO: List demo agent
         InitAdmin();
+
+    /// <summary>
+    /// Executes the init agent settings operation.
+    /// </summary>
 
     public void InitAgentSettings()
     {
@@ -480,6 +673,10 @@ public partial class IddsAdmin : Form
             PanelAgentConfiguration.LoadSecurityAgent(agent);
         }
     }
+
+    /// <summary>
+    /// Executes the init admin operation.
+    /// </summary>
 
     public void InitAdmin()
     {
@@ -535,7 +732,20 @@ public partial class IddsAdmin : Form
     public bool IsInitialized { get; set; }
 
 
+    /// <summary>
+    /// Writes entry.
+    /// </summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="type">The type value.</param>
+    /// <param name="eventId">The event id value.</param>
+    /// <param name="category">The category value.</param>
+
     internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogCyberarms?.WriteEntry(text, type, eventId, category);
+
+    /// <summary>
+    /// Executes the resize form operation.
+    /// </summary>
+    /// <param name="mouseLocation">The mouse location value.</param>
 
     private void resizeForm(Point mouseLocation)
     {
@@ -577,11 +787,23 @@ public partial class IddsAdmin : Form
 
 
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderN_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -589,11 +811,23 @@ public partial class IddsAdmin : Form
         enterResizeMode(e.Location);
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderS_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Bottom;
         enterResizeMode(e.Location);
     }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderW_MouseDown(object sender, MouseEventArgs e)
     {
@@ -601,11 +835,23 @@ public partial class IddsAdmin : Form
         enterResizeMode(e.Location);
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderNE_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void borderSE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -613,17 +859,34 @@ public partial class IddsAdmin : Form
         enterResizeMode(e.Location);
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderSW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Bottom;
         enterResizeMode(e.Location);
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void borderNW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
+
+    /// <summary>
+    /// Executes the enter resize mode operation.
+    /// </summary>
+    /// <param name="currentLocation">The current location value.</param>
 
     private void enterResizeMode(Point currentLocation)
     {
@@ -632,6 +895,12 @@ public partial class IddsAdmin : Form
         //this.SuspendLayout();
     }
 
+    /// <summary>
+    /// Handles the mouse move event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void border_MouseMove(object sender, MouseEventArgs e)
     {
         if (isResizing)
@@ -639,14 +908,32 @@ public partial class IddsAdmin : Form
             resizeForm(e.Location);
         }
     }
+    /// <summary>
+    /// Handles the resize event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void IddsAdmin_Resize(object sender, EventArgs e)
     {
 
     }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void border_MouseUp(object sender, MouseEventArgs e) => isResizing = false;//this.ResumeLayout();
 
     #endregion
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void labelMenuOnline_Click(object sender, EventArgs e)
     {
@@ -661,6 +948,12 @@ public partial class IddsAdmin : Form
         }
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void labelMenuCurrentLocks_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuCurrentLocks);
@@ -670,11 +963,23 @@ public partial class IddsAdmin : Form
     }
 
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
         var c = (Control)sender;
         c.Location = new Point(c.Location.X + 1, c.Location.Y + 1);
     }
+
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
@@ -683,11 +988,33 @@ public partial class IddsAdmin : Form
     }
 
 
+    /// <summary>
+    /// Handles the paint event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void panelContent_Paint(object? sender, PaintEventArgs e) => paintPanelTopBorder();
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxStartService_Click(object sender, EventArgs e) => StartService();
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxStopService_Click(object sender, EventArgs e) => StopService();
+
+    /// <summary>
+    /// Starts service.
+    /// </summary>
 
     private void StartService()
     {
@@ -700,6 +1027,10 @@ public partial class IddsAdmin : Form
         }
         RefreshServiceStatus();
     }
+
+    /// <summary>
+    /// Stops service.
+    /// </summary>
 
     private void StopService()
     {

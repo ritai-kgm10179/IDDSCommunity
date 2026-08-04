@@ -10,6 +10,10 @@ public class ReportGenerator
     const string SELECT_BY_AGENT = @"SELECT a.DisplayName as AgentName, i.Action as Action, COUNT(*) as Incidents FROM IntrusionLog i INNER JOIN SecurityAgents a ON a.AgentId=i.AgentId WHERE IncidentTime>@p0 AND IncidentTime<@p1 GROUP BY a.DisplayName, i.Action ORDER BY 1";
     const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime>@p0 AND IncidentTime<@p1 AND Action=@p2 GROUP BY ClientIp ORDER BY COUNT(*)";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportGenerator"/> class.
+    /// </summary>
+
     private ReportGenerator()
     {
     }
@@ -24,11 +28,23 @@ public class ReportGenerator
         }
     }
 
+    /// <summary>
+    /// Executes the daily report operation.
+    /// </summary>
+    /// <returns>The daily report result.</returns>
+
     public static string DailyReport() => string.Empty;
 
     public long TotalIntrusionAttempts { get; set; }
     public long TotalSoftLocks { get; set; }
     public long TotalHardLocks { get; set; }
+
+    /// <summary>
+    /// Gets events per agent.
+    /// </summary>
+    /// <param name="start">The start value.</param>
+    /// <param name="end">The end value.</param>
+    /// <returns>The get events per agent result.</returns>
 
     public string GetEventsPerAgent(DateTime start, DateTime end)
     {
@@ -82,6 +98,14 @@ public class ReportGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Gets incidents by ip.
+    /// </summary>
+    /// <param name="action">The action value.</param>
+    /// <param name="start">The start value.</param>
+    /// <param name="end">The end value.</param>
+    /// <returns>The get incidents by ip result.</returns>
+
     public string GetIncidentsByIP(int action, DateTime start, DateTime end)
     {
         IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_IP, start, end, action);
@@ -98,9 +122,28 @@ public class ReportGenerator
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Gets incident by iptemplate.
+    /// </summary>
+    /// <returns>The get incident by iptemplate result.</returns>
+
     public static string GetIncidentByIPTemplate() => Resources.IntrusionAttemptsByIp;
 
+    /// <summary>
+    /// Gets events per agent template.
+    /// </summary>
+    /// <returns>The get events per agent template result.</returns>
+
     public static string GetEventsPerAgentTemplate() => Resources.EventsPerAgent;
+
+    /// <summary>
+    /// Sets events per agent.
+    /// </summary>
+    /// <param name="agentName">The agent name value.</param>
+    /// <param name="intrusionAttempts">The intrusion attempts value.</param>
+    /// <param name="softLocks">The soft locks value.</param>
+    /// <param name="hardLocks">The hard locks value.</param>
+    /// <returns>The set events per agent result.</returns>
 
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
@@ -113,6 +156,16 @@ public class ReportGenerator
         TotalHardLocks += hardLocks;
         return result;
     }
+
+    /// <summary>
+    /// Gets report.
+    /// </summary>
+    /// <param name="title">The title value.</param>
+    /// <param name="subtitle">The subtitle value.</param>
+    /// <param name="installationInformation">The installation information value.</param>
+    /// <param name="start">The start value.</param>
+    /// <param name="end">The end value.</param>
+    /// <returns>The get report result.</returns>
 
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {

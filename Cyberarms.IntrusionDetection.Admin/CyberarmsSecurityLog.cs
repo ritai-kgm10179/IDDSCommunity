@@ -45,13 +45,17 @@ public partial class CyberarmsSecurityLog : UserControl
         get
         {
             _intrusionLogView ??= new DataView(DataSetIntrusionLog.Tables["IntrusionLog"]!)
-                {
-                    Sort = "EventDate desc"
-                };
+            {
+                Sort = "EventDate desc"
+            };
             return _intrusionLogView;
         }
     }
 
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsSecurityLog"/> class.
+    /// </summary>
 
     public CyberarmsSecurityLog()
     {
@@ -75,6 +79,12 @@ public partial class CyberarmsSecurityLog : UserControl
 
         PositionLabels();
     }
+
+    /// <summary>
+    /// Handles the filter selection changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void CyberarmsSecurityLog_FilterSelectionChanged(object? sender, EventArgs? e)
     {
@@ -104,10 +114,29 @@ public partial class CyberarmsSecurityLog : UserControl
         IntrusionLogView.RowFilter = viewFilter;
     }
 
+    /// <summary>
+    /// Handles the selection change committed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void comboBoxAgentSelection_SelectionChangeCommitted(object? sender, EventArgs? e)
     {
 
     }
+
+    /// <summary>
+    /// Adds log entry.
+    /// </summary>
+    /// <param name="id">The id value.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="agentId">The agent id value.</param>
+    /// <param name="logIcon">The log icon value.</param>
+    /// <param name="logType">The log type value.</param>
+    /// <param name="eventDate">The event date value.</param>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="message">The message value.</param>
+    /// <returns>The add log entry result.</returns>
 
     public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
     {
@@ -131,6 +160,11 @@ public partial class CyberarmsSecurityLog : UserControl
         return row;
     }
 
+    /// <summary>
+    /// Executes the count events operation.
+    /// </summary>
+    /// <returns>The count events result.</returns>
+
     private int CountEvents()
     {
         int result = 0;
@@ -144,6 +178,20 @@ public partial class CyberarmsSecurityLog : UserControl
         return result;
     }
 
+    /// <summary>
+    /// Executes the fill log entry operation.
+    /// </summary>
+    /// <param name="maxId">The max id value.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="agentId">The agent id value.</param>
+    /// <param name="logIcon">The log icon value.</param>
+    /// <param name="logType">The log type value.</param>
+    /// <param name="lastEventDate">The last event date value.</param>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="message">The message value.</param>
+    /// <param name="numberOfEvents">The number of events value.</param>
+    /// <returns>The fill log entry result.</returns>
+
     public DataRow FillLogEntry(int maxId, int action, string agentId, Image logIcon, string logType, DateTime lastEventDate, string ipAddress, string message, int numberOfEvents)
     {
         DataRow row = AddLogEntry(maxId, action, agentId, logIcon, logType, lastEventDate, ipAddress, message);
@@ -154,7 +202,17 @@ public partial class CyberarmsSecurityLog : UserControl
 
     public int MaxLogId { get; set; }
 
+    /// <summary>
+    /// Adds agent.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
+
     public void AddAgent(SecurityAgent agent) => comboBoxAgentSelection.Items.Add(agent);
+
+    /// <summary>
+    /// Removes agent.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
 
     public void RemoveAgent(SecurityAgent agent)
     {
@@ -168,7 +226,17 @@ public partial class CyberarmsSecurityLog : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the resize event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
+
+    /// <summary>
+    /// Executes the position labels operation.
+    /// </summary>
 
     private void PositionLabels()
     {

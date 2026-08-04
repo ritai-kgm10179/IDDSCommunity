@@ -46,6 +46,12 @@ public class LockStatusAdapter
         }
     }
 
+    /// <summary>
+    /// Gets lock status name.
+    /// </summary>
+    /// <param name="status">The status value.</param>
+    /// <returns>The get lock status name result.</returns>
+
     public static string GetLockStatusName(int status)
     {
         if (LockStatusNames.TryGetValue(status, out string? value))

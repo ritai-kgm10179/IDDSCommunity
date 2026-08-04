@@ -17,11 +17,19 @@ internal class WindowsLogManager
         get
         {
             _instance ??= new WindowsLogManager
-                { };
+            { };
             return _instance;
         }
     }
 
+
+    /// <summary>
+    /// Writes entry.
+    /// </summary>
+    /// <param name="text">The text value.</param>
+    /// <param name="type">The type value.</param>
+    /// <param name="eventId">The event id value.</param>
+    /// <param name="category">The category value.</param>
 
     internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
     {

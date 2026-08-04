@@ -6,6 +6,11 @@ namespace MailServerTest;
 
 class Program
 {
+    /// <summary>
+    /// Runs the application entry point.
+    /// </summary>
+    /// <param name="args">The event data.</param>
+
     static void Main(string[] args)
     {
         Pop3Agent agent = new();

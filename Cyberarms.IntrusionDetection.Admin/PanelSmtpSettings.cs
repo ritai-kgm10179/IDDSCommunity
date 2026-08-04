@@ -12,6 +12,10 @@ public partial class PanelSmtpSettings : UserControl
 
     public event EventHandler? SmtpSettingsChanged;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PanelSmtpSettings"/> class.
+    /// </summary>
+
     public PanelSmtpSettings()
     {
         InitializeComponent();
@@ -19,10 +23,22 @@ public partial class PanelSmtpSettings : UserControl
         Load += new EventHandler(PanelSmtpSettings_Load);
     }
 
+    /// <summary>
+    /// Handles the load event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void PanelSmtpSettings_Load(object? sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
 
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
@@ -30,6 +46,10 @@ public partial class PanelSmtpSettings : UserControl
         ToggleEditMode();
         ClearErrors();
     }
+
+    /// <summary>
+    /// Executes the toggle edit mode operation.
+    /// </summary>
 
     private void ToggleEditMode()
     {
@@ -54,6 +74,10 @@ public partial class PanelSmtpSettings : UserControl
         textBoxPassword.Enabled = IsInEditMode;
     }
 
+    /// <summary>
+    /// Loads data.
+    /// </summary>
+
     private void LoadData()
     {
         textBoxSender.Text = IddsConfig.Instance.SenderEmailAddress;
@@ -67,12 +91,27 @@ public partial class PanelSmtpSettings : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
 
     }
 
+    /// <summary>
+    /// Processes the smtp settings changed notification.
+    /// </summary>
+
     private void OnSmtpSettingsChanged() => SmtpSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Executes the check form data operation.
+    /// </summary>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
 
     private bool CheckFormData()
     {
@@ -88,7 +127,17 @@ public partial class PanelSmtpSettings : UserControl
 
 
 
+    /// <summary>
+    /// Clears errors.
+    /// </summary>
+
     private void ClearErrors() => errSmtpPort.Visible = false;
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void buttonTestSmtpSettings_Click(object sender, EventArgs e)
     {
@@ -127,6 +176,12 @@ public partial class PanelSmtpSettings : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -134,12 +189,24 @@ public partial class PanelSmtpSettings : UserControl
         control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
         Point loc = control.Location;
         control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
@@ -161,15 +228,38 @@ public partial class PanelSmtpSettings : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    /// <summary>
+    /// Sets edit mode.
+    /// </summary>
+    /// <param name="hasChanges">A value indicating whether s changes.</param>
 
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 

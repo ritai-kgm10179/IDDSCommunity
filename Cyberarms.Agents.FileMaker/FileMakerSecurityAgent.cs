@@ -84,6 +84,12 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         query = null;
     }
 
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
@@ -156,6 +162,11 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     }
 
     public Guid Id => new("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
+
+    /// <summary>
+    /// Executes the my regex operation.
+    /// </summary>
+    /// <returns>The my regex result.</returns>
 
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();

@@ -10,6 +10,10 @@ public class NetworkMonitor
     ThreadStart? ts;
     Thread? td;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NetworkMonitor"/> class.
+    /// </summary>
+
     private NetworkMonitor()
     {
     }
@@ -27,12 +31,20 @@ public class NetworkMonitor
     }
 
 
+    /// <summary>
+    /// Starts network sniffer.
+    /// </summary>
+
     protected void StartNetworkSniffer()
     {
         ts = new ThreadStart(RunWatcher);
         td = new Thread(ts);
         td.Start();
     }
+
+    /// <summary>
+    /// Executes the run watcher operation.
+    /// </summary>
 
     void RunWatcher()
     {
@@ -65,7 +77,23 @@ public class NetworkMonitor
         }
     }
 
+    /// <summary>
+    /// Handles the ip packet received event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void IpPacketReceived(object sender, EventArgs e) => throw new NotImplementedException();
+
+    /// <summary>
+    /// Adds sniffer address port.
+    /// </summary>
+    /// <param name="address">The address value.</param>
+    /// <param name="port">The port value.</param>
+    /// <param name="handlesReceived">The handles received value.</param>
+    /// <param name="handlesSent">The handles sent value.</param>
+    /// <param name="received">The received value.</param>
+    /// <param name="sent">The sent value.</param>
 
     public void AddSnifferAddressPort(IPAddress address, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent) => TcpSnifferPorts.Add(new TcpSnifferPort(address, port, handlesReceived, handlesSent, received, sent));
 

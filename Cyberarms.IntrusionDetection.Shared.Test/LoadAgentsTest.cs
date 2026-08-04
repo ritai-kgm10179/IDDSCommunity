@@ -8,6 +8,10 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class LoadAgentsTest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoadAgentsTest"/> class.
+    /// </summary>
+
     public LoadAgentsTest()
     {
         Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
@@ -17,6 +21,10 @@ public class LoadAgentsTest
             try { System.IO.Directory.CreateDirectory(testDir); } catch { }
         }
     }
+
+    /// <summary>
+    /// Loads agents from directory.
+    /// </summary>
 
     [TestMethod]
     public void LoadAgentsFromDirectory()
@@ -28,6 +36,10 @@ public class LoadAgentsTest
             System.Diagnostics.Debug.Print(agent.Name);
         }
     }
+
+    /// <summary>
+    /// Merges disk agents with db.
+    /// </summary>
 
     [TestMethod, Ignore]
     public void MergeDiskAgentsWithDb()
@@ -43,6 +55,10 @@ public class LoadAgentsTest
         }
         if (agents.Count > 1) Assert.IsFalse(agents[1].Enabled);
     }
+
+    /// <summary>
+    /// Loads agents to memory test.
+    /// </summary>
 
     [TestMethod, Ignore]
     public void LoadAgentsToMemoryTest()
@@ -71,11 +87,29 @@ public class LoadAgentsTest
         // Assert.IsTrue(Unloaded); // just works in debug, because object is released too early in runtime
     }
 
+    /// <summary>
+    /// Handles the elapsed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void t_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) => Finished = true;
     public bool Finished { get; set; }
     public bool Unloaded { get; set; }
 
+    /// <summary>
+    /// Handles the domain unload event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void AppDomain_DomainUnload(object? sender, EventArgs e) => Unloaded = true;
+
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="data">The event data.</param>
 
     void LoadAgentsTest_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data) => System.Diagnostics.Debug.Print("Attack detected");
 

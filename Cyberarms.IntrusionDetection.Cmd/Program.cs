@@ -6,6 +6,11 @@ class Program
 {
     static readonly LogAlerts logAlerts = new();
 
+    /// <summary>
+    /// Starts agent.
+    /// </summary>
+    /// <param name="agentName">The agent name value.</param>
+
     static void StartAgent(string agentName)
     {
         foreach (Agent agent in Agents)
@@ -17,6 +22,11 @@ class Program
             }
         }
     }
+
+    /// <summary>
+    /// Runs the application entry point.
+    /// </summary>
+    /// <param name="args">The event data.</param>
 
     static void Main(string[] args)
     {
@@ -56,6 +66,10 @@ class Program
         }
     }
 
+    /// <summary>
+    /// Executes the show usage operation.
+    /// </summary>
+
     static void ShowUsage()
     {
         Console.WriteLine("One or some invalid parameters were passed");
@@ -64,6 +78,12 @@ class Program
         Console.WriteLine("");
         Console.WriteLine("(c) 2012 Cyberarms, isiCore");
     }
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="data">The event data.</param>
+
     static void Assembly_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data)
     {
         string ipAddress = data.IpAddress;
@@ -90,6 +110,13 @@ class Program
 
     class LogAlerts : List<LogAlert>
     {
+        /// <summary>
+        /// Adds alert.
+        /// </summary>
+        /// <param name="ipAddress">The ip address value.</param>
+        /// <param name="eventDate">The event date value.</param>
+        /// <param name="eventId">The event id value.</param>
+
         public void AddAlert(string ipAddress, DateTime eventDate, int eventId)
         {
             bool found = false;
@@ -119,6 +146,12 @@ class Program
                 Add(logAlert);
             }
         }
+        /// <summary>
+        /// Gets alert for.
+        /// </summary>
+        /// <param name="ipAddress">The ip address value.</param>
+        /// <returns>The get alert for result.</returns>
+
         public LogAlert GetAlertFor(string ipAddress)
         {
             foreach (LogAlert alert in this)

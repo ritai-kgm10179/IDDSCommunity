@@ -7,6 +7,10 @@ namespace CyberarmsIntrusionDetection.Cmd.Test;
 [TestClass]
 public class AgentTests
 {
+    /// <summary>
+    /// Executes the test resolve ip operation.
+    /// </summary>
+
     [TestMethod]
     public void TestResolveIP()
     {
@@ -21,6 +25,12 @@ public class AgentTests
         }
     }
 
+
+    /// <summary>
+    /// Resolves ip.
+    /// </summary>
+    /// <param name="hostname">The hostname value.</param>
+    /// <returns>The resolve ip result.</returns>
 
     private static string[] ResolveIp(string hostname)
     {

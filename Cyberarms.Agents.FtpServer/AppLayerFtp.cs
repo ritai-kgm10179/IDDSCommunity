@@ -11,6 +11,12 @@ public class AppLayerFtp
 
     public string FtpReplyCode { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AppLayerFtp"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public AppLayerFtp(byte[] byBuffer, int nReceived)
     {
         try

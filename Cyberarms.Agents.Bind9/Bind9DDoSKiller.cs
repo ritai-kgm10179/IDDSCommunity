@@ -75,6 +75,12 @@ public class Bind9DDoSKiller : AgentPlugin
         query = null;
     }
 
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try

@@ -20,6 +20,12 @@ public class AppLayerTlsSsl
 
     public TlsProtocolHeader TlsHeader = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AppLayerTlsSsl"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public AppLayerTlsSsl(byte[] byBuffer, int nReceived)
     {
         try

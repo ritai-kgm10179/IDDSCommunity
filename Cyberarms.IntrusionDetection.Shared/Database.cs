@@ -15,6 +15,11 @@ public class Database
     private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
 
+    /// <summary>
+    /// Configures requested operation.
+    /// </summary>
+    /// <param name="directory">The directory value.</param>
+
     public void Configure(string directory)
     {
         if (_connection is not null)
@@ -45,6 +50,12 @@ public class Database
         OpenOrCreate();
     }
 
+    /// <summary>
+    /// Handles the state change event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void _connection_StateChange(object sender, StateChangeEventArgs e) => System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
 
     public SqliteConnection Connection
@@ -73,9 +84,28 @@ public class Database
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Database"/> class.
+    /// </summary>
+
     private Database() { }
 
+    /// <summary>
+    /// Executes reader.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="parameters">The parameters value.</param>
+    /// <returns>The execute reader result.</returns>
+
     public IDataReader ExecuteReader(string sqlString, params object[] parameters) => ExecuteReader(sqlString, null, parameters);
+
+    /// <summary>
+    /// Executes reader.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="transaction">The transaction value.</param>
+    /// <param name="parameters">The parameters value.</param>
+    /// <returns>The execute reader result.</returns>
 
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -99,7 +129,20 @@ public class Database
         }
     }
 
+    /// <summary>
+    /// Executes non query.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="parameters">The parameters value.</param>
+
     public void ExecuteNonQuery(string sqlString, params object[] parameters) => ExecuteNonQuery(sqlString, null, parameters);
+
+    /// <summary>
+    /// Executes non query.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="transaction">The transaction value.</param>
+    /// <param name="parameters">The parameters value.</param>
 
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -138,7 +181,22 @@ public class Database
         }
     }
 
+    /// <summary>
+    /// Executes scalar.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="parameters">The parameters value.</param>
+    /// <returns>The execute scalar result.</returns>
+
     public object? ExecuteScalar(string sqlString, params object[] parameters) => ExecuteScalar(sqlString, null, parameters);
+
+    /// <summary>
+    /// Executes scalar.
+    /// </summary>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="transaction">The transaction value.</param>
+    /// <param name="parameters">The parameters value.</param>
+    /// <returns>The execute scalar result.</returns>
 
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -162,9 +220,33 @@ public class Database
         }
     }
 
+    /// <summary>
+    /// Executes the query operation.
+    /// </summary>
+    /// <typeparam name="T">The t type.</typeparam>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="param">The param value.</param>
+    /// <param name="transaction">The transaction value.</param>
+    /// <returns>The query result.</returns>
+
     public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.Query<T>(sqlString, param, transaction);
 
+    /// <summary>
+    /// Executes the query first or default operation.
+    /// </summary>
+    /// <typeparam name="T">The t type.</typeparam>
+    /// <param name="sqlString">The sql string value.</param>
+    /// <param name="param">The param value.</param>
+    /// <param name="transaction">The transaction value.</param>
+    /// <returns>The query first or default result.</returns>
+
     public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.QueryFirstOrDefault<T>(sqlString, param, transaction);
+
+    /// <summary>
+    /// Builds dynamic parameters.
+    /// </summary>
+    /// <param name="parameters">The parameters value.</param>
+    /// <returns>The build dynamic parameters result.</returns>
 
     private static DynamicParameters? BuildDynamicParameters(object[] parameters)
     {
@@ -180,6 +262,10 @@ public class Database
     }
 
     public int DatabaseVersion { get; set; }
+
+    /// <summary>
+    /// Opens or create.
+    /// </summary>
 
     private void OpenOrCreate()
     {

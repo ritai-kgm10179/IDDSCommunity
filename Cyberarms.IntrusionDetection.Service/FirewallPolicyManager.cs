@@ -20,11 +20,27 @@ internal class FirewallPolicyManager
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FirewallPolicyManager"/> class.
+    /// </summary>
+
     private FirewallPolicyManager() => firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
+
+    /// <summary>
+    /// Creates com object.
+    /// </summary>
+    /// <typeparam name="T">The t type.</typeparam>
+    /// <param name="progId">The prog id value.</param>
+    /// <returns>The create com object result.</returns>
 
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type {progId} is unavailable.")) as T
         ?? throw new InvalidOperationException($"Unable to create COM object {progId}.");
+
+    /// <summary>
+    /// Executes the block operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     internal void Block(string ipAddress)
     {
@@ -39,6 +55,12 @@ internal class FirewallPolicyManager
             System.Diagnostics.EventLog.WriteEntry("Create Firewall Rule", ex.Message, System.Diagnostics.EventLogEntryType.Error);
         }
     }
+
+    /// <summary>
+    /// Determines whether locked.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
+    /// <returns><see langword="true"/> if locked; otherwise, <see langword="false"/>.</returns>
 
     internal bool IsLocked(string ipAddress)
     {
@@ -55,6 +77,11 @@ internal class FirewallPolicyManager
         }
         return false;
     }
+
+    /// <summary>
+    /// Removes ip address from block list.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     internal void RemoveIpAddressFromBlockList(string ipAddress)
     {
@@ -73,6 +100,13 @@ internal class FirewallPolicyManager
             rule.Enabled = false;
         }
     }
+
+    /// <summary>
+    /// Gets cleaned remote addresses.
+    /// </summary>
+    /// <param name="addresses">The addresses value.</param>
+    /// <param name="removeAddress">The remove address value.</param>
+    /// <returns>The get cleaned remote addresses result.</returns>
 
     private static string GetCleanedRemoteAddresses(string addresses, string removeAddress)
     {
@@ -106,7 +140,25 @@ internal class FirewallPolicyManager
         return result.ToString();
     }
 
+    /// <summary>
+    /// Gets rule name.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="port">The port value.</param>
+    /// <returns>The get rule name result.</returns>
+
     private static string GetRuleName(string name, int port) => string.Format("{0}_{1}_{2}", Globals.CYBERARMS_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
+
+    /// <summary>
+    /// Adds rule.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="port">The port value.</param>
+    /// <param name="protocol">The protocol value.</param>
+    /// <param name="direction">The direction value.</param>
+    /// <param name="scope">The scope value.</param>
+    /// <param name="action">The action value.</param>
+    /// <param name="remoteAddress">The remote address value.</param>
 
     internal void AddRule(string name, int port, NET_FW_IP_PROTOCOL_ protocol, NET_FW_RULE_DIRECTION_ direction,
         NET_FW_SCOPE_ scope, NET_FW_ACTION_ action, string remoteAddress)
@@ -169,6 +221,10 @@ internal class FirewallPolicyManager
         }
     }
 
+    /// <summary>
+    /// Clears up rules.
+    /// </summary>
+
     internal void CleanUpRules()
     {
         foreach (INetFwRule rule in FindRules(Globals.CYBERARMS_WINDOWS_IDS_RULE_NAME))
@@ -178,6 +234,12 @@ internal class FirewallPolicyManager
         }
     }
 
+    /// <summary>
+    /// Gets rule.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <returns>The get rule result.</returns>
+
     internal INetFwRule? GetRule(string name)
     {
         foreach (INetFwRule rule in firewallPolicyManager.Rules)
@@ -186,6 +248,12 @@ internal class FirewallPolicyManager
         }
         return null;
     }
+
+    /// <summary>
+    /// Finds rules.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <returns>The find rules result.</returns>
 
     internal List<INetFwRule> FindRules(string name)
     {

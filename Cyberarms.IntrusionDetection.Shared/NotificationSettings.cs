@@ -77,10 +77,20 @@ public class NotificationSettings
     }
 
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NotificationSettings"/> class.
+    /// </summary>
+
     private NotificationSettings()
     {
 
     }
+
+    /// <summary>
+    /// Executes the string to bool operation.
+    /// </summary>
+    /// <param name="value">The value to process.</param>
+    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
 
     private static bool StringToBool(string value)
     {
@@ -88,7 +98,15 @@ public class NotificationSettings
         return result;
     }
 
+    /// <summary>
+    /// Executes the reload operation.
+    /// </summary>
+
     public static void Reload() => IddsConfig.Instance.LoadAppConfig();
+
+    /// <summary>
+    /// Saves requested operation.
+    /// </summary>
 
     public static void Save() => IddsConfig.Instance.SaveAppConfig();
 }

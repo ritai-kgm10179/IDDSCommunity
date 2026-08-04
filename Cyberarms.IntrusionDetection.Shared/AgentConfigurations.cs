@@ -6,6 +6,11 @@ namespace Cyberarms.IntrusionDetection.Shared;
 
 public class AgentConfigurations : List<AgentConfigurationBase>
 {
+    /// <summary>
+    /// Adds requested operation.
+    /// </summary>
+    /// <param name="agentConfig">The agent config value.</param>
+
     public new void Add(AgentConfigurationBase agentConfig)
     {
         if (!IsConfigured(agentConfig.AssemblyName, agentConfig.AgentName))
@@ -26,6 +31,13 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         }
     }
 
+    /// <summary>
+    /// Determines whether configured.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <returns><see langword="true"/> if configured; otherwise, <see langword="false"/>.</returns>
+
     public bool IsConfigured(string assemblyName, string agentName)
     {
         // return GetAgentConfig(assemblyName, agentName) != null;
@@ -36,6 +48,13 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         return false;
     }
 
+    /// <summary>
+    /// Determines whether agent enabled.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <returns><see langword="true"/> if agent enabled; otherwise, <see langword="false"/>.</returns>
+
     public bool IsAgentEnabled(string assemblyName, string agentName)
     {
         IAgentConfiguration config = GetAgentConfig(assemblyName, agentName);
@@ -43,7 +62,22 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         return config.Enabled;
     }
 
+    /// <summary>
+    /// Gets agent config.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <returns>The get agent config result.</returns>
+
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName) => GetAgentConfig(assemblyName, agentName, null);
+
+    /// <summary>
+    /// Gets agent config.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <param name="configurationSettingsType">The configuration settings type value.</param>
+    /// <returns>The get agent config result.</returns>
 
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName, string? configurationSettingsType)
     {
@@ -58,6 +92,14 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         return CreateAgentConfig(assemblyName, agentName, configurationSettingsType);
     }
 
+    /// <summary>
+    /// Creates agent config.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <param name="configurationSettingsTypeName">The configuration settings type name value.</param>
+    /// <returns>The create agent config result.</returns>
+
     public AgentConfigurationBase CreateAgentConfig(string assemblyName, string agentName, string? configurationSettingsTypeName)
     {
         AgentConfigurationBase newConfig = new()
@@ -71,15 +113,39 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         return newConfig;
     }
 
+    /// <summary>
+    /// Executes the enable agent operation.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+
     public void EnableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, true);
 
+    /// <summary>
+    /// Executes the disable agent operation.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+
     public void DisableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, false);
+
+    /// <summary>
+    /// Sets enabled.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="agentName">The agent name value.</param>
+    /// <param name="enabled">The enabled value.</param>
 
     public void SetEnabled(string assemblyName, string agentName, bool enabled)
     {
         IAgentConfiguration config = GetAgentConfig(assemblyName, agentName);
         config?.Enabled = enabled;
     }
+
+    /// <summary>
+    /// Loads plugins from directory.
+    /// </summary>
+    /// <param name="pluginDirectory">The plugin directory value.</param>
 
     public void LoadPluginsFromDirectory(string pluginDirectory)
     {
@@ -129,6 +195,14 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     public event LoadPlugInExceptionRaisedHandler? LoadPluginExceptionRaised;
     public delegate void LoadPlugInExceptionRaisedHandler(object sender, PluginExceptionArguments data);
 
+    /// <summary>
+    /// Processes the load plugin exception raised notification.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <param name="moduleName">The module name value.</param>
+    /// <param name="exception">The exception associated with the operation.</param>
+    /// <param name="source">The source value.</param>
+
     protected internal void OnLoadPluginExceptionRaised(string assemblyName, string? moduleName, Exception exception, PluginExceptionSource source)
     {
         PluginExceptionArguments args = new()
@@ -141,6 +215,11 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         LoadPluginExceptionRaised?.Invoke(this, args);
     }
 
+    /// <summary>
+    /// Gets assembly names.
+    /// </summary>
+    /// <returns>The get assembly names result.</returns>
+
     public List<string> GetAssemblyNames()
     {
         List<string> result = [];
@@ -150,6 +229,12 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         }
         return result;
     }
+
+    /// <summary>
+    /// Gets modules.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+    /// <returns>The get modules result.</returns>
 
     public List<string> GetModules(string assemblyName)
     {

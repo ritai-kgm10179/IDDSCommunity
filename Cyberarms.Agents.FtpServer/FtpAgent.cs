@@ -17,12 +17,20 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     private readonly List<Sniffer> sniffers = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FtpAgent"/> class.
+    /// </summary>
+
     public FtpAgent()
     {
         FtpConfig settings = new();
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
+
+    /// <summary>
+    /// Processes the start agent notification.
+    /// </summary>
 
     protected override void OnStartAgent()
     {
@@ -31,6 +39,10 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         td.Start();
         base.OnStartAgent();
     }
+
+    /// <summary>
+    /// Executes the run watcher operation.
+    /// </summary>
 
     private void RunWatcher()
     {
@@ -47,6 +59,11 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
             }
         }
     }
+
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     private void WatchAddress(object? ipAddress)
     {
@@ -67,6 +84,12 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         catch { }
         sniffers.Add(s);
     }
+
+    /// <summary>
+    /// Handles the ip packet sent event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void IpPacketSent(object? sender, EventArgs e)
     {
@@ -102,7 +125,16 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// Processes the trace notification.
+    /// </summary>
+    /// <param name="tlsPackage">The tls package value.</param>
+
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the continue agent notification.
+    /// </summary>
 
     protected override void OnContinueAgent()
     {
@@ -110,11 +142,19 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         base.OnContinueAgent();
     }
 
+    /// <summary>
+    /// Processes the pause agent notification.
+    /// </summary>
+
     protected override void OnPauseAgent()
     {
         Stop();
         base.OnPauseAgent();
     }
+
+    /// <summary>
+    /// Processes the stop agent notification.
+    /// </summary>
 
     protected override void OnStopAgent()
     {
@@ -128,6 +168,11 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     }
 
     public override bool IsRunning => base.IsRunning;
+
+    /// <summary>
+    /// Executes the unsuccessful login operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     private void UnsuccessfulLogin(string ipAddress)
     {

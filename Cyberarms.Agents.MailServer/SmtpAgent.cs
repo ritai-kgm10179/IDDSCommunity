@@ -16,12 +16,20 @@ public class SmtpAgent : AgentPlugin
 
     private readonly List<Sniffer> sniffers = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SmtpAgent"/> class.
+    /// </summary>
+
     public SmtpAgent()
     {
         SmtpConfig settings = new();
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
+
+    /// <summary>
+    /// Processes the start agent notification.
+    /// </summary>
 
     protected override void OnStartAgent()
     {
@@ -30,6 +38,10 @@ public class SmtpAgent : AgentPlugin
         td.Start();
         base.OnStartAgent();
     }
+
+    /// <summary>
+    /// Executes the run watcher operation.
+    /// </summary>
 
     private void RunWatcher()
     {
@@ -46,6 +58,11 @@ public class SmtpAgent : AgentPlugin
             }
         }
     }
+
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     private void WatchAddress(object? ipAddress)
     {
@@ -65,6 +82,12 @@ public class SmtpAgent : AgentPlugin
         catch { }
         sniffers.Add(s);
     }
+
+    /// <summary>
+    /// Handles the ip packet sent event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void s_IpPacketSent(object? sender, EventArgs e)
     {
@@ -100,7 +123,16 @@ public class SmtpAgent : AgentPlugin
         }
     }
 
+    /// <summary>
+    /// Processes the trace notification.
+    /// </summary>
+    /// <param name="tlsPackage">The tls package value.</param>
+
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the continue agent notification.
+    /// </summary>
 
     protected override void OnContinueAgent()
     {
@@ -108,11 +140,19 @@ public class SmtpAgent : AgentPlugin
         base.OnContinueAgent();
     }
 
+    /// <summary>
+    /// Processes the pause agent notification.
+    /// </summary>
+
     protected override void OnPauseAgent()
     {
         Stop();
         base.OnPauseAgent();
     }
+
+    /// <summary>
+    /// Processes the stop agent notification.
+    /// </summary>
 
     protected override void OnStopAgent()
     {
@@ -126,6 +166,11 @@ public class SmtpAgent : AgentPlugin
     }
 
     public override bool IsRunning => base.IsRunning;
+
+    /// <summary>
+    /// Executes the unsuccessful login operation.
+    /// </summary>
+    /// <param name="ipAddress">The ip address value.</param>
 
     private void UnsuccessfulLogin(string ipAddress)
     {

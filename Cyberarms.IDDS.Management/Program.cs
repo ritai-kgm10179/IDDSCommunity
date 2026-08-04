@@ -7,6 +7,11 @@ namespace Cyberarms.IDDS.Management;
 class Program
 {
 
+    /// <summary>
+    /// Runs the application entry point.
+    /// </summary>
+    /// <param name="args">The event data.</param>
+
     static void Main(string[] args)
     {
         string path = System.Reflection.Assembly.GetExecutingAssembly().Location;
@@ -91,6 +96,10 @@ class Program
         }
 
     }
+
+    /// <summary>
+    /// Executes the show usage operation.
+    /// </summary>
 
     static void ShowUsage()
     {

@@ -10,6 +10,10 @@ namespace Cyberarms.IntrusionDetection.Shared;
 [Serializable]
 public class SecurityAgents : List<SecurityAgent>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SecurityAgents"/> class.
+    /// </summary>
+
     private SecurityAgents()
     {
     }
@@ -28,6 +32,10 @@ public class SecurityAgents : List<SecurityAgent>
             return _instance;
         }
     }
+
+    /// <summary>
+    /// Executes the initialize agents operation.
+    /// </summary>
 
     public void InitializeAgents()
     {
@@ -61,6 +69,11 @@ public class SecurityAgents : List<SecurityAgent>
         }
         rdr.Close();
     }
+
+    /// <summary>
+    /// Reads agents from disk.
+    /// </summary>
+    /// <returns>The read agents from disk result.</returns>
 
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
@@ -98,6 +111,12 @@ public class SecurityAgents : List<SecurityAgent>
 
     public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
 
+    /// <summary>
+    /// Finds by display name.
+    /// </summary>
+    /// <param name="displayName">The display name value.</param>
+    /// <returns>The find by display name result.</returns>
+
     public SecurityAgent? FindByDisplayName(string displayName)
     {
         foreach (SecurityAgent agent in this)
@@ -110,6 +129,12 @@ public class SecurityAgents : List<SecurityAgent>
         return null;
     }
 
+    /// <summary>
+    /// Finds by name.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <returns>The find by name result.</returns>
+
     public SecurityAgent? FindByName(string name)
     {
         foreach (SecurityAgent agent in this)
@@ -121,6 +146,12 @@ public class SecurityAgents : List<SecurityAgent>
         }
         return null;
     }
+
+    /// <summary>
+    /// Gets display name.
+    /// </summary>
+    /// <param name="agentId">The agent id value.</param>
+    /// <returns>The get display name result.</returns>
 
     public string GetDisplayName(string agentId)
     {
@@ -138,9 +169,17 @@ public class SecurityAgents : List<SecurityAgent>
         return string.Format("Agent {0} is not registered.", agentId);
     }
 
+    /// <summary>
+    /// Executes the register security agents operation.
+    /// </summary>
+
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
     public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
+
+    /// <summary>
+    /// Executes the unload agents operation.
+    /// </summary>
 
     public void UnloadAgents()
     {
@@ -158,6 +197,11 @@ public class SecurityAgents : List<SecurityAgent>
         LoadedAgents.Clear();
     }
 
+    /// <summary>
+    /// Executes the unload agent operation.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
+
     public void UnloadAgent(SecurityAgent agent)
     {
 #if NETFRAMEWORK
@@ -173,7 +217,17 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
+    /// <summary>
+    /// Handles the domain unload event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
+
+    /// <summary>
+    /// Loads agents.
+    /// </summary>
 
     public void LoadAgents()
     {
@@ -229,6 +283,10 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
+    /// <summary>
+    /// Starts agents.
+    /// </summary>
+
     public void StartAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -237,6 +295,10 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
+    /// <summary>
+    /// Stops agents.
+    /// </summary>
+
     public void StopAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -244,6 +306,10 @@ public class SecurityAgents : List<SecurityAgent>
             agent.Stop();
         }
     }
+
+    /// <summary>
+    /// Executes the pause agents operation.
+    /// </summary>
 
     public void PauseAgents()
     {
@@ -260,6 +326,10 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
+    /// <summary>
+    /// Executes the continue agents operation.
+    /// </summary>
+
     public void ContinueAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -275,6 +345,12 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
+
+    /// <summary>
+    /// Merges db information.
+    /// </summary>
+    /// <param name="agents">The agents value.</param>
+    /// <returns>The merge db information result.</returns>
 
     public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
     {
@@ -334,6 +410,13 @@ public class SecurityAgents : List<SecurityAgent>
         AddRange(result);
         return this;
     }
+
+    /// <summary>
+    /// Gets list index.
+    /// </summary>
+    /// <param name="list">The list value.</param>
+    /// <param name="name">The name value.</param>
+    /// <returns>The get list index result.</returns>
 
     private static int GetListIndex(List<SecurityAgent> list, string name)
     {

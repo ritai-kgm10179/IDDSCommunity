@@ -15,13 +15,26 @@ public class Sniffer
 
     private bool aborted = false;
 
+    /// <summary>
+    /// Executes the abort operation.
+    /// </summary>
+
     public void Abort() => aborted = true;
+
+    /// <summary>
+    /// Executes the continue operation.
+    /// </summary>
 
     public void Continue() => aborted = false;
 
     public int? TcpPort { get; set; }
 
     public IPAddress IPAddress { get; set; } = IPAddress.Loopback;
+
+    /// <summary>
+    /// Executes the watch address operation.
+    /// </summary>
+    /// <param name="ipAddressToMonitor">The ip address to monitor value.</param>
 
     public void WatchAddress(object ipAddressToMonitor)
     {
@@ -41,6 +54,11 @@ public class Sniffer
             new AsyncCallback(OnReceive), null);
 
     }
+
+    /// <summary>
+    /// Processes the receive notification.
+    /// </summary>
+    /// <param name="ar">The ar value.</param>
 
     private void OnReceive(IAsyncResult ar)
     {
@@ -76,12 +94,31 @@ public class Sniffer
         }
     }
 
+    /// <summary>
+    /// Processes the packet sent notification.
+    /// </summary>
+    /// <param name="ipHeader">The ip header value.</param>
+
     private void OnPacketSent(IPHeader ipHeader) => IpPacketSent?.Invoke(ipHeader, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the packet received notification.
+    /// </summary>
+    /// <param name="ipHeader">The ip header value.</param>
 
     private void OnPacketReceived(IPHeader ipHeader) => IpPacketReceived?.Invoke(ipHeader, EventArgs.Empty);
 
 
+    /// <summary>
+    /// Closes socket.
+    /// </summary>
+
     public void CloseSocket() => ipSocket?.Close();
+
+    /// <summary>
+    /// Executes the log trace operation.
+    /// </summary>
+    /// <param name="ex">The exception associated with the operation.</param>
 
     public static void LogTrace(Exception ex)
     {

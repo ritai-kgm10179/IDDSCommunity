@@ -11,6 +11,10 @@ public partial class CyberarmsSettingsNavigation : UserControl
 
     public event EventHandler? PluginsChanged;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsSettingsNavigation"/> class.
+    /// </summary>
+
     public CyberarmsSettingsNavigation() => InitializeComponent();
 
     public event EventHandler? NavigationChanged;
@@ -20,6 +24,11 @@ public partial class CyberarmsSettingsNavigation : UserControl
     public bool ShowSeparator { get; set; }
 
     public bool ShowTopMenu { get; set; }
+
+    /// <summary>
+    /// Handles the on paint event.
+    /// </summary>
+    /// <param name="e">The event data.</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -42,6 +51,12 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void cyberarmsSettingsNavigationItem_Click(object? sender, EventArgs e)
     {
         if (sender is CyberarmsSettingsNavigationItem item && !item.IsSelected)
@@ -62,7 +77,19 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
+    /// <summary>
+    /// Adds navigation item.
+    /// </summary>
+    /// <param name="item">The item value.</param>
+
     public void AddNavigationItem(CyberarmsSettingsNavigationItem item) => NavigationItems.Add(item);
+
+    /// <summary>
+    /// Adds navigation item.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="selectedIcon">The selected icon value.</param>
+    /// <param name="unselectedIcon">The unselected icon value.</param>
 
     public void AddNavigationItem(string name, Image selectedIcon, Image unselectedIcon)
     {
@@ -81,6 +108,10 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
+    /// <summary>
+    /// Clears requested operation.
+    /// </summary>
+
     public void Clear() => NavigationItems.Clear();
 
 
@@ -96,6 +127,11 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
+    /// <summary>
+    /// Sets selected item.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+
     public void SetSelectedItem(string name)
     {
         foreach (Control c in flowLayoutPanelNavigationItems.Controls)
@@ -108,6 +144,11 @@ public partial class CyberarmsSettingsNavigation : UserControl
             }
         }
     }
+
+    /// <summary>
+    /// Processes the navigation changed notification.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
 
     private void OnNavigationChanged(object sender) => NavigationChanged?.Invoke(sender, EventArgs.Empty);
 
@@ -122,6 +163,10 @@ public partial class CyberarmsSettingsNavigation : UserControl
             return string.Empty;
         }
     }
+
+    /// <summary>
+    /// Executes the unselect all operation.
+    /// </summary>
 
     public void UnselectAll()
     {
@@ -139,13 +184,43 @@ public partial class CyberarmsSettingsNavigation : UserControl
     }
 
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
+
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxRemove_MouseUp(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X - 1, pictureBoxRemove.Location.Y - 1);
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxRemove_MouseDown(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X + 1, pictureBoxRemove.Location.Y + 1);
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
@@ -207,6 +282,10 @@ public partial class CyberarmsSettingsNavigation : UserControl
             OnPluginsChanged();
         }
     }
+
+    /// <summary>
+    /// Processes the plugins changed notification.
+    /// </summary>
 
     private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
 

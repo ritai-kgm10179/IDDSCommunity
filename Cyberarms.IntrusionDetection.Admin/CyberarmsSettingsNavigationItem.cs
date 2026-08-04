@@ -9,6 +9,10 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
     public event EventHandler? NavigationClicked;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsSettingsNavigationItem"/> class.
+    /// </summary>
+
     public CyberarmsSettingsNavigationItem() => InitializeComponent();
 
     public bool IsSelected { get; set; }
@@ -21,6 +25,11 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
     {
         get => smartLabelAgentName.Text; set => smartLabelAgentName.Text = value;
     }
+
+    /// <summary>
+    /// Handles the on paint event.
+    /// </summary>
+    /// <param name="e">The event data.</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -41,11 +50,23 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
 
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void CyberarmsSettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
     {
         pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
         smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X + 1, smartLabelAgentName.Location.Y + 1);
     }
+
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void CyberarmsSettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
     {
@@ -55,7 +76,17 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
 
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void CyberarmsSettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
+
+    /// <summary>
+    /// Processes the navigation clicked notification.
+    /// </summary>
 
     private void OnNavigationClicked() => NavigationClicked?.Invoke(this, EventArgs.Empty);
 

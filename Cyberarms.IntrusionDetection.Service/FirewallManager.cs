@@ -17,11 +17,31 @@ internal class FirewallManager
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FirewallManager"/> class.
+    /// </summary>
+
     private FirewallManager() => firewallManager = CreateComObject<INetFwMgr>("HNetCfg.FwMgr");
+
+    /// <summary>
+    /// Creates com object.
+    /// </summary>
+    /// <typeparam name="T">The t type.</typeparam>
+    /// <param name="progId">The prog id value.</param>
+    /// <returns>The create com object result.</returns>
 
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type {progId} is unavailable.")) as T
         ?? throw new InvalidOperationException($"Unable to create COM object {progId}.");
+
+    /// <summary>
+    /// Adds port.
+    /// </summary>
+    /// <param name="strName">The str name value.</param>
+    /// <param name="Port">The port value.</param>
+    /// <param name="Scope">The scope value.</param>
+    /// <param name="Protocol">The protocol value.</param>
+    /// <param name="remoteAddresses">The remote addresses value.</param>
 
     internal void AddPort(string strName,
                                int Port,
@@ -42,12 +62,25 @@ internal class FirewallManager
 
 
 
+    /// <summary>
+    /// Removes port.
+    /// </summary>
+    /// <param name="Port">The port value.</param>
+    /// <param name="Protocol">The protocol value.</param>
+
     internal void RemovePort(int Port,
                                   NET_FW_IP_PROTOCOL_ Protocol)
     {
         firewallManager.LocalPolicy.CurrentProfile
            .GloballyOpenPorts.Remove(Port, Protocol);
     }
+
+    /// <summary>
+    /// Adds authorized application.
+    /// </summary>
+    /// <param name="strName">The str name value.</param>
+    /// <param name="processImageFileName">The process image file name value.</param>
+    /// <param name="Scope">The scope value.</param>
 
     internal void AddAuthorizedApplication(string strName,
                                             string processImageFileName,
@@ -62,11 +95,22 @@ internal class FirewallManager
                        .AuthorizedApplications.Add(authorizedApplication);
     }
 
+    /// <summary>
+    /// Removes authorized application.
+    /// </summary>
+    /// <param name="processFileName">The process file name value.</param>
+
     internal void RemoveAuthorizedApplication(string processFileName)
     {
         firewallManager.LocalPolicy.CurrentProfile
                        .AuthorizedApplications.Remove(processFileName);
     }
+
+    /// <summary>
+    /// Reads port.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <returns>The read port result.</returns>
 
     internal INetFwOpenPort? ReadPort(string name)
     {

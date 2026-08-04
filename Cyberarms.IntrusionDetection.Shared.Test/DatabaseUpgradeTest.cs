@@ -5,6 +5,10 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class DatabaseUpgradeTest
 {
+    /// <summary>
+    /// Executes the test database creation operation.
+    /// </summary>
+
     [TestMethod]
     public void TestDatabaseCreation()
     {

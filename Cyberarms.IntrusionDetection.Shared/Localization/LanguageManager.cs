@@ -32,6 +32,10 @@ public class LanguageManager
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LanguageManager"/> class.
+    /// </summary>
+
     private LanguageManager()
     {
         RegisterResourceManager("Strings", Strings.ResourceManager);
@@ -40,7 +44,18 @@ public class LanguageManager
 
     public CultureInfo CurrentCulture => _currentCulture;
 
+    /// <summary>
+    /// Executes the register resource manager operation.
+    /// </summary>
+    /// <param name="name">The name value.</param>
+    /// <param name="resourceManager">The resource manager value.</param>
+
     public void RegisterResourceManager(string name, ResourceManager resourceManager) => _resourceManagers[name] = resourceManager;
+
+    /// <summary>
+    /// Executes the initialize operation.
+    /// </summary>
+    /// <param name="userLanguageSetting">The user language setting value.</param>
 
     public void Initialize(string? userLanguageSetting)
     {
@@ -71,6 +86,11 @@ public class LanguageManager
         }
     }
 
+    /// <summary>
+    /// Executes the detect system culture with fallback operation.
+    /// </summary>
+    /// <returns>The detect system culture with fallback result.</returns>
+
     public static CultureInfo DetectSystemCultureWithFallback()
     {
         CultureInfo currentUI = CultureInfo.CurrentUICulture;
@@ -87,6 +107,14 @@ public class LanguageManager
         // Fallback for all other unsupported cultures (e.g. ja-JP, fr-FR, de-DE) to English (en-US)
         return new CultureInfo(DEFAULT_CULTURE);
     }
+
+    /// <summary>
+    /// Gets string.
+    /// </summary>
+    /// <param name="key">The key value.</param>
+    /// <param name="defaultValue">The default value value.</param>
+    /// <param name="resourceCategory">The resource category value.</param>
+    /// <returns>The get string result.</returns>
 
     public string GetString(string key, string? defaultValue = null, string resourceCategory = "Strings")
     {

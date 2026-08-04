@@ -6,6 +6,11 @@ namespace TlsSslTest;
 
 class Program
 {
+    /// <summary>
+    /// Runs the application entry point.
+    /// </summary>
+    /// <param name="args">The event data.</param>
+
     static void Main(string[] args)
     {
         TlsSslAgent agent = new();
@@ -18,7 +23,19 @@ class Program
         Console.ReadKey();
     }
 
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="data">The event data.</param>
+
     static void agent_AttackDetected(object sender, Cyberarms.IntrusionDetection.Api.Plugin.INotificationEventArgs data) => Console.WriteLine("AttackDetected from " + data.IpAddress);
+
+    /// <summary>
+    /// Handles the trace event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     static void agent_Trace(object? sender, EventArgs e)
     {

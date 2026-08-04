@@ -17,6 +17,12 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     private readonly IAgentPlugin _agent;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AgentProxy"/> class.
+    /// </summary>
+    /// <param name="assemblyFilename">The assembly filename value.</param>
+    /// <param name="typeName">The type name value.</param>
+
     public AgentProxy(string assemblyFilename, string typeName)
     {
         object? instance = Activator.CreateInstanceFrom(assemblyFilename, typeName)?.Unwrap();
@@ -25,14 +31,46 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         _agent.AttackDetected += agent_AttackDetected;
     }
 
+    /// <summary>
+    /// Handles the attack detected event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="data">The event data.</param>
+
     private void agent_AttackDetected(object sender, INotificationEventArgs data) => AttackDetected?.Invoke(sender, data);
 
+    /// <summary>
+    /// Starts requested operation.
+    /// </summary>
+
     public void Start() => _agent.Start();
+    /// <summary>
+    /// Stops requested operation.
+    /// </summary>
+
     public void Stop() => _agent.Stop();
+    /// <summary>
+    /// Executes the pause operation.
+    /// </summary>
+
     public void Pause() => _agent.Pause();
+    /// <summary>
+    /// Executes the continue operation.
+    /// </summary>
+
     public void Continue() => _agent.Continue();
 
+    /// <summary>
+    /// Determines whether n pause.
+    /// </summary>
+    /// <returns><see langword="true"/> if n pause; otherwise, <see langword="false"/>.</returns>
+
     public bool CanPause() => _agent.CanPause();
+    /// <summary>
+    /// Determines whether n continue.
+    /// </summary>
+    /// <returns><see langword="true"/> if n continue; otherwise, <see langword="false"/>.</returns>
+
     public bool CanContinue() => _agent.CanContinue();
 
     public bool IsPaused
@@ -49,9 +87,23 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         set => _agent.Configuration = value;
     }
 
+    /// <summary>
+    /// Gets memory usage.
+    /// </summary>
+    /// <returns>The get memory usage result.</returns>
+
     public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 
+    /// <summary>
+    /// Gets cpu time.
+    /// </summary>
+    /// <returns>The get cpu time result.</returns>
+
     public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
+
+    /// <summary>
+    /// Executes the enable monitoring operation.
+    /// </summary>
 
     public void EnableMonitoring()
     {
@@ -64,6 +116,12 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     public List<AgentPerformanceRecord> PerformanceRecords { get; set; } = [];
+
+    /// <summary>
+    /// Handles the elapsed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void watchdog_Elapsed(object? sender, ElapsedEventArgs e)
     {
@@ -80,7 +138,15 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         }
     }
 
+    /// <summary>
+    /// Executes the disable monitoring operation.
+    /// </summary>
+
     public void DisableMonitoring() => _watchdog = null;
+
+    /// <summary>
+    /// Executes the dispose operation.
+    /// </summary>
 
     public void Dispose() => GC.SuppressFinalize(this);
 }

@@ -12,13 +12,28 @@ public class SecurityMonitor : IHttpModule
     const string VAR_NAME_FAILED_LOGIN_DEFAULT = "bCyberarmsLoginFailed";
     const string EVENT_LOG_MESSAGE = "Cyberarms Web Security Monitor has recognized an unsuccessful login from computer {0} [IP = '{1}'] \nUser agent: {2}\nRequested url: {3}";
 
+    /// <summary>
+    /// Executes the dispose operation.
+    /// </summary>
+
     public void Dispose()
     {
 
     }
 
 
+    /// <summary>
+    /// Executes the init operation.
+    /// </summary>
+    /// <param name="context">The context value.</param>
+
     public void Init(HttpApplication context) => context.PostRequestHandlerExecute += context_PostRequestHandlerExecute;
+
+    /// <summary>
+    /// Handles the post request handler execute event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void context_PostRequestHandlerExecute(object? sender, EventArgs e)
     {

@@ -11,7 +11,16 @@ internal class Agent
     internal IAgentPlugin? Assembly { get; set; }
     internal string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Agent"/> class.
+    /// </summary>
+    /// <param name="assemblyName">The assembly name value.</param>
+
     internal Agent(string assemblyName) => AssemblyName = assemblyName;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Agent"/> class.
+    /// </summary>
 
     internal Agent() { }
 }

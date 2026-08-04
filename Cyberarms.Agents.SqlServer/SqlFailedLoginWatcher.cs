@@ -69,6 +69,11 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         query = null;
     }
 
+    /// <summary>
+    /// Sets watcher enabled.
+    /// </summary>
+    /// <param name="enabled">The enabled value.</param>
+
     private void SetWatcherEnabled(bool enabled)
     {
         if (watcher is not null)
@@ -76,6 +81,12 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
             watcher.Enabled = enabled;
         }
     }
+
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
@@ -156,6 +167,11 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
 
     public Guid Id => new("{0F470A49-594D-4895-ADE1-46B48B9B8A58}");
+
+    /// <summary>
+    /// Executes the my regex operation.
+    /// </summary>
+    /// <returns>The my regex result.</returns>
 
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();

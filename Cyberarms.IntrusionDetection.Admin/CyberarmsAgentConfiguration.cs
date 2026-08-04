@@ -10,12 +10,22 @@ public partial class CyberarmsAgentConfiguration : UserControl
     public event EventHandler? PluginsChanged;
     public event EventHandler? AgentSettingsChanged;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsAgentConfiguration"/> class.
+    /// </summary>
+
     public CyberarmsAgentConfiguration()
     {
         InitializeComponent();
         BackColor = Color.White;
         cyberarmsSettingsNavigation.PluginsChanged += new EventHandler(cyberarmsSettingsNavigation_PluginsChanged);
     }
+
+    /// <summary>
+    /// Handles the plugins changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void cyberarmsSettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
 
@@ -37,20 +47,54 @@ public partial class CyberarmsAgentConfiguration : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the agent configuration changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     void _pluginConfigPanel_AgentConfigurationChanged(object? sender, EventArgs e) => OnAgentSettingsChanged();
 
+    /// <summary>
+    /// Processes the agent settings changed notification.
+    /// </summary>
+
     void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Handles the agent changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void _pluginConfigPanel_AgentChanged(object? sender, EventArgs e)
     {
         //OnAgentSettingsChanged();
     }
 
+    /// <summary>
+    /// Processes the plugins changed notification.
+    /// </summary>
+
     private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Clears security agents.
+    /// </summary>
 
     public void ClearSecurityAgents() => cyberarmsSettingsNavigation.Clear();
 
+    /// <summary>
+    /// Loads security agent.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
+
     public void LoadSecurityAgent(SecurityAgent agent) => cyberarmsSettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
+
+    /// <summary>
+    /// Executes the show agent config operation.
+    /// </summary>
+    /// <param name="agent">The agent value.</param>
 
     public void ShowAgentConfig(SecurityAgent agent)
     {
@@ -62,6 +106,12 @@ public partial class CyberarmsAgentConfiguration : UserControl
         if (agent is not null)
             PluginConfigPanel.Agent = agent;
     }
+
+    /// <summary>
+    /// Handles the navigation changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void cyberarmsSettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {

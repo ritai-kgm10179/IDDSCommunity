@@ -65,6 +65,12 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
         query = null;
     }
 
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
@@ -124,6 +130,11 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
 
 
     public Guid Id => new("{FDA41145-2E75-400E-882C-E06EC4790EBE}");
+
+    /// <summary>
+    /// Executes the my regex operation.
+    /// </summary>
+    /// <returns>The my regex result.</returns>
 
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();

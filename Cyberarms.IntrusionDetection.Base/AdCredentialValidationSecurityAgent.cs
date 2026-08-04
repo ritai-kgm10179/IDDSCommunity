@@ -66,6 +66,12 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
         query = null;
     }
 
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
@@ -92,6 +98,12 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
             EventLog.WriteEntry("Cyberarms.IntrusionDetection.Base.Plugins.WindowsSecurityBase.AdCredentialValidation", ex.Message);
         }
     }
+
+    /// <summary>
+    /// Resolves ip.
+    /// </summary>
+    /// <param name="hostname">The hostname value.</param>
+    /// <returns>The resolve ip result.</returns>
 
     private static string[] ResolveIp(string hostname)
     {

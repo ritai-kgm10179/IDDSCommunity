@@ -11,6 +11,10 @@ public class ReportScheduler
     public event EventHandler? RunWeeklyReport;
     public event EventHandler? RunMonthlyReport;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ReportScheduler"/> class.
+    /// </summary>
+
     private ReportScheduler()
     {
     }
@@ -31,13 +35,27 @@ public class ReportScheduler
         set => _instance = value;
     }
 
+    /// <summary>
+    /// Executes the init operation.
+    /// </summary>
+
     private void Init()
     {
         reporter = new Timer(600000);
         reporter.Elapsed += new ElapsedEventHandler(reporter_Elapsed);
     }
 
+    /// <summary>
+    /// Starts reporting.
+    /// </summary>
+
     public void StartReporting() => reporter?.Start();
+
+    /// <summary>
+    /// Handles the elapsed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void reporter_Elapsed(object? sender, ElapsedEventArgs e)
     {
@@ -46,6 +64,10 @@ public class ReportScheduler
         if (NotificationSettings.Instance.SummaryReportWeekly) CheckWeeklyReport();
         if (NotificationSettings.Instance.SummaryReportMonthly) CheckMonthlyReport();
     }
+
+    /// <summary>
+    /// Executes the check daily report operation.
+    /// </summary>
 
     public void CheckDailyReport()
     {
@@ -61,6 +83,10 @@ public class ReportScheduler
         }
     }
 
+    /// <summary>
+    /// Executes the check weekly report operation.
+    /// </summary>
+
     public void CheckWeeklyReport()
     {
         NotificationSettings.Reload();
@@ -74,6 +100,10 @@ public class ReportScheduler
             RunWeeklyReport?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    /// <summary>
+    /// Executes the check monthly report operation.
+    /// </summary>
 
     public void CheckMonthlyReport()
     {
@@ -89,6 +119,12 @@ public class ReportScheduler
         }
     }
 
+    /// <summary>
+    /// Gets week of year string.
+    /// </summary>
+    /// <param name="d">The d value.</param>
+    /// <returns>The get week of year string result.</returns>
+
     public string GetWeekOfYearString(DateTime d)
     {
         int weekOfYear = GetWeekOfYear(d);
@@ -96,6 +132,12 @@ public class ReportScheduler
         if (weekOfYear > 50 && d.Month < 2) year--;
         return string.Format("{0}-{1}", year, weekOfYear);
     }
+
+    /// <summary>
+    /// Gets week of year.
+    /// </summary>
+    /// <param name="d">The d value.</param>
+    /// <returns>The get week of year result.</returns>
 
     public static int GetWeekOfYear(DateTime d)
     {

@@ -10,6 +10,10 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 [TestClass]
 public class ApiTest
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ApiTest"/> class.
+    /// </summary>
+
     public ApiTest()
     {
         //
@@ -49,6 +53,10 @@ public class ApiTest
     // public void MyTestCleanup() { }
     //
     #endregion
+
+    /// <summary>
+    /// Executes the test serialization operation.
+    /// </summary>
 
     [TestMethod]
     public void TestSerialization()

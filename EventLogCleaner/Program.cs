@@ -5,6 +5,11 @@ namespace EventLogCleaner;
 
 class Program
 {
+    /// <summary>
+    /// Runs the application entry point.
+    /// </summary>
+    /// <param name="args">The event data.</param>
+
     static void Main(string[] args)
     {
         Console.WriteLine("This program will remove the Cyberarms EventLog. This can not be undone.");

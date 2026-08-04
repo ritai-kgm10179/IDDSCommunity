@@ -7,8 +7,18 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class CyberarmsCurrentLocks : UserControl
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CyberarmsCurrentLocks"/> class.
+    /// </summary>
+
     public CyberarmsCurrentLocks() => InitializeComponent();
 
+
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
@@ -16,11 +26,23 @@ public partial class CyberarmsCurrentLocks : UserControl
         c.Location = new Point(c.Location.X + 1, c.Location.Y + 1);
     }
 
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
         var c = (Control)sender;
         c.Location = new Point(c.Location.X - 1, c.Location.Y - 1);
     }
+
+    /// <summary>
+    /// Finds row.
+    /// </summary>
+    /// <param name="id">The id value.</param>
+    /// <returns>The find row result.</returns>
 
     public DataGridViewRow? FindRow(int id)
     {
@@ -34,7 +56,23 @@ public partial class CyberarmsCurrentLocks : UserControl
         return null;
     }
 
+    /// <summary>
+    /// Clears requested operation.
+    /// </summary>
+
     public void Clear() => dataGridViewLocks.Rows.Clear();
+
+    /// <summary>
+    /// Adds requested operation.
+    /// </summary>
+    /// <param name="id">The id value.</param>
+    /// <param name="icon">The icon value.</param>
+    /// <param name="statusName">The status name value.</param>
+    /// <param name="clientIp">The client ip value.</param>
+    /// <param name="displayName">The display name value.</param>
+    /// <param name="lockDate">The lock date value.</param>
+    /// <param name="unlockDate">The unlock date value.</param>
+    /// <param name="status">The status value.</param>
 
     public void Add(int id, Image icon, string statusName, string clientIp, string displayName, DateTime lockDate, DateTime unlockDate, int status)
     {
@@ -61,7 +99,18 @@ public partial class CyberarmsCurrentLocks : UserControl
         row.Cells[8].Value = status;
     }
 
+    /// <summary>
+    /// Sets hard locks.
+    /// </summary>
+    /// <param name="number">The number value.</param>
+
     public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = string.Format("{0} hard locks", number);
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBoxSelectAllLocks_CheckedChanged(object sender, EventArgs e)
     {
@@ -75,7 +124,18 @@ public partial class CyberarmsCurrentLocks : UserControl
     }
 
 
+    /// <summary>
+    /// Sets soft locks.
+    /// </summary>
+    /// <param name="number">The number value.</param>
+
     public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = string.Format("{0} soft locks", number);
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void actionMenuUnlock_Click(object sender, EventArgs e)
     {

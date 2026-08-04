@@ -9,11 +9,21 @@ public partial class PanelPluginConfiguration : UserControl
 {
     public event EventHandler? AgentChanged;
     public event EventHandler? AgentConfigurationChanged;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PanelPluginConfiguration"/> class.
+    /// </summary>
+
     public PanelPluginConfiguration()
     {
         InitializeComponent();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
     }
+
+    /// <summary>
+    /// Handles the agent changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     void PanelPluginConfiguration_AgentChanged(object? sender, EventArgs e)
     {
@@ -22,11 +32,23 @@ public partial class PanelPluginConfiguration : UserControl
         ClearErrors();
     }
 
+    /// <summary>
+    /// Handles the mouse down event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
     {
         if (sender is PictureBox pictureBox)
             pictureBox.Location = new Point(pictureBox.Location.X + 1, pictureBox.Location.Y + 1);
     }
+
+    /// <summary>
+    /// Handles the mouse up event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
     {
@@ -35,6 +57,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     public bool IsInEditMode { get; set; }
+
+    /// <summary>
+    /// Loads data.
+    /// </summary>
 
     private void LoadData()
     {
@@ -52,6 +78,10 @@ public partial class PanelPluginConfiguration : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Loads custom settings.
+    /// </summary>
+
     private void LoadCustomSettings()
     {
         flowLayoutPanelCustomPluginSettings.Controls.Clear();
@@ -66,6 +96,10 @@ public partial class PanelPluginConfiguration : UserControl
             ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
         }
     }
+
+    /// <summary>
+    /// Saves custom configuration.
+    /// </summary>
 
     private void SaveCustomConfiguration()
     {
@@ -82,17 +116,32 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         if (IsInEditMode) LoadData(); else ToggleEditMode();
         ClearErrors();
     }
 
+    /// <summary>
+    /// Executes the toggle edit mode operation.
+    /// </summary>
+
     private void ToggleEditMode()
     {
         IsInEditMode = true;
         return;
     }
+
+    /// <summary>
+    /// Sets enabled mode.
+    /// </summary>
+    /// <param name="enabled">The enabled value.</param>
 
     public void SetEnabledMode(bool enabled)
     {
@@ -103,6 +152,10 @@ public partial class PanelPluginConfiguration : UserControl
         checkBoxLockForever.Enabled = enabled;
     }
 
+    /// <summary>
+    /// Clears errors.
+    /// </summary>
+
     private void ClearErrors()
     {
         errHardLockDuration.Visible = false;
@@ -110,6 +163,12 @@ public partial class PanelPluginConfiguration : UserControl
         errSoftLockDuration.Visible = false;
         errSoftLocks.Visible = false;
     }
+
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
@@ -152,7 +211,15 @@ public partial class PanelPluginConfiguration : UserControl
         SetEditMode(false);
     }
 
+    /// <summary>
+    /// Processes the agent configuration changed notification.
+    /// </summary>
+
     private void OnAgentConfigurationChanged() => AgentConfigurationChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    /// Processes the agent changed notification.
+    /// </summary>
 
     private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
@@ -167,7 +234,19 @@ public partial class PanelPluginConfiguration : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the click event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBoxOverrideConfiguration_CheckedChanged(object sender, EventArgs e)
     {
@@ -176,13 +255,30 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
 
+    /// <summary>
+    /// Handles the key press event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    /// <summary>
+    /// Sets edit mode.
+    /// </summary>
+    /// <param name="hasChanges">A value indicating whether s changes.</param>
 
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
+
+    /// <summary>
+    /// Handles the checked changed event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 

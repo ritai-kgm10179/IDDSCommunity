@@ -22,6 +22,12 @@ public class TCPHeader
     private readonly ushort usMessageLength;           //Length of the data being carried
     private readonly byte[] byTCPData = new byte[128];//Data carried by the TCP packet
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TCPHeader"/> class.
+    /// </summary>
+    /// <param name="byBuffer">The by buffer value.</param>
+    /// <param name="nReceived">The n received value.</param>
+
     public TCPHeader(byte[] byBuffer, int nReceived)
     {
         try

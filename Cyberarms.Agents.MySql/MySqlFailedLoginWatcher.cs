@@ -69,6 +69,11 @@ public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         query = null;
     }
 
+    /// <summary>
+    /// Sets watcher enabled.
+    /// </summary>
+    /// <param name="enabled">The enabled value.</param>
+
     private void SetWatcherEnabled(bool enabled)
     {
         if (watcher is not null)
@@ -76,6 +81,12 @@ public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
             watcher.Enabled = enabled;
         }
     }
+
+    /// <summary>
+    /// Handles the event record written event.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
 
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
@@ -157,8 +168,18 @@ public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
     public Guid Id => new("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
 
+    /// <summary>
+    /// Executes the my regex operation.
+    /// </summary>
+    /// <returns>The my regex result.</returns>
+
     [GeneratedRegex("^.*?\bAccess denied\b.*(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();
+    /// <summary>
+    /// Executes the my regex1 operation.
+    /// </summary>
+    /// <returns>The my regex1 result.</returns>
+
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex1();
 }
