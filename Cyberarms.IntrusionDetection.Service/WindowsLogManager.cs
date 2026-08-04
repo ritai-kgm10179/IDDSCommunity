@@ -40,7 +40,7 @@ internal sealed class WindowsLogManager : IRuntimeLog
         //    }
         //    EventLog.CreateEventSource(new EventSourceCreationData(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME));
         //}
-        eventLog.WriteEntry(text, type, eventId, category);
+        eventLog.WriteEntry(LogSanitizer.Sanitize(text), type, eventId, category);
     }
 
 

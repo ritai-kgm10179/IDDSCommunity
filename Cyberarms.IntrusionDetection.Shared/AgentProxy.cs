@@ -8,6 +8,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 
 public class AgentProxy : MarshalByRefObject, IAgentPlugin
 {
+    private const int MaximumPerformanceRecords = 3600;
     public event AttackDetectedHandler? AttackDetected;
 
     private System.Timers.Timer? _watchdog;
@@ -143,6 +144,8 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         lock (_lock)
         {
             PerformanceRecords.Add(rcd);
+            if (PerformanceRecords.Count > MaximumPerformanceRecords)
+                PerformanceRecords.RemoveRange(0, PerformanceRecords.Count - MaximumPerformanceRecords);
         }
     }
 
