@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Net.Mail;
 using System.Windows.Forms;
@@ -108,14 +108,25 @@ public partial class PanelSmtpSettings : UserControl
         {
             try
             {
-                SmtpClient server = new(textBoxSmtpServer.Text);
+                var mimeMessage = new MimeKit.MimeMessage();
+                mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(textBoxSender.Text));
+                mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(textBoxRecipient.Text));
+                mimeMessage.Subject = "Intrusion Detection Testmail";
+                mimeMessage.Body = new MimeKit.TextPart("plain") { Text = "This is a test message from your Cyberarms Intrusion Detection administration tool." };
+
+                using var client = new MailKit.Net.Smtp.SmtpClient();
+                int port = int.Parse(textBoxSmtpPort.Text);
+                var secureOption = checkBoxUseSSL.Checked ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
+                client.Connect(textBoxSmtpServer.Text, port, secureOption);
+
                 if (checkBoxAuthentication.Checked)
                 {
-                    server.Credentials = new System.Net.NetworkCredential(textBoxUsername.Text, textBoxPassword.Text);
+                    client.Authenticate(textBoxUsername.Text, textBoxPassword.Text);
                 }
-                server.EnableSsl = checkBoxUseSSL.Checked;
-                server.Port = int.Parse(textBoxSmtpPort.Text);
-                server.Send(textBoxSender.Text, textBoxRecipient.Text, "Intrusion Detection Testmail", "This is a test message from your Cyberarms Intrusion Detection administration tool.");
+
+                client.Send(mimeMessage);
+                client.Disconnect(true);
+
                 MessageBox.Show("Mail was sent successfully.");
             }
             catch (Exception ex)

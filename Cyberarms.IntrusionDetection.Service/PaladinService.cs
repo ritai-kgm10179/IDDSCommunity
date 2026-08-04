@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ServiceProcess;
@@ -244,25 +244,23 @@ public partial class Service : ServiceBase
             if (!string.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) && !string.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
                 && !string.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
             {
-                SmtpClient server = new(IddsConfig.Instance.SmtpServer)
-                {
-                    Port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort
-                };
+                var mimeMessage = new MimeKit.MimeMessage();
+                mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.SenderEmailAddress));
+                mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.NotificationEmailAddress));
+                mimeMessage.Subject = subject;
+                mimeMessage.Body = new MimeKit.TextPart("html") { Text = message };
+
+                using var client = new MailKit.Net.Smtp.SmtpClient();
+                int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
+                var secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
+                client.Connect(IddsConfig.Instance.SmtpServer, port, secureOption);
+
                 if (IddsConfig.Instance.SmtpRequiresAuthentication)
                 {
-                    server.Credentials = new System.Net.NetworkCredential(
-                        IddsConfig.Instance.SmtpUsername,
-                        IddsConfig.Instance.GetSmtpPassword());
+                    client.Authenticate(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword());
                 }
-                server.EnableSsl = IddsConfig.Instance.SmtpSslRequired;
-                MailMessage msg = new(IddsConfig.Instance.SenderEmailAddress,
-                    IddsConfig.Instance.NotificationEmailAddress, subject, message)
-                {
-                    BodyEncoding = Encoding.UTF8,
-                    IsBodyHtml = true,
-                    SubjectEncoding = Encoding.UTF8
-                };
-                server.Send(msg);
+                client.Send(mimeMessage);
+                client.Disconnect(true);
             }
         }
         catch { }
