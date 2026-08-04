@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
 using Cyberarms.IntrusionDetection.Api.Plugin;
@@ -12,12 +11,13 @@ using Microsoft.Extensions.Options;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-public partial class Service : ServiceBase
+public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 {
     private readonly IFirewallPolicy firewallPolicy;
     private readonly DatabaseOptions databaseOptions;
     private readonly PluginOptions pluginOptions;
     private readonly ReportOptions reportOptions;
+    private readonly System.Threading.SemaphoreSlim lifecycleLock = new(1, 1);
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -31,6 +31,11 @@ public partial class Service : ServiceBase
     // private bool restartPending = false;
     // private System.Timers.Timer restartTimer = new System.Timers.Timer(2000);
     private bool isInitialized;
+    private bool agentsLoaded;
+    private bool agentsStarted;
+    private bool reportingStarted;
+    private bool runtimeStarted;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Service"/> class.
@@ -54,13 +59,7 @@ public partial class Service : ServiceBase
         this.databaseOptions = databaseOptions.Value;
         this.pluginOptions = pluginOptions.Value;
         this.reportOptions = reportOptions.Value;
-        InitializeComponent();
         isInitialized = false;
-        CanStop = true;
-        CanPauseAndContinue = false;
-        AutoLog = false;
-        CanShutdown = true;
-        EventLog.Source = Globals.APPLICATION_NAME;
         ClientIpAddressSoftLocked += new EventHandler(Service_ClientIpAddressSoftLocked);
         ClientIpAddressUnlocked += new EventHandler(Service_ClientIpAddressUnlocked);
         ClientIpAddressHardLocked += new EventHandler(Service_ClientIpAddressHardLocked);
@@ -528,104 +527,137 @@ public partial class Service : ServiceBase
 
 
     /// <summary>
-    /// Processes the start notification.
+    /// Starts the complete intrusion-detection runtime and rolls back partial startup on failure.
     /// </summary>
-    /// <param name="args">The event data.</param>
-
-    protected override void OnStart(string[] args)
+    /// <param name="cancellationToken">Signals cancellation of host startup.</param>
+    /// <returns>A task that completes when every component has started.</returns>
+    public async Task StartAsync(System.Threading.CancellationToken cancellationToken)
     {
-        _ = Task.Run(StartService).ContinueWith(
-            task => WindowsLogManager.Instance.WriteEntry(
-                "Service startup failed: " + task.Exception!.GetBaseException().Message.Replace('\r', ' ').Replace('\n', ' '),
-                EventLogEntryType.Error,
-                Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL,
-                Globals.CYBERARMS_LOG_CATEGORY_RUNTIME),
-            System.Threading.CancellationToken.None,
-            System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted,
-            TaskScheduler.Default);
-    }
-
-    /// <summary>
-    /// Starts service.
-    /// </summary>
-
-    void StartService()
-    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        await lifecycleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (runtimeStarted)
+                return;
+
+            cancellationToken.ThrowIfCancellationRequested();
             ConfigureSystem();
             if (!isInitialized) Init();
-            // FirewallPolicyManager.Instance.CleanUpRules();
             InitAgentConfiguration();
+            agentsLoaded = true;
             LoadAgents();
+            agentsStarted = true;
             SecurityAgents.Instance.StartAgents();
             cleanupTimer.Enabled = true;
+            reportingStarted = true;
             ReportScheduler.Instance.StartReporting();
+            runtimeStarted = true;
             WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
-Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
-
+                Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
-Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            StopComponents(throwOnFailure: false);
+            try
+            {
+                WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
+                    Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            }
+            catch (Exception)
+            {
+                // Preserve the original startup exception when Event Log is unavailable.
+            }
             throw;
+        }
+        finally
+        {
+            lifecycleLock.Release();
         }
     }
 
     /// <summary>
-    /// Starts the runtime when hosted by the .NET Generic Host.
+    /// Stops the runtime once and releases every component that completed startup.
     /// </summary>
-    internal void StartHostedService() => StartService();
-
-
-    /// <summary>
-    /// Processes the stop notification.
-    /// </summary>
-
-    protected override void OnStop()
+    /// <param name="cancellationToken">Signals that graceful shutdown has exceeded its deadline.</param>
+    /// <returns>A task that completes after shutdown.</returns>
+    public async Task StopAsync(System.Threading.CancellationToken cancellationToken)
     {
-        StopHostedService();
+        await lifecycleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            StopComponents(throwOnFailure: true);
+        }
+        finally
+        {
+            lifecycleLock.Release();
+        }
     }
 
     /// <summary>
-    /// Stops the runtime when hosted by the .NET Generic Host.
+    /// Stops started components in reverse order and optionally propagates shutdown failures.
     /// </summary>
-    internal void StopHostedService()
+    /// <param name="throwOnFailure"><see langword="true"/> to propagate one or more shutdown failures.</param>
+    private void StopComponents(bool throwOnFailure)
     {
-        ReportScheduler.Instance.StopReporting();
-        SecurityAgents.Instance.StopAgents();
+        List<Exception> failures = [];
+        if (reportingStarted)
+            TryStop(ReportScheduler.Instance.StopReporting, failures);
+        reportingStarted = false;
+
         cleanupTimer.Enabled = false;
-        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
-Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
-        UnloadAgents();
+        if (agentsStarted)
+            TryStop(SecurityAgents.Instance.StopAgents, failures);
+        agentsStarted = false;
+
+        if (agentsLoaded)
+            TryStop(UnloadAgents, failures);
+        agentsLoaded = false;
+        bool wasStarted = runtimeStarted;
+        runtimeStarted = false;
+
+        if (wasStarted)
+        {
+            TryStop(() => WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
+                Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME), failures);
+        }
+
+        if (throwOnFailure && failures.Count == 1)
+            throw failures[0];
+        if (throwOnFailure && failures.Count > 1)
+            throw new AggregateException(failures);
     }
 
     /// <summary>
-    /// Processes the pause notification.
+    /// Executes one shutdown action while preserving failures so later cleanup still runs.
     /// </summary>
-
-    protected override void OnPause()
+    /// <param name="action">The shutdown action.</param>
+    /// <param name="failures">The collection receiving any failure.</param>
+    private static void TryStop(Action action, List<Exception> failures)
     {
-        SecurityAgents.Instance.PauseAgents();
-        //SecurityAgents.Instance.UnloadAgents();
-        cleanupTimer.Enabled = false;
-        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was paused."), EventLogEntryType.Information,
-Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
-
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            failures.Add(ex);
+        }
     }
 
     /// <summary>
-    /// Processes the continue notification.
+    /// Releases lifecycle resources and event subscriptions.
     /// </summary>
-
-    protected override void OnContinue()
+    public void Dispose()
     {
-        //SecurityAgents.Instance.LoadAgents();
-        SecurityAgents.Instance.ContinueAgents();
-        cleanupTimer.Enabled = true;
-        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service has continued securing your system."), EventLogEntryType.Information,
-Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+        if (disposed)
+            return;
+        StopComponents(throwOnFailure: false);
+        ReportScheduler.Instance.RunDailyReportAsync -= Instance_RunDailyReportAsync;
+        ReportScheduler.Instance.RunWeeklyReportAsync -= Instance_RunWeeklyReportAsync;
+        ReportScheduler.Instance.RunMonthlyReportAsync -= Instance_RunMonthlyReportAsync;
+        cleanupTimer.Dispose();
+        lifecycleLock.Dispose();
+        disposed = true;
     }
 
     /// <summary>

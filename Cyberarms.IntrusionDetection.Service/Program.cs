@@ -25,6 +25,7 @@ internal static class Program
                 provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseOptions>>(),
                 provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PluginOptions>>(),
                 provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReportOptions>>()));
+            builder.Services.AddSingleton<IIntrusionDetectionRuntime>(provider => provider.GetRequiredService<Service>());
             builder.Services.AddHostedService<PaladinWorker>();
             using IHost host = builder.Build();
             await host.RunAsync().ConfigureAwait(false);
