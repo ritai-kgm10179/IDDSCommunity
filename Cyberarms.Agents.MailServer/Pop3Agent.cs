@@ -58,7 +58,7 @@ public class Pop3Agent : AgentPlugin
     protected override void OnStartAgent()
     {
         ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts);
+        td = new Thread(ts) { IsBackground = true };
         td.Start();
         base.OnStartAgent();
     }

@@ -34,7 +34,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
     protected override void OnStartAgent()
     {
         ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts);
+        td = new Thread(ts) { IsBackground = true };
         td.Start();
         base.OnStartAgent();
     }
