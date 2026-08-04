@@ -4,7 +4,6 @@
     <File Path="Local.testsettings" />
     <File Path="TraceAndTestImpact.testsettings" />
   </Folder>
-  <Project Path="Cyberarms.Agents.Bind9/Cyberarms.Agents.Bind9.csproj" />
   <Project Path="Cyberarms.Agents.FileMaker/Cyberarms.Agents.FileMaker.csproj" />
   <Project Path="Cyberarms.Agents.FtpServer/Cyberarms.Agents.FtpServer.csproj" />
   <Project Path="Cyberarms.Agents.MailServer/Cyberarms.Agents.MailServer.csproj" />

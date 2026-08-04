@@ -23,6 +23,10 @@ internal static class SchemaMigrationRunner
             foreach (string command in InitialSchemaCommands)
                 Execute(connection, transaction, command);
         }
+        else
+        {
+            ValidateExistingSchema(connection, transaction);
+        }
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -48,6 +52,33 @@ internal static class SchemaMigrationRunner
         command.CommandText = sql;
         command.ExecuteNonQuery();
     }
+
+    /// <summary>
+    /// Rejects incomplete legacy databases instead of incorrectly marking them as migrated.
+    /// </summary>
+    /// <param name="connection">The open SQLite connection.</param>
+    /// <param name="transaction">The active migration transaction.</param>
+    private static void ValidateExistingSchema(SqliteConnection connection, SqliteTransaction transaction)
+    {
+        foreach (string tableName in RequiredInitialTables)
+        {
+            if (!TableExists(connection, transaction, tableName))
+                throw new InvalidOperationException(string.Format(Localization.Strings.Get("The existing database is missing the required table '{0}'."), tableName));
+        }
+    }
+
+    private static IReadOnlyList<string> RequiredInitialTables { get; } =
+    [
+        "DbConfig",
+        "Configuration",
+        "IntrusionLog",
+        "Locks",
+        "SecurityAgentConfig",
+        "SecurityAgents",
+        "AppConfig",
+        "Whitelist",
+        "AgentStatistics"
+    ];
 
     private static IReadOnlyList<string> InitialSchemaCommands { get; } =
     [

@@ -65,7 +65,7 @@ public class Sniffer
         {
             try
             {
-                byte[] packet = e.Packet.ToArray();
+                byte[] packet = e.Packet;
                 IPHeader ipHeader = new(packet, packet.Length);
                 if (ipHeader.SourceAddress.Equals(IPAddress)) OnPacketSent(ipHeader);
                 if (ipHeader.DestinationAddress.Equals(IPAddress)) OnPacketReceived(ipHeader);

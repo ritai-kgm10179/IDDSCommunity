@@ -9,9 +9,14 @@ public class ReportScheduler
     private readonly TimeProvider timeProvider;
     private CancellationTokenSource? cancellation;
 
-    public event EventHandler? RunDailyReport;
-    public event EventHandler? RunWeeklyReport;
-    public event EventHandler? RunMonthlyReport;
+    /// <summary>
+    /// Gets or sets how often enabled reports are checked.
+    /// </summary>
+    public TimeSpan CheckInterval { get; set; } = TimeSpan.FromMinutes(10);
+
+    public event Func<CancellationToken, Task>? RunDailyReportAsync;
+    public event Func<CancellationToken, Task>? RunWeeklyReportAsync;
+    public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReportScheduler"/> class.
@@ -72,15 +77,22 @@ public class ReportScheduler
     /// <returns>A task representing the reporting loop.</returns>
     private async Task RunAsync(CancellationToken cancellationToken)
     {
-        using PeriodicTimer timer = new(TimeSpan.FromMinutes(10), timeProvider);
+        using PeriodicTimer timer = new(CheckInterval, timeProvider);
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
                 NotificationSettings.Reload();
-                if (NotificationSettings.Instance.SummaryReportDaily) CheckDailyReport();
-                if (NotificationSettings.Instance.SummaryReportWeekly) CheckWeeklyReport();
-                if (NotificationSettings.Instance.SummaryReportMonthly) CheckMonthlyReport();
+                try
+                {
+                    if (NotificationSettings.Instance.SummaryReportDaily) await CheckDailyReportAsync(cancellationToken).ConfigureAwait(false);
+                    if (NotificationSettings.Instance.SummaryReportWeekly) await CheckWeeklyReportAsync(cancellationToken).ConfigureAwait(false);
+                    if (NotificationSettings.Instance.SummaryReportMonthly) await CheckMonthlyReportAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception) when (!cancellationToken.IsCancellationRequested)
+                {
+                    // The report handler logs the operational error. Leave the checkpoint unchanged so the next tick retries it.
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
@@ -89,8 +101,10 @@ public class ReportScheduler
     /// <summary>
     /// Executes the check daily report operation.
     /// </summary>
+    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
+    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
 
-    public void CheckDailyReport()
+    public async Task CheckDailyReportAsync(CancellationToken cancellationToken = default)
     {
         NotificationSettings.Reload();
         DateTime d = timeProvider.GetLocalNow().DateTime.AddDays(-1);
@@ -98,17 +112,19 @@ public class ReportScheduler
         if (!string.Equals(dailyReportTime, NotificationSettings.LastDailyReport))
         {
             // run daily report
+            await InvokeAsync(RunDailyReportAsync, cancellationToken).ConfigureAwait(false);
             NotificationSettings.LastDailyReport = dailyReportTime;
             NotificationSettings.Save();
-            RunDailyReport?.Invoke(this, EventArgs.Empty);
         }
     }
 
     /// <summary>
     /// Executes the check weekly report operation.
     /// </summary>
+    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
+    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
 
-    public void CheckWeeklyReport()
+    public async Task CheckWeeklyReportAsync(CancellationToken cancellationToken = default)
     {
         NotificationSettings.Reload();
         DateTime now = timeProvider.GetLocalNow().DateTime;
@@ -117,17 +133,19 @@ public class ReportScheduler
         if (GetWeekOfYear(d) != GetWeekOfYear(now) && !string.Equals(weeklyReportTime, NotificationSettings.LastWeeklyReport))
         {
             // run weekly report
+            await InvokeAsync(RunWeeklyReportAsync, cancellationToken).ConfigureAwait(false);
             NotificationSettings.LastWeeklyReport = weeklyReportTime;
             NotificationSettings.Save();
-            RunWeeklyReport?.Invoke(this, EventArgs.Empty);
         }
     }
 
     /// <summary>
     /// Executes the check monthly report operation.
     /// </summary>
+    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
+    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
 
-    public void CheckMonthlyReport()
+    public async Task CheckMonthlyReportAsync(CancellationToken cancellationToken = default)
     {
         NotificationSettings.Reload();
         DateTime now = timeProvider.GetLocalNow().DateTime;
@@ -136,10 +154,25 @@ public class ReportScheduler
         if (d.Month != now.Month && !string.Equals(monthlyReportTime, NotificationSettings.LastMonthlyReport))
         {
             // run monthly report
+            await InvokeAsync(RunMonthlyReportAsync, cancellationToken).ConfigureAwait(false);
             NotificationSettings.LastMonthlyReport = monthlyReportTime;
             NotificationSettings.Save();
-            RunMonthlyReport?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    /// <summary>
+    /// Invokes asynchronous report handlers sequentially and propagates failures to preserve retry semantics.
+    /// </summary>
+    /// <param name="handlers">The handlers to invoke.</param>
+    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
+    /// <returns>A task that completes after every handler succeeds.</returns>
+    private static async Task InvokeAsync(Func<CancellationToken, Task>? handlers, CancellationToken cancellationToken)
+    {
+        if (handlers is null)
+            return;
+
+        foreach (Delegate subscriber in handlers.GetInvocationList())
+            await ((Func<CancellationToken, Task>)subscriber)(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
