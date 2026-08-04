@@ -15,7 +15,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
 
-    private static SecurityAgents _instance;
+    private static SecurityAgents? _instance;
     public static SecurityAgents Instance
     {
         get
@@ -84,9 +84,10 @@ public class SecurityAgents : List<SecurityAgent>
             if (!fileName.Contains(".Api.dll"))
             {
                 Type tProxy = typeof(AgentLoaderProxy);
-                var proxy = (AgentLoaderProxy)CurrentDomain.CreateInstanceAndUnwrap(
-                    tProxy.Assembly.FullName,
-                    tProxy.FullName);
+                string assemblyName = tProxy.Assembly.FullName ?? throw new InvalidOperationException("Agent loader assembly has no full name.");
+                string typeName = tProxy.FullName ?? throw new InvalidOperationException("Agent loader type has no full name.");
+                var proxy = (AgentLoaderProxy?)CurrentDomain.CreateInstanceAndUnwrap(assemblyName, typeName)
+                    ?? throw new InvalidOperationException("Unable to create agent loader proxy.");
                 List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
                 result.AddRange(agents);
 
@@ -95,9 +96,9 @@ public class SecurityAgents : List<SecurityAgent>
         return result;
     }
 
-    public AppDomain CurrentDomain { get; set; }
+    public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
 
-    public SecurityAgent FindByDisplayName(string displayName)
+    public SecurityAgent? FindByDisplayName(string displayName)
     {
         foreach (SecurityAgent agent in this)
         {
@@ -109,7 +110,7 @@ public class SecurityAgents : List<SecurityAgent>
         return null;
     }
 
-    public SecurityAgent FindByName(string name)
+    public SecurityAgent? FindByName(string name)
     {
         foreach (SecurityAgent agent in this)
         {
@@ -139,7 +140,7 @@ public class SecurityAgents : List<SecurityAgent>
 
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
-    public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; }
+    public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
 
     public void UnloadAgents()
     {
@@ -164,7 +165,6 @@ public class SecurityAgents : List<SecurityAgent>
 #endif
         if (LoadedAgents.ContainsKey(agent))
         {
-            LoadedAgents[agent] = null;
             LoadedAgents.Remove(agent);
         }
         else
@@ -202,7 +202,7 @@ public class SecurityAgents : List<SecurityAgent>
                     proxy.Configuration.OverwriteConfiguration = agent.OverrideConfig;
                     proxy.Configuration.SoftLockAttempts = agent.SoftLockAttempts;
                     proxy.Configuration.SoftLockDurationMins = agent.SoftLockTimeMinutes;
-                    PluginConfiguration pc = proxy.Configuration.AgentSettings;
+                    PluginConfiguration? pc = proxy.Configuration.AgentSettings;
                     if (pc != null)
                     {
                         foreach (PropertyInfo pi in pc.GetType().GetProperties())
@@ -221,7 +221,7 @@ public class SecurityAgents : List<SecurityAgent>
                     agent.Reload();
                     LoadedAgents.Add(agent, proxy);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     throw;
                 }
@@ -305,7 +305,8 @@ public class SecurityAgents : List<SecurityAgent>
                 agent.UnselectedIcon = Resources.agent15px_custom_dark;
                 agent.BinaryMissing = true;
                 agent.Enabled = false;
-                Remove(a);
+                if (a is not null)
+                    Remove(a);
             }
             //int listIndex = GetListIndex(result, agent.Name);
             //if (listIndex >= 0) {

@@ -8,8 +8,8 @@ namespace Cyberarms.Agents.Bind9;
 public class Bind9DDoSKiller : AgentPlugin
 {
 
-    private EventLogQuery query;
-    private EventLogWatcher watcher;
+    private EventLogQuery? query;
+    private EventLogWatcher? watcher;
 
     internal const string EVENT_LOG_QUERY_BIND_RECURSION_DENIED = @"<QueryList>
                   <Query Id=""3"" Path=""Application"">
@@ -42,38 +42,65 @@ public class Bind9DDoSKiller : AgentPlugin
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent() => watcher.Enabled = true;
+    protected override void OnContinueAgent()
+    {
+        if (watcher is not null)
+        {
+            watcher.Enabled = true;
+        }
+    }
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent() => watcher.Enabled = false;
+    protected override void OnPauseAgent()
+    {
+        if (watcher is not null)
+        {
+            watcher.Enabled = false;
+        }
+    }
 
     /// <summary>
     /// Stop the agent
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.Enabled = false;
+        if (watcher is not null)
+        {
+            watcher.Enabled = false;
+            watcher.Dispose();
+        }
         watcher = null;
         query = null;
     }
 
-    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
+            if (e.EventRecord is null)
+            {
+                return;
+            }
+
             foreach (EventProperty prop in e.EventRecord.Properties)
             {
-                if (prop.Value.ToString().Contains("CLIENT:"))
+                string? propertyValue = prop.Value?.ToString();
+                if (propertyValue?.Contains("CLIENT:", StringComparison.Ordinal) == true)
                 {
-                    string client = prop.Value.ToString();
-                    int start = client.IndexOf("CLIENT:") + 7;
-                    string ipAddress = client[start..client.LastIndexOf(']')];
+                    int start = propertyValue.IndexOf("CLIENT:", StringComparison.Ordinal) + 7;
+                    int end = propertyValue.LastIndexOf(']');
+                    if (end <= start)
+                    {
+                        continue;
+                    }
+
+                    string ipAddress = propertyValue[start..end];
                     NotificationEventArgs args = new()
                     {
-                        CreateDate = e.EventRecord.TimeCreated.Value,
+                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress
                     };

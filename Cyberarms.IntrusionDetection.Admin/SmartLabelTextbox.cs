@@ -5,7 +5,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class SmartLabelTextbox : UserControl
 {
 
-    public event KeyPressEventHandler TextBoxKeyPress;
+    public event KeyPressEventHandler? TextBoxKeyPress;
 
     public SmartLabelTextbox()
     {
@@ -13,7 +13,7 @@ public partial class SmartLabelTextbox : UserControl
         textBox1.KeyPress += new KeyPressEventHandler(textBox1_KeyPress);
     }
 
-    void textBox1_KeyPress(object sender, KeyPressEventArgs e) => TextBoxKeyPress?.Invoke(sender, e);
+    void textBox1_KeyPress(object? sender, KeyPressEventArgs e) => TextBoxKeyPress?.Invoke(sender, e);
 
     public string LabelText
     {

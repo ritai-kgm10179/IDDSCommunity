@@ -9,18 +9,18 @@ namespace Cyberarms.Agents.Smtp;
 
 public class SmtpAgent : AgentPlugin, IExtendedInformation
 {
-    public event EventHandler Trace;
+    public event EventHandler? Trace;
     public bool Tracing { get; set; }
-    ThreadStart ts;
-    Thread td;
+    private ThreadStart? ts;
+    private Thread? td;
 
     readonly List<Sniffer> sniffers = [];
 
     public SmtpAgent()
     {
-        Configuration.AgentSettings = new SmtpConfig();
-        Configuration.ConfigurationSettingsTypeName =
-            Configuration.AgentSettings.GetType().FullName;
+        SmtpConfig settings = new();
+        Configuration.AgentSettings = settings;
+        Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
 
     protected override void OnStartAgent()
@@ -49,20 +49,21 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
 
 
-    void WatchAddress(object ipAddress)
+    void WatchAddress(object? ipAddress)
     {
+        if (ipAddress is not IPAddress address || Configuration.AgentSettings is not SmtpConfig settings) return;
         Sniffer s = new();
         // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
         s.IpPacketSent += new EventHandler(s_IpPacketSent);
-        s.TcpPort = ((SmtpConfig)Configuration.AgentSettings).SmtpPort;
+        s.TcpPort = settings.SmtpPort;
         System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.SmtpServer", string.Format("Smtp Server Security Agent is listening on port {0}", s.TcpPort));
-        s.WatchAddress((IPAddress)ipAddress);
+        s.WatchAddress(address);
         sniffers.Add(s);
     }
 
-    void s_IpPacketSent(object sender, EventArgs e)
+    void s_IpPacketSent(object? sender, EventArgs e)
     {
-        var ipHeader = (IPHeader)sender;
+        if (sender is not IPHeader ipHeader) return;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
@@ -70,11 +71,11 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
-                    if (sourcePort == ((SmtpConfig)Configuration.AgentSettings).SmtpPort)
+                    if (Configuration.AgentSettings is SmtpConfig settings && sourcePort == settings.SmtpPort)
                     {
                         if (Tracing)
                         {
-                            OnTrace((IPHeader)sender);
+                            OnTrace(ipHeader);
                         }
                         if (tcp.Data.Length > 0)
                         {

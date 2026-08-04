@@ -5,10 +5,9 @@ using System.ServiceProcess;
 using System.Text;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using Cyberarms.IntrusionDetection.Shared;
-using System.Net.Mail;
 using MailKit.Security;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 public partial class Service : ServiceBase
 {
@@ -50,7 +49,7 @@ public partial class Service : ServiceBase
 
     }
 
-    void Instance_RunMonthlyReport(object sender, EventArgs e)
+    void Instance_RunMonthlyReport(object? sender, EventArgs e)
     {
         try
         {
@@ -66,7 +65,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    void Instance_RunWeeklyReport(object sender, EventArgs e)
+    void Instance_RunWeeklyReport(object? sender, EventArgs e)
     {
         try
         {
@@ -82,7 +81,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    void Instance_RunDailyReport(object sender, EventArgs e)
+    void Instance_RunDailyReport(object? sender, EventArgs e)
     {
         try
         {
@@ -113,16 +112,18 @@ public partial class Service : ServiceBase
     //    restartTimer.Enabled = true;
     //}
 
-    void Service_ClientIpAddressHardLocked(object sender, EventArgs e)
+    void Service_ClientIpAddressHardLocked(object? sender, EventArgs e)
     {
-        var op = (ClientOperationInformation)sender;
+        if (sender is not ClientOperationInformation op)
+            return;
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
-        SendInfoMail(sender, LockType.HardLock);
+        SendInfoMail(op, LockType.HardLock);
     }
 
-    void Service_ClientIpAddressUnlocked(object sender, EventArgs e)
+    void Service_ClientIpAddressUnlocked(object? sender, EventArgs e)
     {
-        var op = (ClientOperationInformation)sender;
+        if (sender is not ClientOperationInformation op)
+            return;
         if (op.HasError)
         {
             IntrusionLog.AddEntry(DateTime.Now, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
@@ -131,17 +132,18 @@ public partial class Service : ServiceBase
         {
             IntrusionLog.AddEntry(DateTime.Now, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCKED, false);
         }
-        SendInfoMail(sender, LockType.None);
+        SendInfoMail(op, LockType.None);
     }
 
-    void Service_ClientIpAddressSoftLocked(object sender, EventArgs e)
+    void Service_ClientIpAddressSoftLocked(object? sender, EventArgs e)
     {
-        var op = (ClientOperationInformation)sender;
+        if (sender is not ClientOperationInformation op)
+            return;
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
-        SendInfoMail(sender, LockType.SoftLock);
+        SendInfoMail(op, LockType.SoftLock);
     }
 
-    void OnClientIpAddressHardLocked(Lock lockItem, Exception ex, Guid agentId)
+    void OnClientIpAddressHardLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
         if (ClientIpAddressHardLocked != null)
         {
@@ -151,7 +153,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception ex, string info)
+    private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception? ex, string info)
     {
         ClientOperationInformation op = new()
         {
@@ -170,7 +172,7 @@ public partial class Service : ServiceBase
         return op;
     }
 
-    void OnClientIpAddressSoftLocked(Lock lockItem, Exception ex, Guid agentId)
+    void OnClientIpAddressSoftLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
         if (ClientIpAddressSoftLocked != null)
         {
@@ -180,7 +182,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    void OnClientIpAddressUnlocked(Lock lockItem, Exception ex)
+    void OnClientIpAddressUnlocked(Lock lockItem, Exception? ex)
     {
         if (ClientIpAddressUnlocked != null)
         {
@@ -282,7 +284,7 @@ public partial class Service : ServiceBase
 
 
 
-    void cleanupTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         List<Lock> timedOutLocks = Locks.GetUnlockList();
         foreach (Lock l in timedOutLocks)
@@ -468,12 +470,16 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                     return;
                 }
             }
-            SecurityAgent reportingAgent = SecurityAgents.Instance.FindByName((sender as IAgentPlugin).Configuration.AgentName);
+            if (sender is not IAgentPlugin reportingPlugin)
+                return;
+            SecurityAgent? reportingAgent = SecurityAgents.Instance.FindByName(reportingPlugin.Configuration.AgentName);
+            if (reportingAgent is null)
+                return;
             long incidentId;
             if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
             {
                 Statistics.Instance.IncreaseFailedLoginStatistics(reportingAgent);
-                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress ipAddress) && IddsConfig.Instance.IsIpAddressLocal(ipAddress))
+                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? ipAddress) && IddsConfig.Instance.IsIpAddressLocal(ipAddress))
                 {
                     incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, false);

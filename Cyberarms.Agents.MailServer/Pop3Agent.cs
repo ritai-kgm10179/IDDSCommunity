@@ -9,20 +9,20 @@ namespace Cyberarms.Agents.MailServer;
 public class Pop3Agent : AgentPlugin
 {
     public const int CLEANUP_INTERVAL_MINS = 2;
-    public event EventHandler Trace;
+    public event EventHandler? Trace;
     public bool Tracing { get; set; }
     public System.Timers.Timer cleanupTimer;
-    ThreadStart ts;
-    Thread td;
+    private ThreadStart? ts;
+    private Thread? td;
 
     readonly List<Sniffer> sniffers = [];
 
     public Pop3Agent()
     {
 
-        Configuration.AgentSettings = new Pop3Config();
-        Configuration.ConfigurationSettingsTypeName =
-            Configuration.AgentSettings.GetType().FullName;
+        Pop3Config settings = new();
+        Configuration.AgentSettings = settings;
+        Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
         cleanupTimer = new System.Timers.Timer
         {
             Interval = 5000
@@ -30,7 +30,7 @@ public class Pop3Agent : AgentPlugin
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
     }
 
-    void cleanupTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         //for (int i = CurrentClients.Keys.Max(); i > 0; i--) {
         //    if (CurrentClients.ContainsKey(i) && CurrentClients[i].LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now) CurrentClients.Remove(i);
@@ -67,12 +67,13 @@ public class Pop3Agent : AgentPlugin
 
 
 
-    void WatchAddress(object ipAddress)
+    void WatchAddress(object? ipAddress)
     {
+        if (ipAddress is not IPAddress address || Configuration.AgentSettings is not Pop3Config settings) return;
         Sniffer s = new();
         s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
         s.IpPacketSent += new EventHandler(s_IpPacketSent);
-        s.TcpPort = ((Pop3Config)Configuration.AgentSettings).Pop3Port;
+        s.TcpPort = settings.Pop3Port;
         try
         {
             System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.MailServer", string.Format("POP3 Server Security Agent is listening on port {0}", s.TcpPort));
@@ -85,7 +86,7 @@ public class Pop3Agent : AgentPlugin
         }
         try
         {
-            s.WatchAddress((IPAddress)ipAddress);
+            s.WatchAddress(address);
         }
         catch (System.Net.Sockets.SocketException)
         {
@@ -108,9 +109,9 @@ public class Pop3Agent : AgentPlugin
         s_IpPacketSent(hdr, EventArgs.Empty);
     }
 
-    void s_IpPacketReceived(object sender, EventArgs e)
+    void s_IpPacketReceived(object? sender, EventArgs e)
     {
-        var ipHeader = (IPHeader)sender;
+        if (sender is not IPHeader ipHeader) return;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
@@ -118,7 +119,7 @@ public class Pop3Agent : AgentPlugin
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
                 {
-                    if (destinationPort == ((Pop3Config)Configuration.AgentSettings).Pop3Port)
+                    if (Configuration.AgentSettings is Pop3Config settings && destinationPort == settings.Pop3Port)
                     {
                         if (tcp.Data.Length > 0)
                         {
@@ -175,9 +176,9 @@ public class Pop3Agent : AgentPlugin
         }
     }
 
-    void s_IpPacketSent(object sender, EventArgs e)
+    void s_IpPacketSent(object? sender, EventArgs e)
     {
-        var ipHeader = (IPHeader)sender;
+        if (sender is not IPHeader ipHeader) return;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
@@ -185,7 +186,7 @@ public class Pop3Agent : AgentPlugin
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
                 {
-                    if (sourcePort == ((Pop3Config)Configuration.AgentSettings).Pop3Port)
+                    if (Configuration.AgentSettings is Pop3Config settings && sourcePort == settings.Pop3Port)
                     {
                         if (tcp.Data.Length > 0)
                         {
@@ -193,11 +194,11 @@ public class Pop3Agent : AgentPlugin
                             if (ftp.Pop3Code.ToUpper().Equals(AppLayerPop3.POP3_REPLY_CODE_ERROR.ToUpper()))
                             {
                                 Thread.Sleep(100);
-                                if (CurrentClients.ContainsKey(destinationPort) && CurrentClients[destinationPort].LastMessage == Pop3Message.PASS)
+                                if (CurrentClients.TryGetValue(destinationPort, out Pop3Client? value) && value.LastMessage == Pop3Message.PASS)
                                 {
                                     if (Tracing)
                                     {
-                                        OnTrace((IPHeader)sender);
+                                        OnTrace(ipHeader);
                                     }
                                     UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                                 }
@@ -217,12 +218,11 @@ public class Pop3Agent : AgentPlugin
     }
 
 
-    private Dictionary<int, Pop3Client> _currentClients;
+    private Dictionary<int, Pop3Client> _currentClients = [];
     public Dictionary<int, Pop3Client> CurrentClients
     {
         get
         {
-            _currentClients ??= [];
             return _currentClients;
         }
 

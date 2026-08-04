@@ -22,7 +22,7 @@ public class AppLayerPop3
     public const string POP3_INTERACTION_CODE_USER = "USER";
 
 
-    public string Pop3Code { get; set; }
+    public string Pop3Code { get; set; } = string.Empty;
 
     public AppLayerPop3(byte[] byBuffer, int nReceived)
     {

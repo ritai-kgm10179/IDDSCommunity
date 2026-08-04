@@ -24,7 +24,7 @@ public class IntrusionLog
 
     public static Guid GetSystemId() => new(SYSTEM_ID);
 
-    private static Dictionary<int, string> _statusNames;
+    private static Dictionary<int, string>? _statusNames;
 
     public static Dictionary<int, string> StatusNames
     {
@@ -50,7 +50,7 @@ public class IntrusionLog
         }
     }
 
-    private static Dictionary<int, string> _statusClasses;
+    private static Dictionary<int, string>? _statusClasses;
 
     public static Dictionary<int, string> StatusClasses
     {
@@ -76,7 +76,7 @@ public class IntrusionLog
         }
     }
 
-    private static Dictionary<int, Image> _statusIcons;
+    private static Dictionary<int, Image>? _statusIcons;
     public static Dictionary<int, Image> StatusIcons
     {
         get
@@ -103,9 +103,9 @@ public class IntrusionLog
 
     public static Image GetStatusIcon(int status)
     {
-        if (StatusIcons.ContainsKey(status))
+        if (StatusIcons.TryGetValue(status, out Image? value))
         {
-            return StatusIcons[status];
+            return value;
         }
         else
         {
@@ -115,9 +115,9 @@ public class IntrusionLog
 
     public static string GetStatusClass(int status)
     {
-        if (StatusClasses.ContainsKey(status))
+        if (StatusClasses.TryGetValue(status, out string? value))
         {
-            return StatusClasses[status];
+            return value;
         }
         else
         {
@@ -127,9 +127,9 @@ public class IntrusionLog
 
     public static string GetStatusName(int status)
     {
-        if (StatusNames.ContainsKey(status))
+        if (StatusNames.TryGetValue(status, out string? value))
         {
-            return StatusNames[status];
+            return value;
         }
         else
         {
@@ -152,8 +152,8 @@ public class IntrusionLog
 
     public static int GetLastLogId()
     {
-        object result = Database.Instance.ExecuteScalar("select Max(Id) from IntrusionLog");
-        if (int.TryParse(result.ToString(), out int maxLogId)) return maxLogId;
+        object? result = Database.Instance.ExecuteScalar("select Max(Id) from IntrusionLog");
+        if (int.TryParse(result?.ToString(), out int maxLogId)) return maxLogId;
         return -1;
     }
 
@@ -181,7 +181,7 @@ public class IntrusionLog
     {
         if (Database.Instance.IsConfigured)
         {
-            object result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
+            object? result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
             if (result != null && int.TryParse(result.ToString(), out int lastId))
             {
                 return lastSequenceNumber != lastId;
@@ -214,7 +214,7 @@ public class IntrusionLog
     {
         if (Database.Instance.IsConfigured)
         {
-            int.TryParse(Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0", startDate).ToString(), out int result);
+            int.TryParse(Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0", startDate)?.ToString(), out int result);
             return result;
         }
         else
@@ -230,7 +230,7 @@ public class IntrusionLog
             string sqlString = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser)
 values (@p0,@p1,@p2,@p3,@p4)";
             Database.Instance.ExecuteNonQuery(sqlString, incidentTime, agentId, clientIp, action, actionTriggeredByUser);
-            object result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
+            object? result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
             return Db.DbValueConverter.ToInt64(result);
         }
         else
@@ -244,7 +244,7 @@ values (@p0,@p1,@p2,@p3,@p4)";
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"select count(*) from IntrusionLog where AgentId=@p0 and IncidentTime>@p1 and ClientIP=@p2";
-            object queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.Now.AddDays(-1), IpAddress);
+            object? queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.Now.AddDays(-1), IpAddress);
             return Db.DbValueConverter.ToInt(queryResult);
         }
         else

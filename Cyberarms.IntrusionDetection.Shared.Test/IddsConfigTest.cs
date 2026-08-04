@@ -6,6 +6,16 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class IddsConfigTest
 {
+    private string TestDirectory => TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? AppDomain.CurrentDomain.BaseDirectory;
+
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestInitialize]
+    public void ConfigureTestDatabase()
+    {
+        Database.Instance.Configure(TestDirectory);
+        IddsConfig.Instance.ApplicationPath = TestDirectory;
+    }
 
     //[TestMethod]
     //public void IsActivatedTest() {
@@ -36,7 +46,6 @@ public class IddsConfigTest
     [TestMethod]
     public void SaveConfigTest()
     {
-        IddsConfig.Instance.ApplicationPath = @"c:\\temp\\";
         IddsConfig.Instance.ConfigVersionNumber = 1;
         IddsConfig.Instance.CyberSheriffContributor = true;
         IddsConfig.Instance.Edition = "PRO";
@@ -87,8 +96,6 @@ public class IddsConfigTest
     [TestMethod]
     public void ReadWriteAppConfigTest()
     {
-        IddsConfig.Instance.ApplicationPath = @"c:\\temp\\";
-
         IddsConfig.Instance.GetConfigValue("TestConfigSetting1");
         IddsConfig.Instance.SetConfigValue("TestConfigSetting1", "Value1");
         IddsConfig.Instance.SetConfigValue("TestConfigSetting2", "Value2");
@@ -105,9 +112,6 @@ public class IddsConfigTest
     [TestMethod]
     public void ConfigIsInSafeNetworkTest()
     {
-        Database.Instance.Configure(@"c:\\temp");
-        IddsConfig.Instance.ApplicationPath = @"c:\\temp";
-
         IddsConfig.Instance.SafeNetworks.Add(new IddsConfig.CSafeNetwork("192.168.1.1", "255.255.255.255"));
         Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("192.168.1.1"));
         Assert.IsFalse(IddsConfig.Instance.IsInSafeNetwork("192.168.1.2"));

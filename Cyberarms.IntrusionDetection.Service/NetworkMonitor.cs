@@ -7,14 +7,14 @@ namespace Cyberarms.IntrusionDetection.Service;
 
 public class NetworkMonitor
 {
-    ThreadStart ts;
-    Thread td;
+    ThreadStart? ts;
+    Thread? td;
 
     private NetworkMonitor()
     {
     }
 
-    private static NetworkMonitor _instance;
+    private static NetworkMonitor? _instance;
     public static NetworkMonitor Instance
     {
         get
@@ -69,7 +69,7 @@ public class NetworkMonitor
 
     public void AddSnifferAddressPort(IPAddress address, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent) => TcpSnifferPorts.Add(new TcpSnifferPort(address, port, handlesReceived, handlesSent, received, sent));
 
-    private List<TcpSnifferPort> _tcpSnifferPorts;
+    private List<TcpSnifferPort>? _tcpSnifferPorts;
     private List<TcpSnifferPort> TcpSnifferPorts
     {
         get

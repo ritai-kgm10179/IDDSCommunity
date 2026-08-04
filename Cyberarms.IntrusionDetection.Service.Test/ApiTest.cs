@@ -17,7 +17,7 @@ public class ApiTest
         //
     }
 
-    private TestContext testContextInstance;
+    private TestContext testContextInstance = null!;
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -59,9 +59,9 @@ public class ApiTest
             Prop2 = "Test2"
         };
         XmlSerializer xs = new(typeof(TestPluginConfig));
-        System.IO.StreamWriter sw = new("c:\\temp\\pluginsettings.xml");
+        string outputPath = System.IO.Path.Combine(TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? System.AppDomain.CurrentDomain.BaseDirectory, "pluginsettings.xml");
+        using System.IO.StreamWriter sw = new(outputPath);
         xs.Serialize(sw, config);
-        sw.Close();
     }
 
 
@@ -70,6 +70,6 @@ public class ApiTest
 
 public class TestPluginConfig : PluginConfiguration
 {
-    public string Prop1 { get; set; }
-    public string Prop2 { get; set; }
+    public string Prop1 { get; set; } = string.Empty;
+    public string Prop2 { get; set; } = string.Empty;
 }

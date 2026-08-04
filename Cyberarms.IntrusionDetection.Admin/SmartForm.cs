@@ -44,9 +44,9 @@ public partial class SmartForm : Form
 
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
 
-    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip.Show(PointToScreen(pictureBox1.Location));
+    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(pictureBox1.Location));
 
-    public event EventHandler HelpClicked;
+    public event EventHandler? HelpClicked;
 
     private void pictureBoxHelpButon_Click(object sender, EventArgs e) => HelpClicked?.Invoke(this, EventArgs.Empty);
 
@@ -67,13 +67,13 @@ public partial class SmartForm : Form
     }
 
 
-    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) => (sender as Control).BackColor = buttonHighlight;
+    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
 
-    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) => (sender as Control).BackColor = buttonNormal;
+    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
-    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonPress;
+    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
 
-    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonNormal;
+    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
     private void resizeForm(Point mouseLocation)
     {

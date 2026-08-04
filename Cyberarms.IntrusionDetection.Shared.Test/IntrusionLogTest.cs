@@ -35,11 +35,11 @@ public class IntrusionLogTest
 
     private static void prepareIntrusionLog()
     {
-        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1), null, "10.10.1.1", 0, false);
-        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-1), null, "10.10.1.1", 0, false);
-        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-2), null, "10.10.1.1", 0, false);
-        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-3), null, "10.10.1.1", 0, false);
-        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-4), null, "10.10.1.1", 0, false);
+        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1), DBNull.Value, "10.10.1.1", 0, false);
+        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-1), DBNull.Value, "10.10.1.1", 0, false);
+        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-2), DBNull.Value, "10.10.1.1", 0, false);
+        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-3), DBNull.Value, "10.10.1.1", 0, false);
+        Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-4), DBNull.Value, "10.10.1.1", 0, false);
 
     }
 

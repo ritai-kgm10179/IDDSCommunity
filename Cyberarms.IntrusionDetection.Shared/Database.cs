@@ -17,6 +17,12 @@ public class Database
 
     public void Configure(string directory)
     {
+        if (_connection is not null)
+        {
+            _connection.StateChange -= _connection_StateChange;
+            _connection.Dispose();
+        }
+
         connBuilder.DataSource = System.IO.Path.Combine(directory, "cyberarms.idds.dbf");
         connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
         connBuilder.Cache = SqliteCacheMode.Shared;
@@ -104,11 +110,16 @@ public class Database
         }
         catch
         {
+            if (transaction is not null)
+            {
+                throw;
+            }
+
             try
             {
                 using IDbConnection conn = new SqliteConnection(Connection.ConnectionString);
                 if (conn.State != ConnectionState.Open) conn.Open();
-                conn.Execute(sqlString, paramObj, transaction);
+                conn.Execute(sqlString, paramObj);
             }
             catch
             {

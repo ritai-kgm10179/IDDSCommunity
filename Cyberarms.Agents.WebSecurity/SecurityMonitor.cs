@@ -12,8 +12,8 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 {
 
 
-    private EventLogQuery query;
-    private EventLogWatcher watcher;
+    private EventLogQuery? query;
+    private EventLogWatcher? watcher;
     private const string SEARCH_PATTERN_BEGIN = "[IP = '";
     private const string SEARCH_PATTERN_END = "']";
 
@@ -50,45 +50,67 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent() => watcher.Enabled = true;
+    protected override void OnContinueAgent() => SetWatcherEnabled(true);
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent() => watcher.Enabled = false;
+    protected override void OnPauseAgent() => SetWatcherEnabled(false);
 
     /// <summary>
     /// Stop the agent
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.Enabled = false;
+        if (watcher is not null)
+        {
+            watcher.Enabled = false;
+            watcher.Dispose();
+        }
         watcher = null;
         query = null;
     }
 
-    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void SetWatcherEnabled(bool enabled)
+    {
+        if (watcher is not null)
+        {
+            watcher.Enabled = enabled;
+        }
+    }
+
+    private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
+            if (e.EventRecord is null)
+            {
+                return;
+            }
+
             foreach (EventProperty prop in e.EventRecord.Properties)
             {
                 // extract ip address from event log entry
                 // format: <clientname> [IP = 'x.x.x.x']
-                if (prop.Value.ToString().Contains(SEARCH_PATTERN_BEGIN))
+                string? propertyValue = prop.Value?.ToString();
+                if (propertyValue?.Contains(SEARCH_PATTERN_BEGIN, StringComparison.Ordinal) == true)
                 {
-                    string orig = prop.Value.ToString();
-                    int start = orig.IndexOf(SEARCH_PATTERN_BEGIN) + SEARCH_PATTERN_BEGIN.Length;
-                    int length = orig.IndexOf(SEARCH_PATTERN_END) - start;
-                    string ipAddress = orig.Substring(start, length);
+                    int start = propertyValue.IndexOf(SEARCH_PATTERN_BEGIN, StringComparison.Ordinal) + SEARCH_PATTERN_BEGIN.Length;
+                    int end = propertyValue.IndexOf(SEARCH_PATTERN_END, start, StringComparison.Ordinal);
+                    if (end <= start)
+                    {
+                        continue;
+                    }
+
+                    string ipAddress = propertyValue[start..end];
                     NotificationEventArgs args = new()
                     {
-                        CreateDate = e.EventRecord.TimeCreated.Value,
+                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress
                     };
-                    if (System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress probe))
+                    if (System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? probe))
                     {
                         if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {

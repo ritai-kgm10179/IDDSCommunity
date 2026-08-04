@@ -14,7 +14,7 @@ public class ReportGenerator
     {
     }
 
-    private static ReportGenerator _instance;
+    private static ReportGenerator? _instance;
     public static ReportGenerator Instance
     {
         get

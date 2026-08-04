@@ -6,7 +6,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class CyberarmsDashboard : UserControl
 {
-    public event EventHandler SecurityAgentConfigurationRequest;
+    public event EventHandler? SecurityAgentConfigurationRequest;
 
     public CyberarmsDashboard() => InitializeComponent();
 
@@ -27,7 +27,7 @@ public partial class CyberarmsDashboard : UserControl
         agentX.SecurityAgentConfigurationRequest += new EventHandler(agentX_SecurityAgentConfigurationRequest);
     }
 
-    void agentX_SecurityAgentConfigurationRequest(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(sender, e);
+    void agentX_SecurityAgentConfigurationRequest(object? sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(sender, e);
 
     public void ClearAgents() => flowLayoutPanelPlugins.Controls.Clear();
 

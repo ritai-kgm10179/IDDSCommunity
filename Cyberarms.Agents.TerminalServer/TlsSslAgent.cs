@@ -9,18 +9,18 @@ namespace Cyberarms.Agents.TerminalServer;
 
 public class TlsSslAgent : AgentPlugin, IExtendedInformation
 {
-    public event EventHandler Trace;
+    public event EventHandler? Trace;
     public bool Tracing { get; set; }
-    ThreadStart ts;
-    Thread td;
+    private ThreadStart? ts;
+    private Thread? td;
 
     readonly List<Sniffer> sniffers = [];
 
     public TlsSslAgent()
     {
-        Configuration.AgentSettings = new TslSslConfig();
-        Configuration.ConfigurationSettingsTypeName =
-            Configuration.AgentSettings.GetType().FullName;
+        TslSslConfig settings = new();
+        Configuration.AgentSettings = settings;
+        Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
 
     protected override void OnStartAgent()
@@ -49,20 +49,21 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
 
 
-    void WatchAddress(object ipAddress)
+    void WatchAddress(object? ipAddress)
     {
+        if (ipAddress is not IPAddress address || Configuration.AgentSettings is not TslSslConfig settings) return;
         Sniffer s = new();
         // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
         s.IpPacketSent += new EventHandler(s_IpPacketSent);
-        s.TcpPort = ((TslSslConfig)Configuration.AgentSettings).RdpPort;
+        s.TcpPort = settings.RdpPort;
         System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.TlsSslAgent", string.Format("Remote Desktop Security Agent is listening on port {0}", s.TcpPort));
-        s.WatchAddress((IPAddress)ipAddress);
+        s.WatchAddress(address);
         sniffers.Add(s);
     }
 
-    void s_IpPacketSent(object sender, EventArgs e)
+    void s_IpPacketSent(object? sender, EventArgs e)
     {
-        var ipHeader = (IPHeader)sender;
+        if (sender is not IPHeader ipHeader) return;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
@@ -70,11 +71,11 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
-                    if (sourcePort == ((TslSslConfig)Configuration.AgentSettings).RdpPort)
+                    if (Configuration.AgentSettings is TslSslConfig settings && sourcePort == settings.RdpPort)
                     {
                         if (Tracing)
                         {
-                            OnTrace((IPHeader)sender);
+                            OnTrace(ipHeader);
                         }
                         if (tcp.Data.Length > 0)
                         {

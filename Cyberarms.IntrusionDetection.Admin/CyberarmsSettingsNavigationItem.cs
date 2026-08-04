@@ -7,15 +7,15 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class CyberarmsSettingsNavigationItem : UserControl
 {
 
-    public event EventHandler NavigationClicked;
+    public event EventHandler? NavigationClicked;
 
     public CyberarmsSettingsNavigationItem() => InitializeComponent();
 
     public bool IsSelected { get; set; }
 
-    public Image SelectedIcon { get; set; }
+    public Image? SelectedIcon { get; set; }
 
-    public Image UnselectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
     public string DisplayName
     {

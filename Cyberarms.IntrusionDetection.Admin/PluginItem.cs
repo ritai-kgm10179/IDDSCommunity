@@ -7,7 +7,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class PluginItem : UserControl
 {
-    public event EventHandler SecurityAgentConfigurationRequest;
+    public event EventHandler? SecurityAgentConfigurationRequest;
 
     public PluginItem() => InitializeComponent();
 
@@ -18,15 +18,15 @@ public partial class PluginItem : UserControl
 
     public void SetName(string name) => labelAgentName.Text = name;
 
-    public void SetIcon(Image icon) => pictureBoxAgentIcon.Image = icon;
+    public void SetIcon(Image? icon) => pictureBoxAgentIcon.Image = icon;
 
 
     public void SetFailedLogins(int failedLogins) => labelFailedLoginsValue.Text = failedLogins.ToString();
 
-    private SecurityAgent _securityAgent;
+    private SecurityAgent? _securityAgent;
     public SecurityAgent SecurityAgent
     {
-        get => _securityAgent;
+        get => _securityAgent ?? throw new InvalidOperationException("Security agent has not been assigned.");
         set
         {
             _securityAgent = value;
@@ -35,7 +35,7 @@ public partial class PluginItem : UserControl
         }
     }
 
-    public void UpdateValues(string displayName, int failedLogins, int hardLocks, int softLocks, Image icon)
+    public void UpdateValues(string displayName, int failedLogins, int hardLocks, int softLocks, Image? icon)
     {
         SetName(displayName);
         SetFailedLogins(failedLogins);
@@ -61,7 +61,7 @@ public partial class PluginItem : UserControl
         }
     }
 
-    void _securityAgent_StatisticsUpdated(object sender, EventArgs e) => UpdateValues(SecurityAgent);
+    void _securityAgent_StatisticsUpdated(object? sender, EventArgs e) => UpdateValues(SecurityAgent);
 
     private void toolTip1_Popup(object sender, PopupEventArgs e)
     {

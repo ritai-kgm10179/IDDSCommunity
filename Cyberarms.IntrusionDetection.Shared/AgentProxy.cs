@@ -19,7 +19,9 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public AgentProxy(string assemblyFilename, string typeName)
     {
-        _agent = (IAgentPlugin)Activator.CreateInstanceFrom(assemblyFilename, typeName).Unwrap();
+        object? instance = Activator.CreateInstanceFrom(assemblyFilename, typeName)?.Unwrap();
+        _agent = instance as IAgentPlugin
+            ?? throw new InvalidOperationException($"Unable to create agent plugin '{typeName}' from '{assemblyFilename}'.");
         _agent.AttackDetected += agent_AttackDetected;
     }
 

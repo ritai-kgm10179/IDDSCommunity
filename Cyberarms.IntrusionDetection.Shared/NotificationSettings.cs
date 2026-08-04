@@ -13,7 +13,7 @@ public class NotificationSettings
     public const string LAST_WEEKLY_REPORT = "{10C8A9BC-A1CA-4BD5-818C-39A4696E9C80}";
     public const string LAST_MONTHLY_REPORT = "{4D3BC893-8C13-41ED-BEF8-35BEB768C7E8}";
 
-    private static NotificationSettings _instance;
+    private static NotificationSettings? _instance;
 
     public static NotificationSettings Instance
     {

@@ -12,7 +12,7 @@ public partial class CyberarmsApplicationSettings : UserControl
     public const string MENU_LICENSING = "Licensing";
     public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
     public const string MENU_SMTP_SETTINGS = "SMTP configuration";
-    public event EventHandler ConfigurationChanged;
+    public event EventHandler? ConfigurationChanged;
 
 
     public CyberarmsApplicationSettings()
@@ -22,17 +22,17 @@ public partial class CyberarmsApplicationSettings : UserControl
         Load += new EventHandler(CyberamsApplicationSettings_Load);
     }
 
-    void CyberamsApplicationSettings_Load(object sender, EventArgs e)
+    void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
         cyberarmsSettingsNavigation.NavigationChanged += new EventHandler(cyberarmsSettingsNavigation_NavigationChanged);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LOCK_OUT_CONFIGURATION, null, null);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SAFE_NETWORKS, null, null);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LICENSING, null, null);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_NOTIFICATION_SETTINGS, null, null);
-        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SMTP_SETTINGS, null, null);
+        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LOCK_OUT_CONFIGURATION, null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SAFE_NETWORKS, null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(MENU_LICENSING, null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(MENU_NOTIFICATION_SETTINGS, null!, null!);
+        cyberarmsSettingsNavigation.AddNavigationItem(MENU_SMTP_SETTINGS, null!, null!);
     }
 
-    private PanelLockoutConfiguration _lockoutConfiguration;
+    private PanelLockoutConfiguration? _lockoutConfiguration;
 
     public PanelLockoutConfiguration LockoutConfiguration
     {
@@ -51,7 +51,7 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _lockoutConfiguration_LockoutConfigurationChanged(object sender, EventArgs e) => OnConfigurationChanged();
+    void _lockoutConfiguration_LockoutConfigurationChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
 
 
@@ -59,7 +59,7 @@ public partial class CyberarmsApplicationSettings : UserControl
 
 
 
-    private PanelSafeNetworks _panelSafeNetworks;
+    private PanelSafeNetworks? _panelSafeNetworks;
     public PanelSafeNetworks PanelSafeNetworks
     {
         get
@@ -77,9 +77,9 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _panelSafeNetworks_SafeNetworksChanged(object sender, EventArgs e) => OnConfigurationChanged();
+    void _panelSafeNetworks_SafeNetworksChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
-    private PanelSmtpSettings _panelSmtpSettings;
+    private PanelSmtpSettings? _panelSmtpSettings;
     public PanelSmtpSettings PanelSmtpSettings
     {
         get
@@ -98,9 +98,9 @@ public partial class CyberarmsApplicationSettings : UserControl
 
     }
 
-    void _panelSmtpSettings_SmtpSettingsChanged(object sender, EventArgs e) => OnConfigurationChanged();
+    void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
-    private PanelNotificationSettings _panelNotificationSettings;
+    private PanelNotificationSettings? _panelNotificationSettings;
     public PanelNotificationSettings PanelNotificationSettings
     {
         get
@@ -118,11 +118,11 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _panelNotificationSettings_NotificationSettingsChanged(object sender, EventArgs e) => OnConfigurationChanged();
+    void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
-    void cyberarmsSettingsNavigation_NavigationChanged(object sender, EventArgs e)
+    void cyberarmsSettingsNavigation_NavigationChanged(object? sender, EventArgs? e)
     {
-        switch ((sender as CyberarmsSettingsNavigationItem).DisplayName)
+        switch ((sender as CyberarmsSettingsNavigationItem)?.DisplayName)
         {
 
             case MENU_LOCK_OUT_CONFIGURATION:

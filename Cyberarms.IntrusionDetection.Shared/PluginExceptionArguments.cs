@@ -14,8 +14,8 @@ public enum PluginExceptionSource
 
 public class PluginExceptionArguments
 {
-    public string AssemblyName { get; set; }
-    public string ModuleName { get; set; }
-    public Exception Exception { get; set; }
+    public string AssemblyName { get; set; } = string.Empty;
+    public string? ModuleName { get; set; }
+    public Exception Exception { get; set; } = new InvalidOperationException();
     public PluginExceptionSource Source { get; set; }
 }

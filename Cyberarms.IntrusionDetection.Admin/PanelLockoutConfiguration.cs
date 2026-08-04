@@ -8,7 +8,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class PanelLockoutConfiguration : UserControl
 {
 
-    public event EventHandler LockoutConfigurationChanged;
+    public event EventHandler? LockoutConfigurationChanged;
 
     public PanelLockoutConfiguration()
     {

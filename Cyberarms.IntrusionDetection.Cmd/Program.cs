@@ -12,7 +12,7 @@ class Program
         {
             if (agent.Name == agentName)
             {
-                agent.Assembly.Start();
+                agent.Assembly!.Start();
                 agent.Assembly.AttackDetected += new Api.Plugin.AttackDetectedHandler(Assembly_AttackDetected);
             }
         }
@@ -25,7 +25,8 @@ class Program
             // Default: Load WindowsBaseSecurity
             Console.WriteLine("Cyberarms Intrusion Detection Command line plugin test tool");
             var p = System.Diagnostics.Process.GetCurrentProcess();
-            Agents.Load(p.MainModule.FileName[..p.MainModule.FileName.LastIndexOf('\\')] + "\\Plugins\\Cyberarms.IntrusionDetection.Base.Plugins.dll");
+            string executablePath = p.MainModule?.FileName ?? Environment.ProcessPath ?? string.Empty;
+            Agents.Load(executablePath[..executablePath.LastIndexOf('\\')] + "\\Plugins\\Cyberarms.IntrusionDetection.Base.Plugins.dll");
             StartAgent("WindowsSecurityBase");
 
             if (args.Length > 0)
@@ -76,7 +77,7 @@ class Program
 
     }
 
-    private static Agents _agents = null;
+    private static Agents? _agents;
     public static Agents Agents
     {
         get
@@ -124,7 +125,7 @@ class Program
             {
                 if (alert.IpAddress == ipAddress) return alert;
             }
-            return null;
+            throw new InvalidOperationException($"Alert for {ipAddress} was not found.");
         }
     }
 
@@ -132,7 +133,7 @@ class Program
 
     class LogAlert
     {
-        public string IpAddress { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
         public DateTime FirstEventDate { get; set; }
         public DateTime LastEventDate { get; set; }
         public int EventId { get; set; }

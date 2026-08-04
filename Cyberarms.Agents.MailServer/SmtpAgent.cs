@@ -18,8 +18,9 @@ public class SmtpAgent : AgentPlugin
 
     public SmtpAgent()
     {
-        Configuration.AgentSettings = new SmtpConfig();
-        Configuration.ConfigurationSettingsTypeName = Configuration.AgentSettings.GetType().FullName ?? string.Empty;
+        SmtpConfig settings = new();
+        Configuration.AgentSettings = settings;
+        Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
 
     protected override void OnStartAgent()
@@ -48,10 +49,10 @@ public class SmtpAgent : AgentPlugin
 
     private void WatchAddress(object? ipAddress)
     {
-        if (ipAddress is not IPAddress address) return;
+        if (ipAddress is not IPAddress address || Configuration.AgentSettings is not SmtpConfig settings) return;
         Sniffer s = new();
         s.IpPacketSent += s_IpPacketSent;
-        s.TcpPort = ((SmtpConfig)Configuration.AgentSettings).SmtpPort;
+        s.TcpPort = settings.SmtpPort;
         try
         {
             System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.SmtpServer", $"Smtp Server Security Agent is listening on port {s.TcpPort}");
@@ -75,7 +76,7 @@ public class SmtpAgent : AgentPlugin
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
-                    if (sourcePort == ((SmtpConfig)Configuration.AgentSettings).SmtpPort)
+                    if (Configuration.AgentSettings is SmtpConfig settings && sourcePort == settings.SmtpPort)
                     {
                         if (Tracing)
                         {

@@ -19,7 +19,7 @@ public partial class SplashScreen : Form
         Load += new EventHandler(SplashScreen_Load);
     }
 
-    void SplashScreen_Load(object sender, EventArgs e)
+    void SplashScreen_Load(object? sender, EventArgs e)
     {
         t.Interval = 100;
         t.Start();
@@ -53,7 +53,7 @@ public partial class SplashScreen : Form
     public bool IsUpdating { get; set; }
 
 
-    void t_Tick(object sender, EventArgs e)
+    void t_Tick(object? sender, EventArgs e)
     {
         if (!IsUpdating)
         {

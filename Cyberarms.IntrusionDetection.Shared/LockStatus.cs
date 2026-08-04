@@ -22,7 +22,7 @@ public enum LockStatus
 
 public class LockStatusAdapter
 {
-    private static Dictionary<int, string> _lockStatusNames;
+    private static Dictionary<int, string>? _lockStatusNames;
     public static Dictionary<int, string> LockStatusNames
     {
         get
@@ -48,9 +48,9 @@ public class LockStatusAdapter
 
     public static string GetLockStatusName(int status)
     {
-        if (LockStatusNames.ContainsKey(status))
+        if (LockStatusNames.TryGetValue(status, out string? value))
         {
-            return LockStatusNames[status];
+            return value;
         }
         else
         {

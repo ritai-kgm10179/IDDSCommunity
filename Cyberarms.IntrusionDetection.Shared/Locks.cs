@@ -14,7 +14,7 @@ public class Locks
     {
         if (Database.Instance.IsConfigured)
         {
-            object result = Database.Instance.ExecuteScalar("select count(*) from Locks where LastUpdate>@p0", lastUpdate);
+            object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where LastUpdate>@p0", lastUpdate);
             if (result != null && int.TryParse(result.ToString(), out int count))
             {
                 return count > 0;
@@ -51,9 +51,9 @@ public class Locks
     {
         if (Database.Instance.IsConfigured)
         {
-            object queryResult = Database.Instance.ExecuteScalar(@"select count(*) from IntrusionLog where (action=@p0 or action=@p1) and IncidentTime>@p2",
+            object? queryResult = Database.Instance.ExecuteScalar(@"select count(*) from IntrusionLog where (action=@p0 or action=@p1) and IncidentTime>@p2",
                 IntrusionLog.STATUS_SOFT_LOCKED, IntrusionLog.STATUS_HARD_LOCKED, DateTime.Now.AddDays(-1));
-            if (int.TryParse(queryResult.ToString(), out int result))
+            if (int.TryParse(queryResult?.ToString(), out int result))
             {
                 return result;
             }
@@ -70,22 +70,22 @@ public class Locks
 
     public static int ReadCurrentSoftLocks()
     {
-        object result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0) ", (int)LockStatus.SoftLocked);
-        int.TryParse(result.ToString(), out int softLocks);
+        object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0) ", (int)LockStatus.SoftLocked);
+        int.TryParse(result?.ToString(), out int softLocks);
         return softLocks;
     }
 
     public static int ReadCurrentHardLocks()
     {
-        object result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0)", (int)LockStatus.HardLocked);
-        int.TryParse(result.ToString(), out int hardLocks);
+        object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0)", (int)LockStatus.HardLocked);
+        int.TryParse(result?.ToString(), out int hardLocks);
         return hardLocks;
     }
 
     public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
     {
-        object result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
-        int.TryParse(result.ToString(), out int intrusionAttempts);
+        object? result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
+        int.TryParse(result?.ToString(), out int intrusionAttempts);
         return intrusionAttempts;
     }
 
@@ -151,7 +151,7 @@ public class Locks
 
             string sqlString = @"Select count(*) from Locks where IpAddress=@p0 and status in (@p1,@p2,@p3,@p4)";
 
-            object count = Database.Instance.ExecuteScalar(sqlString, ipAddress, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
+            object? count = Database.Instance.ExecuteScalar(sqlString, ipAddress, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
             if (Db.DbValueConverter.ToInt(count) > 0)
             {
                 return true;
@@ -189,7 +189,7 @@ public class Locks
             Lock result = new();
             string sqlString = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
             Database.Instance.ExecuteNonQuery(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.Now);
-            object id = Database.Instance.ExecuteScalar("SELECT last_insert_rowid()");
+            object? id = Database.Instance.ExecuteScalar("SELECT last_insert_rowid()");
             l.Id = Db.DbValueConverter.ToInt64(id);
             return l.Id;
         }

@@ -12,7 +12,7 @@ class Program
         agent.Trace += new EventHandler(agent_Trace);
         agent.Tracing = false;
         agent.AttackDetected += new Cyberarms.IntrusionDetection.Api.Plugin.AttackDetectedHandler(agent_AttackDetected);
-        ((TslSslConfig)agent.Configuration.AgentSettings).RdpPort = 3389;
+        ((TslSslConfig)agent.Configuration.AgentSettings!).RdpPort = 3389;
         agent.Start();
         Console.WriteLine("Press any key to abort...");
         Console.ReadKey();
@@ -20,9 +20,10 @@ class Program
 
     static void agent_AttackDetected(object sender, Cyberarms.IntrusionDetection.Api.Plugin.INotificationEventArgs data) => Console.WriteLine("AttackDetected from " + data.IpAddress);
 
-    static void agent_Trace(object sender, EventArgs e)
+    static void agent_Trace(object? sender, EventArgs e)
     {
-        var tls = (IPHeader)sender;
+        if (sender is not IPHeader tls)
+            return;
         //Console.WriteLine("{0} {1} {2} {3}", tls.TlsHeader.ContentType, tls.TlsHeader.MajorVersion, tls.TlsHeader.MinorVersion, tls.TlsHeader.Length);
         for (int i = 0; i < int.Parse(tls.TotalLength); i++)
         {

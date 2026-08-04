@@ -36,9 +36,9 @@ public class PluginAttribute(string displayName) : Attribute
     /// <summary>
     /// Add a short description about what your agent does
     /// </summary>
-    public string Description { get; set; }
+    public string Description { get; set; } = string.Empty;
     /// <summary>
     /// Version number of your agent
     /// </summary>
-    public string Version { get; set; }
+    public string Version { get; set; } = string.Empty;
 }

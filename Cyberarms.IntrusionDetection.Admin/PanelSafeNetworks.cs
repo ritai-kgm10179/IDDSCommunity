@@ -9,7 +9,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class PanelSafeNetworks : UserControl
 {
 
-    public event EventHandler SafeNetworksChanged;
+    public event EventHandler? SafeNetworksChanged;
 
     public PanelSafeNetworks()
     {
@@ -20,7 +20,7 @@ public partial class PanelSafeNetworks : UserControl
         Load += new EventHandler(PanelSafeNetworks_Load);
     }
 
-    void PanelSafeNetworks_Load(object sender, EventArgs e) => LoadData();
+    void PanelSafeNetworks_Load(object? sender, EventArgs e) => LoadData();
 
     private void textBoxAddNetwork_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -44,7 +44,10 @@ public partial class PanelSafeNetworks : UserControl
             string ipnet = IddsConfig.ConvertStringToIpAddressNetwork(textBoxAddNetwork.Text);
             if (EditExisting)
             {
-                listBoxSafeNetworks.Items.Remove(listBoxSafeNetworks.SelectedItem);
+                if (listBoxSafeNetworks.SelectedItem is object selectedItem)
+                {
+                    listBoxSafeNetworks.Items.Remove(selectedItem);
+                }
             }
 
             listBoxSafeNetworks.Items.Add(new IddsConfig.CSafeNetwork(ipnet.Split('/')[0], ipnet.Split('/')[1]));
@@ -81,7 +84,7 @@ public partial class PanelSafeNetworks : UserControl
     {
         if (listBoxSafeNetworks.SelectedItems.Count == 1)
         {
-            textBoxAddNetwork.Text = listBoxSafeNetworks.SelectedItem.ToString();
+            textBoxAddNetwork.Text = listBoxSafeNetworks.SelectedItem?.ToString() ?? string.Empty;
             EditExisting = true;
             ShowAddNetworkPanel();
         }
@@ -92,7 +95,7 @@ public partial class PanelSafeNetworks : UserControl
         List<IddsConfig.CSafeNetwork> selected = [];
         foreach (object o in listBoxSafeNetworks.SelectedItems)
         {
-            selected.Add(o as IddsConfig.CSafeNetwork);
+            if (o is IddsConfig.CSafeNetwork network) selected.Add(network);
         }
         foreach (IddsConfig.CSafeNetwork net in selected)
         {
@@ -109,7 +112,7 @@ public partial class PanelSafeNetworks : UserControl
     {
         if (e.KeyChar == 13 && listBoxSafeNetworks.SelectedItem != null)
         {
-            textBoxAddNetwork.Text = listBoxSafeNetworks.SelectedItem.ToString();
+            textBoxAddNetwork.Text = listBoxSafeNetworks.SelectedItem?.ToString() ?? string.Empty;
             EditExisting = true;
             ShowAddNetworkPanel();
         }
@@ -125,14 +128,16 @@ public partial class PanelSafeNetworks : UserControl
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
-        Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
-        (sender as Control).Location = new Point(loc.X + 1, loc.Y + 1);
+        if (sender is not Control control) return;
+        Point loc = control.Location;
+        control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
 
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
-        Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
-        (sender as Control).Location = new Point(loc.X - 1, loc.Y - 1);
+        if (sender is not Control control) return;
+        Point loc = control.Location;
+        control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
 
     private void pictureBoxSave_Click(object sender, EventArgs e)

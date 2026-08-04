@@ -68,8 +68,8 @@ class Program
                         swexport.WriteLine("Sequence Number;Date and Time;Security Agent;IP Address;Status");
                         while (rdr.Read())
                         {
-                            swexport.WriteLine("{0};{1};{2};{3};{4}", rdr[0].ToString(), rdr[1].ToString(), SecurityAgents.Instance.GetDisplayName(rdr[2].ToString()),
-                                rdr[3].ToString(), IntrusionLog.GetStatusName(int.Parse(rdr[4].ToString())));
+                            swexport.WriteLine("{0};{1};{2};{3};{4}", rdr[0].ToString(), rdr[1].ToString(), SecurityAgents.Instance.GetDisplayName(rdr[2]?.ToString() ?? string.Empty),
+                                rdr[3].ToString(), IntrusionLog.GetStatusName(int.Parse(rdr[4]?.ToString() ?? "0")));
                         }
                         swexport.Flush();
                         swexport.Close();

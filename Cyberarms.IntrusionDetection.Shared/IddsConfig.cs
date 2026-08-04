@@ -23,7 +23,7 @@ public class IddsConfig
     // production server
     private const string LICENSE_SERVER = "https://cyberarms.net/activationV2/";
 
-    private static IddsConfig _instance;
+    private static IddsConfig? _instance;
     public static IddsConfig Instance
     {
         get
@@ -76,7 +76,7 @@ public class IddsConfig
 
 
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }
@@ -85,7 +85,7 @@ public class IddsConfig
     public void Load()
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
-        IDataReader reader = null;
+        IDataReader? reader = null;
         try
         {
             reader = Database.Instance.ExecuteReader("select * from Configuration order by ConfigVersionNumber desc LIMIT 1");
@@ -118,7 +118,7 @@ public class IddsConfig
             }
 
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }
@@ -128,7 +128,7 @@ public class IddsConfig
         }
     }
 
-    private Dictionary<string, string> _appConfig;
+    private Dictionary<string, string>? _appConfig;
     public Dictionary<string, string> AppConfig
     {
         get
@@ -137,7 +137,7 @@ public class IddsConfig
             {
                 LoadAppConfig();
             }
-            return _appConfig;
+            return _appConfig!;
         }
     }
 
@@ -170,7 +170,7 @@ public class IddsConfig
             Database.Instance.ExecuteNonQuery("delete from AppConfig", trans);
             foreach (string key in AppConfig.Keys)
             {
-                object exists = Database.Instance.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
+                object? exists = Database.Instance.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
                 if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
                 {
                     Database.Instance.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
@@ -182,7 +182,7 @@ public class IddsConfig
             }
             trans.Commit();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             trans.Rollback();
             throw;
@@ -221,7 +221,7 @@ public class IddsConfig
             }
             trans.Commit();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             trans.Rollback();
             throw;
@@ -254,11 +254,11 @@ public class IddsConfig
 
 
 
-    public string ApplicationPath { get; set; }
+    public string ApplicationPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
 
     public int ConfigVersionNumber { get; set; }
     public DateTime? Expires { get; set; }
-    public string Edition { get; set; }
+    public string Edition { get; set; } = string.Empty;
 
 
     private IddsConfig()
@@ -279,7 +279,7 @@ public class IddsConfig
     public int SoftLockAttempts { get; set; }
     public int SoftLockTimeMinutes { get; set; }
     public bool UseSafeNetworkList { get; set; }
-    public static string PluginDirectory { get; set; }
+    public static string PluginDirectory { get; set; } = string.Empty;
 
     /* private string _hardwareId;
     private string GetHardwareId() {
@@ -294,7 +294,7 @@ public class IddsConfig
 
     public bool CyberSheriffContributor { get; set; }
 
-    private CSafeNetworks _safeNetworks;
+    private CSafeNetworks? _safeNetworks;
     public CSafeNetworks SafeNetworks
     {
         get
@@ -327,8 +327,8 @@ public class IddsConfig
     public class CSafeNetworks : List<CSafeNetwork> { }
     public class CSafeNetwork
     {
-        public string IpAddress { get; set; }
-        public string SubnetMask { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
+        public string SubnetMask { get; set; } = string.Empty;
         public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
         public CSafeNetwork()
         {
@@ -342,24 +342,24 @@ public class IddsConfig
 
     public bool SendInfoMail { get; set; }
 
-    public string NotificationEmailAddress { get; set; }
+    public string NotificationEmailAddress { get; set; } = string.Empty;
 
-    public string SmtpServer { get; set; }
+    public string SmtpServer { get; set; } = string.Empty;
 
     public int SmtpPort { get; set; }
 
-    public string SmtpUsername { get; set; }
+    public string SmtpUsername { get; set; } = string.Empty;
 
     public bool SmtpSslRequired { get; set; }
 
-    private string _smtpPassword;
+    private string _smtpPassword = string.Empty;
 
     public string SmtpPassword
     {
         get => _smtpPassword; set => _smtpPassword = value;
     }
 
-    public string SenderEmailAddress { get; set; }
+    public string SenderEmailAddress { get; set; } = string.Empty;
 
     public bool SmtpRequiresAuthentication { get; set; }
 
@@ -475,7 +475,7 @@ public class IddsConfig
         return false;
     }
 
-    private List<IPAddress> _localAddresses;
+    private List<IPAddress>? _localAddresses;
 
 
     public bool IsIpAddressLocal(IPAddress address)
@@ -526,7 +526,7 @@ public class IddsConfig
     public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
 
-    public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress validIpAddress);
+    public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
 
     public static bool IsValidSubnetMask(string subnetMask) => IsValidIpAddress(subnetMask);
 
@@ -618,7 +618,7 @@ public class IddsConfig
     //        object result = Database.Instance.ExecuteScalar(cmd, displayName);
     //        Guid agentId;
     //        if (result != null && Guid.TryParse(result.ToString(), out agentId)) return agentId;
-    //    } catch (Exception ex) {
+    //    } catch (Exception) {
     //        throw;
     //    }
     //    return Guid.Empty;

@@ -23,7 +23,7 @@ public interface IAgentConfiguration
     /// <summary>
     /// Agent settings containing your custom settings
     /// </summary>
-    PluginConfiguration AgentSettings { get; set; }
+    PluginConfiguration? AgentSettings { get; set; }
     /// <summary>
     /// String value of your custom configuration settings type. 
     /// </summary>
@@ -32,7 +32,7 @@ public interface IAgentConfiguration
     /// Returns the configuration type
     /// </summary>
     /// <returns></returns>
-    Type GetConfigurationType();
+    Type? GetConfigurationType();
     /// <summary>
     /// Override value for soft lock attempts
     /// </summary>

@@ -19,8 +19,9 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     public FtpAgent()
     {
-        Configuration.AgentSettings = new FtpConfig();
-        Configuration.ConfigurationSettingsTypeName = Configuration.AgentSettings.GetType().FullName ?? string.Empty;
+        FtpConfig settings = new();
+        Configuration.AgentSettings = settings;
+        Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
 
     protected override void OnStartAgent()
@@ -52,7 +53,8 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         if (ipAddress is not IPAddress address) return;
         Sniffer s = new();
         s.IpPacketSent += IpPacketSent;
-        s.TcpPort = ((FtpConfig)Configuration.AgentSettings).FtpPort;
+        if (Configuration.AgentSettings is not FtpConfig settings) return;
+        s.TcpPort = settings.FtpPort;
         try
         {
             System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.FtpServer", $"Ftp Server Security Agent is listening on port {s.TcpPort}");
@@ -76,7 +78,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
                 if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
-                    if (sourcePort == ((FtpConfig)Configuration.AgentSettings).FtpPort)
+                    if (Configuration.AgentSettings is FtpConfig settings && sourcePort == settings.FtpPort)
                     {
                         if (Tracing)
                         {

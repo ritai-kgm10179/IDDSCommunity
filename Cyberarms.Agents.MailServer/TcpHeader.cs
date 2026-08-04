@@ -64,7 +64,7 @@ public class TCPHeader
             //Copy the TCP data into the data buffer
             Array.Copy(byBuffer, byHeaderLength, byTCPData, 0, nReceived - byHeaderLength);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }

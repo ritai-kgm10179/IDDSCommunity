@@ -13,8 +13,8 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
 {
 
 
-    private EventLogQuery query;
-    private EventLogWatcher watcher;
+    private EventLogQuery? query;
+    private EventLogWatcher? watcher;
 
     internal const string EVENT_LOG_QUERY_WINDOWS_LOGIN_DENIED = @"<QueryList>
                   <Query Id=""0"" Path=""Security"">
@@ -49,37 +49,39 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent() => watcher.Enabled = true;
+    protected override void OnContinueAgent() => watcher!.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent() => watcher.Enabled = false;
+    protected override void OnPauseAgent() => watcher!.Enabled = false;
 
     /// <summary>
     /// Stop the agent
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.Enabled = false;
+        watcher?.Dispose();
         watcher = null;
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             string[] xPathProperties = [@"Event/EventData/Data[@Name=""Workstation""]"];
             EventLogPropertySelector props = new(xPathProperties);
-            string hostName = ((EventLogRecord)e.EventRecord).GetPropertyValues(props)[0].ToString();
+            if (e.EventRecord is not EventLogRecord record)
+                return;
+            string hostName = record.GetPropertyValues(props)[0]?.ToString() ?? string.Empty;
             string[] ipAddresses = ResolveIp(hostName);
             foreach (string ipAddress in ipAddresses)
             {
                 NotificationEventArgs args = new()
                 {
-                    CreateDate = e.EventRecord.TimeCreated.Value,
-                    EventId = e.EventRecord.Id,
+                    CreateDate = record.TimeCreated ?? DateTime.Now,
+                    EventId = record.Id,
                     IpAddress = ipAddress
                 };
                 OnAttackDetected(this, args);

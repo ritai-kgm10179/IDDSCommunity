@@ -9,7 +9,7 @@ namespace Cyberarms.IntrusionDetection.Service;
 internal class FirewallPolicyManager
 {
     private readonly INetFwPolicy2 firewallPolicyManager;
-    private static FirewallPolicyManager _instance;
+    private static FirewallPolicyManager? _instance;
 
     internal static FirewallPolicyManager Instance
     {
@@ -20,7 +20,11 @@ internal class FirewallPolicyManager
         }
     }
 
-    private FirewallPolicyManager() => firewallPolicyManager = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
+    private FirewallPolicyManager() => firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
+
+    private static T CreateComObject<T>(string progId) where T : class =>
+        Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type {progId} is unavailable.")) as T
+        ?? throw new InvalidOperationException($"Unable to create COM object {progId}.");
 
     internal void Block(string ipAddress)
     {
@@ -40,7 +44,9 @@ internal class FirewallPolicyManager
     {
         try
         {
-            INetFwRule rule = GetRule(GetRuleName("BlockAttacker", 0));
+            INetFwRule? rule = GetRule(GetRuleName("BlockAttacker", 0));
+            if (rule is null)
+                return false;
             return rule.RemoteAddresses.Contains(ipAddress);
         }
         catch (Exception ex)
@@ -53,7 +59,9 @@ internal class FirewallPolicyManager
     internal void RemoveIpAddressFromBlockList(string ipAddress)
     {
         string ruleName = GetRuleName("BlockAttacker", 0);
-        INetFwRule rule = GetRule(ruleName);
+        INetFwRule? rule = GetRule(ruleName);
+        if (rule is null)
+            throw new ArgumentException($"Firewall rule {ruleName} was not found.", nameof(ipAddress));
         if (!rule.RemoteAddresses.Contains(ipAddress))
         {
             throw new ArgumentException(string.Format(
@@ -106,7 +114,7 @@ internal class FirewallPolicyManager
         bool ruleExists = false;
         string ipAddress;
         string ruleName = GetRuleName(name, port);
-        INetFwRule rule = GetRule(ruleName);
+        INetFwRule? rule = GetRule(ruleName);
         if (rule != null)
         {
             ruleExists = true;
@@ -115,7 +123,7 @@ internal class FirewallPolicyManager
         {
             try
             {
-                rule = (INetFwRule)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule", true));
+                rule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
             }
             catch (Exception)
             {
@@ -170,7 +178,7 @@ internal class FirewallPolicyManager
         }
     }
 
-    internal INetFwRule GetRule(string name)
+    internal INetFwRule? GetRule(string name)
     {
         foreach (INetFwRule rule in firewallPolicyManager.Rules)
         {
