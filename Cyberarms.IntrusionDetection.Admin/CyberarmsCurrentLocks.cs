@@ -155,6 +155,13 @@ public partial class CyberarmsCurrentLocks : UserControl
                     {
                         l.Status = Lock.LOCK_STATUS_UNLOCK_REQUESTED;
                         l.Save();
+                        ProtectionAuditTrail auditTrail = new(Database.Instance, TimeProvider.System);
+                        auditTrail.Record(
+                            "Firewall.ManualUnlockRequested",
+                            "Succeeded",
+                            Environment.UserDomainName + "\\" + Environment.UserName,
+                            l.IpAddress,
+                            lockId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     }
                     row.Cells[2].Value = LockStatusAdapter.GetLockStatusName(Lock.LOCK_STATUS_MANUAL);
                 }

@@ -518,4 +518,23 @@
   <data name="The runtime database is not configured." xml:space="preserve"><value>The runtime database is not configured.</value></data>
   <data name="The report scheduler is not running." xml:space="preserve"><value>The report scheduler is not running.</value></data>
   <data name="Cyberarms runtime is operational." xml:space="preserve"><value>Cyberarms runtime is operational.</value></data>
+  <data name="Daily report for {0}" xml:space="preserve"><value>Daily report for {0}</value></data>
+  <data name="Weekly report for {0}" xml:space="preserve"><value>Weekly report for {0}</value></data>
+  <data name="Monthly report for {0}" xml:space="preserve"><value>Monthly report for {0}</value></data>
+  <data name="Report for {0:Y}" xml:space="preserve"><value>Report for {0:Y}</value></data>
+  <data name="Week of {0:d}" xml:space="preserve"><value>Week of {0:d}</value></data>
+  <data name="Server: {0}" xml:space="preserve"><value>Server: {0}</value></data>
+  <data name="Installation information" xml:space="preserve"><value>Installation information</value></data>
+  <data name="Events per agent" xml:space="preserve"><value>Events per agent</value></data>
+  <data name="Agent name" xml:space="preserve"><value>Agent name</value></data>
+  <data name="Intrusion attempts" xml:space="preserve"><value>Intrusion attempts</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Intrusion attempts by IP address" xml:space="preserve"><value>Intrusion attempts by IP address</value></data>
+  <data name="Soft locks by IP address" xml:space="preserve"><value>Soft locks by IP address</value></data>
+  <data name="Hard locks by IP address" xml:space="preserve"><value>Hard locks by IP address</value></data>
+  <data name="Client IP" xml:space="preserve"><value>Client IP</value></data>
+  <data name="To configure reporting options, use the IDDS administration software on the server." xml:space="preserve"><value>To configure reporting options, use the IDDS administration software on the server.</value></data>
+  <data name="The audit export destination must be writable." xml:space="preserve"><value>The audit export destination must be writable.</value></data>
+  <data name="Protection audit recording failed: {0}" xml:space="preserve"><value>Protection audit recording failed: {0}</value></data>
+  <data name="The protection audit store is unavailable." xml:space="preserve"><value>The protection audit store is unavailable.</value></data>
 </root>

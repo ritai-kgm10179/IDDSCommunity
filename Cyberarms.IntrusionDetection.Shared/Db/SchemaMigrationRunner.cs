@@ -28,9 +28,16 @@ internal static class SchemaMigrationRunner
             ValidateExistingSchema(connection, transaction);
         }
 
+        Execute(connection, transaction, CreateProtectionAuditLog);
+        Execute(connection, transaction, CreateProtectionAuditLogIndex);
+
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (2, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -94,4 +101,19 @@ internal static class SchemaMigrationRunner
         Version_2_1.TABLE_WHITE_LIST,
         Version_2_1.TABLE_AGENT_STATISTICS
     ];
+
+    private const string CreateProtectionAuditLog = """
+        CREATE TABLE IF NOT EXISTS ProtectionAuditLog (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            OccurredUtc TEXT NOT NULL,
+            EventType TEXT NOT NULL,
+            Outcome TEXT NOT NULL,
+            Actor TEXT NOT NULL,
+            Subject TEXT NOT NULL,
+            Details TEXT NOT NULL
+        )
+        """;
+
+    private const string CreateProtectionAuditLogIndex =
+        "CREATE INDEX IF NOT EXISTS IX_ProtectionAuditLog_OccurredUtc ON ProtectionAuditLog(OccurredUtc)";
 }

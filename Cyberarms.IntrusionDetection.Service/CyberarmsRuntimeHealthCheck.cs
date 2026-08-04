@@ -15,7 +15,7 @@ internal sealed class CyberarmsRuntimeHealthCheck(Database database, ReportSched
     /// <param name="context">The health-check context.</param>
     /// <param name="cancellationToken">Cancels the health check.</param>
     /// <returns>The current runtime health result.</returns>
-    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Dictionary<string, object> data = new()
@@ -25,9 +25,19 @@ internal sealed class CyberarmsRuntimeHealthCheck(Database database, ReportSched
             ["loaded_agents"] = securityAgents.LoadedAgents.Count
         };
         if (!database.IsConfigured)
-            return Task.FromResult(HealthCheckResult.Unhealthy(Strings.Get("The runtime database is not configured."), data: data));
+            return HealthCheckResult.Unhealthy(Strings.Get("The runtime database is not configured."), data: data);
+        try
+        {
+            await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM ProtectionAuditLog", cancellationToken: cancellationToken).ConfigureAwait(false);
+            data["audit_store_available"] = true;
+        }
+        catch (System.Exception exception)
+        {
+            data["audit_store_available"] = false;
+            return HealthCheckResult.Unhealthy(Strings.Get("The protection audit store is unavailable."), exception, data);
+        }
         if (!reportScheduler.IsRunning)
-            return Task.FromResult(HealthCheckResult.Degraded(Strings.Get("The report scheduler is not running."), data: data));
-        return Task.FromResult(HealthCheckResult.Healthy(Strings.Get("Cyberarms runtime is operational."), data));
+            return HealthCheckResult.Degraded(Strings.Get("The report scheduler is not running."), data: data);
+        return HealthCheckResult.Healthy(Strings.Get("Cyberarms runtime is operational."), data);
     }
 }

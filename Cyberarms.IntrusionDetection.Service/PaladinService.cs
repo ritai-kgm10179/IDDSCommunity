@@ -17,6 +17,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly DatabaseOptions databaseOptions;
     private readonly PluginOptions pluginOptions;
     private readonly ReportOptions reportOptions;
+    private readonly ProtectionOptions protectionOptions;
     private readonly System.Threading.SemaphoreSlim lifecycleLock = new(1, 1);
     private readonly Database database;
     private readonly IddsConfig configuration;
@@ -24,6 +25,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly SecurityAgents securityAgents;
     private readonly ReportScheduler reportScheduler;
     private readonly Statistics statistics;
+    private readonly ProtectionAuditTrail protectionAuditTrail;
     private readonly IRuntimeLog logManager;
 
     internal event EventHandler ClientIpAddressSoftLocked;
@@ -51,47 +53,55 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="databaseOptions">The validated database settings.</param>
     /// <param name="pluginOptions">The validated plug-in settings.</param>
     /// <param name="reportOptions">The validated report scheduler settings.</param>
+    /// <param name="protectionOptions">The validated protection evidence settings.</param>
     /// <param name="database">The runtime database.</param>
     /// <param name="configuration">The runtime configuration.</param>
     /// <param name="notificationSettings">The notification settings.</param>
     /// <param name="securityAgents">The managed security agents.</param>
     /// <param name="reportScheduler">The report scheduler.</param>
     /// <param name="statistics">The attack statistics service.</param>
+    /// <param name="protectionAuditTrail">The persistent protection-control audit trail.</param>
     /// <param name="logManager">The Windows runtime logger.</param>
     internal Service(
         IFirewallPolicy firewallPolicy,
         IOptions<DatabaseOptions> databaseOptions,
         IOptions<PluginOptions> pluginOptions,
         IOptions<ReportOptions> reportOptions,
+        IOptions<ProtectionOptions> protectionOptions,
         Database database,
         IddsConfig configuration,
         NotificationSettings notificationSettings,
         SecurityAgents securityAgents,
         ReportScheduler reportScheduler,
         Statistics statistics,
+        ProtectionAuditTrail protectionAuditTrail,
         IRuntimeLog logManager)
     {
         ArgumentNullException.ThrowIfNull(firewallPolicy);
         ArgumentNullException.ThrowIfNull(databaseOptions);
         ArgumentNullException.ThrowIfNull(pluginOptions);
         ArgumentNullException.ThrowIfNull(reportOptions);
+        ArgumentNullException.ThrowIfNull(protectionOptions);
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(notificationSettings);
         ArgumentNullException.ThrowIfNull(securityAgents);
         ArgumentNullException.ThrowIfNull(reportScheduler);
         ArgumentNullException.ThrowIfNull(statistics);
+        ArgumentNullException.ThrowIfNull(protectionAuditTrail);
         ArgumentNullException.ThrowIfNull(logManager);
         this.firewallPolicy = firewallPolicy;
         this.databaseOptions = databaseOptions.Value;
         this.pluginOptions = pluginOptions.Value;
         this.reportOptions = reportOptions.Value;
+        this.protectionOptions = protectionOptions.Value;
         this.database = database;
         this.configuration = configuration;
         this.notificationSettings = notificationSettings;
         this.securityAgents = securityAgents;
         this.reportScheduler = reportScheduler;
         this.statistics = statistics;
+        this.protectionAuditTrail = protectionAuditTrail;
         this.logManager = logManager;
         isInitialized = false;
         ClientIpAddressSoftLocked += new EventHandler(Service_ClientIpAddressSoftLocked);
@@ -117,12 +127,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         {
             DateTime end = DateTime.Now.AddDays(-1);
             DateTime start = new(end.Year, end.Month, 1, 0, 0, 0);
-            string report = ReportGenerator.Instance.GetReport("Monthly Report", string.Format("Report for {0}/{1}", start.Month, start.Year), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
+            string hostName = System.Net.Dns.GetHostName();
+            string report = ReportGenerator.Instance.GetReport(Strings.Get("Monthly report"), Strings.Format("Report for {0:Y}", start), Strings.Format("Server: {0}", hostName),
                 start, new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            await SendMailAsync(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
+            await SendMailAsync(Strings.Format("Monthly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            TryRecordAudit("Report.Monthly", "Succeeded", hostName);
         }
         catch (Exception ex)
         {
+            TryRecordAudit("Report.Monthly", "Failed", System.Net.Dns.GetHostName(), ex.GetType().Name);
             logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
@@ -140,12 +153,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         {
             DateTime end = DateTime.Now.AddDays(-1);
             DateTime start = end.AddDays(-6);
-            string report = ReportGenerator.Instance.GetReport("Weekly Report", string.Format("Week of {0}-{1}-{2}", start.Year, start.Month, start.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
+            string hostName = System.Net.Dns.GetHostName();
+            string report = ReportGenerator.Instance.GetReport(Strings.Get("Weekly report"), Strings.Format("Week of {0:d}", start), Strings.Format("Server: {0}", hostName),
                 new DateTime(start.Year, start.Month, start.Day, 0, 0, 0), new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            await SendMailAsync(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
+            await SendMailAsync(Strings.Format("Weekly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            TryRecordAudit("Report.Weekly", "Succeeded", hostName);
         }
         catch (Exception ex)
         {
+            TryRecordAudit("Report.Weekly", "Failed", System.Net.Dns.GetHostName(), ex.GetType().Name);
             logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
@@ -162,12 +178,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         try
         {
             DateTime d = DateTime.Now.AddDays(-1);
-            string report = ReportGenerator.Instance.GetReport("Daily Report", string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
+            string hostName = System.Net.Dns.GetHostName();
+            string report = ReportGenerator.Instance.GetReport(Strings.Get("Daily report"), d.ToString("d", LanguageManager.Instance.CurrentCulture), Strings.Format("Server: {0}", hostName),
                 new DateTime(d.Year, d.Month, d.Day, 0, 0, 0), new DateTime(d.Year, d.Month, d.Day, 23, 59, 59));
-            await SendMailAsync(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
+            await SendMailAsync(Strings.Format("Daily report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            TryRecordAudit("Report.Daily", "Succeeded", hostName);
         }
         catch (Exception ex)
         {
+            TryRecordAudit("Report.Daily", "Failed", System.Net.Dns.GetHostName(), ex.GetType().Name);
             logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
@@ -462,12 +481,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             try
             {
                 firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
                 // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_REQUESTED, false);
                 OnClientIpAddressUnlocked(l, null);
                 //l.Save();
             }
             catch (Exception ex)
             {
+                TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
                 // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
                 logManager.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
                     l.IpAddress, ex.Message),
@@ -552,6 +573,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 break;
         }
         lockItem.Save();
+        TryRecordAudit(
+            lockType == LockType.HardLock ? "Firewall.HardLock" : "Firewall.SoftLock",
+            lockItem.Status == Lock.LOCK_STATUS_LOCK_ERROR ? "Failed" : "Succeeded",
+            lockItem.IpAddress,
+            reportingAgent.Id.ToString());
 
 
     }
@@ -574,6 +600,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
             cancellationToken.ThrowIfCancellationRequested();
             ConfigureSystem();
+            await protectionAuditTrail.PurgeOlderThanAsync(TimeSpan.FromDays(protectionOptions.AuditRetentionDays), cancellationToken).ConfigureAwait(false);
             if (!isInitialized) Init();
             InitAgentConfiguration();
             agentsLoaded = true;
@@ -584,11 +611,13 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             reportingStarted = true;
             reportScheduler.StartReporting();
             runtimeStarted = true;
+            TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
                 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         catch (Exception ex)
         {
+            TryRecordAudit("Runtime.Start", "Failed", Environment.MachineName, ex.GetType().Name);
             StopComponents(throwOnFailure: false);
             try
             {
@@ -649,6 +678,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
         if (wasStarted)
         {
+            TryRecordAudit("Runtime.Stop", failures.Count == 0 ? "Succeeded" : "Failed", Environment.MachineName);
             TryStop(() => logManager.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
                 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME), failures);
         }
@@ -664,6 +694,30 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="action">The shutdown action.</param>
     /// <param name="failures">The collection receiving any failure.</param>
+    /// <summary>
+    /// Writes operational evidence without allowing an audit-store outage to disable protection.
+    /// </summary>
+    /// <param name="eventType">The stable protection event type.</param>
+    /// <param name="outcome">The stable outcome code.</param>
+    /// <param name="subject">The protected resource or address.</param>
+    /// <param name="details">Optional non-sensitive diagnostic details.</param>
+    private void TryRecordAudit(string eventType, string outcome, string subject, string? details = null)
+    {
+        try
+        {
+            string actor = Environment.UserDomainName + "\\" + Environment.UserName;
+            protectionAuditTrail.Record(eventType, outcome, actor, subject, details);
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry(
+                Strings.Format("Protection audit recording failed: {0}", ex.GetType().Name),
+                EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR,
+                Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+        }
+    }
+
     private static void TryStop(Action action, List<Exception> failures)
     {
         try
