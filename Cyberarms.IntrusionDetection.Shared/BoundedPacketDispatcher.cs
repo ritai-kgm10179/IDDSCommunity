@@ -50,9 +50,11 @@ internal sealed class BoundedPacketDispatcher
     {
         ArgumentNullException.ThrowIfNull(packet);
         Interlocked.Increment(ref receivedCount);
+        CyberarmsMetrics.RecordReceived();
         if (channel.Writer.TryWrite(new RawPacketEventArgs(packet)))
             return true;
         Interlocked.Increment(ref droppedCount);
+        CyberarmsMetrics.RecordDropped();
         return false;
     }
 
@@ -71,6 +73,7 @@ internal sealed class BoundedPacketDispatcher
         {
             dispatch(packet);
             Interlocked.Increment(ref dispatchedCount);
+            CyberarmsMetrics.RecordDispatched();
         }
     }
 }

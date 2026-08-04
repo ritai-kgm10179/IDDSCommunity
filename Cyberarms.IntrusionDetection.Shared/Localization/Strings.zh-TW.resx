@@ -515,4 +515,7 @@
   <data name="Agent plugin assembly was not found." xml:space="preserve"><value>找不到 Agent 外掛組件。</value></data>
   <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>Agent 外掛路徑不可包含重新解析點。</value></data>
   <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>Agent 外掛識別碼不可重複。</value></data>
+  <data name="The runtime database is not configured." xml:space="preserve"><value>執行期資料庫尚未設定。</value></data>
+  <data name="The report scheduler is not running." xml:space="preserve"><value>報表排程器尚未執行。</value></data>
+  <data name="Cyberarms runtime is operational." xml:space="preserve"><value>Cyberarms 執行期運作正常。</value></data>
 </root>
