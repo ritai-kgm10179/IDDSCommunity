@@ -530,6 +530,8 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             // TO DO: Hard Lock overrides Soft Lock!
             if (firewallPolicy.IsLocked(lockItem.IpAddress))
             {
+                lockItem.Status = lockType == LockType.HardLock ? Lock.LOCK_STATUS_HARDLOCK : Lock.LOCK_STATUS_SOFTLOCK;
+                lockItem.Save();
                 logManager.WriteEntry(Strings.Get("Received another request to lock IP address ") + lockItem.IpAddress +
                             ". This IP address is already locked.", EventLogEntryType.Information, Globals.CYBERARMS_EVENT_ID_INFORMATION,
                             Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
@@ -545,6 +547,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             lockType == LockType.HardLock ? "Hard" : "Soft", lockItem.IpAddress), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_FIREWALL_RULE_CREATED,
                     Globals.CYBERARMS_LOG_CATEGORY_SECURITY);
         // lockItem.Id = Locks.CreateLock(lockItem);
+        bool firewallApplied = false;
         try
         {
             firewallPolicy.Block(lockItem.IpAddress);
@@ -559,24 +562,32 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                     statistics.IncreaseHardLockStatistics(reportingAgent);
                     break;
             }
+            firewallApplied = true;
         }
-        catch
+        catch (Exception ex)
         {
-            lockItem.Status = Lock.LOCK_STATUS_LOCK_ERROR;
+            logManager.WriteEntry(
+                Strings.Format("Firewall block failed for {0}: {1}", lockItem.IpAddress, ex.GetType().Name),
+                EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR,
+                Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
-        switch (lockType)
+        if (firewallApplied)
         {
-            case LockType.SoftLock:
-                OnClientIpAddressSoftLocked(lockItem, null, reportingAgent.Id);
-                break;
-            case LockType.HardLock:
-                OnClientIpAddressHardLocked(lockItem, null, reportingAgent.Id);
-                break;
+            switch (lockType)
+            {
+                case LockType.SoftLock:
+                    OnClientIpAddressSoftLocked(lockItem, null, reportingAgent.Id);
+                    break;
+                case LockType.HardLock:
+                    OnClientIpAddressHardLocked(lockItem, null, reportingAgent.Id);
+                    break;
+            }
         }
         lockItem.Save();
         TryRecordAudit(
             lockType == LockType.HardLock ? "Firewall.HardLock" : "Firewall.SoftLock",
-            lockItem.Status == Lock.LOCK_STATUS_LOCK_ERROR ? "Failed" : "Succeeded",
+            firewallApplied ? "Succeeded" : "Failed",
             lockItem.IpAddress,
             reportingAgent.Id.ToString());
 
@@ -601,17 +612,23 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
             cancellationToken.ThrowIfCancellationRequested();
             ConfigureSystem();
+            ReconcileFirewallState();
             await protectionAuditTrail.PurgeOlderThanAsync(TimeSpan.FromDays(protectionOptions.AuditRetentionDays), cancellationToken).ConfigureAwait(false);
+            SecurityEventInbox securityEventInbox = new(database, TimeProvider.System);
+            securityEventInbox.PurgeCompleted(TimeSpan.FromDays(protectionOptions.AuditRetentionDays));
             securityEventPipeline = new SecurityEventPipeline(
                 protectionOptions.SecurityEventQueueCapacity,
                 ProcessAttackDetected,
-                LogSecurityEventFailure);
+                LogSecurityEventFailure,
+                securityEventInbox,
+                ResolveAgentForReplay);
             if (!isInitialized) Init();
             InitAgentConfiguration();
             agentsLoaded = true;
             LoadAgents();
             agentsStarted = true;
             securityAgents.StartAgents();
+            securityEventPipeline.RecoverPending(protectionOptions.SecurityEventRecoveryBatchSize);
             cleanupTimer.Enabled = true;
             reportingStarted = true;
             reportScheduler.StartReporting();
@@ -682,7 +699,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (securityEventPipeline is not null)
         {
             securityEventPipeline.Complete();
-            TryStop(() => securityEventPipeline.Completion.WaitAsync(TimeSpan.FromSeconds(protectionOptions.SecurityEventDrainTimeoutSeconds)).GetAwaiter().GetResult(), failures);
+            TryStop(() => securityEventPipeline.Drain(TimeSpan.FromSeconds(protectionOptions.SecurityEventDrainTimeoutSeconds)), failures);
             securityEventPipeline = null;
         }
         bool wasStarted = runtimeStarted;
@@ -842,7 +859,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.SoftLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_SOFT_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(configuration.GetSoftLockMinutes(reportingAgent)), incidentId, Lock.LOCK_STATUS_SOFTLOCK, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(configuration.GetSoftLockMinutes(reportingAgent)), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
                                     break;
                                 case LockType.SoftLock:
                                     // already locked, ignore
@@ -850,7 +867,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.HardLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddHours(configuration.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddHours(configuration.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
                                     break;
                             }
                         }
@@ -861,6 +878,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 ex.Message), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
                                 Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                         // OnClientIpAddressSoftLocked(new Lock( new Client(notificationEventArgs.IpAddress), ex);
+                        throw;
                     }
                 }
             }
@@ -873,6 +891,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         {
             logManager.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", sender != null ? sender.GetType().Name : "unknown", ex.Message),
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
+            throw;
         }
     }
 
@@ -885,6 +904,39 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         EventLogEntryType.Error,
         Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
         Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
+
+    /// <summary>
+    /// Resolves a persisted Agent name to its currently loaded proxy for event replay.
+    /// </summary>
+    /// <param name="agentName">The stable Agent configuration name.</param>
+    /// <returns>The loaded Agent proxy, or <see langword="null"/> when that plug-in is unavailable.</returns>
+    private object? ResolveAgentForReplay(string agentName)
+    {
+        foreach (KeyValuePair<SecurityAgent, AgentProxy> pair in securityAgents.LoadedAgents)
+        {
+            if (string.Equals(pair.Value.Configuration.AgentName, agentName, StringComparison.Ordinal))
+                return pair.Value;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Reconciles the persisted desired lock state with the Cyberarms Windows Firewall rule.
+    /// </summary>
+    private void ReconcileFirewallState()
+    {
+        FirewallStateReconciler reconciler = new(
+            firewallPolicy,
+            Locks.GetActiveLocks,
+            static lockItem => lockItem.Save(),
+            TryRecordAudit,
+            (address, exception) => logManager.WriteEntry(
+                Strings.Format("Firewall reconciliation failed for {0}: {1}", address, exception.GetType().Name),
+                EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR,
+                Globals.CYBERARMS_LOG_CATEGORY_RUNTIME));
+        reconciler.Reconcile();
+    }
 
 
 

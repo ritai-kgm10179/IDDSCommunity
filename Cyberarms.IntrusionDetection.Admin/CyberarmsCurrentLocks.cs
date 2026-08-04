@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -137,8 +139,9 @@ public partial class CyberarmsCurrentLocks : UserControl
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    private void actionMenuUnlock_Click(object sender, EventArgs e)
+    private async void actionMenuUnlock_Click(object sender, EventArgs e)
     {
+        List<(long LockId, DataGridViewRow Row)> requests = [];
         foreach (DataGridViewRow row in dataGridViewLocks.Rows)
         {
             if (row.Cells["dataGridViewSelectItem"] is not DataGridViewCheckBoxCell c) continue;
@@ -149,24 +152,63 @@ public partial class CyberarmsCurrentLocks : UserControl
                           row.Cells[8].Value?.ToString() == Lock.LOCK_STATUS_HARDLOCK.ToString()))
             {
                 if (long.TryParse(row.Cells[7].Value?.ToString(), out long lockId))
-                {
-                    Lock l = Locks.GetLockById(lockId);
-                    if (l != null)
-                    {
-                        l.Status = Lock.LOCK_STATUS_UNLOCK_REQUESTED;
-                        l.Save();
-                        ProtectionAuditTrail auditTrail = new(Database.Instance, TimeProvider.System);
-                        auditTrail.Record(
-                            "Firewall.ManualUnlockRequested",
-                            "Succeeded",
-                            Environment.UserDomainName + "\\" + Environment.UserName,
-                            l.IpAddress,
-                            lockId.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                    }
-                    row.Cells[2].Value = LockStatusAdapter.GetLockStatusName(Lock.LOCK_STATUS_MANUAL);
-                }
+                    requests.Add((lockId, row));
             }
         }
+        if (requests.Count == 0)
+            return;
+        actionMenuUnlock.Enabled = false;
+        try
+        {
+            HashSet<long> completed = await Task.Run(() => RequestUnlocks(requests.ConvertAll(static request => request.LockId))).ConfigureAwait(false);
+            await this.InvokeAsync(() =>
+            {
+                foreach ((long lockId, DataGridViewRow row) in requests)
+                {
+                    if (completed.Contains(lockId))
+                        row.Cells[2].Value = LockStatusAdapter.GetLockStatusName(Lock.LOCK_STATUS_MANUAL);
+                }
+            });
+        }
+        finally
+        {
+            try
+            {
+                if (!IsDisposed && IsHandleCreated)
+                    await this.InvokeAsync(() => actionMenuUnlock.Enabled = true);
+            }
+            catch (InvalidOperationException) when (IsDisposed || !IsHandleCreated)
+            {
+                // Form shutdown can destroy the window handle while the database operation completes.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Persists manual-unlock requests without accessing WinForms controls.
+    /// </summary>
+    /// <param name="lockIds">The selected durable lock identifiers.</param>
+    /// <returns>The identifiers successfully changed to unlock-requested.</returns>
+    private static HashSet<long> RequestUnlocks(IReadOnlyList<long> lockIds)
+    {
+        HashSet<long> completed = [];
+        ProtectionAuditTrail auditTrail = new(Database.Instance, TimeProvider.System);
+        foreach (long lockId in lockIds)
+        {
+            Lock l = Locks.GetLockById(lockId);
+            if (l is null)
+                continue;
+            l.Status = Lock.LOCK_STATUS_UNLOCK_REQUESTED;
+            l.Save();
+            auditTrail.Record(
+                "Firewall.ManualUnlockRequested",
+                "Succeeded",
+                Environment.UserDomainName + "\\" + Environment.UserName,
+                l.IpAddress,
+                lockId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            completed.Add(lockId);
+        }
+        return completed;
     }
 
 

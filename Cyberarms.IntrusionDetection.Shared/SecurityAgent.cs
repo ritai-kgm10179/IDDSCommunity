@@ -215,10 +215,9 @@ public class SecurityAgent : IAgentFilter
     {
         if (Id == Guid.Empty) Id = GetId();
         string sqlString;
-        IDbTransaction trans = Database.Instance.Connection.BeginTransaction(IsolationLevel.Serializable);
-        try
+        Database.Instance.ExecuteInTransaction((_, trans) =>
         {
-            if (!DoesExistInDb(Id))
+            if (!DoesExistInDb(trans, Id))
             {
 
                 sqlString = @"INSERT INTO SecurityAgents(AgentId, AssemblyName,HardLockAttempts,HardLockTimeHours,
@@ -234,15 +233,9 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             Database.Instance.ExecuteNonQuery(sqlString, trans, Id, AssemblyName, HardLockAttempts, HardLockTimeHours,
                 LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
             Database.Instance.ExecuteNonQuery("UPDATE SecurityAgents set Serial = Serial+1 where AgentId=@p0", trans, Id);
-            SaveCustomConfig();
-            trans.Commit();
-            OnStatisticsUpdated();
-        }
-        catch (Exception)
-        {
-            trans.Rollback();
-            throw;
-        }
+            SaveCustomConfig(trans);
+        });
+        OnStatisticsUpdated();
     }
 
     /// <summary>
@@ -260,15 +253,33 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
+    /// Determines whether an Agent exists using the caller-owned transaction.
+    /// </summary>
+    /// <param name="transaction">The transaction that owns the database connection.</param>
+    /// <param name="id">The Agent identifier.</param>
+    /// <returns><see langword="true"/> when the Agent exists; otherwise, <see langword="false"/>.</returns>
+    private static bool DoesExistInDb(IDbTransaction transaction, Guid id)
+    {
+        object? result = Database.Instance.ExecuteScalar("select AgentId from SecurityAgents where AgentId = @p0", transaction, id);
+        return result is not null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId);
+    }
+
+    /// <summary>
     /// Saves custom config.
     /// </summary>
 
-    public void SaveCustomConfig()
+    public void SaveCustomConfig() => Database.Instance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction));
+
+    /// <summary>
+    /// Persists custom Agent configuration using the caller-owned transaction.
+    /// </summary>
+    /// <param name="transaction">The transaction that owns the database connection.</param>
+    private void SaveCustomConfig(IDbTransaction transaction)
     {
         foreach (string key in CustomConfiguration.Keys)
         {
             //select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id);
-            object? dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", Id, key);
+            object? dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", transaction, Id, key);
             int found = Db.DbValueConverter.ToInt(dbResult);
             string sql;
             if (found > 0)
@@ -279,7 +290,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             {
                 sql = "insert into SecurityAgentConfig (PropertyValueString, AgentId, PropertyName) values(@p0,@p1,@p2)";
             }
-            Database.Instance.ExecuteNonQuery(sql, CustomConfiguration[key], Id, key);
+            Database.Instance.ExecuteNonQuery(sql, transaction, CustomConfiguration[key], Id, key);
         }
     }
 

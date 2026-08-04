@@ -40,6 +40,9 @@ internal sealed class ProtectionOptions
 
     [Range(1, 300)]
     public int SecurityEventDrainTimeoutSeconds { get; init; } = 30;
+
+    [Range(1, 1000000)]
+    public int SecurityEventRecoveryBatchSize { get; init; } = 10000;
 }
 
 internal static class ServiceOptionsExtensions

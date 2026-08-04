@@ -30,6 +30,8 @@ internal static class SchemaMigrationRunner
 
         Execute(connection, transaction, CreateProtectionAuditLog);
         Execute(connection, transaction, CreateProtectionAuditLogIndex);
+        Execute(connection, transaction, CreateProtectionEventInbox);
+        Execute(connection, transaction, CreateProtectionEventInboxStatusIndex);
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -38,6 +40,10 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (2, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (3, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -116,4 +122,23 @@ internal static class SchemaMigrationRunner
 
     private const string CreateProtectionAuditLogIndex =
         "CREATE INDEX IF NOT EXISTS IX_ProtectionAuditLog_OccurredUtc ON ProtectionAuditLog(OccurredUtc)";
+
+    private const string CreateProtectionEventInbox = """
+        CREATE TABLE IF NOT EXISTS ProtectionEventInbox (
+            Id TEXT PRIMARY KEY NOT NULL,
+            ReceivedUtc TEXT NOT NULL,
+            AgentName TEXT NOT NULL,
+            CreateDate TEXT NOT NULL,
+            EventId INTEGER NOT NULL,
+            IpAddress TEXT NOT NULL,
+            EventMessage TEXT NOT NULL,
+            Status INTEGER NOT NULL,
+            Attempts INTEGER NOT NULL,
+            LastError TEXT NOT NULL,
+            UpdatedUtc TEXT NOT NULL
+        )
+        """;
+
+    private const string CreateProtectionEventInboxStatusIndex =
+        "CREATE INDEX IF NOT EXISTS IX_ProtectionEventInbox_Status_ReceivedUtc ON ProtectionEventInbox(Status, ReceivedUtc)";
 }

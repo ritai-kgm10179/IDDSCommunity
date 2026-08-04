@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.IO;
+using Cyberarms.IntrusionDetection.Shared;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,6 +11,31 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 [TestClass]
 public sealed class SecurityEventPipelineTest
 {
+    private string testDirectory = null!;
+    private Database database = null!;
+
+    /// <summary>
+    /// Creates an isolated durable inbox for each pipeline test.
+    /// </summary>
+    [TestInitialize]
+    public void Initialize()
+    {
+        testDirectory = Path.Combine(Path.GetTempPath(), "Cyberarms.SecurityEventPipelineTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDirectory);
+        database = new Database();
+        database.Configure(testDirectory, "pipeline.db");
+    }
+
+    /// <summary>
+    /// Releases the isolated inbox database.
+    /// </summary>
+    [TestCleanup]
+    public void Cleanup()
+    {
+        database.Close();
+        if (Directory.Exists(testDirectory))
+            Directory.Delete(testDirectory, recursive: true);
+    }
     /// <summary>
     /// Verifies accepted events are processed sequentially and drained during completion.
     /// </summary>
@@ -17,7 +44,7 @@ public sealed class SecurityEventPipelineTest
     public async System.Threading.Tasks.Task Complete_AcceptedEvents_DrainsInOrderAsync()
     {
         ConcurrentQueue<string> processed = new();
-        SecurityEventPipeline pipeline = new(8, (_, args) => processed.Enqueue(args.IpAddress), _ => Assert.Fail("Unexpected failure."));
+        SecurityEventPipeline pipeline = CreatePipeline(8, (_, args) => processed.Enqueue(args.IpAddress), _ => Assert.Fail("Unexpected failure."));
         NotificationEventArgs first = CreateEvent("192.0.2.1");
 
         Assert.IsTrue(pipeline.TryPublish(this, first));
@@ -42,7 +69,7 @@ public sealed class SecurityEventPipelineTest
         using ManualResetEventSlim release = new(false);
         int processed = 0;
         int failures = 0;
-        SecurityEventPipeline pipeline = new(1, (_, args) =>
+        SecurityEventPipeline pipeline = CreatePipeline(1, (_, args) =>
         {
             Interlocked.Increment(ref processed);
             if (args.IpAddress == "192.0.2.1")
@@ -74,7 +101,7 @@ public sealed class SecurityEventPipelineTest
     {
         using ManualResetEventSlim entered = new(false);
         using ManualResetEventSlim release = new(false);
-        SecurityEventPipeline pipeline = new(1, (_, args) =>
+        SecurityEventPipeline pipeline = CreatePipeline(1, (_, args) =>
         {
             if (args.IpAddress == "192.0.2.1")
             {
@@ -97,6 +124,31 @@ public sealed class SecurityEventPipelineTest
     }
 
     /// <summary>
+    /// Verifies an event persisted before interruption is replayed and marked completed by a new pipeline.
+    /// </summary>
+    /// <returns>A task that completes after recovered work drains.</returns>
+    [TestMethod]
+    public async System.Threading.Tasks.Task RecoverPending_PersistedEvent_ReplaysAfterRestartAsync()
+    {
+        SecurityEventInbox inbox = new(database, TimeProvider.System);
+        inbox.Add("RecoveredAgent", CreateEvent("192.0.2.44"));
+        string? processedAddress = null;
+        SecurityEventPipeline pipeline = new(
+            4,
+            (_, args) => processedAddress = args.IpAddress,
+            _ => Assert.Fail("Unexpected failure."),
+            inbox,
+            agentName => agentName == "RecoveredAgent" ? this : null);
+
+        pipeline.RecoverPending(10);
+        pipeline.Complete();
+        await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.AreEqual("192.0.2.44", processedAddress);
+        Assert.AreEqual(0, inbox.CountUnfinished());
+    }
+
+    /// <summary>
     /// Creates one test detection event.
     /// </summary>
     /// <param name="address">The source address.</param>
@@ -108,4 +160,7 @@ public sealed class SecurityEventPipelineTest
         EventMessage = "test",
         IpAddress = address
     };
+
+    private SecurityEventPipeline CreatePipeline(int capacity, Action<object, INotificationEventArgs> process, Action<Exception> reportFailure) =>
+        new(capacity, process, reportFailure, new SecurityEventInbox(database, TimeProvider.System), _ => this);
 }

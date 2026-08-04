@@ -296,9 +296,8 @@ public class IntrusionLog
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser)
-values (@p0,@p1,@p2,@p3,@p4)";
-            Database.Instance.ExecuteNonQuery(sqlString, incidentTime, agentId, clientIp, action, actionTriggeredByUser);
-            object? result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
+values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
+            object? result = Database.Instance.ExecuteScalar(sqlString, incidentTime, agentId, clientIp, action, actionTriggeredByUser);
             return Db.DbValueConverter.ToInt64(result);
         }
         else

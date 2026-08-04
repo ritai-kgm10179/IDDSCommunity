@@ -62,6 +62,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             logManager.WriteEntry("Create Firewall Rule: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
                 Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
     }
 
@@ -84,8 +85,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             logManager.WriteEntry("IsLocked encountered an error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
                 Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
-        return false;
+    }
+
+    /// <summary>
+    /// Returns the exact addresses currently present in the Cyberarms block rule.
+    /// </summary>
+    /// <returns>The normalized firewall address entries.</returns>
+    public IReadOnlyCollection<string> GetBlockedAddresses()
+    {
+        INetFwRule? rule = GetRule(GetRuleName("BlockAttacker", 0));
+        if (rule is null || !rule.Enabled)
+            return [];
+        List<string> addresses = [];
+        foreach (string entry in rule.RemoteAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (System.Net.IPAddress.TryParse(entry, out System.Net.IPAddress? address))
+                addresses.Add(address.ToString());
+        }
+        return addresses;
     }
 
     /// <summary>

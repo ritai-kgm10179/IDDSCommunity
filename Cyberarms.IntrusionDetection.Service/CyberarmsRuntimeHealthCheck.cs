@@ -4,10 +4,15 @@ using System.Threading.Tasks;
 using Cyberarms.IntrusionDetection.Shared;
 using Cyberarms.IntrusionDetection.Shared.Localization;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal sealed class CyberarmsRuntimeHealthCheck(Database database, ReportScheduler reportScheduler, SecurityAgents securityAgents) : IHealthCheck
+internal sealed class CyberarmsRuntimeHealthCheck(
+    Database database,
+    ReportScheduler reportScheduler,
+    SecurityAgents securityAgents,
+    IOptions<ProtectionOptions> protectionOptions) : IHealthCheck
 {
     /// <summary>
     /// Reports whether required runtime subsystems are configured and active.
@@ -29,7 +34,13 @@ internal sealed class CyberarmsRuntimeHealthCheck(Database database, ReportSched
         try
         {
             await database.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM ProtectionAuditLog", cancellationToken: cancellationToken).ConfigureAwait(false);
+            long unfinishedEvents = await database.ExecuteScalarAsync<long>(
+                "SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status<>2",
+                cancellationToken: cancellationToken).ConfigureAwait(false);
             data["audit_store_available"] = true;
+            data["unfinished_security_events"] = unfinishedEvents;
+            if (unfinishedEvents > protectionOptions.Value.SecurityEventQueueCapacity)
+                return HealthCheckResult.Degraded(Strings.Get("The protection event backlog exceeds the configured queue capacity."), data: data);
         }
         catch (System.Exception exception)
         {
