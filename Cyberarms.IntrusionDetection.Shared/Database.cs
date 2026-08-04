@@ -6,12 +6,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Polly;
+using Polly.Retry;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
 public class Database
 {
     private const int MaximumRetryCount = 5;
+    private static readonly ResiliencePipeline SqlitePipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            ShouldHandle = new PredicateBuilder().Handle<SqliteException>(IsTransient),
+            MaxRetryAttempts = MaximumRetryCount,
+            Delay = TimeSpan.FromMilliseconds(100),
+            BackoffType = DelayBackoffType.Exponential,
+            UseJitter = true
+        })
+        .Build();
     private bool _isConfigured = false;
     public bool IsConfigured => _isConfigured;
 
@@ -113,23 +125,9 @@ public class Database
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
-        try
-        {
+        if (transaction is not null)
             return Connection.ExecuteReader(sqlString, paramObj, transaction);
-        }
-        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
-        {
-            for (int i = 0; i < MaximumRetryCount; i++)
-            {
-                Thread.Sleep(GetRetryDelay(i));
-                try
-                {
-                    return Connection.ExecuteReader(sqlString, paramObj, transaction);
-                }
-                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
-            }
-            throw;
-        }
+        return SqlitePipeline.Execute(() => Connection.ExecuteReader(sqlString, paramObj));
     }
 
     /// <summary>
@@ -150,24 +148,10 @@ public class Database
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
-        try
-        {
+        if (transaction is not null)
             Connection.Execute(sqlString, paramObj, transaction);
-        }
-        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
-        {
-            for (int i = 0; i < MaximumRetryCount; i++)
-            {
-                Thread.Sleep(GetRetryDelay(i));
-                try
-                {
-                    Connection.Execute(sqlString, paramObj);
-                    return;
-                }
-                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
-            }
-            throw;
-        }
+        else
+            SqlitePipeline.Execute(() => Connection.Execute(sqlString, paramObj));
     }
 
     /// <summary>
@@ -190,23 +174,9 @@ public class Database
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
-        try
-        {
+        if (transaction is not null)
             return Connection.ExecuteScalar(sqlString, paramObj, transaction);
-        }
-        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
-        {
-            for (int i = 0; i < MaximumRetryCount; i++)
-            {
-                Thread.Sleep(GetRetryDelay(i));
-                try
-                {
-                    return Connection.ExecuteScalar(sqlString, paramObj, transaction);
-                }
-                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
-            }
-            throw;
-        }
+        return SqlitePipeline.Execute(() => Connection.ExecuteScalar(sqlString, paramObj));
     }
 
     /// <summary>
@@ -216,23 +186,14 @@ public class Database
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and command execution.</param>
     /// <returns>A task whose result is the number of affected rows.</returns>
-    public async Task<int> ExecuteNonQueryAsync(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
-    {
-        for (int attempt = 0; ; attempt++)
+    public async Task<int> ExecuteNonQueryAsync(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
+        await SqlitePipeline.ExecuteAsync(async token =>
         {
-            try
-            {
-                await using SqliteConnection connection = new(connBuilder.ConnectionString);
-                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-                CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
-                return await connection.ExecuteAsync(command).ConfigureAwait(false);
-            }
-            catch (SqliteException ex) when (IsTransient(ex) && attempt < MaximumRetryCount)
-            {
-                await Task.Delay(GetRetryDelay(attempt), cancellationToken).ConfigureAwait(false);
-            }
-        }
-    }
+            await using SqliteConnection connection = new(connBuilder.ConnectionString);
+            await connection.OpenAsync(token).ConfigureAwait(false);
+            CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
+            return await connection.ExecuteAsync(command).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
     /// <summary>
     /// Asynchronously returns the first column of the first row produced by a query.
@@ -242,23 +203,14 @@ public class Database
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and query execution.</param>
     /// <returns>A task whose result is the converted scalar value, or the default value when no value is returned.</returns>
-    public async Task<T?> ExecuteScalarAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
-    {
-        for (int attempt = 0; ; attempt++)
+    public async Task<T?> ExecuteScalarAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
+        await SqlitePipeline.ExecuteAsync(async token =>
         {
-            try
-            {
-                await using SqliteConnection connection = new(connBuilder.ConnectionString);
-                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-                CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
-                return await connection.ExecuteScalarAsync<T>(command).ConfigureAwait(false);
-            }
-            catch (SqliteException ex) when (IsTransient(ex) && attempt < MaximumRetryCount)
-            {
-                await Task.Delay(GetRetryDelay(attempt), cancellationToken).ConfigureAwait(false);
-            }
-        }
-    }
+            await using SqliteConnection connection = new(connBuilder.ConnectionString);
+            await connection.OpenAsync(token).ConfigureAwait(false);
+            CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
+            return await connection.ExecuteScalarAsync<T>(command).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
     /// <summary>
     /// Asynchronously executes a parameterized query and materializes its rows.
