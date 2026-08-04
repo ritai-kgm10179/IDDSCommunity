@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 
-namespace Cyberarms.IntrusionDetection {
+namespace Cyberarms.IntrusionDetection
+{
 
     /// <summary>
     /// Crypto library for encrypting/decrypting configuration files
     /// </summary>
-    internal class CryptoLib {
+    internal class CryptoLib
+    {
         const string YYHSK_DNRTF = "62Hd_cn$a0)8_fnS";
-        internal static string Encrypt(string toEncrypt, bool useHashing) {
+        internal static string Encrypt(string toEncrypt, bool useHashing)
+        {
             byte[] keyArray;
             byte[] toEncryptArray = UTF8Encoding.UTF8.GetBytes(toEncrypt);
 
@@ -19,25 +20,29 @@ namespace Cyberarms.IntrusionDetection {
             string key = YYHSK_DNRTF;
             //System.Windows.Forms.MessageBox.Show(key);
             //If hashing use get hashcode regards to your key
-            if (useHashing) {
-                MD5CryptoServiceProvider hashmd5 = new MD5CryptoServiceProvider();
+            if (useHashing)
+            {
+                MD5CryptoServiceProvider hashmd5 = new();
                 keyArray = hashmd5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
                 //Always release the resources and flush data
                 // of the Cryptographic service provide. Best Practice
 
                 hashmd5.Clear();
-            } else
+            }
+            else
                 keyArray = UTF8Encoding.UTF8.GetBytes(key);
 
-            TripleDESCryptoServiceProvider tdes = new TripleDESCryptoServiceProvider();
-            //set the secret key for the tripleDES algorithm
-            tdes.Key = keyArray;
-            //mode of operation. there are other 4 modes.
-            //We choose ECB(Electronic code Book)
-            tdes.Mode = CipherMode.ECB;
-            //padding mode(if any extra byte added)
+            TripleDESCryptoServiceProvider tdes = new()
+            {
+                //set the secret key for the tripleDES algorithm
+                Key = keyArray,
+                //mode of operation. there are other 4 modes.
+                //We choose ECB(Electronic code Book)
+                Mode = CipherMode.ECB,
+                //padding mode(if any extra byte added)
 
-            tdes.Padding = PaddingMode.PKCS7;
+                Padding = PaddingMode.PKCS7
+            };
 
             ICryptoTransform cTransform = tdes.CreateEncryptor();
             //transform the specified region of bytes array to resultArray
@@ -51,7 +56,8 @@ namespace Cyberarms.IntrusionDetection {
         }
 
 
-        internal static string Decrypt(string cipherString, bool useHashing) {
+        internal static string Decrypt(string cipherString, bool useHashing)
+        {
             byte[] keyArray;
             //get the byte code of the string
 
@@ -60,27 +66,32 @@ namespace Cyberarms.IntrusionDetection {
             //Get your key from config file to open the lock!
             string key = YYHSK_DNRTF;
 
-            if (useHashing) {
+            if (useHashing)
+            {
                 //if hashing was used get the hash code with regards to your key
-                MD5CryptoServiceProvider hashmd5 = new MD5CryptoServiceProvider();
+                MD5CryptoServiceProvider hashmd5 = new();
                 keyArray = hashmd5.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
                 //release any resource held by the MD5CryptoServiceProvider
 
                 hashmd5.Clear();
-            } else {
+            }
+            else
+            {
                 //if hashing was not implemented get the byte code of the key
                 keyArray = UTF8Encoding.UTF8.GetBytes(key);
             }
 
-            TripleDESCryptoServiceProvider tdes = new TripleDESCryptoServiceProvider();
-            //set the secret key for the tripleDES algorithm
-            tdes.Key = keyArray;
-            //mode of operation. there are other 4 modes. 
-            //We choose ECB(Electronic code Book)
+            TripleDESCryptoServiceProvider tdes = new()
+            {
+                //set the secret key for the tripleDES algorithm
+                Key = keyArray,
+                //mode of operation. there are other 4 modes. 
+                //We choose ECB(Electronic code Book)
 
-            tdes.Mode = CipherMode.ECB;
-            //padding mode(if any extra byte added)
-            tdes.Padding = PaddingMode.PKCS7;
+                Mode = CipherMode.ECB,
+                //padding mode(if any extra byte added)
+                Padding = PaddingMode.PKCS7
+            };
 
             ICryptoTransform cTransform = tdes.CreateDecryptor();
             byte[] resultArray = cTransform.TransformFinalBlock(

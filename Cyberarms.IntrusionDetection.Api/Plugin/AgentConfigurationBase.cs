@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Text;
 using System.Xml.Serialization;
 using System.IO;
@@ -12,21 +10,27 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin;
 /// This class can be used as base class for custom configuration.
 /// Using this base class, Intrusion Detection automatically loads and saves configuration values needed by your plugin.
 /// </summary>
-public class AgentConfigurationBase : IAgentConfiguration {
+public class AgentConfigurationBase : IAgentConfiguration
+{
     public string AssemblyName { get; set; } = string.Empty;
     public string AgentName { get; set; } = string.Empty;
     public bool Enabled { get; set; }
 
     private PluginConfiguration? _agentSettings;
 
-    [System.Xml.Serialization.XmlIgnore]
-    public PluginConfiguration? AgentSettings {
-        get {
-            if (_agentSettings is null && !string.IsNullOrEmpty(ConfigurationSettingsTypeName)) {
+    [XmlIgnore]
+    public PluginConfiguration? AgentSettings
+    {
+        get
+        {
+            if (_agentSettings is null && !string.IsNullOrEmpty(ConfigurationSettingsTypeName))
+            {
                 Type? configType = GetConfigurationType();
-                if (configType is not null) {
+                if (configType is not null)
+                {
                     object? o = Activator.CreateInstance(configType);
-                    if (o is PluginConfiguration pluginConfig) {
+                    if (o is PluginConfiguration pluginConfig)
+                    {
                         _agentSettings = pluginConfig;
                     }
                 }
@@ -38,8 +42,10 @@ public class AgentConfigurationBase : IAgentConfiguration {
 
     public string ConfigurationSettingsTypeName { get; set; } = string.Empty;
 
-    public string? PluginConfigurationXml {
-        get {
+    public string? PluginConfigurationXml
+    {
+        get
+        {
             if (AgentSettings is null) return null;
             XmlSerializer xs = new(AgentSettings.GetType());
             StringBuilder sb = new();
@@ -47,8 +53,10 @@ public class AgentConfigurationBase : IAgentConfiguration {
             xs.Serialize(sw, AgentSettings);
             return sb.ToString();
         }
-        set {
-            if (AgentSettings is not null && value is not null) {
+        set
+        {
+            if (AgentSettings is not null && value is not null)
+            {
                 XmlSerializer xs = new(AgentSettings.GetType());
                 using StringReader sr = new(value);
                 AgentSettings = (PluginConfiguration)xs.Deserialize(sr)!;
@@ -64,7 +72,8 @@ public class AgentConfigurationBase : IAgentConfiguration {
     public bool NeverUnlock { get; set; }
     public string FileName { get; set; } = string.Empty;
 
-    public void CloneFrom(IAgentConfiguration source) {
+    public void CloneFrom(IAgentConfiguration source)
+    {
         AssemblyName = source.AssemblyName;
         AgentName = source.AgentName;
         ConfigurationSettingsTypeName = source.ConfigurationSettingsTypeName;
@@ -75,21 +84,28 @@ public class AgentConfigurationBase : IAgentConfiguration {
         SoftLockDurationMins = source.SoftLockDurationMins;
         OverwriteConfiguration = source.OverwriteConfiguration;
         NeverUnlock = source.NeverUnlock;
-        if (!string.IsNullOrEmpty(ConfigurationSettingsTypeName) && source.AgentSettings is not null) {
+        if (!string.IsNullOrEmpty(ConfigurationSettingsTypeName) && source.AgentSettings is not null)
+        {
             Type? configType = GetConfigurationType();
-            if (configType is not null) {
+            if (configType is not null)
+            {
                 AgentSettings = (PluginConfiguration)Activator.CreateInstance(configType)!;
                 AgentSettings.CloneFrom(source.AgentSettings);
             }
         }
     }
 
-    public Type? GetConfigurationType() {
-        if (File.Exists(AssemblyName)) {
+    public Type? GetConfigurationType()
+    {
+        if (File.Exists(AssemblyName))
+        {
             Assembly assembly = Assembly.LoadFile(AssemblyName);
-            if (assembly is not null) {
-                foreach (Type type in assembly.GetTypes()) {
-                    if (type.IsPublic && !type.IsAbstract && type.FullName == ConfigurationSettingsTypeName) {
+            if (assembly is not null)
+            {
+                foreach (Type type in assembly.GetTypes())
+                {
+                    if (type.IsPublic && !type.IsAbstract && type.FullName == ConfigurationSettingsTypeName)
+                    {
                         return type;
                     }
                 }

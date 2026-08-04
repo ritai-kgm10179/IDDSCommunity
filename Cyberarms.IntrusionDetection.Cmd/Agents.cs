@@ -1,23 +1,28 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Reflection;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 
 namespace Cyberarms.IntrusionDetection;
 
-internal class Agents : List<Agent> {
-    internal void Load(string assemblyName) {
+internal class Agents : List<Agent>
+{
+    internal void Load(string assemblyName)
+    {
         Type pInterfaceType = typeof(IAgentPlugin);
         Assembly assembly = Assembly.LoadFile(assemblyName);
-        foreach (Type type in assembly.GetTypes()) {
-            if (type.IsPublic && !type.IsAbstract) {
+        foreach (Type type in assembly.GetTypes())
+        {
+            if (type.IsPublic && !type.IsAbstract)
+            {
                 Type? typeInterface = type.GetInterface(pInterfaceType.ToString(), false);
 
-                if (typeInterface is not null) {
-                    if (Activator.CreateInstance(type) is IAgentPlugin objectInstance) {
-                        Agent orange = new(assembly.FullName ?? assemblyName) {
+                if (typeInterface is not null)
+                {
+                    if (Activator.CreateInstance(type) is IAgentPlugin objectInstance)
+                    {
+                        Agent orange = new(assembly.FullName ?? assemblyName)
+                        {
                             Assembly = objectInstance,
                             Name = type.Name
                         };

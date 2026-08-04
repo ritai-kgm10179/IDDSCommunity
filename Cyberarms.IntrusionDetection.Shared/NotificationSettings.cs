@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Cyberarms.IntrusionDetection.Shared {
-    public class NotificationSettings {
+﻿namespace Cyberarms.IntrusionDetection.Shared
+{
+    public class NotificationSettings
+    {
         public const string NOTIFICATION_ON_UNLOCK = "{BE227461-8622-4168-A15C-644773070A5D}";
         public const string NOTIFICATION_ON_SOFT_LOCK = "{C4A9EC33-44E0-445A-8134-009F559E22A1}";
         public const string NOTIFICATION_ON_HARD_LOCK = "{AD963FA3-1D19-4CFE-9F6A-C1A8A4DBBA33}";
@@ -18,9 +15,12 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
         private static NotificationSettings _instance;
 
-        public static NotificationSettings Instance {
-            get {
-                if (_instance == null) {
+        public static NotificationSettings Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
                     _instance = new NotificationSettings();
                 }
                 return _instance;
@@ -28,113 +28,147 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
 
-        public bool OnUnlock {
-            get {
+        public bool OnUnlock
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_ON_UNLOCK));
             }
-            set {
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_ON_UNLOCK, value.ToString());
             }
         }
 
 
-        
-        public bool OnSoftLock { 
-            get {
+
+        public bool OnSoftLock
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_ON_SOFT_LOCK));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_ON_SOFT_LOCK, value.ToString());
             }
         }
 
-        public bool OnHardLock { 
-            get {
+        public bool OnHardLock
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_ON_HARD_LOCK));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_ON_HARD_LOCK, value.ToString());
             }
         }
-        public bool SummaryReport { 
-            get {
+        public bool SummaryReport
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_SUMMARY_REPORT));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_SUMMARY_REPORT, value.ToString());
             }
         }
-        public bool SummaryReportDaily { 
-                get {
+        public bool SummaryReportDaily
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_SUMMARY_REPORT_DAILY));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_SUMMARY_REPORT_DAILY, value.ToString());
             }
         }
-        
-        public bool SummaryReportWeekly { 
-            get {
+
+        public bool SummaryReportWeekly
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_SUMMARY_REPORT_WEEKLY));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_SUMMARY_REPORT_WEEKLY, value.ToString());
             }
         }
 
-        public bool SummaryReportMonthly { 
-                get {
+        public bool SummaryReportMonthly
+        {
+            get
+            {
                 return StringToBool(IddsConfig.Instance.GetConfigValue(NOTIFICATION_SUMMARY_REPORT_MONTHLY));
-            } 
-            set {
+            }
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(NOTIFICATION_SUMMARY_REPORT_MONTHLY, value.ToString());
             }
         }
 
 
-        public string LastDailyReport {
-            get {
+        public string LastDailyReport
+        {
+            get
+            {
                 return IddsConfig.Instance.GetConfigValue(LAST_DAILY_REPORT);
             }
-            set {
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(LAST_DAILY_REPORT, value);
             }
         }
 
-        public string LastWeeklyReport {
-            get {
+        public string LastWeeklyReport
+        {
+            get
+            {
                 return IddsConfig.Instance.GetConfigValue(LAST_WEEKLY_REPORT);
             }
-            set {
+            set
+            {
                 IddsConfig.Instance.SetConfigValue(LAST_WEEKLY_REPORT, value);
             }
         }
 
-        public string LastMonthlyReport {
-            get {
+        public string LastMonthlyReport
+        {
+            get
+            {
                 return IddsConfig.Instance.GetConfigValue(LAST_MONTHLY_REPORT);
             }
-            set {
-                IddsConfig.Instance.SetConfigValue(LAST_MONTHLY_REPORT, value);            
+            set
+            {
+                IddsConfig.Instance.SetConfigValue(LAST_MONTHLY_REPORT, value);
             }
         }
 
 
-        private NotificationSettings() {
+        private NotificationSettings()
+        {
 
         }
 
-        private bool StringToBool(string value) {
+        private bool StringToBool(string value)
+        {
             bool result = false;
             bool.TryParse(value, out result);
             return result;
         }
 
-        public void Reload() {
+        public void Reload()
+        {
             IddsConfig.Instance.LoadAppConfig();
         }
 
-        public void Save() {
+        public void Save()
+        {
             IddsConfig.Instance.SaveAppConfig();
         }
     }

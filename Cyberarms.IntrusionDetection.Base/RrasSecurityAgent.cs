@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Text.RegularExpressions;
 
-namespace Cyberarms.IntrusionDetection.Base.Plugins {
-    [PluginAttribute("Intrusion Detection RRAS Security Agent", "This agent scans and monitors the system eventlog for possible RRAS attacks.")]
+namespace Cyberarms.IntrusionDetection.Base.Plugins
+{
+    [Plugin("Intrusion Detection RRAS Security Agent", "This agent scans and monitors the system eventlog for possible RRAS attacks.")]
 
-    public class RrasSecurityAgent : AgentPlugin, IExtendedInformation {
+    public class RrasSecurityAgent : AgentPlugin, IExtendedInformation
+    {
 
         private EventLogQuery query;
         private EventLogWatcher watcher;
@@ -28,7 +27,8 @@ namespace Cyberarms.IntrusionDetection.Base.Plugins {
         /// <summary>
         /// Initialize the Agent
         /// </summary>
-        public RrasSecurityAgent() {
+        public RrasSecurityAgent()
+        {
 
         }
 
@@ -36,9 +36,10 @@ namespace Cyberarms.IntrusionDetection.Base.Plugins {
         /// <summary>
         /// Agent Startup, initialization of our EventLog watcher
         /// </summary>
-        protected override void OnStartAgent() {
+        protected override void OnStartAgent()
+        {
             query = new EventLogQuery("System", PathType.LogName,
-                String.Format(EVENT_LOG_QUERY_FILEMAKER_LOGIN_DENIED));
+                string.Format(EVENT_LOG_QUERY_FILEMAKER_LOGIN_DENIED));
             watcher = new EventLogWatcher(query);
             watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
             watcher.Enabled = true;
@@ -47,91 +48,117 @@ namespace Cyberarms.IntrusionDetection.Base.Plugins {
         /// <summary>
         /// Resume from Pause
         /// </summary>
-        protected override void OnContinueAgent() {
+        protected override void OnContinueAgent()
+        {
             watcher.Enabled = true;
         }
 
         /// <summary>
         /// Pause the agent
         /// </summary>
-        protected override void OnPauseAgent() {
+        protected override void OnPauseAgent()
+        {
             watcher.Enabled = false;
         }
 
         /// <summary>
         /// Stop the agent
         /// </summary>
-        protected override void OnStopAgent() {
+        protected override void OnStopAgent()
+        {
             watcher.Enabled = false;
             watcher = null;
             query = null;
         }
 
-        private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e) {
-            try {
-                foreach (System.Diagnostics.Eventing.Reader.EventProperty prop in e.EventRecord.Properties) {
-                    if (Regex.IsMatch(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}")) {
+        private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+        {
+            try
+            {
+                foreach (EventProperty prop in e.EventRecord.Properties)
+                {
+                    if (Regex.IsMatch(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}"))
+                    {
                         Match ipAddress = Regex.Match(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}");
-                        NotificationEventArgs args = new NotificationEventArgs();
-                        args.CreateDate = e.EventRecord.TimeCreated.Value;
-                        args.EventId = e.EventRecord.Id;
-                        args.IpAddress = ipAddress.Value;
+                        NotificationEventArgs args = new()
+                        {
+                            CreateDate = e.EventRecord.TimeCreated.Value,
+                            EventId = e.EventRecord.Id,
+                            IpAddress = ipAddress.Value
+                        };
                         System.Net.IPAddress ip;
                         System.Net.IPAddress.TryParse(args.IpAddress, out ip);
-                        if (ip != null && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) {
+                        if (ip != null && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        {
                             OnAttackDetected(this, args);
                         }
                     }
                 }
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 EventLog.WriteEntry("Cyberarms.IntrusionDetection.Base.Plugins.RrasSecurityAgent", ex.Message);
             }
         }
 
 
-        public string DisplayName {
-            get {
+        public string DisplayName
+        {
+            get
+            {
                 return "RRAS Security Agent - Routing and Remote Access";
             }
-            set {
+            set
+            {
                 throw new NotSupportedException("DisplayName cannot be changed!");
             }
         }
 
         private Image _icon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.agent15px_rras_dark;
-        public Image Icon {
-            get {
+        public Image Icon
+        {
+            get
+            {
                 return _icon;
             }
-            set {
+            set
+            {
                 _icon = value;
             }
         }
 
         private Image _selectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.agent15px_rras_white;
-        public Image SelectedIcon {
-            get {
+        public Image SelectedIcon
+        {
+            get
+            {
                 return _selectedIcon;
             }
-            set {
+            set
+            {
                 _selectedIcon = value;
             }
         }
 
         private Image _unselectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.agent15px_rras_dark;
-        public Image UnselectedIcon {
-            get {
+        public Image UnselectedIcon
+        {
+            get
+            {
                 return _unselectedIcon;
             }
-            set {
+            set
+            {
                 _unselectedIcon = value;
             }
         }
 
 
-        public Guid Id {
-            get {
+        public Guid Id
+        {
+            get
+            {
                 return new Guid("{FDA41145-2E75-400E-882C-E06EC4790EBE}");
             }
         }

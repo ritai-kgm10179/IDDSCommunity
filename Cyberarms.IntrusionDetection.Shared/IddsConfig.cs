@@ -1,12 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
 using System.Data;
 
-namespace Cyberarms.IntrusionDetection.Shared {
-    public class IddsConfig {
+namespace Cyberarms.IntrusionDetection.Shared
+{
+    public class IddsConfig
+    {
 
         public const int ENABLED_FEATURES_FREE = 1;
         public const int ENABLED_FEATURES_PRO = 2;
@@ -14,7 +15,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public const string LICENSE_FILE = "idds.vl";
 
         public const string CONFIG_VALUE_IS_DEBUG = "Configuration.IsDebug";
-        
+
 
         //private const string LICENSE_SERVER = "http://localhost:54996/activation.cyberarms.net2/";
         private const int IDDS_PRODUCT_ID = 0x66;
@@ -22,29 +23,35 @@ namespace Cyberarms.IntrusionDetection.Shared {
         private const string LICENSE_SERVER = "https://cyberarms.net/activationV2/";
 
         private static IddsConfig _instance;
-        public static IddsConfig Instance {
-            get {
-                if (_instance == null) {
+        public static IddsConfig Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
                     _instance = new IddsConfig();
                     _instance.Load();
                 }
                 return _instance;
             }
-            set {
+            set
+            {
                 _instance = value;
             }
         }
 
         public string PluginsDirectory { get; set; }
 
-        
-        
 
 
-        public void Save() {
+
+
+        public void Save()
+        {
             //throw new NotImplementedException("Save functionality not implemented yet");
             if (!Database.Instance.IsConfigured) configureDatabase();
-            try {
+            try
+            {
                 Database.Instance.ExecuteNonQuery(@"insert into Configuration(ConfigVersionDate,
                     HardLockAttempts, HardLockTimeHours, LockForever, SoftLockAttempts, SoftLockTimeMinutes,
                     UseSafeNetworkList, PluginDirectory, LicenseKey, ActivationId, SendInfoMail, 
@@ -57,17 +64,22 @@ namespace Cyberarms.IntrusionDetection.Shared {
                     NotificationEmailAddress, SmtpServer, SmtpUsername, SmtpPassword, CyberSheriffContributor, WebBasedMonitoring, DBNull.Value, SmtpSslRequired);
 
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 throw;
             }
         }
 
-        public void Load() {
+        public void Load()
+        {
             if (!Database.Instance.IsConfigured) configureDatabase();
-            System.Data.IDataReader reader = null;
-            try {
+            IDataReader reader = null;
+            try
+            {
                 reader = Database.Instance.ExecuteReader("select * from Configuration order by ConfigVersionNumber desc LIMIT 1");
-                if (reader.Read()) {
+                if (reader.Read())
+                {
                     HardLockAttempts = Db.DbValueConverter.ToInt(reader["HardLockAttempts"]);
                     HardLockTimeHours = Db.DbValueConverter.ToInt(reader["HardLockTimeHours"]);
                     LockForever = Db.DbValueConverter.ToBool(reader["LockForever"]);
@@ -87,103 +99,138 @@ namespace Cyberarms.IntrusionDetection.Shared {
                     WebBasedMonitoring = Db.DbValueConverter.ToBool(reader["WebBasedMonitoring"]);
                     SmtpSslRequired = Db.DbValueConverter.ToBool(reader["SmtpSslRequired"]);
                     LoadSafeNetworks();
-                } else {
+                }
+                else
+                {
                     Database.Instance.ExecuteNonQuery(Db.Version_2_1.CREATE_DEFAULT_CONFIGURATION);
-                   
+
                 }
 
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 throw;
-            } finally {
+            }
+            finally
+            {
                 if (reader != null && !reader.IsClosed) reader.Close();
             }
         }
 
         private Dictionary<string, string> _appConfig;
-        public Dictionary<string, string> AppConfig {
-            get {
-                if (_appConfig == null) {
+        public Dictionary<string, string> AppConfig
+        {
+            get
+            {
+                if (_appConfig == null)
+                {
                     LoadAppConfig();
                 }
                 return _appConfig;
             }
         }
 
-        public void LoadAppConfig() {
+        public void LoadAppConfig()
+        {
             _appConfig = LoadConfig("AppConfig");
         }
 
-        public string GetConfigValue(string key) {
-            if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, String.Empty);
+        public string GetConfigValue(string key)
+        {
+            if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
             return AppConfig[key];
         }
 
-        public void SetConfigValue(string key, string value) {
-            if (AppConfig.ContainsKey(key)) {
+        public void SetConfigValue(string key, string value)
+        {
+            if (AppConfig.ContainsKey(key))
+            {
                 AppConfig[key] = value;
-            } else {
+            }
+            else
+            {
                 AppConfig.Add(key, value);
             }
         }
 
-        public void SaveAppConfig() {
+        public void SaveAppConfig()
+        {
             if (!Database.Instance.IsConfigured) configureDatabase();
-            System.Data.IDbTransaction trans = Database.Instance.Connection.BeginTransaction();
-            try {
+            IDbTransaction trans = Database.Instance.Connection.BeginTransaction();
+            try
+            {
                 Database.Instance.ExecuteNonQuery("delete from AppConfig", trans);
-                foreach (string key in AppConfig.Keys) {
+                foreach (string key in AppConfig.Keys)
+                {
                     object exists = Database.Instance.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
                     int count;
-                    if (exists != null && int.TryParse(exists.ToString(), out count) && count > 0) {
+                    if (exists != null && int.TryParse(exists.ToString(), out count) && count > 0)
+                    {
                         Database.Instance.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
-                    } else {
+                    }
+                    else
+                    {
                         Database.Instance.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
                     }
                 }
                 trans.Commit();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 trans.Rollback();
                 throw;
-            } finally {
+            }
+            finally
+            {
                 trans.Dispose();
             }
         }
 
-        private Dictionary<string, string> LoadConfig(string configTable) {
+        private Dictionary<string, string> LoadConfig(string configTable)
+        {
             if (!Database.Instance.IsConfigured) configureDatabase();
-            Dictionary<string, string> config = new Dictionary<string, string>();
-            System.Data.IDataReader rdr = Database.Instance.ExecuteReader(String.Format("select ConfigKey, ConfigValue from {0}", configTable));
-            while (rdr.Read()) {
+            Dictionary<string, string> config = new();
+            IDataReader rdr = Database.Instance.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
+            while (rdr.Read())
+            {
                 config.Add(Db.DbValueConverter.ToString(rdr["ConfigKey"]), Db.DbValueConverter.ToString(rdr["ConfigValue"]));
             }
             rdr.Close();
             return config;
         }
 
-        public void LoadSafeNetworks() {
+        public void LoadSafeNetworks()
+        {
             SafeNetworks = LoadNetworkList("WhiteList");
         }
 
-        public void SaveSafeNetworks() {
+        public void SaveSafeNetworks()
+        {
             if (!Database.Instance.IsConfigured) configureDatabase();
             IDbTransaction trans = Database.Instance.Connection.BeginTransaction();
-            try {
+            try
+            {
                 Database.Instance.ExecuteNonQuery("delete from WhiteList");
-                foreach (CSafeNetwork net in SafeNetworks) {
+                foreach (CSafeNetwork net in SafeNetworks)
+                {
                     Database.Instance.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", net.IpAddress, net.SubnetMask);
                 }
                 trans.Commit();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 trans.Rollback();
                 throw;
             }
         }
 
-        public CSafeNetworks LoadNetworkList(string list) {
+        public CSafeNetworks LoadNetworkList(string list)
+        {
             if (!Database.Instance.IsConfigured) configureDatabase();
-            CSafeNetworks net = new CSafeNetworks();
-            IDataReader rdr = Database.Instance.ExecuteReader(String.Format("Select IpAddress, NetworkMask from {0}", list));
-            while (rdr.Read()) {
+            CSafeNetworks net = new();
+            IDataReader rdr = Database.Instance.ExecuteReader(string.Format("Select IpAddress, NetworkMask from {0}", list));
+            while (rdr.Read())
+            {
                 net.Add(new CSafeNetwork(Db.DbValueConverter.ToString(rdr["IpAddress"]), Db.DbValueConverter.ToString(rdr["NetworkMask"])));
             }
             rdr.Close();
@@ -191,15 +238,17 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
 
-        internal void configureDatabase() {
-            if (String.IsNullOrEmpty(ApplicationPath)) {
+        internal void configureDatabase()
+        {
+            if (string.IsNullOrEmpty(ApplicationPath))
+            {
                 ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
             }
             Database.Instance.Configure(ApplicationPath);
         }
 
 
-       
+
 
         public string ApplicationPath { get; set; }
 
@@ -207,11 +256,12 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public DateTime? Expires { get; set; }
         public string Edition { get; set; }
 
-        
-        private IddsConfig() {
+
+        private IddsConfig()
+        {
         }
 
-    
+
         /*
          * 
          * Configuration values for IDDS plus Security Agents
@@ -241,45 +291,57 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public bool CyberSheriffContributor { get; set; }
 
         private CSafeNetworks _safeNetworks;
-        public CSafeNetworks SafeNetworks {
-            get {
-                if (_safeNetworks == null) {
+        public CSafeNetworks SafeNetworks
+        {
+            get
+            {
+                if (_safeNetworks == null)
+                {
                     _safeNetworks = SafeNetworks = LoadNetworkList("WhiteList");
                 }
                 return _safeNetworks;
             }
-            set {
+            set
+            {
                 _safeNetworks = value;
             }
         }
 
-        public static IddsConfig GetDefaultConfiguration() {
-            IddsConfig config = new IddsConfig();
-            config.HardLockAttempts = 10;
-            config.SoftLockAttempts = 3;
-            config.HardLockTimeHours = 24; // 24 hours
-            config.SoftLockTimeMinutes = 30;
-            config.LockForever = false;
-            config.UseSafeNetworkList = false;
-            config.SafeNetworks = new CSafeNetworks();
-            config.SenderEmailAddress = "Cyberarms.IDDS@" + System.Net.Dns.GetHostEntry("localhost").HostName;
+        public static IddsConfig GetDefaultConfiguration()
+        {
+            IddsConfig config = new()
+            {
+                HardLockAttempts = 10,
+                SoftLockAttempts = 3,
+                HardLockTimeHours = 24, // 24 hours
+                SoftLockTimeMinutes = 30,
+                LockForever = false,
+                UseSafeNetworkList = false,
+                SafeNetworks = new CSafeNetworks(),
+                SenderEmailAddress = "Cyberarms.IDDS@" + System.Net.Dns.GetHostEntry("localhost").HostName
+            };
             //config.AgentConfigurations.GetAgentConfig(PluginDirectory + "Cyberarms.IntrusionDetection.Base.Plugins.dll", "WindowsSecurityBase");
             //config.AgentConfigurations[0].Enabled = true;
             return config;
         }
 
         public class CSafeNetworks : List<CSafeNetwork> { }
-        public class CSafeNetwork {
+        public class CSafeNetwork
+        {
             public string IpAddress { get; set; }
             public string SubnetMask { get; set; }
-            public string DisplayName {
-                get {
-                    return String.Format("{0}/{1}", IpAddress, SubnetMask);
+            public string DisplayName
+            {
+                get
+                {
+                    return string.Format("{0}/{1}", IpAddress, SubnetMask);
                 }
             }
-            public CSafeNetwork() {
+            public CSafeNetwork()
+            {
             }
-            public CSafeNetwork(string ipAddress, string subnetmask) {
+            public CSafeNetwork(string ipAddress, string subnetmask)
+            {
                 this.IpAddress = ipAddress;
                 this.SubnetMask = subnetmask;
             }
@@ -299,11 +361,14 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
         private string _smtpPassword;
 
-        public string SmtpPassword {
-            get {
+        public string SmtpPassword
+        {
+            get
+            {
                 return _smtpPassword;
             }
-            set {
+            set
+            {
                 _smtpPassword = value;
             }
         }
@@ -315,41 +380,56 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public bool WebBasedMonitoring { get; set; }
 
         private bool? _isDebug;
-        public bool IsDebug {
-            get {
-                if (!_isDebug.HasValue) {
+        public bool IsDebug
+        {
+            get
+            {
+                if (!_isDebug.HasValue)
+                {
                     bool isDebug;
-                    if (bool.TryParse(GetConfigValue(CONFIG_VALUE_IS_DEBUG), out isDebug)) {
+                    if (bool.TryParse(GetConfigValue(CONFIG_VALUE_IS_DEBUG), out isDebug))
+                    {
                         _isDebug = isDebug;
-                    } else {
+                    }
+                    else
+                    {
                         _isDebug = false;
                     }
                 }
                 return _isDebug.Value;
             }
-            set {
+            set
+            {
                 _isDebug = value;
                 SetConfigValue(CONFIG_VALUE_IS_DEBUG, value.ToString());
             }
         }
 
 
-        public string GetSmtpPassword() {
-            string smtpPassword = String.Empty;
-            if (!String.IsNullOrEmpty(SmtpPassword)) {
+        public string GetSmtpPassword()
+        {
+            string smtpPassword = string.Empty;
+            if (!string.IsNullOrEmpty(SmtpPassword))
+            {
                 smtpPassword = CryptoHelper.Decrypt(SmtpPassword, true);
             }
             return smtpPassword;
         }
 
-        public bool IsInSafeNetwork(string ipAddress) {
+        public bool IsInSafeNetwork(string ipAddress)
+        {
             bool result = false;
-            try {
-                System.Net.IPAddress address = System.Net.IPAddress.Parse(ipAddress);
-                foreach (CSafeNetwork net in SafeNetworks) {
-                    try {
-                        if (IPAddress.Parse(net.IpAddress).AddressFamily.Equals(address.AddressFamily)) {
-                            switch (address.AddressFamily) {
+            try
+            {
+                IPAddress address = System.Net.IPAddress.Parse(ipAddress);
+                foreach (CSafeNetwork net in SafeNetworks)
+                {
+                    try
+                    {
+                        if (IPAddress.Parse(net.IpAddress).AddressFamily.Equals(address.AddressFamily))
+                        {
+                            switch (address.AddressFamily)
+                            {
                                 case System.Net.Sockets.AddressFamily.InterNetwork:
                                     result = IsIp4InNetwork(address, IPAddress.Parse(net.IpAddress), net.SubnetMask);
                                     break;
@@ -359,33 +439,43 @@ namespace Cyberarms.IntrusionDetection.Shared {
                             }
                         }
                         if (result) return true;
-                    } catch {
+                    }
+                    catch
+                    {
                         // ignore error, function returns false if none found
                     }
                 }
 
-            } catch { }
+            }
+            catch { }
             return false;
 
         }
 
 
-        public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) {
+        public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask)
+        {
             return IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
         }
 
-        public bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength) {
+        public bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
+        {
             int count = 0;
             byte[] addressBytes = address.GetAddressBytes();
             byte[] networkBytes = networkAddress.GetAddressBytes();
-            for (int i = 0; i < addressLength; i++) {
+            for (int i = 0; i < addressLength; i++)
+            {
                 string addressBits = Convert.ToString(addressBytes[i], 2).PadLeft(8);
                 string networkBits = Convert.ToString(networkBytes[i], 2).PadLeft(8);
-                for (int n = 0; n < 8; n++) {
-                    if (addressBits.Substring(n, 1).Equals(networkBits.Substring(n, 1))) {
+                for (int n = 0; n < 8; n++)
+                {
+                    if (addressBits.Substring(n, 1).Equals(networkBits.Substring(n, 1)))
+                    {
                         count++;
                         if (count == maskBits) return true;
-                    } else {
+                    }
+                    else
+                    {
                         return false;
                     }
                 }
@@ -393,15 +483,19 @@ namespace Cyberarms.IntrusionDetection.Shared {
             return false;
         }
 
-        private List<System.Net.IPAddress> _localAddresses;
+        private List<IPAddress> _localAddresses;
 
 
-        public bool IsIpAddressLocal(System.Net.IPAddress address) {
-            if (_localAddresses == null) {
-                _localAddresses = new List<System.Net.IPAddress>();
-                foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()) {
+        public bool IsIpAddressLocal(IPAddress address)
+        {
+            if (_localAddresses == null)
+            {
+                _localAddresses = new List<IPAddress>();
+                foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                {
                     System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
-                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses) {
+                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses)
+                    {
                         _localAddresses.Add(info.Address);
                     }
                 }
@@ -410,18 +504,24 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
 
-        public int GetSubnetMaskBits(string subnetMask) {
+        public int GetSubnetMaskBits(string subnetMask)
+        {
             if (!subnetMask.Contains(".") && int.Parse(subnetMask) > 2 && int.Parse(subnetMask) < 33) return int.Parse(subnetMask);
             string[] s = subnetMask.Split('.');
             if (s.Length < 4) throw new ArgumentException("No valid subnetmask entered");
             int result = 0;
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++)
+            {
                 byte b = (byte)int.Parse(s[i]);
                 string bin = Convert.ToString(b, 2);
-                for (int n = 0; n < 8; n++) {
-                    if (bin.Substring(n, 1) == "1") {
+                for (int n = 0; n < 8; n++)
+                {
+                    if (bin.Substring(n, 1) == "1")
+                    {
                         result++;
-                    } else {
+                    }
+                    else
+                    {
                         return result;
                     }
                 }
@@ -431,50 +531,68 @@ namespace Cyberarms.IntrusionDetection.Shared {
             throw new ArgumentException("Error while parsing subnet mask");
         }
 
-        public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) {
+        public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask)
+        {
             return IsIpInNetwork(address, networkAddress, subnetMask, 16);
         }
 
 
-        public static bool IsValidIpAddress(string ipAddress) {
-            System.Net.IPAddress validIpAddress = null;
+        public static bool IsValidIpAddress(string ipAddress)
+        {
+            IPAddress validIpAddress = null;
             return System.Net.IPAddress.TryParse(ipAddress, out validIpAddress);
         }
 
-        public static bool IsValidSubnetMask(string subnetMask) {
+        public static bool IsValidSubnetMask(string subnetMask)
+        {
             return IsValidIpAddress(subnetMask);
         }
 
-        public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork) {
+        public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
+        {
             string ip, net;
             int subnetMaskBits = 0;
             ipAddressNetwork = ipAddressNetwork.Trim();
-            if (!ipAddressNetwork.Contains("/")) {
-                if (!IsValidIpAddress(ipAddressNetwork)) {
+            if (!ipAddressNetwork.Contains("/"))
+            {
+                if (!IsValidIpAddress(ipAddressNetwork))
+                {
                     throw new ArgumentException("No valid IP address provided!");
                 }
                 return ipAddressNetwork + "/255.255.255.255";
-            } else {
+            }
+            else
+            {
                 ip = ipAddressNetwork.Split('/')[0];
                 net = ipAddressNetwork.Split('/')[1];
-                if (!IsValidIpAddress(ip)) {
+                if (!IsValidIpAddress(ip))
+                {
                     throw new ArgumentException("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!");
                 }
-                if (int.TryParse(net, out subnetMaskBits)) {
-                    if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && 7 < subnetMaskBits && subnetMaskBits < 33) {
+                if (int.TryParse(net, out subnetMaskBits))
+                {
+                    if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && 7 < subnetMaskBits && subnetMaskBits < 33)
+                    {
                         long netmask = 0;
-                        for (int b = 31; b > 31 - subnetMaskBits; b--) {
+                        for (int b = 31; b > 31 - subnetMaskBits; b--)
+                        {
                             netmask += (long)Math.Pow(2, (double)b);
                         }
                         net = netmask.ToString();
-                    } else if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) {
-                        if (subnetMaskBits < 12 || subnetMaskBits > 128) {
+                    }
+                    else if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        if (subnetMaskBits < 12 || subnetMaskBits > 128)
+                        {
                             throw new ArgumentException("Invalid subnet mask for IPv6 address. Please enter the subnet mask as number from 12 to 128!");
                         }
                     }
-                } else {
+                }
+                else
+                {
 
-                    if (!IsValidSubnetMask(net)) {
+                    if (!IsValidSubnetMask(net))
+                    {
                         throw new ArgumentException("Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!");
                     }
                 }
@@ -488,31 +606,32 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
 
 
-        public void SetSmtpPassword(string password) {
+        public void SetSmtpPassword(string password)
+        {
             SmtpPassword = CryptoHelper.Encrypt(password, true);
         }
 
 
-//        public void WriteAgentConfiguration(Cyberarms.IntrusionDetection.Api.Plugin.IAgentConfiguration agentConfiguration) {
-//            // find the agent first
-//            if (!Database.Instance.IsConfigured) configureDatabase();
-//            Guid agentId = GetAgentId(agentConfiguration.AgentName);
+        //        public void WriteAgentConfiguration(Cyberarms.IntrusionDetection.Api.Plugin.IAgentConfiguration agentConfiguration) {
+        //            // find the agent first
+        //            if (!Database.Instance.IsConfigured) configureDatabase();
+        //            Guid agentId = GetAgentId(agentConfiguration.AgentName);
 
-//            string writeConfigCmd;
-//            if (agentId != Guid.Empty) {
-//                writeConfigCmd = @"update SecurityAgents set HardLockAttempts = @p2, HardLockTimeHours = @p3,
-//LockForever = @p4, SoftLockAttempts = @p5, SoftLockTimeMinutes=@p6, OverwriteConfiguration=@p7 where AssemblyName = @p0";
-//            } else {
-//                // agent not configured in database
-//                agentId = Guid.NewGuid();
-//                writeConfigCmd = @"insert into SecurityAgents(AssemblyName, AgentId, HardLockAttempts, HardLockTimeHours,
-//LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverwriteConfiguration) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7)";
-//            }
-//            Database.Instance.ExecuteNonQuery(writeConfigCmd, agentConfiguration.AssemblyName, agentId.ToString(),
-//                agentConfiguration.HardLockAttempts, agentConfiguration.HardLockDurationHrs,
-//                agentConfiguration.NeverUnlock, agentConfiguration.SoftLockAttempts, agentConfiguration.SoftLockDurationMins, agentConfiguration.OverwriteConfiguration);
+        //            string writeConfigCmd;
+        //            if (agentId != Guid.Empty) {
+        //                writeConfigCmd = @"update SecurityAgents set HardLockAttempts = @p2, HardLockTimeHours = @p3,
+        //LockForever = @p4, SoftLockAttempts = @p5, SoftLockTimeMinutes=@p6, OverwriteConfiguration=@p7 where AssemblyName = @p0";
+        //            } else {
+        //                // agent not configured in database
+        //                agentId = Guid.NewGuid();
+        //                writeConfigCmd = @"insert into SecurityAgents(AssemblyName, AgentId, HardLockAttempts, HardLockTimeHours,
+        //LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverwriteConfiguration) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7)";
+        //            }
+        //            Database.Instance.ExecuteNonQuery(writeConfigCmd, agentConfiguration.AssemblyName, agentId.ToString(),
+        //                agentConfiguration.HardLockAttempts, agentConfiguration.HardLockDurationHrs,
+        //                agentConfiguration.NeverUnlock, agentConfiguration.SoftLockAttempts, agentConfiguration.SoftLockDurationMins, agentConfiguration.OverwriteConfiguration);
 
-//        }
+        //        }
 
         //public Guid GetAgentId(string displayName) {
         //    string cmd = "Select AgentId from  SecurityAgents where DisplayName like @p0";
@@ -526,20 +645,26 @@ namespace Cyberarms.IntrusionDetection.Shared {
         //    return Guid.Empty;
         //}
 
-        public int GetSoftLockMinutes(SecurityAgent agent) {
-            if (agent.OverrideConfig) {
+        public int GetSoftLockMinutes(SecurityAgent agent)
+        {
+            if (agent.OverrideConfig)
+            {
                 return agent.SoftLockTimeMinutes;
             }
             return SoftLockTimeMinutes;
         }
 
-        
-        public int GetHardLockHours(SecurityAgent agent) {
+
+        public int GetHardLockHours(SecurityAgent agent)
+        {
             int hardLockHours;
-            if (agent.OverrideConfig) {
+            if (agent.OverrideConfig)
+            {
                 hardLockHours = agent.HardLockTimeHours;
                 if (agent.LockForever) hardLockHours = (int)DateTime.MaxValue.Subtract(DateTime.Now).TotalHours;
-            } else {
+            }
+            else
+            {
                 hardLockHours = HardLockTimeHours;
                 if (LockForever) hardLockHours = (int)DateTime.MaxValue.Subtract(DateTime.Now).TotalHours;
             }

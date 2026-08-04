@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Data;
 using System.Drawing;
 
-namespace Cyberarms.IntrusionDetection.Shared {
-    public class IntrusionLog {
+namespace Cyberarms.IntrusionDetection.Shared
+{
+    public class IntrusionLog
+    {
         public const int STATUS_INTRUSION_ATTEMPT = 100;
         public const int STATUS_INTRUSION_ATTEMPT_FROM_LOCAL = 110;
         public const int STATUS_INTRUSION_ATTEMPT_FROM_SAFE = 120;
@@ -22,15 +22,19 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public const int STATUS_LICENSE_REQUIRED = 999;
         public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
 
-        public static Guid GetSystemId() {
+        public static Guid GetSystemId()
+        {
             return new Guid(SYSTEM_ID);
         }
 
         private static Dictionary<int, string> _statusNames;
 
-        public static Dictionary<int, string> StatusNames {
-            get {
-                if (_statusNames == null) {
+        public static Dictionary<int, string> StatusNames
+        {
+            get
+            {
+                if (_statusNames == null)
+                {
                     _statusNames = new Dictionary<int, string>();
                     _statusNames.Add(STATUS_INTRUSION_ATTEMPT, "Possible intrusion attempt.");
                     _statusNames.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Invalid logon from localhost. Local addresses will not be blocked");
@@ -52,9 +56,12 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
         private static Dictionary<int, string> _statusClasses;
 
-        public static Dictionary<int, string> StatusClasses {
-            get {
-                if (_statusClasses == null) {
+        public static Dictionary<int, string> StatusClasses
+        {
+            get
+            {
+                if (_statusClasses == null)
+                {
                     _statusClasses = new Dictionary<int, string>();
                     _statusClasses.Add(STATUS_INTRUSION_ATTEMPT, "Intrusion");
                     _statusClasses.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Intrusion");
@@ -75,9 +82,12 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
         private static Dictionary<int, Image> _statusIcons;
-        public static Dictionary<int, Image> StatusIcons {
-            get {
-                if (_statusIcons == null) {
+        public static Dictionary<int, Image> StatusIcons
+        {
+            get
+            {
+                if (_statusIcons == null)
+                {
                     _statusIcons = new Dictionary<int, Image>();
                     _statusIcons.Add(STATUS_INTRUSION_ATTEMPT, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_loginAttempt);
                     _statusIcons.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_loginAttempt);
@@ -97,113 +107,157 @@ namespace Cyberarms.IntrusionDetection.Shared {
             }
         }
 
-        public static Image GetStatusIcon(int status) {
-            if (StatusIcons.ContainsKey(status)) {
+        public static Image GetStatusIcon(int status)
+        {
+            if (StatusIcons.ContainsKey(status))
+            {
                 return StatusIcons[status];
-            } else {
+            }
+            else
+            {
                 return global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_systemMessage;
             }
         }
 
-        public static string GetStatusClass(int status) {
-            if (StatusClasses.ContainsKey(status)) {
+        public static string GetStatusClass(int status)
+        {
+            if (StatusClasses.ContainsKey(status))
+            {
                 return StatusClasses[status];
-            } else {
-                return String.Format("System", status);
+            }
+            else
+            {
+                return string.Format("System", status);
             }
         }
 
-        public static string GetStatusName(int status) {
-            if (StatusNames.ContainsKey(status)) {
+        public static string GetStatusName(int status)
+        {
+            if (StatusNames.ContainsKey(status))
+            {
                 return StatusNames[status];
-            } else {
-                return String.Format("Display name for status {0} was not found.", status);
+            }
+            else
+            {
+                return string.Format("Display name for status {0} was not found.", status);
             }
         }
 
-        public static IDataReader ReadInterval(TimeSpan timeSpan) {
-            if (Database.Instance.IsConfigured) {
+        public static IDataReader ReadInterval(TimeSpan timeSpan)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 return Database.Instance.ExecuteReader("select * from IntrusionLog where IncidentTime>@p0 order by Id desc", DateTime.Now.Subtract(timeSpan));
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
 
-        public static int GetLastLogId() {
+        public static int GetLastLogId()
+        {
             int maxLogId = 0;
             object result = Database.Instance.ExecuteScalar("select Max(Id) from IntrusionLog");
             if (int.TryParse(result.ToString(), out maxLogId)) return maxLogId;
             return -1;
         }
 
-                //table IntrusionLog
-                //Id INTEGER PRIMARY KEY AUTOINCREMENT not null,
-                //IncidentTime DateTime null,
-                //AgentId uniqueidentifier null,
-                //ClientIP nvarchar(80) null,
-                //Action int null,
-                //ActionTriggeredByUser bit null
+        //table IntrusionLog
+        //Id INTEGER PRIMARY KEY AUTOINCREMENT not null,
+        //IncidentTime DateTime null,
+        //AgentId uniqueidentifier null,
+        //ClientIP nvarchar(80) null,
+        //Action int null,
+        //ActionTriggeredByUser bit null
 
-        public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan) {
-            if (Database.Instance.IsConfigured) {
+        public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 return Database.Instance.ExecuteReader("select MAX(Id) as MaxId, MAX(IncidentTime) as LatestEvent, Count(*) as NumberOfEvents, AgentId, ClientIP, Action from IntrusionLog where IncidentTime>@p0 group by AgentId, ClientIP, Action order by 1 desc", DateTime.Now.Subtract(timeSpan));
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
-        public static bool HasUpdates(int lastSequenceNumber) {
+        public static bool HasUpdates(int lastSequenceNumber)
+        {
             int lastId;
-            if (Database.Instance.IsConfigured) {
+            if (Database.Instance.IsConfigured)
+            {
                 object result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
-                if (result != null && int.TryParse(result.ToString(), out lastId)) {
+                if (result != null && int.TryParse(result.ToString(), out lastId))
+                {
                     return lastSequenceNumber != lastId;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
-        public static IDataReader ReadDifferential(int lastSequenceNumber) {
-            if (Database.Instance.IsConfigured) {
+        public static IDataReader ReadDifferential(int lastSequenceNumber)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 return Database.Instance.ExecuteReader("select * from IntrusionLog where Id>@p0", lastSequenceNumber);
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
-        
-        public static int ReadUnsuccessfulAttempts(DateTime startDate) {
-            if (Database.Instance.IsConfigured) {
+
+        public static int ReadUnsuccessfulAttempts(DateTime startDate)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 int result = 0;
                 int.TryParse(Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0", startDate).ToString(), out result);
                 return result;
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
-        public static long AddEntry(DateTime incidentTime, Guid agentId, string clientIp, int action, bool actionTriggeredByUser) {
-            if (Database.Instance.IsConfigured) {
+        public static long AddEntry(DateTime incidentTime, Guid agentId, string clientIp, int action, bool actionTriggeredByUser)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 string sqlString = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser)
 values (@p0,@p1,@p2,@p3,@p4)";
                 Database.Instance.ExecuteNonQuery(sqlString, incidentTime, agentId, clientIp, action, actionTriggeredByUser);
                 object result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
                 return Db.DbValueConverter.ToInt64(result);
-            } else {
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }
 
-        public static int GetIncidentsByAgentId(Guid agentId, string IpAddress) {
-            if (Database.Instance.IsConfigured) {
+        public static int GetIncidentsByAgentId(Guid agentId, string IpAddress)
+        {
+            if (Database.Instance.IsConfigured)
+            {
                 string sqlString = @"select count(*) from IntrusionLog where AgentId=@p0 and IncidentTime>@p1 and ClientIP=@p2";
-                object queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.Now.AddDays(-1),IpAddress);
-                return Db.DbValueConverter.ToInt(queryResult); 
-            } else {
+                object queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.Now.AddDays(-1), IpAddress);
+                return Db.DbValueConverter.ToInt(queryResult);
+            }
+            else
+            {
                 throw new ApplicationException("Database not initialized");
             }
         }

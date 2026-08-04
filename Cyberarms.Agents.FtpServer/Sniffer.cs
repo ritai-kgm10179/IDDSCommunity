@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Net.NetworkInformation;
 
 
-namespace Cyberarms.Agents.FtpServer {
-    public class Sniffer {
+namespace Cyberarms.Agents.FtpServer
+{
+    public class Sniffer
+    {
         private Socket ipSocket;
         byte[] byteData;
 
@@ -17,11 +15,13 @@ namespace Cyberarms.Agents.FtpServer {
 
         private bool aborted = false;
 
-        public void Abort() {
+        public void Abort()
+        {
             aborted = true;
         }
 
-        public void Continue() {
+        public void Continue()
+        {
             aborted = false;
         }
 
@@ -29,9 +29,11 @@ namespace Cyberarms.Agents.FtpServer {
 
         public IPAddress IPAddress { get; set; }
 
-        public void WatchAddress(object ipAddressToMonitor) {
+        public void WatchAddress(object ipAddressToMonitor)
+        {
             byteData = new byte[128];
-            try {
+            try
+            {
                 IPAddress = (IPAddress)ipAddressToMonitor;
                 ipSocket = new Socket(IPAddress.AddressFamily,
                     SocketType.Raw, ProtocolType.IP);
@@ -45,25 +47,34 @@ namespace Cyberarms.Agents.FtpServer {
                     byTrue, byOut);
                 ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
                     new AsyncCallback(OnReceive), null);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 LogTrace(ex);
             }
         }
 
-        private void OnReceive(IAsyncResult ar) {
-            if (!aborted) {
-                try {
+        private void OnReceive(IAsyncResult ar)
+        {
+            if (!aborted)
+            {
+                try
+                {
                     int length = ipSocket.EndReceive(ar);
                     //ParseData(byteData, nReceived);
-                    IPHeader ipHeader = new IPHeader(byteData, length);
+                    IPHeader ipHeader = new(byteData, length);
                     if (ipHeader.SourceAddress.Equals(IPAddress)) OnPacketSent(ipHeader);
                     // if (ipHeader.DestinationAddress.Equals(IPAddress)) OnPacketReceived(ipHeader);
                     // OnPacketReceived(new NetworkPacket(byteData,length));
 
-                    
-                } catch (Exception ex) {
+
+                }
+                catch (Exception ex)
+                {
                     // Sniffer.LogTrace(ex);
-                } finally {
+                }
+                finally
+                {
                     byteData = new byte[128];          // set to 16276 bytes
                     // continue receiving
                     ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
@@ -72,31 +83,41 @@ namespace Cyberarms.Agents.FtpServer {
             }
         }
 
-        private void OnPacketSent(IPHeader ipHeader) {
-            if (IpPacketSent != null) {
+        private void OnPacketSent(IPHeader ipHeader)
+        {
+            if (IpPacketSent != null)
+            {
                 IpPacketSent(ipHeader, EventArgs.Empty);
             }
         }
 
-        private void OnPacketReceived(IPHeader ipHeader) {
-            if (IpPacketReceived != null) {
+        private void OnPacketReceived(IPHeader ipHeader)
+        {
+            if (IpPacketReceived != null)
+            {
                 IpPacketReceived(ipHeader, EventArgs.Empty);
             }
         }
 
 
-        public void CloseSocket() {
+        public void CloseSocket()
+        {
             ipSocket.Close();
         }
 
-        public static void LogTrace(Exception ex) {
+        public static void LogTrace(Exception ex)
+        {
             System.IO.StreamWriter sw = null;
-            try {
+            try
+            {
                 sw = System.IO.File.AppendText(System.IO.Path.GetTempPath() + "\\Cyberarms.Agents.FtpServer.ErrorLog.txt");
-                sw.WriteLine(String.Format("{0}\n{1}", ex.Message, ex.StackTrace));
+                sw.WriteLine(string.Format("{0}\n{1}", ex.Message, ex.StackTrace));
                 sw.Flush();
-            } catch { } finally {
-                if(sw!=null) sw.Close();
+            }
+            catch { }
+            finally
+            {
+                if (sw != null) sw.Close();
             }
         }
 

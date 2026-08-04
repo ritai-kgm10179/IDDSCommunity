@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Cyberarms.IntrusionDetection.Shared {
-    public enum PluginExceptionSource {
+namespace Cyberarms.IntrusionDetection.Shared
+{
+    public enum PluginExceptionSource
+    {
         Init = 0,
         Load = 100,
         Configuration = 200,
@@ -13,7 +12,8 @@ namespace Cyberarms.IntrusionDetection.Shared {
         Unload = 500
     }
 
-    public class PluginExceptionArguments {
+    public class PluginExceptionArguments
+    {
         public string AssemblyName { get; set; }
         public string ModuleName { get; set; }
         public Exception Exception { get; set; }

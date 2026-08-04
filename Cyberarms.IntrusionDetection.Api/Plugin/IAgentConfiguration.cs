@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
 
-namespace Cyberarms.IntrusionDetection.Api.Plugin {
+namespace Cyberarms.IntrusionDetection.Api.Plugin
+{
     /// <summary>
     /// This interface provídes any property needed forIntrusion Detectionto load and save configuration values for your agent plugin.
     /// It is used byIntrusion Detectioninternally, as agent developer, you don't have to care about this interface
     /// </summary>
-    public interface IAgentConfiguration {
+    public interface IAgentConfiguration
+    {
         /// <summary>
         /// The name of your assembly, this property is used byIntrusion Detectionand is set automatically when adding your plugin toIntrusion Detectionplugins
         /// </summary>

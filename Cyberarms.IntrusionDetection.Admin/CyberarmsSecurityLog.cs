@@ -1,56 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Data;
-using System.Text;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection.Admin {
-    public partial class CyberarmsSecurityLog : UserControl {
+namespace Cyberarms.IntrusionDetection.Admin
+{
+    public partial class CyberarmsSecurityLog : UserControl
+    {
 
         public event EventHandler FilterSelectionChanged;
         public const string ALL_AGENTS = "{46DD5CAD-3F50-4D69-8917-11505DB10553}";
 
 
         private DataSet _intrusionLog;
-        public DataSet DataSetIntrusionLog {
-            get {
-                if (_intrusionLog == null) {
+        public DataSet DataSetIntrusionLog
+        {
+            get
+            {
+                if (_intrusionLog == null)
+                {
                     _intrusionLog = new DataSet();
                     _intrusionLog.Tables.Add("IntrusionLog");
                     _intrusionLog.Tables["IntrusionLog"].Columns.Add("Id", typeof(int));
                     _intrusionLog.Tables["IntrusionLog"].Columns.Add("Action", typeof(int));
-                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("Agent", typeof(String));
+                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("Agent", typeof(string));
                     _intrusionLog.Tables["IntrusionLog"].Columns.Add("LogIcon", typeof(Image));
-                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("LogType", typeof(String));
+                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("LogType", typeof(string));
                     _intrusionLog.Tables["IntrusionLog"].Columns.Add("EventDate", typeof(DateTime));
-                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("IpAddress", typeof(String));
-                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("Message", typeof(String));
-                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("AgentId", typeof(String));
+                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("IpAddress", typeof(string));
+                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("Message", typeof(string));
+                    _intrusionLog.Tables["IntrusionLog"].Columns.Add("AgentId", typeof(string));
                     _intrusionLog.Tables["IntrusionLog"].Columns.Add("NumberOfEvents", typeof(int));
                 }
                 return _intrusionLog;
             }
-            set {
+            set
+            {
                 _intrusionLog = value;
             }
         }
 
         private DataView _intrusionLogView;
-        public DataView IntrusionLogView {
-            get {
-                if (_intrusionLogView == null) {
-                    _intrusionLogView = new DataView(DataSetIntrusionLog.Tables["IntrusionLog"]);
-                    _intrusionLogView.Sort = "EventDate desc";
+        public DataView IntrusionLogView
+        {
+            get
+            {
+                if (_intrusionLogView == null)
+                {
+                    _intrusionLogView = new DataView(DataSetIntrusionLog.Tables["IntrusionLog"])
+                    {
+                        Sort = "EventDate desc"
+                    };
                 }
                 return _intrusionLogView;
             }
         }
 
 
-        public CyberarmsSecurityLog() {
+        public CyberarmsSecurityLog()
+        {
             InitializeComponent();
             comboBoxAgentSelection.DisplayMember = "DisplayName";
             comboBoxAgentSelection.ValueMember = "Id";
@@ -73,9 +83,10 @@ namespace Cyberarms.IntrusionDetection.Admin {
             PositionLabels();
         }
 
-        void CyberarmsSecurityLog_FilterSelectionChanged(object sender, EventArgs e) {
+        void CyberarmsSecurityLog_FilterSelectionChanged(object sender, EventArgs e)
+        {
             // @ToDo: Filter richtig setzen!
-            List<string> filter = new List<string>();
+            List<string> filter = new();
             if (!checkBoxFailedLogins.Checked && !checkBoxHardLocks.Checked && !checkBoxSoftLocks.Checked && !checkBoxSystemMessages.Checked) filter.Add("0=1");
             if (checkBoxFailedLogins.Checked) filter.Add("(Action >99 and Action <200)");
             if (checkBoxSoftLocks.Checked) filter.Add("(Action >199 and Action <300)");
@@ -83,34 +94,41 @@ namespace Cyberarms.IntrusionDetection.Admin {
             if (checkBoxSystemMessages.Checked) filter.Add("(Action >= 500)");
 
             int i = 0;
-            string viewFilter = filter.Count > 0 ? "(" : String.Empty;
+            string viewFilter = filter.Count > 0 ? "(" : string.Empty;
 
-            foreach (string f in filter) {
+            foreach (string f in filter)
+            {
                 if (i > 0) viewFilter = viewFilter + " or ";
                 viewFilter = viewFilter + f;
                 i++;
             }
             if (filter.Count > 0) viewFilter = viewFilter + ")";
-            if (comboBoxAgentSelection.Text != null && !((IAgentFilter)comboBoxAgentSelection.SelectedItem).Id.Equals(new Guid(ALL_AGENTS))) {
+            if (comboBoxAgentSelection.Text != null && !((IAgentFilter)comboBoxAgentSelection.SelectedItem).Id.Equals(new Guid(ALL_AGENTS)))
+            {
                 viewFilter = viewFilter + (filter.Count > 0 ? " and " : "");
-                viewFilter = viewFilter + (String.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem).Id));
+                viewFilter = viewFilter + (string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem).Id));
             }
             IntrusionLogView.RowFilter = viewFilter;
         }
 
-        void comboBoxAgentSelection_SelectionChangeCommitted(object sender, EventArgs e) {
+        void comboBoxAgentSelection_SelectionChangeCommitted(object sender, EventArgs e)
+        {
 
         }
 
-        public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message) {
+        public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
+        {
             DataTable t = DataSetIntrusionLog.Tables["IntrusionLog"];
             DataRow row;
-            DataRow[] rows = t.Select(String.Format("AgentId='{0}' and IpAddress='{1}' and logType='{2}' and action='{3}'", agentId, ipAddress, logType, action));
-            if (rows != null && rows.Length > 0) {
+            DataRow[] rows = t.Select(string.Format("AgentId='{0}' and IpAddress='{1}' and logType='{2}' and action='{3}'", agentId, ipAddress, logType, action));
+            if (rows != null && rows.Length > 0)
+            {
                 rows[0]["NumberOfEvents"] = int.Parse(rows[0]["NumberOfEvents"].ToString()) + 1;
                 rows[0]["EventDate"] = eventDate;
                 row = rows[0];
-            } else {
+            }
+            else
+            {
                 row = t.Rows.Add(id, action,
                     SecurityAgents.Instance.GetDisplayName(agentId), logIcon, logType, eventDate, ipAddress, message, agentId, 1);
             }
@@ -119,18 +137,22 @@ namespace Cyberarms.IntrusionDetection.Admin {
             return row;
         }
 
-        private int CountEvents() {
+        private int CountEvents()
+        {
             int result = 0;
-            foreach (DataGridViewRow row in dataGridViewIntrusionLog.Rows) {
+            foreach (DataGridViewRow row in dataGridViewIntrusionLog.Rows)
+            {
                 int c;
-                if (int.TryParse(row.Cells["NumberOfEvents"].Value.ToString(), out c)) {
+                if (int.TryParse(row.Cells["NumberOfEvents"].Value.ToString(), out c))
+                {
                     result += c;
                 }
             }
             return result;
         }
 
-        public DataRow FillLogEntry(int maxId, int action, string agentId, Image logIcon, string logType, DateTime lastEventDate, string ipAddress, string message, int numberOfEvents) {
+        public DataRow FillLogEntry(int maxId, int action, string agentId, Image logIcon, string logType, DateTime lastEventDate, string ipAddress, string message, int numberOfEvents)
+        {
             DataRow row = AddLogEntry(maxId, action, agentId, logIcon, logType, lastEventDate, ipAddress, message);
             row["NumberOfEvents"] = numberOfEvents;
             labelEventsCount.Text = CountEvents().ToString();
@@ -139,23 +161,30 @@ namespace Cyberarms.IntrusionDetection.Admin {
 
         public int MaxLogId { get; set; }
 
-        public void AddAgent(SecurityAgent agent) {
+        public void AddAgent(SecurityAgent agent)
+        {
             comboBoxAgentSelection.Items.Add(agent);
         }
 
-        public void RemoveAgent(SecurityAgent agent) {
-            try {
+        public void RemoveAgent(SecurityAgent agent)
+        {
+            try
+            {
                 comboBoxAgentSelection.Items.Remove(agent);
-            } catch {
+            }
+            catch
+            {
                 // not found
             }
         }
 
-        private void dataGridViewIntrusionLog_Resize(object sender, EventArgs e) {
+        private void dataGridViewIntrusionLog_Resize(object sender, EventArgs e)
+        {
             PositionLabels();
         }
 
-        private void PositionLabels() {
+        private void PositionLabels()
+        {
             smartLabelType.Left = 3;
             smartLabelLatestEntry.Left = smartLabelType.Left + dataGridViewIntrusionLog.Columns[0].Width + dataGridViewIntrusionLog.Columns[1].Width;
             smartLabelNumberOfEvents.Left = smartLabelLatestEntry.Left + dataGridViewIntrusionLog.Columns[2].Width;

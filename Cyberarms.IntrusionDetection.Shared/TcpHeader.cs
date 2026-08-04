@@ -1,12 +1,11 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Net;
-using System.Text;
 using System.IO;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
-public class TCPHeader {
+public class TCPHeader
+{
     private readonly ushort usSourcePort;
     private readonly ushort usDestinationPort;
     private readonly uint uiSequenceNumber = 555;
@@ -20,7 +19,8 @@ public class TCPHeader {
     private readonly ushort usMessageLength;
     private readonly byte[] byTCPData = new byte[128];
 
-    public TCPHeader(byte[] byBuffer, int nReceived) {
+    public TCPHeader(byte[] byBuffer, int nReceived)
+    {
         using MemoryStream memoryStream = new(byBuffer, 0, nReceived);
         using BinaryReader binaryReader = new(memoryStream);
 
@@ -51,8 +51,10 @@ public class TCPHeader {
 
     public string UrgentPointer => (usDataOffsetAndFlags & 0x20) != 0 ? usUrgentPointer.ToString() : string.Empty;
 
-    public string Flags {
-        get {
+    public string Flags
+    {
+        get
+        {
             int nFlags = usDataOffsetAndFlags & 0x3F;
             string strFlags = $"0x{nFlags:x2} (";
 
@@ -65,9 +67,12 @@ public class TCPHeader {
 
             strFlags += ")";
 
-            if (strFlags.Contains("()")) {
-                strFlags = strFlags.Remove(strFlags.Length - 3);
-            } else if (strFlags.Contains(", )")) {
+            if (strFlags.Contains("()"))
+            {
+                strFlags = strFlags[..^3];
+            }
+            else if (strFlags.Contains(", )"))
+            {
                 strFlags = strFlags.Remove(strFlags.Length - 3, 2);
             }
 
