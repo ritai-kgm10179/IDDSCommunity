@@ -1,11 +1,13 @@
 ﻿using System;
-using System.Timers;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
 public class ReportScheduler
 {
-    private Timer? reporter;
+    private readonly TimeProvider timeProvider;
+    private CancellationTokenSource? cancellation;
 
     public event EventHandler? RunDailyReport;
     public event EventHandler? RunWeeklyReport;
@@ -15,9 +17,15 @@ public class ReportScheduler
     /// Initializes a new instance of the <see cref="ReportScheduler"/> class.
     /// </summary>
 
-    private ReportScheduler()
+    private ReportScheduler() : this(TimeProvider.System)
     {
     }
+
+    /// <summary>
+    /// Initializes a scheduler with an explicit time source for deterministic tests.
+    /// </summary>
+    /// <param name="timeProvider">The source of current time and timer ticks.</param>
+    internal ReportScheduler(TimeProvider timeProvider) => this.timeProvider = timeProvider;
 
     private static ReportScheduler? _instance;
     public static ReportScheduler Instance
@@ -27,7 +35,6 @@ public class ReportScheduler
             if (_instance == null)
             {
                 _instance = new ReportScheduler();
-                _instance.Init();
             }
             return _instance;
         }
@@ -36,33 +43,47 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Executes the init operation.
-    /// </summary>
-
-    private void Init()
-    {
-        reporter = new Timer(600000);
-        reporter.Elapsed += new ElapsedEventHandler(reporter_Elapsed);
-    }
-
-    /// <summary>
     /// Starts reporting.
     /// </summary>
 
-    public void StartReporting() => reporter?.Start();
+    public void StartReporting()
+    {
+        if (cancellation is not null)
+            return;
+        cancellation = new CancellationTokenSource();
+        _ = RunAsync(cancellation.Token);
+    }
 
     /// <summary>
-    /// Handles the elapsed event.
+    /// Stops the reporting loop.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
 
-    void reporter_Elapsed(object? sender, ElapsedEventArgs e)
+    public void StopReporting()
     {
-        NotificationSettings.Reload();
-        if (NotificationSettings.Instance.SummaryReportDaily) CheckDailyReport();
-        if (NotificationSettings.Instance.SummaryReportWeekly) CheckWeeklyReport();
-        if (NotificationSettings.Instance.SummaryReportMonthly) CheckMonthlyReport();
+        cancellation?.Cancel();
+        cancellation?.Dispose();
+        cancellation = null;
+    }
+
+    /// <summary>
+    /// Runs the reporting checks at a fixed interval using the configured time provider.
+    /// </summary>
+    /// <param name="cancellationToken">Stops the reporting loop.</param>
+    /// <returns>A task representing the reporting loop.</returns>
+    private async Task RunAsync(CancellationToken cancellationToken)
+    {
+        using PeriodicTimer timer = new(TimeSpan.FromMinutes(10), timeProvider);
+        try
+        {
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                NotificationSettings.Reload();
+                if (NotificationSettings.Instance.SummaryReportDaily) CheckDailyReport();
+                if (NotificationSettings.Instance.SummaryReportWeekly) CheckWeeklyReport();
+                if (NotificationSettings.Instance.SummaryReportMonthly) CheckMonthlyReport();
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
     /// <summary>
@@ -72,7 +93,7 @@ public class ReportScheduler
     public void CheckDailyReport()
     {
         NotificationSettings.Reload();
-        DateTime d = DateTime.Now.AddDays(-1);
+        DateTime d = timeProvider.GetLocalNow().DateTime.AddDays(-1);
         string dailyReportTime = string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day);
         if (!string.Equals(dailyReportTime, NotificationSettings.LastDailyReport))
         {
@@ -90,9 +111,10 @@ public class ReportScheduler
     public void CheckWeeklyReport()
     {
         NotificationSettings.Reload();
-        DateTime d = DateTime.Now.AddDays(-1);
+        DateTime now = timeProvider.GetLocalNow().DateTime;
+        DateTime d = now.AddDays(-1);
         string weeklyReportTime = GetWeekOfYearString(d);
-        if (GetWeekOfYear(d) != GetWeekOfYear(DateTime.Now) && !string.Equals(weeklyReportTime, NotificationSettings.LastWeeklyReport))
+        if (GetWeekOfYear(d) != GetWeekOfYear(now) && !string.Equals(weeklyReportTime, NotificationSettings.LastWeeklyReport))
         {
             // run weekly report
             NotificationSettings.LastWeeklyReport = weeklyReportTime;
@@ -108,9 +130,10 @@ public class ReportScheduler
     public void CheckMonthlyReport()
     {
         NotificationSettings.Reload();
-        DateTime d = DateTime.Now.AddDays(-1);
+        DateTime now = timeProvider.GetLocalNow().DateTime;
+        DateTime d = now.AddDays(-1);
         string monthlyReportTime = string.Format("{0}-{1}", d.Year, d.Month);
-        if (d.Month != DateTime.Now.Month && !string.Equals(monthlyReportTime, NotificationSettings.LastMonthlyReport))
+        if (d.Month != now.Month && !string.Equals(monthlyReportTime, NotificationSettings.LastMonthlyReport))
         {
             // run monthly report
             NotificationSettings.LastMonthlyReport = monthlyReportTime;

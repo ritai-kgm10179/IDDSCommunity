@@ -557,6 +557,7 @@ Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_R
     /// </summary>
     internal void StopHostedService()
     {
+        ReportScheduler.Instance.StopReporting();
         SecurityAgents.Instance.StopAgents();
         cleanupTimer.Enabled = false;
         WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
