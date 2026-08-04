@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
+using Dapper;
 using Microsoft.Data.Sqlite;
 
 namespace Cyberarms.IntrusionDetection.Shared;
@@ -76,11 +79,10 @@ public class Database
 
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        IDbCommand cmd = PrepareCommand(sqlString, parameters);
-        if (transaction != null) cmd.Transaction = transaction;
+        var paramObj = BuildDynamicParameters(parameters);
         try
         {
-            return cmd.ExecuteReader();
+            return Connection.ExecuteReader(sqlString, paramObj, transaction);
         }
         catch
         {
@@ -89,7 +91,7 @@ public class Database
                 System.Threading.Thread.Sleep(500);
                 try
                 {
-                    return cmd.ExecuteReader();
+                    return Connection.ExecuteReader(sqlString, paramObj, transaction);
                 }
                 catch { }
             }
@@ -104,11 +106,10 @@ public class Database
 
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        IDbCommand cmd = PrepareCommand(sqlString, parameters);
+        var paramObj = BuildDynamicParameters(parameters);
         try
         {
-            if (transaction != null) cmd.Transaction = transaction;
-            cmd.ExecuteNonQuery();
+            Connection.Execute(sqlString, paramObj, transaction);
         }
         catch
         {
@@ -116,8 +117,7 @@ public class Database
             {
                 using IDbConnection conn = new SqliteConnection(Connection.ConnectionString);
                 if (conn.State != ConnectionState.Open) conn.Open();
-                cmd.Connection = conn;
-                cmd.ExecuteNonQuery();
+                conn.Execute(sqlString, paramObj, transaction);
             }
             catch
             {
@@ -126,7 +126,7 @@ public class Database
                     System.Threading.Thread.Sleep(500);
                     try
                     {
-                        cmd.ExecuteNonQuery();
+                        Connection.Execute(sqlString, paramObj, transaction);
                         return;
                     }
                     catch { }
@@ -136,22 +136,6 @@ public class Database
         }
     }
 
-    private IDbCommand PrepareCommand(string sqlString, params object[] parameters)
-    {
-        IDbCommand cmd = Connection.CreateCommand();
-        cmd.CommandText = sqlString;
-        cmd.CommandType = CommandType.Text;
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            IDbDataParameter p = cmd.CreateParameter();
-            p.ParameterName = "@p" + i;
-            p.Value = parameters[i] ?? DBNull.Value;
-            cmd.Parameters.Add(p);
-        }
-        cmd.Prepare();
-        return cmd;
-    }
-
     public object? ExecuteScalar(string sqlString, params object[] parameters)
     {
         return ExecuteScalar(sqlString, null, parameters);
@@ -159,12 +143,10 @@ public class Database
 
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        IDbCommand cmd = PrepareCommand(sqlString, parameters);
-        if (transaction != null) cmd.Transaction = transaction;
-
+        var paramObj = BuildDynamicParameters(parameters);
         try
         {
-            return cmd.ExecuteScalar();
+            return Connection.ExecuteScalar(sqlString, paramObj, transaction);
         }
         catch
         {
@@ -173,7 +155,7 @@ public class Database
                 System.Threading.Thread.Sleep(500);
                 try
                 {
-                    return cmd.ExecuteScalar();
+                    return Connection.ExecuteScalar(sqlString, paramObj, transaction);
                 }
                 catch { }
             }
@@ -181,16 +163,37 @@ public class Database
         }
     }
 
+    public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
+    {
+        return Connection.Query<T>(sqlString, param, transaction);
+    }
+
+    public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
+    {
+        return Connection.QueryFirstOrDefault<T>(sqlString, param, transaction);
+    }
+
+    private static DynamicParameters? BuildDynamicParameters(object[] parameters)
+    {
+        if (parameters == null || parameters.Length == 0) return null;
+        DynamicParameters dynParams = new();
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            object? val = parameters[i];
+            if (val is DBNull) val = null;
+            dynParams.Add("p" + i, val);
+        }
+        return dynParams;
+    }
+
     public int DatabaseVersion { get; set; }
 
     private void OpenOrCreate()
     {
-        IDbCommand cmd = Connection.CreateCommand();
         string? version = null;
         try
         {
-            cmd.CommandText = "Select Version from DbConfig";
-            version = cmd.ExecuteScalar()?.ToString();
+            version = Connection.ExecuteScalar<string>("Select Version from DbConfig");
         }
         catch (Exception sqEx)
         {
@@ -201,7 +204,8 @@ public class Database
         {
             Db.DbUpgrader upgrader = new();
             upgrader.RunUpgradeScripts(Connection);
-            if (int.TryParse(cmd.ExecuteScalar()?.ToString(), out int versionNumber))
+            var versionObj = Connection.ExecuteScalar("Select Version from DbConfig");
+            if (int.TryParse(versionObj?.ToString(), out int versionNumber))
             {
                 DatabaseVersion = versionNumber;
             }
