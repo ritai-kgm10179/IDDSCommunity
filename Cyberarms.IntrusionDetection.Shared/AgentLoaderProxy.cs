@@ -8,6 +8,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 [Serializable]
 public class AgentLoaderProxy : MarshalByRefObject
 {
+    private readonly List<AgentPluginLoadContext> loadContexts = [];
     /// <summary>
     /// Gets security agents.
     /// </summary>
@@ -16,7 +17,10 @@ public class AgentLoaderProxy : MarshalByRefObject
 
     public List<SecurityAgent> GetSecurityAgents(string fileName)
     {
-        var assembly = Assembly.LoadFile(fileName);
+        string pluginPath = System.IO.Path.GetFullPath(fileName);
+        AgentPluginLoadContext loadContext = new(pluginPath);
+        var assembly = loadContext.LoadFromAssemblyPath(pluginPath);
+        loadContexts.Add(loadContext);
         List<SecurityAgent> result = [];
         foreach (Type type in assembly.GetTypes())
         {
@@ -30,7 +34,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                     try
                     {
                         string typeName = type.FullName ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent type has no full name."));
-                        object? instance = Activator.CreateInstanceFrom(fileName, typeName)?.Unwrap();
+                        object? instance = Activator.CreateInstance(type);
                         if (instance is IAgentPlugin agentPlugin)
                         {
                             SecurityAgent securityAgent = new()

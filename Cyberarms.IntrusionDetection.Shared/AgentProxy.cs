@@ -16,6 +16,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     private readonly System.Threading.Lock _lock = new();
 
     private readonly IAgentPlugin _agent;
+    private readonly AgentPluginLoadContext loadContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentProxy"/> class.
@@ -25,7 +26,12 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public AgentProxy(string assemblyFilename, string typeName)
     {
-        object? instance = Activator.CreateInstanceFrom(assemblyFilename, typeName)?.Unwrap();
+        string pluginPath = System.IO.Path.GetFullPath(assemblyFilename);
+        loadContext = new AgentPluginLoadContext(pluginPath);
+        System.Reflection.Assembly assembly = loadContext.LoadFromAssemblyPath(pluginPath);
+        Type pluginType = assembly.GetType(typeName, throwOnError: true)
+            ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unable to resolve the requested agent plugin type."));
+        object? instance = Activator.CreateInstance(pluginType);
         _agent = instance as IAgentPlugin
             ?? throw new InvalidOperationException($"Unable to create agent plugin '{typeName}' from '{assemblyFilename}'.");
         _agent.AttackDetected += agent_AttackDetected;
@@ -148,5 +154,10 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// Executes the dispose operation.
     /// </summary>
 
-    public void Dispose() => GC.SuppressFinalize(this);
+    public void Dispose()
+    {
+        _agent.AttackDetected -= agent_AttackDetected;
+        loadContext.Unload();
+        GC.SuppressFinalize(this);
+    }
 }
