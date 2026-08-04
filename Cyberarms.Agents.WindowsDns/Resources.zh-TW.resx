@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS 安全防護 Agent</value></data>
+  <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS Agent 設定無法使用。</value></data>
+  <data name="DNS detection window must be between 1 and 3600 seconds." xml:space="preserve"><value>DNS 偵測時間窗必須介於 1 到 3600 秒。</value></data>
+  <data name="DNS detection thresholds must be greater than zero." xml:space="preserve"><value>DNS 偵測門檻必須大於零。</value></data>
+  <data name="DNS tracked client capacity must be between 100 and 1000000." xml:space="preserve"><value>DNS 追蹤用戶端容量必須介於 100 到 1000000。</value></data>
+  <data name="Windows DNS event subscription failed." xml:space="preserve"><value>Windows DNS 事件訂閱失敗。</value></data>
+  <data name="DNS query-rate threshold exceeded by {0}." xml:space="preserve"><value>{0} 超過 DNS 查詢速率門檻。</value></data>
+  <data name="DNS NXDOMAIN threshold exceeded by {0}." xml:space="preserve"><value>{0} 超過 DNS NXDOMAIN 門檻。</value></data>
+  <data name="DNS ANY-query threshold exceeded by {0}." xml:space="preserve"><value>{0} 超過 DNS ANY 查詢門檻。</value></data>
+  <data name="DNS dynamic-update threshold exceeded by {0}." xml:space="preserve"><value>{0} 超過 DNS 動態更新門檻。</value></data>
+  <data name="DNS zone-transfer threshold exceeded by {0}." xml:space="preserve"><value>{0} 超過 DNS 區域傳送門檻。</value></data>
+  <data name="Suspicious DNS activity was detected from {0}." xml:space="preserve"><value>偵測到來自 {0} 的可疑 DNS 活動。</value></data>
+</root>
