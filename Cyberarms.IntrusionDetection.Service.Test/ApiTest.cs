@@ -2,7 +2,7 @@
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Xml.Serialization;
 
-namespace IdsServiceForWindowsTest;
+namespace Cyberarms.IntrusionDetection.Service.Test;
 
 /// <summary>
 /// Summary description for ApiTest
@@ -25,14 +25,7 @@ public class ApiTest
     ///</summary>
     public TestContext TestContext
     {
-        get
-        {
-            return testContextInstance;
-        }
-        set
-        {
-            testContextInstance = value;
-        }
+        get => testContextInstance; set => testContextInstance = value;
     }
 
     #region Additional test attributes

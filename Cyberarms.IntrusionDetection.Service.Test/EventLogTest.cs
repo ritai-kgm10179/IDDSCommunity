@@ -1,9 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
-using Cyberarms.IntrusionDetection;
 
-namespace IdsServiceForWindowsTest;
+namespace Cyberarms.IntrusionDetection.Service.Test;
 
 [TestClass]
 public class EventLogTest

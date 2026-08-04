@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -51,7 +51,7 @@ public class Statistics
         IncreaseStatistics(agent, "SoftLocks");
     }
 
-    public void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
+    public static void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
     {
         string sqlString = $"Update AgentStatistics set {statisticsColumn}={statisticsColumn}+1 where AgentId=@p0";
         Database.Instance.ExecuteNonQuery(sqlString, agent.Id);

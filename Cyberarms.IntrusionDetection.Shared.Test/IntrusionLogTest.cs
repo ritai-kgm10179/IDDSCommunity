@@ -7,10 +7,7 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 [TestClass]
 public class IntrusionLogTest
 {
-    public IntrusionLogTest()
-    {
-        Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
-    }
+    public IntrusionLogTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
 
     [TestMethod]
     public void ReadIntervalTest()
@@ -36,7 +33,7 @@ public class IntrusionLogTest
     {
     }
 
-    private void prepareIntrusionLog()
+    private static void prepareIntrusionLog()
     {
         Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1), null, "10.10.1.1", 0, false);
         Database.Instance.ExecuteNonQuery(INSERT_COMMAND, DateTime.Now.AddHours(-1).AddMinutes(-1), null, "10.10.1.1", 0, false);

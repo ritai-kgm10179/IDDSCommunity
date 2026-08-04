@@ -15,15 +15,9 @@ public class Sniffer
 
     private bool aborted = false;
 
-    public void Abort()
-    {
-        aborted = true;
-    }
+    public void Abort() => aborted = true;
 
-    public void Continue()
-    {
-        aborted = false;
-    }
+    public void Continue() => aborted = false;
 
     public int? TcpPort { get; set; }
 
@@ -40,12 +34,12 @@ public class Sniffer
             {
                 ExclusiveAddressUse = false
             };
-            ipSocket.Bind(new IPEndPoint(IPAddress, TcpPort.HasValue ? TcpPort.Value : 3389));
+            ipSocket.Bind(new IPEndPoint(IPAddress, TcpPort ?? 3389));
             ipSocket.SetSocketOption(SocketOptionLevel.IP,
                 SocketOptionName.HeaderIncluded,
                 true);
-            byte[] byTrue = new byte[4] { 3, 0, 0, 0 };
-            byte[] byOut = new byte[4] { 1, 0, 0, 0 };  // capture outgoing packets
+            byte[] byTrue = [3, 0, 0, 0];
+            byte[] byOut = [1, 0, 0, 0];  // capture outgoing packets
             ipSocket.IOControl(IOControlCode.ReceiveAll,
                 byTrue, byOut);
 
@@ -90,27 +84,12 @@ public class Sniffer
         }
     }
 
-    private void OnPacketSent(IPHeader ipHeader)
-    {
-        if (IpPacketSent != null)
-        {
-            IpPacketSent(ipHeader, EventArgs.Empty);
-        }
-    }
+    private void OnPacketSent(IPHeader ipHeader) => IpPacketSent?.Invoke(ipHeader, EventArgs.Empty);
 
-    private void OnPacketReceived(IPHeader ipHeader)
-    {
-        if (IpPacketReceived != null)
-        {
-            IpPacketReceived(ipHeader, EventArgs.Empty);
-        }
-    }
+    private void OnPacketReceived(IPHeader ipHeader) => IpPacketReceived?.Invoke(ipHeader, EventArgs.Empty);
 
 
-    public void CloseSocket()
-    {
-        ipSocket.Close();
-    }
+    public void CloseSocket() => ipSocket.Close();
 
     public static void LogTrace(Exception ex)
     {
@@ -124,7 +103,7 @@ public class Sniffer
         catch { }
         finally
         {
-            if (sw != null) sw.Close();
+            sw?.Close();
         }
     }
 

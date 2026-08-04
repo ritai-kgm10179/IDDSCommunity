@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Net.Mail;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using MailKit.Security;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -14,15 +15,11 @@ public partial class PanelSmtpSettings : UserControl
     public PanelSmtpSettings()
     {
         InitializeComponent();
-        this.BackColor = Color.White;
-        this.Load += new EventHandler(PanelSmtpSettings_Load);
+        BackColor = Color.White;
+        Load += new EventHandler(PanelSmtpSettings_Load);
     }
 
-    void PanelSmtpSettings_Load(object sender, EventArgs e)
-    {
-        LoadData();
-
-    }
+    void PanelSmtpSettings_Load(object sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
 
@@ -38,12 +35,12 @@ public partial class PanelSmtpSettings : UserControl
     {
         if (!IsInEditMode)
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
+            pictureBoxEdit.Image = Properties.Resources.button25px_delete;
             IsInEditMode = true;
         }
         else
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
+            pictureBoxEdit.Image = Properties.Resources.button25px_edit;
             IsInEditMode = false;
         }
         pictureBoxSave.Visible = IsInEditMode;
@@ -75,17 +72,13 @@ public partial class PanelSmtpSettings : UserControl
 
     }
 
-    private void OnSmtpSettingsChanged()
-    {
-        if (SmtpSettingsChanged != null) SmtpSettingsChanged(this, EventArgs.Empty);
-    }
+    private void OnSmtpSettingsChanged() => SmtpSettingsChanged?.Invoke(this, EventArgs.Empty);
 
     private bool CheckFormData()
     {
-        int smtpPort;
         bool hasError = false;
         ClearErrors();
-        if (!int.TryParse(textBoxSmtpPort.Text, out smtpPort))
+        if (!int.TryParse(textBoxSmtpPort.Text, out int smtpPort))
         {
             errSmtpPort.Visible = true;
             hasError = true;
@@ -95,10 +88,7 @@ public partial class PanelSmtpSettings : UserControl
 
 
 
-    private void ClearErrors()
-    {
-        errSmtpPort.Visible = false;
-    }
+    private void ClearErrors() => errSmtpPort.Visible = false;
 
     private void buttonTestSmtpSettings_Click(object sender, EventArgs e)
     {
@@ -116,7 +106,7 @@ public partial class PanelSmtpSettings : UserControl
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();
                 int port = int.Parse(textBoxSmtpPort.Text);
-                var secureOption = checkBoxUseSSL.Checked ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
+                SecureSocketOptions secureOption = checkBoxUseSSL.Checked ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
                 client.Connect(textBoxSmtpServer.Text, port, secureOption);
 
                 if (checkBoxAuthentication.Checked)
@@ -169,15 +159,9 @@ public partial class PanelSmtpSettings : UserControl
         SetEditMode(false);
     }
 
-    private void buttonDiscard_Click(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {
@@ -185,9 +169,6 @@ public partial class PanelSmtpSettings : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 
 }

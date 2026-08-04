@@ -4,12 +4,13 @@ using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace Cyberarms.Agents.FileMaker;
 
 [Plugin("Intrusion Detection Base Windows Security Agent", "This agent scans and monitors the system eventlog for possible attacks.")]
 
-public class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
+public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
 {
 
 
@@ -43,25 +44,19 @@ public class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         query = new EventLogQuery("Application", PathType.LogName,
             string.Format(EVENT_LOG_QUERY_FILEMAKER_LOGIN_DENIED));
         watcher = new EventLogWatcher(query);
-        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
+        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
 
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -73,24 +68,23 @@ public class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
             foreach (EventProperty prop in e.EventRecord.Properties)
             {
-                if (Regex.IsMatch(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}"))
+                if (MyRegex().IsMatch(prop.Value.ToString()))
                 {
-                    Match ipAddress = Regex.Match(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}");
+                    Match ipAddress = MyRegex().Match(prop.Value.ToString());
                     NotificationEventArgs args = new()
                     {
                         CreateDate = e.EventRecord.TimeCreated.Value,
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress.Value
                     };
-                    System.Net.IPAddress ip;
-                    System.Net.IPAddress.TryParse(args.IpAddress, out ip);
+                    IPAddress.TryParse(args.IpAddress, out IPAddress ip);
                     if (ip != null && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
                         OnAttackDetected(this, args);
@@ -118,61 +112,29 @@ public class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "FileMaker Security Agent";
-        }
-        set
-        {
-            throw new NotSupportedException("DisplayName cannot be changed!");
-        }
+        get => "FileMaker Security Agent"; set => throw new NotSupportedException("DisplayName cannot be changed!");
     }
 
-    private Image _icon = global::Cyberarms.Agents.FileMaker.FileMakerResource.agent15px_filemaker_dark;
+    private Image _icon = FileMakerResource.agent15px_filemaker_dark;
     public Image Icon
     {
-        get
-        {
-            return _icon;
-        }
-        set
-        {
-            _icon = value;
-        }
+        get => _icon; set => _icon = value;
     }
 
-    private Image _selectedIcon = global::Cyberarms.Agents.FileMaker.FileMakerResource.agent15px_filemaker_white;
+    private Image _selectedIcon = FileMakerResource.agent15px_filemaker_white;
     public Image SelectedIcon
     {
-        get
-        {
-            return _selectedIcon;
-        }
-        set
-        {
-            _selectedIcon = value;
-        }
+        get => _selectedIcon; set => _selectedIcon = value;
     }
 
-    private Image _unselectedIcon = global::Cyberarms.Agents.FileMaker.FileMakerResource.agent15px_filemaker_dark;
+    private Image _unselectedIcon = FileMakerResource.agent15px_filemaker_dark;
     public Image UnselectedIcon
     {
-        get
-        {
-            return _unselectedIcon;
-        }
-        set
-        {
-            _unselectedIcon = value;
-        }
+        get => _unselectedIcon; set => _unselectedIcon = value;
     }
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
-        }
-    }
+    public Guid Id => new("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
 
+    [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    private static partial Regex MyRegex();
 }

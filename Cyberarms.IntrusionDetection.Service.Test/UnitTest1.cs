@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics.Eventing.Reader;
-namespace IdsServiceForWindowsTest;
+namespace Cyberarms.IntrusionDetection.Service.Test;
 
 [TestClass]
 public class UnitTest1
@@ -34,7 +34,7 @@ public class UnitTest1
                     System.Diagnostics.Debug.Print(s);
 
                 }
-                string[] xPathProperties = new string[1] { @"Event/EventData/Data[@Name=""IpAddress""]" };
+                string[] xPathProperties = [@"Event/EventData/Data[@Name=""IpAddress""]"];
 
                 EventLogPropertySelector props = new(xPathProperties);
                 System.Diagnostics.Debug.Print(((EventLogRecord)eventRecord).GetPropertyValues(props)[0].ToString());
@@ -57,7 +57,7 @@ public class UnitTest1
     {
         try
         {
-            Cyberarms.IntrusionDetection.WindowsLogManager.Instance.WriteEntry("Test from unit test", System.Diagnostics.EventLogEntryType.Information, 1, 1);
+            WindowsLogManager.Instance.WriteEntry("Test from unit test", System.Diagnostics.EventLogEntryType.Information, 1, 1);
         }
         catch (System.Security.SecurityException)
         {

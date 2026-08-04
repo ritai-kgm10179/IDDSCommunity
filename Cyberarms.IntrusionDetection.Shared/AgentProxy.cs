@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cyberarms.IntrusionDetection.Api.Plugin;
@@ -47,9 +47,9 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         set => _agent.Configuration = value;
     }
 
-    public long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
+    public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 
-    public TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
+    public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
 
     public void EnableMonitoring()
     {
@@ -80,8 +80,5 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public void DisableMonitoring() => _watchdog = null;
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
+    public void Dispose() => GC.SuppressFinalize(this);
 }

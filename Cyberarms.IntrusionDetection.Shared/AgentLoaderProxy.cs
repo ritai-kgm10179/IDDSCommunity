@@ -10,8 +10,8 @@ public class AgentLoaderProxy : MarshalByRefObject
 {
     public List<SecurityAgent> GetSecurityAgents(string fileName)
     {
-        Assembly assembly = Assembly.LoadFile(fileName);
-        List<SecurityAgent> result = new();
+        var assembly = Assembly.LoadFile(fileName);
+        List<SecurityAgent> result = [];
         foreach (Type type in assembly.GetTypes())
         {
             if (type.IsPublic && !type.IsAbstract)
@@ -23,7 +23,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                 {
                     try
                     {
-                        IAgentPlugin agentPlugin = (IAgentPlugin)Activator.CreateInstanceFrom(fileName, type.FullName.ToString()).Unwrap();
+                        var agentPlugin = (IAgentPlugin)Activator.CreateInstanceFrom(fileName, type.FullName.ToString()).Unwrap();
                         if (agentPlugin != null)
                         {
                             SecurityAgent securityAgent = new()
@@ -32,7 +32,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                             };
                             if (agentPlugin is IExtendedInformation)
                             {
-                                IExtendedInformation exInfo = (IExtendedInformation)agentPlugin;
+                                var exInfo = (IExtendedInformation)agentPlugin;
                                 securityAgent.DisplayName = exInfo.DisplayName;
                                 securityAgent.UnselectedIcon = exInfo.UnselectedIcon;
                                 securityAgent.SelectedIcon = exInfo.SelectedIcon;
@@ -42,9 +42,9 @@ public class AgentLoaderProxy : MarshalByRefObject
                             else
                             {
                                 securityAgent.DisplayName = type.FullName;
-                                securityAgent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_default_dark;
-                                securityAgent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_default_white;
-                                securityAgent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_default_dark;
+                                securityAgent.UnselectedIcon = Resources.agent15px_default_dark;
+                                securityAgent.SelectedIcon = Resources.agent15px_default_white;
+                                securityAgent.Icon = Resources.agent15px_default_dark;
                             }
                             securityAgent.Name = type.FullName;
                             securityAgent.Enabled = false;
@@ -77,9 +77,9 @@ public class AgentLoaderProxy : MarshalByRefObject
     }
 
 
-    public Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
+    public static Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
     {
-        Dictionary<string, string> result = new();
+        Dictionary<string, string> result = [];
         foreach (PropertyInfo pi in config.GetType().GetProperties())
         {
             result.Add(pi.Name, pi.GetValue(config, null).ToString());

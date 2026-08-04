@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -31,7 +31,7 @@ public class SecurityAgents : List<SecurityAgent>
 
     public void InitializeAgents()
     {
-        this.Clear();
+        Clear();
         if (!Database.Instance.IsConfigured)
         {
             throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
@@ -57,7 +57,7 @@ public class SecurityAgents : List<SecurityAgent>
                 Serial = Db.DbValueConverter.ToInt(rdr["Serial"])
             };
             //agent.LoadCustomConfig();
-            this.Add(agent);
+            Add(agent);
         }
         rdr.Close();
     }
@@ -65,7 +65,7 @@ public class SecurityAgents : List<SecurityAgent>
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
         if (string.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException("Application is not initialized.");
-        List<SecurityAgent> result = new();
+        List<SecurityAgent> result = [];
 #if NETFRAMEWORK
         AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
         System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
@@ -84,7 +84,7 @@ public class SecurityAgents : List<SecurityAgent>
             if (!fileName.Contains(".Api.dll"))
             {
                 Type tProxy = typeof(AgentLoaderProxy);
-                AgentLoaderProxy proxy = (AgentLoaderProxy)CurrentDomain.CreateInstanceAndUnwrap(
+                var proxy = (AgentLoaderProxy)CurrentDomain.CreateInstanceAndUnwrap(
                     tProxy.Assembly.FullName,
                     tProxy.FullName);
                 List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
@@ -137,10 +137,7 @@ public class SecurityAgents : List<SecurityAgent>
         return string.Format("Agent {0} is not registered.", agentId);
     }
 
-    public void RegisterSecurityAgents()
-    {
-        MergeDbInformation(ReadAgentsFromDisk());
-    }
+    public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
     public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; }
 
@@ -176,14 +173,11 @@ public class SecurityAgents : List<SecurityAgent>
         }
     }
 
-    void AppDomain_DomainUnload(object sender, EventArgs e)
-    {
-        System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
-    }
+    void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
 
     public void LoadAgents()
     {
-        if (LoadedAgents == null) LoadedAgents = new Dictionary<SecurityAgent, AgentProxy>();
+        LoadedAgents ??= [];
         if (LoadedAgents.Count > 0) UnloadAgents();
         foreach (SecurityAgent agent in this)
         {
@@ -217,8 +211,7 @@ public class SecurityAgents : List<SecurityAgent>
                             {
                                 if (pi.PropertyType == typeof(int))
                                 {
-                                    int result;
-                                    int.TryParse(agent.CustomConfiguration[pi.Name], out result);
+                                    int.TryParse(agent.CustomConfiguration[pi.Name], out int result);
                                     pi.SetValue(pc, result, null);
                                 }
                             }
@@ -285,14 +278,13 @@ public class SecurityAgents : List<SecurityAgent>
 
     public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
     {
-        List<SecurityAgent> result = new();
-        result.AddRange(agents);
+        List<SecurityAgent> result = [.. agents];
         foreach (SecurityAgent agent in this)
         {
             int listIndex = GetListIndex(result, agent.Name);
-            SecurityAgent a = (SecurityAgent)result.Find(x => x.Id == agent.Id);
+            SecurityAgent? a = result.Find(x => x.Id == agent.Id);
             // fallback if previous installation was made
-            if (a == null) a = (SecurityAgent)result.Find(x => x.Name == agent.Name);
+            a ??= (result.Find(x => x.Name == agent.Name));
 
             if (a != null)
             {
@@ -308,12 +300,12 @@ public class SecurityAgents : List<SecurityAgent>
             }
             else
             {
-                agent.Icon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-                agent.SelectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_white;
-                agent.UnselectedIcon = global::Cyberarms.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
+                agent.Icon = Resources.agent15px_custom_dark;
+                agent.SelectedIcon = Resources.agent15px_custom_white;
+                agent.UnselectedIcon = Resources.agent15px_custom_dark;
                 agent.BinaryMissing = true;
                 agent.Enabled = false;
-                this.Remove(a);
+                Remove(a);
             }
             //int listIndex = GetListIndex(result, agent.Name);
             //if (listIndex >= 0) {
@@ -338,11 +330,11 @@ public class SecurityAgents : List<SecurityAgent>
         {
             agent.Enabled = false;
         }
-        this.AddRange(result);
-        return (List<SecurityAgent>)this;
+        AddRange(result);
+        return this;
     }
 
-    private int GetListIndex(List<SecurityAgent> list, string name)
+    private static int GetListIndex(List<SecurityAgent> list, string name)
     {
         for (int i = 0; i < list.Count; i++)
         {

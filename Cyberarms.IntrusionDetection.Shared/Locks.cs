@@ -15,8 +15,7 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             object result = Database.Instance.ExecuteScalar("select count(*) from Locks where LastUpdate>@p0", lastUpdate);
-            int count;
-            if (result != null && int.TryParse(result.ToString(), out count))
+            if (result != null && int.TryParse(result.ToString(), out int count))
             {
                 return count > 0;
             }
@@ -50,12 +49,11 @@ public class Locks
 
     public static int Today()
     {
-        int result;
         if (Database.Instance.IsConfigured)
         {
             object queryResult = Database.Instance.ExecuteScalar(@"select count(*) from IntrusionLog where (action=@p0 or action=@p1) and IncidentTime>@p2",
                 IntrusionLog.STATUS_SOFT_LOCKED, IntrusionLog.STATUS_HARD_LOCKED, DateTime.Now.AddDays(-1));
-            if (int.TryParse(queryResult.ToString(), out result))
+            if (int.TryParse(queryResult.ToString(), out int result))
             {
                 return result;
             }
@@ -73,24 +71,21 @@ public class Locks
     public static int ReadCurrentSoftLocks()
     {
         object result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0) ", (int)LockStatus.SoftLocked);
-        int softLocks = 0;
-        int.TryParse(result.ToString(), out softLocks);
+        int.TryParse(result.ToString(), out int softLocks);
         return softLocks;
     }
 
     public static int ReadCurrentHardLocks()
     {
         object result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0)", (int)LockStatus.HardLocked);
-        int hardLocks = 0;
-        int.TryParse(result.ToString(), out hardLocks);
+        int.TryParse(result.ToString(), out int hardLocks);
         return hardLocks;
     }
 
     public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
     {
         object result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
-        int intrusionAttempts = 0;
-        int.TryParse(result.ToString(), out intrusionAttempts);
+        int.TryParse(result.ToString(), out int intrusionAttempts);
         return intrusionAttempts;
     }
 
@@ -98,7 +93,7 @@ public class Locks
     {
         if (Database.Instance.IsConfigured)
         {
-            List<Lock> result = new();
+            List<Lock> result = [];
             string sqlString = @"select LockId, LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress from Locks where status in (@p0,@p1)";
             IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
             while (rdr.Read())
@@ -219,7 +214,7 @@ public class Locks
 
     public static List<Lock> GetUnlockList()
     {
-        List<Lock> result = new();
+        List<Lock> result = [];
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"select * from Locks where (UnlockDate<@p0 and (status=@p1 or status=@p2)) or status=@p3";

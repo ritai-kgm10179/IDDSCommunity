@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -35,10 +35,8 @@ public class IddsConfig
             }
             return _instance;
         }
-        set
-        {
-            _instance = value;
-        }
+
+        set => _instance = value;
     }
 
     private string? _pluginsDirectory;
@@ -143,10 +141,7 @@ public class IddsConfig
         }
     }
 
-    public void LoadAppConfig()
-    {
-        _appConfig = LoadConfig("AppConfig");
-    }
+    public void LoadAppConfig() => _appConfig = LoadConfig("AppConfig");
 
     public string GetConfigValue(string key)
     {
@@ -176,8 +171,7 @@ public class IddsConfig
             foreach (string key in AppConfig.Keys)
             {
                 object exists = Database.Instance.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
-                int count;
-                if (exists != null && int.TryParse(exists.ToString(), out count) && count > 0)
+                if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
                 {
                     Database.Instance.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
                 }
@@ -202,7 +196,7 @@ public class IddsConfig
     private Dictionary<string, string> LoadConfig(string configTable)
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
-        Dictionary<string, string> config = new();
+        Dictionary<string, string> config = [];
         IDataReader rdr = Database.Instance.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
         while (rdr.Read())
         {
@@ -212,10 +206,7 @@ public class IddsConfig
         return config;
     }
 
-    public void LoadSafeNetworks()
-    {
-        SafeNetworks = LoadNetworkList("WhiteList");
-    }
+    public void LoadSafeNetworks() => SafeNetworks = LoadNetworkList("WhiteList");
 
     public void SaveSafeNetworks()
     {
@@ -240,7 +231,7 @@ public class IddsConfig
     public CSafeNetworks LoadNetworkList(string list)
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
-        CSafeNetworks net = new();
+        CSafeNetworks net = [];
         IDataReader rdr = Database.Instance.ExecuteReader(string.Format("Select IpAddress, NetworkMask from {0}", list));
         while (rdr.Read())
         {
@@ -308,16 +299,11 @@ public class IddsConfig
     {
         get
         {
-            if (_safeNetworks == null)
-            {
-                _safeNetworks = SafeNetworks = LoadNetworkList("WhiteList");
-            }
+            _safeNetworks ??= SafeNetworks = LoadNetworkList("WhiteList");
             return _safeNetworks;
         }
-        set
-        {
-            _safeNetworks = value;
-        }
+
+        set => _safeNetworks = value;
     }
 
     public static IddsConfig GetDefaultConfiguration()
@@ -330,8 +316,8 @@ public class IddsConfig
             SoftLockTimeMinutes = 30,
             LockForever = false,
             UseSafeNetworkList = false,
-            SafeNetworks = new CSafeNetworks(),
-            SenderEmailAddress = "Cyberarms.IDDS@" + System.Net.Dns.GetHostEntry("localhost").HostName
+            SafeNetworks = [],
+            SenderEmailAddress = "Cyberarms.IDDS@" + Dns.GetHostEntry("localhost").HostName
         };
         //config.AgentConfigurations.GetAgentConfig(PluginDirectory + "Cyberarms.IntrusionDetection.Base.Plugins.dll", "WindowsSecurityBase");
         //config.AgentConfigurations[0].Enabled = true;
@@ -343,20 +329,14 @@ public class IddsConfig
     {
         public string IpAddress { get; set; }
         public string SubnetMask { get; set; }
-        public string DisplayName
-        {
-            get
-            {
-                return string.Format("{0}/{1}", IpAddress, SubnetMask);
-            }
-        }
+        public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
         public CSafeNetwork()
         {
         }
         public CSafeNetwork(string ipAddress, string subnetmask)
         {
-            this.IpAddress = ipAddress;
-            this.SubnetMask = subnetmask;
+            IpAddress = ipAddress;
+            SubnetMask = subnetmask;
         }
     }
 
@@ -376,14 +356,7 @@ public class IddsConfig
 
     public string SmtpPassword
     {
-        get
-        {
-            return _smtpPassword;
-        }
-        set
-        {
-            _smtpPassword = value;
-        }
+        get => _smtpPassword; set => _smtpPassword = value;
     }
 
     public string SenderEmailAddress { get; set; }
@@ -399,8 +372,7 @@ public class IddsConfig
         {
             if (!_isDebug.HasValue)
             {
-                bool isDebug;
-                if (bool.TryParse(GetConfigValue(CONFIG_VALUE_IS_DEBUG), out isDebug))
+                if (bool.TryParse(GetConfigValue(CONFIG_VALUE_IS_DEBUG), out bool isDebug))
                 {
                     _isDebug = isDebug;
                 }
@@ -444,7 +416,7 @@ public class IddsConfig
         bool result = false;
         try
         {
-            IPAddress address = System.Net.IPAddress.Parse(ipAddress);
+            var address = IPAddress.Parse(ipAddress);
             foreach (CSafeNetwork net in SafeNetworks)
             {
                 try
@@ -476,12 +448,9 @@ public class IddsConfig
     }
 
 
-    public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask)
-    {
-        return IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
-    }
+    public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) => IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
 
-    public bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
+    public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
         int count = 0;
         byte[] addressBytes = address.GetAddressBytes();
@@ -513,7 +482,7 @@ public class IddsConfig
     {
         if (_localAddresses == null)
         {
-            _localAddresses = new List<IPAddress>();
+            _localAddresses = [];
             foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
             {
                 System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
@@ -527,7 +496,7 @@ public class IddsConfig
     }
 
 
-    public int GetSubnetMaskBits(string subnetMask)
+    public static int GetSubnetMaskBits(string subnetMask)
     {
         if (!subnetMask.Contains(".") && int.Parse(subnetMask) > 2 && int.Parse(subnetMask) < 33) return int.Parse(subnetMask);
         string[] s = subnetMask.Split('.');
@@ -554,27 +523,16 @@ public class IddsConfig
         throw new ArgumentException("Error while parsing subnet mask");
     }
 
-    public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask)
-    {
-        return IsIpInNetwork(address, networkAddress, subnetMask, 16);
-    }
+    public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
 
-    public static bool IsValidIpAddress(string ipAddress)
-    {
-        IPAddress validIpAddress = null;
-        return System.Net.IPAddress.TryParse(ipAddress, out validIpAddress);
-    }
+    public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress validIpAddress);
 
-    public static bool IsValidSubnetMask(string subnetMask)
-    {
-        return IsValidIpAddress(subnetMask);
-    }
+    public static bool IsValidSubnetMask(string subnetMask) => IsValidIpAddress(subnetMask);
 
     public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
     {
         string ip, net;
-        int subnetMaskBits = 0;
         ipAddressNetwork = ipAddressNetwork.Trim();
         if (!ipAddressNetwork.Contains("/"))
         {
@@ -592,18 +550,19 @@ public class IddsConfig
             {
                 throw new ArgumentException("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!");
             }
+            int subnetMaskBits;
             if (int.TryParse(net, out subnetMaskBits))
             {
-                if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && 7 < subnetMaskBits && subnetMaskBits < 33)
+                if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && 7 < subnetMaskBits && subnetMaskBits < 33)
                 {
                     long netmask = 0;
                     for (int b = 31; b > 31 - subnetMaskBits; b--)
                     {
-                        netmask += (long)Math.Pow(2, (double)b);
+                        netmask += (long)Math.Pow(2, b);
                     }
                     net = netmask.ToString();
                 }
-                else if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                else if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                 {
                     if (subnetMaskBits < 12 || subnetMaskBits > 128)
                     {
@@ -619,8 +578,8 @@ public class IddsConfig
                     throw new ArgumentException("Invalid subnet mask. Please enter the subnet mask either as number from 8 to 32 or in the form xxx.xxx.xxx.xxx!");
                 }
             }
-            ip = System.Net.IPAddress.Parse(ip).ToString();
-            if (System.Net.IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) net = System.Net.IPAddress.Parse(net).ToString();
+            ip = IPAddress.Parse(ip).ToString();
+            if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) net = IPAddress.Parse(net).ToString();
             ipAddressNetwork = ip + "/" + net;
         }
         return ipAddressNetwork;
@@ -629,10 +588,7 @@ public class IddsConfig
 
 
 
-    public void SetSmtpPassword(string password)
-    {
-        SmtpPassword = CryptoHelper.Encrypt(password, true);
-    }
+    public void SetSmtpPassword(string password) => SmtpPassword = CryptoHelper.Encrypt(password, true);
 
 
     //        public void WriteAgentConfiguration(Cyberarms.IntrusionDetection.Api.Plugin.IAgentConfiguration agentConfiguration) {

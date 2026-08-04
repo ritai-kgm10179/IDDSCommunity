@@ -12,7 +12,7 @@ public class Get_ActivationStatus : System.Management.Automation.PSCmdlet
     {
         if (string.IsNullOrEmpty(Options))
         {
-            this.WriteObject(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            WriteObject(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
         }
         else

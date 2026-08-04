@@ -9,9 +9,9 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class IddsAdmin : Form
 {
-    Color buttonHighlight = Color.FromArgb(205, 230, 247);
-    Color buttonPress = Color.FromArgb(105, 130, 147);
-    Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
+    readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
+    readonly Color buttonPress = Color.FromArgb(105, 130, 147);
+    readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
     Timer logReader;
     Timer timerRefreshServiceStatus;
     CyberarmsSecurityLog _panelSecurityLog;
@@ -25,13 +25,13 @@ public partial class IddsAdmin : Form
     public IddsAdmin()
     {
         InitializeComponent();
-        this.Text = "Cyberarms Intrusion Detection - Version " + Application.ProductVersion;
-        this.labelFormText.Text = this.Text;
+        Text = "Cyberarms Intrusion Detection - Version " + Application.ProductVersion;
+        labelFormText.Text = Text;
 
         //            panelContent.Invalidated += new InvalidateEventHandler(panelContent_Invalidated);
         panelContent.Paint += new PaintEventHandler(panelContent_Paint);
 
-        this.Load += new EventHandler(IddsAdmin_Load);
+        Load += new EventHandler(IddsAdmin_Load);
     }
 
     private static IddsAdmin _instance;
@@ -39,13 +39,10 @@ public partial class IddsAdmin : Form
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new IddsAdmin
+            _instance ??= new IddsAdmin
                 {
                     Visible = false
                 };
-            }
             return _instance;
         }
     }
@@ -69,10 +66,7 @@ public partial class IddsAdmin : Form
         }
     }
 
-    void _panelApplicationSettings_ConfigurationChanged(object sender, EventArgs e)
-    {
-        RestartService();
-    }
+    void _panelApplicationSettings_ConfigurationChanged(object sender, EventArgs e) => RestartService();
 
     public CyberarmsAgentConfiguration PanelAgentConfiguration
     {
@@ -92,16 +86,9 @@ public partial class IddsAdmin : Form
         }
     }
 
-    void _panelAgentConfiguration_AgentSettingsChanged(object sender, EventArgs e)
-    {
-        RestartService();
-    }
+    void _panelAgentConfiguration_AgentSettingsChanged(object sender, EventArgs e) => RestartService();
 
-    void _panelAgentConfiguration_PluginsChanged(object sender, EventArgs e)
-    {
-        InitAgentSettings();
-        //RestartService();
-    }
+    void _panelAgentConfiguration_PluginsChanged(object sender, EventArgs e) => InitAgentSettings();//RestartService();
 
     public void RestartService()
     {
@@ -166,7 +153,7 @@ public partial class IddsAdmin : Form
         }
     }
 
-    private void FillLog(IDataReader rdr)
+    private static void FillLog(IDataReader rdr)
     {
     }
 
@@ -208,7 +195,7 @@ public partial class IddsAdmin : Form
         if (sender != null && sender is SecurityAgent)
         {
             ShowMenu(labelMenuAgents);
-            PanelAgentConfiguration.ShowAgentConfig((sender as SecurityAgent));
+            PanelAgentConfiguration.ShowAgentConfig(sender as SecurityAgent);
             PanelAgentConfiguration.BringToFront();
             panelOnlineServices.Hide();
         }
@@ -216,10 +203,7 @@ public partial class IddsAdmin : Form
 
     public bool IsServiceRunning { get; set; }
 
-    void serviceReader_Tick(object sender, EventArgs e)
-    {
-        RefreshServiceStatus();
-    }
+    void serviceReader_Tick(object sender, EventArgs e) => RefreshServiceStatus();
 
 
     public bool ServiceError { get; set; }
@@ -238,9 +222,9 @@ public partial class IddsAdmin : Form
             if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
             {
                 IsServiceRunning = true;
-                pictureBoxStartService.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.service_controller_start_deactivated;
+                pictureBoxStartService.Image = Properties.Resources.service_controller_start_deactivated;
                 pictureBoxStartService.Enabled = false;
-                pictureBoxStopService.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.service_controller_stop;
+                pictureBoxStopService.Image = Properties.Resources.service_controller_stop;
                 pictureBoxStopService.Enabled = true;
                 smartLabelServiceStatus.Text = "Service is running";
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(0, 159, 227);
@@ -248,9 +232,9 @@ public partial class IddsAdmin : Form
             else if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
             {
                 IsServiceRunning = false;
-                pictureBoxStartService.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.service_controller_start;
+                pictureBoxStartService.Image = Properties.Resources.service_controller_start;
                 pictureBoxStartService.Enabled = true;
-                pictureBoxStopService.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.service_controller_stop_deactivated;
+                pictureBoxStopService.Image = Properties.Resources.service_controller_stop_deactivated;
                 pictureBoxStopService.Enabled = false;
                 smartLabelServiceStatus.Text = "Service is stopped";
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(225, 50, 50);
@@ -265,7 +249,7 @@ public partial class IddsAdmin : Form
 
     public bool IsUpdating { get; set; }
 
-    public string GetLogMessage(string agentId, int action)
+    public static string GetLogMessage(string agentId, int action)
     {
         string agentName = SecurityAgents.Instance.GetDisplayName(agentId);
         string message = string.Empty;
@@ -273,7 +257,7 @@ public partial class IddsAdmin : Form
         {
             message = string.Format("{0}: ", agentName);
         }
-        return string.Format("{0}{1}", message, Cyberarms.IntrusionDetection.Shared.IntrusionLog.GetStatusName(action));
+        return string.Format("{0}{1}", message, IntrusionLog.GetStatusName(action));
     }
 
     void logReader_Tick(object sender, EventArgs e)
@@ -309,14 +293,12 @@ public partial class IddsAdmin : Form
                 IDataReader locksReader = Locks.ReadLocks();
                 while (locksReader.Read())
                 {
-                    DateTime lockDate;
-                    DateTime unlockDate;
-                    DateTime.TryParse(locksReader["LockDate"].ToString(), out lockDate);
-                    DateTime.TryParse(locksReader["UnlockDate"].ToString(), out unlockDate);
-                    PanelCurrentLocks.Add(int.Parse(locksReader["LockId"].ToString()), global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.logIcon_softLock,
+                    DateTime.TryParse(locksReader["LockDate"].ToString(), out DateTime lockDate);
+                    DateTime.TryParse(locksReader["UnlockDate"].ToString(), out DateTime unlockDate);
+                    PanelCurrentLocks.Add(int.Parse(locksReader["LockId"].ToString()), Properties.Resources.logIcon_softLock,
                         LockStatusAdapter.GetLockStatusName(int.Parse(locksReader["Status"].ToString())), locksReader["ClientIp"].ToString(),
                         locksReader["DisplayName"].ToString(),
-                        lockDate, unlockDate, IntrusionDetection.Shared.Db.DbValueConverter.ToInt(locksReader["Status"]));
+                        lockDate, unlockDate, Shared.Db.DbValueConverter.ToInt(locksReader["Status"]));
                 }
                 locksReader.Close();
                 locksReader.Dispose();
@@ -340,31 +322,28 @@ public partial class IddsAdmin : Form
                 Dashboard.SetSoftLocks(softLocks);
 
             }
-            if (!IsInitialized || (CurrentMenu == labelMenuHome || CurrentMenu == labelMenuSecurityLog))
+            if (!IsInitialized || CurrentMenu == labelMenuHome || CurrentMenu == labelMenuSecurityLog)
             {
                 // ?? 
             }
         }
         IsInitialized = true;
         IsUpdating = false;
-        System.Diagnostics.Debug.Print(DateTime.Now.Subtract(metering).TotalMilliseconds.ToString());
+        Debug.Print(DateTime.Now.Subtract(metering).TotalMilliseconds.ToString());
     }
 
     public int LastLogId { get; set; }
 
     public DateTime LastLockUpdate { get; set; }
 
-    void panelContent_Invalidated(object sender, InvalidateEventArgs e)
-    {
-        paintPanelTopBorder();
-    }
+    void panelContent_Invalidated(object sender, InvalidateEventArgs e) => paintPanelTopBorder();
 
 
     void paintPanelTopBorder()
     {
         if (CurrentMenu != null)
         {
-            Graphics g = Graphics.FromHwnd(panelContent.Handle);
+            var g = Graphics.FromHwnd(panelContent.Handle);
             Pen borderPen = new(Color.FromArgb(190, 190, 190), 1);
             Pen backgroundPen = new(panelContent.BackColor, 1);
             System.Drawing.Drawing2D.GraphicsPath path = new();
@@ -375,10 +354,7 @@ public partial class IddsAdmin : Form
     }
 
     #region Form basics
-    private void pictureBoxCloseButton_Click(object sender, EventArgs e)
-    {
-        this.Close();
-    }
+    private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
 
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
@@ -388,16 +364,13 @@ public partial class IddsAdmin : Form
 
     public bool IsMoving { get; set; }
     public Point MoveStartPoint { get; set; }
-    private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e)
-    {
-        IsMoving = false;
-    }
+    private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
 
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
         if (IsMoving)
         {
-            this.Location = new Point(this.Location.X + e.X - MoveStartPoint.X, this.Location.Y + e.Y - MoveStartPoint.Y);
+            Location = new Point(Location.X + e.X - MoveStartPoint.X, Location.Y + e.Y - MoveStartPoint.Y);
 
         }
     }
@@ -451,73 +424,50 @@ public partial class IddsAdmin : Form
 
 
 
-    private void closeToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        Close();
-    }
+    private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
-    private void pictureBox1_Click(object sender, EventArgs e)
-    {
-        pictureBox1.ContextMenuStrip.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
-    }
+    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
 
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
         ProcessStartInfo sInfo = new("http://cyberarms.net/iddshelp/");
-        System.Diagnostics.Process.Start(sInfo);
+        Process.Start(sInfo);
     }
 
-    private void pictureBoxMinimizeButton_Click(object sender, EventArgs e)
-    {
-        this.WindowState = FormWindowState.Minimized;
-    }
+    private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
 
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
-        if (this.WindowState != FormWindowState.Maximized)
+        if (WindowState != FormWindowState.Maximized)
         {
-            this.WindowState = FormWindowState.Maximized;
-            pictureBoxMaximizeButton.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.icon_scale;
+            WindowState = FormWindowState.Maximized;
+            pictureBoxMaximizeButton.Image = Properties.Resources.icon_scale;
         }
         else
         {
-            this.WindowState = FormWindowState.Normal;
-            pictureBoxMaximizeButton.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
+            WindowState = FormWindowState.Normal;
+            pictureBoxMaximizeButton.Image = Properties.Resources.icon_maximize;
         }
     }
 
 
-    private void pictureBoxButton_MouseEnter(object sender, EventArgs e)
-    {
-        (sender as Control).BackColor = buttonHighlight;
-    }
+    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) => (sender as Control).BackColor = buttonHighlight;
 
-    private void pictureBoxButton_MouseLeave(object sender, EventArgs e)
-    {
-        (sender as Control).BackColor = buttonNormal;
-    }
+    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) => (sender as Control).BackColor = buttonNormal;
 
-    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e)
-    {
-        (sender as Control).BackColor = buttonPress;
-    }
+    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonPress;
 
-    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e)
-    {
-        (sender as Control).BackColor = buttonNormal;
-    }
+    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonNormal;
 
     private void panelUnsuccessfulLogins_Click(object sender, EventArgs e)
     {
 
     }
 
-    private void IddsAdmin_Load(object sender, EventArgs e)
-    {
+    private void IddsAdmin_Load(object sender, EventArgs e) =>
 
         //@DEMO: List demo agent
         InitAdmin();
-    }
 
     public void InitAgentSettings()
     {
@@ -584,32 +534,29 @@ public partial class IddsAdmin : Form
     public bool IsInitialized { get; set; }
 
 
-    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
-    {
-        eventLogCyberarms.WriteEntry(text, type, eventId, category);
-    }
+    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogCyberarms.WriteEntry(text, type, eventId, category);
 
     private void resizeForm(Point mouseLocation)
     {
-        int deltaX = (resizeStartLocation.X - mouseLocation.X);
-        int deltaY = (resizeStartLocation.Y - mouseLocation.Y);
+        int deltaX = resizeStartLocation.X - mouseLocation.X;
+        int deltaY = resizeStartLocation.Y - mouseLocation.Y;
         if ((resizeDirection & ResizeDirection.Left) == ResizeDirection.Left)
         {
-            this.Left += -deltaX;
-            this.Width += deltaX;
+            Left += -deltaX;
+            Width += deltaX;
         }
         if ((resizeDirection & ResizeDirection.Right) == ResizeDirection.Right)
         {
-            this.Width -= deltaX;
+            Width -= deltaX;
         }
         if ((resizeDirection & ResizeDirection.Top) == ResizeDirection.Top)
         {
-            this.Height += deltaY;
-            this.Top += -deltaY;
+            Height += deltaY;
+            Top += -deltaY;
         }
         if ((resizeDirection & ResizeDirection.Bottom) == ResizeDirection.Bottom)
         {
-            this.Height -= deltaY;
+            Height -= deltaY;
         }
 
     }
@@ -696,11 +643,7 @@ public partial class IddsAdmin : Form
 
     }
 
-    private void border_MouseUp(object sender, MouseEventArgs e)
-    {
-        isResizing = false;
-        //this.ResumeLayout();
-    }
+    private void border_MouseUp(object sender, MouseEventArgs e) => isResizing = false;//this.ResumeLayout();
 
     #endregion
 
@@ -728,31 +671,22 @@ public partial class IddsAdmin : Form
 
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
-        Control c = (Control)sender;
+        var c = (Control)sender;
         c.Location = new Point(c.Location.X + 1, c.Location.Y + 1);
     }
 
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
-        Control c = (Control)sender;
+        var c = (Control)sender;
         c.Location = new Point(c.Location.X - 1, c.Location.Y - 1);
     }
 
 
-    private void panelContent_Paint(object sender, PaintEventArgs e)
-    {
-        paintPanelTopBorder();
-    }
+    private void panelContent_Paint(object sender, PaintEventArgs e) => paintPanelTopBorder();
 
-    private void pictureBoxStartService_Click(object sender, EventArgs e)
-    {
-        StartService();
-    }
+    private void pictureBoxStartService_Click(object sender, EventArgs e) => StartService();
 
-    private void pictureBoxStopService_Click(object sender, EventArgs e)
-    {
-        StopService();
-    }
+    private void pictureBoxStopService_Click(object sender, EventArgs e) => StopService();
 
     private void StartService()
     {

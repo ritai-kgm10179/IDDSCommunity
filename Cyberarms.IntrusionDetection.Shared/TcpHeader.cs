@@ -30,7 +30,7 @@ public class TCPHeader
         uiAcknowledgementNumber = (uint)IPAddress.NetworkToHostOrder(binaryReader.ReadInt32());
         usDataOffsetAndFlags = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
         usWindow = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        sChecksum = (short)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
+        sChecksum = IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
         usUrgentPointer = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
 
         byHeaderLength = (byte)(usDataOffsetAndFlags >> 12);

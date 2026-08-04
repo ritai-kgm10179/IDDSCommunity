@@ -27,22 +27,21 @@ public class LockStatusAdapter
     {
         get
         {
-            if (_lockStatusNames == null)
-            {
-                _lockStatusNames = new Dictionary<int, string>();
-                _lockStatusNames.Add((int)LockStatus.None, "New");
-                _lockStatusNames.Add((int)LockStatus.SoftLockRequested, "Soft lock requested");
-                _lockStatusNames.Add((int)LockStatus.SoftLocked, "Soft lock");
-                _lockStatusNames.Add((int)LockStatus.SoftLockExpired, "Soft lock expired");
-                _lockStatusNames.Add((int)LockStatus.HardLockRequested, "Hard lock requested");
-                _lockStatusNames.Add((int)LockStatus.HardLocked, "Hard lock");
-                _lockStatusNames.Add((int)LockStatus.HardLockExpired, "Hard lock expired");
-                _lockStatusNames.Add((int)LockStatus.Unlocked, "Unlocked");
-                _lockStatusNames.Add((int)LockStatus.ManuallyUnlocked, "Manually unlocked");
-                _lockStatusNames.Add((int)LockStatus.LockError, "Error adding lock");
-                _lockStatusNames.Add((int)LockStatus.UnlockError, "Unlock error");
-                _lockStatusNames.Add((int)LockStatus.LicenseRequired, "License limitation");
-            }
+            _lockStatusNames ??= new Dictionary<int, string>
+                {
+                    { (int)LockStatus.None, "New" },
+                    { (int)LockStatus.SoftLockRequested, "Soft lock requested" },
+                    { (int)LockStatus.SoftLocked, "Soft lock" },
+                    { (int)LockStatus.SoftLockExpired, "Soft lock expired" },
+                    { (int)LockStatus.HardLockRequested, "Hard lock requested" },
+                    { (int)LockStatus.HardLocked, "Hard lock" },
+                    { (int)LockStatus.HardLockExpired, "Hard lock expired" },
+                    { (int)LockStatus.Unlocked, "Unlocked" },
+                    { (int)LockStatus.ManuallyUnlocked, "Manually unlocked" },
+                    { (int)LockStatus.LockError, "Error adding lock" },
+                    { (int)LockStatus.UnlockError, "Unlock error" },
+                    { (int)LockStatus.LicenseRequired, "License limitation" }
+                };
             return _lockStatusNames;
         }
     }

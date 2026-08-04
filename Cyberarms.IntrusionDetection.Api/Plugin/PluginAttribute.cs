@@ -6,7 +6,11 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin;
 /// Custom attribute for plugins to specify displayname and description. 
 /// TheIntrusion Detectionadministration software displays the values defined as class attribute
 /// </summary>
-public class PluginAttribute : Attribute
+/// <remarks>
+/// This attribute is displayed in theIntrusion Detectionadministration software
+/// </remarks>
+/// <param name="displayName">Name to display in the administration software</param>
+public class PluginAttribute(string displayName) : Attribute
 {
     /// <summary>
     /// This attribute is displayed in theIntrusion Detectionadministration software
@@ -15,10 +19,7 @@ public class PluginAttribute : Attribute
     /// <param name="description">Short description of the agent</param>
     /// <param name="version">Version number of the agent</param>
     public PluginAttribute(string displayName, string description, string version)
-        : this(displayName, description)
-    {
-        this.Version = version;
-    }
+        : this(displayName, description) => Version = version;
 
     /// <summary>
     /// This attribute is displayed in theIntrusion Detectionadministration software
@@ -26,22 +27,12 @@ public class PluginAttribute : Attribute
     /// <param name="displayName">Name to display in the administration software</param>
     /// <param name="description">Short description of the agent</param>
     public PluginAttribute(string displayName, string description)
-        : this(displayName)
-    {
-        this.Description = description;
-    }
-    /// <summary>
-    /// This attribute is displayed in theIntrusion Detectionadministration software
-    /// </summary>
-    /// <param name="displayName">Name to display in the administration software</param>
-    public PluginAttribute(string displayName)
-    {
-        this.DisplayName = displayName;
-    }
+        : this(displayName) => Description = description;
+
     /// <summary>
     /// Display name of your agent
     /// </summary>
-    public string DisplayName { get; set; }
+    public string DisplayName { get; set; } = displayName;
     /// <summary>
     /// Add a short description about what your agent does
     /// </summary>

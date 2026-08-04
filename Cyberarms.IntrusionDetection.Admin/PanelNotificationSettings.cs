@@ -12,13 +12,10 @@ public partial class PanelNotificationSettings : UserControl
     public PanelNotificationSettings()
     {
         InitializeComponent();
-        this.Load += new EventHandler(PanelNotificationSettings_Load);
+        Load += new EventHandler(PanelNotificationSettings_Load);
     }
 
-    void PanelNotificationSettings_Load(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    void PanelNotificationSettings_Load(object sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
 
@@ -46,12 +43,12 @@ public partial class PanelNotificationSettings : UserControl
     {
         if (!IsInEditMode)
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
+            pictureBoxEdit.Image = Properties.Resources.button25px_delete;
             IsInEditMode = true;
         }
         else
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
+            pictureBoxEdit.Image = Properties.Resources.button25px_edit;
             IsInEditMode = false;
         }
         pictureBoxSave.Visible = IsInEditMode;
@@ -64,11 +61,7 @@ public partial class PanelNotificationSettings : UserControl
 
     }
 
-    private void pictureBoxSave_Click(object sender, EventArgs e)
-    {
-
-        ToggleEditMode();
-    }
+    private void pictureBoxSave_Click(object sender, EventArgs e) => ToggleEditMode();
 
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
@@ -96,20 +89,11 @@ public partial class PanelNotificationSettings : UserControl
         SetEditMode(false);
     }
 
-    private void buttonDiscard_Click(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
-    private void OnNotificationSettingsChanged()
-    {
-        if (NotificationSettingsChanged != null) NotificationSettingsChanged(this, EventArgs.Empty);
-    }
+    private void OnNotificationSettingsChanged() => NotificationSettingsChanged?.Invoke(this, EventArgs.Empty);
 
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {
@@ -117,8 +101,5 @@ public partial class PanelNotificationSettings : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 }

@@ -1,29 +1,23 @@
 ﻿using System;
 using NetFwTypeLib;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 internal class FirewallManager
 {
     private static FirewallManager _instance;
-    private INetFwMgr firewallManager;
+    private readonly INetFwMgr firewallManager;
     internal static FirewallManager Instance
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new FirewallManager();
-            }
+            _instance ??= new FirewallManager();
             return _instance;
 
         }
     }
 
-    private FirewallManager()
-    {
-        firewallManager = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr"));
-    }
+    private FirewallManager() => firewallManager = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr"));
 
     internal void AddPort(string strName,
                                int Port,
@@ -31,7 +25,7 @@ internal class FirewallManager
                                NET_FW_IP_PROTOCOL_ Protocol,
                                string remoteAddresses)
     {
-        INetFwOpenPort fireWallPort =
+        var fireWallPort =
                       (INetFwOpenPort)Activator.CreateInstance(
                            Type.GetTypeFromProgID("HNetCfg.FWOpenPort"));
         fireWallPort.RemoteAddresses = remoteAddresses;
@@ -57,7 +51,7 @@ internal class FirewallManager
                                             string processImageFileName,
                                             NET_FW_SCOPE_ Scope)
     {
-        INetFwAuthorizedApplication authorizedApplication
+        var authorizedApplication
               = (INetFwAuthorizedApplication)Activator
                       .CreateInstance(Type.GetTypeFromProgID(
                                 "HNetCfg.FwAuthorizedApplication"));

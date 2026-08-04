@@ -7,23 +7,20 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class SmartForm : Form
 {
 
-    Color buttonHighlight = Color.FromArgb(205, 230, 247);
-    Color buttonPress = Color.FromArgb(105, 130, 147);
-    Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
+    readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
+    readonly Color buttonPress = Color.FromArgb(105, 130, 147);
+    readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
 
     public SmartForm()
     {
         InitializeComponent();
-        this.Text = Name;
-        this.labelFormText.Text = this.Text;
+        Text = Name;
+        labelFormText.Text = Text;
 
     }
 
 
-    private void pictureBoxCloseButton_Click(object sender, EventArgs e)
-    {
-        this.Close();
-    }
+    private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
 
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
@@ -33,90 +30,63 @@ public partial class SmartForm : Form
 
     public bool IsMoving { get; set; }
     public Point MoveStartPoint { get; set; }
-    private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e)
-    {
-        IsMoving = false;
-    }
+    private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
 
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
         if (IsMoving)
         {
-            this.Location = new Point(this.Location.X + e.X - MoveStartPoint.X, this.Location.Y + e.Y - MoveStartPoint.Y);
+            Location = new Point(Location.X + e.X - MoveStartPoint.X, Location.Y + e.Y - MoveStartPoint.Y);
 
         }
     }
 
 
-    private void closeToolStripMenuItem_Click(object sender, EventArgs e)
-    {
-        Application.Exit();
-    }
+    private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
 
-    private void pictureBox1_Click(object sender, EventArgs e)
-    {
-        pictureBox1.ContextMenuStrip.Show(PointToScreen(pictureBox1.Location));
-    }
+    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip.Show(PointToScreen(pictureBox1.Location));
 
     public event EventHandler HelpClicked;
 
-    private void pictureBoxHelpButon_Click(object sender, EventArgs e)
-    {
-        if (HelpClicked != null) HelpClicked(this, EventArgs.Empty);
-    }
+    private void pictureBoxHelpButon_Click(object sender, EventArgs e) => HelpClicked?.Invoke(this, EventArgs.Empty);
 
-    private void pictureBoxMinimizeButton_Click(object sender, EventArgs e)
-    {
-        this.WindowState = FormWindowState.Minimized;
-    }
+    private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
 
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
-        if (this.WindowState != FormWindowState.Maximized)
+        if (WindowState != FormWindowState.Maximized)
         {
-            this.WindowState = FormWindowState.Maximized;
-            pictureBoxMaximizeButton.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.icon_scale;
+            WindowState = FormWindowState.Maximized;
+            pictureBoxMaximizeButton.Image = Properties.Resources.icon_scale;
         }
         else
         {
-            this.WindowState = FormWindowState.Normal;
-            pictureBoxMaximizeButton.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
+            WindowState = FormWindowState.Normal;
+            pictureBoxMaximizeButton.Image = Properties.Resources.icon_maximize;
         }
     }
 
 
-    private void pictureBoxButton_MouseEnter(object sender, EventArgs e)
-    {
-        (sender as Control).BackColor = buttonHighlight;
-    }
+    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) => (sender as Control).BackColor = buttonHighlight;
 
-    private void pictureBoxButton_MouseLeave(object sender, EventArgs e)
-    {
-        (sender as Control).BackColor = buttonNormal;
-    }
+    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) => (sender as Control).BackColor = buttonNormal;
 
-    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e)
-    {
-        (sender as Control).BackColor = buttonPress;
-    }
+    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonPress;
 
-    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e)
-    {
-        (sender as Control).BackColor = buttonNormal;
-    }
+    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonNormal;
 
     private void resizeForm(Point mouseLocation)
     {
-        int deltaX = (resizeStartLocation.X - mouseLocation.X);
-        int deltaY = (resizeStartLocation.Y - mouseLocation.Y);
+        int deltaX = resizeStartLocation.X - mouseLocation.X;
+        int deltaY = resizeStartLocation.Y - mouseLocation.Y;
         if ((resizeDirection & ResizeDirection.Left) == ResizeDirection.Left)
         {
-            this.Left += -deltaX;
-            this.Width += deltaX;
+            Left += -deltaX;
+            Width += deltaX;
         }
         else if ((resizeDirection & ResizeDirection.Right) == ResizeDirection.Right)
         {
-            this.Width -= deltaX;
+            Width -= deltaX;
             resizeStartLocation = mouseLocation;
         }
 
@@ -141,10 +111,7 @@ public partial class SmartForm : Form
         if (isResizing) resizeStartLocation = e.Location;
     }
 
-    private void panelContent_MouseUp(object sender, MouseEventArgs e)
-    {
-        isResizing = false;
-    }
+    private void panelContent_MouseUp(object sender, MouseEventArgs e) => isResizing = false;
 
     private void panelContent_MouseLeave(object sender, EventArgs e)
     {
@@ -179,10 +146,7 @@ public partial class SmartForm : Form
         isResizing = true;
     }
 
-    private void borderNE_MouseDown(object sender, MouseEventArgs e)
-    {
-        resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
-    }
+    private void borderNE_MouseDown(object sender, MouseEventArgs e) => resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
 
     private void borderSE_MouseDown(object sender, MouseEventArgs e)
     {

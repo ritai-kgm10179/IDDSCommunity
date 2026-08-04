@@ -1,6 +1,4 @@
-﻿using Cyberarms.IntrusionDetection.Shared;
-
-namespace Cyberarms.IntrusionDetection;
+﻿namespace Cyberarms.IntrusionDetection.Shared;
 
 public enum LockType
 {

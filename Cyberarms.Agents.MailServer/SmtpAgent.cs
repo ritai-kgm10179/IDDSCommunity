@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -138,5 +138,5 @@ public class SmtpAgent : AgentPlugin
         OnAttackDetected(this, args);
     }
 
-    public Guid Id => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
+    public static Guid Id => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
 }

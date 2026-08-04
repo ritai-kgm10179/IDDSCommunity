@@ -27,10 +27,8 @@ public class ReportScheduler
             }
             return _instance;
         }
-        set
-        {
-            _instance = value;
-        }
+
+        set => _instance = value;
     }
 
     private void Init()
@@ -39,14 +37,11 @@ public class ReportScheduler
         reporter.Elapsed += new ElapsedEventHandler(reporter_Elapsed);
     }
 
-    public void StartReporting()
-    {
-        reporter.Start();
-    }
+    public void StartReporting() => reporter.Start();
 
     void reporter_Elapsed(object sender, ElapsedEventArgs e)
     {
-        NotificationSettings.Instance.Reload();
+        NotificationSettings.Reload();
         if (NotificationSettings.Instance.SummaryReportDaily) CheckDailyReport();
         if (NotificationSettings.Instance.SummaryReportWeekly) CheckWeeklyReport();
         if (NotificationSettings.Instance.SummaryReportMonthly) CheckMonthlyReport();
@@ -54,43 +49,43 @@ public class ReportScheduler
 
     public void CheckDailyReport()
     {
-        NotificationSettings.Instance.Reload();
+        NotificationSettings.Reload();
         DateTime d = DateTime.Now.AddDays(-1);
         string dailyReportTime = string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day);
-        if (!string.Equals(dailyReportTime, NotificationSettings.Instance.LastDailyReport))
+        if (!string.Equals(dailyReportTime, NotificationSettings.LastDailyReport))
         {
             // run daily report
-            NotificationSettings.Instance.LastDailyReport = dailyReportTime;
-            NotificationSettings.Instance.Save();
-            if (RunDailyReport != null) RunDailyReport(this, EventArgs.Empty);
+            NotificationSettings.LastDailyReport = dailyReportTime;
+            NotificationSettings.Save();
+            RunDailyReport?.Invoke(this, EventArgs.Empty);
         }
     }
 
     public void CheckWeeklyReport()
     {
-        NotificationSettings.Instance.Reload();
+        NotificationSettings.Reload();
         DateTime d = DateTime.Now.AddDays(-1);
         string weeklyReportTime = GetWeekOfYearString(d);
-        if (GetWeekOfYear(d) != GetWeekOfYear(DateTime.Now) && !string.Equals(weeklyReportTime, NotificationSettings.Instance.LastWeeklyReport))
+        if (GetWeekOfYear(d) != GetWeekOfYear(DateTime.Now) && !string.Equals(weeklyReportTime, NotificationSettings.LastWeeklyReport))
         {
             // run weekly report
-            NotificationSettings.Instance.LastWeeklyReport = weeklyReportTime;
-            NotificationSettings.Instance.Save();
-            if (RunWeeklyReport != null) RunWeeklyReport(this, EventArgs.Empty);
+            NotificationSettings.LastWeeklyReport = weeklyReportTime;
+            NotificationSettings.Save();
+            RunWeeklyReport?.Invoke(this, EventArgs.Empty);
         }
     }
 
     public void CheckMonthlyReport()
     {
-        NotificationSettings.Instance.Reload();
+        NotificationSettings.Reload();
         DateTime d = DateTime.Now.AddDays(-1);
         string monthlyReportTime = string.Format("{0}-{1}", d.Year, d.Month);
-        if (d.Month != DateTime.Now.Month && !string.Equals(monthlyReportTime, NotificationSettings.Instance.LastMonthlyReport))
+        if (d.Month != DateTime.Now.Month && !string.Equals(monthlyReportTime, NotificationSettings.LastMonthlyReport))
         {
             // run monthly report
-            NotificationSettings.Instance.LastMonthlyReport = monthlyReportTime;
-            NotificationSettings.Instance.Save();
-            if (RunMonthlyReport != null) RunMonthlyReport(this, EventArgs.Empty);
+            NotificationSettings.LastMonthlyReport = monthlyReportTime;
+            NotificationSettings.Save();
+            RunMonthlyReport?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -102,7 +97,7 @@ public class ReportScheduler
         return string.Format("{0}-{1}", year, weekOfYear);
     }
 
-    public int GetWeekOfYear(DateTime d)
+    public static int GetWeekOfYear(DateTime d)
     {
         System.Globalization.GregorianCalendar cal = new(System.Globalization.GregorianCalendarTypes.Localized);
         int weekOfYear = cal.GetWeekOfYear(d, System.Globalization.CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);

@@ -15,14 +15,14 @@ public class Pop3Agent : AgentPlugin
     ThreadStart ts;
     Thread td;
 
-    List<Sniffer> sniffers = new();
+    readonly List<Sniffer> sniffers = [];
 
     public Pop3Agent()
     {
 
-        this.Configuration.AgentSettings = new Pop3Config();
+        Configuration.AgentSettings = new Pop3Config();
         Configuration.ConfigurationSettingsTypeName =
-            this.Configuration.AgentSettings.GetType().FullName;
+            Configuration.AgentSettings.GetType().FullName;
         cleanupTimer = new System.Timers.Timer
         {
             Interval = 5000
@@ -51,7 +51,7 @@ public class Pop3Agent : AgentPlugin
 
     void RunWatcher()
     {
-        IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
+        IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
         if (hostEntry.AddressList.Length > 0)
         {
             foreach (IPAddress ip in hostEntry.AddressList)
@@ -110,15 +110,13 @@ public class Pop3Agent : AgentPlugin
 
     void s_IpPacketReceived(object sender, EventArgs e)
     {
-        IPHeader ipHeader = (IPHeader)sender;
+        var ipHeader = (IPHeader)sender;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
             {
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                int sourcePort;
-                int destinationPort;
-                if (int.TryParse(tcp.SourcePort, out sourcePort) && int.TryParse(tcp.DestinationPort, out destinationPort))
+                if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
                 {
                     if (destinationPort == ((Pop3Config)Configuration.AgentSettings).Pop3Port)
                     {
@@ -179,15 +177,13 @@ public class Pop3Agent : AgentPlugin
 
     void s_IpPacketSent(object sender, EventArgs e)
     {
-        IPHeader ipHeader = (IPHeader)sender;
+        var ipHeader = (IPHeader)sender;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
             {
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                int sourcePort;
-                int destinationPort;
-                if (int.TryParse(tcp.SourcePort, out sourcePort) && int.TryParse(tcp.DestinationPort, out destinationPort))
+                if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
                 {
                     if (sourcePort == ((Pop3Config)Configuration.AgentSettings).Pop3Port)
                     {
@@ -196,7 +192,7 @@ public class Pop3Agent : AgentPlugin
                             AppLayerPop3 ftp = new(tcp.Data, tcp.Data.Length);
                             if (ftp.Pop3Code.ToUpper().Equals(AppLayerPop3.POP3_REPLY_CODE_ERROR.ToUpper()))
                             {
-                                System.Threading.Thread.Sleep(100);
+                                Thread.Sleep(100);
                                 if (CurrentClients.ContainsKey(destinationPort) && CurrentClients[destinationPort].LastMessage == Pop3Message.PASS)
                                 {
                                     if (Tracing)
@@ -226,22 +222,14 @@ public class Pop3Agent : AgentPlugin
     {
         get
         {
-            if (_currentClients == null)
-            {
-                _currentClients = new Dictionary<int, Pop3Client>();
-            }
+            _currentClients ??= [];
             return _currentClients;
         }
-        set
-        {
-            _currentClients = value;
-        }
+
+        set => _currentClients = value;
     }
 
-    private void OnTrace(IPHeader tlsPackage)
-    {
-        if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
-    }
+    private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     protected override void OnContinueAgent()
     {
@@ -266,13 +254,7 @@ public class Pop3Agent : AgentPlugin
         base.OnStopAgent();
     }
 
-    public override bool IsRunning
-    {
-        get
-        {
-            return base.IsRunning;
-        }
-    }
+    public override bool IsRunning => base.IsRunning;
 
     void UnsuccessfulLogin(string ipAddress)
     {
@@ -287,12 +269,6 @@ public class Pop3Agent : AgentPlugin
     }
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{1F917251-2661-473A-970B-B2BB62EA6E1A}");
-        }
-    }
+    public static Guid Id => new("{1F917251-2661-473A-970B-B2BB62EA6E1A}");
 
 }

@@ -18,8 +18,8 @@ public partial class CyberarmsApplicationSettings : UserControl
     public CyberarmsApplicationSettings()
     {
         InitializeComponent();
-        this.BackColor = Color.White;
-        this.Load += new EventHandler(CyberamsApplicationSettings_Load);
+        BackColor = Color.White;
+        Load += new EventHandler(CyberamsApplicationSettings_Load);
     }
 
     void CyberamsApplicationSettings_Load(object sender, EventArgs e)
@@ -51,10 +51,7 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _lockoutConfiguration_LockoutConfigurationChanged(object sender, EventArgs e)
-    {
-        OnConfigurationChanged();
-    }
+    void _lockoutConfiguration_LockoutConfigurationChanged(object sender, EventArgs e) => OnConfigurationChanged();
 
 
 
@@ -80,10 +77,7 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _panelSafeNetworks_SafeNetworksChanged(object sender, EventArgs e)
-    {
-        OnConfigurationChanged();
-    }
+    void _panelSafeNetworks_SafeNetworksChanged(object sender, EventArgs e) => OnConfigurationChanged();
 
     private PanelSmtpSettings _panelSmtpSettings;
     public PanelSmtpSettings PanelSmtpSettings
@@ -104,10 +98,7 @@ public partial class CyberarmsApplicationSettings : UserControl
 
     }
 
-    void _panelSmtpSettings_SmtpSettingsChanged(object sender, EventArgs e)
-    {
-        OnConfigurationChanged();
-    }
+    void _panelSmtpSettings_SmtpSettingsChanged(object sender, EventArgs e) => OnConfigurationChanged();
 
     private PanelNotificationSettings _panelNotificationSettings;
     public PanelNotificationSettings PanelNotificationSettings
@@ -127,10 +118,7 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    void _panelNotificationSettings_NotificationSettingsChanged(object sender, EventArgs e)
-    {
-        OnConfigurationChanged();
-    }
+    void _panelNotificationSettings_NotificationSettingsChanged(object sender, EventArgs e) => OnConfigurationChanged();
 
     void cyberarmsSettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {
@@ -153,10 +141,7 @@ public partial class CyberarmsApplicationSettings : UserControl
         }
     }
 
-    private void OnConfigurationChanged()
-    {
-        if (ConfigurationChanged != null) ConfigurationChanged(this, EventArgs.Empty);
-    }
+    private void OnConfigurationChanged() => ConfigurationChanged?.Invoke(this, EventArgs.Empty);
 
 
 }

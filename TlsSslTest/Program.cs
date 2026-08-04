@@ -18,14 +18,11 @@ class Program
         Console.ReadKey();
     }
 
-    static void agent_AttackDetected(object sender, Cyberarms.IntrusionDetection.Api.Plugin.INotificationEventArgs data)
-    {
-        Console.WriteLine("AttackDetected from " + data.IpAddress);
-    }
+    static void agent_AttackDetected(object sender, Cyberarms.IntrusionDetection.Api.Plugin.INotificationEventArgs data) => Console.WriteLine("AttackDetected from " + data.IpAddress);
 
     static void agent_Trace(object sender, EventArgs e)
     {
-        IPHeader tls = (IPHeader)sender;
+        var tls = (IPHeader)sender;
         //Console.WriteLine("{0} {1} {2} {3}", tls.TlsHeader.ContentType, tls.TlsHeader.MajorVersion, tls.TlsHeader.MinorVersion, tls.TlsHeader.Length);
         for (int i = 0; i < int.Parse(tls.TotalLength); i++)
         {

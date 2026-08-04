@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace IdsServiceForWindowsTest;
+namespace Cyberarms.IntrusionDetection.Service.Test;
 
 /// <summary>
 /// Summary description for LockTest
@@ -27,14 +27,7 @@ public class LockTest
     ///</summary>
     public TestContext TestContext
     {
-        get
-        {
-            return testContextInstance;
-        }
-        set
-        {
-            testContextInstance = value;
-        }
+        get => testContextInstance; set => testContextInstance = value;
     }
 
     #region Additional test attributes
@@ -65,7 +58,7 @@ public class LockTest
     public void TestIpAddressLocal()
     {
         IddsConfig.Instance.ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
-        IPAddress ip = IPAddress.Parse("127.0.0.1");
+        var ip = IPAddress.Parse("127.0.0.1");
         Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(ip));
         foreach (IPAddress address in getLocalIps())
         {
@@ -97,7 +90,7 @@ public class LockTest
     {
         if (_localAddresses == null)
         {
-            _localAddresses = new List<IPAddress>();
+            _localAddresses = [];
             foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
             {
                 System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();

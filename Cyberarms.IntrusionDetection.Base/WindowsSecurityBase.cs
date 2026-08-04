@@ -47,18 +47,12 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -74,7 +68,7 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     {
         try
         {
-            string[] xPathProperties = new string[1] { @"Event/EventData/Data[@Name=""IpAddress""]" };
+            string[] xPathProperties = [@"Event/EventData/Data[@Name=""IpAddress""]"];
             EventLogPropertySelector props = new(xPathProperties);
             string ipAddress = ((EventLogRecord)e.EventRecord).GetPropertyValues(props)[0].ToString();
             NotificationEventArgs args = new()
@@ -94,62 +88,28 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "Windows Base Security Agent";
-        }
-        set
-        {
-            throw new NotSupportedException("DisplayName cannot be changed!");
-        }
+        get => "Windows Base Security Agent"; set => throw new NotSupportedException("DisplayName cannot be changed!");
     }
 
-    private Image _icon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_dark;
+    private Image _icon = Resources.WindowsSecurityAgent_dark;
     public Image Icon
     {
-        get
-        {
-            return _icon;
-        }
-        set
-        {
-            _icon = value;
-        }
+        get => _icon; set => _icon = value;
     }
 
-    private Image _selectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_white;
+    private Image _selectedIcon = Resources.WindowsSecurityAgent_white;
     public Image SelectedIcon
     {
-        get
-        {
-            return _selectedIcon;
-        }
-        set
-        {
-            _selectedIcon = value;
-        }
+        get => _selectedIcon; set => _selectedIcon = value;
     }
 
-    private Image _unselectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_dark;
+    private Image _unselectedIcon = Resources.WindowsSecurityAgent_dark;
     public Image UnselectedIcon
     {
-        get
-        {
-            return _unselectedIcon;
-        }
-        set
-        {
-            _unselectedIcon = value;
-        }
+        get => _unselectedIcon; set => _unselectedIcon = value;
     }
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{CC03AE88-51B4-426C-BA68-50875D70409F}");
-        }
-    }
+    public Guid Id => new("{CC03AE88-51B4-426C-BA68-50875D70409F}");
 
 }

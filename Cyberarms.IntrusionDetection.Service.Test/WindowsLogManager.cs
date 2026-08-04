@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service.Test;
 
 internal class WindowsLogManager
 {
@@ -18,13 +18,10 @@ internal class WindowsLogManager
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new WindowsLogManager
+            _instance ??= new WindowsLogManager
                 {
                     lastSearchDate = DateTime.Now
                 };
-            }
             return _instance;
         }
     }
@@ -37,20 +34,17 @@ internal class WindowsLogManager
         //    EventLog.DeleteEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
         //    EventLog.Delete(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
         //} catch { }
-        if (eventLogCyberarms == null)
-        {
-            //if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
-            //    // did somebody delete the eventlog with event viewer?
-            //    if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) && EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
-            //        // delete the source first
-            //        EventLog.DeleteEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
-            //    }
-            //    EventLog.CreateEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
-            //    System.Diagnostics.EventLogInstaller installer = new EventLogInstaller();
+        //if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
+        //    // did somebody delete the eventlog with event viewer?
+        //    if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) && EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
+        //        // delete the source first
+        //        EventLog.DeleteEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
+        //    }
+        //    EventLog.CreateEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
+        //    System.Diagnostics.EventLogInstaller installer = new EventLogInstaller();
 
-            //} 
-            eventLogCyberarms = new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
-        }
+        //} 
+        eventLogCyberarms ??= new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
         eventLogCyberarms.Source = Globals.CYBERARMS_WINDOWS_EVENT_SOURCE;
         eventLogCyberarms.Log = Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME;
 

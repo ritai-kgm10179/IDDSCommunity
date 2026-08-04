@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Reflection;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Cmd;
 
 internal class Agents : List<Agent>
 {
     internal void Load(string assemblyName)
     {
         Type pInterfaceType = typeof(IAgentPlugin);
-        Assembly assembly = Assembly.LoadFile(assemblyName);
+        var assembly = Assembly.LoadFile(assemblyName);
         foreach (Type type in assembly.GetTypes())
         {
             if (type.IsPublic && !type.IsAbstract)
@@ -33,5 +33,5 @@ internal class Agents : List<Agent>
         }
     }
 
-    internal void LoadAll(string configFilename) { }
+    internal static void LoadAll(string configFilename) { }
 }

@@ -13,17 +13,11 @@ public partial class CyberarmsAgentConfiguration : UserControl
     public CyberarmsAgentConfiguration()
     {
         InitializeComponent();
-        this.BackColor = Color.White;
+        BackColor = Color.White;
         cyberarmsSettingsNavigation.PluginsChanged += new EventHandler(cyberarmsSettingsNavigation_PluginsChanged);
     }
 
-    void cyberarmsSettingsNavigation_PluginsChanged(object sender, EventArgs e)
-    {
-        if (PluginsChanged != null)
-        {
-            PluginsChanged(sender, e);
-        }
-    }
+    void cyberarmsSettingsNavigation_PluginsChanged(object sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
 
     private PanelPluginConfiguration _pluginConfigPanel;
 
@@ -43,35 +37,20 @@ public partial class CyberarmsAgentConfiguration : UserControl
         }
     }
 
-    void _pluginConfigPanel_AgentConfigurationChanged(object sender, EventArgs e)
-    {
-        OnAgentSettingsChanged();
-    }
+    void _pluginConfigPanel_AgentConfigurationChanged(object sender, EventArgs e) => OnAgentSettingsChanged();
 
-    void OnAgentSettingsChanged()
-    {
-        if (AgentSettingsChanged != null) AgentSettingsChanged(this, EventArgs.Empty);
-    }
+    void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
 
     void _pluginConfigPanel_AgentChanged(object sender, EventArgs e)
     {
         //OnAgentSettingsChanged();
     }
 
-    private void OnPluginsChanged()
-    {
-        if (PluginsChanged != null) PluginsChanged(this, EventArgs.Empty);
-    }
+    private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
 
-    public void ClearSecurityAgents()
-    {
-        cyberarmsSettingsNavigation.Clear();
-    }
+    public void ClearSecurityAgents() => cyberarmsSettingsNavigation.Clear();
 
-    public void LoadSecurityAgent(SecurityAgent agent)
-    {
-        cyberarmsSettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
-    }
+    public void LoadSecurityAgent(SecurityAgent agent) => cyberarmsSettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
 
     public void ShowAgentConfig(SecurityAgent agent)
     {

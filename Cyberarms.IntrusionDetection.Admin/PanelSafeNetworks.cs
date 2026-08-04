@@ -14,16 +14,13 @@ public partial class PanelSafeNetworks : UserControl
     public PanelSafeNetworks()
     {
         InitializeComponent();
-        this.BackColor = Color.White;
+        BackColor = Color.White;
         listBoxSafeNetworks.Sorted = true;
         listBoxSafeNetworks.DisplayMember = "DisplayName";
-        this.Load += new EventHandler(PanelSafeNetworks_Load);
+        Load += new EventHandler(PanelSafeNetworks_Load);
     }
 
-    void PanelSafeNetworks_Load(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    void PanelSafeNetworks_Load(object sender, EventArgs e) => LoadData();
 
     private void textBoxAddNetwork_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -92,10 +89,10 @@ public partial class PanelSafeNetworks : UserControl
 
     private void pictureBoxDelete_Click(object sender, EventArgs e)
     {
-        List<IddsConfig.CSafeNetwork> selected = new();
+        List<IddsConfig.CSafeNetwork> selected = [];
         foreach (object o in listBoxSafeNetworks.SelectedItems)
         {
-            selected.Add((o as IddsConfig.CSafeNetwork));
+            selected.Add(o as IddsConfig.CSafeNetwork);
         }
         foreach (IddsConfig.CSafeNetwork net in selected)
         {
@@ -104,15 +101,9 @@ public partial class PanelSafeNetworks : UserControl
         SetEditMode(true);
     }
 
-    private void button1_Click(object sender, EventArgs e)
-    {
-        HideNetworkPanel();
-    }
+    private void button1_Click(object sender, EventArgs e) => HideNetworkPanel();
 
-    private void buttonAddNetwork_Click(object sender, EventArgs e)
-    {
-        AddNetwork();
-    }
+    private void buttonAddNetwork_Click(object sender, EventArgs e) => AddNetwork();
 
     private void listBoxSafeNetworks_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -128,10 +119,7 @@ public partial class PanelSafeNetworks : UserControl
         }
     }
 
-    private void OnSafeNetworksChanged()
-    {
-        if (SafeNetworksChanged != null) SafeNetworksChanged(this, EventArgs.Empty);
-    }
+    private void OnSafeNetworksChanged() => SafeNetworksChanged?.Invoke(this, EventArgs.Empty);
 
     public bool EditExisting { get; set; }
 
@@ -175,12 +163,12 @@ public partial class PanelSafeNetworks : UserControl
     {
         if (!IsInEditMode)
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
+            pictureBoxEdit.Image = Properties.Resources.button25px_delete;
             IsInEditMode = true;
         }
         else
         {
-            pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
+            pictureBoxEdit.Image = Properties.Resources.button25px_edit;
             IsInEditMode = false;
         }
         pictureBoxSave.Visible = IsInEditMode;
@@ -190,14 +178,11 @@ public partial class PanelSafeNetworks : UserControl
         checkBoxConfigureSafeNetworks.Enabled = IsInEditMode;
     }
 
-    private void buttonDiscard_Click(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
-        IddsConfig.CSafeNetworks nets = new();
+        IddsConfig.CSafeNetworks nets = [];
         foreach (object o in listBoxSafeNetworks.Items)
         {
             if (o is IddsConfig.CSafeNetwork)
@@ -214,10 +199,7 @@ public partial class PanelSafeNetworks : UserControl
         SetEditMode(false);
     }
 
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {
@@ -225,10 +207,7 @@ public partial class PanelSafeNetworks : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 
 
 }

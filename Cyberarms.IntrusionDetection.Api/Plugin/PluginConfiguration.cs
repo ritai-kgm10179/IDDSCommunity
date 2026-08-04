@@ -13,7 +13,7 @@ public class PluginConfiguration
     /// <param name="source"></param>
     public void CloneFrom(PluginConfiguration source)
     {
-        foreach (PropertyInfo pi in this.GetType().GetProperties())
+        foreach (PropertyInfo pi in GetType().GetProperties())
         {
             if (pi.CanWrite)
             {

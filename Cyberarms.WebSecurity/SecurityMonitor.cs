@@ -18,10 +18,7 @@ public class SecurityMonitor : IHttpModule
     }
 
 
-    public void Init(HttpApplication context)
-    {
-        context.PostRequestHandlerExecute += context_PostRequestHandlerExecute;
-    }
+    public void Init(HttpApplication context) => context.PostRequestHandlerExecute += context_PostRequestHandlerExecute;
 
     void context_PostRequestHandlerExecute(object sender, EventArgs e)
     {
@@ -38,8 +35,7 @@ public class SecurityMonitor : IHttpModule
                     {
                         if (fi.Name == VAR_NAME_FAILED_LOGIN_DEFAULT || fi.Name == VAR_NAME_FAILED_LOGIN_RDWEB)
                         {
-                            bool bFailed = false;
-                            if (fi.GetValue(handler) != null && bool.TryParse(fi.GetValue(handler).ToString(), out bFailed))
+                            if (fi.GetValue(handler) != null && bool.TryParse(fi.GetValue(handler).ToString(), out bool bFailed))
                             {
                                 if (bFailed) bFailedLoginDetected = true;
                             }

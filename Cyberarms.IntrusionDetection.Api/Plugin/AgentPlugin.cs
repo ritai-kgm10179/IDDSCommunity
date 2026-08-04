@@ -9,10 +9,7 @@ public class AgentPlugin : IAgentPlugin
 {
     public event AttackDetectedHandler? AttackDetected;
 
-    public AgentPlugin()
-    {
-        IsPaused = false;
-    }
+    public AgentPlugin() => IsPaused = false;
 
     protected void OnAttackDetected(object sender, INotificationEventArgs data)
     {

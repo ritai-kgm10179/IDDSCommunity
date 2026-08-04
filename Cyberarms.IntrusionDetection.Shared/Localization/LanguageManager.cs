@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Resources;
@@ -40,10 +40,7 @@ public class LanguageManager
 
     public CultureInfo CurrentCulture => _currentCulture;
 
-    public void RegisterResourceManager(string name, ResourceManager resourceManager)
-    {
-        _resourceManagers[name] = resourceManager;
-    }
+    public void RegisterResourceManager(string name, ResourceManager resourceManager) => _resourceManagers[name] = resourceManager;
 
     public void Initialize(string? userLanguageSetting)
     {
@@ -93,7 +90,7 @@ public class LanguageManager
 
     public string GetString(string key, string? defaultValue = null, string resourceCategory = "Strings")
     {
-        if (_resourceManagers.TryGetValue(resourceCategory, out var resourceManager))
+        if (_resourceManagers.TryGetValue(resourceCategory, out ResourceManager? resourceManager))
         {
             try
             {

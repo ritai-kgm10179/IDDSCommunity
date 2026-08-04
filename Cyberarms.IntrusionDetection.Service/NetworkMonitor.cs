@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Net;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 public class NetworkMonitor
 {
@@ -19,16 +19,11 @@ public class NetworkMonitor
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new NetworkMonitor();
-            }
+            _instance ??= new NetworkMonitor();
             return _instance;
         }
-        set
-        {
-            _instance = new NetworkMonitor();
-        }
+
+        set => _instance = new NetworkMonitor();
     }
 
 
@@ -41,7 +36,7 @@ public class NetworkMonitor
 
     void RunWatcher()
     {
-        IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
+        IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
         if (hostEntry.AddressList.Length > 0)
         {
             foreach (IPAddress ip in hostEntry.AddressList)
@@ -49,9 +44,9 @@ public class NetworkMonitor
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
                     Sniffer s = new();
-                    foreach (TcpSnifferPort port in this.TcpSnifferPorts)
+                    foreach (TcpSnifferPort port in TcpSnifferPorts)
                     {
-                        if (port.IPAddress == null || (port.IPAddress != null && port.IPAddress.Equals(ip)))
+                        if (port.IPAddress == null || port.IPAddress != null && port.IPAddress.Equals(ip))
                         {
                             if (port.HandlesReceived)
                             {
@@ -70,50 +65,30 @@ public class NetworkMonitor
         }
     }
 
-    void s_IpPacketReceived(object sender, EventArgs e)
-    {
-        throw new NotImplementedException();
-    }
+    void IpPacketReceived(object sender, EventArgs e) => throw new NotImplementedException();
 
-    public void AddSnifferAddressPort(IPAddress address, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent)
-    {
-        this.TcpSnifferPorts.Add(new TcpSnifferPort(address, port, handlesReceived, handlesSent, received, sent));
-    }
+    public void AddSnifferAddressPort(IPAddress address, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent) => TcpSnifferPorts.Add(new TcpSnifferPort(address, port, handlesReceived, handlesSent, received, sent));
 
     private List<TcpSnifferPort> _tcpSnifferPorts;
     private List<TcpSnifferPort> TcpSnifferPorts
     {
         get
         {
-            if (_tcpSnifferPorts == null)
-            {
-                _tcpSnifferPorts = new List<TcpSnifferPort>();
-            }
+            _tcpSnifferPorts ??= [];
             return _tcpSnifferPorts;
         }
-        set
-        {
-            _tcpSnifferPorts = value;
-        }
+
+        set => _tcpSnifferPorts = value;
     }
 
-    private class TcpSnifferPort
+    private class TcpSnifferPort(IPAddress ipaddress, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent)
     {
-        public TcpSnifferPort(IPAddress ipaddress, int port, bool handlesReceived, bool handlesSent, EventHandler received, EventHandler sent)
-        {
-            this.IPAddress = ipaddress;
-            this.Port = port;
-            this.HandlesReceived = handlesReceived;
-            this.HandlesSent = handlesSent;
-            Received = received;
-            Sent = sent;
-        }
-        public IPAddress IPAddress;
-        public int Port;
-        public bool HandlesReceived;
-        public bool HandlesSent;
-        public EventHandler Received;
-        public EventHandler Sent;
+        public IPAddress IPAddress = ipaddress;
+        public int Port = port;
+        public bool HandlesReceived = handlesReceived;
+        public bool HandlesSent = handlesSent;
+        public EventHandler Received = received;
+        public EventHandler Sent = sent;
     }
 
 }

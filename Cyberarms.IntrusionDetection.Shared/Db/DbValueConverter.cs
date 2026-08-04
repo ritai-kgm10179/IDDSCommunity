@@ -7,8 +7,7 @@ public class DbValueConverter
     public static bool ToBool(object value)
     {
         if (value == DBNull.Value) return false;
-        bool result;
-        bool.TryParse(value.ToString(), out result);
+        bool.TryParse(value.ToString(), out bool result);
         return result;
     }
 
@@ -21,24 +20,21 @@ public class DbValueConverter
     public static int ToInt(object value)
     {
         if (value == DBNull.Value) return 0;
-        int result;
-        int.TryParse(value.ToString(), out result);
+        int.TryParse(value.ToString(), out int result);
         return result;
     }
 
     public static long ToInt64(object value)
     {
         if (value == DBNull.Value) return 0;
-        long result;
-        long.TryParse(value.ToString(), out result);
+        long.TryParse(value.ToString(), out long result);
         return result;
     }
 
     public static Guid ToGuid(object value)
     {
         string textValue = ToString(value);
-        Guid result;
-        if (!Guid.TryParse(textValue, out result))
+        if (!Guid.TryParse(textValue, out Guid result))
         {
             throw new ArgumentException(value + " is not a unique id");
         }
@@ -48,8 +44,7 @@ public class DbValueConverter
     public static DateTime ToDateTime(object value)
     {
         if (value == DBNull.Value) return DateTime.MinValue;
-        DateTime result;
-        if (!DateTime.TryParse(ToString(value), out result))
+        if (!DateTime.TryParse(ToString(value), out DateTime result))
         {
             throw new ArgumentException(value + " is not a valid date");
         }

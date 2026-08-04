@@ -19,18 +19,12 @@ public class ReportGenerator
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new ReportGenerator();
-            }
+            _instance ??= new ReportGenerator();
             return _instance;
         }
     }
 
-    public string DailyReport()
-    {
-        return string.Empty;
-    }
+    public static string DailyReport() => string.Empty;
 
     public long TotalIntrusionAttempts { get; set; }
     public long TotalSoftLocks { get; set; }
@@ -40,7 +34,6 @@ public class ReportGenerator
     {
         IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_AGENT, start, end);
         string currentAgent = string.Empty;
-        string currentLine = string.Empty;
         bool hasValues = false;
         StringBuilder sb = new();
         long intrusionAttempts = 0;
@@ -105,15 +98,9 @@ public class ReportGenerator
         return sb.ToString();
     }
 
-    public string GetIncidentByIPTemplate()
-    {
-        return global::Cyberarms.IntrusionDetection.Shared.Resources.IntrusionAttemptsByIp;
-    }
+    public static string GetIncidentByIPTemplate() => Resources.IntrusionAttemptsByIp;
 
-    public string GetEventsPerAgentTemplate()
-    {
-        return global::Cyberarms.IntrusionDetection.Shared.Resources.EventsPerAgent;
-    }
+    public static string GetEventsPerAgentTemplate() => Resources.EventsPerAgent;
 
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
@@ -129,7 +116,7 @@ public class ReportGenerator
 
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
-        string result = global::Cyberarms.IntrusionDetection.Shared.Resources.ReportTemplate;
+        string result = Resources.ReportTemplate;
         result = result.Replace("[%TITLE%]", title);
         result = result.Replace("[%SUBTITLE%]", subtitle);
         result = result.Replace("[%INSTALLATION_INFORMATION%]", installationInformation);

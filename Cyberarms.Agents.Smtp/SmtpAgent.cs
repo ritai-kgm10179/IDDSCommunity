@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Drawing;
 
-namespace Cyberarms.Agents.MailServer;
+namespace Cyberarms.Agents.Smtp;
 
 public class SmtpAgent : AgentPlugin, IExtendedInformation
 {
@@ -14,13 +14,13 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
     ThreadStart ts;
     Thread td;
 
-    List<Sniffer> sniffers = new();
+    readonly List<Sniffer> sniffers = [];
 
     public SmtpAgent()
     {
-        this.Configuration.AgentSettings = new SmtpConfig();
+        Configuration.AgentSettings = new SmtpConfig();
         Configuration.ConfigurationSettingsTypeName =
-            this.Configuration.AgentSettings.GetType().FullName;
+            Configuration.AgentSettings.GetType().FullName;
     }
 
     protected override void OnStartAgent()
@@ -33,7 +33,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     void RunWatcher()
     {
-        IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
+        IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
         if (hostEntry.AddressList.Length > 0)
         {
             foreach (IPAddress ip in hostEntry.AddressList)
@@ -62,14 +62,13 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     void s_IpPacketSent(object sender, EventArgs e)
     {
-        IPHeader ipHeader = (IPHeader)sender;
+        var ipHeader = (IPHeader)sender;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
             {
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                int sourcePort;
-                if (int.TryParse(tcp.SourcePort, out sourcePort))
+                if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
                     if (sourcePort == ((SmtpConfig)Configuration.AgentSettings).SmtpPort)
                     {
@@ -99,10 +98,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    private void OnTrace(IPHeader tlsPackage)
-    {
-        if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
-    }
+    private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     protected override void OnContinueAgent()
     {
@@ -127,13 +123,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
-    public override bool IsRunning
-    {
-        get
-        {
-            return base.IsRunning;
-        }
-    }
+    public override bool IsRunning => base.IsRunning;
 
     void UnsuccessfulLogin(string ipAddress)
     {
@@ -150,10 +140,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "SMTP Security Agent";
-        }
+        get => "SMTP Security Agent";
         set
         {
 
@@ -162,10 +149,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     public Image Icon
     {
-        get
-        {
-            return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_dark;
-        }
+        get => Smtp.Resource.agent15px_mail_dark;
         set
         {
 
@@ -174,10 +158,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     public Image SelectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_white;
-        }
+        get => Smtp.Resource.agent15px_mail_white;
         set
         {
 
@@ -186,10 +167,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     public Image UnselectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.Smtp.Resource.agent15px_mail_dark;
-        }
+        get => Smtp.Resource.agent15px_mail_dark;
         set
         {
 
@@ -198,12 +176,6 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{EB69BF23-939C-4F89-97D0-50274306D018}");
-        }
-    }
+    public Guid Id => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
 
 }

@@ -8,25 +8,13 @@ public partial class CyberarmsDashboard : UserControl
 {
     public event EventHandler SecurityAgentConfigurationRequest;
 
-    public CyberarmsDashboard()
-    {
-        InitializeComponent();
-    }
+    public CyberarmsDashboard() => InitializeComponent();
 
-    public void SetSoftLocks(int locks)
-    {
-        labelSoftLocks.Text = locks.ToString();
-    }
+    public void SetSoftLocks(int locks) => labelSoftLocks.Text = locks.ToString();
 
-    public void SetHardLocks(int locks)
-    {
-        labelHardLocks.Text = locks.ToString();
-    }
+    public void SetHardLocks(int locks) => labelHardLocks.Text = locks.ToString();
 
-    public void SetUnsuccessfulLogins(int logins)
-    {
-        labelUnsuccessfulLogins.Text = logins.ToString();
-    }
+    public void SetUnsuccessfulLogins(int logins) => labelUnsuccessfulLogins.Text = logins.ToString();
 
 
     public void AddAgent(SecurityAgent agent)
@@ -39,14 +27,8 @@ public partial class CyberarmsDashboard : UserControl
         agentX.SecurityAgentConfigurationRequest += new EventHandler(agentX_SecurityAgentConfigurationRequest);
     }
 
-    void agentX_SecurityAgentConfigurationRequest(object sender, EventArgs e)
-    {
-        if (SecurityAgentConfigurationRequest != null) SecurityAgentConfigurationRequest(sender, e);
-    }
+    void agentX_SecurityAgentConfigurationRequest(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(sender, e);
 
-    public void ClearAgents()
-    {
-        flowLayoutPanelPlugins.Controls.Clear();
-    }
+    public void ClearAgents() => flowLayoutPanelPlugins.Controls.Clear();
 
 }

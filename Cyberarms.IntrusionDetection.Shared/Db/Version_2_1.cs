@@ -7,13 +7,7 @@ namespace Cyberarms.IntrusionDetection.Shared.Db;
 
 public class Version_2_1 : DbUpgradeScript
 {
-    public override int INTERNAL_VERSION
-    {
-        get
-        {
-            return 1;
-        }
-    }
+    public override int INTERNAL_VERSION => 1;
 
     public const string TABLE_DB_CONFIG = @"CREATE TABLE DbConfig(Version bigint NOT NULL, UpgradeDate DateTime NOT NULL, UpgradeLog nvarchar(1000), UpgradeSuccessful bit NOT NULL)";
 
@@ -151,7 +145,7 @@ CREATE TABLE AgentStatistics(
         }
         catch (Exception ex)
         {
-            throw (ex);
+            throw ex;
         }
     }
 
