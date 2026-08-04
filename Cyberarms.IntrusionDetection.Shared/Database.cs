@@ -66,6 +66,8 @@ public class Database
         connBuilder.DataSource = System.IO.Path.Combine(directory, fileName);
         connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
         connBuilder.Cache = SqliteCacheMode.Shared;
+        connBuilder.Pooling = true;
+        connBuilder.DefaultTimeout = 5;
 
         string? dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
@@ -79,6 +81,7 @@ public class Database
 
         _connection = new SqliteConnection(connBuilder.ConnectionString);
         _connection.Open();
+        ConfigureConnection(_connection);
         _connection.StateChange += _connection_StateChange;
         _isConfigured = true;
 
@@ -209,8 +212,7 @@ public class Database
     public async Task<int> ExecuteNonQueryAsync(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
         await SqlitePipeline.ExecuteAsync(async token =>
         {
-            await using SqliteConnection connection = new(connBuilder.ConnectionString);
-            await connection.OpenAsync(token).ConfigureAwait(false);
+            await using SqliteConnection connection = await OpenConnectionAsync(token).ConfigureAwait(false);
             CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
             return await connection.ExecuteAsync(command).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
@@ -226,8 +228,7 @@ public class Database
     public async Task<T?> ExecuteScalarAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
         await SqlitePipeline.ExecuteAsync(async token =>
         {
-            await using SqliteConnection connection = new(connBuilder.ConnectionString);
-            await connection.OpenAsync(token).ConfigureAwait(false);
+            await using SqliteConnection connection = await OpenConnectionAsync(token).ConfigureAwait(false);
             CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
             return await connection.ExecuteScalarAsync<T>(command).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
@@ -242,10 +243,68 @@ public class Database
     /// <returns>A task whose result contains the materialized rows.</returns>
     public async Task<IEnumerable<T>> QueryAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
     {
-        await using SqliteConnection connection = new(connBuilder.ConnectionString);
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using SqliteConnection connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
         return await connection.QueryAsync<T>(command).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Executes an asynchronous unit of work inside an independently owned SQLite transaction.
+    /// </summary>
+    /// <param name="operation">The transaction operation.</param>
+    /// <param name="cancellationToken">Cancels connection opening, the operation, or commit.</param>
+    /// <returns>A task that completes after the transaction commits.</returns>
+    public async Task ExecuteInTransactionAsync(
+        Func<SqliteConnection, SqliteTransaction, CancellationToken, Task> operation,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        await using SqliteConnection connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await operation(connection, transaction, cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Opens and configures an independently owned pooled SQLite connection.
+    /// </summary>
+    /// <param name="cancellationToken">Cancels opening the connection.</param>
+    /// <returns>The open connection.</returns>
+    private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
+    {
+        if (!_isConfigured)
+            throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
+        SqliteConnection connection = new(connBuilder.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            ConfigureConnection(connection);
+            return connection;
+        }
+        catch
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Applies connection-local integrity and contention settings.
+    /// </summary>
+    /// <param name="connection">The open SQLite connection.</param>
+    private static void ConfigureConnection(SqliteConnection connection)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;";
+        command.ExecuteNonQuery();
     }
 
     /// <summary>
@@ -311,6 +370,7 @@ public class Database
 
     private void OpenOrCreate()
     {
+        Connection.Execute("PRAGMA journal_mode=WAL");
         Db.SchemaMigrationRunner.Migrate(Connection);
         string? version = null;
         try
