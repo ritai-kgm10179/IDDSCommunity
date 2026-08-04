@@ -12,24 +12,6 @@ internal sealed class DatabaseOptions
     public string FileName { get; init; } = "cyberarms.idds.dbf";
 }
 
-internal sealed class SmtpOptions
-{
-    internal const string SectionName = "Smtp";
-
-    [Range(1, 65535)]
-    public int Port { get; init; } = 587;
-
-    public bool UseTls { get; init; } = true;
-}
-
-internal sealed class LockoutOptions
-{
-    internal const string SectionName = "Lockout";
-
-    [Range(1, 100000)]
-    public int MaximumTrackedAddresses { get; init; } = 10000;
-}
-
 internal sealed class ReportOptions
 {
     internal const string SectionName = "Reports";
@@ -57,8 +39,6 @@ internal static class ServiceOptionsExtensions
     internal static IServiceCollection AddCyberarmsOptions(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<DatabaseOptions>().Bind(configuration.GetSection(DatabaseOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<SmtpOptions>().Bind(configuration.GetSection(SmtpOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<LockoutOptions>().Bind(configuration.GetSection(LockoutOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         services.AddOptions<ReportOptions>().Bind(configuration.GetSection(ReportOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         services.AddOptions<PluginOptions>().Bind(configuration.GetSection(PluginOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         return services;

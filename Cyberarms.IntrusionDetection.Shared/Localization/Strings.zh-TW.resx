@@ -506,4 +506,7 @@
   <data name="COM type {0} is unavailable." xml:space="preserve"><value>COM 類型 {0} 無法使用。</value></data>
   <data name="Unable to create COM object {0}." xml:space="preserve"><value>無法建立 COM 物件 {0}。</value></data>
   <data name="Firewall rule {0} was not found." xml:space="preserve"><value>找不到防火牆規則 {0}。</value></data>
+  <data name="The database file name cannot contain a directory path." xml:space="preserve"><value>資料庫檔案名稱不可包含目錄路徑。</value></data>
+  <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>現有資料庫缺少必要資料表「{0}」。</value></data>
+  <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP 設定不完整。</value></data>
 </root>

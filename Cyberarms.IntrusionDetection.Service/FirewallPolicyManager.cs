@@ -145,18 +145,54 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy
     /// </summary>
     /// <param name="addresses">The comma-delimited firewall address list.</param>
     /// <param name="candidate">The IP address to locate.</param>
-    /// <returns><see langword="true"/> when an exact address entry exists.</returns>
+    /// <returns><see langword="true"/> when a wildcard, exact address, or containing CIDR entry exists.</returns>
     internal static bool ContainsAddress(string addresses, string candidate)
     {
         if (!System.Net.IPAddress.TryParse(candidate.Trim(), out System.Net.IPAddress? expected))
             return false;
         foreach (string entry in addresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            string host = entry.Split('/', 2, StringSplitOptions.TrimEntries)[0];
-            if (System.Net.IPAddress.TryParse(host, out System.Net.IPAddress? parsed) && parsed.Equals(expected))
+            if (entry == "*")
+                return true;
+
+            string[] cidr = entry.Split('/', 2, StringSplitOptions.TrimEntries);
+            if (!System.Net.IPAddress.TryParse(cidr[0], out System.Net.IPAddress? network) || network.AddressFamily != expected.AddressFamily)
+                continue;
+            if (cidr.Length == 1 && network.Equals(expected))
+                return true;
+            if (cidr.Length == 2 && int.TryParse(cidr[1], out int prefixLength) && IsInSubnet(expected, network, prefixLength))
                 return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Determines whether an IP address belongs to a CIDR network.
+    /// </summary>
+    /// <param name="candidate">The address being tested.</param>
+    /// <param name="network">The network address.</param>
+    /// <param name="prefixLength">The CIDR prefix length.</param>
+    /// <returns><see langword="true"/> when the candidate belongs to the network.</returns>
+    private static bool IsInSubnet(System.Net.IPAddress candidate, System.Net.IPAddress network, int prefixLength)
+    {
+        byte[] candidateBytes = candidate.GetAddressBytes();
+        byte[] networkBytes = network.GetAddressBytes();
+        if (prefixLength < 0 || prefixLength > candidateBytes.Length * 8)
+            return false;
+
+        int fullBytes = prefixLength / 8;
+        int remainingBits = prefixLength % 8;
+        for (int i = 0; i < fullBytes; i++)
+        {
+            if (candidateBytes[i] != networkBytes[i])
+                return false;
+        }
+
+        if (remainingBits == 0)
+            return true;
+
+        int mask = 0xFF << (8 - remainingBits);
+        return (candidateBytes[fullBytes] & mask) == (networkBytes[fullBytes] & mask);
     }
 
     /// <summary>

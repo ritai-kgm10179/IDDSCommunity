@@ -14,6 +14,12 @@ public sealed class RawSocketReceiver : IDisposable
     private CancellationTokenSource? cancellation;
 
     public event EventHandler<RawPacketEventArgs>? PacketReceived;
+    public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
+
+    /// <summary>
+    /// Gets the active receive-loop task so callers can supervise its lifetime.
+    /// </summary>
+    public Task Completion { get; private set; } = Task.CompletedTask;
 
     /// <summary>
     /// Starts capturing IPv4 packets on the specified local address.
@@ -32,7 +38,7 @@ public sealed class RawSocketReceiver : IDisposable
         socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.HeaderIncluded, true);
         socket.IOControl(IOControlCode.ReceiveAll, [3, 0, 0, 0], [3, 0, 0, 0]);
         cancellation = new CancellationTokenSource();
-        _ = ReceiveLoopAsync(socket, cancellation.Token);
+        Completion = ReceiveLoopAsync(socket, cancellation.Token);
     }
 
     /// <summary>
@@ -63,19 +69,76 @@ public sealed class RawSocketReceiver : IDisposable
                 if (length <= 0)
                     continue;
                 byte[] packet = buffer.AsSpan(0, length).ToArray();
-                PacketReceived?.Invoke(this, new RawPacketEventArgs(packet));
+                NotifyPacketReceived(new RawPacketEventArgs(packet));
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
         catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            NotifyCaptureFailed(ex);
+        }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Notifies each packet subscriber independently so one faulty consumer cannot stop capture.
+    /// </summary>
+    /// <param name="eventArgs">The received packet.</param>
+    private void NotifyPacketReceived(RawPacketEventArgs eventArgs)
+    {
+        foreach (EventHandler<RawPacketEventArgs> handler in PacketReceived?.GetInvocationList() ?? [])
+        {
+            try
+            {
+                handler(this, eventArgs);
+            }
+            catch (Exception ex)
+            {
+                NotifyCaptureFailed(ex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Publishes a capture error without allowing an error observer to fault the receive loop.
+    /// </summary>
+    /// <param name="exception">The capture or subscriber exception.</param>
+    private void NotifyCaptureFailed(Exception exception)
+    {
+        foreach (Delegate subscriber in CaptureFailed?.GetInvocationList() ?? [])
+        {
+            try
+            {
+                ((EventHandler<RawSocketErrorEventArgs>)subscriber)(this, new RawSocketErrorEventArgs(exception));
+            }
+            catch (Exception)
+            {
+                // Error observers must never terminate packet capture.
+            }
         }
     }
 }
 
 public sealed class RawPacketEventArgs(byte[] packet) : EventArgs
 {
-    public ReadOnlyMemory<byte> Packet { get; } = packet;
+    /// <summary>
+    /// Gets the immutable-by-contract packet buffer owned by this event instance.
+    /// </summary>
+    public byte[] Packet { get; } = packet;
+}
+
+/// <summary>
+/// Describes a raw packet capture or subscriber failure.
+/// </summary>
+/// <param name="exception">The exception that interrupted processing.</param>
+public sealed class RawSocketErrorEventArgs(Exception exception) : EventArgs
+{
+    /// <summary>
+    /// Gets the capture or subscriber exception.
+    /// </summary>
+    public Exception Exception { get; } = exception;
 }

@@ -9,6 +9,36 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 public class DatabaseUpgradeTest
 {
     /// <summary>
+    /// Verifies that an incomplete legacy schema is rejected instead of being marked as migrated.
+    /// </summary>
+    [TestMethod]
+    public void Configure_RejectsIncompleteExistingSchema()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "CyberarmsTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string databasePath = Path.Combine(directory, "cyberarms.idds.dbf");
+        try
+        {
+            using (Microsoft.Data.Sqlite.SqliteConnection connection = new($"Data Source={databasePath}"))
+            {
+                connection.Open();
+                using Microsoft.Data.Sqlite.SqliteCommand command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE DbConfig(Version INTEGER NOT NULL)";
+                command.ExecuteNonQuery();
+            }
+
+            InvalidOperationException exception = Assert.ThrowsExactly<InvalidOperationException>(() => Database.Instance.Configure(directory));
+            StringAssert.Contains(exception.Message, "Configuration");
+        }
+        finally
+        {
+            Database.Instance.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
     /// Executes the test database creation operation.
     /// </summary>
 

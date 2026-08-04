@@ -8,11 +8,16 @@ using Cyberarms.IntrusionDetection.Api.Plugin;
 using Cyberarms.IntrusionDetection.Shared;
 using Cyberarms.IntrusionDetection.Shared.Localization;
 using MailKit.Security;
+using Microsoft.Extensions.Options;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
 public partial class Service : ServiceBase
 {
+    private readonly IFirewallPolicy firewallPolicy;
+    private readonly DatabaseOptions databaseOptions;
+    private readonly PluginOptions pluginOptions;
+    private readonly ReportOptions reportOptions;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -31,13 +36,28 @@ public partial class Service : ServiceBase
     /// Initializes a new instance of the <see cref="Service"/> class.
     /// </summary>
 
-    public Service()
+    public Service() : this(FirewallPolicyManager.Instance, Options.Create(new DatabaseOptions()), Options.Create(new PluginOptions()), Options.Create(new ReportOptions()))
     {
+    }
+
+    /// <summary>
+    /// Initializes a service with an explicit firewall policy implementation.
+    /// </summary>
+    /// <param name="firewallPolicy">The firewall operations used for address blocking.</param>
+    /// <param name="databaseOptions">The validated database settings.</param>
+    /// <param name="pluginOptions">The validated plug-in settings.</param>
+    /// <param name="reportOptions">The validated report scheduler settings.</param>
+    internal Service(IFirewallPolicy firewallPolicy, IOptions<DatabaseOptions> databaseOptions, IOptions<PluginOptions> pluginOptions, IOptions<ReportOptions> reportOptions)
+    {
+        ArgumentNullException.ThrowIfNull(firewallPolicy);
+        this.firewallPolicy = firewallPolicy;
+        this.databaseOptions = databaseOptions.Value;
+        this.pluginOptions = pluginOptions.Value;
+        this.reportOptions = reportOptions.Value;
         InitializeComponent();
         isInitialized = false;
-        ConfigureSystem();
         CanStop = true;
-        CanPauseAndContinue = true;
+        CanPauseAndContinue = false;
         AutoLog = false;
         CanShutdown = true;
         EventLog.Source = Globals.APPLICATION_NAME;
@@ -45,10 +65,9 @@ public partial class Service : ServiceBase
         ClientIpAddressUnlocked += new EventHandler(Service_ClientIpAddressUnlocked);
         ClientIpAddressHardLocked += new EventHandler(Service_ClientIpAddressHardLocked);
         // IntrusionDetectionConfiguration.PluginDirectory = System.Windows.Forms.Application.StartupPath + "\\Plugins\\";
-        ReportScheduler.Instance.RunDailyReport += new EventHandler(Instance_RunDailyReport);
-        ReportScheduler.Instance.RunWeeklyReport += new EventHandler(Instance_RunWeeklyReport);
-        ReportScheduler.Instance.RunMonthlyReport += new EventHandler(Instance_RunMonthlyReport);
-        ReportScheduler.Instance.StartReporting();
+        ReportScheduler.Instance.RunDailyReportAsync += Instance_RunDailyReportAsync;
+        ReportScheduler.Instance.RunWeeklyReportAsync += Instance_RunWeeklyReportAsync;
+        ReportScheduler.Instance.RunMonthlyReportAsync += Instance_RunMonthlyReportAsync;
         // Configuration.Instance.ConfigurationChanged += new EventHandler(Instance_ConfigurationChanged);
 
     }
@@ -56,10 +75,10 @@ public partial class Service : ServiceBase
     /// <summary>
     /// Handles the run monthly report event.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
+    /// <returns>A task that completes after the report is delivered.</returns>
 
-    void Instance_RunMonthlyReport(object? sender, EventArgs e)
+    async Task Instance_RunMonthlyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
         {
@@ -67,21 +86,22 @@ public partial class Service : ServiceBase
             DateTime start = new(end.Year, end.Month, 1, 0, 0, 0);
             string report = ReportGenerator.Instance.GetReport("Monthly Report", string.Format("Report for {0}/{1}", start.Month, start.Year), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 start, new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            _ = SendMailAsync(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report, true);
+            await SendMailAsync(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
     }
 
     /// <summary>
     /// Handles the run weekly report event.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
+    /// <returns>A task that completes after the report is delivered.</returns>
 
-    void Instance_RunWeeklyReport(object? sender, EventArgs e)
+    async Task Instance_RunWeeklyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
         {
@@ -89,32 +109,34 @@ public partial class Service : ServiceBase
             DateTime start = end.AddDays(-6);
             string report = ReportGenerator.Instance.GetReport("Weekly Report", string.Format("Week of {0}-{1}-{2}", start.Year, start.Month, start.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 new DateTime(start.Year, start.Month, start.Day, 0, 0, 0), new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            _ = SendMailAsync(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report, true);
+            await SendMailAsync(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
     }
 
     /// <summary>
     /// Handles the run daily report event.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
+    /// <returns>A task that completes after the report is delivered.</returns>
 
-    void Instance_RunDailyReport(object? sender, EventArgs e)
+    async Task Instance_RunDailyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
         {
             DateTime d = DateTime.Now.AddDays(-1);
             string report = ReportGenerator.Instance.GetReport("Daily Report", string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 new DateTime(d.Year, d.Month, d.Day, 0, 0, 0), new DateTime(d.Year, d.Month, d.Day, 23, 59, 59));
-            _ = SendMailAsync(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report, true);
+            await SendMailAsync(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report, true, cancellationToken, true).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
     }
 
@@ -123,13 +145,14 @@ public partial class Service : ServiceBase
     /// Configures system.
     /// </summary>
 
-    static void ConfigureSystem()
+    void ConfigureSystem()
     {
-        Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
+        Database.Instance.Configure(System.Windows.Forms.Application.StartupPath, databaseOptions.FileName);
 
         IddsConfig.Instance.ApplicationPath = System.Windows.Forms.Application.StartupPath;
-        IddsConfig.Instance.PluginsDirectory = System.Windows.Forms.Application.StartupPath + "\\Plugins\\";
+        IddsConfig.Instance.PluginsDirectory = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, pluginOptions.DirectoryName) + System.IO.Path.DirectorySeparatorChar;
         IddsConfig.Instance.Load();
+        ReportScheduler.Instance.CheckInterval = TimeSpan.FromMinutes(reportOptions.CheckIntervalMinutes);
         SecurityAgents.Instance.RegisterSecurityAgents();
     }
 
@@ -324,39 +347,49 @@ public partial class Service : ServiceBase
     /// <param name="subject">The subject value.</param>
     /// <param name="message">The message value.</param>
     /// <param name="isHtml"><see langword="true"/> when the trusted report body contains HTML; otherwise, <see langword="false"/>.</param>
+    /// <param name="cancellationToken">Signals cancellation of SMTP delivery.</param>
+    /// <param name="rethrowOnFailure"><see langword="true"/> to propagate delivery failures to the scheduler.</param>
+    /// <returns>A task representing SMTP delivery.</returns>
 
-    static async Task SendMailAsync(string subject, string message, bool isHtml)
+    static async Task SendMailAsync(string subject, string message, bool isHtml, System.Threading.CancellationToken cancellationToken = default, bool rethrowOnFailure = false)
     {
         try
         {
-            if (!string.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) && !string.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
-                && !string.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
+            if (string.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) || string.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
+                || string.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
             {
-                var mimeMessage = new MimeKit.MimeMessage();
-                mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.SenderEmailAddress));
-                mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.NotificationEmailAddress));
-                mimeMessage.Subject = subject;
-                mimeMessage.Body = new MimeKit.TextPart(isHtml ? "html" : "plain") { Text = message };
-
-                using var client = new MailKit.Net.Smtp.SmtpClient();
-                int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
-                SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
-                using System.Threading.CancellationTokenSource timeout = new(TimeSpan.FromSeconds(30));
-                await client.ConnectAsync(IddsConfig.Instance.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
-
-                if (IddsConfig.Instance.SmtpRequiresAuthentication)
-                {
-                    await client.AuthenticateAsync(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
-                }
-                await client.SendAsync(mimeMessage, timeout.Token).ConfigureAwait(false);
-                await client.DisconnectAsync(true, timeout.Token).ConfigureAwait(false);
+                if (rethrowOnFailure)
+                    throw new InvalidOperationException(Strings.Get("SMTP configuration is incomplete."));
+                return;
             }
+
+            var mimeMessage = new MimeKit.MimeMessage();
+            mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.SenderEmailAddress));
+            mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.NotificationEmailAddress));
+            mimeMessage.Subject = subject;
+            mimeMessage.Body = new MimeKit.TextPart(isHtml ? "html" : "plain") { Text = message };
+
+            using var client = new MailKit.Net.Smtp.SmtpClient();
+            int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
+            SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
+            using System.Threading.CancellationTokenSource timeout = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            await client.ConnectAsync(IddsConfig.Instance.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
+
+            if (IddsConfig.Instance.SmtpRequiresAuthentication)
+            {
+                await client.AuthenticateAsync(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
+            }
+            await client.SendAsync(mimeMessage, timeout.Token).ConfigureAwait(false);
+            await client.DisconnectAsync(true, timeout.Token).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             string safeMessage = ex.Message.Replace('\r', ' ').Replace('\n', ' ');
             WindowsLogManager.Instance.WriteEntry(Strings.Get("Error while sending notification email: ") + safeMessage,
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            if (rethrowOnFailure)
+                throw;
         }
     }
 
@@ -397,7 +430,7 @@ public partial class Service : ServiceBase
         {
             try
             {
-                FirewallPolicyManager.Instance.RemoveIpAddressFromBlockList(l.IpAddress);
+                firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
                 // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_REQUESTED, false);
                 OnClientIpAddressUnlocked(l, null);
                 //l.Save();
@@ -408,7 +441,7 @@ public partial class Service : ServiceBase
                 WindowsLogManager.Instance.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
                     l.IpAddress, ex.Message),
                     EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
-                if (FirewallPolicyManager.Instance.IsLocked(l.IpAddress))
+                if (firewallPolicy.IsLocked(l.IpAddress))
                 {
                     l.Status = Lock.LOCK_STATUS_UNLOCK_ERROR;
                 }
@@ -442,7 +475,7 @@ public partial class Service : ServiceBase
         try
         {
             // TO DO: Hard Lock overrides Soft Lock!
-            if (FirewallPolicyManager.Instance.IsLocked(lockItem.IpAddress))
+            if (firewallPolicy.IsLocked(lockItem.IpAddress))
             {
                 WindowsLogManager.Instance.WriteEntry(Strings.Get("Received another request to lock IP address ") + lockItem.IpAddress +
                             ". This IP address is already locked.", EventLogEntryType.Information, Globals.CYBERARMS_EVENT_ID_INFORMATION,
@@ -461,7 +494,7 @@ public partial class Service : ServiceBase
         // lockItem.Id = Locks.CreateLock(lockItem);
         try
         {
-            FirewallPolicyManager.Instance.Block(lockItem.IpAddress);
+            firewallPolicy.Block(lockItem.IpAddress);
             switch (lockType)
             {
                 case LockType.SoftLock:
@@ -520,12 +553,14 @@ public partial class Service : ServiceBase
     {
         try
         {
+            ConfigureSystem();
             if (!isInitialized) Init();
             // FirewallPolicyManager.Instance.CleanUpRules();
             InitAgentConfiguration();
             LoadAgents();
             SecurityAgents.Instance.StartAgents();
             cleanupTimer.Enabled = true;
+            ReportScheduler.Instance.StartReporting();
             WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 
@@ -534,6 +569,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         {
             WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
 Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            throw;
         }
     }
 

@@ -506,4 +506,7 @@
   <data name="COM type {0} is unavailable." xml:space="preserve"><value>COM type {0} is unavailable.</value></data>
   <data name="Unable to create COM object {0}." xml:space="preserve"><value>Unable to create COM object {0}.</value></data>
   <data name="Firewall rule {0} was not found." xml:space="preserve"><value>Firewall rule {0} was not found.</value></data>
+  <data name="The database file name cannot contain a directory path." xml:space="preserve"><value>The database file name cannot contain a directory path.</value></data>
+  <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>The existing database is missing the required table '{0}'.</value></data>
+  <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP configuration is incomplete.</value></data>
 </root>

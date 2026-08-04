@@ -47,17 +47,23 @@ public class Database
     /// <summary>
     /// Configures requested operation.
     /// </summary>
-    /// <param name="directory">The directory value.</param>
+    /// <param name="directory">The directory containing the database.</param>
+    /// <param name="fileName">The database file name without directory components.</param>
 
-    public void Configure(string directory)
+    public void Configure(string directory, string fileName = "cyberarms.idds.dbf")
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        if (!string.Equals(System.IO.Path.GetFileName(fileName), fileName, StringComparison.Ordinal))
+            throw new ArgumentException(Localization.Strings.Get("The database file name cannot contain a directory path."), nameof(fileName));
+
         if (_connection is not null)
         {
             _connection.StateChange -= _connection_StateChange;
             _connection.Dispose();
         }
 
-        connBuilder.DataSource = System.IO.Path.Combine(directory, "cyberarms.idds.dbf");
+        connBuilder.DataSource = System.IO.Path.Combine(directory, fileName);
         connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
         connBuilder.Cache = SqliteCacheMode.Shared;
 

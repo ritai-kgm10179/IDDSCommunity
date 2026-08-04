@@ -53,7 +53,7 @@ public class AgentPlugin : IAgentPlugin
         }
         else
         {
-                throw new InvalidOperationException(Localization.Strings.Get("Agent is already running. Operation cancelled!"));
+            throw new InvalidOperationException(Localization.Strings.Get("Agent is already running. Operation cancelled!"));
         }
     }
 
@@ -70,7 +70,7 @@ public class AgentPlugin : IAgentPlugin
         }
         else
         {
-                throw new InvalidOperationException(Localization.Strings.Get("Agent is not running."));
+            throw new InvalidOperationException(Localization.Strings.Get("Agent is not running."));
         }
     }
 
@@ -87,7 +87,7 @@ public class AgentPlugin : IAgentPlugin
         }
         else
         {
-                throw new InvalidOperationException(Localization.Strings.Get("Agent cannot be paused in this state"));
+            throw new InvalidOperationException(Localization.Strings.Get("Agent cannot be paused in this state"));
         }
     }
 
@@ -104,7 +104,7 @@ public class AgentPlugin : IAgentPlugin
         }
         else
         {
-                throw new InvalidOperationException(Localization.Strings.Get("Agent must be in paused state"));
+            throw new InvalidOperationException(Localization.Strings.Get("Agent must be in paused state"));
         }
     }
 

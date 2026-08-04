@@ -36,8 +36,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyberarms.Agents.TerminalSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyberarms.Agents.SqlServer", "Cyberarms.Agents.SqlServer\Cyberarms.Agents.SqlServer.csproj", "{C9C41084-7948-427C-A757-75C082150833}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyberarms.Agents.Bind9", "Cyberarms.Agents.Bind9\Cyberarms.Agents.Bind9.csproj", "{1C30DA79-86F3-44A0-AA10-78D823FD9694}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TlsSslTest", "TlsSslTest\TlsSslTest.csproj", "{CB28544C-5CA5-41BB-8672-A0755B6D3B92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServerAgentTest", "SqlServerAgentTest\SqlServerAgentTest.csproj", "{C5FA2C9D-F800-48C3-B8FC-E9EAA928F02B}"
@@ -66,13 +64,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyberarms.Agents.MySql", "C
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 29
+		SccNumberOfProjects = 28
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs41
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = Cyberarms.Agents.Bind9\\Cyberarms.Agents.Bind9.csproj
-		SccProjectName1 = Cyberarms.Agents.Bind9
-		SccLocalPath1 = Cyberarms.Agents.Bind9
 		SccProjectUniqueName2 = Cyberarms.Agents.FileMaker\\Cyberarms.Agents.FileMaker.csproj
 		SccProjectName2 = Cyberarms.Agents.FileMaker
 		SccLocalPath2 = Cyberarms.Agents.FileMaker
