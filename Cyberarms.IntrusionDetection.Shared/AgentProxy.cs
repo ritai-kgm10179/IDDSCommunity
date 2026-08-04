@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Timers;
 
@@ -9,9 +10,10 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 {
     public event AttackDetectedHandler? AttackDetected;
 
-    private Timer? _watchdog;
+    private System.Timers.Timer? _watchdog;
     private TimeSpan _lastCpuTime = TimeSpan.Zero;
     private long _lastPackets;
+    private readonly System.Threading.Lock _lock = new();
 
     private readonly IAgentPlugin _agent;
 
@@ -51,7 +53,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public void EnableMonitoring()
     {
-        _watchdog = new Timer { Interval = 1000 };
+        _watchdog = new System.Timers.Timer { Interval = 1000 };
         _watchdog.Elapsed += watchdog_Elapsed;
         _lastCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
         if (_agent is INetworkListener netListener) _lastPackets = netListener.TotalPackets;
@@ -70,7 +72,10 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             CpuUsage = AppDomain.CurrentDomain.MonitoringTotalProcessorTime.Subtract(_lastCpuTime)
         };
         if (_agent is INetworkListener netListener) rcd.Packets = netListener.TotalPackets - _lastPackets;
-        PerformanceRecords.Add(rcd);
+        lock (_lock)
+        {
+            PerformanceRecords.Add(rcd);
+        }
     }
 
     public void DisableMonitoring() => _watchdog = null;
