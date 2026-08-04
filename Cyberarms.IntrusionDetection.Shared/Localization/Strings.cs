@@ -22,6 +22,15 @@ public static class Strings
     /// <returns>The localized value, or <paramref name="key"/> when the resource is missing.</returns>
     public static string Get(string key) => LanguageManager.Instance.GetString(key, key);
 
+    /// <summary>
+    /// Formats a localized user-facing string using the selected application culture.
+    /// </summary>
+    /// <param name="key">The invariant resource key and fallback format.</param>
+    /// <param name="arguments">The values inserted into the localized format.</param>
+    /// <returns>The localized and culture-aware formatted value.</returns>
+    public static string Format(string key, params object?[] arguments) =>
+        string.Format(LanguageManager.Instance.CurrentCulture, Get(key), arguments);
+
     public static string AppTitle => LanguageManager.Instance.GetString(nameof(AppTitle), "Cyberarms Intrusion Detection");
     public static string StatusRunning => LanguageManager.Instance.GetString(nameof(StatusRunning), "Running");
     public static string StatusStopped => LanguageManager.Instance.GetString(nameof(StatusStopped), "Stopped");

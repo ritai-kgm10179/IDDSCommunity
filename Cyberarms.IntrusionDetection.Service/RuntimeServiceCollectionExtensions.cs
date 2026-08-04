@@ -22,6 +22,8 @@ internal static class RuntimeServiceCollectionExtensions
         services.AddSingleton<IddsConfig>();
         services.AddSingleton<NotificationSettings>();
         services.AddSingleton<SecurityAgents>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<ProtectionAuditTrail>();
         services.AddSingleton(provider => new ReportScheduler(TimeProvider.System, provider.GetRequiredService<NotificationSettings>()));
         services.AddSingleton<Statistics>();
         services.AddSingleton(provider => new Service(
@@ -29,12 +31,14 @@ internal static class RuntimeServiceCollectionExtensions
             provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseOptions>>(),
             provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PluginOptions>>(),
             provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReportOptions>>(),
+            provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ProtectionOptions>>(),
             provider.GetRequiredService<Database>(),
             provider.GetRequiredService<IddsConfig>(),
             provider.GetRequiredService<NotificationSettings>(),
             provider.GetRequiredService<SecurityAgents>(),
             provider.GetRequiredService<ReportScheduler>(),
             provider.GetRequiredService<Statistics>(),
+            provider.GetRequiredService<ProtectionAuditTrail>(),
             provider.GetRequiredService<IRuntimeLog>()));
         services.AddSingleton<IIntrusionDetectionRuntime>(provider => provider.GetRequiredService<Service>());
         services.AddHealthChecks().AddCheck<CyberarmsRuntimeHealthCheck>("cyberarms-runtime");

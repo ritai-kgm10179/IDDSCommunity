@@ -28,6 +28,14 @@ internal sealed class PluginOptions
     public string DirectoryName { get; init; } = "Plugins";
 }
 
+internal sealed class ProtectionOptions
+{
+    internal const string SectionName = "Protection";
+
+    [Range(30, 3650)]
+    public int AuditRetentionDays { get; init; } = 365;
+}
+
 internal static class ServiceOptionsExtensions
 {
     /// <summary>
@@ -41,6 +49,7 @@ internal static class ServiceOptionsExtensions
         services.AddOptions<DatabaseOptions>().Bind(configuration.GetSection(DatabaseOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         services.AddOptions<ReportOptions>().Bind(configuration.GetSection(ReportOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         services.AddOptions<PluginOptions>().Bind(configuration.GetSection(PluginOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
+        services.AddOptions<ProtectionOptions>().Bind(configuration.GetSection(ProtectionOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();
         return services;
     }
 }

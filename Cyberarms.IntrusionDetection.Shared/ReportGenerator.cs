@@ -2,6 +2,7 @@
 using System.Data;
 using System.Text;
 using System.Net;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
@@ -170,7 +171,7 @@ public class ReportGenerator
 
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
-        string result = Resources.ReportTemplate;
+        string result = LocalizeReportTemplate(Resources.ReportTemplate);
         result = result.Replace("[%TITLE%]", WebUtility.HtmlEncode(title));
         result = result.Replace("[%SUBTITLE%]", WebUtility.HtmlEncode(subtitle));
         result = result.Replace("[%INSTALLATION_INFORMATION%]", installationInformation);
@@ -184,6 +185,29 @@ public class ReportGenerator
         result = result.Replace("[%TOTAL_HARD_LOCKS%]", TotalHardLocks.ToString());
 
         return result;
+    }
+
+    /// <summary>
+    /// Replaces every user-facing report label with the selected application language.
+    /// </summary>
+    /// <param name="template">The invariant report template containing localization tokens.</param>
+    /// <returns>The localized report template.</returns>
+    internal static string LocalizeReportTemplate(string template)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        return template
+            .Replace("[%LABEL_INSTALLATION_INFORMATION%]", WebUtility.HtmlEncode(Strings.Get("Installation information")), StringComparison.Ordinal)
+            .Replace("[%LABEL_EVENTS_PER_AGENT%]", WebUtility.HtmlEncode(Strings.Get("Events per agent")), StringComparison.Ordinal)
+            .Replace("[%LABEL_AGENT_NAME%]", WebUtility.HtmlEncode(Strings.Get("Agent name")), StringComparison.Ordinal)
+            .Replace("[%LABEL_INTRUSION_ATTEMPTS%]", WebUtility.HtmlEncode(Strings.Get("Intrusion attempts")), StringComparison.Ordinal)
+            .Replace("[%LABEL_SOFT_LOCKS%]", WebUtility.HtmlEncode(Strings.Get("Soft locks")), StringComparison.Ordinal)
+            .Replace("[%LABEL_HARD_LOCKS%]", WebUtility.HtmlEncode(Strings.Get("Hard locks")), StringComparison.Ordinal)
+            .Replace("[%LABEL_TOTAL%]", WebUtility.HtmlEncode(Strings.Get("Total")), StringComparison.Ordinal)
+            .Replace("[%LABEL_INTRUSION_ATTEMPTS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Intrusion attempts by IP address")), StringComparison.Ordinal)
+            .Replace("[%LABEL_SOFT_LOCKS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Soft locks by IP address")), StringComparison.Ordinal)
+            .Replace("[%LABEL_HARD_LOCKS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Hard locks by IP address")), StringComparison.Ordinal)
+            .Replace("[%LABEL_CLIENT_IP%]", WebUtility.HtmlEncode(Strings.Get("Client IP")), StringComparison.Ordinal)
+            .Replace("[%LABEL_REPORT_CONFIGURATION_HINT%]", WebUtility.HtmlEncode(Strings.Get("To configure reporting options, use the IDDS administration software on the server.")), StringComparison.Ordinal);
     }
 
 }

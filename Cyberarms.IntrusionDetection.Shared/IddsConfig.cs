@@ -9,6 +9,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 public class IddsConfig
 {
     private readonly Database database;
+    private readonly HashSet<string> changedAppConfigKeys = [];
 
     public const int ENABLED_FEATURES_FREE = 1;
     public const int ENABLED_FEATURES_PRO = 2;
@@ -76,8 +77,7 @@ public class IddsConfig
                 LockForever, SoftLockAttempts, SoftLockTimeMinutes, UseSafeNetworkList, PluginDirectory,
                 DBNull.Value, DBNull.Value, SendInfoMail, SmtpPort, SenderEmailAddress, SmtpRequiresAuthentication,
                 NotificationEmailAddress, SmtpServer, SmtpUsername, SmtpPassword, CyberSheriffContributor, WebBasedMonitoring, DBNull.Value, SmtpSslRequired);
-
-
+            RecordConfigurationAudit(null, "Configuration");
         }
         catch (Exception)
         {
@@ -182,6 +182,7 @@ public class IddsConfig
         {
             AppConfig.Add(key, value);
         }
+        changedAppConfigKeys.Add(key);
     }
 
     /// <summary>
@@ -207,7 +208,10 @@ public class IddsConfig
                     database.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
                 }
             }
+            foreach (string key in changedAppConfigKeys)
+                RecordConfigurationAudit(trans, key);
             trans.Commit();
+            changedAppConfigKeys.Clear();
         }
         catch (Exception)
         {
@@ -255,11 +259,12 @@ public class IddsConfig
         IDbTransaction trans = database.Connection.BeginTransaction();
         try
         {
-            database.ExecuteNonQuery("delete from WhiteList");
+            database.ExecuteNonQuery("delete from WhiteList", trans);
             foreach (CSafeNetwork net in SafeNetworks)
             {
-                database.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", net.IpAddress, net.SubnetMask);
+                database.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", trans, net.IpAddress, net.SubnetMask);
             }
+            RecordConfigurationAudit(trans, "SafeNetworks");
             trans.Commit();
         }
         catch (Exception)
@@ -267,6 +272,25 @@ public class IddsConfig
             trans.Rollback();
             throw;
         }
+    }
+
+    /// <summary>
+    /// Records an atomic configuration-change audit event without persisting the setting value.
+    /// </summary>
+    /// <param name="transaction">The active configuration transaction, or <see langword="null"/> for an independent command.</param>
+    /// <param name="subject">The stable configuration key or area.</param>
+    private void RecordConfigurationAudit(IDbTransaction? transaction, string subject)
+    {
+        string actor = Environment.UserDomainName + "\\" + Environment.UserName;
+        database.ExecuteNonQuery(
+            "INSERT INTO ProtectionAuditLog(OccurredUtc, EventType, Outcome, Actor, Subject, Details) VALUES (@p0, @p1, @p2, @p3, @p4, @p5)",
+            transaction,
+            TimeProvider.System.GetUtcNow().ToString("O"),
+            "Configuration.Change",
+            "Succeeded",
+            actor,
+            subject,
+            string.Empty);
     }
 
     /// <summary>
