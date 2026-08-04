@@ -49,7 +49,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                             }
                         }
                     } catch (Exception ex) {
-                        throw ex;
+                        throw;
                     }
                 }
                 return _agentSettings;
@@ -84,7 +84,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                     try {
                         AgentSettings = (PluginConfiguration)xs.Deserialize(sr);
                     } catch (Exception ex) {
-                        throw ex;
+                        throw;
                     }
                 }
             }
@@ -156,7 +156,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                             }
                         }
                     } catch (Exception ex) {
-                        throw ex;
+                        throw;
                     }
                 }
             }

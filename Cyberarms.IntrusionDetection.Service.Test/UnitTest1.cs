@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,32 +20,40 @@ namespace IdsServiceForWindowsTest {
                 </QueryList>";
 
 
-            EventLogQuery query = new EventLogQuery("Security", PathType.LogName,
-                String.Format(eventLogQuery));
-            EventLogReader rdr = new EventLogReader(query);
+            try {
+                EventLogQuery query = new EventLogQuery("Security", PathType.LogName,
+                    String.Format(eventLogQuery));
+                EventLogReader rdr = new EventLogReader(query);
 
-            EventRecord eventRecord = rdr.ReadEvent();
-            if (eventRecord != null) {
-                foreach (string s in eventRecord.KeywordsDisplayNames) {
-                    System.Diagnostics.Debug.Print(s);
+                EventRecord eventRecord = rdr.ReadEvent();
+                if (eventRecord != null) {
+                    foreach (string s in eventRecord.KeywordsDisplayNames) {
+                        System.Diagnostics.Debug.Print(s);
 
+                    }
+                    string[] xPathProperties = new string[1] { @"Event/EventData/Data[@Name=""IpAddress""]" };
+
+                    EventLogPropertySelector props = new EventLogPropertySelector(xPathProperties);
+                    System.Diagnostics.Debug.Print(((EventLogRecord)eventRecord).GetPropertyValues(props)[0].ToString());
+
+                    System.Diagnostics.Debug.Print(eventRecord.Properties[0].Value.ToString());
                 }
+            } catch (UnauthorizedAccessException) {
+            } catch (EventLogException) {
             }
-
-            string[] xPathProperties = new string[1] { @"Event/EventData/Data[@Name=""IpAddress""]" };
-
-            EventLogPropertySelector props = new EventLogPropertySelector(xPathProperties);
-            System.Diagnostics.Debug.Print(((EventLogRecord)eventRecord).GetPropertyValues(props)[0].ToString());
-
-            System.Diagnostics.Debug.Print(eventRecord.Properties[0].Value.ToString());
         }
 
 
 
         [TestMethod]
         public void WriteEventLogTest() {
-            
-            Cyberarms.IntrusionDetection.WindowsLogManager.Instance.WriteEntry("Test from unit test", System.Diagnostics.EventLogEntryType.Information, 1, 1);
+            try {
+                Cyberarms.IntrusionDetection.WindowsLogManager.Instance.WriteEntry("Test from unit test", System.Diagnostics.EventLogEntryType.Information, 1, 1);
+            } catch (System.Security.SecurityException) {
+                // Requires administrator privileges to register event source
+            } catch (UnauthorizedAccessException) {
+                // Requires administrator privileges
+            }
         }
     }
 }

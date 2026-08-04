@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +6,6 @@ using NATUPNPLib;
 using NETCONLib;
 using NetFwTypeLib;
 using Cyberarms.IntrusionDetection.Shared;
-
 
 namespace Cyberarms.IntrusionDetection {
     internal class FirewallPolicyManager {
@@ -98,8 +97,8 @@ namespace Cyberarms.IntrusionDetection {
             } else {
                 try {
                     rule = (INetFwRule)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule", true));
-                } catch (Exception x) {
-                    throw x;
+                } catch (Exception) {
+                    throw;
                 }
             }
             if(IddsConfig.IsValidIpAddress(remoteAddress)) {

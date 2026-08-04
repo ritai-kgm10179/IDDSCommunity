@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,8 +65,16 @@ namespace Cyberarms.Agents.MailServer {
             s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
             s.IpPacketSent += new EventHandler(s_IpPacketSent);
             s.TcpPort = ((Pop3Config)Configuration.AgentSettings).Pop3Port;
-            System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.MailServer", String.Format("POP3 Server Security Agent is listening on port {0}", s.TcpPort));
-            s.WatchAddress((IPAddress)ipAddress);
+            try {
+                System.Diagnostics.EventLog.WriteEntry("Cyberarms.Agents.MailServer", String.Format("POP3 Server Security Agent is listening on port {0}", s.TcpPort));
+            } catch (System.Security.SecurityException) {
+            } catch (UnauthorizedAccessException) {
+            }
+            try {
+                s.WatchAddress((IPAddress)ipAddress);
+            } catch (System.Net.Sockets.SocketException) {
+            } catch (UnauthorizedAccessException) {
+            }
             sniffers.Add(s);
         }
 

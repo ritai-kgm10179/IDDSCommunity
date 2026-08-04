@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
@@ -25,20 +25,30 @@ namespace Cyberarms.IntrusionDetection.Shared {
             connBuilder.Flags = SQLiteConnectionFlags.Default;
             connBuilder.ForeignKeys = true;
             connBuilder.JournalMode = SQLiteJournalModeEnum.Truncate;
-            connBuilder.Password = "hasdvfdfaxNm.DFd3djkn2li9fu24$";
             connBuilder.Pooling = true;
             connBuilder.ReadOnly = false;
             connBuilder.SyncMode = SynchronizationModes.Normal;
             connBuilder.DataSource = directory + "\\cyberarms.idds.dbf";
-            _connection = new SQLiteConnection(connBuilder.ConnectionString);
+            
+            string dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
+            if (!String.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir)) {
+                try {
+                    System.IO.Directory.CreateDirectory(dbDir);
+                } catch { }
+            }
+
             if (!System.IO.File.Exists(connBuilder.DataSource)) {
                 SQLiteConnection.CreateFile(connBuilder.DataSource);
-
-                /*engine = new SqlCeEngine(String.Format(DB_CONNECTION_STRING, directory + "\\cyberarms.idds.sdf"));
-                engine.CreateDatabase();
-                engine.Verify(VerifyOption.Default); */
             }
-            _connection.Open();
+
+            try {
+                _connection = new SQLiteConnection(connBuilder.ConnectionString);
+                _connection.Open();
+            } catch (System.IO.FileNotFoundException) {
+                connBuilder.Password = null;
+                _connection = new SQLiteConnection(connBuilder.ConnectionString);
+                _connection.Open();
+            }
             OpenOrCreate();
             // _connection.FlushFailure += new SqlCeFlushFailureEventHandler(_connection_FlushFailure);
             _connection.StateChange += new StateChangeEventHandler(_connection_StateChange);
@@ -97,7 +107,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                         return rdr;
                     } catch { }
                 }
-                throw ex;
+                throw;
             }
             return rdr;
         }
@@ -172,7 +182,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                         return result;
                     } catch { }
                 }
-                throw ex;
+                throw;
             }
             return result;
         }

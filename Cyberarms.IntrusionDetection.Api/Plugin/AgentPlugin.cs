@@ -29,7 +29,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                 try {
                     AttackDetected(this, data);
                 } catch (Exception ex) {
-                    // throw ex; 
+                    // throw; 
                     System.Diagnostics.EventLog.WriteEntry("Cyberarms.IntrusionDetection.Api.Plugin.AgentPlugin", ex.Message);
                 }
             }
@@ -44,7 +44,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                     OnStartAgent();
                     IsRunning = true;
                 } catch (Exception ex) {
-                    throw ex;
+                    throw;
                 }
             } else {
                 throw new Exception("Agent is already running. Operation cancelled!");
@@ -60,7 +60,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                     OnStopAgent();
                     IsRunning = false;
                 } catch (Exception ex) {
-                    throw ex;
+                    throw;
                 }
             } else {
                 throw new Exception("Agent is not running.");
@@ -77,7 +77,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                     OnPauseAgent();
                     IsPaused = true;
                 } catch (Exception ex) {
-                    throw ex;
+                    throw;
                 }
             } else {
                 throw new Exception("Agent cannot be paused in this state");
@@ -93,7 +93,7 @@ namespace Cyberarms.IntrusionDetection.Api.Plugin {
                     OnContinueAgent();
                     IsPaused = false;
                 } catch (Exception ex) {
-                    throw ex;
+                    throw;
                 }
             } else {
                 throw new Exception("Agent must be in paused state");

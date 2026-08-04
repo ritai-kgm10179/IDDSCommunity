@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +59,7 @@ namespace IdsServiceForWindowsTest {
 
         [TestMethod]
         public void TestIpAddressLocal() {
-            
+            IddsConfig.Instance.ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(ip));
             foreach (IPAddress address in getLocalIps()) {

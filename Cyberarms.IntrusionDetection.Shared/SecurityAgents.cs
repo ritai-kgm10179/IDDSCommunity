@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
@@ -55,9 +55,13 @@ namespace Cyberarms.IntrusionDetection.Shared {
         public List<SecurityAgent> ReadAgentsFromDisk() {
             if (String.IsNullOrEmpty(IddsConfig.Instance.PluginsDirectory)) throw new ApplicationException("Application is not initialized.");
             List<SecurityAgent> result = new List<SecurityAgent>();
+#if NETFRAMEWORK
             AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
             System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
             CurrentDomain = AppDomain.CreateDomain("Cyberarms.Agents.Enumerator", adevidence, setup);
+#else
+            CurrentDomain = AppDomain.CurrentDomain;
+#endif
             
             foreach (string fileName in Directory.EnumerateFiles(IddsConfig.Instance.PluginsDirectory, "*.dll")) {
                 if (!fileName.Contains(".Api.dll")) {
@@ -113,16 +117,22 @@ namespace Cyberarms.IntrusionDetection.Shared {
 
         public void UnloadAgents() {
             if (LoadedAgents == null) return;
+#if NETFRAMEWORK
             AppDomainManager adm = new AppDomainManager();
+#endif
             
             foreach(SecurityAgent agent in LoadedAgents.Keys) {
+#if NETFRAMEWORK
                 AppDomain.Unload(agent.AppDomain);
+#endif
             }
             LoadedAgents.Clear();
         }
 
         public void UnloadAgent(SecurityAgent agent) {
+#if NETFRAMEWORK
             AppDomain.Unload(agent.AppDomain);
+#endif
             if (LoadedAgents.ContainsKey(agent)) {
                 LoadedAgents[agent] = null;
                 LoadedAgents.Remove(agent);
@@ -141,9 +151,13 @@ namespace Cyberarms.IntrusionDetection.Shared {
             foreach (SecurityAgent agent in this) {
                 if (agent.Enabled) {
                     try {
+#if NETFRAMEWORK
                         AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
                         System.Security.Policy.Evidence adevidence = AppDomain.CurrentDomain.Evidence;
                         AppDomain domain = AppDomain.CreateDomain("Cyberarms.Agents." + agent.Id, adevidence, setup);
+#else
+                        AppDomain domain = AppDomain.CurrentDomain;
+#endif
                         AgentProxy proxy = new AgentProxy(agent.AssemblyFilename, agent.Name);
                         proxy.Configuration.AgentName = agent.Name;
                         proxy.Configuration.AssemblyName = agent.AssemblyName;
@@ -170,7 +184,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
                         agent.Reload();
                         LoadedAgents.Add(agent, proxy);
                     } catch (Exception ex) {
-                        throw ex;
+                        throw;
                     }
                 }
             }

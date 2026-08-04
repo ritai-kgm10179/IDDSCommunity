@@ -1,0 +1,33 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="IdsServiceForWindows.vsmdi" />
+    <File Path="Local.testsettings" />
+    <File Path="TraceAndTestImpact.testsettings" />
+  </Folder>
+  <Project Path="Cyberarms.Agents.Bind9/Cyberarms.Agents.Bind9.csproj" />
+  <Project Path="Cyberarms.Agents.FileMaker/Cyberarms.Agents.FileMaker.csproj" />
+  <Project Path="Cyberarms.Agents.FtpServer/Cyberarms.Agents.FtpServer.csproj" />
+  <Project Path="Cyberarms.Agents.MailServer/Cyberarms.Agents.MailServer.csproj" />
+  <Project Path="Cyberarms.Agents.MailServer.Test/Cyberarms.Agents.MailServer.Test.csproj" />
+  <Project Path="Cyberarms.Agents.MySql/Cyberarms.Agents.MySql.csproj" />
+  <Project Path="Cyberarms.Agents.Smtp/Cyberarms.Agents.Smtp.csproj" />
+  <Project Path="Cyberarms.Agents.SqlServer/Cyberarms.Agents.SqlServer.csproj" />
+  <Project Path="Cyberarms.Agents.TerminalServer/Cyberarms.Agents.TerminalServer.csproj" />
+  <Project Path="Cyberarms.Agents.WebSecurity/Cyberarms.Agents.WebSecurity.csproj" />
+  <Project Path="Cyberarms.IDDS.Management/Cyberarms.IDDS.Management.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Admin/Cyberarms.IntrusionDetection.Admin.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Api/Cyberarms.IntrusionDetection.Api.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Base/Cyberarms.IntrusionDetection.Base.Plugins.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Cmd/Cyberarms.IntrusionDetection.Cmd.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Cmd.Test/CyberarmsIntrusionDetection.Cmd.Test.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Service/Cyberarms.IntrusionDetection.Service.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Service.Test/Cyberarms.IntrusionDetection.Service.Test.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Shared/Cyberarms.IntrusionDetection.Shared.csproj" />
+  <Project Path="Cyberarms.IntrusionDetection.Shared.Test/Cyberarms.IntrusionDetection.Shared.Test.csproj" />
+  <Project Path="Cyberarms.WebSecurity/Cyberarms.WebSecurity.csproj" />
+  <Project Path="DemoAgent/DemoAgent.csproj" />
+  <Project Path="EventLogCleaner/EventLogCleaner.csproj" />
+  <Project Path="MailServerTest/MailServerTest.csproj" />
+  <Project Path="SqlServerAgentTest/SqlServerAgentTest.csproj" />
+  <Project Path="TlsSslTest/TlsSslTest.csproj" />
+</Solution>

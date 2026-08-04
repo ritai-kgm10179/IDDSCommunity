@@ -39,7 +39,7 @@ namespace Cyberarms.IntrusionDetection {
                     }
                 }
             } catch (Exception ex) {
-                throw ex;
+                throw;
             }
             assembly = null;
         }

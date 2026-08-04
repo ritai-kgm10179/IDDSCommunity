@@ -33,7 +33,7 @@ namespace Cyberarms.Agents.TerminalServer {
                 
             } catch(Exception ex) {
                 Console.WriteLine(ex.Message);
-                throw ex;
+                throw;
             }
         }
     }

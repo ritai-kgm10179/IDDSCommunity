@@ -27,7 +27,7 @@ namespace Cyberarms.Agents.FtpServer {
                 
             } catch(Exception ex) {
                 Console.WriteLine(ex.Message);
-                throw ex;
+                throw;
             }
         }
     }

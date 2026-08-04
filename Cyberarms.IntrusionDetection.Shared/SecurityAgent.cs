@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
@@ -37,7 +37,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
         public bool CheckConfigVersionById() {
-            if (Id == null || Id.Equals(Guid.Empty)) return false;
+            if (Id.Equals(Guid.Empty)) return false;
             string sqlCommand = "Select Serial from SecurityAgents where AgentId=@p0";
             object dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id);
             if (dbVersion != null) {
@@ -65,7 +65,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
             if (!Database.Instance.IsConfigured) {
                 throw new ApplicationException("Database is not configured yet. Please configure database and re-try this operation!");
             }
-            if (Id == null || Id.Equals(Guid.Empty)) return;
+            if (Id.Equals(Guid.Empty)) return;
             IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id);
             // load all agents
             if (rdr.Read()) {
@@ -147,7 +147,7 @@ namespace Cyberarms.IntrusionDetection.Shared {
         }
 
         public void Save() {
-            if (this.Id == null || this.Id == Guid.Empty) Id = GetId();
+            if (this.Id == Guid.Empty) Id = GetId();
             string sqlString;
             IDbTransaction trans = Database.Instance.Connection.BeginTransaction(IsolationLevel.Serializable);
             try {
@@ -169,7 +169,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
                 OnStatisticsUpdated();
             } catch (Exception ex) {
                 trans.Rollback();
-                throw ex;
+                throw;
             }
         }
 
@@ -226,13 +226,13 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         }
 
         public Guid GetId() {
-            if (Id != null && !Id.Equals(Guid.Empty)) return Id;
+            if (!Id.Equals(Guid.Empty)) return Id;
             // if agent does not provide ID, set the ID from this agent. Otherwise read from database
             if (!Database.Instance.IsConfigured) Database.Instance.Configure(IddsConfig.PluginDirectory);
             object result = Database.Instance.ExecuteScalar("Select AgentId from SecurityAgents where AssemblyName = @p0", AssemblyName);
             if (result != null) {
                 Guid id = Db.DbValueConverter.ToGuid(result);
-                if (id != null && id != Guid.Empty) {
+                if (id != Guid.Empty) {
                     return id;
                 }
             }
