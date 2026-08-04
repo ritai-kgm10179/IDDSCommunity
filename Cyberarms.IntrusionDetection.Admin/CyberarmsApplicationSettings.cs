@@ -136,6 +136,10 @@ public partial class CyberarmsApplicationSettings : UserControl
 
     public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
 
+    /// <summary>
+    /// Creates and attaches the language settings panel.
+    /// </summary>
+    /// <returns>The attached language settings panel.</returns>
     private PanelLanguageSettings CreateLanguageSettingsPanel()
     {
         PanelLanguageSettings panel = new();

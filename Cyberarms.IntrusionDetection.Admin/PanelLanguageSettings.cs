@@ -35,8 +35,18 @@ public sealed class PanelLanguageSettings : UserControl
         Controls.Add(layout);
     }
 
+    /// <summary>
+    /// Maps a persisted language setting to the selector index.
+    /// </summary>
+    /// <param name="setting">The persisted culture name.</param>
+    /// <returns>The matching selector index.</returns>
     private static int GetSelectedIndex(string setting) => setting switch { "en" or "en-US" => 1, "zh" or "zh-TW" or "zh-Hant" => 2, _ => 0 };
 
+    /// <summary>
+    /// Persists the selected language and informs the user that open windows require a restart.
+    /// </summary>
+    /// <param name="sender">The save button.</param>
+    /// <param name="e">The event data.</param>
     private void SaveLanguage(object? sender, EventArgs e)
     {
         if (languageSelector.SelectedItem is not LanguageOption option) return;
@@ -47,6 +57,10 @@ public sealed class PanelLanguageSettings : UserControl
 
     private sealed record LanguageOption(string Value, string DisplayName)
     {
+        /// <summary>
+        /// Returns the localized option label displayed by the selector.
+        /// </summary>
+        /// <returns>The display name.</returns>
         public override string ToString() => DisplayName;
     }
 }
