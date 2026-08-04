@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Net;
-using System.Net.Sockets;
+using Cyberarms.IntrusionDetection.Shared;
 
 
 namespace Cyberarms.Agents.TerminalServer;
 
 public class Sniffer
 {
-    private Socket? ipSocket;
-    private byte[] byteData = [];
+    private readonly RawSocketReceiver receiver = new();
 
     public event EventHandler? IpPacketReceived;
     public event EventHandler? IpPacketSent;
@@ -40,24 +39,9 @@ public class Sniffer
     {
         try
         {
-            byteData = new byte[128];
             IPAddress = (IPAddress)ipAddressToMonitor;
-            ipSocket = new Socket(IPAddress.AddressFamily,
-                SocketType.Raw, ProtocolType.IP)
-            {
-                ExclusiveAddressUse = false
-            };
-            ipSocket.Bind(new IPEndPoint(IPAddress, TcpPort ?? 3389));
-            ipSocket.SetSocketOption(SocketOptionLevel.IP,
-                SocketOptionName.HeaderIncluded,
-                true);
-            byte[] byTrue = [3, 0, 0, 0];
-            byte[] byOut = [1, 0, 0, 0];  // capture outgoing packets
-            ipSocket.IOControl(IOControlCode.ReceiveAll,
-                byTrue, byOut);
-
-            ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
-                new AsyncCallback(OnReceive), null);
+            receiver.PacketReceived += OnReceive;
+            receiver.Start(IPAddress);
         }
         catch (Exception ex)
         {
@@ -71,22 +55,14 @@ public class Sniffer
     /// </summary>
     /// <param name="ar">The ar value.</param>
 
-    private void OnReceive(IAsyncResult ar)
+    private void OnReceive(object? sender, RawPacketEventArgs e)
     {
         if (!aborted)
         {
             try
             {
-                if (ipSocket is null)
-                {
-                    return;
-                }
-
-                int length = ipSocket.EndReceive(ar);
-                byte[] packet = new byte[length];
-                Array.Copy(byteData, 0, packet, 0, length);
-                //ParseData(byteData, nReceived);
-                IPHeader ipHeader = new(packet, length);
+                byte[] packet = e.Packet.ToArray();
+                IPHeader ipHeader = new(packet, packet.Length);
                 if (ipHeader.SourceAddress.Equals(IPAddress)) OnPacketSent(ipHeader);
                 // if (ipHeader.DestinationAddress.Equals(IPAddress)) OnPacketReceived(ipHeader);
                 // OnPacketReceived(new NetworkPacket(byteData,length));
@@ -96,13 +72,6 @@ public class Sniffer
             catch (Exception)
             {
                 // Sniffer.LogTrace(ex);
-            }
-            finally
-            {
-                byteData = new byte[128];          // set to 16276 bytes
-                // continue receiving
-                ipSocket?.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
-                    new AsyncCallback(OnReceive), null);
             }
         }
     }
@@ -126,7 +95,11 @@ public class Sniffer
     /// Closes socket.
     /// </summary>
 
-    public void CloseSocket() => ipSocket?.Close();
+    public void CloseSocket()
+    {
+        receiver.PacketReceived -= OnReceive;
+        receiver.Stop();
+    }
 
     /// <summary>
     /// Executes the log trace operation.

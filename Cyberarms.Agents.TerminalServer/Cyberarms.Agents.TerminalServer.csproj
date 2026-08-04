@@ -9,5 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Api\Cyberarms.IntrusionDetection.Api.csproj" />
+    <ProjectReference Include="..\Cyberarms.IntrusionDetection.Shared\Cyberarms.IntrusionDetection.Shared.csproj" />
   </ItemGroup>
 </Project>

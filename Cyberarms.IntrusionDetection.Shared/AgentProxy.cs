@@ -33,7 +33,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unable to resolve the requested agent plugin type."));
         object? instance = Activator.CreateInstance(pluginType);
         _agent = instance as IAgentPlugin
-            ?? throw new InvalidOperationException($"Unable to create agent plugin '{typeName}' from '{assemblyFilename}'.");
+            ?? throw new InvalidOperationException(string.Format(Localization.Strings.Get("Unable to create agent plugin '{0}' from '{1}'."), typeName, assemblyFilename));
         _agent.AttackDetected += agent_AttackDetected;
     }
 

@@ -166,7 +166,7 @@ class Program
             {
                 if (alert.IpAddress == ipAddress) return alert;
             }
-            throw new InvalidOperationException($"Alert for {ipAddress} was not found.");
+            throw new InvalidOperationException(string.Format(Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Alert for {0} was not found."), ipAddress));
         }
     }
 

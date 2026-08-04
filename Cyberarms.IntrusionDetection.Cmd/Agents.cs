@@ -15,7 +15,7 @@ internal class Agents : List<Agent>
     internal void Load(string assemblyName)
     {
         Type pInterfaceType = typeof(IAgentPlugin);
-        var assembly = Assembly.LoadFile(assemblyName);
+        var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(System.IO.Path.GetFullPath(assemblyName));
         foreach (Type type in assembly.GetTypes())
         {
             if (type.IsPublic && !type.IsAbstract)
