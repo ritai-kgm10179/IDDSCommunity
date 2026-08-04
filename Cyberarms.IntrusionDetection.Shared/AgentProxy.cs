@@ -46,7 +46,20 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <param name="sender">The source of the event.</param>
     /// <param name="data">The event data.</param>
 
-    private void agent_AttackDetected(object sender, INotificationEventArgs data) => AttackDetected?.Invoke(sender, data);
+    private void agent_AttackDetected(object sender, INotificationEventArgs data)
+    {
+        foreach (AttackDetectedHandler handler in AttackDetected?.GetInvocationList() ?? [])
+        {
+            try
+            {
+                handler(sender, data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError(Localization.Strings.Format("AgentProxy AttackDetected subscriber failed: {0}", ex.GetType().Name));
+            }
+        }
+    }
 
     /// <summary>
     /// Starts requested operation.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace Cyberarms.Agents.MailServer;
 
@@ -12,8 +13,6 @@ public class Pop3Agent : AgentPlugin
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
     public System.Timers.Timer cleanupTimer;
-    private ThreadStart? ts;
-    private Thread? td;
 
     readonly List<Sniffer> sniffers = [];
 
@@ -47,7 +46,8 @@ public class Pop3Agent : AgentPlugin
         //}
         foreach (int key in CurrentClients.Keys)
         {
-            if (CurrentClients[key].LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now) CurrentClients.Remove(key);
+            if (CurrentClients.TryGetValue(key, out Pop3Client? client) && client.LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now)
+                _currentClients.TryRemove(key, out _);
         }
     }
 
@@ -57,9 +57,7 @@ public class Pop3Agent : AgentPlugin
 
     protected override void OnStartAgent()
     {
-        ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts) { IsBackground = true };
-        td.Start();
+        RunWatcher();
         base.OnStartAgent();
     }
 
@@ -76,8 +74,7 @@ public class Pop3Agent : AgentPlugin
             {
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    ParameterizedThreadStart pts = new(WatchAddress);
-                    pts.Invoke(ip);
+                    WatchAddress(ip);
                 }
             }
         }
@@ -163,42 +160,42 @@ public class Pop3Agent : AgentPlugin
                         if (tcp.Data.Length > 0)
                         {
                             AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
-                            if (!CurrentClients.ContainsKey(sourcePort)) CurrentClients.Add(sourcePort, new Pop3Client());
-                            CurrentClients[sourcePort].LastInteraction = DateTime.Now;
+                            Pop3Client client = _currentClients.GetOrAdd(sourcePort, _ => new Pop3Client());
+                            client.LastInteraction = DateTime.Now;
                             switch (pop3.Pop3Code.ToUpper())
                             {
                                 case AppLayerPop3.POP3_INTERACTION_CODE_LIST:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.LIST;
+                                    client.LastMessage = Pop3Message.LIST;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_DELE:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.DELE;
+                                    client.LastMessage = Pop3Message.DELE;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_NOOP:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.NOOP;
+                                    client.LastMessage = Pop3Message.NOOP;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_PASS:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.PASS;
+                                    client.LastMessage = Pop3Message.PASS;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_QUIT:
-                                    if (CurrentClients.ContainsKey(sourcePort)) CurrentClients.Remove(sourcePort);
+                                    _currentClients.TryRemove(sourcePort, out _);
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_RETR:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.RETR;
+                                    client.LastMessage = Pop3Message.RETR;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_RSET:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.RSET;
+                                    client.LastMessage = Pop3Message.RSET;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_STAT:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.STAT;
+                                    client.LastMessage = Pop3Message.STAT;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_TOP:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.TOP;
+                                    client.LastMessage = Pop3Message.TOP;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_UIDL:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.UIDL;
+                                    client.LastMessage = Pop3Message.UIDL;
                                     break;
                                 case AppLayerPop3.POP3_INTERACTION_CODE_USER:
-                                    CurrentClients[sourcePort].LastMessage = Pop3Message.USER;
+                                    client.LastMessage = Pop3Message.USER;
                                     break;
                             }
                         }
@@ -263,15 +260,15 @@ public class Pop3Agent : AgentPlugin
     }
 
 
-    private Dictionary<int, Pop3Client> _currentClients = [];
-    public Dictionary<int, Pop3Client> CurrentClients
+    private ConcurrentDictionary<int, Pop3Client> _currentClients = [];
+    public IDictionary<int, Pop3Client> CurrentClients
     {
         get
         {
             return _currentClients;
         }
 
-        set => _currentClients = value;
+        set => _currentClients = new ConcurrentDictionary<int, Pop3Client>(value);
     }
 
     /// <summary>
@@ -287,7 +284,7 @@ public class Pop3Agent : AgentPlugin
 
     protected override void OnContinueAgent()
     {
-        Start();
+        OnStartAgent();
         base.OnContinueAgent();
     }
 
@@ -297,7 +294,7 @@ public class Pop3Agent : AgentPlugin
 
     protected override void OnPauseAgent()
     {
-        Stop();
+        OnStopAgent();
         base.OnPauseAgent();
     }
 

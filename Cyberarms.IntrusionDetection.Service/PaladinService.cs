@@ -27,6 +27,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly Statistics statistics;
     private readonly ProtectionAuditTrail protectionAuditTrail;
     private readonly IRuntimeLog logManager;
+    private SecurityEventPipeline? securityEventPipeline;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -601,6 +602,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             cancellationToken.ThrowIfCancellationRequested();
             ConfigureSystem();
             await protectionAuditTrail.PurgeOlderThanAsync(TimeSpan.FromDays(protectionOptions.AuditRetentionDays), cancellationToken).ConfigureAwait(false);
+            securityEventPipeline = new SecurityEventPipeline(
+                protectionOptions.SecurityEventQueueCapacity,
+                ProcessAttackDetected,
+                LogSecurityEventFailure);
             if (!isInitialized) Init();
             InitAgentConfiguration();
             agentsLoaded = true;
@@ -673,6 +678,13 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (agentsLoaded)
             TryStop(UnloadAgents, failures);
         agentsLoaded = false;
+
+        if (securityEventPipeline is not null)
+        {
+            securityEventPipeline.Complete();
+            TryStop(() => securityEventPipeline.Completion.WaitAsync(TimeSpan.FromSeconds(protectionOptions.SecurityEventDrainTimeoutSeconds)).GetAwaiter().GetResult(), failures);
+            securityEventPipeline = null;
+        }
         bool wasStarted = runtimeStarted;
         runtimeStarted = false;
 
@@ -762,6 +774,23 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     void Service_AttackDetected(object sender, INotificationEventArgs notificationEventArgs)
     {
+        SecurityEventPipeline? pipeline = securityEventPipeline;
+        if (pipeline is not null && pipeline.Publish(sender, notificationEventArgs))
+            return;
+        logManager.WriteEntry(
+            Strings.Get("Security event pipeline is stopping or unavailable; the event could not be accepted."),
+            EventLogEntryType.Error,
+            Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
+            Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
+    }
+
+    /// <summary>
+    /// Processes one accepted Agent detection on the dedicated protection consumer.
+    /// </summary>
+    /// <param name="sender">The reporting Agent.</param>
+    /// <param name="notificationEventArgs">The detection information.</param>
+    private void ProcessAttackDetected(object sender, INotificationEventArgs notificationEventArgs)
+    {
         try
         {
             if (notificationEventArgs == null)
@@ -846,6 +875,16 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
         }
     }
+
+    /// <summary>
+    /// Records an isolated security-event consumer failure.
+    /// </summary>
+    /// <param name="exception">The processing failure.</param>
+    private void LogSecurityEventFailure(Exception exception) => logManager.WriteEntry(
+        Strings.Format("Security event processing failed: {0}", exception.GetType().Name),
+        EventLogEntryType.Error,
+        Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
+        Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
 
 
 

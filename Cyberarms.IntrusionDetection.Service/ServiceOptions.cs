@@ -34,6 +34,12 @@ internal sealed class ProtectionOptions
 
     [Range(30, 3650)]
     public int AuditRetentionDays { get; init; } = 365;
+
+    [Range(16, 1048576)]
+    public int SecurityEventQueueCapacity { get; init; } = 4096;
+
+    [Range(1, 300)]
+    public int SecurityEventDrainTimeoutSeconds { get; init; } = 30;
 }
 
 internal static class ServiceOptionsExtensions

@@ -537,4 +537,7 @@
   <data name="The audit export destination must be writable." xml:space="preserve"><value>稽核匯出目的地必須可寫入。</value></data>
   <data name="Protection audit recording failed: {0}" xml:space="preserve"><value>防護稽核記錄失敗：{0}</value></data>
   <data name="The protection audit store is unavailable." xml:space="preserve"><value>防護稽核儲存區無法使用。</value></data>
+  <data name="Security event pipeline is stopping or unavailable; the event could not be accepted." xml:space="preserve"><value>安全事件管線正在停止或無法使用，無法接受此事件。</value></data>
+  <data name="Security event processing failed: {0}" xml:space="preserve"><value>安全事件處理失敗：{0}</value></data>
+  <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected 訂閱者失敗：{0}</value></data>
 </root>

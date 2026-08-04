@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
-using System.Threading;
 using System.Drawing;
 
 namespace Cyberarms.Agents.Smtp;
@@ -11,8 +10,6 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 {
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
-    private ThreadStart? ts;
-    private Thread? td;
 
     readonly List<Sniffer> sniffers = [];
 
@@ -33,9 +30,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnStartAgent()
     {
-        ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts) { IsBackground = true };
-        td.Start();
+        RunWatcher();
         base.OnStartAgent();
     }
 
@@ -52,8 +47,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
             {
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    ParameterizedThreadStart pts = new(WatchAddress);
-                    pts.Invoke(ip);
+                    WatchAddress(ip);
                 }
             }
         }
@@ -135,7 +129,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnContinueAgent()
     {
-        Start();
+        OnStartAgent();
         base.OnContinueAgent();
     }
 
@@ -145,7 +139,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnPauseAgent()
     {
-        Stop();
+        OnStopAgent();
         base.OnPauseAgent();
     }
 

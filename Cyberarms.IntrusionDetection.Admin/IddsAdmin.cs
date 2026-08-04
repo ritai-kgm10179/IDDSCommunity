@@ -5,6 +5,8 @@ using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
 using Cyberarms.IntrusionDetection.Shared.Localization;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -23,6 +25,8 @@ public partial class IddsAdmin : Form
 
     System.ServiceProcess.ServiceController? serviceController;
     private EventLog? eventLogCyberarms;
+    private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
+    private int serviceRefreshActive;
     /// <summary>
     /// Initializes a new instance of the <see cref="IddsAdmin"/> class.
     /// </summary>
@@ -37,6 +41,16 @@ public partial class IddsAdmin : Form
         panelContent.Paint += new PaintEventHandler(panelContent_Paint);
 
         Load += new EventHandler(IddsAdmin_Load);
+    }
+
+    /// <summary>
+    /// Cancels pending background snapshots before WinForms destroys control handles.
+    /// </summary>
+    /// <param name="e">The form-close event data.</param>
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        uiRefreshCancellation.Cancel();
+        base.OnFormClosed(e);
     }
 
     private static IddsAdmin? _instance;
@@ -248,7 +262,26 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    void serviceReader_Tick(object? sender, EventArgs e) => RefreshServiceStatus();
+    async void serviceReader_Tick(object? sender, EventArgs e)
+    {
+        if (System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 1) != 0)
+            return;
+        try
+        {
+            System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(ReadServiceStatus, uiRefreshCancellation.Token).ConfigureAwait(false);
+            if (!IsDisposed)
+                await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (Exception)
+        {
+            ServiceError = true;
+        }
+        finally
+        {
+            System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 0);
+        }
+    }
 
 
     public bool ServiceError { get; set; }
@@ -259,7 +292,25 @@ public partial class IddsAdmin : Form
 
     public void RefreshServiceStatus()
     {
+        ApplyServiceStatus(ReadServiceStatus());
+    }
+
+    /// <summary>
+    /// Reads the current Windows service status without accessing UI controls.
+    /// </summary>
+    /// <returns>The service status, or <see langword="null"/> when no controller is available.</returns>
+    private System.ServiceProcess.ServiceControllerStatus? ReadServiceStatus()
+    {
         serviceController?.Refresh();
+        return serviceController?.Status;
+    }
+
+    /// <summary>
+    /// Applies one service-status snapshot on the UI thread.
+    /// </summary>
+    /// <param name="status">The status read by the background operation.</param>
+    private void ApplyServiceStatus(System.ServiceProcess.ServiceControllerStatus? status)
+    {
         if (ServiceError)
         {
             smartLabelServiceStatus.Text = Strings.Get("Service not found!");
@@ -268,7 +319,7 @@ public partial class IddsAdmin : Form
         }
         try
         {
-            if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
+            if (status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
             {
                 IsServiceRunning = true;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start_deactivated;
@@ -278,7 +329,7 @@ public partial class IddsAdmin : Form
                 smartLabelServiceStatus.Text = Strings.Get("Service is running");
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(0, 159, 227);
             }
-            else if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
+            else if (status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
             {
                 IsServiceRunning = false;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start;
@@ -322,77 +373,140 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    void logReader_Tick(object? sender, EventArgs e)
+    async void logReader_Tick(object? sender, EventArgs e)
     {
-        DateTime metering = DateTime.Now;
-        if (!IsUpdating && Database.Instance.IsConfigured)
+        if (IsUpdating || !Database.Instance.IsConfigured)
+            return;
+        IsUpdating = true;
+        AdminRefreshMode mode = CurrentMenu == labelMenuSecurityLog
+            ? AdminRefreshMode.SecurityLog
+            : CurrentMenu == labelMenuCurrentLocks
+                ? AdminRefreshMode.CurrentLocks
+                : CurrentMenu == labelMenuHome
+                    ? AdminRefreshMode.Dashboard
+                    : AdminRefreshMode.None;
+        int lastLogId = LastLogId;
+        DateTime lastLockUpdate = LastLockUpdate;
+        try
         {
-            IsUpdating = true;
-            if (CurrentMenu == labelMenuSecurityLog && IntrusionLog.HasUpdates(LastLogId))
+            AdminRefreshSnapshot snapshot = await Task.Run(() => LoadAdminSnapshot(mode, lastLogId, lastLockUpdate), uiRefreshCancellation.Token).ConfigureAwait(false);
+            await this.InvokeAsync(() => ApplyAdminSnapshot(snapshot), uiRefreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            try
             {
-                IDataReader rdr = IntrusionLog.ReadDifferential(LastLogId);
-                int maxLogId = LastLogId;
-                while (rdr.Read())
-                {
-                    int action = Shared.Db.DbValueConverter.ToInt(rdr["Action"]);
-                    string agentId = Shared.Db.DbValueConverter.ToString(rdr["AgentId"]);
-                    PanelSecurityLog.AddLogEntry(Shared.Db.DbValueConverter.ToInt(rdr["id"]), action,
-                        agentId,
-                        IntrusionLog.GetStatusIcon(action),
-                        IntrusionLog.GetStatusClass(action), Shared.Db.DbValueConverter.ToDateTime(rdr["IncidentTime"]), Shared.Db.DbValueConverter.ToString(rdr["ClientIP"]),
-                        GetLogMessage(agentId, action));
-                    if (Convert.ToInt32(rdr["Id"]) > maxLogId) maxLogId = Convert.ToInt32(rdr["Id"]);
-                }
-                rdr.Close();
-                rdr.Dispose();
-                if (maxLogId > LastLogId) LastLogId = maxLogId;
+                EventLog.WriteEntry("Cyberarms.IntrusionDetection.Admin", ex.Message, EventLogEntryType.Error);
             }
-
-            if (CurrentMenu == labelMenuCurrentLocks && Locks.HasUpdates(LastLockUpdate))
+            catch (Exception)
             {
-                LastLockUpdate = DateTime.Now;
-                PanelCurrentLocks.Clear();
-                IDataReader locksReader = Locks.ReadLocks();
-                while (locksReader.Read())
-                {
-                    DateTime.TryParse(locksReader["LockDate"].ToString(), out DateTime lockDate);
-                    DateTime.TryParse(locksReader["UnlockDate"].ToString(), out DateTime unlockDate);
-                    PanelCurrentLocks.Add(Shared.Db.DbValueConverter.ToInt(locksReader["LockId"]), Properties.Resources.logIcon_softLock,
-                        LockStatusAdapter.GetLockStatusName(Shared.Db.DbValueConverter.ToInt(locksReader["Status"])), Shared.Db.DbValueConverter.ToString(locksReader["ClientIp"]),
-                        Shared.Db.DbValueConverter.ToString(locksReader["DisplayName"]),
-                        lockDate, unlockDate, Shared.Db.DbValueConverter.ToInt(locksReader["Status"]));
-                }
-                locksReader.Close();
-                locksReader.Dispose();
-
-            }
-            if (CurrentMenu == labelMenuHome)
-            {
-                Dashboard.SetUnsuccessfulLogins(Locks.ReadUnsuccessfulLoginAttempts(DateTime.Now.AddDays(-30)));
-                foreach (SecurityAgent agent in SecurityAgents.Instance)
-                {
-                    agent.UpdateStatistics();
-                }
-            }
-            if (CurrentMenu == labelMenuHome || CurrentMenu == labelMenuCurrentLocks)
-            {
-                int softLocks = Locks.ReadCurrentSoftLocks();
-                int hardLocks = Locks.ReadCurrentHardLocks();
-                PanelCurrentLocks.SetSoftLocks(softLocks);
-                PanelCurrentLocks.SetHardLocks(hardLocks);
-                Dashboard.SetHardLocks(hardLocks);
-                Dashboard.SetSoftLocks(softLocks);
-
-            }
-            if (!IsInitialized || CurrentMenu == labelMenuHome || CurrentMenu == labelMenuSecurityLog)
-            {
-                // ?? 
+                // UI refresh failures must not terminate the WinForms message loop.
             }
         }
-        IsInitialized = true;
-        IsUpdating = false;
-        Debug.Print(DateTime.Now.Subtract(metering).TotalMilliseconds.ToString());
+        finally
+        {
+            try
+            {
+                if (!IsDisposed && !uiRefreshCancellation.IsCancellationRequested)
+                {
+                    await this.InvokeAsync(() =>
+                    {
+                        IsInitialized = true;
+                        IsUpdating = false;
+                    }, uiRefreshCancellation.Token);
+                }
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (InvalidOperationException) when (IsDisposed || !IsHandleCreated) { }
+        }
     }
+
+    /// <summary>
+    /// Loads one immutable administration snapshot without accessing WinForms controls.
+    /// </summary>
+    /// <param name="mode">The visible administration area.</param>
+    /// <param name="lastLogId">The last log identifier already displayed.</param>
+    /// <param name="lastLockUpdate">The last lock refresh timestamp.</param>
+    /// <returns>The background-loaded administration snapshot.</returns>
+    private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate)
+    {
+        List<AdminLogRow> logs = [];
+        List<AdminLockRow> locks = [];
+        int maxLogId = lastLogId;
+        DateTime? newLockUpdate = null;
+        int? unsuccessfulLogins = null;
+        int? softLocks = null;
+        int? hardLocks = null;
+        if (mode == AdminRefreshMode.SecurityLog && IntrusionLog.HasUpdates(lastLogId))
+        {
+            using IDataReader reader = IntrusionLog.ReadDifferential(lastLogId);
+            while (reader.Read())
+            {
+                int id = Shared.Db.DbValueConverter.ToInt(reader["Id"]);
+                int action = Shared.Db.DbValueConverter.ToInt(reader["Action"]);
+                string agentId = Shared.Db.DbValueConverter.ToString(reader["AgentId"]);
+                logs.Add(new AdminLogRow(id, action, agentId, Shared.Db.DbValueConverter.ToDateTime(reader["IncidentTime"]), Shared.Db.DbValueConverter.ToString(reader["ClientIP"]), GetLogMessage(agentId, action)));
+                maxLogId = Math.Max(maxLogId, id);
+            }
+        }
+        if (mode == AdminRefreshMode.CurrentLocks && Locks.HasUpdates(lastLockUpdate))
+        {
+            newLockUpdate = DateTime.Now;
+            using IDataReader reader = Locks.ReadLocks();
+            while (reader.Read())
+            {
+                DateTime.TryParse(reader["LockDate"].ToString(), out DateTime lockDate);
+                DateTime.TryParse(reader["UnlockDate"].ToString(), out DateTime unlockDate);
+                int status = Shared.Db.DbValueConverter.ToInt(reader["Status"]);
+                locks.Add(new AdminLockRow(Shared.Db.DbValueConverter.ToInt(reader["LockId"]), status, Shared.Db.DbValueConverter.ToString(reader["ClientIp"]), Shared.Db.DbValueConverter.ToString(reader["DisplayName"]), lockDate, unlockDate));
+            }
+        }
+        if (mode == AdminRefreshMode.Dashboard)
+        {
+            unsuccessfulLogins = Locks.ReadUnsuccessfulLoginAttempts(DateTime.Now.AddDays(-30));
+            foreach (SecurityAgent agent in SecurityAgents.Instance)
+                agent.UpdateStatistics();
+        }
+        if (mode is AdminRefreshMode.Dashboard or AdminRefreshMode.CurrentLocks)
+        {
+            softLocks = Locks.ReadCurrentSoftLocks();
+            hardLocks = Locks.ReadCurrentHardLocks();
+        }
+        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, unsuccessfulLogins, softLocks, hardLocks);
+    }
+
+    /// <summary>
+    /// Applies a background-loaded administration snapshot on the UI thread.
+    /// </summary>
+    /// <param name="snapshot">The immutable values to display.</param>
+    private void ApplyAdminSnapshot(AdminRefreshSnapshot snapshot)
+    {
+        foreach (AdminLogRow row in snapshot.Logs)
+            PanelSecurityLog.AddLogEntry(row.Id, row.Action, row.AgentId, IntrusionLog.GetStatusIcon(row.Action), IntrusionLog.GetStatusClass(row.Action), row.IncidentTime, row.ClientIp, row.Message);
+        LastLogId = Math.Max(LastLogId, snapshot.MaxLogId);
+        if (snapshot.NewLockUpdate is DateTime lockUpdate)
+        {
+            LastLockUpdate = lockUpdate;
+            PanelCurrentLocks.Clear();
+            foreach (AdminLockRow row in snapshot.Locks)
+                PanelCurrentLocks.Add(row.Id, Properties.Resources.logIcon_softLock, LockStatusAdapter.GetLockStatusName(row.Status), row.ClientIp, row.DisplayName, row.LockDate, row.UnlockDate, row.Status);
+        }
+        if (snapshot.UnsuccessfulLogins is int unsuccessful)
+            Dashboard.SetUnsuccessfulLogins(unsuccessful);
+        if (snapshot.SoftLocks is int soft && snapshot.HardLocks is int hard)
+        {
+            PanelCurrentLocks.SetSoftLocks(soft);
+            PanelCurrentLocks.SetHardLocks(hard);
+            Dashboard.SetSoftLocks(soft);
+            Dashboard.SetHardLocks(hard);
+        }
+    }
+
+    private enum AdminRefreshMode { None, SecurityLog, CurrentLocks, Dashboard }
+    private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message);
+    private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
+    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, int? UnsuccessfulLogins, int? SoftLocks, int? HardLocks);
 
     public int LastLogId { get; set; }
 
