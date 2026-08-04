@@ -24,7 +24,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly SecurityAgents securityAgents;
     private readonly ReportScheduler reportScheduler;
     private readonly Statistics statistics;
-    private readonly WindowsLogManager logManager;
+    private readonly IRuntimeLog logManager;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -69,7 +69,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         SecurityAgents securityAgents,
         ReportScheduler reportScheduler,
         Statistics statistics,
-        WindowsLogManager logManager)
+        IRuntimeLog logManager)
     {
         ArgumentNullException.ThrowIfNull(firewallPolicy);
         ArgumentNullException.ThrowIfNull(databaseOptions);

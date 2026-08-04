@@ -509,4 +509,5 @@
   <data name="The database file name cannot contain a directory path." xml:space="preserve"><value>The database file name cannot contain a directory path.</value></data>
   <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>The existing database is missing the required table '{0}'.</value></data>
   <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP configuration is incomplete.</value></data>
+  <data name="Windows Firewall integration requires Windows." xml:space="preserve"><value>Windows Firewall integration requires Windows.</value></data>
 </root>

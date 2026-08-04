@@ -4,11 +4,11 @@ using Cyberarms.IntrusionDetection.Shared;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal sealed class WindowsLogManager : IDisposable
+internal sealed class WindowsLogManager : IRuntimeLog
 {
     // public override event AttackDetectedHandler AttackDetected;
 
-    private EventLog? eventLogCyberarms;
+    private readonly IWindowsEventLog eventLog;
 
 
     private static WindowsLogManager? _instance;
@@ -16,8 +16,7 @@ internal sealed class WindowsLogManager : IDisposable
     {
         get
         {
-            _instance ??= new WindowsLogManager
-            { };
+            _instance ??= new WindowsLogManager(new WindowsEventLog());
             return _instance;
         }
     }
@@ -31,7 +30,7 @@ internal sealed class WindowsLogManager : IDisposable
     /// <param name="eventId">The event id value.</param>
     /// <param name="category">The category value.</param>
 
-    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
+    public void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
     {
         //if (!EventLog.Exists(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE)) {
         //    // did somebody delete the eventlog with event viewer?
@@ -41,9 +40,7 @@ internal sealed class WindowsLogManager : IDisposable
         //    }
         //    EventLog.CreateEventSource(new EventSourceCreationData(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME));
         //}
-        eventLogCyberarms ??= new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME, ".", Globals.CYBERARMS_WINDOWS_EVENT_SOURCE);
-
-        eventLogCyberarms.WriteEntry(text, type, eventId, category);
+        eventLog.WriteEntry(text, type, eventId, category);
     }
 
 
@@ -51,18 +48,10 @@ internal sealed class WindowsLogManager : IDisposable
     /// <summary>
     /// Initializes a logger whose lifetime is managed by the Host container.
     /// </summary>
-    public WindowsLogManager()
+    public WindowsLogManager(IWindowsEventLog eventLog)
     {
-
-    }
-
-    /// <summary>
-    /// Releases the cached Windows Event Log handle.
-    /// </summary>
-    public void Dispose()
-    {
-        eventLogCyberarms?.Dispose();
-        eventLogCyberarms = null;
+        ArgumentNullException.ThrowIfNull(eventLog);
+        this.eventLog = eventLog;
     }
 
 

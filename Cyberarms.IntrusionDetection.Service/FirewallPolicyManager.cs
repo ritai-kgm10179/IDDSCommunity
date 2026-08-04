@@ -6,16 +6,17 @@ using Cyberarms.IntrusionDetection.Shared;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal sealed class FirewallPolicyManager : IFirewallPolicy
+internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 {
     private readonly INetFwPolicy2 firewallPolicyManager;
+    private readonly IRuntimeLog logManager;
     private static FirewallPolicyManager? _instance;
 
     internal static FirewallPolicyManager Instance
     {
         get
         {
-            _instance ??= new FirewallPolicyManager();
+            _instance ??= new FirewallPolicyManager(WindowsLogManager.Instance);
             return _instance;
         }
     }
@@ -24,7 +25,14 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy
     /// Initializes a new instance of the <see cref="FirewallPolicyManager"/> class.
     /// </summary>
 
-    private FirewallPolicyManager() => firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
+    internal FirewallPolicyManager(IRuntimeLog logManager)
+    {
+        ArgumentNullException.ThrowIfNull(logManager);
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Windows Firewall integration requires Windows."));
+        this.logManager = logManager;
+        firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
+    }
 
     /// <summary>
     /// Creates com object.
@@ -52,7 +60,8 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy
         }
         catch (Exception ex)
         {
-            System.Diagnostics.EventLog.WriteEntry("Create Firewall Rule", ex.Message, System.Diagnostics.EventLogEntryType.Error);
+            logManager.WriteEntry("Create Firewall Rule: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
     }
 
@@ -73,7 +82,8 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy
         }
         catch (Exception ex)
         {
-            System.Diagnostics.EventLog.WriteEntry("IsLocked encountered an error: ", ex.Message, System.Diagnostics.EventLogEntryType.Error);
+            logManager.WriteEntry("IsLocked encountered an error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         return false;
     }
@@ -318,6 +328,15 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy
             if (rule.Name.StartsWith(name)) rules.Add(rule);
         }
         return rules;
+    }
+
+    /// <summary>
+    /// Releases the COM firewall policy object owned by this manager.
+    /// </summary>
+    public void Dispose()
+    {
+        if (System.Runtime.InteropServices.Marshal.IsComObject(firewallPolicyManager))
+            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(firewallPolicyManager);
     }
 
 }
