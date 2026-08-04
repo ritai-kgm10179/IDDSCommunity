@@ -31,6 +31,20 @@ public class Database
     private SqliteConnection? _connection;
 
     /// <summary>
+    /// Closes the active database connection and releases its file handle.
+    /// </summary>
+    public void Close()
+    {
+        if (_connection is null)
+            return;
+        _connection.StateChange -= _connection_StateChange;
+        _connection.Dispose();
+        _connection = null;
+        SqliteConnection.ClearAllPools();
+        _isConfigured = false;
+    }
+
+    /// <summary>
     /// Configures requested operation.
     /// </summary>
     /// <param name="directory">The directory value.</param>
@@ -291,6 +305,7 @@ public class Database
 
     private void OpenOrCreate()
     {
+        Db.SchemaMigrationRunner.Migrate(Connection);
         string? version = null;
         try
         {
@@ -303,8 +318,6 @@ public class Database
 
         if (string.IsNullOrEmpty(version))
         {
-            Db.DbUpgrader upgrader = new();
-            upgrader.RunUpgradeScripts(Connection);
             var versionObj = Connection.ExecuteScalar("Select Version from DbConfig");
             if (int.TryParse(versionObj?.ToString(), out int versionNumber))
             {
