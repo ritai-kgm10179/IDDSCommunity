@@ -1,26 +1,27 @@
 ﻿using System;
-using System.ServiceProcess;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-static class Program
+internal static class Program
 {
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
     /// <param name="args">The event data.</param>
 
-    static void Main(string[] args)
+    private static async System.Threading.Tasks.Task Main(string[] args)
     {
-        ServiceBase[] ServicesToRun;
-        ServicesToRun =
-        [
-            new Service()
-        ];
         System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
         try
         {
-            ServiceBase.Run(ServicesToRun);
+            HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+            builder.Services.AddWindowsService(options => options.ServiceName = "Cyberarms Intrusion Detection Service");
+            builder.Services.AddSingleton<Service>();
+            builder.Services.AddHostedService<PaladinWorker>();
+            using IHost host = builder.Build();
+            await host.RunAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -34,5 +35,5 @@ static class Program
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) => System.Diagnostics.EventLog.WriteEntry("Cyberarms Intrusion Detection Service Base", e.Exception.Message, System.Diagnostics.EventLogEntryType.Error);
+    private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) => System.Diagnostics.EventLog.WriteEntry("Cyberarms Intrusion Detection Service Base", e.Exception.Message, System.Diagnostics.EventLogEntryType.Error);
 }

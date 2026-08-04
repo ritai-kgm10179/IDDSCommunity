@@ -537,12 +537,25 @@ Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_R
         }
     }
 
+    /// <summary>
+    /// Starts the runtime when hosted by the .NET Generic Host.
+    /// </summary>
+    internal void StartHostedService() => StartService();
+
 
     /// <summary>
     /// Processes the stop notification.
     /// </summary>
 
     protected override void OnStop()
+    {
+        StopHostedService();
+    }
+
+    /// <summary>
+    /// Stops the runtime when hosted by the .NET Generic Host.
+    /// </summary>
+    internal void StopHostedService()
     {
         SecurityAgents.Instance.StopAgents();
         cleanupTimer.Enabled = false;
