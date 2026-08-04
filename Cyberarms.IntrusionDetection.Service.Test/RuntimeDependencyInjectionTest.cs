@@ -77,6 +77,12 @@ public sealed class RuntimeDependencyInjectionTest
         public bool IsLocked(string ipAddress) => false;
 
         /// <summary>
+        /// Returns an empty firewall snapshot for dependency-registration tests.
+        /// </summary>
+        /// <returns>An empty address collection.</returns>
+        public System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses() => [];
+
+        /// <summary>
         /// Records no external firewall state in dependency-registration tests.
         /// </summary>
         /// <param name="ipAddress">The address that would be removed.</param>

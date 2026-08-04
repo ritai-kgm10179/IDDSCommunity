@@ -1117,7 +1117,7 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    private void pictureBoxStartService_Click(object sender, EventArgs e) => StartService();
+    private async void pictureBoxStartService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: true);
 
     /// <summary>
     /// Handles the click event.
@@ -1125,37 +1125,53 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    private void pictureBoxStopService_Click(object sender, EventArgs e) => StopService();
+    private async void pictureBoxStopService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: false);
 
     /// <summary>
-    /// Starts service.
+    /// Changes the Windows service state without blocking the WinForms message loop.
     /// </summary>
-
-    private void StartService()
+    /// <param name="start"><see langword="true"/> to start the service; <see langword="false"/> to stop it.</param>
+    /// <returns>A task that completes after the requested state is observed or the operation fails.</returns>
+    private async Task ChangeServiceStateAsync(bool start)
     {
-        smartLabelServiceStatus.Text = Strings.Get("Starting service...");
+        smartLabelServiceStatus.Text = Strings.Get(start ? "Starting service..." : "Stopping service...");
         smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
-        if (serviceController is not null && (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Paused ||
-            serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped))
+        System.ServiceProcess.ServiceController? controller = serviceController;
+        if (controller is null)
+            return;
+        try
         {
-            serviceController.Start();
+            System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(() =>
+            {
+                controller.Refresh();
+                if (start && controller.Status is System.ServiceProcess.ServiceControllerStatus.Paused or System.ServiceProcess.ServiceControllerStatus.Stopped)
+                {
+                    controller.Start();
+                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
+                }
+                else if (!start && controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
+                {
+                    controller.Stop();
+                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+                }
+                controller.Refresh();
+                return (System.ServiceProcess.ServiceControllerStatus?)controller.Status;
+            }, uiRefreshCancellation.Token).ConfigureAwait(false);
+            await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
         }
-        RefreshServiceStatus();
-    }
-
-    /// <summary>
-    /// Stops service.
-    /// </summary>
-
-    private void StopService()
-    {
-        smartLabelServiceStatus.Text = Strings.Get("Stopping service...");
-        smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
-        if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Running)
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (Exception ex)
         {
-            serviceController.Stop();
+            ServiceError = true;
+            try
+            {
+                EventLog.WriteEntry("Cyberarms.IntrusionDetection.Admin", ex.Message, EventLogEntryType.Error);
+            }
+            catch (Exception)
+            {
+                // Service-control failures must not terminate the WinForms message loop.
+            }
         }
-        RefreshServiceStatus();
     }
 
 

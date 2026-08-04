@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Metrics;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -18,10 +19,17 @@ internal sealed class SecurityEventPipeline
     private static readonly Counter<long> Processed = Meter.CreateCounter<long>("cyberarms.security_events.processed");
     private static readonly Counter<long> Rejected = Meter.CreateCounter<long>("cyberarms.security_events.rejected");
     private static readonly Counter<long> Failures = Meter.CreateCounter<long>("cyberarms.security_events.failures");
+    private static readonly Counter<long> Recovered = Meter.CreateCounter<long>("cyberarms.security_events.recovered");
     private static readonly UpDownCounter<long> Queued = Meter.CreateUpDownCounter<long>("cyberarms.security_events.queued");
+    private static readonly Histogram<double> QueueDelay = Meter.CreateHistogram<double>("cyberarms.security_events.queue_delay", "ms");
+    private static readonly Histogram<double> ProcessingDuration = Meter.CreateHistogram<double>("cyberarms.security_events.processing_duration", "ms");
+    private static readonly Histogram<double> RecoveryAge = Meter.CreateHistogram<double>("cyberarms.security_events.recovery_age", "s");
+    private static readonly Counter<long> DrainTimeouts = Meter.CreateCounter<long>("cyberarms.security_events.drain_timeouts");
     private readonly Channel<SecurityEventEnvelope> channel;
     private readonly Action<object, INotificationEventArgs> process;
     private readonly Action<Exception> reportFailure;
+    private readonly SecurityEventInbox inbox;
+    private readonly Func<string, object?> resolveAgent;
     private long queueDepth;
     private int accepting = 1;
 
@@ -31,13 +39,22 @@ internal sealed class SecurityEventPipeline
     /// <param name="capacity">The maximum number of queued security events.</param>
     /// <param name="process">The synchronous protection operation executed by the dedicated consumer.</param>
     /// <param name="reportFailure">The isolated failure observer.</param>
-    internal SecurityEventPipeline(int capacity, Action<object, INotificationEventArgs> process, Action<Exception> reportFailure)
+    internal SecurityEventPipeline(
+        int capacity,
+        Action<object, INotificationEventArgs> process,
+        Action<Exception> reportFailure,
+        SecurityEventInbox inbox,
+        Func<string, object?> resolveAgent)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity);
         ArgumentNullException.ThrowIfNull(process);
         ArgumentNullException.ThrowIfNull(reportFailure);
+        ArgumentNullException.ThrowIfNull(inbox);
+        ArgumentNullException.ThrowIfNull(resolveAgent);
         this.process = process;
         this.reportFailure = reportFailure;
+        this.inbox = inbox;
+        this.resolveAgent = resolveAgent;
         channel = Channel.CreateBounded<SecurityEventEnvelope>(new BoundedChannelOptions(capacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
@@ -74,9 +91,10 @@ internal sealed class SecurityEventPipeline
             Rejected.Add(1);
             return false;
         }
+        Guid id = inbox.Add(GetAgentName(sender), snapshot);
         Interlocked.Increment(ref queueDepth);
         Queued.Add(1);
-        if (!channel.Writer.TryWrite(new SecurityEventEnvelope(sender, snapshot)))
+        if (!channel.Writer.TryWrite(new SecurityEventEnvelope(id, sender, snapshot, Stopwatch.GetTimestamp())))
         {
             Interlocked.Decrement(ref queueDepth);
             Queued.Add(-1);
@@ -102,11 +120,13 @@ internal sealed class SecurityEventPipeline
             Rejected.Add(1);
             return false;
         }
+        NotificationEventArgs snapshot = CreateSnapshot(eventArgs);
+        Guid id = inbox.Add(GetAgentName(sender), snapshot);
         Interlocked.Increment(ref queueDepth);
         Queued.Add(1);
         try
         {
-            channel.Writer.WriteAsync(new SecurityEventEnvelope(sender, CreateSnapshot(eventArgs))).AsTask().GetAwaiter().GetResult();
+            channel.Writer.WriteAsync(new SecurityEventEnvelope(id, sender, snapshot, Stopwatch.GetTimestamp())).AsTask().GetAwaiter().GetResult();
             Accepted.Add(1);
             return true;
         }
@@ -129,6 +149,51 @@ internal sealed class SecurityEventPipeline
     }
 
     /// <summary>
+    /// Waits for accepted work to drain and records timeout evidence.
+    /// </summary>
+    /// <param name="timeout">The maximum graceful-drain duration.</param>
+    internal void Drain(TimeSpan timeout)
+    {
+        try
+        {
+            Completion.WaitAsync(timeout).GetAwaiter().GetResult();
+        }
+        catch (TimeoutException)
+        {
+            DrainTimeouts.Add(1);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Requeues durable unfinished events whose Agents are loaded in the current runtime.
+    /// </summary>
+    /// <param name="maximumCount">The maximum number of persisted events to recover during startup.</param>
+    internal void RecoverPending(int maximumCount)
+    {
+        foreach (SecurityEventInboxItem item in inbox.ReadPending(maximumCount))
+        {
+            object? sender = resolveAgent(item.AgentName);
+            if (sender is null)
+                continue;
+            Interlocked.Increment(ref queueDepth);
+            Queued.Add(1);
+            try
+            {
+                channel.Writer.WriteAsync(new SecurityEventEnvelope(item.Id, sender, item.EventArgs, Stopwatch.GetTimestamp())).AsTask().GetAwaiter().GetResult();
+                Recovered.Add(1);
+                RecoveryAge.Record(Math.Max(0, (DateTimeOffset.UtcNow - item.ReceivedUtc).TotalSeconds));
+            }
+            catch (ChannelClosedException)
+            {
+                Interlocked.Decrement(ref queueDepth);
+                Queued.Add(-1);
+                return;
+            }
+        }
+    }
+
+    /// <summary>
     /// Processes accepted events sequentially and isolates one failure from later work.
     /// </summary>
     /// <returns>A task representing the consumer lifetime.</returns>
@@ -138,14 +203,27 @@ internal sealed class SecurityEventPipeline
         {
             Interlocked.Decrement(ref queueDepth);
             Queued.Add(-1);
+            long processingStarted = 0;
             try
             {
+                QueueDelay.Record(Stopwatch.GetElapsedTime(item.EnqueuedTimestamp).TotalMilliseconds);
+                processingStarted = Stopwatch.GetTimestamp();
+                inbox.MarkProcessing(item.Id);
                 process(item.Sender, item.EventArgs);
+                inbox.MarkCompleted(item.Id);
                 Processed.Add(1);
             }
             catch (Exception ex)
             {
                 Failures.Add(1);
+                try
+                {
+                    inbox.MarkFailed(item.Id, ex);
+                }
+                catch (Exception inboxException)
+                {
+                    reportFailure(inboxException);
+                }
                 try
                 {
                     reportFailure(ex);
@@ -154,6 +232,11 @@ internal sealed class SecurityEventPipeline
                 {
                     // Failure observers must never terminate the protection consumer.
                 }
+            }
+            finally
+            {
+                if (processingStarted != 0)
+                    ProcessingDuration.Record(Stopwatch.GetElapsedTime(processingStarted).TotalMilliseconds);
             }
         }
     }
@@ -171,5 +254,14 @@ internal sealed class SecurityEventPipeline
         EventMessage = eventArgs.EventMessage
     };
 
-    private sealed record SecurityEventEnvelope(object Sender, INotificationEventArgs EventArgs);
+    /// <summary>
+    /// Obtains the stable Agent identity required to resolve a durable event after restart.
+    /// </summary>
+    /// <param name="sender">The event-producing Agent instance.</param>
+    /// <returns>The configured Agent name, or a deterministic type name for compatible senders.</returns>
+    private static string GetAgentName(object sender) => sender is IAgentPlugin plugin
+        ? plugin.Configuration.AgentName
+        : sender.GetType().FullName ?? sender.GetType().Name;
+
+    private sealed record SecurityEventEnvelope(Guid Id, object Sender, INotificationEventArgs EventArgs, long EnqueuedTimestamp);
 }

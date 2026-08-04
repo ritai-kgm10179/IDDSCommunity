@@ -192,8 +192,7 @@ public class IddsConfig
     public void SaveAppConfig()
     {
         if (!database.IsConfigured) configureDatabase();
-        IDbTransaction trans = database.Connection.BeginTransaction();
-        try
+        database.ExecuteInTransaction((_, trans) =>
         {
             database.ExecuteNonQuery("delete from AppConfig", trans);
             foreach (string key in AppConfig.Keys)
@@ -210,18 +209,8 @@ public class IddsConfig
             }
             foreach (string key in changedAppConfigKeys)
                 RecordConfigurationAudit(trans, key);
-            trans.Commit();
-            changedAppConfigKeys.Clear();
-        }
-        catch (Exception)
-        {
-            trans.Rollback();
-            throw;
-        }
-        finally
-        {
-            trans.Dispose();
-        }
+        });
+        changedAppConfigKeys.Clear();
     }
 
     /// <summary>
@@ -256,8 +245,7 @@ public class IddsConfig
     public void SaveSafeNetworks()
     {
         if (!database.IsConfigured) configureDatabase();
-        IDbTransaction trans = database.Connection.BeginTransaction();
-        try
+        database.ExecuteInTransaction((_, trans) =>
         {
             database.ExecuteNonQuery("delete from WhiteList", trans);
             foreach (CSafeNetwork net in SafeNetworks)
@@ -265,13 +253,7 @@ public class IddsConfig
                 database.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", trans, net.IpAddress, net.SubnetMask);
             }
             RecordConfigurationAudit(trans, "SafeNetworks");
-            trans.Commit();
-        }
-        catch (Exception)
-        {
-            trans.Rollback();
-            throw;
-        }
+        });
     }
 
     /// <summary>

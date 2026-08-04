@@ -36,7 +36,34 @@ public class Locks
         }
     }
 
-
+    /// <summary>
+    /// Returns every database lock whose desired state is an active firewall block.
+    /// </summary>
+    /// <returns>The active lock records.</returns>
+    public static List<Lock> GetActiveLocks()
+    {
+        List<Lock> result = [];
+        using IDataReader reader = Database.Instance.ExecuteReader(
+            "select * from Locks where status in (@p0,@p1,@p2,@p3)",
+            Lock.LOCK_STATUS_HARDLOCK,
+            Lock.LOCK_STATUS_SOFTLOCK,
+            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
+        while (reader.Read())
+        {
+            result.Add(new Lock
+            {
+                Id = Db.DbValueConverter.ToInt64(reader["LockId"]),
+                IpAddress = Db.DbValueConverter.ToString(reader["IpAddress"]),
+                LockDate = Db.DbValueConverter.ToDateTime(reader["LockDate"]),
+                Port = Db.DbValueConverter.ToInt(reader["Port"]),
+                Status = Db.DbValueConverter.ToInt(reader["Status"]),
+                TriggerIncident = Db.DbValueConverter.ToInt64(reader["TriggerIncident"]),
+                UnlockDate = Db.DbValueConverter.ToDateTime(reader["UnlockDate"])
+            });
+        }
+        return result;
+    }
 
     /// <summary>
     /// Reads locks.
@@ -253,9 +280,8 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             Lock result = new();
-            string sqlString = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
-            Database.Instance.ExecuteNonQuery(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.Now);
-            object? id = Database.Instance.ExecuteScalar("SELECT last_insert_rowid()");
+            string sqlString = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6) RETURNING LockId";
+            object? id = Database.Instance.ExecuteScalar(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.Now);
             l.Id = Db.DbValueConverter.ToInt64(id);
             return l.Id;
         }

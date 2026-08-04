@@ -149,8 +149,15 @@ public class Database
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         if (transaction is not null)
-            return Connection.ExecuteReader(sqlString, paramObj, transaction);
-        return SqlitePipeline.Execute(() => Connection.ExecuteReader(sqlString, paramObj));
+            return transaction.Connection!.ExecuteReader(sqlString, paramObj, transaction);
+        return SqlitePipeline.Execute(() =>
+        {
+            using SqliteConnection connection = OpenConnection();
+            using IDataReader reader = connection.ExecuteReader(sqlString, paramObj);
+            DataTable table = new();
+            table.Load(reader);
+            return table.CreateDataReader();
+        });
     }
 
     /// <summary>
@@ -172,9 +179,13 @@ public class Database
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         if (transaction is not null)
-            Connection.Execute(sqlString, paramObj, transaction);
+            transaction.Connection!.Execute(sqlString, paramObj, transaction);
         else
-            SqlitePipeline.Execute(() => Connection.Execute(sqlString, paramObj));
+            SqlitePipeline.Execute(() =>
+            {
+                using SqliteConnection connection = OpenConnection();
+                connection.Execute(sqlString, paramObj);
+            });
     }
 
     /// <summary>
@@ -198,8 +209,12 @@ public class Database
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         if (transaction is not null)
-            return Connection.ExecuteScalar(sqlString, paramObj, transaction);
-        return SqlitePipeline.Execute(() => Connection.ExecuteScalar(sqlString, paramObj));
+            return transaction.Connection!.ExecuteScalar(sqlString, paramObj, transaction);
+        return SqlitePipeline.Execute(() =>
+        {
+            using SqliteConnection connection = OpenConnection();
+            return connection.ExecuteScalar(sqlString, paramObj);
+        });
     }
 
     /// <summary>
@@ -274,6 +289,52 @@ public class Database
     }
 
     /// <summary>
+    /// Executes a synchronous unit of work inside an independently owned SQLite transaction.
+    /// </summary>
+    /// <param name="operation">The transaction operation.</param>
+    public void ExecuteInTransaction(Action<SqliteConnection, SqliteTransaction> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        SqlitePipeline.Execute(() =>
+        {
+            using SqliteConnection connection = OpenConnection();
+            using SqliteTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+            try
+            {
+                operation(connection, transaction);
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Opens and configures an independently owned pooled SQLite connection.
+    /// </summary>
+    /// <returns>The open connection.</returns>
+    private SqliteConnection OpenConnection()
+    {
+        if (!_isConfigured)
+            throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
+        SqliteConnection connection = new(connBuilder.ConnectionString);
+        try
+        {
+            connection.Open();
+            ConfigureConnection(connection);
+            return connection;
+        }
+        catch
+        {
+            connection.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
     /// <param name="cancellationToken">Cancels opening the connection.</param>
@@ -330,7 +391,16 @@ public class Database
     /// <param name="transaction">The transaction value.</param>
     /// <returns>The query result.</returns>
 
-    public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.Query<T>(sqlString, param, transaction);
+    public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
+    {
+        if (transaction is not null)
+            return transaction.Connection!.Query<T>(sqlString, param, transaction).AsList();
+        return SqlitePipeline.Execute(() =>
+        {
+            using SqliteConnection connection = OpenConnection();
+            return connection.Query<T>(sqlString, param).AsList();
+        });
+    }
 
     /// <summary>
     /// Executes the query first or default operation.
@@ -341,7 +411,16 @@ public class Database
     /// <param name="transaction">The transaction value.</param>
     /// <returns>The query first or default result.</returns>
 
-    public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.QueryFirstOrDefault<T>(sqlString, param, transaction);
+    public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
+    {
+        if (transaction is not null)
+            return transaction.Connection!.QueryFirstOrDefault<T>(sqlString, param, transaction);
+        return SqlitePipeline.Execute(() =>
+        {
+            using SqliteConnection connection = OpenConnection();
+            return connection.QueryFirstOrDefault<T>(sqlString, param);
+        });
+    }
 
     /// <summary>
     /// Builds dynamic parameters.

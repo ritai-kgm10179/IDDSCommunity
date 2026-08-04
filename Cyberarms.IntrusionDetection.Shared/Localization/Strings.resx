@@ -537,7 +537,10 @@
   <data name="The audit export destination must be writable." xml:space="preserve"><value>The audit export destination must be writable.</value></data>
   <data name="Protection audit recording failed: {0}" xml:space="preserve"><value>Protection audit recording failed: {0}</value></data>
   <data name="The protection audit store is unavailable." xml:space="preserve"><value>The protection audit store is unavailable.</value></data>
+  <data name="The protection event backlog exceeds the configured queue capacity." xml:space="preserve"><value>The protection event backlog exceeds the configured queue capacity.</value></data>
   <data name="Security event pipeline is stopping or unavailable; the event could not be accepted." xml:space="preserve"><value>Security event pipeline is stopping or unavailable; the event could not be accepted.</value></data>
   <data name="Security event processing failed: {0}" xml:space="preserve"><value>Security event processing failed: {0}</value></data>
   <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected subscriber failed: {0}</value></data>
+  <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>Firewall block failed for {0}: {1}</value></data>
+  <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>Firewall reconciliation failed for {0}: {1}</value></data>
 </root>

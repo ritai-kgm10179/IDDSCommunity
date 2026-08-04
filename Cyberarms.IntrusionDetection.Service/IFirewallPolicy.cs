@@ -6,5 +6,7 @@ internal interface IFirewallPolicy
 
     bool IsLocked(string ipAddress);
 
+    System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses();
+
     void RemoveIpAddressFromBlockList(string ipAddress);
 }
