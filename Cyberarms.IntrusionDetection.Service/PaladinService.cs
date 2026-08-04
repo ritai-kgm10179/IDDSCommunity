@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading.Tasks;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using Cyberarms.IntrusionDetection.Shared;
 using MailKit.Security;
@@ -15,8 +16,6 @@ public partial class Service : ServiceBase
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
     internal event EventHandler ClientIpAddressHardLocked;
-
-    delegate void StartServiceDelegate();
 
 
     // private LogAlerts logAlerts;
@@ -67,7 +66,7 @@ public partial class Service : ServiceBase
             DateTime start = new(end.Year, end.Month, 1, 0, 0, 0);
             string report = ReportGenerator.Instance.GetReport("Monthly Report", string.Format("Report for {0}/{1}", start.Month, start.Year), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 start, new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            SendMail(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report);
+            _ = SendMailAsync(string.Format("Monthly report for {0}", System.Net.Dns.GetHostName()), report, true);
         }
         catch (Exception ex)
         {
@@ -89,7 +88,7 @@ public partial class Service : ServiceBase
             DateTime start = end.AddDays(-6);
             string report = ReportGenerator.Instance.GetReport("Weekly Report", string.Format("Week of {0}-{1}-{2}", start.Year, start.Month, start.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 new DateTime(start.Year, start.Month, start.Day, 0, 0, 0), new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
-            SendMail(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report);
+            _ = SendMailAsync(string.Format("Weekly report for {0}", System.Net.Dns.GetHostName()), report, true);
         }
         catch (Exception ex)
         {
@@ -110,7 +109,7 @@ public partial class Service : ServiceBase
             DateTime d = DateTime.Now.AddDays(-1);
             string report = ReportGenerator.Instance.GetReport("Daily Report", string.Format("{0}-{1}-{2}", d.Year, d.Month, d.Day), string.Format("Server: {0}", System.Net.Dns.GetHostName()),
                 new DateTime(d.Year, d.Month, d.Day, 0, 0, 0), new DateTime(d.Year, d.Month, d.Day, 23, 59, 59));
-            SendMail(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report);
+            _ = SendMailAsync(string.Format("Daily report for {0}", System.Net.Dns.GetHostName()), report, true);
         }
         catch (Exception ex)
         {
@@ -309,7 +308,7 @@ public partial class Service : ServiceBase
                     subject = "Cyberarms IDDS: Hard lock notification (" + op.IpAddress + ")";
                     break;
             }
-            SendMail(subject, op.Message);
+            _ = SendMailAsync(subject, op.Message, false);
         }
         catch (Exception ex)
         {
@@ -323,8 +322,9 @@ public partial class Service : ServiceBase
     /// </summary>
     /// <param name="subject">The subject value.</param>
     /// <param name="message">The message value.</param>
+    /// <param name="isHtml"><see langword="true"/> when the trusted report body contains HTML; otherwise, <see langword="false"/>.</param>
 
-    static void SendMail(string subject, string message)
+    static async Task SendMailAsync(string subject, string message, bool isHtml)
     {
         try
         {
@@ -335,22 +335,28 @@ public partial class Service : ServiceBase
                 mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.SenderEmailAddress));
                 mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.NotificationEmailAddress));
                 mimeMessage.Subject = subject;
-                mimeMessage.Body = new MimeKit.TextPart("html") { Text = message };
+                mimeMessage.Body = new MimeKit.TextPart(isHtml ? "html" : "plain") { Text = message };
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();
                 int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
-                SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
-                client.Connect(IddsConfig.Instance.SmtpServer, port, secureOption);
+                SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
+                using System.Threading.CancellationTokenSource timeout = new(TimeSpan.FromSeconds(30));
+                await client.ConnectAsync(IddsConfig.Instance.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
 
                 if (IddsConfig.Instance.SmtpRequiresAuthentication)
                 {
-                    client.Authenticate(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword());
+                    await client.AuthenticateAsync(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
                 }
-                client.Send(mimeMessage);
-                client.Disconnect(true);
+                await client.SendAsync(mimeMessage, timeout.Token).ConfigureAwait(false);
+                await client.DisconnectAsync(true, timeout.Token).ConfigureAwait(false);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            string safeMessage = ex.Message.Replace('\r', ' ').Replace('\n', ' ');
+            WindowsLogManager.Instance.WriteEntry("Error while sending notification email: " + safeMessage,
+                EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+        }
     }
 
 
@@ -494,18 +500,15 @@ public partial class Service : ServiceBase
 
     protected override void OnStart(string[] args)
     {
-        StartServiceDelegate serviceStarter = new(StartService);
-        IAsyncResult result = serviceStarter.BeginInvoke(new AsyncCallback(StartServiceHandler), null);
-    }
-
-    /// <summary>
-    /// Starts service handler.
-    /// </summary>
-    /// <param name="result">The result value.</param>
-
-    void StartServiceHandler(IAsyncResult result)
-    {
-        // service started
+        _ = Task.Run(StartService).ContinueWith(
+            task => WindowsLogManager.Instance.WriteEntry(
+                "Service startup failed: " + task.Exception!.GetBaseException().Message.Replace('\r', ' ').Replace('\n', ' '),
+                EventLogEntryType.Error,
+                Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL,
+                Globals.CYBERARMS_LOG_CATEGORY_RUNTIME),
+            System.Threading.CancellationToken.None,
+            System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
     }
 
     /// <summary>

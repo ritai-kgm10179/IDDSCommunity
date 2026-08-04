@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Text;
+using System.Net;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
@@ -115,7 +116,7 @@ public class ReportGenerator
             string result = GetIncidentByIPTemplate();
             string ipAddress = Db.DbValueConverter.ToString(rdr["ClientIP"]);
             long incidents = Db.DbValueConverter.ToInt64(rdr["Incidents"]);
-            result = result.Replace("[%IP_ADDRESS%]", ipAddress);
+            result = result.Replace("[%IP_ADDRESS%]", WebUtility.HtmlEncode(ipAddress));
             result = result.Replace("[%INTRUSION_ATTEMPTS%]", incidents.ToString());
             sb.AppendLine(result);
         }
@@ -147,7 +148,7 @@ public class ReportGenerator
 
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
-        string result = GetEventsPerAgentTemplate().Replace("[%AGENT_NAME%]", agentName);
+        string result = GetEventsPerAgentTemplate().Replace("[%AGENT_NAME%]", WebUtility.HtmlEncode(agentName));
         result = result.Replace("[%INTRUSION_ATTEMPTS%]", intrusionAttempts.ToString());
         result = result.Replace("[%SOFT_LOCKS%]", softLocks.ToString());
         result = result.Replace("[%HARD_LOCKS%]", hardLocks.ToString());
@@ -170,8 +171,8 @@ public class ReportGenerator
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
         string result = Resources.ReportTemplate;
-        result = result.Replace("[%TITLE%]", title);
-        result = result.Replace("[%SUBTITLE%]", subtitle);
+        result = result.Replace("[%TITLE%]", WebUtility.HtmlEncode(title));
+        result = result.Replace("[%SUBTITLE%]", WebUtility.HtmlEncode(subtitle));
         result = result.Replace("[%INSTALLATION_INFORMATION%]", installationInformation);
 
         result = result.Replace("[%EVENTS_PER_AGENT%]", GetEventsPerAgent(start, end));

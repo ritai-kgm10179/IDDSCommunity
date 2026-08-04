@@ -279,8 +279,12 @@ public class IddsConfig
     public CSafeNetworks LoadNetworkList(string list)
     {
         if (!Database.Instance.IsConfigured) configureDatabase();
+        if (!string.Equals(list, "WhiteList", StringComparison.Ordinal))
+        {
+            throw new ArgumentOutOfRangeException(nameof(list), "Only the configured safe-network table can be loaded.");
+        }
         CSafeNetworks net = [];
-        IDataReader rdr = Database.Instance.ExecuteReader(string.Format("Select IpAddress, NetworkMask from {0}", list));
+        IDataReader rdr = Database.Instance.ExecuteReader("Select IpAddress, NetworkMask from WhiteList");
         while (rdr.Read())
         {
             net.Add(new CSafeNetwork(Db.DbValueConverter.ToString(rdr["IpAddress"]), Db.DbValueConverter.ToString(rdr["NetworkMask"])));
@@ -483,6 +487,10 @@ public class IddsConfig
         if (!string.IsNullOrEmpty(SmtpPassword))
         {
             smtpPassword = CryptoHelper.Decrypt(SmtpPassword, true);
+            if (!CryptoHelper.IsCurrentFormat(SmtpPassword))
+            {
+                SetSmtpPassword(smtpPassword);
+            }
         }
         return smtpPassword;
     }
@@ -551,27 +559,24 @@ public class IddsConfig
 
     public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
-        int count = 0;
         byte[] addressBytes = address.GetAddressBytes();
         byte[] networkBytes = networkAddress.GetAddressBytes();
-        for (int i = 0; i < addressLength; i++)
+        if (addressBytes.Length != addressLength || networkBytes.Length != addressLength)
         {
-            string addressBits = Convert.ToString(addressBytes[i], 2).PadLeft(8);
-            string networkBits = Convert.ToString(networkBytes[i], 2).PadLeft(8);
-            for (int n = 0; n < 8; n++)
-            {
-                if (addressBits.Substring(n, 1).Equals(networkBits.Substring(n, 1)))
-                {
-                    count++;
-                    if (count == maskBits) return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return false;
         }
-        return false;
+        if (maskBits < 0 || maskBits > addressLength * 8)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maskBits));
+        }
+
+        int fullBytes = maskBits / 8;
+        int remainingBits = maskBits % 8;
+        if (!addressBytes.AsSpan(0, fullBytes).SequenceEqual(networkBytes.AsSpan(0, fullBytes))) return false;
+        if (remainingBits == 0) return true;
+
+        int mask = 0xFF << (8 - remainingBits);
+        return (addressBytes[fullBytes] & mask) == (networkBytes[fullBytes] & mask);
     }
 
     private List<IPAddress>? _localAddresses;
@@ -609,29 +614,29 @@ public class IddsConfig
 
     public static int GetSubnetMaskBits(string subnetMask)
     {
-        if (!subnetMask.Contains(".") && int.Parse(subnetMask) > 2 && int.Parse(subnetMask) < 33) return int.Parse(subnetMask);
-        string[] s = subnetMask.Split('.');
-        if (s.Length < 4) throw new ArgumentException("No valid subnetmask entered");
+        if (int.TryParse(subnetMask, out int prefixLength) && prefixLength is >= 0 and <= 32) return prefixLength;
+        if (!IPAddress.TryParse(subnetMask, out IPAddress? maskAddress) || maskAddress.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+            throw new ArgumentException("No valid subnet mask entered.", nameof(subnetMask));
+
         int result = 0;
-        for (int i = 0; i < 4; i++)
+        bool foundZero = false;
+        foreach (byte maskByte in maskAddress.GetAddressBytes())
         {
-            byte b = (byte)int.Parse(s[i]);
-            string bin = Convert.ToString(b, 2);
-            for (int n = 0; n < 8; n++)
+            for (int bit = 7; bit >= 0; bit--)
             {
-                if (bin.Substring(n, 1) == "1")
+                bool isSet = (maskByte & (1 << bit)) != 0;
+                if (isSet)
                 {
+                    if (foundZero) throw new ArgumentException("Subnet mask bits must be contiguous.", nameof(subnetMask));
                     result++;
                 }
                 else
                 {
-                    return result;
+                    foundZero = true;
                 }
             }
-
         }
-        if (result == 32) return result;
-        throw new ArgumentException("Error while parsing subnet mask");
+        return result;
     }
 
     /// <summary>
@@ -659,7 +664,18 @@ public class IddsConfig
     /// <param name="subnetMask">The subnet mask value.</param>
     /// <returns><see langword="true"/> if valid subnet mask; otherwise, <see langword="false"/>.</returns>
 
-    public static bool IsValidSubnetMask(string subnetMask) => IsValidIpAddress(subnetMask);
+    public static bool IsValidSubnetMask(string subnetMask)
+    {
+        try
+        {
+            _ = GetSubnetMaskBits(subnetMask);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>
     /// Converts string to ip address network.

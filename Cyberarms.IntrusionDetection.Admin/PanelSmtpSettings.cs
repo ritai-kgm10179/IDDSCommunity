@@ -139,7 +139,7 @@ public partial class PanelSmtpSettings : UserControl
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    private void buttonTestSmtpSettings_Click(object sender, EventArgs e)
+    private async void buttonTestSmtpSettings_Click(object sender, EventArgs e)
     {
         smartLabelTestError.Visible = false;
 
@@ -154,17 +154,18 @@ public partial class PanelSmtpSettings : UserControl
                 mimeMessage.Body = new MimeKit.TextPart("plain") { Text = "This is a test message from your Cyberarms Intrusion Detection administration tool." };
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();
+                using System.Threading.CancellationTokenSource timeout = new(TimeSpan.FromSeconds(30));
                 int port = int.Parse(textBoxSmtpPort.Text);
-                SecureSocketOptions secureOption = checkBoxUseSSL.Checked ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
-                client.Connect(textBoxSmtpServer.Text, port, secureOption);
+                SecureSocketOptions secureOption = checkBoxUseSSL.Checked ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto;
+                await client.ConnectAsync(textBoxSmtpServer.Text, port, secureOption, timeout.Token);
 
                 if (checkBoxAuthentication.Checked)
                 {
-                    client.Authenticate(textBoxUsername.Text, textBoxPassword.Text);
+                    await client.AuthenticateAsync(textBoxUsername.Text, textBoxPassword.Text, timeout.Token);
                 }
 
-                client.Send(mimeMessage);
-                client.Disconnect(true);
+                await client.SendAsync(mimeMessage, timeout.Token);
+                await client.DisconnectAsync(true, timeout.Token);
 
                 MessageBox.Show("Mail was sent successfully.");
             }

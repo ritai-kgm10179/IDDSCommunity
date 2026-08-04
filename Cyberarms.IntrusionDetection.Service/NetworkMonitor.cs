@@ -38,7 +38,7 @@ public class NetworkMonitor
     protected void StartNetworkSniffer()
     {
         ts = new ThreadStart(RunWatcher);
-        td = new Thread(ts);
+        td = new Thread(ts) { IsBackground = true };
         td.Start();
     }
 

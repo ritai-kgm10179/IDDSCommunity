@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 namespace Cyberarms.IntrusionDetection.Cmd;
 
 class Program
@@ -58,7 +59,13 @@ class Program
                 }
             }
 
-            while (true) ;
+            using ManualResetEventSlim shutdown = new(false);
+            Console.CancelKeyPress += (_, eventArgs) =>
+            {
+                eventArgs.Cancel = true;
+                shutdown.Set();
+            };
+            shutdown.Wait();
         }
         catch
         {

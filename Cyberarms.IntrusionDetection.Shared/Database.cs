@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
 
@@ -9,6 +11,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 
 public class Database
 {
+    private const int MaximumRetryCount = 5;
     private bool _isConfigured = false;
     public bool IsConfigured => _isConfigured;
 
@@ -114,16 +117,16 @@ public class Database
         {
             return Connection.ExecuteReader(sqlString, paramObj, transaction);
         }
-        catch
+        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < MaximumRetryCount; i++)
             {
-                System.Threading.Thread.Sleep(500);
+                Thread.Sleep(GetRetryDelay(i));
                 try
                 {
                     return Connection.ExecuteReader(sqlString, paramObj, transaction);
                 }
-                catch { }
+                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
             }
             throw;
         }
@@ -151,33 +154,19 @@ public class Database
         {
             Connection.Execute(sqlString, paramObj, transaction);
         }
-        catch
+        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
         {
-            if (transaction is not null)
+            for (int i = 0; i < MaximumRetryCount; i++)
             {
-                throw;
-            }
-
-            try
-            {
-                using IDbConnection conn = new SqliteConnection(Connection.ConnectionString);
-                if (conn.State != ConnectionState.Open) conn.Open();
-                conn.Execute(sqlString, paramObj);
-            }
-            catch
-            {
-                for (int i = 0; i < 5; i++)
+                Thread.Sleep(GetRetryDelay(i));
+                try
                 {
-                    System.Threading.Thread.Sleep(500);
-                    try
-                    {
-                        Connection.Execute(sqlString, paramObj, transaction);
-                        return;
-                    }
-                    catch { }
+                    Connection.Execute(sqlString, paramObj);
+                    return;
                 }
-                throw;
+                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
             }
+            throw;
         }
     }
 
@@ -205,20 +194,91 @@ public class Database
         {
             return Connection.ExecuteScalar(sqlString, paramObj, transaction);
         }
-        catch
+        catch (SqliteException ex) when (transaction is null && IsTransient(ex))
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < MaximumRetryCount; i++)
             {
-                System.Threading.Thread.Sleep(500);
+                Thread.Sleep(GetRetryDelay(i));
                 try
                 {
                     return Connection.ExecuteScalar(sqlString, paramObj, transaction);
                 }
-                catch { }
+                catch (SqliteException retryException) when (IsTransient(retryException) && i < MaximumRetryCount - 1) { }
             }
             throw;
         }
     }
+
+    /// <summary>
+    /// Asynchronously executes a command using an independently owned database connection.
+    /// </summary>
+    /// <param name="sqlString">The parameterized SQL command to execute.</param>
+    /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
+    /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and command execution.</param>
+    /// <returns>A task whose result is the number of affected rows.</returns>
+    public async Task<int> ExecuteNonQueryAsync(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
+    {
+        for (int attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await using SqliteConnection connection = new(connBuilder.ConnectionString);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
+                return await connection.ExecuteAsync(command).ConfigureAwait(false);
+            }
+            catch (SqliteException ex) when (IsTransient(ex) && attempt < MaximumRetryCount)
+            {
+                await Task.Delay(GetRetryDelay(attempt), cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously returns the first column of the first row produced by a query.
+    /// </summary>
+    /// <typeparam name="T">The expected scalar result type.</typeparam>
+    /// <param name="sqlString">The parameterized SQL query to execute.</param>
+    /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
+    /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and query execution.</param>
+    /// <returns>A task whose result is the converted scalar value, or the default value when no value is returned.</returns>
+    public async Task<T?> ExecuteScalarAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
+    {
+        for (int attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await using SqliteConnection connection = new(connBuilder.ConnectionString);
+                await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+                CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
+                return await connection.ExecuteScalarAsync<T>(command).ConfigureAwait(false);
+            }
+            catch (SqliteException ex) when (IsTransient(ex) && attempt < MaximumRetryCount)
+            {
+                await Task.Delay(GetRetryDelay(attempt), cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously executes a parameterized query and materializes its rows.
+    /// </summary>
+    /// <typeparam name="T">The row type to materialize.</typeparam>
+    /// <param name="sqlString">The parameterized SQL query to execute.</param>
+    /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
+    /// <param name="cancellationToken">A token that cancels opening the connection and query execution.</param>
+    /// <returns>A task whose result contains the materialized rows.</returns>
+    public async Task<IEnumerable<T>> QueryAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
+    {
+        await using SqliteConnection connection = new(connBuilder.ConnectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
+        return await connection.QueryAsync<T>(command).ConfigureAwait(false);
+    }
+
+    private static bool IsTransient(SqliteException exception) => exception.SqliteErrorCode is 5 or 6;
+
+    private static TimeSpan GetRetryDelay(int attempt) => TimeSpan.FromMilliseconds(50 * (1 << Math.Min(attempt, 4)));
 
     /// <summary>
     /// Executes the query operation.
