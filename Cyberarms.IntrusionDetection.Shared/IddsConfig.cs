@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -15,6 +15,7 @@ public class IddsConfig
     public const string LICENSE_FILE = "idds.vl";
 
     public const string CONFIG_VALUE_IS_DEBUG = "Configuration.IsDebug";
+    public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
 
 
     //private const string LICENSE_SERVER = "http://localhost:54996/activation.cyberarms.net2/";
@@ -402,6 +403,16 @@ public class IddsConfig
         {
             _isDebug = value;
             SetConfigValue(CONFIG_VALUE_IS_DEBUG, value.ToString());
+        }
+    }
+
+    public string Language
+    {
+        get => GetConfigValue(CONFIG_VALUE_LANGUAGE);
+        set
+        {
+            SetConfigValue(CONFIG_VALUE_LANGUAGE, value);
+            Localization.LanguageManager.Instance.Initialize(value);
         }
     }
 
