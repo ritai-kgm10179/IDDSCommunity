@@ -1,36 +1,24 @@
-﻿using System;
+using System;
 using System.Data;
-
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 
 namespace Cyberarms.IntrusionDetection.Shared;
 
 public class Database
 {
-    public const string DB_CONNECTION_STRING =
-        "Persist Security Info = False; Data Source = {0};" +
-        "Password = 'hasdvfdfaxNm.DFd3djkn2li9fu24$'; File Mode = 'read write'; " +
-        "Max Buffer Size = 1024";
-
     private bool _isConfigured = false;
-    public bool IsConfigured { get { return _isConfigured; } }
+    public bool IsConfigured => _isConfigured;
 
-    private SQLiteConnectionStringBuilder connBuilder = new();
-
-
+    private readonly SqliteConnectionStringBuilder connBuilder = new();
+    private SqliteConnection? _connection;
 
     public void Configure(string directory)
     {
-        connBuilder.FailIfMissing = false;
-        connBuilder.Flags = SQLiteConnectionFlags.Default;
-        connBuilder.ForeignKeys = true;
-        connBuilder.JournalMode = SQLiteJournalModeEnum.Truncate;
-        connBuilder.Pooling = true;
-        connBuilder.ReadOnly = false;
-        connBuilder.SyncMode = SynchronizationModes.Normal;
-        connBuilder.DataSource = directory + "\\cyberarms.idds.dbf";
+        connBuilder.DataSource = System.IO.Path.Combine(directory, "cyberarms.idds.dbf");
+        connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
+        connBuilder.Cache = SqliteCacheMode.Shared;
 
-        string dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
+        string? dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
         {
             try
@@ -40,99 +28,73 @@ public class Database
             catch { }
         }
 
-        if (!System.IO.File.Exists(connBuilder.DataSource))
-        {
-            SQLiteConnection.CreateFile(connBuilder.DataSource);
-        }
-
-        try
-        {
-            _connection = new SQLiteConnection(connBuilder.ConnectionString);
-            _connection.Open();
-        }
-        catch (System.IO.FileNotFoundException)
-        {
-            connBuilder.Password = null;
-            _connection = new SQLiteConnection(connBuilder.ConnectionString);
-            _connection.Open();
-        }
-        OpenOrCreate();
-        // _connection.FlushFailure += new SqlCeFlushFailureEventHandler(_connection_FlushFailure);
-        _connection.StateChange += new StateChangeEventHandler(_connection_StateChange);
+        _connection = new SqliteConnection(connBuilder.ConnectionString);
+        _connection.Open();
+        _connection.StateChange += _connection_StateChange;
         _isConfigured = true;
+
+        OpenOrCreate();
     }
 
-    void _connection_StateChange(object sender, StateChangeEventArgs e)
+    private void _connection_StateChange(object sender, StateChangeEventArgs e)
     {
         System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
     }
 
-
-    private SQLiteConnection _connection;
-
-    public SQLiteConnection Connection
+    public SqliteConnection Connection
     {
         get
         {
-            if (_connection == null) throw new ApplicationException("Sorry, cannot return requested connection object. Please run Configure first to set database path.");
-            if (_connection.State == System.Data.ConnectionState.Broken)
+            if (_connection == null)
+            {
+                throw new ApplicationException("Sorry, cannot return requested connection object. Please run Configure first to set database path.");
+            }
+            if (_connection.State == ConnectionState.Broken || _connection.State == ConnectionState.Closed)
             {
                 _connection.Open();
             }
-            // open new connection;
             return _connection;
         }
     }
 
-    private static Database _instance;
+    private static Database? _instance;
     public static Database Instance
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new Database();
-
-            }
+            _instance ??= new Database();
             return _instance;
         }
     }
 
-    private Database()
-    {
-
-    }
-
+    private Database() { }
 
     public IDataReader ExecuteReader(string sqlString, params object[] parameters)
     {
         return ExecuteReader(sqlString, null, parameters);
     }
 
-    public IDataReader ExecuteReader(string sqlString, IDbTransaction transaction, params object[] parameters)
+    public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         IDbCommand cmd = PrepareCommand(sqlString, parameters);
-        IDataReader rdr = null;
         if (transaction != null) cmd.Transaction = transaction;
         try
         {
-            rdr = cmd.ExecuteReader();
+            return cmd.ExecuteReader();
         }
-        catch (Exception ex)
+        catch
         {
             for (int i = 0; i < 5; i++)
             {
                 System.Threading.Thread.Sleep(500);
                 try
                 {
-                    rdr = cmd.ExecuteReader();
-                    return rdr;
+                    return cmd.ExecuteReader();
                 }
                 catch { }
             }
             throw;
         }
-        return rdr;
     }
 
     public void ExecuteNonQuery(string sqlString, params object[] parameters)
@@ -140,7 +102,7 @@ public class Database
         ExecuteNonQuery(sqlString, null, parameters);
     }
 
-    public void ExecuteNonQuery(string sqlString, IDbTransaction transaction, params object[] parameters)
+    public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         IDbCommand cmd = PrepareCommand(sqlString, parameters);
         try
@@ -148,37 +110,28 @@ public class Database
             if (transaction != null) cmd.Transaction = transaction;
             cmd.ExecuteNonQuery();
         }
-        catch (Exception ex)
+        catch
         {
-            // try to recover
             try
             {
-                IDbConnection conn = (IDbConnection)Connection.Clone();
+                using IDbConnection conn = new SqliteConnection(Connection.ConnectionString);
                 if (conn.State != ConnectionState.Open) conn.Open();
                 cmd.Connection = conn;
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                }
-                catch (Exception ex2)
-                {
-                    for (int i = 0; i < 5; i++)
-                    {
-                        System.Threading.Thread.Sleep(500);
-                        try
-                        {
-                            cmd.ExecuteNonQuery();
-                            return;
-                        }
-                        catch { }
-                    }
-                    throw ex2;
-                }
-                conn.Close();
+                cmd.ExecuteNonQuery();
             }
-            catch (Exception ex1)
+            catch
             {
-                throw ex1;
+                for (int i = 0; i < 5; i++)
+                {
+                    System.Threading.Thread.Sleep(500);
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                        return;
+                    }
+                    catch { }
+                }
+                throw;
             }
         }
     }
@@ -186,52 +139,46 @@ public class Database
     private IDbCommand PrepareCommand(string sqlString, params object[] parameters)
     {
         IDbCommand cmd = Connection.CreateCommand();
-        cmd.Connection = Connection;
         cmd.CommandText = sqlString;
-        cmd.CommandType = System.Data.CommandType.Text;
+        cmd.CommandType = CommandType.Text;
         for (int i = 0; i < parameters.Length; i++)
         {
             IDbDataParameter p = cmd.CreateParameter();
             p.ParameterName = "@p" + i;
-            p.Value = parameters[i];
-            if (parameters[i] == null) p.Value = DBNull.Value;
+            p.Value = parameters[i] ?? DBNull.Value;
             cmd.Parameters.Add(p);
         }
         cmd.Prepare();
         return cmd;
     }
 
-    public object ExecuteScalar(string sqlString, params object[] parameters)
+    public object? ExecuteScalar(string sqlString, params object[] parameters)
     {
         return ExecuteScalar(sqlString, null, parameters);
     }
 
-    public object ExecuteScalar(string sqlString, IDbTransaction transaction, params object[] parameters)
+    public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        object result = null;
         IDbCommand cmd = PrepareCommand(sqlString, parameters);
         if (transaction != null) cmd.Transaction = transaction;
 
         try
         {
-            result = cmd.ExecuteScalar();
+            return cmd.ExecuteScalar();
         }
-        catch (Exception ex)
+        catch
         {
             for (int i = 0; i < 5; i++)
             {
-                // can we recover the problem within a timeout period?
                 System.Threading.Thread.Sleep(500);
                 try
                 {
-                    result = cmd.ExecuteScalar();
-                    return result;
+                    return cmd.ExecuteScalar();
                 }
                 catch { }
             }
             throw;
         }
-        return result;
     }
 
     public int DatabaseVersion { get; set; }
@@ -239,24 +186,22 @@ public class Database
     private void OpenOrCreate()
     {
         IDbCommand cmd = Connection.CreateCommand();
-        string version = null;
+        string? version = null;
         try
         {
             cmd.CommandText = "Select Version from DbConfig";
-            version = cmd.ExecuteScalar().ToString();
+            version = cmd.ExecuteScalar()?.ToString();
         }
         catch (Exception sqEx)
         {
-            //
-            System.Diagnostics.Debug.Print(sqEx.Message.ToString());
+            System.Diagnostics.Debug.Print(sqEx.Message);
         }
+
         if (string.IsNullOrEmpty(version))
         {
-            // no database exists, or database was deleted. create tables and populate
             Db.DbUpgrader upgrader = new();
             upgrader.RunUpgradeScripts(Connection);
-            int versionNumber;
-            if (int.TryParse(cmd.ExecuteScalar().ToString(), out versionNumber))
+            if (int.TryParse(cmd.ExecuteScalar()?.ToString(), out int versionNumber))
             {
                 DatabaseVersion = versionNumber;
             }
@@ -267,12 +212,8 @@ public class Database
         }
         else
         {
-            int versionNumber = -1;
-            int.TryParse(version, out versionNumber);
+            int.TryParse(version, out int versionNumber);
             DatabaseVersion = versionNumber;
         }
     }
-
-
-
 }
