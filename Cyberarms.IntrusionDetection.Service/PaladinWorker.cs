@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Cyberarms.IntrusionDetection.Service;
 
-internal sealed class PaladinWorker(Service service) : BackgroundService
+internal sealed class PaladinWorker(IIntrusionDetectionRuntime runtime) : BackgroundService
 {
     private bool started;
 
@@ -15,9 +15,18 @@ internal sealed class PaladinWorker(Service service) : BackgroundService
     /// <returns>A task representing hosted-service startup.</returns>
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        service.StartHostedService();
+        await runtime.StartAsync(cancellationToken).ConfigureAwait(false);
         started = true;
-        await base.StartAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await base.StartAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await runtime.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            started = false;
+            throw;
+        }
     }
 
     /// <summary>
@@ -35,13 +44,13 @@ internal sealed class PaladinWorker(Service service) : BackgroundService
     /// </summary>
     /// <param name="cancellationToken">Signals that graceful shutdown has exceeded its deadline.</param>
     /// <returns>A completed task after the runtime has stopped.</returns>
-    public override Task StopAsync(CancellationToken cancellationToken)
+    public override async Task StopAsync(CancellationToken cancellationToken)
     {
+        await base.StopAsync(cancellationToken).ConfigureAwait(false);
         if (started)
         {
-            service.StopHostedService();
+            await runtime.StopAsync(cancellationToken).ConfigureAwait(false);
             started = false;
         }
-        return base.StopAsync(cancellationToken);
     }
 }

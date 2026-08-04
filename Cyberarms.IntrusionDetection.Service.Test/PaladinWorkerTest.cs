@@ -1,0 +1,82 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Cyberarms.IntrusionDetection.Service.Test;
+
+[TestClass]
+public sealed class PaladinWorkerTest
+{
+    /// <summary>
+    /// Verifies that the worker starts and stops the runtime exactly once.
+    /// </summary>
+    /// <returns>A task that completes after the worker has stopped twice.</returns>
+    [TestMethod]
+    public async Task StartAndStopAsync_ControlsRuntimeExactlyOnce()
+    {
+        FakeRuntime runtime = new();
+        PaladinWorker worker = new(runtime);
+
+        await worker.StartAsync(CancellationToken.None).ConfigureAwait(false);
+        await worker.StopAsync(CancellationToken.None).ConfigureAwait(false);
+        await worker.StopAsync(CancellationToken.None).ConfigureAwait(false);
+
+        Assert.AreEqual(1, runtime.StartCount);
+        Assert.AreEqual(1, runtime.StopCount);
+    }
+
+    /// <summary>
+    /// Verifies that a runtime startup failure propagates to the Generic Host.
+    /// </summary>
+    /// <returns>A task that completes after startup fails.</returns>
+    [TestMethod]
+    public async Task StartAsync_WhenRuntimeFails_PropagatesFailure()
+    {
+        InvalidOperationException expected = new("startup failed");
+        FakeRuntime runtime = new() { StartException = expected };
+        PaladinWorker worker = new(runtime);
+
+        InvalidOperationException actual = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            () => worker.StartAsync(CancellationToken.None)).ConfigureAwait(false);
+
+        Assert.AreSame(expected, actual);
+        Assert.AreEqual(1, runtime.StartCount);
+        Assert.AreEqual(0, runtime.StopCount);
+    }
+
+    private sealed class FakeRuntime : IIntrusionDetectionRuntime
+    {
+        internal int StartCount { get; private set; }
+
+        internal int StopCount { get; private set; }
+
+        internal Exception? StartException { get; init; }
+
+        /// <summary>
+        /// Records runtime startup and optionally throws the configured failure.
+        /// </summary>
+        /// <param name="cancellationToken">Signals cancellation of startup.</param>
+        /// <returns>A completed task when startup succeeds.</returns>
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            StartCount++;
+            if (StartException is not null)
+                throw StartException;
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Records runtime shutdown.
+        /// </summary>
+        /// <param name="cancellationToken">Signals cancellation of shutdown.</param>
+        /// <returns>A completed task.</returns>
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            StopCount++;
+            return Task.CompletedTask;
+        }
+    }
+}
