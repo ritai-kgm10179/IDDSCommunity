@@ -509,4 +509,5 @@
   <data name="The database file name cannot contain a directory path." xml:space="preserve"><value>資料庫檔案名稱不可包含目錄路徑。</value></data>
   <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>現有資料庫缺少必要資料表「{0}」。</value></data>
   <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP 設定不完整。</value></data>
+  <data name="Windows Firewall integration requires Windows." xml:space="preserve"><value>Windows 防火牆整合需要 Windows。</value></data>
 </root>

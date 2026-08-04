@@ -15,14 +15,15 @@ internal static class RuntimeServiceCollectionExtensions
     internal static IServiceCollection AddCyberarmsRuntime(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        services.TryAddSingleton<IFirewallPolicy>(_ => FirewallPolicyManager.Instance);
+        services.TryAddSingleton<IWindowsEventLog, WindowsEventLog>();
+        services.TryAddSingleton<IRuntimeLog, WindowsLogManager>();
+        services.TryAddSingleton<IFirewallPolicy>(provider => new FirewallPolicyManager(provider.GetRequiredService<IRuntimeLog>()));
         services.AddSingleton<Database>();
         services.AddSingleton<IddsConfig>();
         services.AddSingleton<NotificationSettings>();
         services.AddSingleton<SecurityAgents>();
         services.AddSingleton(provider => new ReportScheduler(TimeProvider.System, provider.GetRequiredService<NotificationSettings>()));
         services.AddSingleton<Statistics>();
-        services.AddSingleton<WindowsLogManager>();
         services.AddSingleton(provider => new Service(
             provider.GetRequiredService<IFirewallPolicy>(),
             provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<DatabaseOptions>>(),
@@ -34,7 +35,7 @@ internal static class RuntimeServiceCollectionExtensions
             provider.GetRequiredService<SecurityAgents>(),
             provider.GetRequiredService<ReportScheduler>(),
             provider.GetRequiredService<Statistics>(),
-            provider.GetRequiredService<WindowsLogManager>()));
+            provider.GetRequiredService<IRuntimeLog>()));
         services.AddSingleton<IIntrusionDetectionRuntime>(provider => provider.GetRequiredService<Service>());
         return services;
     }
