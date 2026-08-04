@@ -158,7 +158,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
             System.Reflection.Assembly? assembly = null;
             try
             {
-                assembly = System.Reflection.Assembly.LoadFile(assemblyName);
+                assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(System.IO.Path.GetFullPath(assemblyName));
             }
             catch (Exception ex)
             {

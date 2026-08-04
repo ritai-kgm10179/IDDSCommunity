@@ -498,4 +498,12 @@
   <data name="Restart the application after saving to apply the language to every open window." xml:space="preserve"><value>儲存後請重新啟動應用程式，以將語言套用至所有視窗。</value></data>
   <data name="Use system language" xml:space="preserve"><value>使用系統語言</value></data>
   <data name="Language setting was saved. Restart the application to apply it." xml:space="preserve"><value>語言設定已儲存。請重新啟動應用程式以套用。</value></data>
+  <data name="Raw packet capture currently requires an IPv4 address." xml:space="preserve"><value>原始封包擷取目前需要 IPv4 位址。</value></data>
+  <data name="Packet capture has already started." xml:space="preserve"><value>封包擷取已經啟動。</value></data>
+  <data name="Unable to resolve the requested agent plugin type." xml:space="preserve"><value>無法解析指定的 Agent 外掛類型。</value></data>
+  <data name="Unable to create agent plugin '{0}' from '{1}'." xml:space="preserve"><value>無法從「{1}」建立 Agent 外掛「{0}」。</value></data>
+  <data name="Alert for {0} was not found." xml:space="preserve"><value>找不到 {0} 的警示。</value></data>
+  <data name="COM type {0} is unavailable." xml:space="preserve"><value>COM 類型 {0} 無法使用。</value></data>
+  <data name="Unable to create COM object {0}." xml:space="preserve"><value>無法建立 COM 物件 {0}。</value></data>
+  <data name="Firewall rule {0} was not found." xml:space="preserve"><value>找不到防火牆規則 {0}。</value></data>
 </root>

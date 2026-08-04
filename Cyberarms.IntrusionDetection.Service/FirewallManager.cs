@@ -31,8 +31,8 @@ internal class FirewallManager
     /// <returns>The create com object result.</returns>
 
     private static T CreateComObject<T>(string progId) where T : class =>
-        Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type {progId} is unavailable.")) as T
-        ?? throw new InvalidOperationException($"Unable to create COM object {progId}.");
+        Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException(string.Format(Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("COM type {0} is unavailable."), progId))) as T
+        ?? throw new InvalidOperationException(string.Format(Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unable to create COM object {0}."), progId));
 
     /// <summary>
     /// Adds port.

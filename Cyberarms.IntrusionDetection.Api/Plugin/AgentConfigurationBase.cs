@@ -109,7 +109,7 @@ public class AgentConfigurationBase : IAgentConfiguration
     {
         if (File.Exists(AssemblyName))
         {
-            var assembly = Assembly.LoadFile(AssemblyName);
+            var assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(System.IO.Path.GetFullPath(AssemblyName));
             if (assembly is not null)
             {
                 foreach (Type type in assembly.GetTypes())
