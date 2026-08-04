@@ -117,7 +117,12 @@ public class SecurityAgents : List<SecurityAgent>
                 string typeName = tProxy.FullName ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Agent loader type has no full name."));
                 var proxy = (AgentLoaderProxy?)CurrentDomain.CreateInstanceAndUnwrap(assemblyName, typeName)
                     ?? throw new InvalidOperationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Unable to create agent loader proxy."));
-                List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName);
+                List<SecurityAgent> agents = proxy.GetSecurityAgents(fileName, configuration.PluginsDirectory);
+                foreach (SecurityAgent discoveredAgent in agents)
+                {
+                    if (result.Exists(existingAgent => existingAgent.Id == discoveredAgent.Id))
+                        throw new InvalidOperationException(Localization.Strings.Get("Agent plugin identifiers must be unique."));
+                }
                 result.AddRange(agents);
 
             }
@@ -204,10 +209,11 @@ public class SecurityAgents : List<SecurityAgent>
         AppDomainManager adm = new AppDomainManager();
 #endif
 
-        foreach (SecurityAgent agent in LoadedAgents.Keys)
+        foreach (AgentProxy proxy in LoadedAgents.Values)
         {
+            proxy.Dispose();
 #if NETFRAMEWORK
-            AppDomain.Unload(agent.AppDomain);
+            AppDomain.Unload(proxy.AppDomain);
 #endif
         }
         LoadedAgents.Clear();
@@ -225,6 +231,7 @@ public class SecurityAgents : List<SecurityAgent>
 #endif
         if (LoadedAgents.ContainsKey(agent))
         {
+            LoadedAgents[agent].Dispose();
             LoadedAgents.Remove(agent);
         }
         else
@@ -262,7 +269,7 @@ public class SecurityAgents : List<SecurityAgent>
 #else
                     AppDomain domain = AppDomain.CurrentDomain;
 #endif
-                    AgentProxy proxy = new(agent.AssemblyFilename, agent.Name);
+                    AgentProxy proxy = new(configuration.PluginsDirectory, agent.AssemblyFilename, agent.Name);
                     proxy.Configuration.AgentName = agent.Name;
                     proxy.Configuration.AssemblyName = agent.AssemblyName;
                     proxy.Configuration.Enabled = agent.Enabled;

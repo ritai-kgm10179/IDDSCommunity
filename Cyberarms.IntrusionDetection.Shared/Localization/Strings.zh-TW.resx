@@ -510,4 +510,9 @@
   <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>現有資料庫缺少必要資料表「{0}」。</value></data>
   <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP 設定不完整。</value></data>
   <data name="Windows Firewall integration requires Windows." xml:space="preserve"><value>Windows 防火牆整合需要 Windows。</value></data>
+  <data name="Agent plugin path must remain inside the configured plugin directory." xml:space="preserve"><value>Agent 外掛路徑必須位於設定的外掛目錄內。</value></data>
+  <data name="Agent plugin must be a DLL assembly." xml:space="preserve"><value>Agent 外掛必須是 DLL 組件。</value></data>
+  <data name="Agent plugin assembly was not found." xml:space="preserve"><value>找不到 Agent 外掛組件。</value></data>
+  <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>Agent 外掛路徑不可包含重新解析點。</value></data>
+  <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>Agent 外掛識別碼不可重複。</value></data>
 </root>
