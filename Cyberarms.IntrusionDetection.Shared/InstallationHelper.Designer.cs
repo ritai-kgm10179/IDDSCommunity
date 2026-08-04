@@ -1,4 +1,5 @@
-﻿namespace Cyberarms.IntrusionDetection.Shared {
+#if NETFRAMEWORK
+namespace Cyberarms.IntrusionDetection.Shared {
     partial class InstallationHelper {
         /// <summary>
         /// Required designer variable.
@@ -29,3 +30,4 @@
         #endregion
     }
 }
+#endif
