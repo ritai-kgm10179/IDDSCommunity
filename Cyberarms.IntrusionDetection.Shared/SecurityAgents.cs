@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -73,6 +73,11 @@ public class SecurityAgents : List<SecurityAgent>
 #else
         CurrentDomain = AppDomain.CurrentDomain;
 #endif
+
+        if (!Directory.Exists(IddsConfig.Instance.PluginsDirectory))
+        {
+            Directory.CreateDirectory(IddsConfig.Instance.PluginsDirectory);
+        }
 
         foreach (string fileName in Directory.EnumerateFiles(IddsConfig.Instance.PluginsDirectory, "*.dll"))
         {

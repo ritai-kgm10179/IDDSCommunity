@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="EnsurePluginsFolder" AfterTargets="Build">
+    <MakeDir Directories="$(OutputPath)Plugins" Condition="!Exists('$(OutputPath)Plugins')" />
+  </Target>
+</Project>
