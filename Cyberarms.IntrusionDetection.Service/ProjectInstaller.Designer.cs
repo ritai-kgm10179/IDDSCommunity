@@ -1,4 +1,4 @@
-#if NETFRAMEWORK
+﻿#if NETFRAMEWORK
 namespace Cyberarms.IntrusionDetection {
     partial class ProjectInstaller {
         /// <summary>
@@ -6,7 +6,7 @@ namespace Cyberarms.IntrusionDetection {
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
+        /// <summary>
         /// Clean up any resources being used.
         /// </summary>
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
@@ -26,16 +26,16 @@ namespace Cyberarms.IntrusionDetection {
         private void InitializeComponent() {
             this.intrusionDetectionServiceProcessInstaller = new System.ServiceProcess.ServiceProcessInstaller();
             this.intrusionDetectionServiceInstaller = new System.ServiceProcess.ServiceInstaller();
-            // 
+            //
             // intrusionDetectionServiceProcessInstaller
-            // 
+            //
             this.intrusionDetectionServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
             this.intrusionDetectionServiceProcessInstaller.Password = null;
             this.intrusionDetectionServiceProcessInstaller.Username = null;
             this.intrusionDetectionServiceProcessInstaller.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.intrusionDetectionServiceProcessInstaller_AfterInstall);
-            // 
+            //
             // intrusionDetectionServiceInstaller
-            // 
+            //
             this.intrusionDetectionServiceInstaller.Description = "Intrusion Detection and Defense System for Windows Servers.";
             this.intrusionDetectionServiceInstaller.DisplayName = "Cyberarms Intrusion Detection Service";
             this.intrusionDetectionServiceInstaller.ServiceName = "Cyberarms Intrusion Detection";
@@ -43,9 +43,9 @@ namespace Cyberarms.IntrusionDetection {
         "RpcSs"};
             this.intrusionDetectionServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             this.intrusionDetectionServiceInstaller.AfterInstall += new System.Configuration.Install.InstallEventHandler(this.intrusionDetectionServiceInstaller_AfterInstall);
-            // 
+            //
             // ProjectInstaller
-            // 
+            //
             this.Installers.AddRange(new System.Configuration.Install.Installer[] {
             this.intrusionDetectionServiceProcessInstaller,
             this.intrusionDetectionServiceInstaller});
@@ -58,4 +58,4 @@ namespace Cyberarms.IntrusionDetection {
         private System.ServiceProcess.ServiceInstaller intrusionDetectionServiceInstaller;
     }
 }
-#endif
+#endif

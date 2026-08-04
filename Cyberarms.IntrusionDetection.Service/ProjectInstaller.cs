@@ -50,9 +50,9 @@ namespace Cyberarms.IntrusionDetection {
             }
         }
 
-        
 
- 
+
+
         void ProjectInstaller_AfterInstall(object sender, InstallEventArgs e) {
             try {
                 System.ServiceProcess.ServiceController controller = new System.ServiceProcess.ServiceController(intrusionDetectionServiceInstaller.DisplayName);
@@ -97,4 +97,3 @@ namespace Cyberarms.IntrusionDetection {
     }
 }
 #endif
-

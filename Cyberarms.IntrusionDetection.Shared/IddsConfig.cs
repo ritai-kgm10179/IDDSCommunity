@@ -69,9 +69,9 @@ public class IddsConfig
         {
             Database.Instance.ExecuteNonQuery(@"insert into Configuration(ConfigVersionDate,
                     HardLockAttempts, HardLockTimeHours, LockForever, SoftLockAttempts, SoftLockTimeMinutes,
-                    UseSafeNetworkList, PluginDirectory, LicenseKey, ActivationId, SendInfoMail, 
+                    UseSafeNetworkList, PluginDirectory, LicenseKey, ActivationId, SendInfoMail,
                 SmtpPort, SenderEmailAddress, SmtpRequiresAuthentication, NotificationEmailAddress, SmtpServer,
-                SmtpUsername, SmtpPassword, CyberSheriffContributor, WebBasedMonitoring, HardwareId, SmtpSslRequired) 
+                SmtpUsername, SmtpPassword, CyberSheriffContributor, WebBasedMonitoring, HardwareId, SmtpSslRequired)
                 values(@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14,@p15,@p16,@p17,@p18,@p19,@p20,@p21)",
                 DateTime.Now, HardLockAttempts, HardLockTimeHours,
                 LockForever, SoftLockAttempts, SoftLockTimeMinutes, UseSafeNetworkList, PluginDirectory,
@@ -327,10 +327,10 @@ public class IddsConfig
 
 
     /*
-     * 
+     *
      * Configuration values for IDDS plus Security Agents
-     * 
-     * 
+     *
+     *
      */
 
     public int HardLockAttempts { get; set; }

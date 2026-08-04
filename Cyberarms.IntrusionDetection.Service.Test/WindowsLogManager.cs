@@ -47,7 +47,7 @@ internal class WindowsLogManager
         //    EventLog.CreateEventSource(Globals.CYBERARMS_WINDOWS_EVENT_SOURCE, Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
         //    System.Diagnostics.EventLogInstaller installer = new EventLogInstaller();
 
-        //} 
+        //}
         eventLogCyberarms ??= new EventLog(Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME);
         eventLogCyberarms.Source = Globals.CYBERARMS_WINDOWS_EVENT_SOURCE;
         eventLogCyberarms.Log = Globals.CYBERARMS_WINDOWS_EVENT_LOG_NAME;

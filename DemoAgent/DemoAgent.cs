@@ -16,7 +16,7 @@ public class DemoAgent : AgentPlugin
     FileSystemWatcher? watcher;
 
     /// <summary>
-    /// Important: This plugin uses a custom configuration (see DemoConfiguration.cs). 
+    /// Important: This plugin uses a custom configuration (see DemoConfiguration.cs).
     /// This is loaded in the constructor, and the TypeName of this configuration is set.
     ///Intrusion Detectiontakes care of persistance of configuration settings, but it must know the type.
     /// </summary>
@@ -29,9 +29,9 @@ public class DemoAgent : AgentPlugin
 
     /// <summary>
     /// Override the OnStartAgent function to load and initialize objects as needed
-    /// This DemoAgent configures a FileSystemWatcher to monitor a directory 
+    /// This DemoAgent configures a FileSystemWatcher to monitor a directory
     /// for creation/change of files with the extension .agentTest
-    /// The directory is specified in the custom plugin configuration "DemoConfiguration". 
+    /// The directory is specified in the custom plugin configuration "DemoConfiguration".
     /// If no value is provided, it falls back to the default directory (c:\temp\)
     /// </summary>
     protected override void OnStartAgent()
@@ -68,7 +68,7 @@ public class DemoAgent : AgentPlugin
 
 
     /// <summary>
-    /// Override the IsRunning function. This should return an 
+    /// Override the IsRunning function. This should return an
     /// indication whether the agent is in a running state
     /// </summary>
     public override bool IsRunning
@@ -80,10 +80,10 @@ public class DemoAgent : AgentPlugin
     }
 
     /// <summary>
-    /// The FileSystemWatcher.Changed event handler does the job for this example. 
-    /// Calling the base.OnAttackDetected(object, NotificationEventArgs) function 
+    /// The FileSystemWatcher.Changed event handler does the job for this example.
+    /// Calling the base.OnAttackDetected(object, NotificationEventArgs) function
     /// notifiesIntrusion Detectionwith information about a potential attack
-    /// 
+    ///
     /// The EventId can be any valuem, 4001 is just for example
     /// </summary>
     /// <param name="sender"></param>

@@ -1,6 +1,6 @@
-<!-- 
+<!--
 本檔案為參照引導檔。實際開發規範維護於專案根目錄的 AGENTS.md。
-Cyberarms 專案之全體 AI Agent (包含 Antigravity、Cursor、Claude Code、Copilot 等) 
+Cyberarms 專案之全體 AI Agent (包含 Antigravity、Cursor、Claude Code、Copilot 等)
 均統一讀取專案根目錄的 AGENTS.md 作為唯一真理來源 (Single Source of Truth)。
 -->
 

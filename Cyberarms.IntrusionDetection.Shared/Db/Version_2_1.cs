@@ -40,7 +40,7 @@ CREATE TABLE Configuration (
 
     public const string CREATE_DEFAULT_CONFIGURATION = @"
 INSERT INTO Configuration(ConfigVersionDate, HardLockAttempts, HardLockTimeHours, LockForever,
-                SoftLockAttempts, SoftLockTimeMinutes, UseSafeNetworkList, SendInfoMail, SmtpPort, 
+                SoftLockAttempts, SoftLockTimeMinutes, UseSafeNetworkList, SendInfoMail, SmtpPort,
                 SmtpRequiresAuthentication, SmtpSslRequired, CyberSheriffContributor, WebBasedMonitoring)
         values('4/4/2013',10,24,0,3,20,0,0,25,0,0,0,0)";
 
@@ -49,7 +49,7 @@ INSERT INTO DbConfig(Version, UpgradeDate, UpgradeLog, UpgradeSuccessful)
         values(1,'now','Initial setup',1)
 ";
 
-    public const string TABLE_INTRUSION_LOG = @" 
+    public const string TABLE_INTRUSION_LOG = @"
 CREATE TABLE IntrusionLog (
     Id INTEGER PRIMARY KEY AUTOINCREMENT not null,
     IncidentTime DateTime null,
@@ -66,14 +66,14 @@ CREATE TABLE Locks (
     Port int null,
     UnlockDate DateTime null,
     TriggerIncident bigint not null,
-    Status int not null, 
+    Status int not null,
     LastUpdate DateTime null
 )";
     public const string TABLE_SECURITY_AGENTS = @"
 CREATE TABLE SecurityAgents(
     AgentId uniqueidentifier PRIMARY KEY NOT NULL,
     Name nvarchar(250) NOT NULL,
-    AssemblyName nvarchar(250) NOT NULL,    
+    AssemblyName nvarchar(250) NOT NULL,
     HardLockAttempts int NULL,
 	HardLockTimeHours int NULL,
 	LockForever bit NULL,
@@ -89,17 +89,17 @@ CREATE TABLE SecurityAgents(
 CREATE TABLE SecurityAgentConfig(
     AgentId uniqueidentifier not null,
     PropertyName nvarchar(255) not null,
-    PropertyValueString nvarchar(255) null, 
+    PropertyValueString nvarchar(255) null,
     PRIMARY KEY(AgentId, PropertyName)
 )";
 
     public const string TABLE_SECURITY_AGENT_CONFIG_CLUSTERED_KEY = @"
 ALTER TABLE SecurityAgentConfig ADD CONSTRAINT
-	PK_SecurityAgentConfig PRIMARY KEY  
+	PK_SecurityAgentConfig PRIMARY KEY
 	(
 	AgentId,
 	PropertyName
-	) 
+	)
 ";
 
     public const string TABLE_WHITE_LIST = @"
@@ -122,8 +122,8 @@ CREATE TABLE AppConfig(
     public const string TABLE_AGENT_STATISTICS = @"
 CREATE TABLE AgentStatistics(
     AgentId uniqueidentifier PRIMARY KEY NOT NULL,
-    FailedLogins int not null default 0, 
-    HardLocks int not null default 0, 
+    FailedLogins int not null default 0,
+    HardLocks int not null default 0,
     SoftLocks int not null default 0)";
 
     /// <summary>

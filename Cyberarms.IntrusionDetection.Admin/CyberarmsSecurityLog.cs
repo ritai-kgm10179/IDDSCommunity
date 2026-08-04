@@ -68,7 +68,7 @@ public partial class CyberarmsSecurityLog : UserControl
         comboBoxAgentSelection.SelectionChangeCommitted += new EventHandler(comboBoxAgentSelection_SelectionChangeCommitted);
         dataGridViewIntrusionLog.AutoGenerateColumns = false;
         dataGridViewIntrusionLog.DataSource = IntrusionLogView;
-        //dataGridViewIntrusionLog.DataMember = "IntrusionLog";            
+        //dataGridViewIntrusionLog.DataMember = "IntrusionLog";
         dataGridViewIntrusionLog.Columns["LogIcon"]!.DataPropertyName = "LogIcon";
         dataGridViewIntrusionLog.Columns["LogType"]!.DataPropertyName = "LogType";
         dataGridViewIntrusionLog.Columns["LatestEntry"]!.DataPropertyName = "EventDate";

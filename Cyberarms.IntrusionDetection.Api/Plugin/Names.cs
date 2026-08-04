@@ -6,7 +6,7 @@
 public class Names
 {
     /// <summary>
-    /// Returns display names 
+    /// Returns display names
     /// </summary>
     public static readonly string[] pluginTypeNames = ["Agent", "NotificationListener"];
 }

@@ -3,7 +3,7 @@
 namespace Cyberarms.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// Custom attribute for plugins to specify displayname and description. 
+/// Custom attribute for plugins to specify displayname and description.
 /// TheIntrusion Detectionadministration software displays the values defined as class attribute
 /// </summary>
 /// <remarks>

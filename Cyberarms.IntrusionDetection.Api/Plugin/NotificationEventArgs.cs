@@ -21,7 +21,7 @@ public class NotificationEventArgs : INotificationEventArgs
     /// </summary>
     public int EventId { get; set; }
     /// <summary>
-    /// Optionally include a message to an event listener. 
+    /// Optionally include a message to an event listener.
     /// </summary>
     public string EventMessage { get; set; } = string.Empty;
 }

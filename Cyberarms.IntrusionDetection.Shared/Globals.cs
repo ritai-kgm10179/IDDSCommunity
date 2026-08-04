@@ -26,7 +26,7 @@ public class Globals
     /// </summary>
     public const string CYBERARMS_WINDOWS_EVENT_SOURCE = "Cyberarms Intrusion Detection";
     /// <summary>
-    /// Windows event log name forIntrusion Detectionlogs. 
+    /// Windows event log name forIntrusion Detectionlogs.
     /// </summary>
     public const string CYBERARMS_WINDOWS_EVENT_LOG_NAME = "Cyberarms";
 
@@ -64,7 +64,7 @@ public class Globals
     public const int CYBERARMS_EVENT_ID_CONFIGURATION_ERROR = 9000;
 
     /// <summary>
-    /// Event log id when calling delegate with invalid parameters 
+    /// Event log id when calling delegate with invalid parameters
     /// </summary>
     public const int CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL = 9001;
 
