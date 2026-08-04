@@ -515,4 +515,7 @@
   <data name="Agent plugin assembly was not found." xml:space="preserve"><value>Agent plugin assembly was not found.</value></data>
   <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>Agent plugin path cannot contain a reparse point.</value></data>
   <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>Agent plugin identifiers must be unique.</value></data>
+  <data name="The runtime database is not configured." xml:space="preserve"><value>The runtime database is not configured.</value></data>
+  <data name="The report scheduler is not running." xml:space="preserve"><value>The report scheduler is not running.</value></data>
+  <data name="Cyberarms runtime is operational." xml:space="preserve"><value>Cyberarms runtime is operational.</value></data>
 </root>

@@ -37,6 +37,7 @@ internal static class RuntimeServiceCollectionExtensions
             provider.GetRequiredService<Statistics>(),
             provider.GetRequiredService<IRuntimeLog>()));
         services.AddSingleton<IIntrusionDetectionRuntime>(provider => provider.GetRequiredService<Service>());
+        services.AddHealthChecks().AddCheck<CyberarmsRuntimeHealthCheck>("cyberarms-runtime");
         return services;
     }
 }

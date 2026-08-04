@@ -15,6 +15,11 @@ public class ReportScheduler
     /// </summary>
     public TimeSpan CheckInterval { get; set; } = TimeSpan.FromMinutes(10);
 
+    /// <summary>
+    /// Gets whether the scheduler loop has been started.
+    /// </summary>
+    public bool IsRunning => cancellation is not null;
+
     public event Func<CancellationToken, Task>? RunDailyReportAsync;
     public event Func<CancellationToken, Task>? RunWeeklyReportAsync;
     public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
