@@ -23,10 +23,7 @@ public class Bind9DDoSKiller : AgentPlugin
     /// <summary>
     /// Initialize the Agent
     /// </summary>
-    public Bind9DDoSKiller()
-    {
-        this.Configuration = new Bind9DDoSConfig();
-    }
+    public Bind9DDoSKiller() => Configuration = new Bind9DDoSConfig();
 
 
 
@@ -38,25 +35,19 @@ public class Bind9DDoSKiller : AgentPlugin
         query = new EventLogQuery("Application", PathType.LogName,
             string.Format(EVENT_LOG_QUERY_BIND_RECURSION_DENIED));
         watcher = new EventLogWatcher(query);
-        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
+        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
 
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -68,7 +59,7 @@ public class Bind9DDoSKiller : AgentPlugin
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
     {
         try
         {

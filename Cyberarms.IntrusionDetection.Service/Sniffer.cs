@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 public class Sniffer
 {
@@ -19,15 +19,9 @@ public class Sniffer
 
     private bool isPaused = false;
 
-    public void Pause()
-    {
-        isPaused = true;
-    }
+    public void Pause() => isPaused = true;
 
-    public void Continue()
-    {
-        isPaused = false;
-    }
+    public void Continue() => isPaused = false;
 
 
     public IPAddress IPAddress { get; set; }
@@ -47,8 +41,8 @@ public class Sniffer
             ipSocket.SetSocketOption(SocketOptionLevel.IP,
                 SocketOptionName.HeaderIncluded,
                 true);
-            byte[] byTrue = new byte[4] { 3, 0, 0, 0 };
-            byte[] byOut = new byte[4] { 3, 0, 0, 0 };  // capture outgoing packets
+            byte[] byTrue = [3, 0, 0, 0];
+            byte[] byOut = [3, 0, 0, 0];  // capture outgoing packets
             ipSocket.IOControl(IOControlCode.ReceiveAll,
                 byTrue, byOut);
 
@@ -77,7 +71,7 @@ public class Sniffer
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                LogTrace(ex);
             }
             finally
             {
@@ -91,35 +85,20 @@ public class Sniffer
 
     private void OnPacketSent(IPHeader ipHeader)
     {
-        if (IpPacketSent != null)
-        {
-            IpPacketSent(ipHeader, EventArgs.Empty);
-        }
+        IpPacketSent?.Invoke(ipHeader, EventArgs.Empty);
         TCPHeader tcpHeader = new(ipHeader.Data, ipHeader.MessageLength);
-        if (TcpPacketSent != null)
-        {
-            TcpPacketSent(tcpHeader, EventArgs.Empty);
-        }
+        TcpPacketSent?.Invoke(tcpHeader, EventArgs.Empty);
     }
 
     private void OnPacketReceived(IPHeader ipHeader)
     {
-        if (IpPacketReceived != null)
-        {
-            IpPacketReceived(ipHeader, EventArgs.Empty);
-        }
+        IpPacketReceived?.Invoke(ipHeader, EventArgs.Empty);
         TCPHeader tcpHeader = new(ipHeader.Data, ipHeader.MessageLength);
-        if (TcpPacketReceived != null)
-        {
-            TcpPacketReceived(tcpHeader, EventArgs.Empty);
-        }
+        TcpPacketReceived?.Invoke(tcpHeader, EventArgs.Empty);
     }
 
 
-    public void CloseSocket()
-    {
-        ipSocket.Close();
-    }
+    public void CloseSocket() => ipSocket.Close();
 
     public static void LogTrace(Exception ex)
     {
@@ -133,7 +112,7 @@ public class Sniffer
         catch { }
         finally
         {
-            if (sw != null) sw.Close();
+            sw?.Close();
         }
     }
 

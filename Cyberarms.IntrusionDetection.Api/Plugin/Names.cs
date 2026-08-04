@@ -8,5 +8,5 @@ public class Names
     /// <summary>
     /// Returns display names 
     /// </summary>
-    public static readonly string[] pluginTypeNames = new string[2] { "Agent", "NotificationListener" };
+    public static readonly string[] pluginTypeNames = ["Agent", "NotificationListener"];
 }

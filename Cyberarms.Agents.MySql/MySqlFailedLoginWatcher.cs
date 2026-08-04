@@ -8,7 +8,7 @@ using System.Drawing;
 namespace Cyberarms.Agents.MySql;
 
 //  [PluginAttribute("Intrusion Detection Base Windows Security Agent", "This agent scans and monitors the system eventlog for possible attacks.")]
-public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
+public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 {
 
 
@@ -41,25 +41,19 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         query = new EventLogQuery("Application", PathType.LogName,
             string.Format(EVENT_LOG_QUERY_MYSQL_SERVER_LOGIN_DENIED));
         watcher = new EventLogWatcher(query);
-        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
+        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
 
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -71,24 +65,23 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
             foreach (EventProperty prop in e.EventRecord.Properties)
             {
-                if (Regex.IsMatch(prop.Value.ToString(), "^.*?\bAccess denied\b.*(?:[0-9]{1,3}.){3}[0-9]{1,3}"))
+                if (MyRegex().IsMatch(prop.Value.ToString()))
                 {
-                    Match ipAddress = Regex.Match(prop.Value.ToString(), "(?:[0-9]{1,3}.){3}[0-9]{1,3}");
+                    Match ipAddress = MyRegex1().Match(prop.Value.ToString());
                     NotificationEventArgs args = new()
                     {
                         CreateDate = e.EventRecord.TimeCreated.Value,
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress.Value
                     };
-                    System.Net.IPAddress probe;
-                    if (System.Net.IPAddress.TryParse(ipAddress.Value, out probe))
+                    if (System.Net.IPAddress.TryParse(ipAddress.Value, out System.Net.IPAddress probe))
                     {
                         if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {
@@ -108,10 +101,7 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "MySql Server Security Agent";
-        }
+        get => "MySql Server Security Agent";
         set
         {
 
@@ -120,10 +110,7 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
     public Image Icon
     {
-        get
-        {
-            return global::Cyberarms.Agents.MySql.Resource.agent15px_sql_dark;
-        }
+        get => Resource.agent15px_sql_dark;
         set
         {
 
@@ -132,10 +119,7 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
     public Image SelectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.MySql.Resource.agent15px_sql_white;
-        }
+        get => Resource.agent15px_sql_white;
         set
         {
 
@@ -144,10 +128,7 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
     public Image UnselectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.MySql.Resource.agent15px_sql_dark;
-        }
+        get => Resource.agent15px_sql_dark;
         set
         {
 
@@ -156,13 +137,10 @@ public class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
-        }
-    }
+    public Guid Id => new("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
 
-
+    [GeneratedRegex("^.*?\bAccess denied\b.*(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    private static partial Regex MyRegex();
+    [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    private static partial Regex MyRegex1();
 }

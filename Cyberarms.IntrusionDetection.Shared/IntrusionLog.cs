@@ -22,10 +22,7 @@ public class IntrusionLog
     public const int STATUS_LICENSE_REQUIRED = 999;
     public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
 
-    public static Guid GetSystemId()
-    {
-        return new Guid(SYSTEM_ID);
-    }
+    public static Guid GetSystemId() => new(SYSTEM_ID);
 
     private static Dictionary<int, string> _statusNames;
 
@@ -33,23 +30,22 @@ public class IntrusionLog
     {
         get
         {
-            if (_statusNames == null)
-            {
-                _statusNames = new Dictionary<int, string>();
-                _statusNames.Add(STATUS_INTRUSION_ATTEMPT, "Possible intrusion attempt.");
-                _statusNames.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Invalid logon from localhost. Local addresses will not be blocked");
-                _statusNames.Add(STATUS_INTRUSION_ATTEMPT_FROM_SAFE, "Invalid logon from safe network!");
-                _statusNames.Add(STATUS_SOFT_LOCK_REQUESTED, "Soft lock threshold exceeded. Soft lock requested.");
-                _statusNames.Add(STATUS_SOFT_LOCKED, "This client was soft locked.");
-                _statusNames.Add(STATUS_SOFT_LOCK_ERROR, "There was a soft lock error. Please see event viewer for details.");
-                _statusNames.Add(STATUS_HARD_LOCK_REQUESTED, "Hard lock threshold exceeded. Hard lock requested.");
-                _statusNames.Add(STATUS_HARD_LOCKED, "The client was hard locked.");
-                _statusNames.Add(STATUS_HARD_LOCK_ERROR, "There was a hard lock error. Please see event viewer for details.");
-                _statusNames.Add(STATUS_UNLOCK_REQUESTED, "Lock has expired. Unlock requested.");
-                _statusNames.Add(STATUS_UNLOCKED, "This client was unlocked.");
-                _statusNames.Add(STATUS_UNLOCK_ERROR, "There was an unlock error. Please see event viewer for details.");
-                _statusNames.Add(STATUS_LICENSE_REQUIRED, "FREE license limit exceeded. Please order your license.");
-            }
+            _statusNames ??= new Dictionary<int, string>
+                {
+                    { STATUS_INTRUSION_ATTEMPT, "Possible intrusion attempt." },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Invalid logon from localhost. Local addresses will not be blocked" },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_SAFE, "Invalid logon from safe network!" },
+                    { STATUS_SOFT_LOCK_REQUESTED, "Soft lock threshold exceeded. Soft lock requested." },
+                    { STATUS_SOFT_LOCKED, "This client was soft locked." },
+                    { STATUS_SOFT_LOCK_ERROR, "There was a soft lock error. Please see event viewer for details." },
+                    { STATUS_HARD_LOCK_REQUESTED, "Hard lock threshold exceeded. Hard lock requested." },
+                    { STATUS_HARD_LOCKED, "The client was hard locked." },
+                    { STATUS_HARD_LOCK_ERROR, "There was a hard lock error. Please see event viewer for details." },
+                    { STATUS_UNLOCK_REQUESTED, "Lock has expired. Unlock requested." },
+                    { STATUS_UNLOCKED, "This client was unlocked." },
+                    { STATUS_UNLOCK_ERROR, "There was an unlock error. Please see event viewer for details." },
+                    { STATUS_LICENSE_REQUIRED, "FREE license limit exceeded. Please order your license." }
+                };
             return _statusNames;
         }
     }
@@ -60,23 +56,22 @@ public class IntrusionLog
     {
         get
         {
-            if (_statusClasses == null)
-            {
-                _statusClasses = new Dictionary<int, string>();
-                _statusClasses.Add(STATUS_INTRUSION_ATTEMPT, "Intrusion");
-                _statusClasses.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Intrusion");
-                _statusClasses.Add(STATUS_INTRUSION_ATTEMPT_FROM_SAFE, "Intrusion");
-                _statusClasses.Add(STATUS_SOFT_LOCK_REQUESTED, "Soft lock");
-                _statusClasses.Add(STATUS_SOFT_LOCKED, "Soft lock");
-                _statusClasses.Add(STATUS_SOFT_LOCK_ERROR, "Error");
-                _statusClasses.Add(STATUS_HARD_LOCK_REQUESTED, "Hard lock");
-                _statusClasses.Add(STATUS_HARD_LOCKED, "Hard lock");
-                _statusClasses.Add(STATUS_HARD_LOCK_ERROR, "Error");
-                _statusClasses.Add(STATUS_UNLOCK_REQUESTED, "Unlock");
-                _statusClasses.Add(STATUS_UNLOCKED, "Unlock");
-                _statusClasses.Add(STATUS_UNLOCK_ERROR, "Error");
-                _statusClasses.Add(STATUS_LICENSE_REQUIRED, "Licensing");
-            }
+            _statusClasses ??= new Dictionary<int, string>
+                {
+                    { STATUS_INTRUSION_ATTEMPT, "Intrusion" },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, "Intrusion" },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_SAFE, "Intrusion" },
+                    { STATUS_SOFT_LOCK_REQUESTED, "Soft lock" },
+                    { STATUS_SOFT_LOCKED, "Soft lock" },
+                    { STATUS_SOFT_LOCK_ERROR, "Error" },
+                    { STATUS_HARD_LOCK_REQUESTED, "Hard lock" },
+                    { STATUS_HARD_LOCKED, "Hard lock" },
+                    { STATUS_HARD_LOCK_ERROR, "Error" },
+                    { STATUS_UNLOCK_REQUESTED, "Unlock" },
+                    { STATUS_UNLOCKED, "Unlock" },
+                    { STATUS_UNLOCK_ERROR, "Error" },
+                    { STATUS_LICENSE_REQUIRED, "Licensing" }
+                };
             return _statusClasses;
         }
     }
@@ -86,23 +81,22 @@ public class IntrusionLog
     {
         get
         {
-            if (_statusIcons == null)
-            {
-                _statusIcons = new Dictionary<int, Image>();
-                _statusIcons.Add(STATUS_INTRUSION_ATTEMPT, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_loginAttempt);
-                _statusIcons.Add(STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_loginAttempt);
-                _statusIcons.Add(STATUS_INTRUSION_ATTEMPT_FROM_SAFE, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_loginAttempt);
-                _statusIcons.Add(STATUS_SOFT_LOCK_REQUESTED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_softLock);
-                _statusIcons.Add(STATUS_SOFT_LOCKED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_softLock);
-                _statusIcons.Add(STATUS_SOFT_LOCK_ERROR, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_warning);
-                _statusIcons.Add(STATUS_HARD_LOCK_REQUESTED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_hardLock);
-                _statusIcons.Add(STATUS_HARD_LOCKED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_hardLock);
-                _statusIcons.Add(STATUS_HARD_LOCK_ERROR, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_warning);
-                _statusIcons.Add(STATUS_UNLOCK_REQUESTED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_unlock);
-                _statusIcons.Add(STATUS_UNLOCKED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_unlock);
-                _statusIcons.Add(STATUS_UNLOCK_ERROR, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_warning);
-                _statusIcons.Add(STATUS_LICENSE_REQUIRED, global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_warning);
-            }
+            _statusIcons ??= new Dictionary<int, Image>
+                {
+                    { STATUS_INTRUSION_ATTEMPT, Resources.logIcon_loginAttempt },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, Resources.logIcon_loginAttempt },
+                    { STATUS_INTRUSION_ATTEMPT_FROM_SAFE, Resources.logIcon_loginAttempt },
+                    { STATUS_SOFT_LOCK_REQUESTED, Resources.logIcon_softLock },
+                    { STATUS_SOFT_LOCKED, Resources.logIcon_softLock },
+                    { STATUS_SOFT_LOCK_ERROR, Resources.logIcon_warning },
+                    { STATUS_HARD_LOCK_REQUESTED, Resources.logIcon_hardLock },
+                    { STATUS_HARD_LOCKED, Resources.logIcon_hardLock },
+                    { STATUS_HARD_LOCK_ERROR, Resources.logIcon_warning },
+                    { STATUS_UNLOCK_REQUESTED, Resources.logIcon_unlock },
+                    { STATUS_UNLOCKED, Resources.logIcon_unlock },
+                    { STATUS_UNLOCK_ERROR, Resources.logIcon_warning },
+                    { STATUS_LICENSE_REQUIRED, Resources.logIcon_warning }
+                };
             return _statusIcons;
         }
     }
@@ -115,7 +109,7 @@ public class IntrusionLog
         }
         else
         {
-            return global::Cyberarms.IntrusionDetection.Shared.Resources.logIcon_systemMessage;
+            return Resources.logIcon_systemMessage;
         }
     }
 
@@ -158,9 +152,8 @@ public class IntrusionLog
 
     public static int GetLastLogId()
     {
-        int maxLogId = 0;
         object result = Database.Instance.ExecuteScalar("select Max(Id) from IntrusionLog");
-        if (int.TryParse(result.ToString(), out maxLogId)) return maxLogId;
+        if (int.TryParse(result.ToString(), out int maxLogId)) return maxLogId;
         return -1;
     }
 
@@ -186,11 +179,10 @@ public class IntrusionLog
 
     public static bool HasUpdates(int lastSequenceNumber)
     {
-        int lastId;
         if (Database.Instance.IsConfigured)
         {
             object result = Database.Instance.ExecuteScalar("select max(Id) from IntrusionLog");
-            if (result != null && int.TryParse(result.ToString(), out lastId))
+            if (result != null && int.TryParse(result.ToString(), out int lastId))
             {
                 return lastSequenceNumber != lastId;
             }
@@ -222,8 +214,7 @@ public class IntrusionLog
     {
         if (Database.Instance.IsConfigured)
         {
-            int result = 0;
-            int.TryParse(Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0", startDate).ToString(), out result);
+            int.TryParse(Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0", startDate).ToString(), out int result);
             return result;
         }
         else

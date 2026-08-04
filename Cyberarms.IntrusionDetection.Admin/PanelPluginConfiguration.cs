@@ -12,7 +12,7 @@ public partial class PanelPluginConfiguration : UserControl
     public PanelPluginConfiguration()
     {
         InitializeComponent();
-        this.AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
+        AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
     }
 
     void PanelPluginConfiguration_AgentChanged(object sender, EventArgs e)
@@ -22,15 +22,9 @@ public partial class PanelPluginConfiguration : UserControl
         ClearErrors();
     }
 
-    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
-    {
-        (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X + 1, (sender as PictureBox).Location.Y + 1);
-    }
+    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X + 1, (sender as PictureBox).Location.Y + 1);
 
-    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
-    {
-        (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X - 1, (sender as PictureBox).Location.Y - 1);
-    }
+    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X - 1, (sender as PictureBox).Location.Y - 1);
 
     public bool IsInEditMode { get; set; }
 
@@ -110,25 +104,24 @@ public partial class PanelPluginConfiguration : UserControl
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
-        int hardLocks = 10, softLocks = 3, hardLockDuration = 24, softLockDuration = 20;
         bool hasError = false;
         ClearErrors();
-        if (!int.TryParse(textBoxHardLocks.Text, out hardLocks))
+        if (!int.TryParse(textBoxHardLocks.Text, out int hardLocks))
         {
             errHardLocks.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration))
+        if (!int.TryParse(textBoxHardLockDuration.Text, out int hardLockDuration))
         {
             errHardLockDuration.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxSoftLockDuration.Text, out softLockDuration))
+        if (!int.TryParse(textBoxSoftLockDuration.Text, out int softLockDuration))
         {
             errSoftLockDuration.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxSoftLocks.Text, out softLocks))
+        if (!int.TryParse(textBoxSoftLocks.Text, out int softLocks))
         {
             errSoftLocks.Visible = true;
             hasError = true;
@@ -150,34 +143,22 @@ public partial class PanelPluginConfiguration : UserControl
         SetEditMode(false);
     }
 
-    private void OnAgentConfigurationChanged()
-    {
-        if (AgentConfigurationChanged != null) AgentConfigurationChanged(this, EventArgs.Empty);
-    }
+    private void OnAgentConfigurationChanged() => AgentConfigurationChanged?.Invoke(this, EventArgs.Empty);
 
-    private void OnAgentChanged()
-    {
-        if (AgentChanged != null) AgentChanged(this, EventArgs.Empty);
-    }
+    private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
     private SecurityAgent _agent;
     public SecurityAgent Agent
     {
-        get
-        {
-            return _agent;
-        }
+        get => _agent;
         set
         {
             _agent = value;
-            if (AgentChanged != null) AgentChanged(this, EventArgs.Empty);
+            AgentChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 
-    private void buttonDiscard_Click(object sender, EventArgs e)
-    {
-        LoadData();
-    }
+    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
     private void checkBoxOverrideConfiguration_CheckedChanged(object sender, EventArgs e)
     {
@@ -186,10 +167,7 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
 
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {
@@ -197,9 +175,6 @@ public partial class PanelPluginConfiguration : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 
 }

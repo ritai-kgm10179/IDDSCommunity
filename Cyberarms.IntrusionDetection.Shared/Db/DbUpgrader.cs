@@ -15,7 +15,7 @@ public class DbUpgrader
         cmd.Connection = connection;
         cmd.CommandText = "SELECT VersionNumber from DbConfig order by VersionNumber desc LIMIT 1";
         int latestVersion = 0;
-        object result = null;
+        object result;
         try
         {
             result = cmd.ExecuteScalar();
@@ -27,7 +27,7 @@ public class DbUpgrader
         }
         catch (Exception ex)
         {
-            throw (ex);
+            throw ex;
         }
         if (result != null && !string.IsNullOrEmpty(result.ToString()))
         {
@@ -56,8 +56,10 @@ public class DbUpgrader
 
     private void InitScripts()
     {
-        upgradeScripts = new SortedList<int, DbUpgradeScript>();
-        upgradeScripts.Add(1, new Version_2_1());
+        upgradeScripts = new SortedList<int, DbUpgradeScript>
+        {
+            { 1, new Version_2_1() }
+        };
     }
 
     public DbUpgrader()

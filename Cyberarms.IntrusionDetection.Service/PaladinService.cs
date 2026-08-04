@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ServiceProcess;
@@ -6,6 +6,7 @@ using System.Text;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using Cyberarms.IntrusionDetection.Shared;
 using System.Net.Mail;
+using MailKit.Security;
 
 namespace Cyberarms.IntrusionDetection;
 
@@ -20,7 +21,7 @@ public partial class Service : ServiceBase
 
 
     // private LogAlerts logAlerts;
-    private System.Timers.Timer cleanupTimer = new();
+    private readonly System.Timers.Timer cleanupTimer = new();
 
 
     // private bool restartPending = false;
@@ -32,14 +33,14 @@ public partial class Service : ServiceBase
         InitializeComponent();
         isInitialized = false;
         ConfigureSystem();
-        this.CanStop = true;
-        this.CanPauseAndContinue = true;
-        this.AutoLog = false;
-        this.CanShutdown = true;
-        this.EventLog.Source = Globals.APPLICATION_NAME;
-        this.ClientIpAddressSoftLocked += new EventHandler(Service_ClientIpAddressSoftLocked);
-        this.ClientIpAddressUnlocked += new EventHandler(Service_ClientIpAddressUnlocked);
-        this.ClientIpAddressHardLocked += new EventHandler(Service_ClientIpAddressHardLocked);
+        CanStop = true;
+        CanPauseAndContinue = true;
+        AutoLog = false;
+        CanShutdown = true;
+        EventLog.Source = Globals.APPLICATION_NAME;
+        ClientIpAddressSoftLocked += new EventHandler(Service_ClientIpAddressSoftLocked);
+        ClientIpAddressUnlocked += new EventHandler(Service_ClientIpAddressUnlocked);
+        ClientIpAddressHardLocked += new EventHandler(Service_ClientIpAddressHardLocked);
         // IntrusionDetectionConfiguration.PluginDirectory = System.Windows.Forms.Application.StartupPath + "\\Plugins\\";
         ReportScheduler.Instance.RunDailyReport += new EventHandler(Instance_RunDailyReport);
         ReportScheduler.Instance.RunWeeklyReport += new EventHandler(Instance_RunWeeklyReport);
@@ -97,7 +98,7 @@ public partial class Service : ServiceBase
     }
 
 
-    void ConfigureSystem()
+    static void ConfigureSystem()
     {
         Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
 
@@ -114,14 +115,14 @@ public partial class Service : ServiceBase
 
     void Service_ClientIpAddressHardLocked(object sender, EventArgs e)
     {
-        ClientOperationInformation op = (ClientOperationInformation)sender;
+        var op = (ClientOperationInformation)sender;
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
         SendInfoMail(sender, LockType.HardLock);
     }
 
     void Service_ClientIpAddressUnlocked(object sender, EventArgs e)
     {
-        ClientOperationInformation op = (ClientOperationInformation)sender;
+        var op = (ClientOperationInformation)sender;
         if (op.HasError)
         {
             IntrusionLog.AddEntry(DateTime.Now, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
@@ -135,14 +136,14 @@ public partial class Service : ServiceBase
 
     void Service_ClientIpAddressSoftLocked(object sender, EventArgs e)
     {
-        ClientOperationInformation op = (ClientOperationInformation)sender;
+        var op = (ClientOperationInformation)sender;
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
         SendInfoMail(sender, LockType.SoftLock);
     }
 
     void OnClientIpAddressHardLocked(Lock lockItem, Exception ex, Guid agentId)
     {
-        if (this.ClientIpAddressHardLocked != null)
+        if (ClientIpAddressHardLocked != null)
         {
             ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, "hard");
             co.AgentId = agentId;
@@ -150,7 +151,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    private ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception ex, string info)
+    private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception ex, string info)
     {
         ClientOperationInformation op = new()
         {
@@ -171,7 +172,7 @@ public partial class Service : ServiceBase
 
     void OnClientIpAddressSoftLocked(Lock lockItem, Exception ex, Guid agentId)
     {
-        if (this.ClientIpAddressSoftLocked != null)
+        if (ClientIpAddressSoftLocked != null)
         {
             ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, "soft");
             co.AgentId = agentId;
@@ -209,7 +210,7 @@ public partial class Service : ServiceBase
         //if (!IddsConfig.Instance.SendInfoMail) return;
 
         if (o == null || !(o is ClientOperationInformation)) return;
-        ClientOperationInformation op = (ClientOperationInformation)o;
+        var op = (ClientOperationInformation)o;
         try
         {
             string subject = string.Empty;
@@ -237,7 +238,7 @@ public partial class Service : ServiceBase
         }
     }
 
-    void SendMail(string subject, string message)
+    static void SendMail(string subject, string message)
     {
         try
         {
@@ -252,7 +253,7 @@ public partial class Service : ServiceBase
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();
                 int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
-                var secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
+                SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTlsWhenAvailable : MailKit.Security.SecureSocketOptions.Auto;
                 client.Connect(IddsConfig.Instance.SmtpServer, port, secureOption);
 
                 if (IddsConfig.Instance.SmtpRequiresAuthentication)
@@ -444,10 +445,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
     }
 
-    private void InitAgentConfiguration()
-    {
-        SecurityAgents.Instance.RegisterSecurityAgents();
-    }
+    private static void InitAgentConfiguration() => SecurityAgents.Instance.RegisterSecurityAgents();
 
 
 
@@ -475,8 +473,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
             {
                 Statistics.Instance.IncreaseFailedLoginStatistics(reportingAgent);
-                System.Net.IPAddress ipAddress;
-                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out ipAddress) && IddsConfig.Instance.IsIpAddressLocal(ipAddress))
+                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress ipAddress) && IddsConfig.Instance.IsIpAddressLocal(ipAddress))
                 {
                     incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, false);
@@ -530,7 +527,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", (sender != null ? sender.GetType().Name : "unknown"), ex.Message),
+            WindowsLogManager.Instance.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", sender != null ? sender.GetType().Name : "unknown", ex.Message),
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
         }
     }
@@ -542,7 +539,7 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         SecurityAgents.Instance.LoadAgents();
         foreach (SecurityAgent agent in SecurityAgents.Instance.LoadedAgents.Keys)
         {
-            AgentProxy agentPlugin = (AgentProxy)SecurityAgents.Instance.LoadedAgents[agent];
+            AgentProxy agentPlugin = SecurityAgents.Instance.LoadedAgents[agent];
             if (agent.Enabled)
             {
                 agentPlugin.AttackDetected += new AttackDetectedHandler(Service_AttackDetected);
@@ -551,9 +548,6 @@ Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
     }
 
 
-    private void UnloadAgents()
-    {
-        SecurityAgents.Instance.UnloadAgents();
-    }
+    private static void UnloadAgents() => SecurityAgents.Instance.UnloadAgents();
 
 }

@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 
-namespace CyberarmsPaladinCmd.Test;
+namespace CyberarmsIntrusionDetection.Cmd.Test;
 
 [TestClass]
 public class AgentTests
@@ -22,10 +22,10 @@ public class AgentTests
     }
 
 
-    private string[] ResolveIp(string hostname)
+    private static string[] ResolveIp(string hostname)
     {
-        List<string> result = new();
-        IPAddress[] addr = System.Net.Dns.GetHostAddresses(hostname);
+        List<string> result = [];
+        IPAddress[] addr = Dns.GetHostAddresses(hostname);
         foreach (IPAddress ip in addr)
         {
             if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)

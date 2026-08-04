@@ -43,25 +43,19 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         query = new EventLogQuery("Application", PathType.LogName,
             string.Format(EVENT_LOG_QUERY_CYBERARMS_IIS_SECURITY_MONITOR_ACCESS_DENIED));
         watcher = new EventLogWatcher(query);
-        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
+        watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
 
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -73,7 +67,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
     {
         try
         {
@@ -94,8 +88,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress
                     };
-                    System.Net.IPAddress probe;
-                    if (System.Net.IPAddress.TryParse(ipAddress, out probe))
+                    if (System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress probe))
                     {
                         if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {
@@ -115,10 +108,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "Web Security Agent";
-        }
+        get => "Web Security Agent";
         set
         {
 
@@ -127,10 +117,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
     public Image Icon
     {
-        get
-        {
-            return global::Cyberarms.Agents.WebSecurity.Resource.agent15px_sharePoint_dark;
-        }
+        get => Resource.agent15px_sharePoint_dark;
         set
         {
 
@@ -139,10 +126,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
     public Image SelectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.WebSecurity.Resource.agent15px_sharePoint_white;
-        }
+        get => Resource.agent15px_sharePoint_white;
         set
         {
 
@@ -151,10 +135,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
     public Image UnselectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.WebSecurity.Resource.agent15px_sharePoint_dark;
-        }
+        get => Resource.agent15px_sharePoint_dark;
         set
         {
 
@@ -163,13 +144,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{63F5567C-7A75-4870-A842-E981855DA3E9}");
-        }
-    }
+    public Guid Id => new("{63F5567C-7A75-4870-A842-E981855DA3E9}");
 
 
 }

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Text;
 using System.Security.Cryptography;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 internal class CryptoLib
 {

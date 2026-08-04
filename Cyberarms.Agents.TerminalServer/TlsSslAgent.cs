@@ -14,13 +14,13 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     ThreadStart ts;
     Thread td;
 
-    List<Sniffer> sniffers = new();
+    readonly List<Sniffer> sniffers = [];
 
     public TlsSslAgent()
     {
-        this.Configuration.AgentSettings = new TslSslConfig();
+        Configuration.AgentSettings = new TslSslConfig();
         Configuration.ConfigurationSettingsTypeName =
-            this.Configuration.AgentSettings.GetType().FullName;
+            Configuration.AgentSettings.GetType().FullName;
     }
 
     protected override void OnStartAgent()
@@ -33,7 +33,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     void RunWatcher()
     {
-        IPHostEntry hostEntry = Dns.GetHostEntry((Dns.GetHostName()));
+        IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
         if (hostEntry.AddressList.Length > 0)
         {
             foreach (IPAddress ip in hostEntry.AddressList)
@@ -62,14 +62,13 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     void s_IpPacketSent(object sender, EventArgs e)
     {
-        IPHeader ipHeader = (IPHeader)sender;
+        var ipHeader = (IPHeader)sender;
         if (ipHeader.ProtocolType == Protocol.Tcp)
         {
             try
             {
                 TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                int sourcePort;
-                if (int.TryParse(tcp.SourcePort, out sourcePort))
+                if (int.TryParse(tcp.SourcePort, out int sourcePort))
                 {
                     if (sourcePort == ((TslSslConfig)Configuration.AgentSettings).RdpPort)
                     {
@@ -102,10 +101,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    private void OnTrace(IPHeader tlsPackage)
-    {
-        if (Trace != null) Trace(tlsPackage, EventArgs.Empty);
-    }
+    private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     protected override void OnContinueAgent()
     {
@@ -130,13 +126,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
-    public override bool IsRunning
-    {
-        get
-        {
-            return base.IsRunning;
-        }
-    }
+    public override bool IsRunning => base.IsRunning;
 
     void UnsuccessfulLogin(string ipAddress)
     {
@@ -153,10 +143,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     public string DisplayName
     {
-        get
-        {
-            return "TLS/SSL Security Agent";
-        }
+        get => "TLS/SSL Security Agent";
         set
         {
 
@@ -165,10 +152,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     public Image Icon
     {
-        get
-        {
-            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
-        }
+        get => Resource.agent15px_rdp_dark;
         set
         {
 
@@ -177,10 +161,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     public Image SelectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_white;
-        }
+        get => Resource.agent15px_rdp_white;
         set
         {
 
@@ -189,10 +170,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     public Image UnselectedIcon
     {
-        get
-        {
-            return global::Cyberarms.Agents.TerminalServer.Resource.agent15px_rdp_dark;
-        }
+        get => Resource.agent15px_rdp_dark;
         set
         {
 
@@ -200,11 +178,5 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{A682433B-852F-4150-ADF4-FB7F75090015}");
-        }
-    }
+    public Guid Id => new("{A682433B-852F-4150-ADF4-FB7F75090015}");
 }

@@ -71,22 +71,13 @@ public class LoadAgentsTest
         // Assert.IsTrue(Unloaded); // just works in debug, because object is released too early in runtime
     }
 
-    void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-    {
-        Finished = true;
-    }
+    void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => Finished = true;
     public bool Finished { get; set; }
     public bool Unloaded { get; set; }
 
-    void AppDomain_DomainUnload(object sender, EventArgs e)
-    {
-        Unloaded = true;
-    }
+    void AppDomain_DomainUnload(object sender, EventArgs e) => Unloaded = true;
 
-    void LoadAgentsTest_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data)
-    {
-        System.Diagnostics.Debug.Print("Attack detected");
-    }
+    void LoadAgentsTest_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data) => System.Diagnostics.Debug.Print("Attack detected");
 
 
 }

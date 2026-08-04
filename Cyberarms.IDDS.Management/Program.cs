@@ -38,7 +38,7 @@ class Program
                         , DateTime.Now.AddMonths(-1), DateTime.Now);
                     try
                     {
-                        StreamWriter sw = System.IO.File.CreateText(args[1]);
+                        StreamWriter sw = File.CreateText(args[1]);
                         sw.Write(report);
                         sw.Close();
                     }
@@ -63,7 +63,7 @@ class Program
                     }
                     try
                     {
-                        StreamWriter swexport = System.IO.File.CreateText(args[1]);
+                        StreamWriter swexport = File.CreateText(args[1]);
                         System.Data.IDataReader rdr = IntrusionLog.ReadDifferential(lastSquenceNumber);
                         swexport.WriteLine("Sequence Number;Date and Time;Security Agent;IP Address;Status");
                         while (rdr.Read())

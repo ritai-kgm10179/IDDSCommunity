@@ -4,38 +4,31 @@ using System.Text;
 using NetFwTypeLib;
 using Cyberarms.IntrusionDetection.Shared;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 internal class FirewallPolicyManager
 {
-    private INetFwPolicy2 firewallPolicyManager;
+    private readonly INetFwPolicy2 firewallPolicyManager;
     private static FirewallPolicyManager _instance;
 
     internal static FirewallPolicyManager Instance
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new FirewallPolicyManager();
-            }
+            _instance ??= new FirewallPolicyManager();
             return _instance;
         }
     }
 
-    private FirewallPolicyManager()
-    {
-        firewallPolicyManager = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
-    }
+    private FirewallPolicyManager() => firewallPolicyManager = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
 
     internal void Block(string ipAddress)
     {
         try
         {
-            AddRule("BlockAttacker", 0, NetFwTypeLib.NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_ANY,
-                NetFwTypeLib.NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN, NetFwTypeLib.NET_FW_SCOPE_.NET_FW_SCOPE_CUSTOM,
-                NetFwTypeLib.NET_FW_ACTION_.NET_FW_ACTION_BLOCK, ipAddress);
+            AddRule("BlockAttacker", 0, NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_ANY,
+                NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN, NET_FW_SCOPE_.NET_FW_SCOPE_CUSTOM,
+                NET_FW_ACTION_.NET_FW_ACTION_BLOCK, ipAddress);
         }
         catch (Exception ex)
         {
@@ -73,7 +66,7 @@ internal class FirewallPolicyManager
         }
     }
 
-    private string GetCleanedRemoteAddresses(string addresses, string removeAddress)
+    private static string GetCleanedRemoteAddresses(string addresses, string removeAddress)
     {
         StringBuilder result = new();
         string[] addressList;
@@ -88,7 +81,7 @@ internal class FirewallPolicyManager
         }
         foreach (string address in addressList)
         {
-            string part1 = string.Empty;
+            string part1;
             if (address.Contains('/'))
             {
                 part1 = address.Split('/')[0];
@@ -105,10 +98,7 @@ internal class FirewallPolicyManager
         return result.ToString();
     }
 
-    private string GetRuleName(string name, int port)
-    {
-        return string.Format("{0}_{1}_{2}", Globals.CYBERARMS_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
-    }
+    private static string GetRuleName(string name, int port) => string.Format("{0}_{1}_{2}", Globals.CYBERARMS_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
 
     internal void AddRule(string name, int port, NET_FW_IP_PROTOCOL_ protocol, NET_FW_RULE_DIRECTION_ direction,
         NET_FW_SCOPE_ scope, NET_FW_ACTION_ action, string remoteAddress)
@@ -191,7 +181,7 @@ internal class FirewallPolicyManager
 
     internal List<INetFwRule> FindRules(string name)
     {
-        List<INetFwRule> rules = new();
+        List<INetFwRule> rules = [];
         foreach (INetFwRule rule in firewallPolicyManager.Rules)
         {
             if (rule.Name.StartsWith(name)) rules.Add(rule);

@@ -22,28 +22,16 @@ public class IddsConfigTest
 
 
     [TestMethod, Ignore]
-    public void ActivateTrialKeyTest()
-    {
-        Assert.Fail("Not implemented");
-    }
+    public void ActivateTrialKeyTest() => Assert.Fail("Not implemented");
 
     [TestMethod, Ignore]
-    public void VariousProductActivationTest()
-    {
-        Assert.Fail("Not implemented");
-    }
+    public void VariousProductActivationTest() => Assert.Fail("Not implemented");
 
     [TestMethod, Ignore]
-    public void CreateEditionKeyTest()
-    {
-        Assert.Fail("Not implemented");
-    }
+    public void CreateEditionKeyTest() => Assert.Fail("Not implemented");
 
     [TestMethod, Ignore]
-    public void ActivateEditionKeyTest()
-    {
-        Assert.Fail("Not implemented");
-    }
+    public void ActivateEditionKeyTest() => Assert.Fail("Not implemented");
 
     [TestMethod]
     public void SaveConfigTest()

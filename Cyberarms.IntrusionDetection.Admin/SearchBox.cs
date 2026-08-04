@@ -12,10 +12,7 @@ public class SearchBox : Control
     Rectangle clearSearchButtonPosition;
     bool isEmpty;
 
-    public SearchBox()
-    {
-        InitializeComponents();
-    }
+    public SearchBox() => InitializeComponents();
 
 
     public void InitializeComponents()
@@ -39,30 +36,27 @@ public class SearchBox : Control
 
         EmptyFont = Font;
 
-        this.Controls.Add(textBoxSearch);
-        this.Click += new EventHandler(SearchBox_Click);
-        this.Paint += new PaintEventHandler(SearchBox_Paint);
-        this.SizeChanged += new EventHandler(SearchBox_SizeChanged);
-        this.ForeColorChanged += new EventHandler(SearchBox_ForeColorChanged);
-        this.BackColorChanged += new EventHandler(SearchBox_BackColorChanged);
-        this.FontChanged += new EventHandler(SearchBox_FontChanged);
-        this.MinimumSize = new Size(80, 12);
+        Controls.Add(textBoxSearch);
+        Click += new EventHandler(SearchBox_Click);
+        Paint += new PaintEventHandler(SearchBox_Paint);
+        SizeChanged += new EventHandler(SearchBox_SizeChanged);
+        ForeColorChanged += new EventHandler(SearchBox_ForeColorChanged);
+        BackColorChanged += new EventHandler(SearchBox_BackColorChanged);
+        FontChanged += new EventHandler(SearchBox_FontChanged);
+        MinimumSize = new Size(80, 12);
         textBoxSearch.TextChanged += new EventHandler(textBoxSearch_TextChanged);
     }
 
     void textBoxSearch_TextChanged(object sender, EventArgs e)
     {
-        if ((string.IsNullOrEmpty(Text) && !isEmpty) || (!string.IsNullOrEmpty(Text) && isEmpty))
+        if (string.IsNullOrEmpty(Text) && !isEmpty || !string.IsNullOrEmpty(Text) && isEmpty)
         {
             Invalidate();
             isEmpty = string.IsNullOrEmpty(Text);
         }
     }
 
-    void SearchBox_FontChanged(object sender, EventArgs e)
-    {
-        textBoxSearch.Font = Font;
-    }
+    void SearchBox_FontChanged(object sender, EventArgs e) => textBoxSearch.Font = Font;
 
     void textBoxSearch_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -81,22 +75,16 @@ public class SearchBox : Control
 
     void SearchBox_SizeChanged(object sender, EventArgs e)
     {
-        textBoxSearch.Width = this.Width - 44;
-        textBoxSearch.Height = this.Height;
+        textBoxSearch.Width = Width - 44;
+        textBoxSearch.Height = Height;
         clearSearchButtonPosition.Location = new Point(Width - 42, 0);
         searchButtonPosition.Location = new Point(Width - 20, 0);
     }
 
 
-    void SearchBox_BackColorChanged(object sender, EventArgs e)
-    {
-        textBoxSearch.BackColor = BackColor;
-    }
+    void SearchBox_BackColorChanged(object sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
 
-    void SearchBox_ForeColorChanged(object sender, EventArgs e)
-    {
-        textBoxSearch.ForeColor = ForeColor;
-    }
+    void SearchBox_ForeColorChanged(object sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
 
 
 
@@ -128,40 +116,30 @@ public class SearchBox : Control
     }
 
 
-    private void OnSearch()
-    {
-        if (Search != null) Search(this, EventArgs.Empty);
-    }
+    private void OnSearch() => Search?.Invoke(this, EventArgs.Empty);
 
     private void OnClearSearch()
     {
-        this.Text = "";
-        if (ClearSearch != null) ClearSearch(this, EventArgs.Empty);
+        Text = "";
+        ClearSearch?.Invoke(this, EventArgs.Empty);
 
     }
 
     private void RemoveClearButton()
     {
-        Graphics g = Graphics.FromHwnd(this.Handle);
+        var g = Graphics.FromHwnd(Handle);
         g.FillRectangle(new SolidBrush(BackColor), clearSearchButtonPosition);
     }
 
     private void PaintClearButton()
     {
-        Graphics g = Graphics.FromHwnd(this.Handle);
+        var g = Graphics.FromHwnd(Handle);
         g.DrawImageUnscaled(ClearImage, clearSearchButtonPosition);
     }
 
     public override string Text
     {
-        get
-        {
-            return textBoxSearch.Text;
-        }
-        set
-        {
-            textBoxSearch.Text = value;
-        }
+        get => textBoxSearch.Text; set => textBoxSearch.Text = value;
     }
 
 
@@ -171,52 +149,28 @@ public class SearchBox : Control
 
     public string EmptyText
     {
-        get
-        {
-            return textBoxSearch.EmptyText;
-        }
-        set
-        {
-            textBoxSearch.EmptyText = value;
-        }
+        get => textBoxSearch.EmptyText; set => textBoxSearch.EmptyText = value;
     }
     public Color EmptyTextColor
     {
-        get
-        {
-            return textBoxSearch.EmptyTextColor;
-        }
-        set
-        {
-            textBoxSearch.EmptyTextColor = value;
-        }
+        get => textBoxSearch.EmptyTextColor; set => textBoxSearch.EmptyTextColor = value;
     }
 
     public Font EmptyFont
     {
-        get
-        {
-            return textBoxSearch.EmptyFont;
-        }
-        set
-        {
-            textBoxSearch.EmptyFont = value;
-        }
+        get => textBoxSearch.EmptyFont; set => textBoxSearch.EmptyFont = value;
     }
 
 
     public class SearchTextBox : TextBox
     {
-        public SearchTextBox()
-        {
-            this.TextChanged += new EventHandler(SearchTextBox_TextChanged);
-        }
+        public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
 
         void SearchTextBox_TextChanged(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(Text))
             {
-                Graphics.FromHwnd(this.Handle).DrawString(EmptyText, EmptyFont, new SolidBrush(EmptyTextColor), 5, 2);
+                Graphics.FromHwnd(Handle).DrawString(EmptyText, EmptyFont, new SolidBrush(EmptyTextColor), 5, 2);
             }
         }
 

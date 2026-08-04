@@ -22,9 +22,9 @@ public class DemoAgent : AgentPlugin
     /// </summary>
     public DemoAgent()
     {
-        this.Configuration.AgentSettings = new DemoConfiguration();
+        Configuration.AgentSettings = new DemoConfiguration();
         Configuration.ConfigurationSettingsTypeName =
-            this.Configuration.AgentSettings.GetType().FullName;
+            Configuration.AgentSettings.GetType().FullName;
     }
 
     /// <summary>
@@ -58,19 +58,12 @@ public class DemoAgent : AgentPlugin
     /// <summary>
     /// Override the OnPauseAgent function which is called when pausing theIntrusion DetectionService
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.EnableRaisingEvents = false;
-
-    }
+    protected override void OnPauseAgent() => watcher.EnableRaisingEvents = false;
 
     /// <summary>
     /// Override the OnContinueAgent function which is called when resuming theIntrusion DetectionService
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.EnableRaisingEvents = true;
-    }
+    protected override void OnContinueAgent() => watcher.EnableRaisingEvents = true;
 
 
 
@@ -105,7 +98,7 @@ public class DemoAgent : AgentPlugin
                 EventId = 4001, // Agent found something
                 IpAddress = "192.168.1.23"
             };
-            base.OnAttackDetected(this, args);
+            OnAttackDetected(this, args);
         }
 
     }

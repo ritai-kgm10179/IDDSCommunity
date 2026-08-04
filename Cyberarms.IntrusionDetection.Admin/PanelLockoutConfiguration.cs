@@ -13,19 +13,13 @@ public partial class PanelLockoutConfiguration : UserControl
     public PanelLockoutConfiguration()
     {
         InitializeComponent();
-        this.BackColor = Color.White;
+        BackColor = Color.White;
         LoadData();
     }
 
-    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
-    {
-        pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X + 1, pictureBoxEdit.Location.Y + 1);
-    }
+    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X + 1, pictureBoxEdit.Location.Y + 1);
 
-    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
-    {
-        pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
-    }
+    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
 
     public bool IsInEditMode { get; set; }
 
@@ -46,7 +40,7 @@ public partial class PanelLockoutConfiguration : UserControl
         //ClearErrors();
     }
 
-    private void ToggleEditMode()
+    private static void ToggleEditMode()
     {
         //if (!IsInEditMode) {
         //    pictureBoxEdit.Image = global::Cyberarms.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
@@ -73,25 +67,24 @@ public partial class PanelLockoutConfiguration : UserControl
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
-        int hardLocks = 10, softLocks = 3, hardLockDuration = 24, softLockDuration = 20;
         bool hasError = false;
         ClearErrors();
-        if (!int.TryParse(textBoxHardLocks.Text, out hardLocks))
+        if (!int.TryParse(textBoxHardLocks.Text, out int hardLocks))
         {
             errHardLocks.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration))
+        if (!int.TryParse(textBoxHardLockDuration.Text, out int hardLockDuration))
         {
             errHardLockDuration.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxSoftLockDuration.Text, out softLockDuration))
+        if (!int.TryParse(textBoxSoftLockDuration.Text, out int softLockDuration))
         {
             errSoftLockDuration.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxSoftLocks.Text, out softLocks))
+        if (!int.TryParse(textBoxSoftLocks.Text, out int softLocks))
         {
             errSoftLocks.Visible = true;
             hasError = true;
@@ -110,10 +103,7 @@ public partial class PanelLockoutConfiguration : UserControl
         SetEditMode(false);
     }
 
-    private void OnLockoutConfigurationChanged()
-    {
-        if (LockoutConfigurationChanged != null) LockoutConfigurationChanged(this, EventArgs.Empty);
-    }
+    private void OnLockoutConfigurationChanged() => LockoutConfigurationChanged?.Invoke(this, EventArgs.Empty);
 
     private void buttonDiscard_Click(object sender, EventArgs e)
     {
@@ -121,10 +111,7 @@ public partial class PanelLockoutConfiguration : UserControl
         SetEditMode(false);
     }
 
-    private void textBoxSoftLocks_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void textBoxSoftLocks_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {
@@ -132,8 +119,5 @@ public partial class PanelLockoutConfiguration : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBoxLockForever_CheckedChanged(object sender, EventArgs e)
-    {
-        SetEditMode(true);
-    }
+    private void checkBoxLockForever_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 }

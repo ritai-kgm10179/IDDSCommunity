@@ -8,7 +8,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class SplashScreen : Form
 {
 
-    Timer t = new();
+    readonly Timer t = new();
 
     public SplashScreen()
     {
@@ -16,7 +16,7 @@ public partial class SplashScreen : Form
         smartLabelVersion.Text = "Version " + Application.ProductVersion;
         smartLabelStatus.Text = "Loading components...";
         BackColor = Color.White;
-        this.Load += new EventHandler(SplashScreen_Load);
+        Load += new EventHandler(SplashScreen_Load);
     }
 
     void SplashScreen_Load(object sender, EventArgs e)
@@ -37,7 +37,7 @@ public partial class SplashScreen : Form
 
         smartLabelStatus.Text = "Setting environment variables...";
         IddsConfig.Instance.ApplicationPath = Application.StartupPath;
-        IddsConfig.Instance.PluginsDirectory = System.Windows.Forms.Application.StartupPath + "\\Plugins\\";
+        IddsConfig.Instance.PluginsDirectory = Application.StartupPath + "\\Plugins\\";
         smartLabelStatus.Text = "Loading configuration data...";
         IddsConfig.Instance.Load();
         smartLabelStatus.Text = "Loading agents...";

@@ -36,10 +36,8 @@ public partial class CyberarmsSecurityLog : UserControl
             }
             return _intrusionLog;
         }
-        set
-        {
-            _intrusionLog = value;
-        }
+
+        set => _intrusionLog = value;
     }
 
     private DataView _intrusionLogView;
@@ -47,13 +45,10 @@ public partial class CyberarmsSecurityLog : UserControl
     {
         get
         {
-            if (_intrusionLogView == null)
-            {
-                _intrusionLogView = new DataView(DataSetIntrusionLog.Tables["IntrusionLog"])
+            _intrusionLogView ??= new DataView(DataSetIntrusionLog.Tables["IntrusionLog"])
                 {
                     Sort = "EventDate desc"
                 };
-            }
             return _intrusionLogView;
         }
     }
@@ -79,14 +74,14 @@ public partial class CyberarmsSecurityLog : UserControl
         dataGridViewIntrusionLog.Columns["AgentId"].DataPropertyName = "AgentId";
         dataGridViewIntrusionLog.Columns["NumberOfEvents"].DataPropertyName = "NumberOfEvents";
 
-        this.FilterSelectionChanged += new EventHandler(CyberarmsSecurityLog_FilterSelectionChanged);
+        FilterSelectionChanged += new EventHandler(CyberarmsSecurityLog_FilterSelectionChanged);
         PositionLabels();
     }
 
     void CyberarmsSecurityLog_FilterSelectionChanged(object sender, EventArgs e)
     {
         // @ToDo: Filter richtig setzen!
-        List<string> filter = new();
+        List<string> filter = [];
         if (!checkBoxFailedLogins.Checked && !checkBoxHardLocks.Checked && !checkBoxSoftLocks.Checked && !checkBoxSystemMessages.Checked) filter.Add("0=1");
         if (checkBoxFailedLogins.Checked) filter.Add("(Action >99 and Action <200)");
         if (checkBoxSoftLocks.Checked) filter.Add("(Action >199 and Action <300)");
@@ -106,7 +101,7 @@ public partial class CyberarmsSecurityLog : UserControl
         if (comboBoxAgentSelection.Text != null && !((IAgentFilter)comboBoxAgentSelection.SelectedItem).Id.Equals(new Guid(ALL_AGENTS)))
         {
             viewFilter = viewFilter + (filter.Count > 0 ? " and " : "");
-            viewFilter = viewFilter + (string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem).Id));
+            viewFilter = viewFilter + string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem).Id);
         }
         IntrusionLogView.RowFilter = viewFilter;
     }
@@ -142,8 +137,7 @@ public partial class CyberarmsSecurityLog : UserControl
         int result = 0;
         foreach (DataGridViewRow row in dataGridViewIntrusionLog.Rows)
         {
-            int c;
-            if (int.TryParse(row.Cells["NumberOfEvents"].Value.ToString(), out c))
+            if (int.TryParse(row.Cells["NumberOfEvents"].Value.ToString(), out int c))
             {
                 result += c;
             }
@@ -161,10 +155,7 @@ public partial class CyberarmsSecurityLog : UserControl
 
     public int MaxLogId { get; set; }
 
-    public void AddAgent(SecurityAgent agent)
-    {
-        comboBoxAgentSelection.Items.Add(agent);
-    }
+    public void AddAgent(SecurityAgent agent) => comboBoxAgentSelection.Items.Add(agent);
 
     public void RemoveAgent(SecurityAgent agent)
     {
@@ -178,10 +169,7 @@ public partial class CyberarmsSecurityLog : UserControl
         }
     }
 
-    private void dataGridViewIntrusionLog_Resize(object sender, EventArgs e)
-    {
-        PositionLabels();
-    }
+    private void dataGridViewIntrusionLog_Resize(object sender, EventArgs e) => PositionLabels();
 
     private void PositionLabels()
     {

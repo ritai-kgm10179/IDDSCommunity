@@ -2,7 +2,7 @@
 using System.Text;
 using System.IO;
 
-namespace Cyberarms.Agents.MailServer;
+namespace Cyberarms.Agents.Smtp;
 
 public class AppLayerSmtp
 {

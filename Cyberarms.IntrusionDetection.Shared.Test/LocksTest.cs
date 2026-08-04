@@ -7,10 +7,7 @@ namespace Cyberarms.IntrusionDetection.Shared.Test;
 public class LocksTest
 {
 
-    public LocksTest()
-    {
-        Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
-    }
+    public LocksTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
 
     [TestMethod]
     public void CreateLockTest()
@@ -30,7 +27,7 @@ public class LocksTest
         Assert.AreEqual(currentMaxId + 1, l.Id);
     }
 
-    private long GetMaxLocksId()
+    private static long GetMaxLocksId()
     {
         object result = Database.Instance.ExecuteScalar("Select max(LockId) from Locks");
         return Db.DbValueConverter.ToInt64(result);
@@ -38,14 +35,8 @@ public class LocksTest
     }
 
     [TestMethod]
-    public void TestLockExists()
-    {
-        Assert.IsFalse(Locks.LockExists("192.158.178.120"));
-    }
+    public void TestLockExists() => Assert.IsFalse(Locks.LockExists("192.158.178.120"));
 
     [TestMethod]
-    public void TestLockExists2()
-    {
-        Assert.IsTrue(Locks.LockExists("10.20.1.1"));
-    }
+    public void TestLockExists2() => Assert.IsTrue(Locks.LockExists("10.20.1.1"));
 }

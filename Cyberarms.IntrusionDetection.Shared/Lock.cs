@@ -35,8 +35,8 @@ public class Lock
     {
         if (Database.Instance.IsConfigured)
         {
-            string sqlString = "update Locks set IpAddress=@p0, LockDate=@p1, Port=@p2, Status=@p3, TriggerIncident=@p4, UnlockDate=@p5, LastUpdate=@p6 where LockId=" + this.Id.ToString();
-            Database.Instance.ExecuteNonQuery(sqlString, this.IpAddress, this.LockDate, this.Port, this.Status, this.TriggerIncident, this.UnlockDate, DateTime.Now);
+            string sqlString = "update Locks set IpAddress=@p0, LockDate=@p1, Port=@p2, Status=@p3, TriggerIncident=@p4, UnlockDate=@p5, LastUpdate=@p6 where LockId=" + Id.ToString();
+            Database.Instance.ExecuteNonQuery(sqlString, IpAddress, LockDate, Port, Status, TriggerIncident, UnlockDate, DateTime.Now);
         }
         else
         {

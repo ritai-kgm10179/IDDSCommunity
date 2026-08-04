@@ -7,20 +7,20 @@ namespace Cyberarms.Agents.FtpServer;
 public class TCPHeader
 {
     //TCP header fields
-    private ushort usSourcePort;              //Sixteen bits for the source port number
-    private ushort usDestinationPort;         //Sixteen bits for the destination port number
-    private uint uiSequenceNumber = 555;          //Thirty two bits for the sequence number
-    private uint uiAcknowledgementNumber = 555;   //Thirty two bits for the acknowledgement number
-    private ushort usDataOffsetAndFlags = 555;      //Sixteen bits for flags and data offset
-    private ushort usWindow = 555;                  //Sixteen bits for the window size
-    private short sChecksum = 555;                 //Sixteen bits for the checksum
+    private readonly ushort usSourcePort;              //Sixteen bits for the source port number
+    private readonly ushort usDestinationPort;         //Sixteen bits for the destination port number
+    private readonly uint uiSequenceNumber = 555;          //Thirty two bits for the sequence number
+    private readonly uint uiAcknowledgementNumber = 555;   //Thirty two bits for the acknowledgement number
+    private readonly ushort usDataOffsetAndFlags = 555;      //Sixteen bits for flags and data offset
+    private readonly ushort usWindow = 555;                  //Sixteen bits for the window size
+    private readonly short sChecksum = 555;                 //Sixteen bits for the checksum
     //(checksum can be negative so taken as short)
-    private ushort usUrgentPointer;           //Sixteen bits for the urgent pointer
+    private readonly ushort usUrgentPointer;           //Sixteen bits for the urgent pointer
     //End TCP header fields
 
-    private byte byHeaderLength;            //Header length
-    private ushort usMessageLength;           //Length of the data being carried
-    private byte[] byTCPData = new byte[128];//Data carried by the TCP packet
+    private readonly byte byHeaderLength;            //Header length
+    private readonly ushort usMessageLength;           //Length of the data being carried
+    private readonly byte[] byTCPData = new byte[128];//Data carried by the TCP packet
 
     public TCPHeader(byte[] byBuffer, int nReceived)
     {
@@ -48,7 +48,7 @@ public class TCPHeader
             usWindow = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
 
             //In the next sixteen we have the checksum
-            sChecksum = (short)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
+            sChecksum = IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
 
             //The following sixteen contain the urgent pointer
             usUrgentPointer = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
@@ -70,29 +70,11 @@ public class TCPHeader
         }
     }
 
-    public string SourcePort
-    {
-        get
-        {
-            return usSourcePort.ToString();
-        }
-    }
+    public string SourcePort => usSourcePort.ToString();
 
-    public string DestinationPort
-    {
-        get
-        {
-            return usDestinationPort.ToString();
-        }
-    }
+    public string DestinationPort => usDestinationPort.ToString();
 
-    public string SequenceNumber
-    {
-        get
-        {
-            return uiSequenceNumber.ToString();
-        }
-    }
+    public string SequenceNumber => uiSequenceNumber.ToString();
 
     public string AcknowledgementNumber
     {
@@ -110,21 +92,9 @@ public class TCPHeader
         }
     }
 
-    public string HeaderLength
-    {
-        get
-        {
-            return byHeaderLength.ToString();
-        }
-    }
+    public string HeaderLength => byHeaderLength.ToString();
 
-    public string WindowSize
-    {
-        get
-        {
-            return usWindow.ToString();
-        }
-    }
+    public string WindowSize => usWindow.ToString();
 
     public string UrgentPointer
     {
@@ -194,28 +164,11 @@ public class TCPHeader
         }
     }
 
-    public string Checksum
-    {
-        get
-        {
-            //Return the checksum in hexadecimal format
-            return string.Format("0x{0:x2}", sChecksum);
-        }
-    }
+    public string Checksum =>
+        //Return the checksum in hexadecimal format
+        string.Format("0x{0:x2}", sChecksum);
 
-    public byte[] Data
-    {
-        get
-        {
-            return byTCPData;
-        }
-    }
+    public byte[] Data => byTCPData;
 
-    public ushort MessageLength
-    {
-        get
-        {
-            return usMessageLength;
-        }
-    }
+    public ushort MessageLength => usMessageLength;
 }

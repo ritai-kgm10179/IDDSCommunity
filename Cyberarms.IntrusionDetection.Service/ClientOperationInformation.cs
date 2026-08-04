@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Service;
 
 internal class ClientOperationInformation
 {

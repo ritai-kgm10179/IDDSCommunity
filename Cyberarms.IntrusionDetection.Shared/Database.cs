@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -12,7 +12,7 @@ public class Database
     private bool _isConfigured = false;
     public bool IsConfigured => _isConfigured;
 
-    private readonly SqliteConnectionStringBuilder connBuilder = new();
+    private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
 
     public void Configure(string directory)
@@ -39,10 +39,7 @@ public class Database
         OpenOrCreate();
     }
 
-    private void _connection_StateChange(object sender, StateChangeEventArgs e)
-    {
-        System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
-    }
+    private void _connection_StateChange(object sender, StateChangeEventArgs e) => System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
 
     public SqliteConnection Connection
     {
@@ -72,14 +69,11 @@ public class Database
 
     private Database() { }
 
-    public IDataReader ExecuteReader(string sqlString, params object[] parameters)
-    {
-        return ExecuteReader(sqlString, null, parameters);
-    }
+    public IDataReader ExecuteReader(string sqlString, params object[] parameters) => ExecuteReader(sqlString, null, parameters);
 
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        var paramObj = BuildDynamicParameters(parameters);
+        DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         try
         {
             return Connection.ExecuteReader(sqlString, paramObj, transaction);
@@ -99,14 +93,11 @@ public class Database
         }
     }
 
-    public void ExecuteNonQuery(string sqlString, params object[] parameters)
-    {
-        ExecuteNonQuery(sqlString, null, parameters);
-    }
+    public void ExecuteNonQuery(string sqlString, params object[] parameters) => ExecuteNonQuery(sqlString, null, parameters);
 
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        var paramObj = BuildDynamicParameters(parameters);
+        DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         try
         {
             Connection.Execute(sqlString, paramObj, transaction);
@@ -136,14 +127,11 @@ public class Database
         }
     }
 
-    public object? ExecuteScalar(string sqlString, params object[] parameters)
-    {
-        return ExecuteScalar(sqlString, null, parameters);
-    }
+    public object? ExecuteScalar(string sqlString, params object[] parameters) => ExecuteScalar(sqlString, null, parameters);
 
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
-        var paramObj = BuildDynamicParameters(parameters);
+        DynamicParameters? paramObj = BuildDynamicParameters(parameters);
         try
         {
             return Connection.ExecuteScalar(sqlString, paramObj, transaction);
@@ -163,15 +151,9 @@ public class Database
         }
     }
 
-    public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
-    {
-        return Connection.Query<T>(sqlString, param, transaction);
-    }
+    public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.Query<T>(sqlString, param, transaction);
 
-    public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
-    {
-        return Connection.QueryFirstOrDefault<T>(sqlString, param, transaction);
-    }
+    public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null) => Connection.QueryFirstOrDefault<T>(sqlString, param, transaction);
 
     private static DynamicParameters? BuildDynamicParameters(object[] parameters)
     {

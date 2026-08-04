@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-namespace CyberarmsIntrusionDetectionCmd;
+namespace Cyberarms.IntrusionDetection.Cmd;
 
 class Program
 {
-    static LogAlerts logAlerts = new();
+    static readonly LogAlerts logAlerts = new();
 
     static void StartAgent(string agentName)
     {
-        foreach (Cyberarms.IntrusionDetection.Agent agent in Agents)
+        foreach (Agent agent in Agents)
         {
             if (agent.Name == agentName)
             {
                 agent.Assembly.Start();
-                agent.Assembly.AttackDetected += new Cyberarms.IntrusionDetection.Api.Plugin.AttackDetectedHandler(Assembly_AttackDetected);
+                agent.Assembly.AttackDetected += new Api.Plugin.AttackDetectedHandler(Assembly_AttackDetected);
             }
         }
     }
@@ -24,7 +24,7 @@ class Program
         {
             // Default: Load WindowsBaseSecurity
             Console.WriteLine("Cyberarms Intrusion Detection Command line plugin test tool");
-            System.Diagnostics.Process p = System.Diagnostics.Process.GetCurrentProcess();
+            var p = System.Diagnostics.Process.GetCurrentProcess();
             Agents.Load(p.MainModule.FileName[..p.MainModule.FileName.LastIndexOf('\\')] + "\\Plugins\\Cyberarms.IntrusionDetection.Base.Plugins.dll");
             StartAgent("WindowsSecurityBase");
 
@@ -63,7 +63,7 @@ class Program
         Console.WriteLine("");
         Console.WriteLine("(c) 2012 Cyberarms, isiCore");
     }
-    static void Assembly_AttackDetected(object sender, Cyberarms.IntrusionDetection.Api.Plugin.INotificationEventArgs data)
+    static void Assembly_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data)
     {
         string ipAddress = data.IpAddress;
         logAlerts.AddAlert(data.IpAddress, data.CreateDate, data.EventId);
@@ -76,15 +76,12 @@ class Program
 
     }
 
-    private static Cyberarms.IntrusionDetection.Agents _agents = null;
-    public static Cyberarms.IntrusionDetection.Agents Agents
+    private static Agents _agents = null;
+    public static Agents Agents
     {
         get
         {
-            if (_agents == null)
-            {
-                _agents = new Cyberarms.IntrusionDetection.Agents();
-            }
+            _agents ??= [];
             return _agents;
         }
     }
@@ -118,7 +115,7 @@ class Program
                     EventId = eventId,
                     IpAddress = ipAddress
                 };
-                this.Add(logAlert);
+                Add(logAlert);
             }
         }
         public LogAlert GetAlertFor(string ipAddress)

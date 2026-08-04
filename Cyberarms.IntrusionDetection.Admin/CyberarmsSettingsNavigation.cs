@@ -11,10 +11,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
 
     public event EventHandler PluginsChanged;
 
-    public CyberarmsSettingsNavigation()
-    {
-        InitializeComponent();
-    }
+    public CyberarmsSettingsNavigation() => InitializeComponent();
 
     public event EventHandler NavigationChanged;
 
@@ -60,18 +57,12 @@ public partial class CyberarmsSettingsNavigation : UserControl
     {
         get
         {
-            if (_navigationItems == null)
-            {
-                _navigationItems = new List<CyberarmsSettingsNavigationItem>();
-            }
+            _navigationItems ??= [];
             return _navigationItems;
         }
     }
 
-    public void AddNavigationItem(CyberarmsSettingsNavigationItem item)
-    {
-        NavigationItems.Add(item);
-    }
+    public void AddNavigationItem(CyberarmsSettingsNavigationItem item) => NavigationItems.Add(item);
 
     public void AddNavigationItem(string name, Image selectedIcon, Image unselectedIcon)
     {
@@ -90,10 +81,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
-    public void Clear()
-    {
-        NavigationItems.Clear();
-    }
+    public void Clear() => NavigationItems.Clear();
 
 
     public CyberarmsSettingsNavigationItem SelectedItem
@@ -102,7 +90,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
         {
             foreach (Control c in flowLayoutPanelNavigationItems.Controls)
             {
-                if (c is CyberarmsSettingsNavigationItem && (c as CyberarmsSettingsNavigationItem).IsSelected) return (c as CyberarmsSettingsNavigationItem);
+                if (c is CyberarmsSettingsNavigationItem && (c as CyberarmsSettingsNavigationItem).IsSelected) return c as CyberarmsSettingsNavigationItem;
             }
             return null;
         }
@@ -121,10 +109,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
-    private void OnNavigationChanged(object sender)
-    {
-        if (NavigationChanged != null) NavigationChanged(sender, EventArgs.Empty);
-    }
+    private void OnNavigationChanged(object sender) => NavigationChanged?.Invoke(sender, EventArgs.Empty);
 
     public string SelectedName
     {
@@ -154,25 +139,13 @@ public partial class CyberarmsSettingsNavigation : UserControl
     }
 
 
-    private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e)
-    {
-        pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
-    }
+    private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
 
-    private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e)
-    {
-        pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
-    }
+    private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
 
-    private void pictureBoxRemove_MouseUp(object sender, MouseEventArgs e)
-    {
-        pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X - 1, pictureBoxRemove.Location.Y - 1);
-    }
+    private void pictureBoxRemove_MouseUp(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X - 1, pictureBoxRemove.Location.Y - 1);
 
-    private void pictureBoxRemove_MouseDown(object sender, MouseEventArgs e)
-    {
-        pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X + 1, pictureBoxRemove.Location.Y + 1);
-    }
+    private void pictureBoxRemove_MouseDown(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X + 1, pictureBoxRemove.Location.Y + 1);
 
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
@@ -184,9 +157,9 @@ public partial class CyberarmsSettingsNavigation : UserControl
             Title = "Please select plugin assembly",
             Multiselect = true
         };
-        if (openFile.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        if (openFile.ShowDialog() == DialogResult.OK)
         {
-            string pluginDirectory = Cyberarms.IntrusionDetection.Shared.IddsConfig.Instance.PluginsDirectory;
+            string pluginDirectory = Shared.IddsConfig.Instance.PluginsDirectory;
             string chosenDirectory = openFile.FileNames[0][..openFile.FileNames[0].LastIndexOf('\\')];
             if (openFile.FileNames.Length <= 0)
             {
@@ -217,7 +190,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
             {
                 string assemblyName = fileName[(fileName.LastIndexOf('\\') + 1)..];
                 if (!File.Exists(pluginDirectory + assemblyName) ||
-                    MessageBox.Show("This assembly already exists. Do you want to overwrite the existing?", "Overwrite existing?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == System.Windows.Forms.DialogResult.Yes)
+                    MessageBox.Show("This assembly already exists. Do you want to overwrite the existing?", "Overwrite existing?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
                 {
                     try
                     {
@@ -230,18 +203,12 @@ public partial class CyberarmsSettingsNavigation : UserControl
                     }
                 }
             }
-            Cyberarms.IntrusionDetection.Shared.SecurityAgents.Instance.InitializeAgents();
+            Shared.SecurityAgents.Instance.InitializeAgents();
             OnPluginsChanged();
         }
     }
 
-    private void OnPluginsChanged()
-    {
-        if (PluginsChanged != null)
-        {
-            this.PluginsChanged(this, EventArgs.Empty);
-        }
-    }
+    private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
 
 
 }

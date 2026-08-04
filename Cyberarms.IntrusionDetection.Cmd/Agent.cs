@@ -1,7 +1,7 @@
 ﻿using System;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 
-namespace Cyberarms.IntrusionDetection;
+namespace Cyberarms.IntrusionDetection.Cmd;
 
 internal class Agent
 {
@@ -11,10 +11,7 @@ internal class Agent
     internal IAgentPlugin? Assembly { get; set; }
     internal string Name { get; set; } = string.Empty;
 
-    internal Agent(string assemblyName)
-    {
-        AssemblyName = assemblyName;
-    }
+    internal Agent(string assemblyName) => AssemblyName = assemblyName;
 
     internal Agent() { }
 }

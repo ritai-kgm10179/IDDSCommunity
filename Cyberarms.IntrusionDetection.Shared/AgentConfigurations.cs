@@ -43,10 +43,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         return config.Enabled;
     }
 
-    public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName)
-    {
-        return GetAgentConfig(assemblyName, agentName, null);
-    }
+    public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName) => GetAgentConfig(assemblyName, agentName, null);
 
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName, string configurationSettingsType)
     {
@@ -58,7 +55,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
             }
         }
 
-        return (IAgentConfiguration)CreateAgentConfig(assemblyName, agentName, configurationSettingsType);
+        return CreateAgentConfig(assemblyName, agentName, configurationSettingsType);
     }
 
     public AgentConfigurationBase CreateAgentConfig(string assemblyName, string agentName, string configurationSettingsTypeName)
@@ -70,24 +67,18 @@ public class AgentConfigurations : List<AgentConfigurationBase>
             Enabled = false,
             ConfigurationSettingsTypeName = configurationSettingsTypeName
         };
-        this.Add(newConfig);
+        Add(newConfig);
         return newConfig;
     }
 
-    public void EnableAgent(string assemblyName, string agentName)
-    {
-        SetEnabled(assemblyName, agentName, true);
-    }
+    public void EnableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, true);
 
-    public void DisableAgent(string assemblyName, string agentName)
-    {
-        SetEnabled(assemblyName, agentName, false);
-    }
+    public void DisableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, false);
 
     public void SetEnabled(string assemblyName, string agentName, bool enabled)
     {
         IAgentConfiguration config = GetAgentConfig(assemblyName, agentName);
-        if (config != null) config.Enabled = enabled;
+        config?.Enabled = enabled;
     }
 
     public void LoadPluginsFromDirectory(string pluginDirectory)
@@ -116,10 +107,10 @@ public class AgentConfigurations : List<AgentConfigurationBase>
                         {
                             try
                             {
-                                IAgentPlugin objectInstance = (IAgentPlugin)Activator.CreateInstance(type);
+                                var objectInstance = (IAgentPlugin)Activator.CreateInstance(type);
                                 if (objectInstance != null)
                                 {
-                                    this.GetAgentConfig(assemblyName, type.Name, (objectInstance as IAgentPlugin).Configuration.ConfigurationSettingsTypeName);
+                                    GetAgentConfig(assemblyName, type.Name, objectInstance.Configuration.ConfigurationSettingsTypeName);
 
                                 }
                             }
@@ -147,15 +138,12 @@ public class AgentConfigurations : List<AgentConfigurationBase>
             Exception = exception,
             Source = source
         };
-        if (this.LoadPluginExceptionRaised != null)
-        {
-            LoadPluginExceptionRaised(this, args);
-        }
+        LoadPluginExceptionRaised?.Invoke(this, args);
     }
 
     public List<string> GetAssemblyNames()
     {
-        List<string> result = new();
+        List<string> result = [];
         foreach (AgentConfigurationBase config in this)
         {
             if (!result.Contains(config.AssemblyName)) result.Add(config.AssemblyName);
@@ -165,7 +153,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
 
     public List<string> GetModules(string assemblyName)
     {
-        List<string> result = new();
+        List<string> result = [];
         foreach (AgentConfigurationBase config in this)
         {
             if (config.Equals(assemblyName))

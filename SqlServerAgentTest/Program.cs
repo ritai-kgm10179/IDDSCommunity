@@ -17,7 +17,6 @@ class Program
 
     static void watcher_AttackDetected(object sender, INotificationEventArgs data)
     {
-        SqlFailedLoginWatcher watcher = (SqlFailedLoginWatcher)sender;
         Console.WriteLine("{0}: {1}", data.EventMessage, data.IpAddress);
     }
 }

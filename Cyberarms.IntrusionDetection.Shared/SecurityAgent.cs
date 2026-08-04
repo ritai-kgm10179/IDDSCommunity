@@ -15,15 +15,9 @@ public class SecurityAgent : IAgentFilter
     public SecurityAgent() { }
 
     public SecurityAgent(string name, Guid id)
-        : this(name)
-    {
-        this.Id = id;
-    }
+        : this(name) => Id = id;
 
-    public SecurityAgent(string name)
-    {
-        Name = name;
-    }
+    public SecurityAgent(string name) => Name = name;
 
     public SecurityAgent(string name, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name)
@@ -36,10 +30,7 @@ public class SecurityAgent : IAgentFilter
 
 
     public SecurityAgent(string name, Guid id, int failedLogins, int hardLocks, int softLocks, Image icon)
-        : this(name, failedLogins, hardLocks, softLocks, icon)
-    {
-        this.Id = id;
-    }
+        : this(name, failedLogins, hardLocks, softLocks, icon) => Id = id;
 
     public bool CheckConfigVersionById()
     {
@@ -122,17 +113,10 @@ public class SecurityAgent : IAgentFilter
     private byte[] _selectedIcon;
     public Image SelectedIcon
     {
-        get
-        {
-            return FromByte(_selectedIcon);
-        }
-        set
-        {
-            _selectedIcon = FromImage(value);
-        }
+        get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
     }
 
-    private byte[] FromImage(Image value)
+    private static byte[] FromImage(Image value)
     {
         if (value == null) return null;
         MemoryStream ms = new();
@@ -140,7 +124,7 @@ public class SecurityAgent : IAgentFilter
         return ms.ToArray();
     }
 
-    private Image FromByte(byte[] value)
+    private static Image FromByte(byte[] value)
     {
         if (value == null) return null;
         MemoryStream ms = new(value);
@@ -151,37 +135,23 @@ public class SecurityAgent : IAgentFilter
     private byte[] _unselectedIcon;
     public Image UnselectedIcon
     {
-        get
-        {
-            return FromByte(_unselectedIcon);
-        }
-        set
-        {
-            _unselectedIcon = FromImage(value);
-        }
+        get => FromByte(_unselectedIcon); set => _unselectedIcon = FromImage(value);
     }
 
     private byte[] _icon;
     public Image Icon
     {
-        get
-        {
-            return FromByte(_icon);
-        }
-        set
-        {
-            _icon = FromImage(value);
-        }
+        get => FromByte(_icon); set => _icon = FromImage(value);
     }
 
     public void Save()
     {
-        if (this.Id == Guid.Empty) Id = GetId();
+        if (Id == Guid.Empty) Id = GetId();
         string sqlString;
         IDbTransaction trans = Database.Instance.Connection.BeginTransaction(IsolationLevel.Serializable);
         try
         {
-            if (!DoesExistInDb(this.Id))
+            if (!DoesExistInDb(Id))
             {
 
                 sqlString = @"INSERT INTO SecurityAgents(AgentId, AssemblyName,HardLockAttempts,HardLockTimeHours,
@@ -208,12 +178,11 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         }
     }
 
-    public bool DoesExistInDb(Guid id)
+    public static bool DoesExistInDb(Guid id)
     {
-        Guid agentId;
         string sqlString = "select AgentId from SecurityAgents where AgentId = @p0";
         object result = Database.Instance.ExecuteScalar(sqlString, id);
-        if (result != null && Guid.TryParse(result.ToString(), out agentId) && id.Equals(agentId)) return true;
+        if (result != null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId)) return true;
         return false;
     }
 
@@ -269,10 +238,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         catch { }
     }
 
-    private void OnStatisticsUpdated()
-    {
-        if (StatisticsUpdated != null) StatisticsUpdated(this, EventArgs.Empty);
-    }
+    private void OnStatisticsUpdated() => StatisticsUpdated?.Invoke(this, EventArgs.Empty);
 
     public Guid GetId()
     {
@@ -282,7 +248,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         object result = Database.Instance.ExecuteScalar("Select AgentId from SecurityAgents where AssemblyName = @p0", AssemblyName);
         if (result != null)
         {
-            Guid id = Db.DbValueConverter.ToGuid(result);
+            var id = Db.DbValueConverter.ToGuid(result);
             if (id != Guid.Empty)
             {
                 return id;
@@ -329,13 +295,11 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     {
         get
         {
-            if (_customConfiguration == null) _customConfiguration = new Dictionary<string, string>();
+            _customConfiguration ??= [];
             return _customConfiguration;
         }
-        set
-        {
-            _customConfiguration = value;
-        }
+
+        set => _customConfiguration = value;
     }
 
 }

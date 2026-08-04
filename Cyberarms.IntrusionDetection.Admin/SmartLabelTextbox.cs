@@ -13,33 +13,16 @@ public partial class SmartLabelTextbox : UserControl
         textBox1.KeyPress += new KeyPressEventHandler(textBox1_KeyPress);
     }
 
-    void textBox1_KeyPress(object sender, KeyPressEventArgs e)
-    {
-        if (TextBoxKeyPress != null) TextBoxKeyPress(sender, e);
-    }
+    void textBox1_KeyPress(object sender, KeyPressEventArgs e) => TextBoxKeyPress?.Invoke(sender, e);
 
     public string LabelText
     {
-        get
-        {
-            return smartLabel1.Text;
-        }
-        set
-        {
-            smartLabel1.Text = value;
-        }
+        get => smartLabel1.Text; set => smartLabel1.Text = value;
     }
 
     public string TextBoxText
     {
-        get
-        {
-            return textBox1.Text;
-        }
-        set
-        {
-            textBox1.Text = value;
-        }
+        get => textBox1.Text; set => textBox1.Text = value;
     }
 
 

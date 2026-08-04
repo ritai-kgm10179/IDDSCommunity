@@ -23,15 +23,15 @@ public class VolumeLicenseManager
             if (result.Length == 4)
             {
                 if (result[3] != ENC_MSG) return false;
-                this.LicenseTaker = result[0];
-                this.PurchaseInfo = result[1];
-                this.LicenseCount = result[2];
+                LicenseTaker = result[0];
+                PurchaseInfo = result[1];
+                LicenseCount = result[2];
                 return true;
             }
         }
         catch
         {
-            this.PurchaseInfo = "License not valid!";
+            PurchaseInfo = "License not valid!";
         }
         return false;
     }
@@ -49,7 +49,7 @@ public class VolumeLicenseManager
     }
 
 
-    public byte[] GetBytes(string filename)
+    public static byte[] GetBytes(string filename)
     {
         if (!File.Exists(filename)) throw new ApplicationException("File does not exist!");
         FileStream fs = File.OpenRead(filename);

@@ -49,18 +49,12 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent()
-    {
-        watcher.Enabled = true;
-    }
+    protected override void OnContinueAgent() => watcher.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent()
-    {
-        watcher.Enabled = false;
-    }
+    protected override void OnPauseAgent() => watcher.Enabled = false;
 
     /// <summary>
     /// Stop the agent
@@ -76,7 +70,7 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     {
         try
         {
-            string[] xPathProperties = new string[1] { @"Event/EventData/Data[@Name=""Workstation""]" };
+            string[] xPathProperties = [@"Event/EventData/Data[@Name=""Workstation""]"];
             EventLogPropertySelector props = new(xPathProperties);
             string hostName = ((EventLogRecord)e.EventRecord).GetPropertyValues(props)[0].ToString();
             string[] ipAddresses = ResolveIp(hostName);
@@ -97,10 +91,10 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
         }
     }
 
-    private string[] ResolveIp(string hostname)
+    private static string[] ResolveIp(string hostname)
     {
-        List<string> result = new();
-        IPAddress[] addr = System.Net.Dns.GetHostAddresses(hostname);
+        List<string> result = [];
+        IPAddress[] addr = Dns.GetHostAddresses(hostname);
         foreach (IPAddress ip in addr)
         {
             if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
@@ -113,62 +107,28 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
 
     public string DisplayName
     {
-        get
-        {
-            return "AD Credential Validation Security Agent";
-        }
-        set
-        {
-            throw new NotSupportedException("DisplayName cannot be changed!");
-        }
+        get => "AD Credential Validation Security Agent"; set => throw new NotSupportedException("DisplayName cannot be changed!");
     }
 
-    private Image _icon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_dark;
+    private Image _icon = Resources.WindowsSecurityAgent_dark;
     public Image Icon
     {
-        get
-        {
-            return _icon;
-        }
-        set
-        {
-            _icon = value;
-        }
+        get => _icon; set => _icon = value;
     }
 
-    private Image _selectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_white;
+    private Image _selectedIcon = Resources.WindowsSecurityAgent_white;
     public Image SelectedIcon
     {
-        get
-        {
-            return _selectedIcon;
-        }
-        set
-        {
-            _selectedIcon = value;
-        }
+        get => _selectedIcon; set => _selectedIcon = value;
     }
 
-    private Image _unselectedIcon = global::Cyberarms.IntrusionDetection.Base.Plugins.Resources.WindowsSecurityAgent_dark;
+    private Image _unselectedIcon = Resources.WindowsSecurityAgent_dark;
     public Image UnselectedIcon
     {
-        get
-        {
-            return _unselectedIcon;
-        }
-        set
-        {
-            _unselectedIcon = value;
-        }
+        get => _unselectedIcon; set => _unselectedIcon = value;
     }
 
 
-    public Guid Id
-    {
-        get
-        {
-            return new Guid("{D67852B4-DBEF-4831-877C-E37DAB764952}");
-        }
-    }
+    public Guid Id => new("{D67852B4-DBEF-4831-877C-E37DAB764952}");
 
 }

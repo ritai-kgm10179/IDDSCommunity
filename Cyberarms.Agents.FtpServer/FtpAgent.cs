@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -51,7 +51,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     {
         if (ipAddress is not IPAddress address) return;
         Sniffer s = new();
-        s.IpPacketSent += s_IpPacketSent;
+        s.IpPacketSent += IpPacketSent;
         s.TcpPort = ((FtpConfig)Configuration.AgentSettings).FtpPort;
         try
         {
@@ -66,7 +66,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         sniffers.Add(s);
     }
 
-    private void s_IpPacketSent(object? sender, EventArgs e)
+    private void IpPacketSent(object? sender, EventArgs e)
     {
         if (sender is not IPHeader ipHeader) return;
         if (ipHeader.ProtocolType == Protocol.Tcp)

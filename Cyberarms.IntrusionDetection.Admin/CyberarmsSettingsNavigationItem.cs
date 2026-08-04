@@ -9,10 +9,7 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
     public event EventHandler NavigationClicked;
 
-    public CyberarmsSettingsNavigationItem()
-    {
-        InitializeComponent();
-    }
+    public CyberarmsSettingsNavigationItem() => InitializeComponent();
 
     public bool IsSelected { get; set; }
 
@@ -22,27 +19,20 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
     public string DisplayName
     {
-        get
-        {
-            return smartLabelAgentName.Text;
-        }
-        set
-        {
-            smartLabelAgentName.Text = value;
-        }
+        get => smartLabelAgentName.Text; set => smartLabelAgentName.Text = value;
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         if (IsSelected)
         {
-            this.BackColor = Color.FromArgb(4, 46, 100);
+            BackColor = Color.FromArgb(4, 46, 100);
             smartLabelAgentName.ForeColor = Color.White;
             pictureBoxNavigationIcon.Image = SelectedIcon;
         }
         else
         {
-            this.BackColor = Color.White;
+            BackColor = Color.White;
             smartLabelAgentName.ForeColor = Color.FromArgb(0x666666);
             pictureBoxNavigationIcon.Image = UnselectedIcon;
         }
@@ -65,16 +55,9 @@ public partial class CyberarmsSettingsNavigationItem : UserControl
 
 
 
-    private void CyberarmsSettingsNavigationItem_Click(object sender, EventArgs e)
-    {
-        OnNavigationClicked();
+    private void CyberarmsSettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
 
-    }
-
-    private void OnNavigationClicked()
-    {
-        if (NavigationClicked != null) NavigationClicked(this, EventArgs.Empty);
-    }
+    private void OnNavigationClicked() => NavigationClicked?.Invoke(this, EventArgs.Empty);
 
 
 

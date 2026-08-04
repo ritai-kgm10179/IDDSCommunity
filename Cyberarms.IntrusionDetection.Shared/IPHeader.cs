@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 
@@ -14,19 +14,19 @@ public enum Protocol
 
 public class IPHeader
 {
-    private byte byVersionAndHeaderLength;
-    private byte byDifferentiatedServices;
-    private ushort usTotalLength;
-    private ushort usIdentification;
-    private ushort usFlagsAndOffset;
-    private byte byTTL;
-    private byte byProtocol;
-    private short sChecksum;
-    private uint uiSourceIPAddress;
-    private uint uiDestinationIPAddress;
+    private readonly byte byVersionAndHeaderLength;
+    private readonly byte byDifferentiatedServices;
+    private readonly ushort usTotalLength;
+    private readonly ushort usIdentification;
+    private readonly ushort usFlagsAndOffset;
+    private readonly byte byTTL;
+    private readonly byte byProtocol;
+    private readonly short sChecksum;
+    private readonly uint uiSourceIPAddress;
+    private readonly uint uiDestinationIPAddress;
 
-    private byte byHeaderLength;
-    private byte[] byIPData = [];
+    private readonly byte byHeaderLength;
+    private readonly byte[] byIPData = [];
 
     public IPHeader(byte[] byBuffer, int nReceived)
     {

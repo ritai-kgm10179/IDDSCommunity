@@ -16,21 +16,21 @@ public enum Protocol
 public class IPHeader
 {
     //IP Header fields
-    private byte byVersionAndHeaderLength;   //Eight bits for version and header length
-    private byte byDifferentiatedServices;    //Eight bits for differentiated services (TOS)
-    private ushort usTotalLength;              //Sixteen bits for total length of the datagram (header + message)
-    private ushort usIdentification;           //Sixteen bits for identification
-    private ushort usFlagsAndOffset;           //Eight bits for flags and fragmentation offset
-    private byte byTTL;                      //Eight bits for TTL (Time To Live)
-    private byte byProtocol;                 //Eight bits for the underlying protocol
-    private short sChecksum;                  //Sixteen bits containing the checksum of the header
+    private readonly byte byVersionAndHeaderLength;   //Eight bits for version and header length
+    private readonly byte byDifferentiatedServices;    //Eight bits for differentiated services (TOS)
+    private readonly ushort usTotalLength;              //Sixteen bits for total length of the datagram (header + message)
+    private readonly ushort usIdentification;           //Sixteen bits for identification
+    private readonly ushort usFlagsAndOffset;           //Eight bits for flags and fragmentation offset
+    private readonly byte byTTL;                      //Eight bits for TTL (Time To Live)
+    private readonly byte byProtocol;                 //Eight bits for the underlying protocol
+    private readonly short sChecksum;                  //Sixteen bits containing the checksum of the header
     //(checksum can be negative so taken as short)
-    private uint uiSourceIPAddress;          //Thirty two bit source IP Address
-    private uint uiDestinationIPAddress;     //Thirty two bit destination IP Address
+    private readonly uint uiSourceIPAddress;          //Thirty two bit source IP Address
+    private readonly uint uiDestinationIPAddress;     //Thirty two bit destination IP Address
     //End IP Header fields
 
-    private byte byHeaderLength;             //Header length
-    private byte[] byIPData = new byte[128];  //Data carried by the datagram
+    private readonly byte byHeaderLength;             //Header length
+    private readonly byte[] byIPData = new byte[128];  //Data carried by the datagram
 
 
     public IPHeader(byte[] byBuffer, int nReceived)
@@ -69,10 +69,10 @@ public class IPHeader
             sChecksum = IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
 
             //Next thirty two bits have the source IP address
-            uiSourceIPAddress = (uint)(binaryReader.ReadInt32());
+            uiSourceIPAddress = (uint)binaryReader.ReadInt32();
 
             //Next thirty two hold the destination IP address
-            uiDestinationIPAddress = (uint)(binaryReader.ReadInt32());
+            uiDestinationIPAddress = (uint)binaryReader.ReadInt32();
 
             //Now we calculate the header length
 
@@ -105,11 +105,11 @@ public class IPHeader
             //Calculate the IP version
 
             //The four bits of the IP header contain the IP version
-            if ((byVersionAndHeaderLength >> 4) == 4)
+            if (byVersionAndHeaderLength >> 4 == 4)
             {
                 return "IP v4";
             }
-            else if ((byVersionAndHeaderLength >> 4) == 6)
+            else if (byVersionAndHeaderLength >> 4 == 6)
             {
                 return "IP v6";
             }
@@ -120,22 +120,11 @@ public class IPHeader
         }
     }
 
-    public string HeaderLength
-    {
-        get
-        {
-            return byHeaderLength.ToString();
-        }
-    }
+    public string HeaderLength => byHeaderLength.ToString();
 
-    public ushort MessageLength
-    {
-        get
-        {
-            //MessageLength = Total length of the datagram - Header length
-            return (ushort)(usTotalLength - byHeaderLength);
-        }
-    }
+    public ushort MessageLength =>
+        //MessageLength = Total length of the datagram - Header length
+        (ushort)(usTotalLength - byHeaderLength);
 
     public string DifferentiatedServices
     {
@@ -183,13 +172,7 @@ public class IPHeader
         }
     }
 
-    public string TTL
-    {
-        get
-        {
-            return byTTL.ToString();
-        }
-    }
+    public string TTL => byTTL.ToString();
 
     public Protocol ProtocolType
     {
@@ -197,68 +180,28 @@ public class IPHeader
         {
             //The protocol field represents the protocol in the data portion
             //of the datagram
-            switch (byProtocol)
+            return byProtocol switch
             {
-                case 6:
-                    return Protocol.Tcp;
-                case 17:
-                    return Protocol.Udp;
-                case 56:
-                    return Protocol.Tlsp;
-                default:
-                    return Protocol.Unknown;
-            }
-
+                6 => Protocol.Tcp,
+                17 => Protocol.Udp,
+                56 => Protocol.Tlsp,
+                _ => Protocol.Unknown,
+            };
         }
     }
 
-    public string Checksum
-    {
-        get
-        {
-            //Returns the checksum in hexadecimal format
-            return string.Format("0x{0:x2}", sChecksum);
-        }
-    }
+    public string Checksum =>
+        //Returns the checksum in hexadecimal format
+        string.Format("0x{0:x2}", sChecksum);
 
-    public IPAddress SourceAddress
-    {
-        get
-        {
-            return new IPAddress(uiSourceIPAddress);
-        }
-    }
+    public IPAddress SourceAddress => new(uiSourceIPAddress);
 
-    public IPAddress DestinationAddress
-    {
-        get
-        {
-            return new IPAddress(uiDestinationIPAddress);
-        }
-    }
+    public IPAddress DestinationAddress => new(uiDestinationIPAddress);
 
-    public string TotalLength
-    {
-        get
-        {
-            return usTotalLength.ToString();
-        }
-    }
+    public string TotalLength => usTotalLength.ToString();
 
-    public string Identification
-    {
-        get
-        {
-            return usIdentification.ToString();
-        }
-    }
+    public string Identification => usIdentification.ToString();
 
-    public byte[] Data
-    {
-        get
-        {
-            return byIPData;
-        }
-    }
+    public byte[] Data => byIPData;
 }
 
