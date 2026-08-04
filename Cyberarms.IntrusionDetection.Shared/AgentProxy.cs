@@ -15,18 +15,20 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     private long _lastPackets;
     private readonly System.Threading.Lock _lock = new();
 
-    private readonly IAgentPlugin _agent;
+    private IAgentPlugin? _agent;
     private readonly AgentPluginLoadContext loadContext;
+    private bool disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentProxy"/> class.
     /// </summary>
+    /// <param name="pluginRoot">The trusted plug-in directory.</param>
     /// <param name="assemblyFilename">The assembly filename value.</param>
     /// <param name="typeName">The type name value.</param>
 
-    public AgentProxy(string assemblyFilename, string typeName)
+    public AgentProxy(string pluginRoot, string assemblyFilename, string typeName)
     {
-        string pluginPath = System.IO.Path.GetFullPath(assemblyFilename);
+        string pluginPath = PluginPathValidator.Validate(pluginRoot, assemblyFilename);
         loadContext = new AgentPluginLoadContext(pluginPath);
         System.Reflection.Assembly assembly = loadContext.LoadFromAssemblyPath(pluginPath);
         Type pluginType = assembly.GetType(typeName, throwOnError: true)
@@ -49,48 +51,48 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// Starts requested operation.
     /// </summary>
 
-    public void Start() => _agent.Start();
+    public void Start() => GetAgent().Start();
     /// <summary>
     /// Stops requested operation.
     /// </summary>
 
-    public void Stop() => _agent.Stop();
+    public void Stop() => GetAgent().Stop();
     /// <summary>
     /// Executes the pause operation.
     /// </summary>
 
-    public void Pause() => _agent.Pause();
+    public void Pause() => GetAgent().Pause();
     /// <summary>
     /// Executes the continue operation.
     /// </summary>
 
-    public void Continue() => _agent.Continue();
+    public void Continue() => GetAgent().Continue();
 
     /// <summary>
     /// Determines whether n pause.
     /// </summary>
     /// <returns><see langword="true"/> if n pause; otherwise, <see langword="false"/>.</returns>
 
-    public bool CanPause() => _agent.CanPause();
+    public bool CanPause() => GetAgent().CanPause();
     /// <summary>
     /// Determines whether n continue.
     /// </summary>
     /// <returns><see langword="true"/> if n continue; otherwise, <see langword="false"/>.</returns>
 
-    public bool CanContinue() => _agent.CanContinue();
+    public bool CanContinue() => GetAgent().CanContinue();
 
     public bool IsPaused
     {
-        get => _agent.IsPaused;
-        set => _agent.IsPaused = value;
+        get => GetAgent().IsPaused;
+        set => GetAgent().IsPaused = value;
     }
 
-    public bool IsRunning => _agent.IsRunning;
+    public bool IsRunning => GetAgent().IsRunning;
 
     public IAgentConfiguration Configuration
     {
-        get => _agent.Configuration;
-        set => _agent.Configuration = value;
+        get => GetAgent().Configuration;
+        set => GetAgent().Configuration = value;
     }
 
     /// <summary>
@@ -116,7 +118,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         _watchdog = new System.Timers.Timer { Interval = 1000 };
         _watchdog.Elapsed += watchdog_Elapsed;
         _lastCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-        if (_agent is INetworkListener netListener) _lastPackets = netListener.TotalPackets;
+        if (GetAgent() is INetworkListener netListener) _lastPackets = netListener.TotalPackets;
         _watchdog.Start();
         AppDomain.MonitoringIsEnabled = true;
     }
@@ -137,7 +139,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize,
             CpuUsage = AppDomain.CurrentDomain.MonitoringTotalProcessorTime.Subtract(_lastCpuTime)
         };
-        if (_agent is INetworkListener netListener) rcd.Packets = netListener.TotalPackets - _lastPackets;
+        if (GetAgent() is INetworkListener netListener) rcd.Packets = netListener.TotalPackets - _lastPackets;
         lock (_lock)
         {
             PerformanceRecords.Add(rcd);
@@ -148,7 +150,15 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// Executes the disable monitoring operation.
     /// </summary>
 
-    public void DisableMonitoring() => _watchdog = null;
+    public void DisableMonitoring()
+    {
+        if (_watchdog is null)
+            return;
+        _watchdog.Stop();
+        _watchdog.Elapsed -= watchdog_Elapsed;
+        _watchdog.Dispose();
+        _watchdog = null;
+    }
 
     /// <summary>
     /// Executes the dispose operation.
@@ -156,8 +166,20 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public void Dispose()
     {
-        _agent.AttackDetected -= agent_AttackDetected;
+        if (disposed)
+            return;
+        DisableMonitoring();
+        if (_agent is not null)
+            _agent.AttackDetected -= agent_AttackDetected;
+        _agent = null;
         loadContext.Unload();
+        disposed = true;
         GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    /// Gets the active plug-in instance or rejects access after unload.
+    /// </summary>
+    /// <returns>The active plug-in.</returns>
+    private IAgentPlugin GetAgent() => _agent ?? throw new ObjectDisposedException(nameof(AgentProxy));
 }

@@ -12,11 +12,12 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// Gets security agents.
     /// </summary>
     /// <param name="fileName">The file name value.</param>
+    /// <param name="pluginRoot">The trusted plug-in directory.</param>
     /// <returns>The get security agents result.</returns>
 
-    public List<SecurityAgent> GetSecurityAgents(string fileName)
+    public List<SecurityAgent> GetSecurityAgents(string fileName, string pluginRoot)
     {
-        string pluginPath = System.IO.Path.GetFullPath(fileName);
+        string pluginPath = PluginPathValidator.Validate(pluginRoot, fileName);
         AgentPluginLoadContext loadContext = new(pluginPath);
         try
         {

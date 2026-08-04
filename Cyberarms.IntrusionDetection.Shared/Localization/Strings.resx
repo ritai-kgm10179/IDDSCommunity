@@ -510,4 +510,9 @@
   <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>The existing database is missing the required table '{0}'.</value></data>
   <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP configuration is incomplete.</value></data>
   <data name="Windows Firewall integration requires Windows." xml:space="preserve"><value>Windows Firewall integration requires Windows.</value></data>
+  <data name="Agent plugin path must remain inside the configured plugin directory." xml:space="preserve"><value>Agent plugin path must remain inside the configured plugin directory.</value></data>
+  <data name="Agent plugin must be a DLL assembly." xml:space="preserve"><value>Agent plugin must be a DLL assembly.</value></data>
+  <data name="Agent plugin assembly was not found." xml:space="preserve"><value>Agent plugin assembly was not found.</value></data>
+  <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>Agent plugin path cannot contain a reparse point.</value></data>
+  <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>Agent plugin identifiers must be unique.</value></data>
 </root>
