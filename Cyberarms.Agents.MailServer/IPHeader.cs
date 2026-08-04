@@ -146,8 +146,8 @@ public class IPHeader
     {
         get
         {
-            //The first three bits of the flags and fragmentation field 
-            //represent the flags (which indicate whether the data is 
+            //The first three bits of the flags and fragmentation field
+            //represent the flags (which indicate whether the data is
             //fragmented or not)
             int nFlags = usFlagsAndOffset >> 13;
             if (nFlags == 2)
@@ -169,7 +169,7 @@ public class IPHeader
     {
         get
         {
-            //The last thirteen bits of the flags and fragmentation field 
+            //The last thirteen bits of the flags and fragmentation field
             //contain the fragmentation offset
             int nOffset = usFlagsAndOffset << 3;
             nOffset >>= 3;
@@ -210,4 +210,3 @@ public class IPHeader
 
     public byte[] Data => byIPData;
 }
-

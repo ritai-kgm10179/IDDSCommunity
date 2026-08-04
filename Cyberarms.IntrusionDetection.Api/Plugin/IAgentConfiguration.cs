@@ -25,7 +25,7 @@ public interface IAgentConfiguration
     /// </summary>
     PluginConfiguration? AgentSettings { get; set; }
     /// <summary>
-    /// String value of your custom configuration settings type. 
+    /// String value of your custom configuration settings type.
     /// </summary>
     string ConfigurationSettingsTypeName { get; set; }
     /// <summary>

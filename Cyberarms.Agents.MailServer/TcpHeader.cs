@@ -87,7 +87,7 @@ public class TCPHeader
         get
         {
             //If the ACK flag is set then only we have a valid value in
-            //the acknowlegement field, so check for it beore returning 
+            //the acknowlegement field, so check for it beore returning
             //anything
             if ((usDataOffsetAndFlags & 0x10) != 0)
             {
@@ -107,7 +107,7 @@ public class TCPHeader
         get
         {
             //If the URG flag is set then only we have a valid value in
-            //the urgent pointer field, so check for it beore returning 
+            //the urgent pointer field, so check for it beore returning
             //anything
             if ((usDataOffsetAndFlags & 0x20) != 0)
             {

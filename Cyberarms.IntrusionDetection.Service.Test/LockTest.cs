@@ -46,7 +46,7 @@ public class LockTest
     // [ClassCleanup()]
     // public static void MyClassCleanup() { }
     //
-    // Use TestInitialize to run code before running each test 
+    // Use TestInitialize to run code before running each test
     // [TestInitialize()]
     // public void MyTestInitialize() { }
     //

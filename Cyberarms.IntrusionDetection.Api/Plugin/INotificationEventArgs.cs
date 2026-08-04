@@ -20,7 +20,7 @@ public interface INotificationEventArgs
     /// </summary>
     int EventId { get; set; }
     /// <summary>
-    /// Optionally include a message to an event listener. 
+    /// Optionally include a message to an event listener.
     /// </summary>
     string EventMessage { get; set; }
 }

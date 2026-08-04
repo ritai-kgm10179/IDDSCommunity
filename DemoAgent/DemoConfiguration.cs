@@ -3,8 +3,8 @@
 namespace DemoAgent;
 
 /// <summary>
-/// CustomIntrusion Detectionagent configuration 
-/// In this simple demonstration, just one property "DirectoryName" is used. 
+/// CustomIntrusion Detectionagent configuration
+/// In this simple demonstration, just one property "DirectoryName" is used.
 /// You can provide a more complex configuration class, based on your needs
 /// </summary>
 public class DemoConfiguration : PluginConfiguration
