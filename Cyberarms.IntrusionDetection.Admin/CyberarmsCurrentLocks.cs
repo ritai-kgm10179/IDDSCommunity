@@ -22,11 +22,11 @@ public partial class CyberarmsCurrentLocks : UserControl
         c.Location = new Point(c.Location.X - 1, c.Location.Y - 1);
     }
 
-    public DataGridViewRow FindRow(int id)
+    public DataGridViewRow? FindRow(int id)
     {
         foreach (DataGridViewRow row in dataGridViewLocks.Rows)
         {
-            if (row.Cells[7].Value.ToString().Equals(id.ToString()))
+            if (string.Equals(row.Cells[7].Value?.ToString(), id.ToString(), StringComparison.Ordinal))
             {
                 return row;
             }
@@ -38,10 +38,10 @@ public partial class CyberarmsCurrentLocks : UserControl
 
     public void Add(int id, Image icon, string statusName, string clientIp, string displayName, DateTime lockDate, DateTime unlockDate, int status)
     {
-        DataGridViewRow row = FindRow(id);
+        DataGridViewRow? row = FindRow(id);
         if (row != null)
         {
-            if (row.Cells[2].Value.ToString().Equals(status))
+            if (string.Equals(row.Cells[2].Value?.ToString(), status.ToString(), StringComparison.Ordinal))
             {
                 return;
             }
@@ -51,7 +51,7 @@ public partial class CyberarmsCurrentLocks : UserControl
             dataGridViewLocks.Rows.Insert(0, new DataGridViewRow());
             row = dataGridViewLocks.Rows[0];
         }
-        (row.Cells[1] as DataGridViewImageCell).Value = icon;
+        if (row.Cells[1] is DataGridViewImageCell imageCell) imageCell.Value = icon;
         row.Cells[2].Value = statusName;
         row.Cells[3].Value = clientIp;
         row.Cells[4].Value = displayName;
@@ -67,8 +67,10 @@ public partial class CyberarmsCurrentLocks : UserControl
     {
         foreach (DataGridViewRow r in dataGridViewLocks.Rows)
         {
-            var c = (DataGridViewCheckBoxCell)r.Cells["dataGridViewSelectItem"];
-            c.Value = (sender as CheckBox).Checked;
+            if (r.Cells["dataGridViewSelectItem"] is DataGridViewCheckBoxCell c && sender is CheckBox checkBox)
+            {
+                c.Value = checkBox.Checked;
+            }
         }
     }
 
@@ -79,14 +81,14 @@ public partial class CyberarmsCurrentLocks : UserControl
     {
         foreach (DataGridViewRow row in dataGridViewLocks.Rows)
         {
-            var c = (DataGridViewCheckBoxCell)row.Cells["dataGridViewSelectItem"];
+            if (row.Cells["dataGridViewSelectItem"] is not DataGridViewCheckBoxCell c) continue;
             //if (c.Value == null) {
             //    if (c.Selected) { c.Value = c.TrueValue; } else { c.Value = c.FalseValue; }
             //}
-            if ((bool)c.EditedFormattedValue == true && (row.Cells[8].Value.ToString() == Lock.LOCK_STATUS_SOFTLOCK.ToString() ||
-                          row.Cells[8].Value.ToString() == Lock.LOCK_STATUS_HARDLOCK.ToString().ToString()))
+            if (c.EditedFormattedValue is true && (row.Cells[8].Value?.ToString() == Lock.LOCK_STATUS_SOFTLOCK.ToString() ||
+                          row.Cells[8].Value?.ToString() == Lock.LOCK_STATUS_HARDLOCK.ToString()))
             {
-                if (long.TryParse(row.Cells[7].Value.ToString(), out long lockId))
+                if (long.TryParse(row.Cells[7].Value?.ToString(), out long lockId))
                 {
                     Lock l = Locks.GetLockById(lockId);
                     if (l != null)

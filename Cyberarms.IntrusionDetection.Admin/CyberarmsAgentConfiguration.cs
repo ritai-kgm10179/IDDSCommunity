@@ -7,8 +7,8 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class CyberarmsAgentConfiguration : UserControl
 {
-    public event EventHandler PluginsChanged;
-    public event EventHandler AgentSettingsChanged;
+    public event EventHandler? PluginsChanged;
+    public event EventHandler? AgentSettingsChanged;
 
     public CyberarmsAgentConfiguration()
     {
@@ -17,9 +17,9 @@ public partial class CyberarmsAgentConfiguration : UserControl
         cyberarmsSettingsNavigation.PluginsChanged += new EventHandler(cyberarmsSettingsNavigation_PluginsChanged);
     }
 
-    void cyberarmsSettingsNavigation_PluginsChanged(object sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
+    void cyberarmsSettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
 
-    private PanelPluginConfiguration _pluginConfigPanel;
+    private PanelPluginConfiguration? _pluginConfigPanel;
 
     public PanelPluginConfiguration PluginConfigPanel
     {
@@ -37,11 +37,11 @@ public partial class CyberarmsAgentConfiguration : UserControl
         }
     }
 
-    void _pluginConfigPanel_AgentConfigurationChanged(object sender, EventArgs e) => OnAgentSettingsChanged();
+    void _pluginConfigPanel_AgentConfigurationChanged(object? sender, EventArgs e) => OnAgentSettingsChanged();
 
     void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
 
-    void _pluginConfigPanel_AgentChanged(object sender, EventArgs e)
+    void _pluginConfigPanel_AgentChanged(object? sender, EventArgs e)
     {
         //OnAgentSettingsChanged();
     }
@@ -59,19 +59,21 @@ public partial class CyberarmsAgentConfiguration : UserControl
             if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
             cyberarmsSettingsNavigation.SetSelectedItem(agent.DisplayName);
         }
-        PluginConfigPanel.Agent = agent;
+        if (agent is not null)
+            PluginConfigPanel.Agent = agent;
     }
 
     private void cyberarmsSettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {
         if (cyberarmsSettingsNavigation.SelectedItem != null && !string.IsNullOrEmpty(cyberarmsSettingsNavigation.SelectedItem.DisplayName))
         {
-            SecurityAgent agent = SecurityAgents.Instance.FindByDisplayName(cyberarmsSettingsNavigation.SelectedItem.DisplayName);
+            SecurityAgent? agent = SecurityAgents.Instance.FindByDisplayName(cyberarmsSettingsNavigation.SelectedItem.DisplayName);
             if (agent != null)
             {
                 if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
             }
-            PluginConfigPanel.Agent = agent;
+            if (agent is not null)
+                PluginConfigPanel.Agent = agent;
         }
     }
 }

@@ -7,24 +7,32 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class PanelPluginConfiguration : UserControl
 {
-    public event EventHandler AgentChanged;
-    public event EventHandler AgentConfigurationChanged;
+    public event EventHandler? AgentChanged;
+    public event EventHandler? AgentConfigurationChanged;
     public PanelPluginConfiguration()
     {
         InitializeComponent();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
     }
 
-    void PanelPluginConfiguration_AgentChanged(object sender, EventArgs e)
+    void PanelPluginConfiguration_AgentChanged(object? sender, EventArgs e)
     {
         LoadData();
         smartLabelAgentName.Text = Agent.DisplayName;
         ClearErrors();
     }
 
-    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X + 1, (sender as PictureBox).Location.Y + 1);
+    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
+    {
+        if (sender is PictureBox pictureBox)
+            pictureBox.Location = new Point(pictureBox.Location.X + 1, pictureBox.Location.Y + 1);
+    }
 
-    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => (sender as PictureBox).Location = new Point((sender as PictureBox).Location.X - 1, (sender as PictureBox).Location.Y - 1);
+    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
+    {
+        if (sender is PictureBox pictureBox)
+            pictureBox.Location = new Point(pictureBox.Location.X - 1, pictureBox.Location.Y - 1);
+    }
 
     public bool IsInEditMode { get; set; }
 
@@ -65,8 +73,9 @@ public partial class PanelPluginConfiguration : UserControl
         {
             if (o is SmartLabelTextbox)
             {
-                string name = (o as SmartLabelTextbox).LabelText;
-                string value = (o as SmartLabelTextbox).TextBoxText;
+                SmartLabelTextbox setting = (SmartLabelTextbox)o;
+                string name = setting.LabelText;
+                string value = setting.TextBoxText;
                 Agent.CustomConfiguration[name] = value;
             }
         }
@@ -147,10 +156,10 @@ public partial class PanelPluginConfiguration : UserControl
 
     private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
-    private SecurityAgent _agent;
+    private SecurityAgent? _agent;
     public SecurityAgent Agent
     {
-        get => _agent;
+        get => _agent ?? throw new InvalidOperationException("Security agent has not been assigned.");
         set
         {
             _agent = value;
@@ -167,7 +176,7 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
 
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
+    private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
 
     private void SetEditMode(bool hasChanges)
     {

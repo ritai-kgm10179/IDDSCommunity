@@ -12,16 +12,16 @@ public partial class IddsAdmin : Form
     readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
     readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
-    Timer logReader;
-    Timer timerRefreshServiceStatus;
-    CyberarmsSecurityLog _panelSecurityLog;
-    CyberarmsCurrentLocks _panelCurrentLocks;
-    CyberarmsDashboard _dashboard;
-    CyberarmsAgentConfiguration _panelAgentConfiguration;
-    CyberarmsApplicationSettings _panelApplicationSettings;
+    Timer? logReader;
+    Timer? timerRefreshServiceStatus;
+    CyberarmsSecurityLog? _panelSecurityLog;
+    CyberarmsCurrentLocks? _panelCurrentLocks;
+    CyberarmsDashboard? _dashboard;
+    CyberarmsAgentConfiguration? _panelAgentConfiguration;
+    CyberarmsApplicationSettings? _panelApplicationSettings;
 
-    System.ServiceProcess.ServiceController serviceController;
-    private EventLog eventLogCyberarms;
+    System.ServiceProcess.ServiceController? serviceController;
+    private EventLog? eventLogCyberarms;
     public IddsAdmin()
     {
         InitializeComponent();
@@ -34,7 +34,7 @@ public partial class IddsAdmin : Form
         Load += new EventHandler(IddsAdmin_Load);
     }
 
-    private static IddsAdmin _instance;
+    private static IddsAdmin? _instance;
     public static IddsAdmin Instance
     {
         get
@@ -66,7 +66,7 @@ public partial class IddsAdmin : Form
         }
     }
 
-    void _panelApplicationSettings_ConfigurationChanged(object sender, EventArgs e) => RestartService();
+    void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => RestartService();
 
     public CyberarmsAgentConfiguration PanelAgentConfiguration
     {
@@ -86,9 +86,9 @@ public partial class IddsAdmin : Form
         }
     }
 
-    void _panelAgentConfiguration_AgentSettingsChanged(object sender, EventArgs e) => RestartService();
+    void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => RestartService();
 
-    void _panelAgentConfiguration_PluginsChanged(object sender, EventArgs e) => InitAgentSettings();//RestartService();
+    void _panelAgentConfiguration_PluginsChanged(object? sender, EventArgs e) => InitAgentSettings();//RestartService();
 
     public void RestartService()
     {
@@ -125,16 +125,16 @@ public partial class IddsAdmin : Form
                 int maxLogId = LastLogId;
                 while (rdr.Read())
                 {
-                    int action = int.Parse(rdr["Action"].ToString());
+                    int action = Shared.Db.DbValueConverter.ToInt(rdr["Action"]);
                     string agentId = Shared.Db.DbValueConverter.ToString(rdr["AgentId"]);
-                    PanelSecurityLog.FillLogEntry(int.Parse(rdr["MaxId"].ToString()),
-                            int.Parse(rdr["Action"].ToString()),
+                    PanelSecurityLog.FillLogEntry(Shared.Db.DbValueConverter.ToInt(rdr["MaxId"]),
+                            action,
                             agentId,
                             IntrusionLog.GetStatusIcon(action),
-                            IntrusionLog.GetStatusClass(action), DateTime.Parse(rdr["LatestEvent"].ToString()),
-                            rdr["ClientIP"].ToString(),
+                            IntrusionLog.GetStatusClass(action), Shared.Db.DbValueConverter.ToDateTime(rdr["LatestEvent"]),
+                            Shared.Db.DbValueConverter.ToString(rdr["ClientIP"]),
                             GetLogMessage(agentId, action),
-                            int.Parse(rdr["NumberOfEvents"].ToString()));
+                            Shared.Db.DbValueConverter.ToInt(rdr["NumberOfEvents"]));
                     if (Convert.ToInt32(rdr["MaxId"]) > maxLogId) maxLogId = Convert.ToInt32(rdr["MaxId"]);
                 }
                 if (maxLogId == 0)
@@ -190,12 +190,13 @@ public partial class IddsAdmin : Form
         }
     }
 
-    void _dashboard_SecurityAgentConfigurationRequest(object sender, EventArgs e)
+    void _dashboard_SecurityAgentConfigurationRequest(object? sender, EventArgs e)
     {
         if (sender != null && sender is SecurityAgent)
         {
             ShowMenu(labelMenuAgents);
-            PanelAgentConfiguration.ShowAgentConfig(sender as SecurityAgent);
+            if (sender is SecurityAgent agent)
+                PanelAgentConfiguration.ShowAgentConfig(agent);
             PanelAgentConfiguration.BringToFront();
             panelOnlineServices.Hide();
         }
@@ -203,14 +204,14 @@ public partial class IddsAdmin : Form
 
     public bool IsServiceRunning { get; set; }
 
-    void serviceReader_Tick(object sender, EventArgs e) => RefreshServiceStatus();
+    void serviceReader_Tick(object? sender, EventArgs e) => RefreshServiceStatus();
 
 
     public bool ServiceError { get; set; }
 
     public void RefreshServiceStatus()
     {
-        serviceController.Refresh();
+        serviceController?.Refresh();
         if (ServiceError)
         {
             smartLabelServiceStatus.Text = "Service not found!";
@@ -219,7 +220,7 @@ public partial class IddsAdmin : Form
         }
         try
         {
-            if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
+            if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
             {
                 IsServiceRunning = true;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start_deactivated;
@@ -229,7 +230,7 @@ public partial class IddsAdmin : Form
                 smartLabelServiceStatus.Text = "Service is running";
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(0, 159, 227);
             }
-            else if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
+            else if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
             {
                 IsServiceRunning = false;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start;
@@ -260,7 +261,7 @@ public partial class IddsAdmin : Form
         return string.Format("{0}{1}", message, IntrusionLog.GetStatusName(action));
     }
 
-    void logReader_Tick(object sender, EventArgs e)
+    void logReader_Tick(object? sender, EventArgs e)
     {
         DateTime metering = DateTime.Now;
         if (!IsUpdating && Database.Instance.IsConfigured)
@@ -272,12 +273,12 @@ public partial class IddsAdmin : Form
                 int maxLogId = LastLogId;
                 while (rdr.Read())
                 {
-                    int action = int.Parse(rdr["Action"].ToString());
+                    int action = Shared.Db.DbValueConverter.ToInt(rdr["Action"]);
                     string agentId = Shared.Db.DbValueConverter.ToString(rdr["AgentId"]);
-                    PanelSecurityLog.AddLogEntry(int.Parse(rdr["id"].ToString()), action,
+                    PanelSecurityLog.AddLogEntry(Shared.Db.DbValueConverter.ToInt(rdr["id"]), action,
                         agentId,
                         IntrusionLog.GetStatusIcon(action),
-                        IntrusionLog.GetStatusClass(action), DateTime.Parse(rdr["IncidentTime"].ToString()), rdr["ClientIP"].ToString(),
+                        IntrusionLog.GetStatusClass(action), Shared.Db.DbValueConverter.ToDateTime(rdr["IncidentTime"]), Shared.Db.DbValueConverter.ToString(rdr["ClientIP"]),
                         GetLogMessage(agentId, action));
                     if (Convert.ToInt32(rdr["Id"]) > maxLogId) maxLogId = Convert.ToInt32(rdr["Id"]);
                 }
@@ -295,9 +296,9 @@ public partial class IddsAdmin : Form
                 {
                     DateTime.TryParse(locksReader["LockDate"].ToString(), out DateTime lockDate);
                     DateTime.TryParse(locksReader["UnlockDate"].ToString(), out DateTime unlockDate);
-                    PanelCurrentLocks.Add(int.Parse(locksReader["LockId"].ToString()), Properties.Resources.logIcon_softLock,
-                        LockStatusAdapter.GetLockStatusName(int.Parse(locksReader["Status"].ToString())), locksReader["ClientIp"].ToString(),
-                        locksReader["DisplayName"].ToString(),
+                    PanelCurrentLocks.Add(Shared.Db.DbValueConverter.ToInt(locksReader["LockId"]), Properties.Resources.logIcon_softLock,
+                        LockStatusAdapter.GetLockStatusName(Shared.Db.DbValueConverter.ToInt(locksReader["Status"])), Shared.Db.DbValueConverter.ToString(locksReader["ClientIp"]),
+                        Shared.Db.DbValueConverter.ToString(locksReader["DisplayName"]),
                         lockDate, unlockDate, Shared.Db.DbValueConverter.ToInt(locksReader["Status"]));
                 }
                 locksReader.Close();
@@ -397,7 +398,7 @@ public partial class IddsAdmin : Form
 
     }
 
-    public SmartLabel CurrentMenu { get; set; }
+    public SmartLabel? CurrentMenu { get; set; }
 
     private void labelMenuSecurityLog_Click(object sender, EventArgs e)
     {
@@ -426,7 +427,7 @@ public partial class IddsAdmin : Form
 
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
-    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
+    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
 
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
@@ -451,20 +452,20 @@ public partial class IddsAdmin : Form
     }
 
 
-    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) => (sender as Control).BackColor = buttonHighlight;
+    private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
 
-    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) => (sender as Control).BackColor = buttonNormal;
+    private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
-    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonPress;
+    private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
 
-    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) => (sender as Control).BackColor = buttonNormal;
+    private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
     private void panelUnsuccessfulLogins_Click(object sender, EventArgs e)
     {
 
     }
 
-    private void IddsAdmin_Load(object sender, EventArgs e) =>
+    private void IddsAdmin_Load(object? sender, EventArgs e) =>
 
         //@DEMO: List demo agent
         InitAdmin();
@@ -534,7 +535,7 @@ public partial class IddsAdmin : Form
     public bool IsInitialized { get; set; }
 
 
-    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogCyberarms.WriteEntry(text, type, eventId, category);
+    internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogCyberarms?.WriteEntry(text, type, eventId, category);
 
     private void resizeForm(Point mouseLocation)
     {
@@ -682,7 +683,7 @@ public partial class IddsAdmin : Form
     }
 
 
-    private void panelContent_Paint(object sender, PaintEventArgs e) => paintPanelTopBorder();
+    private void panelContent_Paint(object? sender, PaintEventArgs e) => paintPanelTopBorder();
 
     private void pictureBoxStartService_Click(object sender, EventArgs e) => StartService();
 
@@ -692,8 +693,8 @@ public partial class IddsAdmin : Form
     {
         smartLabelServiceStatus.Text = "Starting service...";
         smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
-        if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Paused ||
-            serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped)
+        if (serviceController is not null && (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Paused ||
+            serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Stopped))
         {
             serviceController.Start();
         }
@@ -704,7 +705,7 @@ public partial class IddsAdmin : Form
     {
         smartLabelServiceStatus.Text = "Stopping service...";
         smartLabelServiceStatus.ForeColor = Color.FromArgb(0x666666);
-        if (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Running)
+        if (serviceController?.Status == System.ServiceProcess.ServiceControllerStatus.Running)
         {
             serviceController.Stop();
         }

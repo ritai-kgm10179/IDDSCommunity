@@ -8,13 +8,13 @@ namespace Cyberarms.IntrusionDetection.Service;
 public class Sniffer
 {
 
-    private Socket ipSocket;
-    byte[] byteData;
+    private Socket? ipSocket;
+    private byte[] byteData = [];
 
-    public event EventHandler IpPacketReceived;
-    public event EventHandler IpPacketSent;
-    public event EventHandler TcpPacketReceived;
-    public event EventHandler TcpPacketSent;
+    public event EventHandler? IpPacketReceived;
+    public event EventHandler? IpPacketSent;
+    public event EventHandler? TcpPacketReceived;
+    public event EventHandler? TcpPacketSent;
 
 
     private bool isPaused = false;
@@ -24,14 +24,16 @@ public class Sniffer
     public void Continue() => isPaused = false;
 
 
-    public IPAddress IPAddress { get; set; }
+    public IPAddress IPAddress { get; set; } = IPAddress.Loopback;
 
-    public void WatchAddress(object ipAddressToMonitor)
+    public void WatchAddress(object? ipAddressToMonitor)
     {
         try
         {
             byteData = new byte[128];
-            IPAddress = (IPAddress)ipAddressToMonitor;
+            if (ipAddressToMonitor is not IPAddress address)
+                throw new ArgumentException("An IP address is required.", nameof(ipAddressToMonitor));
+            IPAddress = address;
             ipSocket = new Socket(IPAddress.AddressFamily,
                 SocketType.Raw, ProtocolType.IP)
             {
@@ -62,6 +64,11 @@ public class Sniffer
         {
             try
             {
+                if (ipSocket is null)
+                {
+                    return;
+                }
+
                 int length = ipSocket.EndReceive(ar);
                 byte[] packet = new byte[length];
                 Array.Copy(byteData, 0, packet, 0, length);
@@ -77,7 +84,7 @@ public class Sniffer
             {
                 byteData = new byte[128];          // set to 16276 bytes
                 // continue receiving
-                ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
+                ipSocket?.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
                     new AsyncCallback(OnReceive), null);
             }
         }
@@ -98,11 +105,11 @@ public class Sniffer
     }
 
 
-    public void CloseSocket() => ipSocket.Close();
+    public void CloseSocket() => ipSocket?.Close();
 
     public static void LogTrace(Exception ex)
     {
-        System.IO.StreamWriter sw = null;
+        System.IO.StreamWriter? sw = null;
         try
         {
             sw = System.IO.File.AppendText(System.IO.Path.GetTempPath() + "\\Cyberarms.IntrusionDetection.Sniffer.ErrorLog.txt");

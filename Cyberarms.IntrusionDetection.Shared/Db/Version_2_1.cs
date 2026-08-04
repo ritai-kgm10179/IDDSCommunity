@@ -143,9 +143,9 @@ CREATE TABLE AgentStatistics(
             RunCommand(connection, TABLE_WHITE_LIST);
             RunCommand(connection, TABLE_AGENT_STATISTICS);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw ex;
+            throw;
         }
     }
 

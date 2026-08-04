@@ -5,17 +5,17 @@ namespace Cyberarms.IntrusionDetection.Shared;
 
 public class ReportScheduler
 {
-    Timer reporter;
+    private Timer? reporter;
 
-    public event EventHandler RunDailyReport;
-    public event EventHandler RunWeeklyReport;
-    public event EventHandler RunMonthlyReport;
+    public event EventHandler? RunDailyReport;
+    public event EventHandler? RunWeeklyReport;
+    public event EventHandler? RunMonthlyReport;
 
     private ReportScheduler()
     {
     }
 
-    private static ReportScheduler _instance;
+    private static ReportScheduler? _instance;
     public static ReportScheduler Instance
     {
         get
@@ -37,9 +37,9 @@ public class ReportScheduler
         reporter.Elapsed += new ElapsedEventHandler(reporter_Elapsed);
     }
 
-    public void StartReporting() => reporter.Start();
+    public void StartReporting() => reporter?.Start();
 
-    void reporter_Elapsed(object sender, ElapsedEventArgs e)
+    void reporter_Elapsed(object? sender, ElapsedEventArgs e)
     {
         NotificationSettings.Reload();
         if (NotificationSettings.Instance.SummaryReportDaily) CheckDailyReport();

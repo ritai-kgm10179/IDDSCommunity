@@ -19,7 +19,7 @@ public class LockTest
         //
     }
 
-    private TestContext testContextInstance;
+    private TestContext testContextInstance = null!;
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -85,7 +85,7 @@ public class LockTest
     }
 
 
-    private List<IPAddress> _localAddresses;
+    private List<IPAddress>? _localAddresses;
     private List<IPAddress> getLocalIps()
     {
         if (_localAddresses == null)

@@ -20,7 +20,7 @@ public class DbUpgradeScript
         {
             cmd.ExecuteNonQuery();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }

@@ -7,11 +7,11 @@ namespace Cyberarms.Agents.MailServer;
 
 public class Sniffer
 {
-    private Socket ipSocket;
-    byte[] byteData;
+    private Socket? ipSocket;
+    private byte[] byteData = [];
 
-    public event EventHandler IpPacketReceived;
-    public event EventHandler IpPacketSent;
+    public event EventHandler? IpPacketReceived;
+    public event EventHandler? IpPacketSent;
 
     private bool aborted = false;
 
@@ -21,7 +21,7 @@ public class Sniffer
 
     public int? TcpPort { get; set; }
 
-    public IPAddress IPAddress { get; set; }
+    public IPAddress IPAddress { get; set; } = IPAddress.Loopback;
 
     public void WatchAddress(object ipAddressToMonitor)
     {
@@ -48,6 +48,11 @@ public class Sniffer
         {
             try
             {
+                if (ipSocket is null)
+                {
+                    return;
+                }
+
                 int length = ipSocket.EndReceive(ar);
                 //ParseData(byteData, nReceived);
                 IPHeader ipHeader = new(byteData, length);
@@ -57,7 +62,7 @@ public class Sniffer
 
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Sniffer.LogTrace(ex);
             }
@@ -65,7 +70,7 @@ public class Sniffer
             {
                 byteData = new byte[128];          // set to 16276 bytes
                 // continue receiving
-                ipSocket.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
+                ipSocket?.BeginReceive(byteData, 0, byteData.Length, SocketFlags.None,
                     new AsyncCallback(OnReceive), null);
             }
         }
@@ -76,11 +81,11 @@ public class Sniffer
     private void OnPacketReceived(IPHeader ipHeader) => IpPacketReceived?.Invoke(ipHeader, EventArgs.Empty);
 
 
-    public void CloseSocket() => ipSocket.Close();
+    public void CloseSocket() => ipSocket?.Close();
 
     public static void LogTrace(Exception ex)
     {
-        System.IO.StreamWriter sw = null;
+        System.IO.StreamWriter? sw = null;
         try
         {
             sw = System.IO.File.AppendText(System.IO.Path.GetTempPath() + "\\Cyberarms.Agents.MailServer.ErrorLog.txt");

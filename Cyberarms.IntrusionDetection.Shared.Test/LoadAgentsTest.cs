@@ -33,7 +33,7 @@ public class LoadAgentsTest
     public void MergeDiskAgentsWithDb()
     {
         IddsConfig.Instance.PluginsDirectory = "c:\\temp\\CyberarmsTest\\Plugins\\";
-        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null));
+        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null!));
         SecurityAgents.Instance[0].Enabled = true;
         List<SecurityAgent> diskAgents = SecurityAgents.Instance.ReadAgentsFromDisk();
         List<SecurityAgent> agents = SecurityAgents.Instance.MergeDbInformation(diskAgents);
@@ -48,7 +48,7 @@ public class LoadAgentsTest
     public void LoadAgentsToMemoryTest()
     {
         IddsConfig.Instance.PluginsDirectory = "c:\\temp\\CyberarmsTest\\Plugins\\";
-        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null));
+        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null!));
         SecurityAgents.Instance[0].Enabled = true;
         List<SecurityAgent> diskAgents = SecurityAgents.Instance.ReadAgentsFromDisk();
         SecurityAgents.Instance.MergeDbInformation(diskAgents);
@@ -71,11 +71,11 @@ public class LoadAgentsTest
         // Assert.IsTrue(Unloaded); // just works in debug, because object is released too early in runtime
     }
 
-    void t_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => Finished = true;
+    void t_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) => Finished = true;
     public bool Finished { get; set; }
     public bool Unloaded { get; set; }
 
-    void AppDomain_DomainUnload(object sender, EventArgs e) => Unloaded = true;
+    void AppDomain_DomainUnload(object? sender, EventArgs e) => Unloaded = true;
 
     void LoadAgentsTest_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data) => System.Diagnostics.Debug.Print("Attack detected");
 

@@ -52,14 +52,13 @@ public class VolumeLicenseManager
     public static byte[] GetBytes(string filename)
     {
         if (!File.Exists(filename)) throw new ApplicationException("File does not exist!");
-        FileStream fs = File.OpenRead(filename);
+        using FileStream fs = File.OpenRead(filename);
         byte[] result = new byte[fs.Length];
-        fs.Read(result, 0, (int)fs.Length);
-        fs.Close();
+        fs.ReadExactly(result, 0, (int)fs.Length);
         return result;
     }
 
-    public string LicenseTaker { get; set; }
-    public string LicenseCount { get; set; }
-    public string PurchaseInfo { get; set; }
+    public string LicenseTaker { get; set; } = string.Empty;
+    public string LicenseCount { get; set; } = string.Empty;
+    public string PurchaseInfo { get; set; } = string.Empty;
 }

@@ -12,8 +12,8 @@ namespace Cyberarms.IntrusionDetection.Base.Plugins;
 public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
 {
 
-    private EventLogQuery query;
-    private EventLogWatcher watcher;
+    private EventLogQuery? query;
+    private EventLogWatcher? watcher;
 
     internal const string EVENT_LOG_QUERY_FILEMAKER_LOGIN_DENIED = @"<QueryList>
                   <Query Id=""20271"" Path=""System"">
@@ -48,39 +48,42 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent() => watcher.Enabled = true;
+    protected override void OnContinueAgent() => watcher!.Enabled = true;
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent() => watcher.Enabled = false;
+    protected override void OnPauseAgent() => watcher!.Enabled = false;
 
     /// <summary>
     /// Stop the agent
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.Enabled = false;
+        watcher?.Dispose();
         watcher = null;
         query = null;
     }
 
-    private void watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
         {
-            foreach (EventProperty prop in e.EventRecord.Properties)
+            if (e.EventRecord is not EventRecord record)
+                return;
+            foreach (EventProperty prop in record.Properties)
             {
-                if (MyRegex().IsMatch(prop.Value.ToString()))
+                string propertyValue = prop.Value?.ToString() ?? string.Empty;
+                if (MyRegex().IsMatch(propertyValue))
                 {
-                    Match ipAddress = MyRegex().Match(prop.Value.ToString());
+                    Match ipAddress = MyRegex().Match(propertyValue);
                     NotificationEventArgs args = new()
                     {
-                        CreateDate = e.EventRecord.TimeCreated.Value,
-                        EventId = e.EventRecord.Id,
+                        CreateDate = record.TimeCreated ?? DateTime.Now,
+                        EventId = record.Id,
                         IpAddress = ipAddress.Value
                     };
-                    System.Net.IPAddress.TryParse(args.IpAddress, out System.Net.IPAddress ip);
+                    System.Net.IPAddress.TryParse(args.IpAddress, out System.Net.IPAddress? ip);
                     if (ip != null && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {
                         OnAttackDetected(this, args);

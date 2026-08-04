@@ -6,22 +6,18 @@ namespace Cyberarms.IntrusionDetection.Service.Test;
 
 internal class WindowsLogManager
 {
-    private DateTime lastSearchDate;
-
     // public override event AttackDetectedHandler AttackDetected;
 
-    private EventLog eventLogCyberarms;
+    private EventLog? eventLogCyberarms;
 
 
-    private static WindowsLogManager _instance;
+    private static WindowsLogManager? _instance;
     internal static WindowsLogManager Instance
     {
         get
         {
             _instance ??= new WindowsLogManager
-                {
-                    lastSearchDate = DateTime.Now
-                };
+                { };
             return _instance;
         }
     }

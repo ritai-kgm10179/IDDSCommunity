@@ -10,7 +10,7 @@ namespace Cyberarms.IntrusionDetection.Shared;
 public class SecurityAgent : IAgentFilter
 {
 
-    public event EventHandler StatisticsUpdated;
+    public event EventHandler? StatisticsUpdated;
 
     public SecurityAgent() { }
 
@@ -36,7 +36,7 @@ public class SecurityAgent : IAgentFilter
     {
         if (Id.Equals(Guid.Empty)) return false;
         string sqlCommand = "Select Serial from SecurityAgents where AgentId=@p0";
-        object dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id);
+        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id);
         if (dbVersion != null)
         {
             if (Db.DbValueConverter.ToInt(dbVersion) > Serial)
@@ -51,7 +51,7 @@ public class SecurityAgent : IAgentFilter
     public bool CheckConfigVersionByName()
     {
         string sqlCommand = "Select Serial from SecurityAgents where Name=@p0";
-        object dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Name);
+        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Name);
         if (dbVersion != null)
         {
             if (Db.DbValueConverter.ToInt(dbVersion) > Serial)
@@ -105,12 +105,12 @@ public class SecurityAgent : IAgentFilter
         rdr.Close();
     }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public int FailedLogins { get; set; }
     public int HardLocks { get; set; }
     public int SoftLocks { get; set; }
-    private byte[] _selectedIcon;
+    private byte[] _selectedIcon = [];
     public Image SelectedIcon
     {
         get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
@@ -118,7 +118,6 @@ public class SecurityAgent : IAgentFilter
 
     private static byte[] FromImage(Image value)
     {
-        if (value == null) return null;
         MemoryStream ms = new();
         value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         return ms.ToArray();
@@ -126,19 +125,19 @@ public class SecurityAgent : IAgentFilter
 
     private static Image FromByte(byte[] value)
     {
-        if (value == null) return null;
+        if (value.Length == 0) return Resources.agent15px_default_dark;
         MemoryStream ms = new(value);
         return new Bitmap(ms);
     }
 
 
-    private byte[] _unselectedIcon;
+    private byte[] _unselectedIcon = [];
     public Image UnselectedIcon
     {
         get => FromByte(_unselectedIcon); set => _unselectedIcon = FromImage(value);
     }
 
-    private byte[] _icon;
+    private byte[] _icon = [];
     public Image Icon
     {
         get => FromByte(_icon); set => _icon = FromImage(value);
@@ -171,7 +170,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             trans.Commit();
             OnStatisticsUpdated();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             trans.Rollback();
             throw;
@@ -181,7 +180,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public static bool DoesExistInDb(Guid id)
     {
         string sqlString = "select AgentId from SecurityAgents where AgentId = @p0";
-        object result = Database.Instance.ExecuteScalar(sqlString, id);
+        object? result = Database.Instance.ExecuteScalar(sqlString, id);
         if (result != null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId)) return true;
         return false;
     }
@@ -191,7 +190,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         foreach (string key in CustomConfiguration.Keys)
         {
             //select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id);
-            object dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", Id, key);
+            object? dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", Id, key);
             int found = Db.DbValueConverter.ToInt(dbResult);
             string sql;
             if (found > 0)
@@ -245,7 +244,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         if (!Id.Equals(Guid.Empty)) return Id;
         // if agent does not provide ID, set the ID from this agent. Otherwise read from database
         if (!Database.Instance.IsConfigured) Database.Instance.Configure(IddsConfig.PluginDirectory);
-        object result = Database.Instance.ExecuteScalar("Select AgentId from SecurityAgents where AssemblyName = @p0", AssemblyName);
+        object? result = Database.Instance.ExecuteScalar("Select AgentId from SecurityAgents where AssemblyName = @p0", AssemblyName);
         if (result != null)
         {
             var id = Db.DbValueConverter.ToGuid(result);
@@ -264,14 +263,14 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public int SoftLockTimeMinutes { get; set; }
     public int HardLockTimeHours { get; set; }
     public bool OverrideConfig { get; set; }
-    public string DisplayName { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
     public bool LockForever { get; set; }
     public bool Enabled { get; set; }
     public int Serial { get; set; }
-    public string AssemblyName { get; set; }
-    public string AssemblyFilename { get; set; }
+    public string AssemblyName { get; set; } = string.Empty;
+    public string AssemblyFilename { get; set; } = string.Empty;
     public bool BinaryMissing { get; set; }
-    public AppDomain AppDomain { get; set; }
+    public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
 
     public LockType GetCurrentLockType(string IpAddress)
     {
@@ -290,7 +289,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         }
     }
 
-    private Dictionary<string, string> _customConfiguration;
+    private Dictionary<string, string>? _customConfiguration;
     public Dictionary<string, string> CustomConfiguration
     {
         get

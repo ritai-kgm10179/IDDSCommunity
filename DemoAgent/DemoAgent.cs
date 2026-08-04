@@ -13,7 +13,7 @@ public class DemoAgent : AgentPlugin
     /// <summary>
     /// A FileSystemWatcher to monitor a directory for changes (could be a log directory)
     /// </summary>
-    FileSystemWatcher watcher;
+    FileSystemWatcher? watcher;
 
     /// <summary>
     /// Important: This plugin uses a custom configuration (see DemoConfiguration.cs). 
@@ -24,7 +24,7 @@ public class DemoAgent : AgentPlugin
     {
         Configuration.AgentSettings = new DemoConfiguration();
         Configuration.ConfigurationSettingsTypeName =
-            Configuration.AgentSettings.GetType().FullName;
+            Configuration.AgentSettings.GetType().FullName ?? string.Empty;
     }
 
     /// <summary>
@@ -51,19 +51,19 @@ public class DemoAgent : AgentPlugin
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.EnableRaisingEvents = false;
+        watcher?.Dispose();
         watcher = null;
     }
 
     /// <summary>
     /// Override the OnPauseAgent function which is called when pausing theIntrusion DetectionService
     /// </summary>
-    protected override void OnPauseAgent() => watcher.EnableRaisingEvents = false;
+    protected override void OnPauseAgent() => watcher!.EnableRaisingEvents = false;
 
     /// <summary>
     /// Override the OnContinueAgent function which is called when resuming theIntrusion DetectionService
     /// </summary>
-    protected override void OnContinueAgent() => watcher.EnableRaisingEvents = true;
+    protected override void OnContinueAgent() => watcher!.EnableRaisingEvents = true;
 
 
 

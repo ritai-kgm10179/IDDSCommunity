@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 
 namespace Cyberarms.IntrusionDetection.Admin;
@@ -7,7 +8,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public class SearchBox : Control
 {
 
-    SearchTextBox textBoxSearch;
+    private SearchTextBox textBoxSearch = null!;
     Rectangle searchButtonPosition;
     Rectangle clearSearchButtonPosition;
     bool isEmpty;
@@ -47,7 +48,7 @@ public class SearchBox : Control
         textBoxSearch.TextChanged += new EventHandler(textBoxSearch_TextChanged);
     }
 
-    void textBoxSearch_TextChanged(object sender, EventArgs e)
+    void textBoxSearch_TextChanged(object? sender, EventArgs e)
     {
         if (string.IsNullOrEmpty(Text) && !isEmpty || !string.IsNullOrEmpty(Text) && isEmpty)
         {
@@ -56,9 +57,9 @@ public class SearchBox : Control
         }
     }
 
-    void SearchBox_FontChanged(object sender, EventArgs e) => textBoxSearch.Font = Font;
+    void SearchBox_FontChanged(object? sender, EventArgs e) => textBoxSearch.Font = Font;
 
-    void textBoxSearch_KeyPress(object sender, KeyPressEventArgs e)
+    void textBoxSearch_KeyPress(object? sender, KeyPressEventArgs e)
     {
         switch (Convert.ToInt32(e.KeyChar))
         {
@@ -73,7 +74,7 @@ public class SearchBox : Control
         }
     }
 
-    void SearchBox_SizeChanged(object sender, EventArgs e)
+    void SearchBox_SizeChanged(object? sender, EventArgs e)
     {
         textBoxSearch.Width = Width - 44;
         textBoxSearch.Height = Height;
@@ -82,13 +83,13 @@ public class SearchBox : Control
     }
 
 
-    void SearchBox_BackColorChanged(object sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
+    void SearchBox_BackColorChanged(object? sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
 
-    void SearchBox_ForeColorChanged(object sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
+    void SearchBox_ForeColorChanged(object? sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
 
 
 
-    void SearchBox_Paint(object sender, PaintEventArgs e)
+    void SearchBox_Paint(object? sender, PaintEventArgs e)
     {
         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
@@ -97,10 +98,10 @@ public class SearchBox : Control
 
     }
 
-    public Image SearchImage { get; set; }
-    public Image ClearImage { get; set; }
+    public Image? SearchImage { get; set; }
+    public Image? ClearImage { get; set; }
 
-    void SearchBox_Click(object sender, EventArgs e)
+    void SearchBox_Click(object? sender, EventArgs e)
     {
         Point currentPosition = PointToClient(MousePosition);
         if (currentPosition.X > searchButtonPosition.X && currentPosition.X < searchButtonPosition.X + searchButtonPosition.Width &&
@@ -134,18 +135,19 @@ public class SearchBox : Control
     private void PaintClearButton()
     {
         var g = Graphics.FromHwnd(Handle);
-        g.DrawImageUnscaled(ClearImage, clearSearchButtonPosition);
+        if (ClearImage is not null) g.DrawImageUnscaled(ClearImage, clearSearchButtonPosition);
     }
 
+    [AllowNull]
     public override string Text
     {
-        get => textBoxSearch.Text; set => textBoxSearch.Text = value;
+        get => textBoxSearch.Text; set => textBoxSearch.Text = value ?? string.Empty;
     }
 
 
-    public event EventHandler Search;
+    public event EventHandler? Search;
 
-    public event EventHandler ClearSearch;
+    public event EventHandler? ClearSearch;
 
     public string EmptyText
     {
@@ -166,7 +168,7 @@ public class SearchBox : Control
     {
         public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
 
-        void SearchTextBox_TextChanged(object sender, EventArgs e)
+        void SearchTextBox_TextChanged(object? sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(Text))
             {
@@ -175,8 +177,8 @@ public class SearchBox : Control
         }
 
         public Color EmptyTextColor { get; set; }
-        public string EmptyText { get; set; }
-        public Font EmptyFont { get; set; }
+        public string EmptyText { get; set; } = string.Empty;
+        public Font EmptyFont { get; set; } = SystemFonts.DefaultFont;
 
 
     }

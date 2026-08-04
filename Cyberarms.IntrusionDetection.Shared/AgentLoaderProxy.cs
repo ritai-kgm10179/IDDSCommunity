@@ -17,18 +17,19 @@ public class AgentLoaderProxy : MarshalByRefObject
             if (type.IsPublic && !type.IsAbstract)
             {
 
-                Type typeInterface = type.GetInterface(typeof(IAgentPlugin).ToString(), false);
+                Type? typeInterface = type.GetInterface(typeof(IAgentPlugin).FullName!, false);
                 //Make sure the interface we want to use actually exists
                 if (typeInterface != null)
                 {
                     try
                     {
-                        var agentPlugin = (IAgentPlugin)Activator.CreateInstanceFrom(fileName, type.FullName.ToString()).Unwrap();
-                        if (agentPlugin != null)
+                        string typeName = type.FullName ?? throw new InvalidOperationException("Agent type has no full name.");
+                        object? instance = Activator.CreateInstanceFrom(fileName, typeName)?.Unwrap();
+                        if (instance is IAgentPlugin agentPlugin)
                         {
                             SecurityAgent securityAgent = new()
                             {
-                                AssemblyName = assembly.FullName
+                                AssemblyName = assembly.FullName ?? assembly.GetName().Name ?? string.Empty
                             };
                             if (agentPlugin is IExtendedInformation)
                             {
@@ -41,12 +42,12 @@ public class AgentLoaderProxy : MarshalByRefObject
                             }
                             else
                             {
-                                securityAgent.DisplayName = type.FullName;
+                                securityAgent.DisplayName = typeName;
                                 securityAgent.UnselectedIcon = Resources.agent15px_default_dark;
                                 securityAgent.SelectedIcon = Resources.agent15px_default_white;
                                 securityAgent.Icon = Resources.agent15px_default_dark;
                             }
-                            securityAgent.Name = type.FullName;
+                            securityAgent.Name = typeName;
                             securityAgent.Enabled = false;
                             securityAgent.FailedLogins = 0;
                             securityAgent.HardLockAttempts = 10;
@@ -67,7 +68,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                     catch (Exception exception)
                     {
                         System.Diagnostics.Debug.WriteLine(exception.Message);
-                        throw exception;
+                        throw;
                     }
 
                 }
@@ -82,7 +83,7 @@ public class AgentLoaderProxy : MarshalByRefObject
         Dictionary<string, string> result = [];
         foreach (PropertyInfo pi in config.GetType().GetProperties())
         {
-            result.Add(pi.Name, pi.GetValue(config, null).ToString());
+            result.Add(pi.Name, pi.GetValue(config, null)?.ToString() ?? string.Empty);
         }
         return result;
     }

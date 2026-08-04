@@ -12,5 +12,5 @@ public class DemoConfiguration : PluginConfiguration
     /// <summary>
     /// The directory which is used by the DemoAgent to watch for changes
     /// </summary>
-    public string DirectoryName { get; set; }
+    public string DirectoryName { get; set; } = string.Empty;
 }

@@ -5,7 +5,7 @@ namespace Cyberarms.IntrusionDetection.Service;
 
 internal class FirewallManager
 {
-    private static FirewallManager _instance;
+    private static FirewallManager? _instance;
     private readonly INetFwMgr firewallManager;
     internal static FirewallManager Instance
     {
@@ -17,7 +17,11 @@ internal class FirewallManager
         }
     }
 
-    private FirewallManager() => firewallManager = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr"));
+    private FirewallManager() => firewallManager = CreateComObject<INetFwMgr>("HNetCfg.FwMgr");
+
+    private static T CreateComObject<T>(string progId) where T : class =>
+        Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type {progId} is unavailable.")) as T
+        ?? throw new InvalidOperationException($"Unable to create COM object {progId}.");
 
     internal void AddPort(string strName,
                                int Port,
@@ -25,9 +29,7 @@ internal class FirewallManager
                                NET_FW_IP_PROTOCOL_ Protocol,
                                string remoteAddresses)
     {
-        var fireWallPort =
-                      (INetFwOpenPort)Activator.CreateInstance(
-                           Type.GetTypeFromProgID("HNetCfg.FWOpenPort"));
+        var fireWallPort = CreateComObject<INetFwOpenPort>("HNetCfg.FWOpenPort");
         fireWallPort.RemoteAddresses = remoteAddresses;
         fireWallPort.Enabled = true;
         fireWallPort.Name = strName;
@@ -51,10 +53,7 @@ internal class FirewallManager
                                             string processImageFileName,
                                             NET_FW_SCOPE_ Scope)
     {
-        var authorizedApplication
-              = (INetFwAuthorizedApplication)Activator
-                      .CreateInstance(Type.GetTypeFromProgID(
-                                "HNetCfg.FwAuthorizedApplication"));
+        var authorizedApplication = CreateComObject<INetFwAuthorizedApplication>("HNetCfg.FwAuthorizedApplication");
         authorizedApplication.Name = strName;
         authorizedApplication.Scope = Scope;
         authorizedApplication.Enabled = true;
@@ -69,7 +68,7 @@ internal class FirewallManager
                        .AuthorizedApplications.Remove(processFileName);
     }
 
-    internal INetFwOpenPort ReadPort(string name)
+    internal INetFwOpenPort? ReadPort(string name)
     {
         INetFwOpenPorts ports = firewallManager.LocalPolicy.CurrentProfile.GloballyOpenPorts;
         foreach (INetFwOpenPort port in ports)

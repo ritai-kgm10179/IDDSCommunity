@@ -8,14 +8,14 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class PanelNotificationSettings : UserControl
 {
-    public event EventHandler NotificationSettingsChanged;
+    public event EventHandler? NotificationSettingsChanged;
     public PanelNotificationSettings()
     {
         InitializeComponent();
         Load += new EventHandler(PanelNotificationSettings_Load);
     }
 
-    void PanelNotificationSettings_Load(object sender, EventArgs e) => LoadData();
+    void PanelNotificationSettings_Load(object? sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
 
@@ -66,14 +66,16 @@ public partial class PanelNotificationSettings : UserControl
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
-        Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
-        (sender as Control).Location = new Point(loc.X + 1, loc.Y + 1);
+        if (sender is not Control control) return;
+        Point loc = control.Location;
+        control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
 
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
-        Point loc = new((sender as Control).Location.X, (sender as Control).Location.Y);
-        (sender as Control).Location = new Point(loc.X - 1, loc.Y - 1);
+        if (sender is not Control control) return;
+        Point loc = control.Location;
+        control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
 
     private void buttonSave_Click(object sender, EventArgs e)

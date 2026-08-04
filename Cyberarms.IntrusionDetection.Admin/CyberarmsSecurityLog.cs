@@ -10,11 +10,10 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class CyberarmsSecurityLog : UserControl
 {
 
-    public event EventHandler FilterSelectionChanged;
     public const string ALL_AGENTS = "{46DD5CAD-3F50-4D69-8917-11505DB10553}";
 
 
-    private DataSet _intrusionLog;
+    private DataSet? _intrusionLog;
     public DataSet DataSetIntrusionLog
     {
         get
@@ -22,17 +21,17 @@ public partial class CyberarmsSecurityLog : UserControl
             if (_intrusionLog == null)
             {
                 _intrusionLog = new DataSet();
-                _intrusionLog.Tables.Add("IntrusionLog");
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("Id", typeof(int));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("Action", typeof(int));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("Agent", typeof(string));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("LogIcon", typeof(Image));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("LogType", typeof(string));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("EventDate", typeof(DateTime));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("IpAddress", typeof(string));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("Message", typeof(string));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("AgentId", typeof(string));
-                _intrusionLog.Tables["IntrusionLog"].Columns.Add("NumberOfEvents", typeof(int));
+                DataTable table = _intrusionLog.Tables.Add("IntrusionLog");
+                table.Columns.Add("Id", typeof(int));
+                table.Columns.Add("Action", typeof(int));
+                table.Columns.Add("Agent", typeof(string));
+                table.Columns.Add("LogIcon", typeof(Image));
+                table.Columns.Add("LogType", typeof(string));
+                table.Columns.Add("EventDate", typeof(DateTime));
+                table.Columns.Add("IpAddress", typeof(string));
+                table.Columns.Add("Message", typeof(string));
+                table.Columns.Add("AgentId", typeof(string));
+                table.Columns.Add("NumberOfEvents", typeof(int));
             }
             return _intrusionLog;
         }
@@ -40,12 +39,12 @@ public partial class CyberarmsSecurityLog : UserControl
         set => _intrusionLog = value;
     }
 
-    private DataView _intrusionLogView;
+    private DataView? _intrusionLogView;
     public DataView IntrusionLogView
     {
         get
         {
-            _intrusionLogView ??= new DataView(DataSetIntrusionLog.Tables["IntrusionLog"])
+            _intrusionLogView ??= new DataView(DataSetIntrusionLog.Tables["IntrusionLog"]!)
                 {
                     Sort = "EventDate desc"
                 };
@@ -66,19 +65,18 @@ public partial class CyberarmsSecurityLog : UserControl
         dataGridViewIntrusionLog.AutoGenerateColumns = false;
         dataGridViewIntrusionLog.DataSource = IntrusionLogView;
         //dataGridViewIntrusionLog.DataMember = "IntrusionLog";            
-        dataGridViewIntrusionLog.Columns["LogIcon"].DataPropertyName = "LogIcon";
-        dataGridViewIntrusionLog.Columns["LogType"].DataPropertyName = "LogType";
-        dataGridViewIntrusionLog.Columns["LatestEntry"].DataPropertyName = "EventDate";
-        dataGridViewIntrusionLog.Columns["IpAddress"].DataPropertyName = "IpAddress";
-        dataGridViewIntrusionLog.Columns["Agent"].DataPropertyName = "Message";
-        dataGridViewIntrusionLog.Columns["AgentId"].DataPropertyName = "AgentId";
-        dataGridViewIntrusionLog.Columns["NumberOfEvents"].DataPropertyName = "NumberOfEvents";
+        dataGridViewIntrusionLog.Columns["LogIcon"]!.DataPropertyName = "LogIcon";
+        dataGridViewIntrusionLog.Columns["LogType"]!.DataPropertyName = "LogType";
+        dataGridViewIntrusionLog.Columns["LatestEntry"]!.DataPropertyName = "EventDate";
+        dataGridViewIntrusionLog.Columns["IpAddress"]!.DataPropertyName = "IpAddress";
+        dataGridViewIntrusionLog.Columns["Agent"]!.DataPropertyName = "Message";
+        dataGridViewIntrusionLog.Columns["AgentId"]!.DataPropertyName = "AgentId";
+        dataGridViewIntrusionLog.Columns["NumberOfEvents"]!.DataPropertyName = "NumberOfEvents";
 
-        FilterSelectionChanged += new EventHandler(CyberarmsSecurityLog_FilterSelectionChanged);
         PositionLabels();
     }
 
-    void CyberarmsSecurityLog_FilterSelectionChanged(object sender, EventArgs e)
+    void CyberarmsSecurityLog_FilterSelectionChanged(object? sender, EventArgs? e)
     {
         // @ToDo: Filter richtig setzen!
         List<string> filter = [];
@@ -98,27 +96,28 @@ public partial class CyberarmsSecurityLog : UserControl
             i++;
         }
         if (filter.Count > 0) viewFilter = viewFilter + ")";
-        if (comboBoxAgentSelection.Text != null && !((IAgentFilter)comboBoxAgentSelection.SelectedItem).Id.Equals(new Guid(ALL_AGENTS)))
+        if (comboBoxAgentSelection.Text != null && comboBoxAgentSelection.SelectedItem is IAgentFilter filter2 && !filter2.Id.Equals(new Guid(ALL_AGENTS)))
         {
             viewFilter = viewFilter + (filter.Count > 0 ? " and " : "");
-            viewFilter = viewFilter + string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem).Id);
+            viewFilter = viewFilter + string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem!).Id);
         }
         IntrusionLogView.RowFilter = viewFilter;
     }
 
-    void comboBoxAgentSelection_SelectionChangeCommitted(object sender, EventArgs e)
+    void comboBoxAgentSelection_SelectionChangeCommitted(object? sender, EventArgs? e)
     {
 
     }
 
     public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
     {
-        DataTable t = DataSetIntrusionLog.Tables["IntrusionLog"];
+        DataTable t = DataSetIntrusionLog.Tables["IntrusionLog"]
+            ?? throw new InvalidOperationException("IntrusionLog table is not initialized.");
         DataRow row;
         DataRow[] rows = t.Select(string.Format("AgentId='{0}' and IpAddress='{1}' and logType='{2}' and action='{3}'", agentId, ipAddress, logType, action));
         if (rows != null && rows.Length > 0)
         {
-            rows[0]["NumberOfEvents"] = int.Parse(rows[0]["NumberOfEvents"].ToString()) + 1;
+            rows[0]["NumberOfEvents"] = int.Parse(rows[0]["NumberOfEvents"]?.ToString() ?? "0") + 1;
             rows[0]["EventDate"] = eventDate;
             row = rows[0];
         }
@@ -137,7 +136,7 @@ public partial class CyberarmsSecurityLog : UserControl
         int result = 0;
         foreach (DataGridViewRow row in dataGridViewIntrusionLog.Rows)
         {
-            if (int.TryParse(row.Cells["NumberOfEvents"].Value.ToString(), out int c))
+            if (int.TryParse(row.Cells["NumberOfEvents"]?.Value?.ToString(), out int c))
             {
                 result += c;
             }
@@ -169,7 +168,7 @@ public partial class CyberarmsSecurityLog : UserControl
         }
     }
 
-    private void dataGridViewIntrusionLog_Resize(object sender, EventArgs e) => PositionLabels();
+    private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
 
     private void PositionLabels()
     {

@@ -29,7 +29,7 @@ public class LocksTest
 
     private static long GetMaxLocksId()
     {
-        object result = Database.Instance.ExecuteScalar("Select max(LockId) from Locks");
+        object? result = Database.Instance.ExecuteScalar("Select max(LockId) from Locks");
         return Db.DbValueConverter.ToInt64(result);
 
     }

@@ -12,8 +12,8 @@ public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 {
 
 
-    private EventLogQuery query;
-    private EventLogWatcher watcher;
+    private EventLogQuery? query;
+    private EventLogWatcher? watcher;
 
     internal const string EVENT_LOG_QUERY_MYSQL_SERVER_LOGIN_DENIED = @"<QueryList>
                   <Query Id=""100"" Path=""Application"">
@@ -48,40 +48,58 @@ public partial class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     /// <summary>
     /// Resume from Pause
     /// </summary>
-    protected override void OnContinueAgent() => watcher.Enabled = true;
+    protected override void OnContinueAgent() => SetWatcherEnabled(true);
 
     /// <summary>
     /// Pause the agent
     /// </summary>
-    protected override void OnPauseAgent() => watcher.Enabled = false;
+    protected override void OnPauseAgent() => SetWatcherEnabled(false);
 
     /// <summary>
     /// Stop the agent
     /// </summary>
     protected override void OnStopAgent()
     {
-        watcher.Enabled = false;
+        if (watcher is not null)
+        {
+            watcher.Enabled = false;
+            watcher.Dispose();
+        }
         watcher = null;
         query = null;
     }
 
-    private void Watcher_EventRecordWritten(object sender, EventRecordWrittenEventArgs e)
+    private void SetWatcherEnabled(bool enabled)
+    {
+        if (watcher is not null)
+        {
+            watcher.Enabled = enabled;
+        }
+    }
+
+    private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
         {
             // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
+            if (e.EventRecord is null)
+            {
+                return;
+            }
+
             foreach (EventProperty prop in e.EventRecord.Properties)
             {
-                if (MyRegex().IsMatch(prop.Value.ToString()))
+                string? propertyValue = prop.Value?.ToString();
+                if (propertyValue is not null && MyRegex().IsMatch(propertyValue))
                 {
-                    Match ipAddress = MyRegex1().Match(prop.Value.ToString());
+                    Match ipAddress = MyRegex1().Match(propertyValue);
                     NotificationEventArgs args = new()
                     {
-                        CreateDate = e.EventRecord.TimeCreated.Value,
+                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
                         EventId = e.EventRecord.Id,
                         IpAddress = ipAddress.Value
                     };
-                    if (System.Net.IPAddress.TryParse(ipAddress.Value, out System.Net.IPAddress probe))
+                    if (System.Net.IPAddress.TryParse(ipAddress.Value, out System.Net.IPAddress? probe))
                     {
                         if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                         {

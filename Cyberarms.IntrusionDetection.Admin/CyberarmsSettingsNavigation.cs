@@ -9,11 +9,11 @@ namespace Cyberarms.IntrusionDetection.Admin;
 public partial class CyberarmsSettingsNavigation : UserControl
 {
 
-    public event EventHandler PluginsChanged;
+    public event EventHandler? PluginsChanged;
 
     public CyberarmsSettingsNavigation() => InitializeComponent();
 
-    public event EventHandler NavigationChanged;
+    public event EventHandler? NavigationChanged;
 
     public Color SeparatorColor { get; set; }
 
@@ -42,17 +42,17 @@ public partial class CyberarmsSettingsNavigation : UserControl
         }
     }
 
-    private void cyberarmsSettingsNavigationItem_Click(object sender, EventArgs e)
+    private void cyberarmsSettingsNavigationItem_Click(object? sender, EventArgs e)
     {
-        if (!(sender as CyberarmsSettingsNavigationItem).IsSelected)
+        if (sender is CyberarmsSettingsNavigationItem item && !item.IsSelected)
         {
             UnselectAll();
-            (sender as CyberarmsSettingsNavigationItem).IsSelected = true;
-            OnNavigationChanged(sender);
+            item.IsSelected = true;
+            OnNavigationChanged(item);
         }
     }
 
-    private List<CyberarmsSettingsNavigationItem> _navigationItems;
+    private List<CyberarmsSettingsNavigationItem>? _navigationItems;
     private List<CyberarmsSettingsNavigationItem> NavigationItems
     {
         get
@@ -84,13 +84,13 @@ public partial class CyberarmsSettingsNavigation : UserControl
     public void Clear() => NavigationItems.Clear();
 
 
-    public CyberarmsSettingsNavigationItem SelectedItem
+    public CyberarmsSettingsNavigationItem? SelectedItem
     {
         get
         {
             foreach (Control c in flowLayoutPanelNavigationItems.Controls)
             {
-                if (c is CyberarmsSettingsNavigationItem && (c as CyberarmsSettingsNavigationItem).IsSelected) return c as CyberarmsSettingsNavigationItem;
+                if (c is CyberarmsSettingsNavigationItem item && item.IsSelected) return item;
             }
             return null;
         }
@@ -100,10 +100,10 @@ public partial class CyberarmsSettingsNavigation : UserControl
     {
         foreach (Control c in flowLayoutPanelNavigationItems.Controls)
         {
-            if (c is CyberarmsSettingsNavigationItem && (c as CyberarmsSettingsNavigationItem).DisplayName.Equals(name))
+            if (c is CyberarmsSettingsNavigationItem item && item.DisplayName.Equals(name, StringComparison.Ordinal))
             {
                 UnselectAll();
-                (c as CyberarmsSettingsNavigationItem).IsSelected = true;
+                item.IsSelected = true;
                 OnNavigationChanged(this);
             }
         }
@@ -117,7 +117,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
         {
             foreach (Control c in flowLayoutPanelNavigationItems.Controls)
             {
-                if (c is CyberarmsSettingsNavigationItem && (c as CyberarmsSettingsNavigationItem).IsSelected) return (c as CyberarmsSettingsNavigationItem).DisplayName;
+                if (c is CyberarmsSettingsNavigationItem item && item.IsSelected) return item.DisplayName;
             }
             return string.Empty;
         }
@@ -127,11 +127,11 @@ public partial class CyberarmsSettingsNavigation : UserControl
     {
         foreach (Control c in flowLayoutPanelNavigationItems.Controls)
         {
-            if (c is CyberarmsSettingsNavigationItem)
+            if (c is CyberarmsSettingsNavigationItem item)
             {
-                if ((c as CyberarmsSettingsNavigationItem).IsSelected)
+                if (item.IsSelected)
                 {
-                    (c as CyberarmsSettingsNavigationItem).IsSelected = false;
+                    item.IsSelected = false;
                     c.Invalidate();
                 }
             }

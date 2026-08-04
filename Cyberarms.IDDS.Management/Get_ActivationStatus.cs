@@ -6,7 +6,7 @@ namespace Cyberarms.IDDS.Management;
 public class Get_ActivationStatus : System.Management.Automation.PSCmdlet
 {
     [System.Management.Automation.Parameter(Position = 0, Mandatory = false)]
-    public string Options;
+    public string Options = string.Empty;
 
     protected override void ProcessRecord()
     {

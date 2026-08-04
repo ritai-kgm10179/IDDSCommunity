@@ -23,7 +23,7 @@ public class Lock
 
 
     public long Id { get; set; }
-    public string IpAddress { get; set; }
+    public string IpAddress { get; set; } = string.Empty;
     public DateTime LockDate { get; set; }
     public DateTime UnlockDate { get; set; }
     public int Port { get; set; }

@@ -17,7 +17,7 @@ public class ReportTest
         //
     }
 
-    private TestContext testContextInstance;
+    private TestContext testContextInstance = null!;
 
     /// <summary>
     ///Gets or sets the test context which provides
@@ -73,18 +73,8 @@ public class ReportTest
         string result = ReportGenerator.Instance.GetReport("Last three days report", "This report contains data of the last three days and is for testing only. If you got this report without running the unit test before, data might be outdated.",
             string.Format(@"Server name: {0} <br/>
                         IP addresses: <br/>{1}<br/>IDDS Version: {2}", System.Net.Dns.GetHostName(), ipAddresses, "Pro Edition"), DateTime.Now.AddDays(-3), DateTime.Now);
-        if (!Directory.Exists(@"c:\temp"))
-        {
-            try { Directory.CreateDirectory(@"c:\temp"); } catch { }
-        }
-        StreamWriter sw = new(@"c:\temp\testreportrun.htm");
-        sw.WriteLine(result);
-        sw.Close();
-        try
-        {
-            System.Diagnostics.ProcessStartInfo sInfo = new(@"c:\temp\testreportrun.htm") { UseShellExecute = true };
-            System.Diagnostics.Process.Start(sInfo);
-        }
-        catch { }
+        string outputPath = Path.Combine(TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? AppDomain.CurrentDomain.BaseDirectory, "testreportrun.htm");
+        File.WriteAllText(outputPath, result);
+        Assert.IsTrue(File.Exists(outputPath));
     }
 }
