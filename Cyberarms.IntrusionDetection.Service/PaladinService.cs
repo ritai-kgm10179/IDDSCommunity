@@ -18,6 +18,13 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly PluginOptions pluginOptions;
     private readonly ReportOptions reportOptions;
     private readonly System.Threading.SemaphoreSlim lifecycleLock = new(1, 1);
+    private readonly Database database;
+    private readonly IddsConfig configuration;
+    private readonly NotificationSettings notificationSettings;
+    private readonly SecurityAgents securityAgents;
+    private readonly ReportScheduler reportScheduler;
+    private readonly Statistics statistics;
+    private readonly WindowsLogManager logManager;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -38,35 +45,62 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private bool disposed;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Service"/> class.
-    /// </summary>
-
-    public Service() : this(FirewallPolicyManager.Instance, Options.Create(new DatabaseOptions()), Options.Create(new PluginOptions()), Options.Create(new ReportOptions()))
-    {
-    }
-
-    /// <summary>
     /// Initializes a service with an explicit firewall policy implementation.
     /// </summary>
     /// <param name="firewallPolicy">The firewall operations used for address blocking.</param>
     /// <param name="databaseOptions">The validated database settings.</param>
     /// <param name="pluginOptions">The validated plug-in settings.</param>
     /// <param name="reportOptions">The validated report scheduler settings.</param>
-    internal Service(IFirewallPolicy firewallPolicy, IOptions<DatabaseOptions> databaseOptions, IOptions<PluginOptions> pluginOptions, IOptions<ReportOptions> reportOptions)
+    /// <param name="database">The runtime database.</param>
+    /// <param name="configuration">The runtime configuration.</param>
+    /// <param name="notificationSettings">The notification settings.</param>
+    /// <param name="securityAgents">The managed security agents.</param>
+    /// <param name="reportScheduler">The report scheduler.</param>
+    /// <param name="statistics">The attack statistics service.</param>
+    /// <param name="logManager">The Windows runtime logger.</param>
+    internal Service(
+        IFirewallPolicy firewallPolicy,
+        IOptions<DatabaseOptions> databaseOptions,
+        IOptions<PluginOptions> pluginOptions,
+        IOptions<ReportOptions> reportOptions,
+        Database database,
+        IddsConfig configuration,
+        NotificationSettings notificationSettings,
+        SecurityAgents securityAgents,
+        ReportScheduler reportScheduler,
+        Statistics statistics,
+        WindowsLogManager logManager)
     {
         ArgumentNullException.ThrowIfNull(firewallPolicy);
+        ArgumentNullException.ThrowIfNull(databaseOptions);
+        ArgumentNullException.ThrowIfNull(pluginOptions);
+        ArgumentNullException.ThrowIfNull(reportOptions);
+        ArgumentNullException.ThrowIfNull(database);
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(notificationSettings);
+        ArgumentNullException.ThrowIfNull(securityAgents);
+        ArgumentNullException.ThrowIfNull(reportScheduler);
+        ArgumentNullException.ThrowIfNull(statistics);
+        ArgumentNullException.ThrowIfNull(logManager);
         this.firewallPolicy = firewallPolicy;
         this.databaseOptions = databaseOptions.Value;
         this.pluginOptions = pluginOptions.Value;
         this.reportOptions = reportOptions.Value;
+        this.database = database;
+        this.configuration = configuration;
+        this.notificationSettings = notificationSettings;
+        this.securityAgents = securityAgents;
+        this.reportScheduler = reportScheduler;
+        this.statistics = statistics;
+        this.logManager = logManager;
         isInitialized = false;
         ClientIpAddressSoftLocked += new EventHandler(Service_ClientIpAddressSoftLocked);
         ClientIpAddressUnlocked += new EventHandler(Service_ClientIpAddressUnlocked);
         ClientIpAddressHardLocked += new EventHandler(Service_ClientIpAddressHardLocked);
         // IntrusionDetectionConfiguration.PluginDirectory = System.Windows.Forms.Application.StartupPath + "\\Plugins\\";
-        ReportScheduler.Instance.RunDailyReportAsync += Instance_RunDailyReportAsync;
-        ReportScheduler.Instance.RunWeeklyReportAsync += Instance_RunWeeklyReportAsync;
-        ReportScheduler.Instance.RunMonthlyReportAsync += Instance_RunMonthlyReportAsync;
+        reportScheduler.RunDailyReportAsync += Instance_RunDailyReportAsync;
+        reportScheduler.RunWeeklyReportAsync += Instance_RunWeeklyReportAsync;
+        reportScheduler.RunMonthlyReportAsync += Instance_RunMonthlyReportAsync;
         // Configuration.Instance.ConfigurationChanged += new EventHandler(Instance_ConfigurationChanged);
 
     }
@@ -89,7 +123,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
     }
@@ -112,7 +146,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
     }
@@ -134,7 +168,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+            logManager.WriteEntry(ex.Message, EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             throw;
         }
     }
@@ -146,13 +180,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     void ConfigureSystem()
     {
-        Database.Instance.Configure(System.Windows.Forms.Application.StartupPath, databaseOptions.FileName);
+        database.Configure(System.Windows.Forms.Application.StartupPath, databaseOptions.FileName);
 
-        IddsConfig.Instance.ApplicationPath = System.Windows.Forms.Application.StartupPath;
-        IddsConfig.Instance.PluginsDirectory = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, pluginOptions.DirectoryName) + System.IO.Path.DirectorySeparatorChar;
-        IddsConfig.Instance.Load();
-        ReportScheduler.Instance.CheckInterval = TimeSpan.FromMinutes(reportOptions.CheckIntervalMinutes);
-        SecurityAgents.Instance.RegisterSecurityAgents();
+        configuration.ApplicationPath = System.Windows.Forms.Application.StartupPath;
+        configuration.PluginsDirectory = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, pluginOptions.DirectoryName) + System.IO.Path.DirectorySeparatorChar;
+        configuration.Load();
+        reportScheduler.CheckInterval = TimeSpan.FromMinutes(reportOptions.CheckIntervalMinutes);
+        securityAgents.InitializeAgents();
+        securityAgents.RegisterSecurityAgents();
     }
 
     //void Instance_ConfigurationChanged(object sender, EventArgs e) {
@@ -308,9 +343,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     void SendInfoMail(object o, LockType lockOperation)
     {
-        //if (!Configuration.Instance.IntrusionDetectionConfiguration.SendInfoMail) return;
-        //if (!IddsConfig.Instance.SendInfoMail) return;
-
         if (o == null || !(o is ClientOperationInformation)) return;
         var op = (ClientOperationInformation)o;
         try
@@ -319,15 +351,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             switch (lockOperation)
             {
                 case LockType.None:
-                    if (!NotificationSettings.Instance.OnUnlock) return;
+                    if (!notificationSettings.OnUnlock) return;
                     subject = "Cyberarms IDDS: Unlock notification (" + op.IpAddress + ")";
                     break;
                 case LockType.SoftLock:
-                    if (!NotificationSettings.Instance.OnSoftLock) return;
+                    if (!notificationSettings.OnSoftLock) return;
                     subject = "Cyberarms IDDS: Soft lock notification (" + op.IpAddress + ")";
                     break;
                 case LockType.HardLock:
-                    if (!NotificationSettings.Instance.OnHardLock) return;
+                    if (!notificationSettings.OnHardLock) return;
                     subject = "Cyberarms IDDS: Hard lock notification (" + op.IpAddress + ")";
                     break;
             }
@@ -335,7 +367,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(Strings.Get("Error while sending notification email.\r\n") + ex.Message,
+            logManager.WriteEntry(Strings.Get("Error while sending notification email.\r\n") + ex.Message,
                         EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
         }
     }
@@ -350,12 +382,12 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="rethrowOnFailure"><see langword="true"/> to propagate delivery failures to the scheduler.</param>
     /// <returns>A task representing SMTP delivery.</returns>
 
-    static async Task SendMailAsync(string subject, string message, bool isHtml, System.Threading.CancellationToken cancellationToken = default, bool rethrowOnFailure = false)
+    async Task SendMailAsync(string subject, string message, bool isHtml, System.Threading.CancellationToken cancellationToken = default, bool rethrowOnFailure = false)
     {
         try
         {
-            if (string.IsNullOrEmpty(IddsConfig.Instance.SmtpServer) || string.IsNullOrEmpty(IddsConfig.Instance.SenderEmailAddress)
-                || string.IsNullOrEmpty(IddsConfig.Instance.NotificationEmailAddress))
+            if (string.IsNullOrEmpty(configuration.SmtpServer) || string.IsNullOrEmpty(configuration.SenderEmailAddress)
+                || string.IsNullOrEmpty(configuration.NotificationEmailAddress))
             {
                 if (rethrowOnFailure)
                     throw new InvalidOperationException(Strings.Get("SMTP configuration is incomplete."));
@@ -363,21 +395,21 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             }
 
             var mimeMessage = new MimeKit.MimeMessage();
-            mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.SenderEmailAddress));
-            mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(IddsConfig.Instance.NotificationEmailAddress));
+            mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(configuration.SenderEmailAddress));
+            mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(configuration.NotificationEmailAddress));
             mimeMessage.Subject = subject;
             mimeMessage.Body = new MimeKit.TextPart(isHtml ? "html" : "plain") { Text = message };
 
             using var client = new MailKit.Net.Smtp.SmtpClient();
-            int port = IddsConfig.Instance.SmtpPort == 0 ? 25 : IddsConfig.Instance.SmtpPort;
-            SecureSocketOptions secureOption = IddsConfig.Instance.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
+            int port = configuration.SmtpPort == 0 ? 25 : configuration.SmtpPort;
+            SecureSocketOptions secureOption = configuration.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
             using System.Threading.CancellationTokenSource timeout = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(30));
-            await client.ConnectAsync(IddsConfig.Instance.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
+            await client.ConnectAsync(configuration.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
 
-            if (IddsConfig.Instance.SmtpRequiresAuthentication)
+            if (configuration.SmtpRequiresAuthentication)
             {
-                await client.AuthenticateAsync(IddsConfig.Instance.SmtpUsername, IddsConfig.Instance.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
+                await client.AuthenticateAsync(configuration.SmtpUsername, configuration.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
             }
             await client.SendAsync(mimeMessage, timeout.Token).ConfigureAwait(false);
             await client.DisconnectAsync(true, timeout.Token).ConfigureAwait(false);
@@ -385,7 +417,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         catch (Exception ex)
         {
             string safeMessage = ex.Message.Replace('\r', ' ').Replace('\n', ' ');
-            WindowsLogManager.Instance.WriteEntry(Strings.Get("Error while sending notification email: ") + safeMessage,
+            logManager.WriteEntry(Strings.Get("Error while sending notification email: ") + safeMessage,
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             if (rethrowOnFailure)
                 throw;
@@ -404,7 +436,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         cleanupTimer.Interval = 1000;
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
         // restartTimer.Elapsed += new System.Timers.ElapsedEventHandler(restartTimer_Elapsed);
-        WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was initialized successfully."), EventLogEntryType.Information,
+        logManager.WriteEntry(Strings.Get("Intrusion Detection Service was initialized successfully."), EventLogEntryType.Information,
            Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         isInitialized = true;
     }
@@ -437,7 +469,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             catch (Exception ex)
             {
                 // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
-                WindowsLogManager.Instance.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
+                logManager.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
                     l.IpAddress, ex.Message),
                     EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                 if (firewallPolicy.IsLocked(l.IpAddress))
@@ -476,7 +508,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             // TO DO: Hard Lock overrides Soft Lock!
             if (firewallPolicy.IsLocked(lockItem.IpAddress))
             {
-                WindowsLogManager.Instance.WriteEntry(Strings.Get("Received another request to lock IP address ") + lockItem.IpAddress +
+                logManager.WriteEntry(Strings.Get("Received another request to lock IP address ") + lockItem.IpAddress +
                             ". This IP address is already locked.", EventLogEntryType.Information, Globals.CYBERARMS_EVENT_ID_INFORMATION,
                             Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                 return;
@@ -484,10 +516,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had an error:") + ex.Message, EventLogEntryType.Error,
+            logManager.WriteEntry(Strings.Get("Intrusion Detection Service had an error:") + ex.Message, EventLogEntryType.Error,
                   Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
-        WindowsLogManager.Instance.WriteEntry(string.Format("{0} lock: Unsuccessful login attempts from ip address {1} exceeded threshold. Firewall rule is being created to block the address specified.",
+        logManager.WriteEntry(string.Format("{0} lock: Unsuccessful login attempts from ip address {1} exceeded threshold. Firewall rule is being created to block the address specified.",
             lockType == LockType.HardLock ? "Hard" : "Soft", lockItem.IpAddress), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_FIREWALL_RULE_CREATED,
                     Globals.CYBERARMS_LOG_CATEGORY_SECURITY);
         // lockItem.Id = Locks.CreateLock(lockItem);
@@ -498,11 +530,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             {
                 case LockType.SoftLock:
                     lockItem.Status = Lock.LOCK_STATUS_SOFTLOCK;
-                    Statistics.Instance.IncreaseSoftLockStatistics(reportingAgent);
+                    statistics.IncreaseSoftLockStatistics(reportingAgent);
                     break;
                 case LockType.HardLock:
                     lockItem.Status = Lock.LOCK_STATUS_HARDLOCK;
-                    Statistics.Instance.IncreaseHardLockStatistics(reportingAgent);
+                    statistics.IncreaseHardLockStatistics(reportingAgent);
                     break;
             }
         }
@@ -547,12 +579,12 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             agentsLoaded = true;
             LoadAgents();
             agentsStarted = true;
-            SecurityAgents.Instance.StartAgents();
+            securityAgents.StartAgents();
             cleanupTimer.Enabled = true;
             reportingStarted = true;
-            ReportScheduler.Instance.StartReporting();
+            reportScheduler.StartReporting();
             runtimeStarted = true;
-            WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
+            logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
                 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
         }
         catch (Exception ex)
@@ -560,7 +592,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             StopComponents(throwOnFailure: false);
             try
             {
-                WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
+                logManager.WriteEntry(Strings.Get("Intrusion Detection Service had a startup error. Details:") + ex.Message, EventLogEntryType.Error,
                     Globals.CYBERARMS_EVENT_ID_CONFIGURATION_ERROR, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
             }
             catch (Exception)
@@ -601,12 +633,12 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         List<Exception> failures = [];
         if (reportingStarted)
-            TryStop(ReportScheduler.Instance.StopReporting, failures);
+            TryStop(reportScheduler.StopReporting, failures);
         reportingStarted = false;
 
         cleanupTimer.Enabled = false;
         if (agentsStarted)
-            TryStop(SecurityAgents.Instance.StopAgents, failures);
+            TryStop(securityAgents.StopAgents, failures);
         agentsStarted = false;
 
         if (agentsLoaded)
@@ -617,7 +649,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
         if (wasStarted)
         {
-            TryStop(() => WindowsLogManager.Instance.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
+            TryStop(() => logManager.WriteEntry(Strings.Get("Intrusion Detection Service was stopped."), EventLogEntryType.Information,
                 Globals.CYBERARMS_EVENT_ID_INFORMATION, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME), failures);
         }
 
@@ -652,9 +684,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (disposed)
             return;
         StopComponents(throwOnFailure: false);
-        ReportScheduler.Instance.RunDailyReportAsync -= Instance_RunDailyReportAsync;
-        ReportScheduler.Instance.RunWeeklyReportAsync -= Instance_RunWeeklyReportAsync;
-        ReportScheduler.Instance.RunMonthlyReportAsync -= Instance_RunMonthlyReportAsync;
+        reportScheduler.RunDailyReportAsync -= Instance_RunDailyReportAsync;
+        reportScheduler.RunWeeklyReportAsync -= Instance_RunWeeklyReportAsync;
+        reportScheduler.RunMonthlyReportAsync -= Instance_RunMonthlyReportAsync;
         cleanupTimer.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
@@ -664,7 +696,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// Executes the init agent configuration operation.
     /// </summary>
 
-    private static void InitAgentConfiguration() => SecurityAgents.Instance.RegisterSecurityAgents();
+    private void InitAgentConfiguration() => securityAgents.RegisterSecurityAgents();
 
 
 
@@ -680,7 +712,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         {
             if (notificationEventArgs == null)
             {
-                if (IddsConfig.Instance.IsDebug)
+                if (configuration.IsDebug)
                 {
                     // the following error should just be thrown when running in debug mode.
                     throw new ApplicationException(global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Operation not supported. EventArgs must be passed as NotificationEventArgs"));
@@ -688,26 +720,26 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 else
                 {
                     // otherwise write to the log file
-                    WindowsLogManager.Instance.WriteEntry(Strings.Get("Plugin error: the lock delegate was called, but notificationEventArgs must not be null!"),
+                    logManager.WriteEntry(Strings.Get("Plugin error: the lock delegate was called, but notificationEventArgs must not be null!"),
                         EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
                     return;
                 }
             }
             if (sender is not IAgentPlugin reportingPlugin)
                 return;
-            SecurityAgent? reportingAgent = SecurityAgents.Instance.FindByName(reportingPlugin.Configuration.AgentName);
+            SecurityAgent? reportingAgent = securityAgents.FindByName(reportingPlugin.Configuration.AgentName);
             if (reportingAgent is null)
                 return;
             long incidentId;
             if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
             {
-                Statistics.Instance.IncreaseFailedLoginStatistics(reportingAgent);
-                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? ipAddress) && IddsConfig.Instance.IsIpAddressLocal(ipAddress))
+                statistics.IncreaseFailedLoginStatistics(reportingAgent);
+                if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? ipAddress) && configuration.IsIpAddressLocal(ipAddress))
                 {
                     incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, false);
                 }
-                else if (IddsConfig.Instance.UseSafeNetworkList && IddsConfig.Instance.IsInSafeNetwork(notificationEventArgs.IpAddress))
+                else if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(notificationEventArgs.IpAddress))
                 {
                     incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE, false);
@@ -727,7 +759,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.SoftLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_SOFT_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(IddsConfig.Instance.GetSoftLockMinutes(reportingAgent)), incidentId, Lock.LOCK_STATUS_SOFTLOCK, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(configuration.GetSoftLockMinutes(reportingAgent)), incidentId, Lock.LOCK_STATUS_SOFTLOCK, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
                                     break;
                                 case LockType.SoftLock:
                                     // already locked, ignore
@@ -735,14 +767,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.HardLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddHours(IddsConfig.Instance.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddHours(configuration.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
                                     break;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        WindowsLogManager.Instance.WriteEntry(string.Format("Unrecoverable error: {0}",
+                        logManager.WriteEntry(string.Format("Unrecoverable error: {0}",
                                 ex.Message), EventLogEntryType.FailureAudit, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR,
                                 Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
                         // OnClientIpAddressSoftLocked(new Lock( new Client(notificationEventArgs.IpAddress), ex);
@@ -756,7 +788,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", sender != null ? sender.GetType().Name : "unknown", ex.Message),
+            logManager.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", sender != null ? sender.GetType().Name : "unknown", ex.Message),
                 EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_PLUGIN_ERROR, Globals.CYBERARMS_LOG_CATEGORY_PLUGIN);
         }
     }
@@ -769,10 +801,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     private void LoadAgents()
     {
-        SecurityAgents.Instance.LoadAgents();
-        foreach (SecurityAgent agent in SecurityAgents.Instance.LoadedAgents.Keys)
+        securityAgents.LoadAgents();
+        foreach (SecurityAgent agent in securityAgents.LoadedAgents.Keys)
         {
-            AgentProxy agentPlugin = SecurityAgents.Instance.LoadedAgents[agent];
+            AgentProxy agentPlugin = securityAgents.LoadedAgents[agent];
             if (agent.Enabled)
             {
                 agentPlugin.AttackDetected += new AttackDetectedHandler(Service_AttackDetected);
@@ -785,6 +817,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// Executes the unload agents operation.
     /// </summary>
 
-    private static void UnloadAgents() => SecurityAgents.Instance.UnloadAgents();
+    private void UnloadAgents() => securityAgents.UnloadAgents();
 
 }

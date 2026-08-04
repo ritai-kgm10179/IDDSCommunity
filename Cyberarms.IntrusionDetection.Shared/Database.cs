@@ -123,7 +123,7 @@ public class Database
     /// Initializes a new instance of the <see cref="Database"/> class.
     /// </summary>
 
-    private Database() { }
+    public Database() { }
 
     /// <summary>
     /// Executes reader.
