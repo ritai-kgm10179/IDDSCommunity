@@ -6,3 +6,9 @@
 *.suo
 *.userosscache
 *.sln.docstates
+*.vspscc
+*.vssscc
+
+# Generated audit and packaging output
+artifacts/
+Compiled/

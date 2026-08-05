@@ -7,10 +7,11 @@ using System.ServiceProcess;
 using System.Threading.Tasks;
 using Cyberarms.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NetFwTypeLib;
+using Windows.Win32.NetworkManagement.WindowsFirewall;
 
 namespace Cyberarms.IntrusionDetection.Service.Test;
 
+#pragma warning disable CA1416 // PrivilegedWindowsTestGuard limits these opt-in integration tests to supported Windows hosts.
 [TestClass]
 [TestCategory(PrivilegedWindowsTestGuard.Category)]
 [DoNotParallelize]
@@ -71,21 +72,24 @@ public sealed class WindowsPlatformIntegrationTest
         string ruleName = "Cyberarms Integration Test " + Guid.NewGuid().ToString("N");
         try
         {
-            rule.Name = ruleName;
-            rule.Description = "Temporary Cyberarms integration-test rule";
-            rule.Grouping = "Cyberarms Integration Tests";
-            rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
-            rule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
-            rule.Protocol = (int)NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_ANY;
-            rule.RemoteAddresses = "192.0.2.1";
+            FirewallComString.Set(ruleName, value => rule.Name = value);
+            FirewallComString.Set("Temporary Cyberarms integration-test rule", value => rule.Description = value);
+            FirewallComString.Set("Cyberarms Integration Tests", value => rule.Grouping = value);
+            rule.Direction = NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN;
+            rule.Action = NET_FW_ACTION.NET_FW_ACTION_BLOCK;
+            rule.Protocol = 256;
+            FirewallComString.Set("192.0.2.1", value => rule.RemoteAddresses = value);
             rule.Enabled = false;
             policy.Rules.Add(rule);
 
-            Assert.IsTrue(policy.Rules.Cast<INetFwRule>().Any(item => string.Equals(item.Name, ruleName, StringComparison.Ordinal)));
+            System.Collections.Generic.List<INetFwRule> currentRules = [];
+            foreach (INetFwRule item in (dynamic)policy.Rules)
+                currentRules.Add(item);
+            Assert.Contains(item => string.Equals(FirewallComString.Get(item.Name), ruleName, StringComparison.Ordinal), currentRules);
         }
         finally
         {
-            policy.Rules.Remove(ruleName);
+            FirewallComString.Set(ruleName, policy.Rules.Remove);
         }
     }
 
@@ -151,3 +155,4 @@ public sealed class WindowsPlatformIntegrationTest
         controller.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
     }
 }
+#pragma warning restore CA1416

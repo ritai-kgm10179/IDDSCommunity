@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Api\Cyberarms.IntrusionDetection.Api.csproj" />
@@ -21,16 +22,6 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.10" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
     <PackageReference Include="MailKit" Version="4.17.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Interop.NetFwTypeLib">
-      <HintPath>..\Dependencies\Interop\Interop.NetFwTypeLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.NATUPNPLib">
-      <HintPath>..\Dependencies\Interop\Interop.NATUPNPLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Interop.NETCONLib">
-      <HintPath>..\Dependencies\Interop\Interop.NETCONLib.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.298" PrivateAssets="all" />
   </ItemGroup>
 </Project>

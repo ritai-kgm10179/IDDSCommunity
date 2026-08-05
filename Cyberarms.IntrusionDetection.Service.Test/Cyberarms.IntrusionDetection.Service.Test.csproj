@@ -19,9 +19,4 @@
     <PackageReference Include="MSTest.TestFramework" Version="4.3.3" />
     <PackageReference Include="MSTest.TestAdapter" Version="4.3.3" />
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Interop.NetFwTypeLib">
-      <HintPath>..\Dependencies\Interop\Interop.NetFwTypeLib.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
