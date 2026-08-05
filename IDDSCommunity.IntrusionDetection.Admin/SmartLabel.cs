@@ -20,14 +20,13 @@ public partial class SmartLabel : Label
     {
         e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-        using Pen pen = new(Selected ? SelectedColor : BackColor);
-        int bottom = System.Math.Max(0, Height - 1);
-        e.Graphics.DrawLines(pen, [ new(0, bottom),
-            new(0, 0),
-            new(Width-1, 0),
-            new(Width-1, bottom) ]);
         base.OnPaint(e);
-
+        if (Selected && !SelectedColor.IsEmpty)
+        {
+            using Pen pen = new(Color.FromArgb(19, 184, 166), 3F);
+            int bottom = System.Math.Max(1, Height - 2);
+            e.Graphics.DrawLine(pen, 8, bottom, System.Math.Max(8, Width - 9), bottom);
+        }
     }
 
     bool _selected;

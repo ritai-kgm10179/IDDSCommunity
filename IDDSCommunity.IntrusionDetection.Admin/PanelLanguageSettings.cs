@@ -11,7 +11,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public sealed class PanelLanguageSettings : UserControl
 {
-    private readonly ComboBox languageSelector = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+    private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
+    private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
+    private readonly ComboBox languageSelector;
 
     /// <summary>
     /// Initializes the language settings panel.
@@ -20,33 +22,61 @@ public sealed class PanelLanguageSettings : UserControl
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
-        Label heading = new() { AutoSize = true, Font = new Font(Font, FontStyle.Bold), Text = Strings.Get("Display language") };
-        Label restartNotice = new() { AutoSize = true, MaximumSize = new Size(430, 0), Text = Strings.Get("Restart the application after saving to apply the language to every open window.") };
-        Button save = new() { AutoSize = true, Text = Strings.Get("&Save") };
-        languageSelector.Items.AddRange([new LanguageOption("auto", Strings.Get("Use system language")), new LanguageOption("en-US", "English"), new LanguageOption("zh-TW", "正體中文")]);
+
+        SmartLabel pageTitle = CreateLabel(Strings.Get("Language settings"), 11F, AccentColor, new Point(11, 8));
+        Label fieldLabel = CreateLabel(Strings.Get("Display language"), 9F, BodyTextColor, new Point(15, 48));
+        languageSelector = new ComboBox
+        {
+            DropDownStyle = ComboBoxStyle.DropDownList,
+            Font = new Font("Segoe UI", 9F),
+            ForeColor = BodyTextColor,
+            Location = new Point(15, 70),
+            Size = new Size(240, 23)
+        };
+        languageSelector.Items.AddRange([
+            new LanguageOption("auto", Strings.Get("Use system language")),
+            new LanguageOption("en-US", "English"),
+            new LanguageOption("zh-TW", "正體中文")]);
         languageSelector.SelectedIndex = GetSelectedIndex(IddsConfig.Instance.Language);
+
+        Label restartNotice = CreateLabel(
+            Strings.Get("Restart the application after saving to apply the language to every open window."),
+            9F,
+            BodyTextColor,
+            new Point(15, 104));
+        restartNotice.MaximumSize = new Size(430, 0);
+
+        Button save = new()
+        {
+            BackColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 9F),
+            ForeColor = BodyTextColor,
+            Location = new Point(15, 142),
+            Size = new Size(102, 26),
+            Text = Strings.Get("&Save"),
+            UseVisualStyleBackColor = false
+        };
         save.Click += SaveLanguage;
 
-        FlowLayoutPanel layout = new() { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new Padding(20), WrapContents = false };
-        layout.Controls.Add(heading);
-        layout.Controls.Add(languageSelector);
-        layout.Controls.Add(restartNotice);
-        layout.Controls.Add(save);
-        Controls.Add(layout);
+        Controls.Add(pageTitle);
+        Controls.Add(fieldLabel);
+        Controls.Add(languageSelector);
+        Controls.Add(restartNotice);
+        Controls.Add(save);
     }
 
-    /// <summary>
-    /// Maps a persisted language setting to the selector index.
-    /// </summary>
-    /// <param name="setting">The persisted culture name.</param>
-    /// <returns>The matching selector index.</returns>
+    private static SmartLabel CreateLabel(string text, float size, Color color, Point location) => new()
+    {
+        AutoSize = true,
+        Font = new Font("Segoe UI", size),
+        ForeColor = color,
+        Location = location,
+        Text = text
+    };
+
     private static int GetSelectedIndex(string setting) => setting switch { "en" or "en-US" => 1, "zh" or "zh-TW" or "zh-Hant" => 2, _ => 0 };
 
-    /// <summary>
-    /// Persists the selected language and informs the user that open windows require a restart.
-    /// </summary>
-    /// <param name="sender">The save button.</param>
-    /// <param name="e">The event data.</param>
     private void SaveLanguage(object? sender, EventArgs e)
     {
         if (languageSelector.SelectedItem is not LanguageOption option) return;
@@ -57,10 +87,6 @@ public sealed class PanelLanguageSettings : UserControl
 
     private sealed record LanguageOption(string Value, string DisplayName)
     {
-        /// <summary>
-        /// Returns the localized option label displayed by the selector.
-        /// </summary>
-        /// <returns>The display name.</returns>
         public override string ToString() => DisplayName;
     }
 }

@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.Smtp;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;</IDDSCommunityAgentPluginProjects>
+    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;</IDDSCommunityAgentPluginProjects>
   </PropertyGroup>
   <Target Name="EnsurePluginsFolder" AfterTargets="Build">
     <MakeDir Directories="$(OutputPath)Plugins" Condition="!Exists('$(OutputPath)Plugins')" />
@@ -8,6 +8,7 @@
   <Target Name="RemoveLegacyAgentPlugins" BeforeTargets="Build" Condition="'$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Admin' Or '$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Service'">
     <ItemGroup>
       <LegacyAgentPlugin Include="$(OutputPath)Plugins\**\Cyberarms.Agents.*" />
+      <LegacyAgentPlugin Include="$(OutputPath)Plugins\**\IDDSCommunity.Agents.Smtp.dll" />
     </ItemGroup>
     <Delete Files="@(LegacyAgentPlugin)" />
   </Target>

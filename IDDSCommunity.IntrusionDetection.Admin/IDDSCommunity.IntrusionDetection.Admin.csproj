@@ -14,7 +14,6 @@
     <ProjectReference Include="..\IDDSCommunity.Agents.FtpServer\IDDSCommunity.Agents.FtpServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.MailServer\IDDSCommunity.Agents.MailServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.MySql\IDDSCommunity.Agents.MySql.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\IDDSCommunity.Agents.Smtp\IDDSCommunity.Agents.Smtp.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.SqlServer\IDDSCommunity.Agents.SqlServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.TerminalServer\IDDSCommunity.Agents.TerminalServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.WebSecurity\IDDSCommunity.Agents.WebSecurity.csproj" ReferenceOutputAssembly="false" />

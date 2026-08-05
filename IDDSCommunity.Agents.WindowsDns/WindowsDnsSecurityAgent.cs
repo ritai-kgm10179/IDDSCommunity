@@ -8,7 +8,6 @@ namespace IDDSCommunity.Agents.WindowsDns;
 [Plugin("Windows DNS Security Agent", "Detects abusive Windows DNS Server clients from official analytical and audit events.", "1.0")]
 public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
 {
-    private static readonly Image AgentIcon = SystemIcons.Shield.ToBitmap();
     private readonly IWindowsDnsEventSource eventSource;
     private readonly TimeProvider timeProvider;
     private DnsThreatDetector? detector;
@@ -105,19 +104,19 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
 
     public Image Icon
     {
-        get => AgentIcon;
+        get => Resource.agent15px_dns_dark;
         set { }
     }
 
     public Image SelectedIcon
     {
-        get => AgentIcon;
+        get => Resource.agent15px_dns_white;
         set { }
     }
 
     public Image UnselectedIcon
     {
-        get => AgentIcon;
+        get => Resource.agent15px_dns_dark;
         set { }
     }
 

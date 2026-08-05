@@ -7,10 +7,10 @@ $resourceRoots = @(
     'IDDSCommunity.Agents.FileMaker\res',
     'IDDSCommunity.Agents.FtpServer\Resources',
     'IDDSCommunity.Agents.MySql\Resources',
-    'IDDSCommunity.Agents.Smtp\Resources',
     'IDDSCommunity.Agents.SqlServer\Resources',
     'IDDSCommunity.Agents.TerminalServer\Resources',
     'IDDSCommunity.Agents.WebSecurity\Resources',
+    'IDDSCommunity.Agents.WindowsDns\Resources',
     'IDDSCommunity.IntrusionDetection.Admin\Resources',
     'IDDSCommunity.IntrusionDetection.Base\Resources',
     'IDDSCommunity.IntrusionDetection.Shared\Resources'
@@ -41,7 +41,7 @@ function Get-Glyph([string]$name) {
         'sql' { 'database'; break }
         'ftp|download' { 'download'; break }
         'rdp|monitor' { 'monitor'; break }
-        'web|network|protection' { 'network'; break }
+        'dns|web|network|protection' { 'network'; break }
         'filemaker|layout' { 'grid'; break }
         'settings|configuration' { 'gear'; break }
         'filter' { 'filter'; break }

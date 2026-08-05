@@ -35,6 +35,7 @@ public partial class IddsAdmin : Form
     public IddsAdmin()
     {
         InitializeComponent();
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
         Text = Strings.Format("IDDSCommunity Intrusion Detection - Version {0}", "3.0.0");
         labelFormText.Text = Text;
 
@@ -555,16 +556,9 @@ public partial class IddsAdmin : Form
 
     void paintPanelTopBorder()
     {
-        if (CurrentMenu != null)
-        {
-            var g = Graphics.FromHwnd(panelContent.Handle);
-            Pen borderPen = new(Color.FromArgb(190, 190, 190), 1);
-            Pen backgroundPen = new(panelContent.BackColor, 1);
-            System.Drawing.Drawing2D.GraphicsPath path = new();
-            g.DrawLine(borderPen, new Point(0, 0), new Point(CurrentMenu.Location.X + 1, 0));
-            g.DrawLine(backgroundPen, new Point(CurrentMenu.Location.X + 1, 0), new Point(CurrentMenu.Location.X + CurrentMenu.Width - 1, 0));
-            g.DrawLine(borderPen, new Point(CurrentMenu.Location.X + CurrentMenu.Width - 1, 0), new Point(Width, 0));
-        }
+        using Graphics graphics = Graphics.FromHwnd(panelContent.Handle);
+        using Pen borderPen = new(Color.FromArgb(218, 226, 232), 1F);
+        graphics.DrawLine(borderPen, Point.Empty, new Point(panelContent.ClientSize.Width, 0));
     }
 
     #region Form basics
@@ -641,7 +635,7 @@ public partial class IddsAdmin : Form
         }
         newMenu.Selected = true;
         CurrentMenu = newMenu;
-        //paintPanelTopBorder(CurrentMenu);
+        panelMenu.Invalidate();
         paintPanelTopBorder();
 
     }

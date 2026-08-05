@@ -538,6 +538,7 @@
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>Firewall block failed for {0}: {1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>Firewall reconciliation failed for {0}: {1}</value></data>
   <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS Community - Version {0}</value></data>
+  <data name="Intrusion detection test email" xml:space="preserve"><value>Intrusion detection test email</value></data>
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>This is a test message from IDDS Community.</value></data>
   <data name="Error starting application" xml:space="preserve"><value>Error starting application</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application.</value></data>

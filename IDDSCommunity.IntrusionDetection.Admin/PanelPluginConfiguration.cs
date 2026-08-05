@@ -94,8 +94,8 @@ public partial class PanelPluginConfiguration : UserControl
                 AutoSize = false,
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.FromArgb(102, 102, 102),
-                Margin = new Padding(3, 3, 3, 6),
-                Size = new Size(330, 38),
+                Margin = new Padding(0, 2, 0, 8),
+                Size = new Size(390, 38),
                 Text = protectionDetails
             };
             flowLayoutPanelCustomPluginSettings.Controls.Add(details);
@@ -106,6 +106,8 @@ public partial class PanelPluginConfiguration : UserControl
             {
                 LabelText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get(propName),
                 TextBoxText = Agent.CustomConfiguration[propName],
+                Margin = new Padding(0, 0, 0, 4),
+                Size = new Size(390, 28),
                 Tag = propName
             };
             flowLayoutPanelCustomPluginSettings.Controls.Add(ltx);
