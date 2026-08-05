@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Drawing;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.Agents.TerminalServer;
 
@@ -174,7 +175,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         {
             CreateDate = DateTime.Now,
             EventId = 9112,
-            EventMessage = "Remote desktop connection TLS/SSL authentication failure",
+            EventMessage = Strings.Get("Remote desktop connection TLS/SSL authentication failure"),
             IpAddress = ipAddress
         };
         OnAttackDetected(this, args);

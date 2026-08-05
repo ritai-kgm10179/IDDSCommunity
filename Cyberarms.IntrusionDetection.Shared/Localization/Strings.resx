@@ -543,4 +543,42 @@
   <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected subscriber failed: {0}</value></data>
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>Firewall block failed for {0}: {1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>Firewall reconciliation failed for {0}: {1}</value></data>
+  <data name="Cyberarms Intrusion Detection - Version {0}" xml:space="preserve"><value>Cyberarms Intrusion Detection - Version {0}</value></data>
+  <data name="Error starting application" xml:space="preserve"><value>Error starting application</value></data>
+  <data name="The Cyberarms service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>The Cyberarms service is not installed or is unavailable. Install or repair the service, then restart the application.</value></data>
+  <data name="No file was selected!" xml:space="preserve"><value>No file was selected!</value></data>
+  <data name="Please choose at least one assembly to load." xml:space="preserve"><value>Please choose at least one assembly to load.</value></data>
+  <data name="Invalid directory" xml:space="preserve"><value>Invalid directory</value></data>
+  <data name="Please choose a directory other than the plugin directory. These assemblies are already loaded." xml:space="preserve"><value>Please choose a directory other than the plugin directory. These assemblies are already loaded.</value></data>
+  <data name="Plugin directory not found!" xml:space="preserve"><value>Plugin directory not found!</value></data>
+  <data name="Assembly cannot be copied." xml:space="preserve"><value>Assembly cannot be copied.</value></data>
+  <data name="FTP authentication failure" xml:space="preserve"><value>FTP authentication failure</value></data>
+  <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP authentication failure</value></data>
+  <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 authentication failure</value></data>
+  <data name="Remote desktop connection TLS/SSL authentication failure" xml:space="preserve"><value>Remote desktop connection TLS/SSL authentication failure</value></data>
+  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker Security Agent</value></data>
+  <data name="DisplayName cannot be changed!" xml:space="preserve"><value>DisplayName cannot be changed!</value></data>
+  <data name="DNS detection window must be between 1 and 3600 seconds." xml:space="preserve"><value>DNS detection window must be between 1 and 3600 seconds.</value></data>
+  <data name="DNS detection thresholds must be greater than zero." xml:space="preserve"><value>DNS detection thresholds must be greater than zero.</value></data>
+  <data name="DNS tracked client capacity must be between 100 and 1000000." xml:space="preserve"><value>DNS tracked client capacity must be between 100 and 1000000.</value></data>
+  <data name="Windows DNS event subscription failed." xml:space="preserve"><value>Windows DNS event subscription failed.</value></data>
+  <data name="DNS query-rate threshold exceeded by {0}." xml:space="preserve"><value>DNS query-rate threshold exceeded by {0}.</value></data>
+  <data name="DNS NXDOMAIN threshold exceeded by {0}." xml:space="preserve"><value>DNS NXDOMAIN threshold exceeded by {0}.</value></data>
+  <data name="DNS ANY-query threshold exceeded by {0}." xml:space="preserve"><value>DNS ANY-query threshold exceeded by {0}.</value></data>
+  <data name="DNS dynamic-update threshold exceeded by {0}." xml:space="preserve"><value>DNS dynamic-update threshold exceeded by {0}.</value></data>
+  <data name="DNS zone-transfer threshold exceeded by {0}." xml:space="preserve"><value>DNS zone-transfer threshold exceeded by {0}.</value></data>
+  <data name="Suspicious DNS activity was detected from {0}." xml:space="preserve"><value>Suspicious DNS activity was detected from {0}.</value></data>
+  <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS Agent configuration is unavailable.</value></data>
+  <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS Security Agent</value></data>
+  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD Credential Validation Security Agent</value></data>
+  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos pre-authentication Security Agent</value></data>
+  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS Security Agent - Routing and Remote Access</value></data>
+  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows Base Security Agent</value></data>
+  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>Agent is already running. Operation cancelled!</value></data>
+  <data name="Agent is not running." xml:space="preserve"><value>Agent is not running.</value></data>
+  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>Agent cannot be paused in this state</value></data>
+  <data name="Agent must be in paused state" xml:space="preserve"><value>Agent must be in paused state</value></data>
+  <data name="IP address {0} cannot be unlocked. Error details: {1}" xml:space="preserve"><value>IP address {0} cannot be unlocked. Error details: {1}</value></data>
+  <data name="Lock cleanup failed: {0}" xml:space="preserve"><value>Lock cleanup failed: {0}</value></data>
+  <data name="Agent performance monitoring failed: {0}" xml:space="preserve"><value>Agent performance monitoring failed: {0}</value></data>
 </root>

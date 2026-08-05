@@ -4,6 +4,7 @@ using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Net.Sockets;
 using System.Drawing;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.Agents.FtpServer;
 
@@ -173,7 +174,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         {
             CreateDate = DateTime.Now,
             EventId = 9112,
-            EventMessage = "FTP authentication failure",
+            EventMessage = Strings.Get("FTP authentication failure"),
             IpAddress = ipAddress
         };
         OnAttackDetected(this, args);

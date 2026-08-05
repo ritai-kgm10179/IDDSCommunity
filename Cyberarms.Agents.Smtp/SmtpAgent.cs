@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Drawing;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.Agents.Smtp;
 
@@ -171,7 +172,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
         {
             CreateDate = DateTime.Now,
             EventId = 9112,
-            EventMessage = "SMTP authentication failure",
+            EventMessage = Strings.Get("SMTP authentication failure"),
             IpAddress = ipAddress
         };
         OnAttackDetected(this, args);
