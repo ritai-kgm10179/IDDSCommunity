@@ -139,6 +139,36 @@ public class LanguageManagerTest
     }
 
     /// <summary>
+    /// Verifies that the removed licensing feature is not exposed by application UI or command sources.
+    /// </summary>
+    [TestMethod]
+    public void UserFacingSourcesDoNotExposeRemovedLicensingFeature()
+    {
+        string root = FindRepositoryRoot();
+        string[] sourceRoots =
+        [
+            Path.Combine(root, "Cyberarms.IntrusionDetection.Admin"),
+            Path.Combine(root, "Cyberarms.IDDS.Management")
+        ];
+        Regex removedFeature = new("\\b(?:licen[cs](?:e|ing|ed)?|activation)\\b|授權", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        List<string> violations = [];
+
+        foreach (string sourceRoot in sourceRoots)
+        {
+            foreach (string file in Directory.EnumerateFiles(sourceRoot, "*.*", SearchOption.AllDirectories)
+                         .Where(path => Path.GetExtension(path) is ".cs" or ".resx"
+                                        && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                                        && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (removedFeature.IsMatch(File.ReadAllText(file)))
+                    violations.Add(Path.GetRelativePath(root, file));
+            }
+        }
+
+        Assert.AreEqual(0, violations.Count, string.Join(Environment.NewLine, violations));
+    }
+
+    /// <summary>
     /// Loads resource keys from a resx file.
     /// </summary>
     /// <param name="path">The resx path.</param>

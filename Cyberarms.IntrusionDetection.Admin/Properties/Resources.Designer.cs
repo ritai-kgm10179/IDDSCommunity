@@ -303,16 +303,6 @@ namespace Cyberarms.IntrusionDetection.Admin.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap buttonicon_activate {
-            get {
-                object obj = ResourceManager.GetObject("buttonicon-activate", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap corner_bottom_left {
             get {
                 object obj = ResourceManager.GetObject("corner_bottom_left", resourceCulture);

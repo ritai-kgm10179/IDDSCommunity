@@ -30,9 +30,6 @@ class Program
             IddsConfig.Instance.ApplicationPath = path;
             switch (args[0].ToLower())
             {
-                case "islicensed":
-                    Console.WriteLine(@"Cyberarms IDDS does not require licensing anymore. Please visit https://cyberarms.net for support options!");
-                    break;
                 case "manualreport":
                     if (args.Length < 2)
                     {

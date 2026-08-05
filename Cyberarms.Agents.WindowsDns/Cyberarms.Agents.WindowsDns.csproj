@@ -13,4 +13,15 @@
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
   </ItemGroup>
+  <Target Name="DeployWindowsDnsAgent" AfterTargets="Build">
+    <ItemGroup>
+      <WindowsDnsDeploymentDirectory Include="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+      <WindowsDnsDeploymentDirectory Include="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+    </ItemGroup>
+    <MakeDir Directories="@(WindowsDnsDeploymentDirectory)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildProjectDirectory)\..\Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
+  </Target>
 </Project>

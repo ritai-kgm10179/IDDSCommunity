@@ -113,7 +113,11 @@ public partial class CyberarmsSettingsNavigation : UserControl
     /// Clears requested operation.
     /// </summary>
 
-    public void Clear() => NavigationItems.Clear();
+    public void Clear()
+    {
+        NavigationItems.Clear();
+        flowLayoutPanelNavigationItems.Controls.Clear();
+    }
 
 
     public CyberarmsSettingsNavigationItem? SelectedItem
@@ -229,8 +233,8 @@ public partial class CyberarmsSettingsNavigation : UserControl
         {
             CheckPathExists = true,
             CheckFileExists = true,
-            Filter = "Assemblies (*.dll)|*.dll",
-            Title = "Please select plugin assembly",
+            Filter = Strings.Get("Assemblies (*.dll)|*.dll"),
+            Title = Strings.Get("Please select plugin assembly"),
             Multiselect = true
         };
         if (openFile.ShowDialog() == DialogResult.OK)

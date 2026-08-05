@@ -178,7 +178,7 @@ public class SecurityAgents : List<SecurityAgent>
     {
         if (Guid.Empty.ToString().Equals(agentId))
         {
-            return "None";
+            return Localization.Strings.Get("None");
         }
         foreach (SecurityAgent agent in this)
         {
@@ -187,7 +187,7 @@ public class SecurityAgents : List<SecurityAgent>
                 return agent.DisplayName;
             }
         }
-        return string.Format("Agent {0} is not registered.", agentId);
+        return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }
 
     /// <summary>

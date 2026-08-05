@@ -19,7 +19,8 @@ public class IntrusionLog
     public const int STATUS_UNLOCK_REQUESTED = 500;
     public const int STATUS_UNLOCKED = 510;
     public const int STATUS_UNLOCK_ERROR = 590;
-    public const int STATUS_LICENSE_REQUIRED = 999;
+    // Retains persisted legacy status value 999 without exposing the removed licensing feature.
+    public const int STATUS_PROTECTION_UNAVAILABLE = 999;
     public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
 
     /// <summary>
@@ -49,7 +50,7 @@ public class IntrusionLog
                     { STATUS_UNLOCK_REQUESTED, "Lock has expired. Unlock requested." },
                     { STATUS_UNLOCKED, "This client was unlocked." },
                     { STATUS_UNLOCK_ERROR, "There was an unlock error. Please see event viewer for details." },
-                    { STATUS_LICENSE_REQUIRED, "FREE license limit exceeded. Please order your license." }
+                    { STATUS_PROTECTION_UNAVAILABLE, "Protection is unavailable." }
                 };
             return _statusNames;
         }
@@ -75,7 +76,7 @@ public class IntrusionLog
                     { STATUS_UNLOCK_REQUESTED, "Unlock" },
                     { STATUS_UNLOCKED, "Unlock" },
                     { STATUS_UNLOCK_ERROR, "Error" },
-                    { STATUS_LICENSE_REQUIRED, "Licensing" }
+                    { STATUS_PROTECTION_UNAVAILABLE, "Error" }
                 };
             return _statusClasses;
         }
@@ -100,7 +101,7 @@ public class IntrusionLog
                     { STATUS_UNLOCK_REQUESTED, Resources.logIcon_unlock },
                     { STATUS_UNLOCKED, Resources.logIcon_unlock },
                     { STATUS_UNLOCK_ERROR, Resources.logIcon_warning },
-                    { STATUS_LICENSE_REQUIRED, Resources.logIcon_warning }
+                    { STATUS_PROTECTION_UNAVAILABLE, Resources.logIcon_warning }
                 };
             return _statusIcons;
         }
@@ -134,11 +135,11 @@ public class IntrusionLog
     {
         if (StatusClasses.TryGetValue(status, out string? value))
         {
-            return value;
+            return Localization.Strings.Get(value);
         }
         else
         {
-            return string.Format("System", status);
+            return Localization.Strings.Get("System");
         }
     }
 
@@ -152,11 +153,11 @@ public class IntrusionLog
     {
         if (StatusNames.TryGetValue(status, out string? value))
         {
-            return value;
+            return Localization.Strings.Get(value);
         }
         else
         {
-            return string.Format("Display name for status {0} was not found.", status);
+            return Localization.Strings.Format("Display name for status {0} was not found.", status);
         }
     }
 

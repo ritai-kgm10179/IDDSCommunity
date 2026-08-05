@@ -104,6 +104,12 @@
   <data name="0 soft locks" xml:space="preserve">
     <value>0 個軟封鎖</value>
   </data>
+  <data name="{0} hard locks" xml:space="preserve">
+    <value>{0} 個硬封鎖</value>
+  </data>
+  <data name="{0} soft locks" xml:space="preserve">
+    <value>{0} 個軟封鎖</value>
+  </data>
   <data name="Add" xml:space="preserve">
     <value>新增</value>
   </data>
@@ -490,7 +496,6 @@
   <data name="Cyberarms Intrusion Detection" xml:space="preserve"><value>Cyberarms 入侵偵測防禦系統</value></data>
   <data name="Cyberarms IDDS is starting up..." xml:space="preserve"><value>Cyberarms IDDS 正在啟動…</value></data>
   <data name="Safe networks" xml:space="preserve"><value>安全網路</value></data>
-  <data name="Licensing" xml:space="preserve"><value>授權</value></data>
   <data name="Notification settings" xml:space="preserve"><value>通知設定</value></data>
   <data name="SMTP configuration" xml:space="preserve"><value>SMTP 設定</value></data>
   <data name="Language settings" xml:space="preserve"><value>語言設定</value></data>
@@ -584,4 +589,38 @@
   <data name="Application startup failed" xml:space="preserve"><value>應用程式啟動失敗</value></data>
   <data name="Application startup failed: {0}" xml:space="preserve"><value>應用程式啟動失敗：{0}</value></data>
   <data name="The administration interface did not complete initialization." xml:space="preserve"><value>管理介面未完成初始化。</value></data>
+  <data name="Assemblies (*.dll)|*.dll" xml:space="preserve"><value>組件 (*.dll)|*.dll</value></data>
+  <data name="Please select plugin assembly" xml:space="preserve"><value>請選擇代理程式組件</value></data>
+  <data name="None" xml:space="preserve"><value>無</value></data>
+  <data name="Agent {0} is not registered." xml:space="preserve"><value>代理程式 {0} 尚未註冊。</value></data>
+  <data name="Possible intrusion attempt." xml:space="preserve"><value>偵測到可能的入侵嘗試。</value></data>
+  <data name="Invalid logon from localhost. Local addresses will not be blocked" xml:space="preserve"><value>本機登入無效；本機位址不會被封鎖。</value></data>
+  <data name="Invalid logon from safe network!" xml:space="preserve"><value>安全網路發生無效登入。</value></data>
+  <data name="Soft lock threshold exceeded. Soft lock requested." xml:space="preserve"><value>已超過暫時封鎖門檻，要求執行暫時封鎖。</value></data>
+  <data name="This client was soft locked." xml:space="preserve"><value>此用戶端已被暫時封鎖。</value></data>
+  <data name="There was a soft lock error. Please see event viewer for details." xml:space="preserve"><value>暫時封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
+  <data name="Hard lock threshold exceeded. Hard lock requested." xml:space="preserve"><value>已超過強制封鎖門檻，要求執行強制封鎖。</value></data>
+  <data name="The client was hard locked." xml:space="preserve"><value>此用戶端已被強制封鎖。</value></data>
+  <data name="There was a hard lock error. Please see event viewer for details." xml:space="preserve"><value>強制封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
+  <data name="Lock has expired. Unlock requested." xml:space="preserve"><value>封鎖已到期，要求解除封鎖。</value></data>
+  <data name="This client was unlocked." xml:space="preserve"><value>此用戶端已解除封鎖。</value></data>
+  <data name="There was an unlock error. Please see event viewer for details." xml:space="preserve"><value>解除封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
+  <data name="Protection is unavailable." xml:space="preserve"><value>防護功能目前無法使用。</value></data>
+  <data name="Intrusion" xml:space="preserve"><value>入侵</value></data>
+  <data name="Soft lock" xml:space="preserve"><value>暫時封鎖</value></data>
+  <data name="Hard lock" xml:space="preserve"><value>強制封鎖</value></data>
+  <data name="Unlock" xml:space="preserve"><value>解除封鎖</value></data>
+  <data name="System" xml:space="preserve"><value>系統</value></data>
+  <data name="New" xml:space="preserve"><value>新增</value></data>
+  <data name="Soft lock requested" xml:space="preserve"><value>已要求暫時封鎖</value></data>
+  <data name="Soft lock expired" xml:space="preserve"><value>暫時封鎖已到期</value></data>
+  <data name="Hard lock requested" xml:space="preserve"><value>已要求強制封鎖</value></data>
+  <data name="Hard lock expired" xml:space="preserve"><value>強制封鎖已到期</value></data>
+  <data name="Unlocked" xml:space="preserve"><value>已解除封鎖</value></data>
+  <data name="Manually unlocked" xml:space="preserve"><value>已手動解除封鎖</value></data>
+  <data name="Error adding lock" xml:space="preserve"><value>新增封鎖失敗</value></data>
+  <data name="Unlock error" xml:space="preserve"><value>解除封鎖失敗</value></data>
+  <data name="Protection unavailable" xml:space="preserve"><value>防護無法使用</value></data>
+  <data name="Display name for status {0} was not found." xml:space="preserve"><value>找不到狀態 {0} 的顯示名稱。</value></data>
+  <data name="Status {0} not found in LockStatusNames!" xml:space="preserve"><value>封鎖狀態名稱中找不到狀態 {0}。</value></data>
 </root>

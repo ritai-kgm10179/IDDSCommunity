@@ -547,7 +547,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Shared, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Shared, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_26109F92689C89F92A3786F8C3CB0886"
@@ -711,7 +711,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Api, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Api, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_C3E3D9421D20DC0E7EB0AEF94E8D4137"
@@ -742,7 +742,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Api, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:Cyberarms.IntrusionDetection.Api, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_E9C67B1E3B839D1C57CDA89F8D2DD407"
@@ -847,15 +847,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Cyberarms Intrusion Detection"
-        "ProductCode" = "8:{5A915D1A-D310-44B7-ACAD-C0671AC664F8}"
-        "PackageCode" = "8:{F17FBF19-D33E-493E-B9EB-C348F9BFB1CF}"
+        "ProductCode" = "8:{81FEE4A1-2AF6-4457-8FDB-01154E66CED6}"
+        "PackageCode" = "8:{D43A3F03-D4C5-405A-ADA0-7A72638A8DB2}"
         "UpgradeCode" = "8:{6A496ED6-AB3D-4CEE-8D62-B01B6A59AA32}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.2.0"
+        "ProductVersion" = "8:3.0.0"
         "Manufacturer" = "8:Cyberarms"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:https://cyberarms.net"
