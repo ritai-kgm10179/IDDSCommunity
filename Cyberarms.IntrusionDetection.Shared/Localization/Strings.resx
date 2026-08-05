@@ -581,4 +581,7 @@
   <data name="IP address {0} cannot be unlocked. Error details: {1}" xml:space="preserve"><value>IP address {0} cannot be unlocked. Error details: {1}</value></data>
   <data name="Lock cleanup failed: {0}" xml:space="preserve"><value>Lock cleanup failed: {0}</value></data>
   <data name="Agent performance monitoring failed: {0}" xml:space="preserve"><value>Agent performance monitoring failed: {0}</value></data>
+  <data name="Application startup failed" xml:space="preserve"><value>Application startup failed</value></data>
+  <data name="Application startup failed: {0}" xml:space="preserve"><value>Application startup failed: {0}</value></data>
+  <data name="The administration interface did not complete initialization." xml:space="preserve"><value>The administration interface did not complete initialization.</value></data>
 </root>
