@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Dapper;
+using Konscious.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -15,6 +16,16 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 public sealed class ConfigurationTransferService
 {
     private const int MaximumPackageBytes = 4 * 1024 * 1024;
+    private const string SecretAlgorithm = "Argon2id/AES-256-GCM";
+    private const int Argon2Version = 19;
+    private const int DefaultMemoryKiB = 65536;
+    private const int DefaultIterations = 3;
+    private const int DefaultParallelism = 1;
+    private const int MinimumMemoryKiB = 19 * 1024;
+    private const int MaximumMemoryKiB = 256 * 1024;
+    private const int MaximumIterations = 10;
+    private const int MaximumParallelism = 4;
+    private const int MinimumPassphraseCharacters = 12;
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = false };
     private readonly Database database;
 
@@ -50,6 +61,7 @@ public sealed class ConfigurationTransferService
         if (includeSecrets)
         {
             if (string.IsNullOrWhiteSpace(passphrase)) throw Argument("A passphrase is required when exporting secrets.", nameof(passphrase));
+            if (passphrase.Length < MinimumPassphraseCharacters) throw Argument("The configuration package passphrase must contain at least 12 characters.", nameof(passphrase));
             string clearPassword = string.IsNullOrEmpty(configuration.SmtpPassword) ? string.Empty : CryptoHelper.Decrypt(configuration.SmtpPassword, true);
             package.Secrets = EncryptSecret(clearPassword, passphrase);
         }
@@ -165,27 +177,78 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
             if (agent.AgentId == Guid.Empty || agent.Settings is null || agent.Settings.Count > 1000) throw Invalid("Agent configuration is invalid.");
             if (agent.Settings.Any(item => item.Key.Length is 0 or > 255 || item.Value is null || item.Value.Length > 4000)) throw Invalid("Agent setting names or values exceed supported limits.");
         }
+        if (package.Secrets is not null) ValidateSecretEncoding(package.Secrets);
     }
 
     private static EncryptedSecretTransfer EncryptSecret(string secret, string passphrase)
     {
+        EncryptedSecretTransfer result = new()
+        {
+            Algorithm = SecretAlgorithm,
+            Argon2Version = Argon2Version,
+            MemoryKiB = DefaultMemoryKiB,
+            Iterations = DefaultIterations,
+            Parallelism = DefaultParallelism
+        };
         byte[] salt = RandomNumberGenerator.GetBytes(16); byte[] nonce = RandomNumberGenerator.GetBytes(12); byte[] tag = new byte[16]; byte[] plaintext = Encoding.UTF8.GetBytes(secret); byte[] ciphertext = new byte[plaintext.Length];
-        byte[] key = Rfc2898DeriveBytes.Pbkdf2(passphrase, salt, 600000, HashAlgorithmName.SHA256, 32);
-        try { using AesGcm aes = new(key, 16); aes.Encrypt(nonce, plaintext, ciphertext, tag, Encoding.UTF8.GetBytes(ConfigurationTransferPackage.CurrentFormat)); }
+        byte[] key = DeriveKey(passphrase, salt, result);
+        byte[] associatedData = CreateAssociatedData(result);
+        try { using AesGcm aes = new(key, 16); aes.Encrypt(nonce, plaintext, ciphertext, tag, associatedData); }
         finally { CryptographicOperations.ZeroMemory(key); CryptographicOperations.ZeroMemory(plaintext); }
-        return new EncryptedSecretTransfer { Salt = Convert.ToBase64String(salt), Nonce = Convert.ToBase64String(nonce), Ciphertext = Convert.ToBase64String(ciphertext), Tag = Convert.ToBase64String(tag) };
+        result.Salt = Convert.ToBase64String(salt); result.Nonce = Convert.ToBase64String(nonce); result.Ciphertext = Convert.ToBase64String(ciphertext); result.Tag = Convert.ToBase64String(tag);
+        return result;
     }
 
     private static string DecryptSecret(EncryptedSecretTransfer secret, string passphrase)
     {
-        if (secret.Algorithm != "AES-256-GCM/PBKDF2-SHA256" || secret.Iterations != 600000) throw Invalid("Unsupported secret encryption parameters.");
+        ValidateSecretParameters(secret);
         byte[] salt = Convert.FromBase64String(secret.Salt); byte[] nonce = Convert.FromBase64String(secret.Nonce); byte[] ciphertext = Convert.FromBase64String(secret.Ciphertext); byte[] tag = Convert.FromBase64String(secret.Tag);
         if (salt.Length != 16 || nonce.Length != 12 || tag.Length != 16 || ciphertext.Length > MaximumPackageBytes) throw Invalid("Invalid secret encryption parameters.");
         byte[] plaintext = new byte[ciphertext.Length];
-        byte[] key = Rfc2898DeriveBytes.Pbkdf2(passphrase, salt, secret.Iterations, HashAlgorithmName.SHA256, 32);
-        try { using AesGcm aes = new(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, Encoding.UTF8.GetBytes(ConfigurationTransferPackage.CurrentFormat)); return Encoding.UTF8.GetString(plaintext); }
+        byte[] key = DeriveKey(passphrase, salt, secret);
+        byte[] associatedData = CreateAssociatedData(secret);
+        try { using AesGcm aes = new(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, associatedData); return Encoding.UTF8.GetString(plaintext); }
         catch (CryptographicException exception) { throw Invalid("The configuration secret passphrase is invalid or the package was modified.", exception); }
         finally { CryptographicOperations.ZeroMemory(key); CryptographicOperations.ZeroMemory(plaintext); }
+    }
+
+    internal static byte[] DeriveKey(string passphrase, byte[] salt, EncryptedSecretTransfer parameters)
+    {
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(passphrase);
+        try
+        {
+            Argon2id argon2 = new(passwordBytes)
+            {
+                Salt = salt,
+                MemorySize = parameters.MemoryKiB,
+                Iterations = parameters.Iterations,
+                DegreeOfParallelism = parameters.Parallelism
+            };
+            return argon2.GetBytes(32);
+        }
+        finally { CryptographicOperations.ZeroMemory(passwordBytes); }
+    }
+
+    private static byte[] CreateAssociatedData(EncryptedSecretTransfer parameters) => Encoding.UTF8.GetBytes(string.Create(CultureInfo.InvariantCulture, $"{ConfigurationTransferPackage.CurrentFormat}\nschema={ConfigurationTransferPackage.CurrentSchemaVersion}\nalgorithm={parameters.Algorithm}\nargon2Version={parameters.Argon2Version}\nmemoryKiB={parameters.MemoryKiB}\niterations={parameters.Iterations}\nparallelism={parameters.Parallelism}"));
+
+    private static void ValidateSecretParameters(EncryptedSecretTransfer secret)
+    {
+        if (secret.Algorithm != SecretAlgorithm || secret.Argon2Version != Argon2Version) throw Invalid("Unsupported secret encryption parameters.");
+        if (secret.MemoryKiB is < MinimumMemoryKiB or > MaximumMemoryKiB || secret.Iterations is < 2 or > MaximumIterations || secret.Parallelism is < 1 or > MaximumParallelism) throw Invalid("Invalid secret encryption parameters.");
+    }
+
+    private static void ValidateSecretEncoding(EncryptedSecretTransfer secret)
+    {
+        ValidateSecretParameters(secret);
+        try
+        {
+            byte[] salt = Convert.FromBase64String(secret.Salt);
+            byte[] nonce = Convert.FromBase64String(secret.Nonce);
+            byte[] ciphertext = Convert.FromBase64String(secret.Ciphertext);
+            byte[] tag = Convert.FromBase64String(secret.Tag);
+            if (salt.Length != 16 || nonce.Length != 12 || tag.Length != 16 || ciphertext.Length > MaximumPackageBytes) throw Invalid("Invalid secret encryption parameters.");
+        }
+        catch (FormatException exception) { throw Invalid("Invalid secret encryption parameters.", exception); }
     }
 
     private void EnsureConfigured() { if (!database.IsConfigured) throw InvalidOperation("Database is not configured."); }

@@ -112,9 +112,42 @@ jobs:
           if (-not (Test-Path "$package/IDDSCommunity.IntrusionDetection.Setup.exe")) { throw 'Setup executable is missing.' }
           if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Service.exe")) { throw 'Service payload is missing.' }
           if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Admin.exe")) { throw 'Admin payload is missing.' }
+
+          $sbomToolDirectory = Join-Path $env:RUNNER_TEMP 'sbom-tool'
+          dotnet tool install --tool-path $sbomToolDirectory Microsoft.Sbom.DotNetTool --version 4.1.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $sbomTool = Join-Path $sbomToolDirectory 'sbom-tool.exe'
+          $namespace = "https://github.com/$env:GITHUB_REPOSITORY/releases/tag/v$env:RELEASE_VERSION/$env:RELEASE_RID"
+          $sbomStaging = Join-Path $env:RUNNER_TEMP "sbom-$env:RELEASE_RID"
+          $sboms = @(
+            @{ Info = 'SPDX:3.0'; Directory = 'spdx_3.0'; File = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID.spdx-3.0.json" },
+            @{ Info = 'SPDX:2.2'; Directory = 'spdx_2.2'; File = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID.spdx-2.2.json" }
+          )
+          foreach ($definition in $sboms) {
+            $staging = Join-Path $sbomStaging $definition.Directory
+            New-Item -ItemType Directory -Path $staging -Force | Out-Null
+            & $sbomTool generate -b $package -bc $env:GITHUB_WORKSPACE -m $staging -pn "IDDS Community $env:RELEASE_RID" -pv $env:RELEASE_VERSION -ps 'Organization: IDDS Community' -nsb "$namespace/$($definition.Directory)" -mi $definition.Info
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $generatedSbom = Join-Path $staging "_manifest/$($definition.Directory)/manifest.spdx.json"
+            if (-not (Test-Path $generatedSbom)) { throw "$($definition.Info) SBOM was not generated." }
+          }
+          foreach ($definition in $sboms) {
+            $generatedSbom = Join-Path (Join-Path $sbomStaging $definition.Directory) "_manifest/$($definition.Directory)/manifest.spdx.json"
+            $packageSbomDirectory = Join-Path $package "_manifest/$($definition.Directory)"
+            New-Item -ItemType Directory -Path $packageSbomDirectory -Force | Out-Null
+            Copy-Item -LiteralPath $generatedSbom -Destination (Join-Path $packageSbomDirectory 'manifest.spdx.json')
+            Copy-Item -LiteralPath $generatedSbom -Destination $definition.File
+          }
+          $spdx30 = Get-Content -LiteralPath $sboms[0].File -Raw | ConvertFrom-Json
+          $spdx22 = Get-Content -LiteralPath $sboms[1].File -Raw | ConvertFrom-Json
+          if ($spdx30.'@context' -ne 'https://spdx.org/rdf/3.0.1/spdx-context.json') { throw 'Unexpected SPDX 3.0 context.' }
+          if ($spdx22.spdxVersion -ne 'SPDX-2.2') { throw 'Unexpected SPDX 2.2 version.' }
+
           Compress-Archive -Path "$package/*" -DestinationPath $archive -CompressionLevel Optimal
-          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash *$(Split-Path -Leaf $archive)" | Set-Content -LiteralPath "$archive.sha256" -Encoding utf8NoBOM
+          foreach ($subject in @($archive, $sboms[0].File, $sboms[1].File)) {
+            $hash = (Get-FileHash -LiteralPath $subject -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash *$(Split-Path -Leaf $subject)" | Set-Content -LiteralPath "$subject.sha256" -Encoding utf8NoBOM
+          }
 
       - name: Upload installer package
         uses: actions/upload-artifact@v7
@@ -122,6 +155,7 @@ jobs:
           name: installer-${{ matrix.rid }}
           path: |
             artifacts/setup/*.zip
+            artifacts/setup/*.spdx-*.json
             artifacts/setup/*.sha256
           if-no-files-found: error
           retention-days: 30
@@ -143,10 +177,12 @@ jobs:
           path: release
           merge-multiple: true
 
-      - name: Attest installer provenance
+      - name: Attest installer and SBOM provenance
         uses: actions/attest@v4
         with:
-          subject-path: release/*.zip
+          subject-path: |
+            release/*.zip
+            release/*.spdx-*.json
 
       - name: Create GitHub Release
         env:

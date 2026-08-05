@@ -35,7 +35,7 @@ public sealed class PanelConfigurationTransfer : UserControl
         importButton.Click += Import;
         Controls.Add(exportButton);
         Controls.Add(importButton);
-        status = Label(Strings.Get("Secrets are excluded unless explicitly selected and protected by a passphrase."), 9F, Color.FromArgb(102, 102, 102), 15, 205);
+        status = Label(Strings.Get("Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM."), 9F, Color.FromArgb(102, 102, 102), 15, 205);
         status.AutoSize = false;
         status.Size = new Size(620, 100);
         Controls.Add(status);
@@ -43,7 +43,7 @@ public sealed class PanelConfigurationTransfer : UserControl
 
     private async void Export(object? sender, EventArgs e)
     {
-        if (includeSecrets.Checked && string.IsNullOrWhiteSpace(passphrase.Text)) { ShowError(Strings.Get("Enter a passphrase before exporting secrets.")); return; }
+        if (includeSecrets.Checked && passphrase.Text.Length < 12) { ShowError(Strings.Get("Enter a passphrase containing at least 12 characters before exporting secrets.")); return; }
         using SaveFileDialog dialog = new() { AddExtension = true, DefaultExt = "json", Filter = Strings.Get("IDDS Community settings (*.json)|*.json"), FileName = "idds-community-settings.json", RestoreDirectory = true, Title = Strings.Get("Export IDDS Community settings") };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         await RunAsync(() => transfer.ExportToFile(dialog.FileName, includeSecrets.Checked, passphrase.Text), Strings.Format("Settings exported: {0}", dialog.FileName));

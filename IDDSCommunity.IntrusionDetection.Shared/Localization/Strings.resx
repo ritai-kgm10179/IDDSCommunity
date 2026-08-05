@@ -722,4 +722,6 @@
   <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL log directory must be an absolute path.</value></data>
   <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL log pattern is invalid.</value></data>
   <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}: authentication failure threshold exceeded.</value></data>
+  <data name="Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM." xml:space="preserve"><value>Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM.</value></data>
+  <data name="Enter a passphrase containing at least 12 characters before exporting secrets." xml:space="preserve"><value>Enter a passphrase containing at least 12 characters before exporting secrets.</value></data>
 </root>

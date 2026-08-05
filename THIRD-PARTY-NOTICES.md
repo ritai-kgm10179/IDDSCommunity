@@ -1,6 +1,15 @@
 # Third-Party Notices
 
-IDDS Community uses the following third-party component during the build process.
+IDDS Community uses the following third-party components.
+
+## Konscious.Security.Cryptography.Argon2
+
+- Copyright (c) Keef Aragon
+- License: MIT
+- Source: https://github.com/kmaragon/Konscious.Security.Cryptography
+- Package: https://www.nuget.org/packages/Konscious.Security.Cryptography.Argon2/
+
+The package provides the managed Argon2id password-based key derivation implementation used to protect exported configuration secrets.
 
 ## Microsoft.Windows.CsWin32
 

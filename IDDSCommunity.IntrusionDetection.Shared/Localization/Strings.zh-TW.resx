@@ -722,4 +722,6 @@
   <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL 記錄目錄必須是絕對路徑。</value></data>
   <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL 記錄檔搜尋模式無效。</value></data>
   <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}：驗證失敗次數已超過門檻。</value></data>
+  <data name="Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM." xml:space="preserve"><value>預設不匯出機密資料；選取的機密資料會以 Argon2id 與 AES-256-GCM 保護。</value></data>
+  <data name="Enter a passphrase containing at least 12 characters before exporting secrets." xml:space="preserve"><value>匯出機密資料前，請輸入至少 12 個字元的複雜密碼。</value></data>
 </root>

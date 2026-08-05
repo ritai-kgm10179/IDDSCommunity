@@ -56,8 +56,11 @@ public sealed class AgentConfigurationTransfer
 
 public sealed class EncryptedSecretTransfer
 {
-    public string Algorithm { get; set; } = "AES-256-GCM/PBKDF2-SHA256";
-    public int Iterations { get; set; } = 600000;
+    public string Algorithm { get; set; } = "Argon2id/AES-256-GCM";
+    public int Argon2Version { get; set; } = 19;
+    public int MemoryKiB { get; set; } = 65536;
+    public int Iterations { get; set; } = 3;
+    public int Parallelism { get; set; } = 1;
     public string Salt { get; set; } = string.Empty;
     public string Nonce { get; set; } = string.Empty;
     public string Ciphertext { get; set; } = string.Empty;
