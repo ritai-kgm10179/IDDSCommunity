@@ -10,6 +10,12 @@ public partial class SplashScreen : Form
 {
 
     readonly Timer t = new();
+    private readonly StartupOperation startupOperation = new();
+
+    /// <summary>
+    /// Gets whether both bootstrap work and the administration interface completed initialization.
+    /// </summary>
+    internal bool StartupSucceeded => startupOperation.Succeeded && IddsAdmin.Instance.IsInitialized;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SplashScreen"/> class.
@@ -33,8 +39,8 @@ public partial class SplashScreen : Form
     void SplashScreen_Load(object? sender, EventArgs e)
     {
         t.Interval = 100;
-        t.Start();
         t.Tick += new EventHandler(t_Tick);
+        t.Start();
 
     }
 
@@ -66,9 +72,6 @@ public partial class SplashScreen : Form
         IddsAdmin.Instance.Visible = false;
     }
 
-    public bool IsUpdating { get; set; }
-
-
     /// <summary>
     /// Handles the tick event.
     /// </summary>
@@ -77,12 +80,32 @@ public partial class SplashScreen : Form
 
     void t_Tick(object? sender, EventArgs e)
     {
-        if (!IsUpdating)
+        if (!startupOperation.TryRun(StartupComponents, out Exception? failure))
+            return;
+        t.Stop();
+        if (StartupSucceeded)
         {
-            IsUpdating = true;
-            StartupComponents();
+            Close();
+            return;
         }
-        if (IddsAdmin.Instance.IsInitialized) Close();
+        string detail = failure?.GetType().Name ?? Strings.Get("The administration interface did not complete initialization.");
+        MessageBox.Show(
+            Strings.Format("Application startup failed: {0}", detail),
+            Strings.Get("Application startup failed"),
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
+        Close();
+    }
+
+    /// <summary>
+    /// Releases the splash timer when the form closes on either success or failure.
+    /// </summary>
+    /// <param name="e">The form-closed event data.</param>
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        t.Stop();
+        t.Dispose();
+        base.OnFormClosed(e);
     }
 
 }

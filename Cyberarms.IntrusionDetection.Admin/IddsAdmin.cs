@@ -446,7 +446,6 @@ public partial class IddsAdmin : Form
                 {
                     await this.InvokeAsync(() =>
                     {
-                        IsInitialized = true;
                         IsUpdating = false;
                     }, uiRefreshCancellation.Token);
                 }
@@ -884,6 +883,7 @@ public partial class IddsAdmin : Form
 
         ShowMenu(labelMenuHome);
         Dashboard.BringToFront();
+        IsInitialized = true;
 
     }
 

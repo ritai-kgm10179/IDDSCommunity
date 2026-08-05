@@ -17,7 +17,10 @@ static class Program
         Application.SetCompatibleTextRenderingDefault(false);
         InitializeDisplayLanguage();
         //Application.Run(new Form1());
-        Application.Run(new SplashScreen());
+        using SplashScreen splashScreen = new();
+        Application.Run(splashScreen);
+        if (!splashScreen.StartupSucceeded)
+            return;
         IddsAdmin.Instance.Visible = true;
         Application.Run(IddsAdmin.Instance);
     }
