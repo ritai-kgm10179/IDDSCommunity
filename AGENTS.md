@@ -35,7 +35,7 @@
   - 重新拋出捕捉到的例外狀況時，必須使用 `throw;`，嚴禁使用 `throw ex;` 以避免破壞堆疊追蹤資訊 (CA2200)。
 - **.NET 10 相容性與跨平台安全**：
   - 由於 .NET 10 不支援 secondary `AppDomain`，動態載入組件時須針對 .NET 10 提供單一 `AppDomain.CurrentDomain` 之相容邏輯，舊型 `AppDomain.CreateDomain` 與 `AppDomain.Unload` 須加上 `#if NETFRAMEWORK` 保護。
-  - 防火牆與網路介面等系統 COM 操作須使用 `tlbimp.exe` 產出之 Interop 組件，並提供權限與例外備援機制。
+  - 防火牆等系統 COM 操作須優先使用 Microsoft 維護的 `Microsoft.Windows.CsWin32` 原始碼產生器，避免提交或散布預先產生的 Interop 二進位檔，並提供權限與例外備援機制。
 
 ---
 

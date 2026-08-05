@@ -1,9 +1,4 @@
 ﻿<Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="IdsServiceForWindows.vsmdi" />
-    <File Path="Local.testsettings" />
-    <File Path="TraceAndTestImpact.testsettings" />
-  </Folder>
   <Project Path="Cyberarms.Agents.FileMaker/Cyberarms.Agents.FileMaker.csproj" />
   <Project Path="Cyberarms.Agents.FtpServer/Cyberarms.Agents.FtpServer.csproj" />
   <Project Path="Cyberarms.Agents.MailServer/Cyberarms.Agents.MailServer.csproj" />
@@ -25,10 +20,5 @@
   <Project Path="Cyberarms.IntrusionDetection.Service.Test/Cyberarms.IntrusionDetection.Service.Test.csproj" />
   <Project Path="Cyberarms.IntrusionDetection.Shared/Cyberarms.IntrusionDetection.Shared.csproj" />
   <Project Path="Cyberarms.IntrusionDetection.Shared.Test/Cyberarms.IntrusionDetection.Shared.Test.csproj" />
-  <Project Path="Cyberarms.WebSecurity/Cyberarms.WebSecurity.csproj" />
   <Project Path="DemoAgent/DemoAgent.csproj" />
-  <Project Path="EventLogCleaner/EventLogCleaner.csproj" />
-  <Project Path="MailServerTest/MailServerTest.csproj" />
-  <Project Path="SqlServerAgentTest/SqlServerAgentTest.csproj" />
-  <Project Path="TlsSslTest/TlsSslTest.csproj" />
 </Solution>
