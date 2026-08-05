@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: windows-2025
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Restore
+        run: dotnet restore IDDSCommunity.slnx --nologo
+
+      - name: Build
+        run: dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
+
+      - name: Test
+        run: dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --logger "trx;LogFilePrefix=ci" --results-directory TestResults --verbosity minimal
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: error
+          retention-days: 14
+
+  privileged-windows:
+    name: Privileged Windows integration tests
+    runs-on: windows-2025
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Restore
+        run: dotnet restore IDDSCommunity.slnx --nologo
+
+      - name: Build integration targets
+        run: dotnet build IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
+
+      - name: Run privileged integration tests
+        shell: pwsh
+        run: ./scripts/run-ci-windows-integration-tests.ps1
+
+      - name: Upload privileged test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: privileged-test-results
+          path: IDDSCommunity.IntrusionDetection.Service.Test/TestResults/**/*.trx
+          if-no-files-found: warn
+          retention-days: 14

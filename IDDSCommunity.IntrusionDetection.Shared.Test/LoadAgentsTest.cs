@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 
 [Serializable]
 [TestClass]
+[DoNotParallelize]
 public class LoadAgentsTest
 {
     private string testDirectory = null!;
@@ -66,75 +68,63 @@ public class LoadAgentsTest
     /// Merges disk agents with db.
     /// </summary>
 
-    [TestMethod, Ignore]
-    public void MergeDiskAgentsWithDb()
+    [TestMethod]
+    public void MergeDiskAgentsWithDbPreservesStoredStateAndDisablesNewAgents()
     {
-        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null!));
-        SecurityAgents.Instance[0].Enabled = true;
-        List<SecurityAgent> diskAgents = SecurityAgents.Instance.ReadAgentsFromDisk();
-        List<SecurityAgent> agents = SecurityAgents.Instance.MergeDbInformation(diskAgents);
-        foreach (SecurityAgent agent in agents)
-        {
-            System.Diagnostics.Debug.Print(agent.DisplayName);
-        }
-        if (agents.Count > 1) Assert.IsFalse(agents[1].Enabled);
+        SecurityAgents agents = new(Database.Instance, IddsConfig.Instance);
+        Guid existingId = Guid.NewGuid();
+        SecurityAgent stored = new("Existing.Agent", existingId) { Enabled = true, DisplayName = "Stored display name" };
+        agents.Add(stored);
+        SecurityAgent discoveredExisting = new("Existing.Agent", existingId) { AssemblyFilename = "IDDSCommunity.Agents.Existing.dll", DisplayName = "Discovered display name" };
+        SecurityAgent discoveredNew = new("New.Agent", Guid.NewGuid()) { AssemblyFilename = "IDDSCommunity.Agents.New.dll", Enabled = true };
+
+        List<SecurityAgent> merged = agents.MergeDbInformation([discoveredExisting, discoveredNew]);
+
+        Assert.HasCount(2, merged);
+        Assert.AreSame(stored, merged[0]);
+        Assert.IsTrue(stored.Enabled);
+        Assert.IsFalse(stored.BinaryMissing);
+        Assert.AreEqual(discoveredExisting.AssemblyFilename, stored.AssemblyFilename);
+        Assert.AreEqual(discoveredExisting.DisplayName, stored.DisplayName);
+        Assert.IsFalse(merged[1].Enabled);
+        Assert.AreEqual(discoveredNew.Id, merged[1].Id);
     }
 
     /// <summary>
     /// Loads agents to memory test.
     /// </summary>
 
-    [TestMethod, Ignore]
-    public void LoadAgentsToMemoryTest()
+    [TestMethod]
+    public void LoadAgentsToMemoryCreatesAndUnloadsProxy()
     {
-        SecurityAgents.Instance.Add(new SecurityAgent("SmtpAgent", Guid.NewGuid(), 0, 0, 0, null!));
-        SecurityAgents.Instance[0].Enabled = true;
-        List<SecurityAgent> diskAgents = SecurityAgents.Instance.ReadAgentsFromDisk();
-        SecurityAgents.Instance.MergeDbInformation(diskAgents);
-        SecurityAgents.Instance[1].Enabled = true;
-        SecurityAgents.Instance.LoadAgents();
-        foreach (SecurityAgent key in SecurityAgents.Instance.LoadedAgents.Keys)
-        {
-            SecurityAgents.Instance.LoadedAgents[key].AttackDetected += new Api.Plugin.AttackDetectedHandler(LoadAgentsTest_AttackDetected);
-        }
-        SecurityAgents.Instance[1].AppDomain.DomainUnload += new EventHandler(AppDomain_DomainUnload);
-        SecurityAgents.Instance.UnloadAgents();
-        System.Timers.Timer t = new(1000);
-        t.Elapsed += new System.Timers.ElapsedEventHandler(t_Elapsed);
-        t.Enabled = true;
-        t.Start();
-        while (!Finished)
-        {
-            System.Threading.Thread.SpinWait(10);
-        }
-        // Assert.IsTrue(Unloaded); // just works in debug, because object is released too early in runtime
+        string pluginDirectory = FindBuiltPluginDirectory();
+        IddsConfig configuration = new(Database.Instance) { PluginsDirectory = pluginDirectory };
+        SecurityAgents agents = new(Database.Instance, configuration);
+        SecurityAgent agent = agents.ReadAgentsFromDisk().First(item => item.Name != "DemoAgent.BadAgent");
+        agent.Id = Guid.Empty;
+        agent.Enabled = true;
+        agents.Add(agent);
+
+        agents.LoadAgents();
+
+        Assert.HasCount(1, agents.LoadedAgents);
+        AgentProxy proxy = agents.LoadedAgents[agent];
+        Assert.IsNotNull(proxy.Configuration);
+        agents.UnloadAgents();
+        Assert.HasCount(0, agents.LoadedAgents);
+        Assert.ThrowsExactly<ObjectDisposedException>(() => _ = proxy.Configuration);
     }
 
-    /// <summary>
-    /// Handles the elapsed event.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
-
-    void t_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) => Finished = true;
-    public bool Finished { get; set; }
-    public bool Unloaded { get; set; }
-
-    /// <summary>
-    /// Handles the domain unload event.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
-
-    void AppDomain_DomainUnload(object? sender, EventArgs e) => Unloaded = true;
-
-    /// <summary>
-    /// Handles the attack detected event.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="data">The event data.</param>
-
-    void LoadAgentsTest_AttackDetected(object sender, Api.Plugin.INotificationEventArgs data) => System.Diagnostics.Debug.Print("Attack detected");
-
+    private static string FindBuiltPluginDirectory()
+    {
+        DirectoryInfo frameworkDirectory = new(AppContext.BaseDirectory);
+        string configuration = frameworkDirectory.Parent?.Name ?? throw new DirectoryNotFoundException();
+        DirectoryInfo? root = frameworkDirectory;
+        while (root is not null && !File.Exists(Path.Combine(root.FullName, "IDDSCommunity.slnx"))) root = root.Parent;
+        if (root is null) throw new DirectoryNotFoundException("Repository root was not found.");
+        string pluginDirectory = Path.Combine(root.FullName, "IDDSCommunity.IntrusionDetection.Admin", "bin", configuration, frameworkDirectory.Name, "Plugins");
+        if (!Directory.Exists(pluginDirectory)) throw new DirectoryNotFoundException(pluginDirectory);
+        return pluginDirectory;
+    }
 
 }

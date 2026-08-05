@@ -2,12 +2,14 @@
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
-    [string] $Configuration = 'Release'
+    [string] $Configuration = 'Release',
+    [ValidatePattern('^\d+\.\d+\.\d+$')]
+    [string] $Version = '3.0.0'
 )
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = $PSScriptRoot
-$packageRoot = Join-Path $repositoryRoot "artifacts\setup\idds-community-3.0.0-$RuntimeIdentifier"
+$packageRoot = Join-Path $repositoryRoot "artifacts\setup\idds-community-$Version-$RuntimeIdentifier"
 $payloadRoot = Join-Path $packageRoot 'payload'
 $pluginRoot = Join-Path $payloadRoot 'Plugins'
 
