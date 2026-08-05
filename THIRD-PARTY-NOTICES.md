@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Cyberarms uses the following third-party component during the build process.
+IDDS Community uses the following third-party component during the build process.
 
 ## Microsoft.Windows.CsWin32
 
@@ -9,7 +9,7 @@ Cyberarms uses the following third-party component during the build process.
 - Source: https://github.com/microsoft/CsWin32
 - Package: https://www.nuget.org/packages/Microsoft.Windows.CsWin32/
 
-The package is referenced as a private build dependency and generates the Windows Firewall COM bindings compiled into Cyberarms. The generator package itself is not included in the application distribution.
+The package is referenced as a private build dependency and generates the Windows Firewall COM bindings compiled into IDDS Community. The generator package itself is not included in the application distribution.
 
 MIT License
 

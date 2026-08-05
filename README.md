@@ -1,20 +1,56 @@
-# Cyberarms
-IDDS is a free and open source intrusion detection and prevention system for Windows Server 2008 R2 and later. 
+# IDDS Community
 
-# Note
+IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護系統，目前獨立版本為 `3.0.0`。它會由可載入的 Agent 分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
 
-Its a fork of https://idds.codeplex.com/  and since Codeplex is dying then this repository acts as a backup if you want to fork into github.
+## AI 產製聲明
 
-It's not supported.  I repeat, it is only a backup. :-P
+本專案現行發行內容中的程式碼、文件、圖片及其他資源皆由人工智慧協作產生，並由專案維護者檢視、測試與整合。AI 產製聲明不取代各項第三方套件、歷史來源與授權文件；相關權利與授權仍以 [`LICENSE`](LICENSE)、[`LICENSE-PROVENANCE.md`](LICENSE-PROVENANCE.md) 及 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) 為準。
 
+本專案源自過去於 CodePlex 發布的 IDDS 前身原始碼，但不是原權利人目前商業產品的官方版本，也未獲其贊助或背書。專案、組件與根命名空間已統一改為 `IDDSCommunity.*`；歷史名稱僅保留於授權來源紀錄。
 
-## Project Description
-IDDS is a free and open source intrusion detection and prevention system for Windows Server 2008 R2 and later.
+## 主要功能
 
-If you want the installer of the program (compiled version), then go here:  
+- Windows 服務型防護核心與 WinForms 管理介面。
+- 硬封鎖、軟封鎖、安全網路允許清單與自動解除封鎖。
+- Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
+- 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
+- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL、FileMaker、遠端桌面、Web Security 與 Windows DNS Server。
+- 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。
 
-https://github.com/EFTEC/Cyberarms/blob/master/Compiled/cyberarms.intrusiondetection.setup.x64_2.2.0.zip
+## 支援界線
 
+- 目標平台為 Windows，所有專案使用 .NET 10 `net10.0-windows`。
+- FTP 與明文郵件 Agent 解析設定連接埠上的協定回應，不是只要連接埠開放就能保護任意服務。TLS/SSL 或 STARTTLS 升級後的加密內容不會被封包解析器解密；應優先使用伺服器原生稽核記錄整合。
+- Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Microsoft-Windows-DNSServer/Audit`，目前不直接支援 Technitium DNS Server 或其他第三方 DNS 的事件格式。
+- Agent 是否適用取決於伺服器版本、事件記錄設定、通訊協定及部署權限；上線前必須在隔離環境驗證。
 
+## 建置與測試
 
+需求：Windows、.NET 10 SDK，以及可使用 Windows 特定 API 的建置環境。
 
+```powershell
+dotnet build IDDSCommunity.slnx
+dotnet test IDDSCommunity.slnx
+```
+
+建立自包含安裝套件：
+
+```powershell
+.\build-setup.ps1 -RuntimeIdentifier win-x64 -Configuration Release
+```
+
+輸出位於 `artifacts\setup\idds-community-3.0.0-win-x64`。只有安裝程式與需要變更服務／防火牆的短生命週期操作要求 UAC 提權；一般 Visual Studio 偵錯及管理介面啟動不強制以系統管理員執行。
+
+## 安裝與移除
+
+安裝程式會顯示確認提示，將檔案部署到 `%ProgramFiles%\IDDS Community`，並透過 Windows 服務控制管理員建立 `IDDSCommunityProtection` 服務。解除安裝前同樣會要求確認，停止並移除服務後刪除該安裝目錄。
+
+## 授權與品牌
+
+程式碼依儲存庫根目錄的 [MIT License](LICENSE) 散布。來源證據與限制記錄於 [LICENSE-PROVENANCE.md](LICENSE-PROVENANCE.md)，第三方元件見 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)，獨立分支及商標聲明見 [FORK-NOTICE.md](FORK-NOTICE.md)。原權利人網站目前的商業 EULA 不會打包為本社群原始碼的授權文件。
+
+新圖示與配色為本社群分支重新製作，未沿用前身的品牌圖示。名稱、商標與第三方資產仍分別受其權利人規範；正式商業散布前應由合格法律專業人員進行個案審查。
+
+## 安全性說明
+
+本軟體會修改 Windows 防火牆及服務狀態，屬高權限防護元件。請先備份設定、限制管理主機存取、使用最小權限服務帳號，並保留 Windows 事件記錄。MIT License 不提供任何適售性、安全性或特定用途保證。

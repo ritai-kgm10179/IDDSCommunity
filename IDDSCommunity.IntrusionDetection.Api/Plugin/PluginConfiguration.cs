@@ -1,0 +1,25 @@
+﻿using System.Reflection;
+
+namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
+
+/// <summary>
+/// Base class for plugin configuration settings
+/// </summary>
+public class PluginConfiguration
+{
+    /// <summary>
+    /// Clone from another PluginConfiguration of the same type
+    /// </summary>
+    /// <param name="source"></param>
+    public void CloneFrom(PluginConfiguration source)
+    {
+        foreach (PropertyInfo pi in GetType().GetProperties())
+        {
+            if (pi.CanWrite)
+            {
+                pi.SetValue(this, pi.GetValue(source, null), null);
+            }
+        }
+    }
+
+}

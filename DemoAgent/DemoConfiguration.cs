@@ -1,4 +1,4 @@
-﻿using Cyberarms.IntrusionDetection.Api.Plugin;
+﻿using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace DemoAgent;
 
