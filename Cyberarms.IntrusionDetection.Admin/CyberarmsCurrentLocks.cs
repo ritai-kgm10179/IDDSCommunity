@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -106,7 +107,7 @@ public partial class CyberarmsCurrentLocks : UserControl
     /// </summary>
     /// <param name="number">The number value.</param>
 
-    public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = string.Format("{0} hard locks", number);
+    public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = Strings.Format("{0} hard locks", number);
 
     /// <summary>
     /// Handles the checked changed event.
@@ -131,7 +132,7 @@ public partial class CyberarmsCurrentLocks : UserControl
     /// </summary>
     /// <param name="number">The number value.</param>
 
-    public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = string.Format("{0} soft locks", number);
+    public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = Strings.Format("{0} soft locks", number);
 
     /// <summary>
     /// Handles the click event.

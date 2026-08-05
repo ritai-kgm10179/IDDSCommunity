@@ -10,7 +10,6 @@ public partial class CyberarmsApplicationSettings : UserControl
 
     public const string MENU_LOCK_OUT_CONFIGURATION = "Lock out configuration";
     public const string MENU_SAFE_NETWORKS = "Safe networks";
-    public const string MENU_LICENSING = "Licensing";
     public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
     public const string MENU_SMTP_SETTINGS = "SMTP configuration";
     public const string MENU_LANGUAGE_SETTINGS = "Language settings";
@@ -39,7 +38,6 @@ public partial class CyberarmsApplicationSettings : UserControl
         cyberarmsSettingsNavigation.NavigationChanged += new EventHandler(cyberarmsSettingsNavigation_NavigationChanged);
         cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null!, null!);
         cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null!, null!);
-        cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LICENSING), null!, null!);
         cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null!, null!);
         cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null!, null!);
         cyberarmsSettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);

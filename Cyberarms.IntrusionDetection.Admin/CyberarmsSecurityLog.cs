@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Data;
 using System.Windows.Forms;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -63,7 +64,7 @@ public partial class CyberarmsSecurityLog : UserControl
         comboBoxAgentSelection.DisplayMember = "DisplayName";
         comboBoxAgentSelection.ValueMember = "Id";
         comboBoxAgentSelection.DropDownStyle = ComboBoxStyle.DropDownList;
-        comboBoxAgentSelection.Items.Add(new AgentFilter(new Guid(ALL_AGENTS), "All agents"));
+        comboBoxAgentSelection.Items.Add(new AgentFilter(new Guid(ALL_AGENTS), Strings.Get("All Agents")));
         comboBoxAgentSelection.SelectedIndex = 0;
         comboBoxAgentSelection.SelectionChangeCommitted += new EventHandler(comboBoxAgentSelection_SelectionChangeCommitted);
         dataGridViewIntrusionLog.AutoGenerateColumns = false;

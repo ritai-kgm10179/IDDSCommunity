@@ -21,48 +21,6 @@ public class IddsConfigTest
         IddsConfig.Instance.ApplicationPath = TestDirectory;
     }
 
-    //[TestMethod]
-    //public void IsActivatedTest() {
-    //    try {
-    //        bool activated = IddsConfig.Instance.IsActivated;
-    //    } catch (ApplicationException ex) {
-    //        Debug.Print("Hardware ID: {0}", IddsConfig.Instance.HardwareId);
-    //        Debug.Print("Activation ID: {0}", IddsConfig.Instance.ActivationId);
-    //        if(ex.InnerException is MissingFieldException) return;
-    //    }
-
-    //    Assert.Fail("Activation did not report error!");
-    //}
-
-
-    /// <summary>
-    /// Executes the activate trial key test operation.
-    /// </summary>
-
-    [TestMethod, Ignore]
-    public void ActivateTrialKeyTest() => Assert.Fail("Not implemented");
-
-    /// <summary>
-    /// Executes the various product activation test operation.
-    /// </summary>
-
-    [TestMethod, Ignore]
-    public void VariousProductActivationTest() => Assert.Fail("Not implemented");
-
-    /// <summary>
-    /// Creates edition key test.
-    /// </summary>
-
-    [TestMethod, Ignore]
-    public void CreateEditionKeyTest() => Assert.Fail("Not implemented");
-
-    /// <summary>
-    /// Executes the activate edition key test operation.
-    /// </summary>
-
-    [TestMethod, Ignore]
-    public void ActivateEditionKeyTest() => Assert.Fail("Not implemented");
-
     /// <summary>
     /// Saves config test.
     /// </summary>

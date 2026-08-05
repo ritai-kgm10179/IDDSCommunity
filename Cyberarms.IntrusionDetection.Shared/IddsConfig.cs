@@ -20,10 +20,8 @@ public class IddsConfig
     public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
 
 
-    //private const string LICENSE_SERVER = "http://localhost:54996/activation.cyberarms.net2/";
     private const int IDDS_PRODUCT_ID = 0x66;
     // production server
-    private const string LICENSE_SERVER = "https://cyberarms.net/activationV2/";
 
     private static IddsConfig? _instance;
     public static IddsConfig Instance
@@ -357,7 +355,6 @@ public class IddsConfig
         return _hardwareId;
     } */
 
-    // public string LicenseKey { get; set; }
 
     public bool CyberSheriffContributor { get; set; }
 

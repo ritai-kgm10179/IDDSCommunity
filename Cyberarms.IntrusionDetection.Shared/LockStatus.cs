@@ -17,7 +17,7 @@ public enum LockStatus
     ManuallyUnlocked = Lock.LOCK_STATUS_MANUAL,
     LockError = Lock.LOCK_STATUS_LOCK_ERROR,
     UnlockError = Lock.LOCK_STATUS_UNLOCK_ERROR,
-    LicenseRequired = Lock.LOCK_STATUS_LICENSE_REQUIRED
+    ProtectionUnavailable = Lock.LOCK_STATUS_PROTECTION_UNAVAILABLE
 }
 
 public class LockStatusAdapter
@@ -40,7 +40,7 @@ public class LockStatusAdapter
                     { (int)LockStatus.ManuallyUnlocked, "Manually unlocked" },
                     { (int)LockStatus.LockError, "Error adding lock" },
                     { (int)LockStatus.UnlockError, "Unlock error" },
-                    { (int)LockStatus.LicenseRequired, "License limitation" }
+                    { (int)LockStatus.ProtectionUnavailable, "Protection unavailable" }
                 };
             return _lockStatusNames;
         }
@@ -56,11 +56,11 @@ public class LockStatusAdapter
     {
         if (LockStatusNames.TryGetValue(status, out string? value))
         {
-            return value;
+            return Localization.Strings.Get(value);
         }
         else
         {
-            return string.Format("Status {0} not found in LockStatusNames!", status);
+            return Localization.Strings.Format("Status {0} not found in LockStatusNames!", status);
         }
     }
 }

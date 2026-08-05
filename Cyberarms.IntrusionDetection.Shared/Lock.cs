@@ -18,7 +18,8 @@ public class Lock
     public const int LOCK_STATUS_HISTORY = 800;
     public const int LOCK_STATUS_LOCK_ERROR = 900;
     public const int LOCK_STATUS_UNLOCK_ERROR = 901;
-    public const int LOCK_STATUS_LICENSE_REQUIRED = 999;
+    // Retains persisted legacy status value 999 without exposing the removed licensing feature.
+    public const int LOCK_STATUS_PROTECTION_UNAVAILABLE = 999;
 
 
 
