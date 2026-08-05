@@ -543,4 +543,42 @@
   <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected 訂閱者失敗：{0}</value></data>
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>防火牆封鎖 {0} 失敗：{1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>防火牆對帳 {0} 失敗：{1}</value></data>
+  <data name="Cyberarms Intrusion Detection - Version {0}" xml:space="preserve"><value>Cyberarms 入侵防禦系統 - 版本 {0}</value></data>
+  <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
+  <data name="The Cyberarms service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>Cyberarms 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>
+  <data name="No file was selected!" xml:space="preserve"><value>尚未選取檔案！</value></data>
+  <data name="Please choose at least one assembly to load." xml:space="preserve"><value>請至少選取一個要載入的組件。</value></data>
+  <data name="Invalid directory" xml:space="preserve"><value>無效的目錄</value></data>
+  <data name="Please choose a directory other than the plugin directory. These assemblies are already loaded." xml:space="preserve"><value>請選擇外掛目錄以外的目錄；這些組件已經載入。</value></data>
+  <data name="Plugin directory not found!" xml:space="preserve"><value>找不到外掛目錄！</value></data>
+  <data name="Assembly cannot be copied." xml:space="preserve"><value>無法複製組件。</value></data>
+  <data name="FTP authentication failure" xml:space="preserve"><value>FTP 驗證失敗</value></data>
+  <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP 驗證失敗</value></data>
+  <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 驗證失敗</value></data>
+  <data name="Remote desktop connection TLS/SSL authentication failure" xml:space="preserve"><value>遠端桌面連線 TLS/SSL 驗證失敗</value></data>
+  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker 安全性 Agent</value></data>
+  <data name="DisplayName cannot be changed!" xml:space="preserve"><value>顯示名稱無法變更！</value></data>
+  <data name="DNS detection window must be between 1 and 3600 seconds." xml:space="preserve"><value>DNS 偵測時間窗必須介於 1 到 3600 秒。</value></data>
+  <data name="DNS detection thresholds must be greater than zero." xml:space="preserve"><value>DNS 偵測閾值必須大於零。</value></data>
+  <data name="DNS tracked client capacity must be between 100 and 1000000." xml:space="preserve"><value>DNS 追蹤用戶端容量必須介於 100 到 1000000。</value></data>
+  <data name="Windows DNS event subscription failed." xml:space="preserve"><value>Windows DNS 事件訂閱失敗。</value></data>
+  <data name="DNS query-rate threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 查詢速率閾值。</value></data>
+  <data name="DNS NXDOMAIN threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS NXDOMAIN 閾值。</value></data>
+  <data name="DNS ANY-query threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS ANY 查詢閾值。</value></data>
+  <data name="DNS dynamic-update threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 動態更新閾值。</value></data>
+  <data name="DNS zone-transfer threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 區域轉送閾值。</value></data>
+  <data name="Suspicious DNS activity was detected from {0}." xml:space="preserve"><value>偵測到來自 {0} 的可疑 DNS 活動。</value></data>
+  <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS Agent 設定無法使用。</value></data>
+  <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS 安全性 Agent</value></data>
+  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD 認證驗證安全性 Agent</value></data>
+  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性 Agent</value></data>
+  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 安全性 Agent - 路由及遠端存取</value></data>
+  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性 Agent</value></data>
+  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>Agent 已在執行，作業已取消！</value></data>
+  <data name="Agent is not running." xml:space="preserve"><value>Agent 尚未執行。</value></data>
+  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>Agent 在目前狀態下無法暫停</value></data>
+  <data name="Agent must be in paused state" xml:space="preserve"><value>Agent 必須處於暫停狀態</value></data>
+  <data name="IP address {0} cannot be unlocked. Error details: {1}" xml:space="preserve"><value>無法解除封鎖 IP 位址 {0}。錯誤詳細資料：{1}</value></data>
+  <data name="Lock cleanup failed: {0}" xml:space="preserve"><value>封鎖清理失敗：{0}</value></data>
+  <data name="Agent performance monitoring failed: {0}" xml:space="preserve"><value>Agent 效能監控失敗：{0}</value></data>
 </root>

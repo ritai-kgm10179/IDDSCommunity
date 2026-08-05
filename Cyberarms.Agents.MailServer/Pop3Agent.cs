@@ -4,6 +4,7 @@ using Cyberarms.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.Agents.MailServer;
 
@@ -326,7 +327,7 @@ public class Pop3Agent : AgentPlugin
         {
             CreateDate = DateTime.Now,
             EventId = 9112,
-            EventMessage = "POP3 authentication failure",
+            EventMessage = Strings.Get("POP3 authentication failure"),
             IpAddress = ipAddress
         };
         OnAttackDetected(this, args);

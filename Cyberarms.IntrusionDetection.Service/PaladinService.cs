@@ -36,6 +36,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     // private LogAlerts logAlerts;
     private readonly System.Timers.Timer cleanupTimer = new();
+    private int cleanupActive;
 
 
     // private bool restartPending = false;
@@ -471,43 +472,45 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
-        List<Lock> timedOutLocks = Locks.GetUnlockList();
-        foreach (Lock l in timedOutLocks)
+        if (System.Threading.Interlocked.Exchange(ref cleanupActive, 1) != 0)
+            return;
+        try
         {
-            l.Status = Lock.LOCK_STATUS_UNLOCKED;
-            l.Save();
-        }
-        foreach (Lock l in timedOutLocks)
-        {
-            try
+            List<Lock> timedOutLocks = Locks.GetUnlockList();
+            foreach (Lock l in timedOutLocks)
             {
-                firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
-                TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
-                // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_REQUESTED, false);
-                OnClientIpAddressUnlocked(l, null);
-                //l.Save();
-            }
-            catch (Exception ex)
-            {
-                TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
-                // IntrusionLog.AddEntry(DateTime.Now, Guid.Empty, l.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
-                logManager.WriteEntry(string.Format("IP address {0} cannot be unlocked. Error details: {1}",
-                    l.IpAddress, ex.Message),
-                    EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
-                if (firewallPolicy.IsLocked(l.IpAddress))
-                {
-                    l.Status = Lock.LOCK_STATUS_UNLOCK_ERROR;
-                }
-                else
-                {
-                    l.Status = Lock.LOCK_STATUS_UNLOCKED;
-                }
+                l.Status = Lock.LOCK_STATUS_UNLOCKED;
                 l.Save();
-                OnClientIpAddressUnlocked(l, ex);
             }
-            //if (l.UnlockDate < DateTime.Now.AddDays(-1) || (l.Status == Lock.LOCK_STATUS_LOCK_ERROR || l.Status == Lock.LOCK_STATUS_UNLOCK_ERROR)) {
-            //    l.Status = Lock.LOCK_STATUS_HISTORY;
-            //}
+            foreach (Lock l in timedOutLocks)
+            {
+                try
+                {
+                    firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                    TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
+                    OnClientIpAddressUnlocked(l, null);
+                }
+                catch (Exception ex)
+                {
+                    TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
+                    logManager.WriteEntry(Strings.Format("IP address {0} cannot be unlocked. Error details: {1}", l.IpAddress, ex.Message),
+                        EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+                    l.Status = firewallPolicy.IsLocked(l.IpAddress)
+                        ? Lock.LOCK_STATUS_UNLOCK_ERROR
+                        : Lock.LOCK_STATUS_UNLOCKED;
+                    l.Save();
+                    OnClientIpAddressUnlocked(l, ex);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry(Strings.Format("Lock cleanup failed: {0}", ex.GetType().Name),
+                EventLogEntryType.Error, Globals.CYBERARMS_EVENT_ID_INVALID_FUNCTION_CALL, Globals.CYBERARMS_LOG_CATEGORY_RUNTIME);
+        }
+        finally
+        {
+            System.Threading.Interlocked.Exchange(ref cleanupActive, 0);
         }
     }
 

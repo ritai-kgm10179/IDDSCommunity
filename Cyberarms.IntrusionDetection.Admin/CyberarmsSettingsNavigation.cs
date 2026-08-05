@@ -239,13 +239,13 @@ public partial class CyberarmsSettingsNavigation : UserControl
             string chosenDirectory = openFile.FileNames[0][..openFile.FileNames[0].LastIndexOf('\\')];
             if (openFile.FileNames.Length <= 0)
             {
-                GenericErrorDialog error = new("No file was selected!", "Please choose at least one assembly to load.", false);
+                GenericErrorDialog error = new(Strings.Get("No file was selected!"), Strings.Get("Please choose at least one assembly to load."), false);
                 error.ShowDialog();
                 return;
             }
             if (chosenDirectory == pluginDirectory)
             {
-                GenericErrorDialog error = new("Invalid directory", "Please choose a directory other than the plugin directory. These assemblies are already loaded.", false);
+                GenericErrorDialog error = new(Strings.Get("Invalid directory"), Strings.Get("Please choose a directory other than the plugin directory. These assemblies are already loaded."), false);
                 error.ShowDialog();
                 return;
             }
@@ -257,7 +257,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
                 }
                 catch (Exception ex)
                 {
-                    GenericErrorDialog error = new("Plugin directory not found!", ex.Message, false);
+                    GenericErrorDialog error = new(Strings.Get("Plugin directory not found!"), ex.Message, false);
                     error.ShowDialog();
                     return;
                 }
@@ -274,7 +274,7 @@ public partial class CyberarmsSettingsNavigation : UserControl
                     }
                     catch (Exception ex)
                     {
-                        GenericErrorDialog error = new("Assembly cannot be copied.", ex.Message, false);
+                        GenericErrorDialog error = new(Strings.Get("Assembly cannot be copied."), ex.Message, false);
                         error.ShowDialog();
                     }
                 }

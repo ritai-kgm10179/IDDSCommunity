@@ -429,7 +429,7 @@
             // 
             // Status
             // 
-            this.Status.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Status");
+            this.Status.HeaderText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("status");
             this.Status.Name = "Status";
             this.Status.Visible = false;
             // 

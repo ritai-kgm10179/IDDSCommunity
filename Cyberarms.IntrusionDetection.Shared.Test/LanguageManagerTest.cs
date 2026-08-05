@@ -73,8 +73,12 @@ public class LanguageManagerTest
     public void ResourceCulturesHaveMatchingKeys()
     {
         string root = FindRepositoryRoot();
-        HashSet<string> neutral = LoadResourceKeys(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.resx"));
-        HashSet<string> traditionalChinese = LoadResourceKeys(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.zh-TW.resx"));
+        string neutralPath = Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.resx");
+        string traditionalChinesePath = Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.zh-TW.resx");
+        AssertResourceKeysAreUnique(neutralPath);
+        AssertResourceKeysAreUnique(traditionalChinesePath);
+        HashSet<string> neutral = LoadResourceKeys(neutralPath);
+        HashSet<string> traditionalChinese = LoadResourceKeys(traditionalChinesePath);
         CollectionAssert.AreEquivalent(neutral.ToArray(), traditionalChinese.ToArray());
     }
 
@@ -85,7 +89,7 @@ public class LanguageManagerTest
     public void ProductionSourcesDoNotContainHardCodedUserFacingMessages()
     {
         string root = FindRepositoryRoot();
-        Regex forbidden = new("throw new [A-Za-z0-9_.<>]+Exception\\(\\s*\"|MessageBox\\.Show\\(\\s*\"|Console\\.Write(?:Line)?\\(\\s*\"|WindowsLogManager\\.Instance\\.WriteEntry\\(\\s*\"", RegexOptions.Compiled);
+        Regex forbidden = new("throw new [A-Za-z0-9_.<>]+Exception\\(\\s*\"|MessageBox\\.Show\\(\\s*\"|Console\\.Write(?:Line)?\\(\\s*\"|WindowsLogManager\\.Instance\\.WriteEntry\\(\\s*\"|GenericErrorDialog(?:\\s+[A-Za-z0-9_]+\\s*=)?\\s*new\\(\\s*\"|EventMessage\\s*=\\s*\"", RegexOptions.Compiled);
         Regex designerText = new("\\.(?:Text|HeaderText|ToolTipText)\\s*=\\s*\"(?<value>[^\"]*)\"", RegexOptions.Compiled);
         List<string> violations = [];
 
@@ -100,7 +104,6 @@ public class LanguageManagerTest
             {
                 violations.Add(Path.GetRelativePath(root, file));
             }
-            if (!file.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) continue;
             foreach (Match match in designerText.Matches(source))
             {
                 string value = match.Groups["value"].Value;
@@ -112,12 +115,49 @@ public class LanguageManagerTest
     }
 
     /// <summary>
+    /// Verifies that literal keys passed to the localization API exist in both resource cultures.
+    /// </summary>
+    [TestMethod]
+    public void LocalizedCallsReferenceExistingResources()
+    {
+        string root = FindRepositoryRoot();
+        HashSet<string> keys = LoadResourceKeys(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "Localization", "Strings.resx"));
+        Regex localizedCall = new("Strings\\.(?:Get|Format)\\(\\s*\"(?<key>[^\"]+)\"", RegexOptions.Compiled);
+        List<string> missing = [];
+        foreach (string file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+                     .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                                    && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)))
+        {
+            string source = File.ReadAllText(file);
+            foreach (Match match in localizedCall.Matches(source))
+            {
+                string key = Regex.Unescape(match.Groups["key"].Value);
+                if (!keys.Contains(key)) missing.Add($"{Path.GetRelativePath(root, file)}: {key}");
+            }
+        }
+        Assert.AreEqual(0, missing.Count, string.Join(Environment.NewLine, missing));
+    }
+
+    /// <summary>
     /// Loads resource keys from a resx file.
     /// </summary>
     /// <param name="path">The resx path.</param>
     /// <returns>The unique resource keys.</returns>
     private static HashSet<string> LoadResourceKeys(string path) => XDocument.Load(path).Root!.Elements("data")
         .Select(element => (string)element.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Rejects duplicate resource names, including names that differ only by casing.
+    /// </summary>
+    /// <param name="path">The resx path.</param>
+    private static void AssertResourceKeysAreUnique(string path)
+    {
+        string[] names = XDocument.Load(path).Root!.Elements("data")
+            .Select(element => (string)element.Attribute("name")!).ToArray();
+        string[] duplicates = names.GroupBy(static name => name, StringComparer.OrdinalIgnoreCase)
+            .Where(static group => group.Count() > 1).Select(static group => group.Key).ToArray();
+        Assert.AreEqual(0, duplicates.Length, string.Join(Environment.NewLine, duplicates));
+    }
 
     /// <summary>
     /// Finds the repository root from the test output directory.

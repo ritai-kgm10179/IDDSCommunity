@@ -12,6 +12,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 
 public partial class IddsAdmin : Form
 {
+    private const string ServiceName = "Cyberarms Intrusion Detection Service";
     readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
     readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
@@ -34,7 +35,7 @@ public partial class IddsAdmin : Form
     public IddsAdmin()
     {
         InitializeComponent();
-        Text = "Cyberarms Intrusion Detection - Version " + Application.ProductVersion;
+        Text = Strings.Format("Cyberarms Intrusion Detection - Version {0}", Application.ProductVersion);
         labelFormText.Text = Text;
 
         //            panelContent.Invalidated += new InvalidateEventHandler(panelContent_Invalidated);
@@ -91,7 +92,7 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => RestartService();
+    async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
     public CyberarmsAgentConfiguration PanelAgentConfiguration
     {
@@ -117,7 +118,7 @@ public partial class IddsAdmin : Form
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => RestartService();
+    async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
     /// <summary>
     /// Handles the plugins changed event.
@@ -131,21 +132,37 @@ public partial class IddsAdmin : Form
     /// Executes the restart service operation.
     /// </summary>
 
-    public void RestartService()
+    public async Task RestartServiceAsync()
     {
-        if (serviceController != null && serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Running)
+        System.ServiceProcess.ServiceController? controller = serviceController;
+        if (controller is null)
         {
-            try
+            ApplyServiceStatus(null);
+            return;
+        }
+        try
+        {
+            System.ServiceProcess.ServiceControllerStatus status = await Task.Run(() =>
             {
-                serviceController.Stop();
-                while (serviceController.Status == System.ServiceProcess.ServiceControllerStatus.Running ||
-                    serviceController.Status == System.ServiceProcess.ServiceControllerStatus.StopPending)
+                controller.Refresh();
+                if (controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
                 {
-                    Application.DoEvents();
+                    controller.Stop();
+                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+                    controller.Start();
+                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
                 }
-                serviceController.Start();
-            }
-            catch { }
+                controller.Refresh();
+                return controller.Status;
+            }, uiRefreshCancellation.Token).ConfigureAwait(false);
+            await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            MarkServiceUnavailable(controller, ex);
+            if (!IsDisposed && IsHandleCreated)
+                await this.InvokeAsync(() => ApplyServiceStatus(null));
         }
     }
 
@@ -270,7 +287,12 @@ public partial class IddsAdmin : Form
         {
             System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(ReadServiceStatus, uiRefreshCancellation.Token).ConfigureAwait(false);
             if (!IsDisposed)
-                await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
+                await this.InvokeAsync(() =>
+                {
+                    ApplyServiceStatus(status);
+                    if (status is null)
+                        timerRefreshServiceStatus?.Stop();
+                }, uiRefreshCancellation.Token);
         }
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
         catch (Exception)
@@ -301,8 +323,20 @@ public partial class IddsAdmin : Form
     /// <returns>The service status, or <see langword="null"/> when no controller is available.</returns>
     private System.ServiceProcess.ServiceControllerStatus? ReadServiceStatus()
     {
-        serviceController?.Refresh();
-        return serviceController?.Status;
+        System.ServiceProcess.ServiceController? controller = serviceController;
+        if (controller is null)
+            return null;
+        if (WindowsServiceStatusReader.TryRead(() =>
+        {
+            controller.Refresh();
+            return controller.Status;
+        }, out System.ServiceProcess.ServiceControllerStatus status, out Exception? failure))
+            return status;
+        if (failure is not null)
+        {
+            MarkServiceUnavailable(controller, failure);
+        }
+        return null;
     }
 
     /// <summary>
@@ -809,14 +843,22 @@ public partial class IddsAdmin : Form
         // Invalidate(false);
         try
         {
-            serviceController = new System.ServiceProcess.ServiceController("Cyberarms Intrusion Detection Service");
-            IsServiceRunning = serviceController.Status != System.ServiceProcess.ServiceControllerStatus.Running;
+            serviceController = new System.ServiceProcess.ServiceController(ServiceName);
+            System.ServiceProcess.ServiceControllerStatus? initialStatus = ReadServiceStatus();
+            IsServiceRunning = initialStatus == System.ServiceProcess.ServiceControllerStatus.Running;
+            ApplyServiceStatus(initialStatus);
         }
         catch (Exception ex)
         {
-            GenericErrorDialog errdlg = new("Error starting application", "The service is not installed or installed correctly. Please uninstall Cyberarms IDDS and reinstall to fix the problem!", false);
+            MarkServiceUnavailable(serviceController, ex);
+        }
+        if (serviceController is null)
+        {
+            using GenericErrorDialog errdlg = new(
+                Strings.Get("Error starting application"),
+                Strings.Get("The Cyberarms service is not installed or is unavailable. Install or repair the service, then restart the application."),
+                false);
             errdlg.ShowDialog();
-            EventLog.WriteEntry("Cyberarms.IntrusionDetection.Admin", ex.Message);
         }
         logReader = new Timer
         {
@@ -831,8 +873,9 @@ public partial class IddsAdmin : Form
             Interval = 1000
         };
         timerRefreshServiceStatus.Tick += new EventHandler(serviceReader_Tick);
-        timerRefreshServiceStatus.Enabled = true;
-        timerRefreshServiceStatus.Start();
+        timerRefreshServiceStatus.Enabled = serviceController is not null;
+        if (timerRefreshServiceStatus.Enabled)
+            timerRefreshServiceStatus.Start();
 
         eventLogCyberarms = new EventLog("Cyberarms")
         {
@@ -1162,15 +1205,30 @@ public partial class IddsAdmin : Form
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
         catch (Exception ex)
         {
-            ServiceError = true;
-            try
-            {
-                EventLog.WriteEntry("Cyberarms.IntrusionDetection.Admin", ex.Message, EventLogEntryType.Error);
-            }
-            catch (Exception)
-            {
-                // Service-control failures must not terminate the WinForms message loop.
-            }
+            MarkServiceUnavailable(controller, ex);
+            if (!IsDisposed && IsHandleCreated)
+                await this.InvokeAsync(() => ApplyServiceStatus(null));
+        }
+    }
+
+    /// <summary>
+    /// Detaches an unusable service controller, records diagnostics, and exposes the unavailable UI state.
+    /// </summary>
+    /// <param name="controller">The controller that failed, if one was created.</param>
+    /// <param name="exception">The service-control failure.</param>
+    private void MarkServiceUnavailable(System.ServiceProcess.ServiceController? controller, Exception exception)
+    {
+        if (ReferenceEquals(serviceController, controller))
+            serviceController = null;
+        controller?.Dispose();
+        ServiceError = true;
+        try
+        {
+            EventLog.WriteEntry("Cyberarms.IntrusionDetection.Admin", exception.Message, EventLogEntryType.Error);
+        }
+        catch (Exception)
+        {
+            // A missing Event Log source must not turn a recoverable service-state failure into a startup crash.
         }
     }
 

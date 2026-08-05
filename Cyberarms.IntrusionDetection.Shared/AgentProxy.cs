@@ -19,6 +19,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     private IAgentPlugin? _agent;
     private readonly AgentPluginLoadContext loadContext;
     private bool disposed;
+    private int watchdogActive;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentProxy"/> class.
@@ -147,18 +148,42 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     private void watchdog_Elapsed(object? sender, ElapsedEventArgs e)
     {
-        AgentPerformanceRecord rcd = new()
+        if (Interlocked.Exchange(ref watchdogActive, 1) != 0)
+            return;
+        try
         {
-            DateTime = DateTime.Now,
-            MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize,
-            CpuUsage = AppDomain.CurrentDomain.MonitoringTotalProcessorTime.Subtract(_lastCpuTime)
-        };
-        if (GetAgent() is INetworkListener netListener) rcd.Packets = netListener.TotalPackets - _lastPackets;
-        lock (_lock)
+            TimeSpan currentCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
+            AgentPerformanceRecord rcd = new()
+            {
+                DateTime = DateTime.Now,
+                MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize,
+                CpuUsage = currentCpuTime.Subtract(_lastCpuTime)
+            };
+            _lastCpuTime = currentCpuTime;
+            if (GetAgent() is INetworkListener netListener)
+            {
+                long currentPackets = netListener.TotalPackets;
+                rcd.Packets = currentPackets - _lastPackets;
+                _lastPackets = currentPackets;
+            }
+            lock (_lock)
+            {
+                PerformanceRecords.Add(rcd);
+                if (PerformanceRecords.Count > MaximumPerformanceRecords)
+                    PerformanceRecords.RemoveRange(0, PerformanceRecords.Count - MaximumPerformanceRecords);
+            }
+        }
+        catch (ObjectDisposedException)
         {
-            PerformanceRecords.Add(rcd);
-            if (PerformanceRecords.Count > MaximumPerformanceRecords)
-                PerformanceRecords.RemoveRange(0, PerformanceRecords.Count - MaximumPerformanceRecords);
+            // A queued timer callback may race with Agent unload.
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.TraceError(Localization.Strings.Format("Agent performance monitoring failed: {0}", ex.GetType().Name));
+        }
+        finally
+        {
+            Interlocked.Exchange(ref watchdogActive, 0);
         }
     }
 

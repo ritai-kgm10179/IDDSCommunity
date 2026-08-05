@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Api\Cyberarms.IntrusionDetection.Api.csproj" />
     <ProjectReference Include="..\Cyberarms.IntrusionDetection.Shared\Cyberarms.IntrusionDetection.Shared.csproj" />
+    <ProjectReference Include="..\Cyberarms.IntrusionDetection.Admin\Cyberarms.IntrusionDetection.Admin.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
