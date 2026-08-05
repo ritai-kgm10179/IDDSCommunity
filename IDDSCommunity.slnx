@@ -1,13 +1,20 @@
 ﻿<Solution>
+  <Project Path="IDDSCommunity.Agents.Authentication.Common/IDDSCommunity.Agents.Authentication.Common.csproj" />
+  <Project Path="IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.FileMaker/IDDSCommunity.Agents.FileMaker.csproj" />
   <Project Path="IDDSCommunity.Agents.FtpServer/IDDSCommunity.Agents.FtpServer.csproj" />
   <Project Path="IDDSCommunity.Agents.MailServer/IDDSCommunity.Agents.MailServer.csproj" />
   <Project Path="IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
+  <Project Path="IDDSCommunity.Agents.IisAuthentication/IDDSCommunity.Agents.IisAuthentication.csproj" />
   <Project Path="IDDSCommunity.Agents.MySql/IDDSCommunity.Agents.MySql.csproj" />
+  <Project Path="IDDSCommunity.Agents.OpenSsh/IDDSCommunity.Agents.OpenSsh.csproj" />
+  <Project Path="IDDSCommunity.Agents.PostgreSql/IDDSCommunity.Agents.PostgreSql.csproj" />
+  <Project Path="IDDSCommunity.Agents.Radius/IDDSCommunity.Agents.Radius.csproj" />
   <Project Path="IDDSCommunity.Agents.SqlServer/IDDSCommunity.Agents.SqlServer.csproj" />
   <Project Path="IDDSCommunity.Agents.TerminalServer/IDDSCommunity.Agents.TerminalServer.csproj" />
   <Project Path="IDDSCommunity.Agents.WebSecurity/IDDSCommunity.Agents.WebSecurity.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsDns/IDDSCommunity.Agents.WindowsDns.csproj" />
+  <Project Path="IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsDns.Test/IDDSCommunity.Agents.WindowsDns.Test.csproj" />
   <Project Path="IDDSCommunity.IDDS.Management/IDDSCommunity.IDDS.Management.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Admin/IDDSCommunity.IntrusionDetection.Admin.csproj" />

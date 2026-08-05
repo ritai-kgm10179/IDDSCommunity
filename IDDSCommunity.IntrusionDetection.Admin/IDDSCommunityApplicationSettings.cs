@@ -14,6 +14,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     public const string MENU_SMTP_SETTINGS = "SMTP configuration";
     public const string MENU_LANGUAGE_SETTINGS = "Language settings";
     public const string MENU_DATABASE_MAINTENANCE = "Database maintenance";
+    public const string MENU_CONFIGURATION_TRANSFER = "Configuration import and export";
     public event EventHandler? ConfigurationChanged;
 
 
@@ -43,6 +44,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null!, null!);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CONFIGURATION_TRANSFER), null!, null!);
     }
 
     private PanelLockoutConfiguration? _lockoutConfiguration;
@@ -134,9 +136,18 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     private PanelNotificationSettings? _panelNotificationSettings;
     private PanelLanguageSettings? _panelLanguageSettings;
     private PanelDatabaseMaintenance? _panelDatabaseMaintenance;
+    private PanelConfigurationTransfer? _panelConfigurationTransfer;
 
     public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
     public PanelDatabaseMaintenance PanelDatabaseMaintenance => _panelDatabaseMaintenance ??= CreateDatabaseMaintenancePanel();
+    public PanelConfigurationTransfer PanelConfigurationTransfer => _panelConfigurationTransfer ??= CreateConfigurationTransferPanel();
+
+    private PanelConfigurationTransfer CreateConfigurationTransferPanel()
+    {
+        PanelConfigurationTransfer panel = new();
+        configurationPanel.Controls.Add(panel);
+        return panel;
+    }
 
     private PanelDatabaseMaintenance CreateDatabaseMaintenancePanel()
     {
@@ -210,6 +221,9 @@ public partial class IDDSCommunityApplicationSettings : UserControl
             case var displayName when displayName == Strings.Get(MENU_DATABASE_MAINTENANCE):
                 PanelDatabaseMaintenance.BringToFront();
                 PanelDatabaseMaintenance.RefreshStatus();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_CONFIGURATION_TRANSFER):
+                PanelConfigurationTransfer.BringToFront();
                 break;
         }
     }

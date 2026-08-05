@@ -14,7 +14,9 @@ IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護�
 - 硬封鎖、軟封鎖、安全網路允許清單與自動解除封鎖。
 - Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
-- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL、FileMaker、遠端桌面、Web Security 與 Windows DNS Server。
+- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
+- 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限及預設 `10 次／5 分鐘` 門檻；各 Agent 可個別調整，且封鎖仍由既有漸進式政策執行。
+- 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 AES-256-GCM 與 PBKDF2-SHA256 保護。匯入前會驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
 - 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。
 
 ## 支援界線
@@ -23,6 +25,8 @@ IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護�
 - FTP 與明文郵件 Agent 解析設定連接埠上的協定回應，不是只要連接埠開放就能保護任意服務。TLS/SSL 或 STARTTLS 升級後的加密內容不會被封包解析器解密；應優先使用伺服器原生稽核記錄整合。
 - Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Microsoft-Windows-DNSServer/Audit`，目前不直接支援 Technitium DNS Server 或其他第三方 DNS 的事件格式。
 - Agent 是否適用取決於伺服器版本、事件記錄設定、通訊協定及部署權限；上線前必須在隔離環境驗證。
+- Windows 網路登入 Agent 僅處理事件 `4625`、登入類型 `3` 與高可信度認證失敗狀態；它涵蓋 SMB 等網路登入來源，但不宣稱能僅依該事件精確辨識 SMB。
+- OpenSSH 預設讀取 `OpenSSH/Operational`，亦可設定文字記錄檔；PostgreSQL 支援一般文字與 `jsonlog`；IIS 讀取 W3C `401` 記錄，並可選擇限制受保護 URL 前綴。
 
 ## 建置與測試
 

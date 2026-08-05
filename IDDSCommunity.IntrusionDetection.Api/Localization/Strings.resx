@@ -10,4 +10,18 @@
   <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos pre-authentication Security Agent</value></data>
   <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS Security Agent - Routing and Remote Access</value></data>
   <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows Base Security Agent</value></data>
+  <data name="Windows OpenSSH Security Agent" xml:space="preserve"><value>Windows OpenSSH Security Agent</value></data>
+  <data name="Windows Network Logon Security Agent" xml:space="preserve"><value>Windows Network Logon Security Agent</value></data>
+  <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL Security Agent</value></data>
+  <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS Security Agent</value></data>
+  <data name="IIS Authentication Security Agent" xml:space="preserve"><value>IIS Authentication Security Agent</value></data>
+  <data name="Detection window must be between 10 and 86400 seconds." xml:space="preserve"><value>Detection window must be between 10 and 86400 seconds.</value></data>
+  <data name="Failure threshold must be between 2 and 100000." xml:space="preserve"><value>Failure threshold must be between 2 and 100000.</value></data>
+  <data name="Tracked source capacity must be between 100 and 1000000." xml:space="preserve"><value>Tracked source capacity must be between 100 and 1000000.</value></data>
+  <data name="Agent configuration is unavailable." xml:space="preserve"><value>Agent configuration is unavailable.</value></data>
+  <data name="IIS log directory must be an absolute path." xml:space="preserve"><value>IIS log directory must be an absolute path.</value></data>
+  <data name="OpenSSH log file must be an absolute path." xml:space="preserve"><value>OpenSSH log file must be an absolute path.</value></data>
+  <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL log directory must be an absolute path.</value></data>
+  <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL log pattern is invalid.</value></data>
+  <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}: authentication failure threshold exceeded.</value></data>
 </root>

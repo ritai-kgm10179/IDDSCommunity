@@ -10,4 +10,18 @@
   <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性代理程式</value></data>
   <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 路由及遠端存取安全性代理程式</value></data>
   <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性代理程式</value></data>
+  <data name="Windows OpenSSH Security Agent" xml:space="preserve"><value>Windows OpenSSH 安全性代理程式</value></data>
+  <data name="Windows Network Logon Security Agent" xml:space="preserve"><value>Windows 網路登入安全性代理程式</value></data>
+  <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL 安全性代理程式</value></data>
+  <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS 安全性代理程式</value></data>
+  <data name="IIS Authentication Security Agent" xml:space="preserve"><value>IIS 驗證安全性代理程式</value></data>
+  <data name="Detection window must be between 10 and 86400 seconds." xml:space="preserve"><value>偵測時間範圍必須介於 10 至 86400 秒。</value></data>
+  <data name="Failure threshold must be between 2 and 100000." xml:space="preserve"><value>失敗門檻必須介於 2 至 100000 次。</value></data>
+  <data name="Tracked source capacity must be between 100 and 1000000." xml:space="preserve"><value>追蹤來源容量必須介於 100 至 1000000。</value></data>
+  <data name="Agent configuration is unavailable." xml:space="preserve"><value>代理程式設定無法使用。</value></data>
+  <data name="IIS log directory must be an absolute path." xml:space="preserve"><value>IIS 記錄目錄必須是絕對路徑。</value></data>
+  <data name="OpenSSH log file must be an absolute path." xml:space="preserve"><value>OpenSSH 記錄檔必須是絕對路徑。</value></data>
+  <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL 記錄目錄必須是絕對路徑。</value></data>
+  <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL 記錄檔搜尋模式無效。</value></data>
+  <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}：驗證失敗次數已超過門檻。</value></data>
 </root>
