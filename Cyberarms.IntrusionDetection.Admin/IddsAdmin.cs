@@ -142,16 +142,9 @@ public partial class IddsAdmin : Form
         }
         try
         {
+            await ElevatedServiceCommand.RunElevatedAsync(ServiceName, "restart", uiRefreshCancellation.Token).ConfigureAwait(false);
             System.ServiceProcess.ServiceControllerStatus status = await Task.Run(() =>
             {
-                controller.Refresh();
-                if (controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
-                {
-                    controller.Stop();
-                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
-                    controller.Start();
-                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
-                }
                 controller.Refresh();
                 return controller.Status;
             }, uiRefreshCancellation.Token).ConfigureAwait(false);
@@ -1184,19 +1177,9 @@ public partial class IddsAdmin : Form
             return;
         try
         {
+            await ElevatedServiceCommand.RunElevatedAsync(ServiceName, start ? "start" : "stop", uiRefreshCancellation.Token).ConfigureAwait(false);
             System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(() =>
             {
-                controller.Refresh();
-                if (start && controller.Status is System.ServiceProcess.ServiceControllerStatus.Paused or System.ServiceProcess.ServiceControllerStatus.Stopped)
-                {
-                    controller.Start();
-                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(30));
-                }
-                else if (!start && controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
-                {
-                    controller.Stop();
-                    controller.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
-                }
                 controller.Refresh();
                 return (System.ServiceProcess.ServiceControllerStatus?)controller.Status;
             }, uiRefreshCancellation.Token).ConfigureAwait(false);
