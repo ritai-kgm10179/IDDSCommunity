@@ -616,4 +616,28 @@
   <data name="The elevated service command could not be started." xml:space="preserve"><value>The elevated service command could not be started.</value></data>
   <data name="The elevated service command failed with exit code {0}." xml:space="preserve"><value>The elevated service command failed with exit code {0}.</value></data>
   <data name="Unsupported service command." xml:space="preserve"><value>Unsupported service command.</value></data>
+  <data name="FTP Security Agent" xml:space="preserve"><value>FTP Security Agent</value></data>
+  <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP Security Agent</value></data>
+  <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server Security Agent</value></data>
+  <data name="MySql Server Security Agent" xml:space="preserve"><value>MySQL Server Security Agent</value></data>
+  <data name="TLS/SSL Security Agent" xml:space="preserve"><value>Remote Desktop Security Agent</value></data>
+  <data name="Web Security Agent" xml:space="preserve"><value>Web Security Agent</value></data>
+  <data name="Cyberarms.Agents.MailServer.Pop3Agent" xml:space="preserve"><value>POP3 Security Agent</value></data>
+  <data name="Cyberarms.Agents.MailServer.SmtpAgent" xml:space="preserve"><value>Mail Server SMTP Security Agent</value></data>
+  <data name="Agent status" xml:space="preserve"><value>Agent status</value></data>
+  <data name="enabled" xml:space="preserve"><value>enabled</value></data>
+  <data name="disabled" xml:space="preserve"><value>disabled</value></data>
+  <data name="The security agent {0} is {1}. Double-click to configure this agent." xml:space="preserve"><value>The security agent {0} is {1}. Double-click to configure this agent.</value></data>
+  <data name="FtpPort" xml:space="preserve"><value>FTP port</value></data>
+  <data name="Pop3Port" xml:space="preserve"><value>POP3 port</value></data>
+  <data name="SmtpPort" xml:space="preserve"><value>SMTP port</value></data>
+  <data name="RdpPort" xml:space="preserve"><value>Remote Desktop port</value></data>
+  <data name="WindowSeconds" xml:space="preserve"><value>Detection window (seconds)</value></data>
+  <data name="QueryRateThreshold" xml:space="preserve"><value>Query rate threshold</value></data>
+  <data name="NxDomainThreshold" xml:space="preserve"><value>NXDOMAIN threshold</value></data>
+  <data name="AnyQueryThreshold" xml:space="preserve"><value>ANY query threshold</value></data>
+  <data name="DynamicUpdateThreshold" xml:space="preserve"><value>Dynamic update threshold</value></data>
+  <data name="ZoneTransferThreshold" xml:space="preserve"><value>Zone transfer threshold</value></data>
+  <data name="MaximumTrackedClients" xml:space="preserve"><value>Maximum tracked clients</value></data>
+  <data name="ExcludedAddresses" xml:space="preserve"><value>Excluded addresses</value></data>
 </root>

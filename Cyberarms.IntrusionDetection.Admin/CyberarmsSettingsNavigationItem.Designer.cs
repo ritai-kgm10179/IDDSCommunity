@@ -32,7 +32,7 @@
             // 
             this.pictureBoxNavigationIcon.Location = new System.Drawing.Point(3, 3);
             this.pictureBoxNavigationIcon.Name = "pictureBoxNavigationIcon";
-            this.pictureBoxNavigationIcon.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxNavigationIcon.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxNavigationIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxNavigationIcon.TabIndex = 0;
             this.pictureBoxNavigationIcon.TabStop = false;

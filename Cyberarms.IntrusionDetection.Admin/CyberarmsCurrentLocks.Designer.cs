@@ -89,7 +89,7 @@
             // smartLabel7
             // 
             this.smartLabel7.AutoSize = true;
-            this.smartLabel7.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabel7.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabel7.Location = new System.Drawing.Point(631, 8);
             this.smartLabel7.Name = "smartLabel7";
@@ -102,7 +102,7 @@
             // smartLabel6
             // 
             this.smartLabel6.AutoSize = true;
-            this.smartLabel6.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabel6.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabel6.Location = new System.Drawing.Point(508, 8);
             this.smartLabel6.Name = "smartLabel6";
@@ -115,7 +115,7 @@
             // smartLabel5
             // 
             this.smartLabel5.AutoSize = true;
-            this.smartLabel5.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabel5.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabel5.Location = new System.Drawing.Point(230, 8);
             this.smartLabel5.Name = "smartLabel5";
@@ -128,7 +128,7 @@
             // smartLabel4
             // 
             this.smartLabel4.AutoSize = true;
-            this.smartLabel4.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabel4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabel4.Location = new System.Drawing.Point(130, 8);
             this.smartLabel4.Name = "smartLabel4";
@@ -141,7 +141,7 @@
             // smartLabel2
             // 
             this.smartLabel2.AutoSize = true;
-            this.smartLabel2.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabel2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabel2.Location = new System.Drawing.Point(29, 7);
             this.smartLabel2.Name = "smartLabel2";
@@ -196,7 +196,7 @@
             this.Status});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
@@ -207,7 +207,7 @@
             this.dataGridViewLocks.Name = "dataGridViewLocks";
             this.dataGridViewLocks.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dataGridViewLocks.RowHeadersVisible = false;
-            this.dataGridViewLocks.RowTemplate.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dataGridViewLocks.RowTemplate.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dataGridViewLocks.RowTemplate.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.dataGridViewLocks.RowTemplate.ReadOnly = true;
             this.dataGridViewLocks.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;

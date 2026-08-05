@@ -19,6 +19,7 @@ static class Program
             return;
         }
 
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         InitializeDisplayLanguage();

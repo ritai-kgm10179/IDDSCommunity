@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Reflection;
 using Cyberarms.IntrusionDetection.Api.Plugin;
 
@@ -43,18 +45,18 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 };
                                 if (agentPlugin is IExtendedInformation exInfo)
                                 {
-                                    securityAgent.DisplayName = exInfo.DisplayName;
-                                    securityAgent.UnselectedIcon = exInfo.UnselectedIcon;
-                                    securityAgent.SelectedIcon = exInfo.SelectedIcon;
-                                    securityAgent.Icon = exInfo.Icon;
+                                    securityAgent.DisplayName = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get(exInfo.DisplayName);
+                                    securityAgent.UnselectedIcon = NormalizeIcon(exInfo.UnselectedIcon);
+                                    securityAgent.SelectedIcon = NormalizeIcon(exInfo.SelectedIcon);
+                                    securityAgent.Icon = NormalizeIcon(exInfo.Icon);
                                     securityAgent.Id = exInfo.Id;
                                 }
                                 else
                                 {
-                                    securityAgent.DisplayName = typeName;
-                                    securityAgent.UnselectedIcon = Resources.agent15px_default_dark;
-                                    securityAgent.SelectedIcon = Resources.agent15px_default_white;
-                                    securityAgent.Icon = Resources.agent15px_default_dark;
+                                    securityAgent.DisplayName = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get(typeName);
+                                    securityAgent.UnselectedIcon = NormalizeIcon(Resources.agent15px_default_dark);
+                                    securityAgent.SelectedIcon = NormalizeIcon(Resources.agent15px_default_white);
+                                    securityAgent.Icon = NormalizeIcon(Resources.agent15px_default_dark);
                                 }
                                 securityAgent.Name = typeName;
                                 securityAgent.Enabled = false;
@@ -86,6 +88,23 @@ public class AgentLoaderProxy : MarshalByRefObject
         {
             loadContext.Unload();
         }
+    }
+
+    /// <summary>
+    /// Normalizes Plugin artwork to the administration UI's standard visual icon size.
+    /// </summary>
+    /// <param name="source">The Plugin-provided icon.</param>
+    /// <returns>A 16-by-16 pixel icon suitable for consistent list presentation.</returns>
+    private static Image NormalizeIcon(Image source)
+    {
+        const int iconSize = 16;
+        Bitmap result = new(iconSize, iconSize);
+        using Graphics graphics = Graphics.FromImage(result);
+        graphics.CompositingQuality = CompositingQuality.HighQuality;
+        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        graphics.DrawImage(source, new Rectangle(0, 0, iconSize, iconSize));
+        return result;
     }
 
 

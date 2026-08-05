@@ -63,6 +63,19 @@ public sealed class PluginDeploymentTest
     }
 
     /// <summary>
+    /// Verifies that Plugin-provided display keys are localized at the shared loading boundary.
+    /// </summary>
+    [TestMethod]
+    public void AgentLoaderLocalizesEveryPluginDisplayKey()
+    {
+        string root = FindRepositoryRoot();
+        string source = File.ReadAllText(Path.Combine(root, "Cyberarms.IntrusionDetection.Shared", "AgentLoaderProxy.cs"));
+
+        StringAssert.Contains(source, "Localization.Strings.Get(exInfo.DisplayName)");
+        StringAssert.Contains(source, "Localization.Strings.Get(typeName)");
+    }
+
+    /// <summary>
     /// Verifies that the administration UI runs unelevated and requests elevation only for service state changes.
     /// </summary>
     [TestMethod]
