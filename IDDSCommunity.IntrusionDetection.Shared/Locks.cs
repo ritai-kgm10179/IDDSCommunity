@@ -149,6 +149,21 @@ public class Locks
     }
 
     /// <summary>
+    /// Counts recent locks created for the same Agent and source IP address.
+    /// </summary>
+    public static int GetRecentLockCount(Guid agentId, string ipAddress, DateTime startDate)
+    {
+        object? result = Database.Instance.ExecuteScalar(
+            @"select count(*) from Locks l
+              inner join IntrusionLog i on l.TriggerIncident = i.Id
+              where i.AgentId=@p0 and l.IpAddress=@p1 and l.LockDate>=@p2",
+            agentId,
+            ipAddress,
+            startDate);
+        return Db.DbValueConverter.ToInt(result);
+    }
+
+    /// <summary>
     /// Gets current locks.
     /// </summary>
     /// <returns>The get current locks result.</returns>

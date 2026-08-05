@@ -8,6 +8,10 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 
 public class IddsConfig
 {
+    public const int DefaultSoftLockAttempts = 10;
+    public const int DefaultSoftLockMinutes = 1;
+    public const int DefaultHardLockAttempts = 20;
+    public const int DefaultHardLockHours = 1;
     private readonly Database database;
     private readonly HashSet<string> changedAppConfigKeys = [];
 
@@ -379,10 +383,10 @@ public class IddsConfig
     {
         IddsConfig config = new(Database.Instance)
         {
-            HardLockAttempts = 10,
-            SoftLockAttempts = 3,
-            HardLockTimeHours = 24, // 24 hours
-            SoftLockTimeMinutes = 30,
+            HardLockAttempts = DefaultHardLockAttempts,
+            SoftLockAttempts = DefaultSoftLockAttempts,
+            HardLockTimeHours = DefaultHardLockHours,
+            SoftLockTimeMinutes = DefaultSoftLockMinutes,
             LockForever = false,
             UseSafeNetworkList = false,
             SafeNetworks = [],

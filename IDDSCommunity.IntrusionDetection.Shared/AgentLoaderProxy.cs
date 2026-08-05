@@ -61,13 +61,13 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 securityAgent.Name = typeName;
                                 securityAgent.Enabled = false;
                                 securityAgent.FailedLogins = 0;
-                                securityAgent.HardLockAttempts = 10;
+                                securityAgent.HardLockAttempts = IddsConfig.DefaultHardLockAttempts;
                                 securityAgent.HardLocks = 0;
-                                securityAgent.HardLockTimeHours = 24;
+                                securityAgent.HardLockTimeHours = IddsConfig.DefaultHardLockHours;
                                 securityAgent.AssemblyFilename = fileName;
-                                securityAgent.SoftLockAttempts = 3;
+                                securityAgent.SoftLockAttempts = IddsConfig.DefaultSoftLockAttempts;
                                 securityAgent.SoftLocks = 0;
-                                securityAgent.SoftLockTimeMinutes = 20;
+                                securityAgent.SoftLockTimeMinutes = IddsConfig.DefaultSoftLockMinutes;
                                 securityAgent.OverrideConfig = false;
                                 if (agentPlugin.Configuration.AgentSettings != null)
                                     securityAgent.CustomConfiguration = GetCustomConfigurationObjects(agentPlugin.Configuration.AgentSettings);

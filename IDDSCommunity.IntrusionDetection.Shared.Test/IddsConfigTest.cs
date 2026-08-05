@@ -53,6 +53,20 @@ public class IddsConfigTest
 
     }
 
+    /// <summary>
+    /// Verifies that new installations use the reviewed two-stage source-IP throttling defaults.
+    /// </summary>
+    [TestMethod]
+    public void DefaultLockoutConfigurationUsesReviewedThresholdsTest()
+    {
+        IddsConfig configuration = IddsConfig.GetDefaultConfiguration();
+
+        Assert.AreEqual(10, configuration.SoftLockAttempts);
+        Assert.AreEqual(1, configuration.SoftLockTimeMinutes);
+        Assert.AreEqual(20, configuration.HardLockAttempts);
+        Assert.AreEqual(1, configuration.HardLockTimeHours);
+    }
+
     //[TestMethod]
     //public void CreateAgentConfigTest() {
     //    IddsConfig.PluginDirectory = "test";

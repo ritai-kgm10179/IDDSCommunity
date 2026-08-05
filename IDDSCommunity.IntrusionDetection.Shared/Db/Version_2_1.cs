@@ -42,7 +42,7 @@ CREATE TABLE Configuration (
 INSERT INTO Configuration(ConfigVersionDate, HardLockAttempts, HardLockTimeHours, LockForever,
                 SoftLockAttempts, SoftLockTimeMinutes, UseSafeNetworkList, SendInfoMail, SmtpPort,
                 SmtpRequiresAuthentication, SmtpSslRequired, CyberSheriffContributor, WebBasedMonitoring)
-        values('4/4/2013',10,24,0,3,20,0,0,25,0,0,0,0)";
+        values('4/4/2013',20,1,0,10,1,0,0,25,0,0,0,0)";
 
     public const string CREATE_DEFAULT_DB_CONFIGURATION = @"
 INSERT INTO DbConfig(Version, UpgradeDate, UpgradeLog, UpgradeSuccessful)

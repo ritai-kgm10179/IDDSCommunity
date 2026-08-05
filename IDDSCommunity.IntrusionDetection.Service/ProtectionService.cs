@@ -862,7 +862,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.SoftLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_SOFT_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(configuration.GetSoftLockMinutes(reportingAgent)), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
+                                    int recentLockCount = Locks.GetRecentLockCount(
+                                        reportingAgent.Id,
+                                        notificationEventArgs.IpAddress,
+                                        DateTime.Now.AddDays(-1));
+                                    int softLockMinutes = LockoutPolicy.CalculateSoftLockMinutes(
+                                        configuration.GetSoftLockMinutes(reportingAgent),
+                                        recentLockCount);
+                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(softLockMinutes), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
                                     break;
                                 case LockType.SoftLock:
                                     // already locked, ignore
