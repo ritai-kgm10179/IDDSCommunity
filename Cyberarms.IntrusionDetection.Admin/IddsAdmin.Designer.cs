@@ -23,6 +23,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.buttonManageService = new System.Windows.Forms.Button();
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IddsAdmin));
             this.panelWindowGrip = new System.Windows.Forms.Panel();
@@ -362,6 +363,7 @@
             // 
             // panelMenu
             // 
+            this.panelMenu.Controls.Add(this.buttonManageService);
             this.panelMenu.Controls.Add(this.smartLabelServiceStatus);
             this.panelMenu.Controls.Add(this.pictureBoxStopService);
             this.panelMenu.Controls.Add(this.pictureBoxStartService);
@@ -391,6 +393,22 @@
             this.smartLabelServiceStatus.TabIndex = 2;
             this.smartLabelServiceStatus.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("reading status....");
             this.smartLabelServiceStatus.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            //
+            // buttonManageService
+            //
+            this.buttonManageService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonManageService.AutoSize = true;
+            this.buttonManageService.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonManageService.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.buttonManageService.ForeColor = System.Drawing.Color.FromArgb(102, 102, 102);
+            this.buttonManageService.Location = new System.Drawing.Point(472, 10);
+            this.buttonManageService.MinimumSize = new System.Drawing.Size(104, 25);
+            this.buttonManageService.Name = "buttonManageService";
+            this.buttonManageService.Size = new System.Drawing.Size(104, 25);
+            this.buttonManageService.TabIndex = 3;
+            this.buttonManageService.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Install service");
+            this.buttonManageService.UseVisualStyleBackColor = true;
+            this.buttonManageService.Click += new System.EventHandler(this.buttonManageService_Click);
             // 
             // pictureBoxStopService
             // 
@@ -717,5 +735,6 @@
         private System.Windows.Forms.PictureBox pictureBoxStopService;
         private System.Windows.Forms.PictureBox pictureBoxStartService;
         private SmartLabel smartLabelServiceStatus;
+        private System.Windows.Forms.Button buttonManageService;
     }
 }

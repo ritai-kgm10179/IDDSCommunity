@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Cyberarms.Agents.MailServer")]
-[assembly: AssemblyDescription("Cyberarms Agent for SMTP and POP3")]
+[assembly: AssemblyDescription("Cyberarms Agent for SMTP, POP3, and IMAP")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Cyberarms Limited")]
 [assembly: AssemblyProduct("Cyberarms.Agents.MailServer")]

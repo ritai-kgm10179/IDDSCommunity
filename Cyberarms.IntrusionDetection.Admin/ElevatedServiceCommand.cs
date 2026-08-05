@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ namespace Cyberarms.IntrusionDetection.Admin;
 internal static class ElevatedServiceCommand
 {
     private const string CommandSwitch = "--service-command";
+    private const string AllowedServiceName = "Cyberarms Intrusion Detection Service";
     private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
@@ -45,7 +47,7 @@ internal static class ElevatedServiceCommand
     /// Starts an elevated process and waits asynchronously for the requested service operation.
     /// </summary>
     /// <param name="serviceName">The Windows service name.</param>
-    /// <param name="command">The requested <c>start</c>, <c>stop</c>, or <c>restart</c> command.</param>
+    /// <param name="command">The requested install, uninstall, start, stop, or restart command.</param>
     /// <param name="cancellationToken">Cancels waiting for the elevated child process.</param>
     /// <returns>A task that completes after the elevated operation succeeds.</returns>
     /// <exception cref="InvalidOperationException">The application executable path is unavailable or the elevated operation fails.</exception>
@@ -73,6 +75,18 @@ internal static class ElevatedServiceCommand
 
     private static void Execute(string serviceName, string command)
     {
+        if (!string.Equals(serviceName, AllowedServiceName, StringComparison.Ordinal))
+            throw new ArgumentException(Strings.Get("Unsupported service name."), nameof(serviceName));
+        if (command == "install")
+        {
+            Install(serviceName);
+            return;
+        }
+        if (command == "uninstall")
+        {
+            Uninstall(serviceName);
+            return;
+        }
         using ServiceController controller = new(serviceName);
         controller.Refresh();
         switch (command)
@@ -91,6 +105,62 @@ internal static class ElevatedServiceCommand
             default:
                 throw new ArgumentOutOfRangeException(nameof(command), command, Strings.Get("Unsupported service command."));
         }
+    }
+
+    private static void Install(string serviceName)
+    {
+        string servicePath = ResolveServiceExecutablePath();
+        RunServiceControl("create", serviceName, "binPath=", servicePath, "start=", "auto", "DisplayName=", serviceName);
+        using ServiceController controller = new(serviceName);
+        Start(controller);
+    }
+
+    private static void Uninstall(string serviceName)
+    {
+        try
+        {
+            using ServiceController controller = new(serviceName);
+            Stop(controller);
+        }
+        catch (InvalidOperationException)
+        {
+            // The service may already be absent; sc.exe delete provides the authoritative result.
+        }
+        RunServiceControl("delete", serviceName);
+    }
+
+    private static string ResolveServiceExecutablePath()
+    {
+        const string executableName = "Cyberarms.IntrusionDetection.Service.exe";
+        string installedPath = Path.Combine(AppContext.BaseDirectory, executableName);
+        if (File.Exists(installedPath)) return installedPath;
+
+        string developmentPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..",
+            "Cyberarms.IntrusionDetection.Service", "bin",
+#if DEBUG
+            "Debug",
+#else
+            "Release",
+#endif
+            "net10.0-windows", executableName));
+        if (File.Exists(developmentPath)) return developmentPath;
+        throw new FileNotFoundException(Strings.Get("The Cyberarms service executable could not be found."), installedPath);
+    }
+
+    private static void RunServiceControl(params string[] arguments)
+    {
+        ProcessStartInfo startInfo = new(Path.Combine(Environment.SystemDirectory, "sc.exe"))
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (string argument in arguments)
+            startInfo.ArgumentList.Add(argument);
+        using Process process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException(Strings.Get("The Windows service management command could not be started."));
+        process.WaitForExit();
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException(Strings.Format("The Windows service management command failed with exit code {0}.", process.ExitCode));
     }
 
     private static void Start(ServiceController controller)
