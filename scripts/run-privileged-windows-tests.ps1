@@ -29,6 +29,8 @@ try {
         --disable-build-servers `
         -m:1 `
         -p:UseSharedCompilation=false `
+        --logger 'trx;LogFileName=privileged-windows.trx' `
+        --results-directory (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service.Test\TestResults') `
         --verbosity minimal
     if ($LASTEXITCODE -ne 0) {
         throw "Privileged Windows integration tests failed with exit code $LASTEXITCODE."

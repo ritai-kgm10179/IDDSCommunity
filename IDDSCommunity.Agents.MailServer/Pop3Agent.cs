@@ -41,13 +41,16 @@ public class Pop3Agent : AgentPlugin
     /// <param name="e">The event data.</param>
 
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        => RemoveExpiredClients(DateTime.Now);
+
+    internal void RemoveExpiredClients(DateTime now)
     {
         //for (int i = CurrentClients.Keys.Max(); i > 0; i--) {
         //    if (CurrentClients.ContainsKey(i) && CurrentClients[i].LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now) CurrentClients.Remove(i);
         //}
         foreach (int key in CurrentClients.Keys)
         {
-            if (CurrentClients.TryGetValue(key, out Pop3Client? client) && client.LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now)
+            if (CurrentClients.TryGetValue(key, out Pop3Client? client) && client.LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < now)
                 _currentClients.TryRemove(key, out _);
         }
     }
@@ -305,6 +308,7 @@ public class Pop3Agent : AgentPlugin
 
     protected override void OnStopAgent()
     {
+        cleanupTimer.Stop();
         foreach (Sniffer s in sniffers)
         {
             s.Abort();

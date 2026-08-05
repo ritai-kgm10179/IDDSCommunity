@@ -1,0 +1,158 @@
+name: Release installer
+
+on:
+  push:
+    tags:
+      # GitHub tag filters use glob syntax; the validation job enforces exact vX.Y.Z.
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing signed release tag (vX.Y.Z)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+jobs:
+  validate:
+    name: Validate signed tag and test
+    runs-on: windows-2025
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Resolve release ref
+        id: version
+        shell: pwsh
+        env:
+          REQUESTED_TAG: ${{ inputs.tag }}
+        run: |
+          $tag = if ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch') { $env:REQUESTED_TAG } else { $env:GITHUB_REF_NAME }
+          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+)$') { throw "Release tag must match vX.Y.Z: $tag" }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$($Matches.version)" >> $env:GITHUB_OUTPUT
+
+      - name: Checkout signed tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.version.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Verify annotated tag signature
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          $reference = gh api "repos/$env:GITHUB_REPOSITORY/git/ref/tags/$env:RELEASE_TAG" | ConvertFrom-Json
+          if ($reference.object.type -ne 'tag') { throw 'Release tags must be signed annotated tags, not lightweight tags.' }
+          $tagObject = gh api "repos/$env:GITHUB_REPOSITORY/git/tags/$($reference.object.sha)" | ConvertFrom-Json
+          if (-not $tagObject.verification.verified) { throw "Tag signature is not verified: $($tagObject.verification.reason)" }
+          if (-not $tagObject.verification.signature.StartsWith('-----BEGIN PGP SIGNATURE-----', [StringComparison]::Ordinal)) { throw 'Release tags must use an OpenPGP/GPG signature.' }
+          if ($tagObject.object.sha -ne (git rev-parse HEAD)) { throw 'The signed tag does not point to the checked-out commit.' }
+
+      - name: Validate project version
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          [xml] $project = Get-Content IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj
+          $projectVersion = [string] $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText
+          if ($projectVersion -ne $env:RELEASE_VERSION) { throw "Tag version $env:RELEASE_VERSION does not match setup version $projectVersion." }
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Restore, build, and test
+        shell: pwsh
+        run: |
+          dotnet restore IDDSCommunity.slnx --nologo
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  package:
+    name: Package ${{ matrix.rid }}
+    needs: validate
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [win-x64, win-arm64]
+    steps:
+      - name: Checkout signed tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.validate.outputs.tag }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.302
+
+      - name: Restore runtime assets
+        run: dotnet restore IDDSCommunity.slnx --runtime ${{ matrix.rid }} --nologo
+
+      - name: Build self-contained installer package
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          RELEASE_RID: ${{ matrix.rid }}
+        run: |
+          ./build-setup.ps1 -RuntimeIdentifier $env:RELEASE_RID -Configuration Release -Version $env:RELEASE_VERSION
+          $package = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID"
+          $archive = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID.zip"
+          if (-not (Test-Path "$package/IDDSCommunity.IntrusionDetection.Setup.exe")) { throw 'Setup executable is missing.' }
+          if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Service.exe")) { throw 'Service payload is missing.' }
+          if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Admin.exe")) { throw 'Admin payload is missing.' }
+          Compress-Archive -Path "$package/*" -DestinationPath $archive -CompressionLevel Optimal
+          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash *$(Split-Path -Leaf $archive)" | Set-Content -LiteralPath "$archive.sha256" -Encoding utf8NoBOM
+
+      - name: Upload installer package
+        uses: actions/upload-artifact@v7
+        with:
+          name: installer-${{ matrix.rid }}
+          path: |
+            artifacts/setup/*.zip
+            artifacts/setup/*.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish GitHub Release
+    needs: [validate, package]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Download installer packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: installer-*
+          path: release
+          merge-multiple: true
+
+      - name: Attest installer provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: release/*.zip
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
+        run: gh release create "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "IDDS Community $RELEASE_TAG"

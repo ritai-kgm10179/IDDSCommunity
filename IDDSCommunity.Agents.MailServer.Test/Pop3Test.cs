@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using System;
+
 namespace IDDSCommunity.Agents.MailServer.Test;
 
 [TestClass]
@@ -55,16 +57,21 @@ public class Pop3Test
     }
 
     /// <summary>
-    /// Executes the test pop3 watcher operation.
+    /// Verifies that the watcher cleanup removes only expired client state.
     /// </summary>
 
-    [TestMethod, Ignore]
-    public void TestPop3Watcher()
+    [TestMethod]
+    public void CleanupRemovesOnlyExpiredClients()
     {
         Pop3Agent agent = new();
-        agent.AttackDetected += new IntrusionDetection.Api.Plugin.AttackDetectedHandler(agent_AttackDetected);
-        agent.Start();
-        System.Threading.Thread.Sleep(600000);
-        Assert.Fail("This test is long running, and takes manual steps");
+        DateTime now = new(2026, 8, 5, 12, 0, 0, DateTimeKind.Local);
+        agent.CurrentClients[11001] = new Pop3Client { LastInteraction = now.AddMinutes(-Pop3Agent.CLEANUP_INTERVAL_MINS - 1) };
+        agent.CurrentClients[11002] = new Pop3Client { LastInteraction = now.AddSeconds(-30) };
+
+        agent.RemoveExpiredClients(now);
+
+        Assert.IsFalse(agent.CurrentClients.ContainsKey(11001));
+        Assert.IsTrue(agent.CurrentClients.ContainsKey(11002));
+        agent.cleanupTimer.Dispose();
     }
 }
