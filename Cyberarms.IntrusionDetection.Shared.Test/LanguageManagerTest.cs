@@ -150,7 +150,7 @@ public class LanguageManagerTest
             Path.Combine(root, "Cyberarms.IntrusionDetection.Admin"),
             Path.Combine(root, "Cyberarms.IDDS.Management")
         ];
-        Regex removedFeature = new("\\b(?:licen[cs](?:e|ing|ed)?|activation)\\b|授權", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        Regex removedFeature = new("\\b(?:licen[cs](?:e|ing|ed)?|activation|pro edition|unlimited edition|register online)\\b|授權|僅限專業版|無限版本|線上註冊", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         List<string> violations = [];
 
         foreach (string sourceRoot in sourceRoots)

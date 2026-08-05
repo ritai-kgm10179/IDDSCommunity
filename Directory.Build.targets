@@ -1,5 +1,19 @@
 <Project>
+  <PropertyGroup>
+    <CyberarmsAgentPluginProjects>;Cyberarms.Agents.FileMaker;Cyberarms.Agents.FtpServer;Cyberarms.Agents.MailServer;Cyberarms.Agents.MySql;Cyberarms.Agents.Smtp;Cyberarms.Agents.SqlServer;Cyberarms.Agents.TerminalServer;Cyberarms.Agents.WebSecurity;Cyberarms.Agents.WindowsDns;</CyberarmsAgentPluginProjects>
+  </PropertyGroup>
   <Target Name="EnsurePluginsFolder" AfterTargets="Build">
     <MakeDir Directories="$(OutputPath)Plugins" Condition="!Exists('$(OutputPath)Plugins')" />
+  </Target>
+  <Target Name="DeployCyberarmsAgentPlugin" AfterTargets="Build" Condition="$([System.String]::Copy('$(CyberarmsAgentPluginProjects)').Contains(';$(MSBuildProjectName);'))">
+    <ItemGroup>
+      <CyberarmsPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+      <CyberarmsPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+    </ItemGroup>
+    <MakeDir Directories="@(CyberarmsPluginDeploymentDirectory)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)Cyberarms.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
   </Target>
 </Project>

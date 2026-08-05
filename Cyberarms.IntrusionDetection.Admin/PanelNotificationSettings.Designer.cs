@@ -89,7 +89,7 @@
             this.smartLabelSummary.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabelSummary.Size = new System.Drawing.Size(138, 13);
             this.smartLabelSummary.TabIndex = 20;
-            this.smartLabelSummary.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Reports (Pro edition only)");
+            this.smartLabelSummary.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Reports");
             // 
             // checkBoxOnUnlock
             // 

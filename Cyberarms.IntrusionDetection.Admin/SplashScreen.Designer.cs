@@ -29,7 +29,6 @@
             this.smartLabelVersion = new Cyberarms.IntrusionDetection.Admin.SmartLabel();
             this.smartLabelStatus = new Cyberarms.IntrusionDetection.Admin.SmartLabel();
             this.smartPanel1 = new Cyberarms.IntrusionDetection.Admin.SmartPanel();
-            this.smartLabelEdition = new Cyberarms.IntrusionDetection.Admin.SmartLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.smartPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -85,7 +84,6 @@
             // 
             this.smartPanel1.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(191)))), ((int)(((byte)(191)))), ((int)(((byte)(191)))));
             this.smartPanel1.Controls.Add(this.smartLabelStatus);
-            this.smartPanel1.Controls.Add(this.smartLabelEdition);
             this.smartPanel1.Controls.Add(this.smartLabelVersion);
             this.smartPanel1.Controls.Add(this.smartLabel1);
             this.smartPanel1.Controls.Add(this.pictureBox1);
@@ -94,18 +92,6 @@
             this.smartPanel1.PaintBorder = true;
             this.smartPanel1.Size = new System.Drawing.Size(442, 170);
             this.smartPanel1.TabIndex = 4;
-            // 
-            // smartLabelEdition
-            // 
-            this.smartLabelEdition.AutoSize = true;
-            this.smartLabelEdition.Font = new System.Drawing.Font("Segoe UI Light", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.smartLabelEdition.Location = new System.Drawing.Point(171, 78);
-            this.smartLabelEdition.Name = "smartLabelEdition";
-            this.smartLabelEdition.Selected = false;
-            this.smartLabelEdition.SelectedColor = System.Drawing.Color.Empty;
-            this.smartLabelEdition.Size = new System.Drawing.Size(41, 15);
-            this.smartLabelEdition.TabIndex = 2;
-            this.smartLabelEdition.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Edition");
             // 
             // SplashScreen
             // 
@@ -134,6 +120,5 @@
         private SmartLabel smartLabelVersion;
         private SmartLabel smartLabelStatus;
         private SmartPanel smartPanel1;
-        private SmartLabel smartLabelEdition;
     }
 }
