@@ -50,8 +50,6 @@ public partial class SplashScreen : Form
 
     public void StartupComponents()
     {
-        smartLabelEdition.Text = Strings.Get("Unlimited edition");
-
         smartLabelStatus.Text = Strings.Get("Configuring database...");
         Database.Instance.Configure(Application.StartupPath);
         smartLabelStatus.Text = Strings.Get("Checking database...");

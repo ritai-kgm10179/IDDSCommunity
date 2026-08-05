@@ -37,7 +37,6 @@
             this.panelForm = new System.Windows.Forms.Panel();
             this.panelContent = new System.Windows.Forms.Panel();
             this.panelOnlineServices = new System.Windows.Forms.Panel();
-            this.linkLabelRegisterOnline = new System.Windows.Forms.LinkLabel();
             this.buttonLogin = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
@@ -249,7 +248,6 @@
             // panelOnlineServices
             // 
             this.panelOnlineServices.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
-            this.panelOnlineServices.Controls.Add(this.linkLabelRegisterOnline);
             this.panelOnlineServices.Controls.Add(this.buttonLogin);
             this.panelOnlineServices.Controls.Add(this.textBox2);
             this.panelOnlineServices.Controls.Add(this.textBox1);
@@ -265,18 +263,6 @@
             // 
             // linkLabelRegisterOnline
             // 
-            this.linkLabelRegisterOnline.ActiveLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(153)))), ((int)(((byte)(153)))), ((int)(((byte)(153)))));
-            this.linkLabelRegisterOnline.AutoSize = true;
-            this.linkLabelRegisterOnline.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.linkLabelRegisterOnline.ForeColor = System.Drawing.Color.White;
-            this.linkLabelRegisterOnline.LinkColor = System.Drawing.Color.White;
-            this.linkLabelRegisterOnline.Location = new System.Drawing.Point(148, 192);
-            this.linkLabelRegisterOnline.Name = "linkLabelRegisterOnline";
-            this.linkLabelRegisterOnline.Size = new System.Drawing.Size(85, 13);
-            this.linkLabelRegisterOnline.TabIndex = 3;
-            this.linkLabelRegisterOnline.TabStop = true;
-            this.linkLabelRegisterOnline.Text = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get("Register online");
-            this.linkLabelRegisterOnline.VisitedLinkColor = System.Drawing.Color.White;
             // 
             // buttonLogin
             // 
@@ -720,7 +706,6 @@
         private System.Windows.Forms.PictureBox borderE;
         private SmartLabel labelMenuOnline;
         private System.Windows.Forms.Panel panelOnlineServices;
-        private System.Windows.Forms.LinkLabel linkLabelRegisterOnline;
         private System.Windows.Forms.Button buttonLogin;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TextBox textBox1;

@@ -179,9 +179,6 @@
   <data name="E-mail notification settings" xml:space="preserve">
     <value>E-mail notification settings</value>
   </data>
-  <data name="Edition" xml:space="preserve">
-    <value>Edition</value>
-  </data>
   <data name="Enable this Security Agent" xml:space="preserve">
     <value>Enable this Security Agent</value>
   </data>
@@ -287,12 +284,7 @@
   <data name="Recipient address" xml:space="preserve">
     <value>Recipient address</value>
   </data>
-  <data name="Register online" xml:space="preserve">
-    <value>Register online</value>
-  </data>
-  <data name="Reports (Pro edition only)" xml:space="preserve">
-    <value>Reports (Pro edition only)</value>
-  </data>
+  <data name="Reports" xml:space="preserve"><value>Reports</value></data>
   <data name="Safe networks (white list)" xml:space="preserve">
     <value>Safe networks (white list)</value>
   </data>
@@ -409,9 +401,6 @@
   </data>
   <data name="Loading components..." xml:space="preserve">
     <value>Loading components...</value>
-  </data>
-  <data name="Unlimited edition" xml:space="preserve">
-    <value>Unlimited edition</value>
   </data>
   <data name="Configuring database..." xml:space="preserve">
     <value>Configuring database...</value>

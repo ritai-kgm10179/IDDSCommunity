@@ -179,9 +179,6 @@
   <data name="E-mail notification settings" xml:space="preserve">
     <value>電子郵件通知設定</value>
   </data>
-  <data name="Edition" xml:space="preserve">
-    <value>版本</value>
-  </data>
   <data name="Enable this Security Agent" xml:space="preserve">
     <value>啟用此安全性代理程式</value>
   </data>
@@ -287,12 +284,7 @@
   <data name="Recipient address" xml:space="preserve">
     <value>收件者地址</value>
   </data>
-  <data name="Register online" xml:space="preserve">
-    <value>線上註冊</value>
-  </data>
-  <data name="Reports (Pro edition only)" xml:space="preserve">
-    <value>報表（僅限專業版）</value>
-  </data>
+  <data name="Reports" xml:space="preserve"><value>報表</value></data>
   <data name="Safe networks (white list)" xml:space="preserve">
     <value>安全網路（允許清單）</value>
   </data>
@@ -409,9 +401,6 @@
   </data>
   <data name="Loading components..." xml:space="preserve">
     <value>正在載入元件…</value>
-  </data>
-  <data name="Unlimited edition" xml:space="preserve">
-    <value>無限版本</value>
   </data>
   <data name="Configuring database..." xml:space="preserve">
     <value>正在設定資料庫…</value>
