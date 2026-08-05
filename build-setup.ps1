@@ -26,7 +26,7 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $pay
 
 $pluginProjects = @(
     'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.MailServer',
-    'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.Smtp', 'IDDSCommunity.Agents.SqlServer',
+    'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.SqlServer',
     'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',
     'IDDSCommunity.IntrusionDetection.Base'
 )

@@ -538,6 +538,7 @@
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>防火牆封鎖 {0} 失敗：{1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>防火牆對帳 {0} 失敗：{1}</value></data>
   <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS Community 入侵防禦系統 - 版本 {0}</value></data>
+  <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS Community 入侵偵測測試郵件</value></data>
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS Community 管理工具的測試郵件。</value></data>
   <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDSCommunity 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>

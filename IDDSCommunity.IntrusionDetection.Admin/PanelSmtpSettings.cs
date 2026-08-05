@@ -151,7 +151,7 @@ public partial class PanelSmtpSettings : UserControl
                 var mimeMessage = new MimeKit.MimeMessage();
                 mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(textBoxSender.Text));
                 mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(textBoxRecipient.Text));
-                mimeMessage.Subject = "Intrusion Detection Testmail";
+                mimeMessage.Subject = Strings.Get("Intrusion detection test email");
                 mimeMessage.Body = new MimeKit.TextPart("plain") { Text = Strings.Get("This is a test message from IDDS Community.") };
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();

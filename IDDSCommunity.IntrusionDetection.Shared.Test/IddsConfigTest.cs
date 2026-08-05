@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 
@@ -137,6 +138,28 @@ public class IddsConfigTest
         Assert.IsFalse(IddsConfig.IsIpInNetwork(System.Net.IPAddress.Parse("192.168.32.1"), network, 20, 4));
         Assert.AreEqual(20, IddsConfig.GetSubnetMaskBits("255.255.240.0"));
         Assert.IsFalse(IddsConfig.IsValidSubnetMask("255.0.255.0"));
+    }
+
+    /// <summary>
+    /// Verifies that validation exceptions remain diagnostic and culture-independent.
+    /// </summary>
+    [TestMethod]
+    public void InvalidNetworkExceptionIsNotLocalizedTest()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-TW");
+            ArgumentException exception = Assert.ThrowsExactly<ArgumentException>(
+                () => IddsConfig.ConvertStringToIpAddressNetwork("not-an-address"));
+
+            StringAssert.Contains(exception.Message, "InvalidIpAddress");
+            Assert.AreEqual("ipAddressNetwork", exception.ParamName);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
     }
 
     /// <summary>

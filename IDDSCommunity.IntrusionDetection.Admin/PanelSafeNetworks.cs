@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
@@ -74,9 +75,9 @@ public partial class PanelSafeNetworks : UserControl
             HideNetworkPanel();
             listBoxSafeNetworks.Focus();
         }
-        catch (Exception ex)
+        catch (ArgumentException)
         {
-            smartLabelInvalidNetwork.Text = ex.Message;
+            smartLabelInvalidNetwork.Text = Strings.Get("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!");
             smartLabelInvalidNetwork.Visible = true;
         }
     }

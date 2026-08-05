@@ -163,6 +163,7 @@
             //
             // buttonSave
             //
+            this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.buttonSave.BackColor = System.Drawing.Color.White;
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -177,6 +178,7 @@
             //
             // buttonDiscard
             //
+            this.buttonDiscard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.buttonDiscard.BackColor = System.Drawing.Color.White;
             this.buttonDiscard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -191,11 +193,18 @@
             //
             // flowLayoutPanelCustomPluginSettings
             //
+            this.flowLayoutPanelCustomPluginSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.flowLayoutPanelCustomPluginSettings.AutoScroll = true;
-            this.flowLayoutPanelCustomPluginSettings.Location = new System.Drawing.Point(8, 272);
+            this.flowLayoutPanelCustomPluginSettings.BackColor = System.Drawing.Color.FromArgb(248, 250, 251);
+            this.flowLayoutPanelCustomPluginSettings.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.flowLayoutPanelCustomPluginSettings.Location = new System.Drawing.Point(8, 268);
             this.flowLayoutPanelCustomPluginSettings.Name = "flowLayoutPanelCustomPluginSettings";
-            this.flowLayoutPanelCustomPluginSettings.Size = new System.Drawing.Size(351, 85);
+            this.flowLayoutPanelCustomPluginSettings.Padding = new System.Windows.Forms.Padding(8, 6, 8, 6);
+            this.flowLayoutPanelCustomPluginSettings.Size = new System.Drawing.Size(428, 70);
             this.flowLayoutPanelCustomPluginSettings.TabIndex = 29;
+            this.flowLayoutPanelCustomPluginSettings.WrapContents = false;
             //
             // errHardLockDuration
             //
@@ -258,7 +267,7 @@
             this.smartLabelCustomConfig.AutoSize = true;
             this.smartLabelCustomConfig.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.smartLabelCustomConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.smartLabelCustomConfig.Location = new System.Drawing.Point(11, 249);
+            this.smartLabelCustomConfig.Location = new System.Drawing.Point(11, 239);
             this.smartLabelCustomConfig.Margin = new System.Windows.Forms.Padding(0);
             this.smartLabelCustomConfig.Name = "smartLabelCustomConfig";
             this.smartLabelCustomConfig.Selected = false;

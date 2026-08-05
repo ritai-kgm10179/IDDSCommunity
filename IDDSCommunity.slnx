@@ -4,7 +4,6 @@
   <Project Path="IDDSCommunity.Agents.MailServer/IDDSCommunity.Agents.MailServer.csproj" />
   <Project Path="IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.MySql/IDDSCommunity.Agents.MySql.csproj" />
-  <Project Path="IDDSCommunity.Agents.Smtp/IDDSCommunity.Agents.Smtp.csproj" />
   <Project Path="IDDSCommunity.Agents.SqlServer/IDDSCommunity.Agents.SqlServer.csproj" />
   <Project Path="IDDSCommunity.Agents.TerminalServer/IDDSCommunity.Agents.TerminalServer.csproj" />
   <Project Path="IDDSCommunity.Agents.WebSecurity/IDDSCommunity.Agents.WebSecurity.csproj" />
