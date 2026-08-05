@@ -30,7 +30,7 @@
             // smartLabel1
             // 
             this.smartLabel1.AutoSize = true;
-            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.smartLabel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel1.Location = new System.Drawing.Point(3, 6);
             this.smartLabel1.Name = "smartLabel1";
@@ -43,7 +43,7 @@
             // textBox1
             // 
             this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBox1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBox1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBox1.Location = new System.Drawing.Point(233, 4);
             this.textBox1.Name = "textBox1";

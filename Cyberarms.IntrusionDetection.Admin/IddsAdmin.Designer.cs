@@ -292,7 +292,7 @@
             // 
             // label8
             // 
-            this.label8.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label8.ForeColor = System.Drawing.Color.White;
             this.label8.Location = new System.Drawing.Point(25, 162);
             this.label8.Name = "label8";
@@ -303,7 +303,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.ForeColor = System.Drawing.Color.White;
             this.label7.Location = new System.Drawing.Point(25, 95);
             this.label7.Name = "label7";
@@ -325,7 +325,7 @@
             // labelUsername
             // 
             this.labelUsername.AutoSize = true;
-            this.labelUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelUsername.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelUsername.ForeColor = System.Drawing.Color.White;
             this.labelUsername.Location = new System.Drawing.Point(25, 69);
             this.labelUsername.Name = "labelUsername";
@@ -381,7 +381,7 @@
             // smartLabelServiceStatus
             // 
             this.smartLabelServiceStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.smartLabelServiceStatus.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabelServiceStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabelServiceStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabelServiceStatus.Location = new System.Drawing.Point(582, 20);
             this.smartLabelServiceStatus.Name = "smartLabelServiceStatus";
@@ -423,7 +423,7 @@
             // labelMenuSettings
             // 
             this.labelMenuSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuSettings.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuSettings.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.labelMenuSettings.Location = new System.Drawing.Point(369, 14);
             this.labelMenuSettings.Margin = new System.Windows.Forms.Padding(0);
@@ -439,7 +439,7 @@
             // labelMenuAgents
             // 
             this.labelMenuAgents.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuAgents.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuAgents.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuAgents.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.labelMenuAgents.Location = new System.Drawing.Point(286, 14);
             this.labelMenuAgents.Margin = new System.Windows.Forms.Padding(0);
@@ -455,7 +455,7 @@
             // labelMenuCurrentLocks
             // 
             this.labelMenuCurrentLocks.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuCurrentLocks.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuCurrentLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuCurrentLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.labelMenuCurrentLocks.Location = new System.Drawing.Point(73, 14);
             this.labelMenuCurrentLocks.Margin = new System.Windows.Forms.Padding(0);
@@ -471,7 +471,7 @@
             // labelMenuSecurityLog
             // 
             this.labelMenuSecurityLog.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuSecurityLog.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuSecurityLog.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuSecurityLog.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.labelMenuSecurityLog.Location = new System.Drawing.Point(185, 14);
             this.labelMenuSecurityLog.Margin = new System.Windows.Forms.Padding(0);
@@ -488,7 +488,7 @@
             // 
             this.labelMenuOnline.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.labelMenuOnline.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuOnline.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuOnline.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuOnline.ForeColor = System.Drawing.Color.White;
             this.labelMenuOnline.Location = new System.Drawing.Point(553, 13);
             this.labelMenuOnline.Margin = new System.Windows.Forms.Padding(0);
@@ -505,7 +505,7 @@
             // labelMenuHome
             // 
             this.labelMenuHome.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.labelMenuHome.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuHome.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuHome.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.labelMenuHome.Location = new System.Drawing.Point(4, 14);
             this.labelMenuHome.Margin = new System.Windows.Forms.Padding(0);

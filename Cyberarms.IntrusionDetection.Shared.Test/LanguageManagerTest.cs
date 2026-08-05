@@ -89,8 +89,8 @@ public class LanguageManagerTest
     public void ProductionSourcesDoNotContainHardCodedUserFacingMessages()
     {
         string root = FindRepositoryRoot();
-        Regex forbidden = new("throw new [A-Za-z0-9_.<>]+Exception\\(\\s*\"|MessageBox\\.Show\\(\\s*\"|Console\\.Write(?:Line)?\\(\\s*\"|WindowsLogManager\\.Instance\\.WriteEntry\\(\\s*\"|GenericErrorDialog(?:\\s+[A-Za-z0-9_]+\\s*=)?\\s*new\\(\\s*\"|EventMessage\\s*=\\s*\"", RegexOptions.Compiled);
-        Regex designerText = new("\\.(?:Text|HeaderText|ToolTipText)\\s*=\\s*\"(?<value>[^\"]*)\"", RegexOptions.Compiled);
+        Regex forbidden = new("throw new [A-Za-z0-9_.<>]+Exception\\(\\s*\"|MessageBox\\.Show\\(\\s*\"|Console\\.Write(?:Line)?\\(\\s*\"|WindowsLogManager\\.Instance\\.WriteEntry\\(\\s*\"|GenericErrorDialog(?:\\s+[A-Za-z0-9_]+\\s*=)?\\s*new\\(\\s*\"|EventMessage\\s*=\\s*\"|SetToolTip\\([^,]+,\\s*(?:string\\.Format\\()?\\s*\"", RegexOptions.Compiled);
+        Regex designerText = new("\\.(?:Text|HeaderText|ToolTipText|ToolTipTitle)\\s*=\\s*\"(?<value>[^\"]*)\"", RegexOptions.Compiled);
         List<string> violations = [];
 
         foreach (string file in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)

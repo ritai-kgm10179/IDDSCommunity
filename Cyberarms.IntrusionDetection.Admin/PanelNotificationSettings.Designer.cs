@@ -81,7 +81,7 @@
             // smartLabelSummary
             // 
             this.smartLabelSummary.AutoSize = true;
-            this.smartLabelSummary.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabelSummary.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabelSummary.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabelSummary.Location = new System.Drawing.Point(2, 128);
             this.smartLabelSummary.Name = "smartLabelSummary";
@@ -94,7 +94,7 @@
             // checkBoxOnUnlock
             // 
             this.checkBoxOnUnlock.AutoSize = true;
-            this.checkBoxOnUnlock.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxOnUnlock.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxOnUnlock.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxOnUnlock.Location = new System.Drawing.Point(6, 91);
             this.checkBoxOnUnlock.Name = "checkBoxOnUnlock";
@@ -107,7 +107,7 @@
             // checkBoxHardLocks
             // 
             this.checkBoxHardLocks.AutoSize = true;
-            this.checkBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxHardLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxHardLocks.Location = new System.Drawing.Point(6, 68);
             this.checkBoxHardLocks.Name = "checkBoxHardLocks";
@@ -121,7 +121,7 @@
             // 
             this.checkBoxMonthlyReport.AutoSize = true;
             this.checkBoxMonthlyReport.Enabled = false;
-            this.checkBoxMonthlyReport.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxMonthlyReport.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxMonthlyReport.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxMonthlyReport.Location = new System.Drawing.Point(24, 210);
             this.checkBoxMonthlyReport.Name = "checkBoxMonthlyReport";
@@ -135,7 +135,7 @@
             // 
             this.checkBoxWeeklyReport.AutoSize = true;
             this.checkBoxWeeklyReport.Enabled = false;
-            this.checkBoxWeeklyReport.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxWeeklyReport.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxWeeklyReport.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxWeeklyReport.Location = new System.Drawing.Point(24, 182);
             this.checkBoxWeeklyReport.Name = "checkBoxWeeklyReport";
@@ -149,7 +149,7 @@
             // 
             this.checkBoxDailySummary.AutoSize = true;
             this.checkBoxDailySummary.Enabled = false;
-            this.checkBoxDailySummary.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxDailySummary.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxDailySummary.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxDailySummary.Location = new System.Drawing.Point(24, 154);
             this.checkBoxDailySummary.Name = "checkBoxDailySummary";
@@ -162,7 +162,7 @@
             // checkBoxSoftLock
             // 
             this.checkBoxSoftLock.AutoSize = true;
-            this.checkBoxSoftLock.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxSoftLock.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxSoftLock.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxSoftLock.Location = new System.Drawing.Point(6, 45);
             this.checkBoxSoftLock.Name = "checkBoxSoftLock";
@@ -175,7 +175,7 @@
             // smartLabel1
             // 
             this.smartLabel1.AutoSize = true;
-            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel1.Location = new System.Drawing.Point(3, 19);
             this.smartLabel1.Name = "smartLabel1";
@@ -217,7 +217,7 @@
             // 
             this.buttonDiscard.BackColor = System.Drawing.Color.White;
             this.buttonDiscard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonDiscard.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.buttonDiscard.Location = new System.Drawing.Point(220, 339);
             this.buttonDiscard.Name = "buttonDiscard";
@@ -231,7 +231,7 @@
             // 
             this.buttonSave.BackColor = System.Drawing.Color.White;
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.buttonSave.Location = new System.Drawing.Point(112, 339);
             this.buttonSave.Name = "buttonSave";

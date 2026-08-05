@@ -69,7 +69,7 @@
             // textBoxUsername
             // 
             this.textBoxUsername.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxUsername.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxUsername.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxUsername.Location = new System.Drawing.Point(112, 186);
             this.textBoxUsername.Name = "textBoxUsername";
@@ -80,7 +80,7 @@
             // textBoxSmtpServer
             // 
             this.textBoxSmtpServer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxSmtpServer.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxSmtpServer.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSmtpServer.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxSmtpServer.Location = new System.Drawing.Point(112, 64);
             this.textBoxSmtpServer.Name = "textBoxSmtpServer";
@@ -91,7 +91,7 @@
             // textBoxRecipient
             // 
             this.textBoxRecipient.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxRecipient.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxRecipient.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxRecipient.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxRecipient.Location = new System.Drawing.Point(112, 36);
             this.textBoxRecipient.Name = "textBoxRecipient";
@@ -102,7 +102,7 @@
             // textBoxSender
             // 
             this.textBoxSender.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxSender.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxSender.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSender.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxSender.Location = new System.Drawing.Point(112, 8);
             this.textBoxSender.Name = "textBoxSender";
@@ -113,7 +113,7 @@
             // checkBoxAuthentication
             // 
             this.checkBoxAuthentication.AutoSize = true;
-            this.checkBoxAuthentication.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxAuthentication.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxAuthentication.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxAuthentication.Location = new System.Drawing.Point(6, 161);
             this.checkBoxAuthentication.Name = "checkBoxAuthentication";
@@ -126,7 +126,7 @@
             // smartLabel4
             // 
             this.smartLabel4.AutoSize = true;
-            this.smartLabel4.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel4.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel4.Location = new System.Drawing.Point(3, 188);
             this.smartLabel4.Name = "smartLabel4";
@@ -139,7 +139,7 @@
             // smartLabel3
             // 
             this.smartLabel3.AutoSize = true;
-            this.smartLabel3.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel3.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel3.Location = new System.Drawing.Point(3, 66);
             this.smartLabel3.Name = "smartLabel3";
@@ -152,7 +152,7 @@
             // smartLabel2
             // 
             this.smartLabel2.AutoSize = true;
-            this.smartLabel2.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel2.Location = new System.Drawing.Point(3, 38);
             this.smartLabel2.Name = "smartLabel2";
@@ -165,7 +165,7 @@
             // smartLabel1
             // 
             this.smartLabel1.AutoSize = true;
-            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel1.Location = new System.Drawing.Point(3, 10);
             this.smartLabel1.Name = "smartLabel1";
@@ -192,7 +192,7 @@
             // textBoxPassword
             // 
             this.textBoxPassword.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxPassword.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxPassword.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxPassword.Location = new System.Drawing.Point(112, 214);
             this.textBoxPassword.Name = "textBoxPassword";
@@ -204,7 +204,7 @@
             // smartLabel6
             // 
             this.smartLabel6.AutoSize = true;
-            this.smartLabel6.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel6.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel6.Location = new System.Drawing.Point(3, 216);
             this.smartLabel6.Name = "smartLabel6";
@@ -217,7 +217,7 @@
             // checkBoxUseSSL
             // 
             this.checkBoxUseSSL.AutoSize = true;
-            this.checkBoxUseSSL.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxUseSSL.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxUseSSL.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxUseSSL.Location = new System.Drawing.Point(6, 120);
             this.checkBoxUseSSL.Name = "checkBoxUseSSL";
@@ -230,7 +230,7 @@
             // smartLabel8
             // 
             this.smartLabel8.AutoSize = true;
-            this.smartLabel8.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabel8.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabel8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel8.Location = new System.Drawing.Point(3, 94);
             this.smartLabel8.Name = "smartLabel8";
@@ -243,7 +243,7 @@
             // textBoxSmtpPort
             // 
             this.textBoxSmtpPort.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textBoxSmtpPort.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxSmtpPort.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSmtpPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBoxSmtpPort.Location = new System.Drawing.Point(112, 92);
             this.textBoxSmtpPort.Name = "textBoxSmtpPort";
@@ -287,7 +287,7 @@
             // 
             this.buttonDiscard.BackColor = System.Drawing.Color.White;
             this.buttonDiscard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonDiscard.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.buttonDiscard.Location = new System.Drawing.Point(220, 296);
             this.buttonDiscard.Name = "buttonDiscard";
@@ -301,7 +301,7 @@
             // 
             this.buttonSave.BackColor = System.Drawing.Color.White;
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.buttonSave.Location = new System.Drawing.Point(112, 296);
             this.buttonSave.Name = "buttonSave";
@@ -314,7 +314,7 @@
             // smartLabelTestError
             // 
             this.smartLabelTestError.AutoSize = true;
-            this.smartLabelTestError.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.smartLabelTestError.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabelTestError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.smartLabelTestError.Location = new System.Drawing.Point(3, 323);
             this.smartLabelTestError.Name = "smartLabelTestError";
@@ -328,7 +328,7 @@
             // errSmtpPort
             // 
             this.errSmtpPort.AutoSize = true;
-            this.errSmtpPort.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.errSmtpPort.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSmtpPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
             this.errSmtpPort.Location = new System.Drawing.Point(329, 94);
             this.errSmtpPort.Name = "errSmtpPort";
@@ -343,7 +343,7 @@
             // 
             this.buttonTestSmtpSettings.BackColor = System.Drawing.Color.White;
             this.buttonTestSmtpSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonTestSmtpSettings.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonTestSmtpSettings.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonTestSmtpSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.buttonTestSmtpSettings.Location = new System.Drawing.Point(332, 212);
             this.buttonTestSmtpSettings.Name = "buttonTestSmtpSettings";

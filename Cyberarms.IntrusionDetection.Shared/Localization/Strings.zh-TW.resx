@@ -550,7 +550,7 @@
   <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP 驗證失敗</value></data>
   <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 驗證失敗</value></data>
   <data name="Remote desktop connection TLS/SSL authentication failure" xml:space="preserve"><value>遠端桌面連線 TLS/SSL 驗證失敗</value></data>
-  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker 安全性 Agent</value></data>
+  <data name="FileMaker Security Agent" xml:space="preserve"><value>FileMaker 安全性代理程式</value></data>
   <data name="DisplayName cannot be changed!" xml:space="preserve"><value>顯示名稱無法變更！</value></data>
   <data name="DNS detection window must be between 1 and 3600 seconds." xml:space="preserve"><value>DNS 偵測時間窗必須介於 1 到 3600 秒。</value></data>
   <data name="DNS detection thresholds must be greater than zero." xml:space="preserve"><value>DNS 偵測閾值必須大於零。</value></data>
@@ -563,11 +563,11 @@
   <data name="DNS zone-transfer threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 區域轉送閾值。</value></data>
   <data name="Suspicious DNS activity was detected from {0}." xml:space="preserve"><value>偵測到來自 {0} 的可疑 DNS 活動。</value></data>
   <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS Agent 設定無法使用。</value></data>
-  <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS 安全性 Agent</value></data>
-  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD 認證驗證安全性 Agent</value></data>
-  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性 Agent</value></data>
-  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 安全性 Agent - 路由及遠端存取</value></data>
-  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性 Agent</value></data>
+  <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS 安全性代理程式</value></data>
+  <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD 認證驗證安全性代理程式</value></data>
+  <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性代理程式</value></data>
+  <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 安全性代理程式－路由及遠端存取</value></data>
+  <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性代理程式</value></data>
   <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>Agent 已在執行，作業已取消！</value></data>
   <data name="Agent is not running." xml:space="preserve"><value>Agent 尚未執行。</value></data>
   <data name="Agent cannot be paused in this state" xml:space="preserve"><value>Agent 在目前狀態下無法暫停</value></data>
@@ -616,4 +616,28 @@
   <data name="The elevated service command could not be started." xml:space="preserve"><value>無法啟動已提升權限的服務命令。</value></data>
   <data name="The elevated service command failed with exit code {0}." xml:space="preserve"><value>已提升權限的服務命令執行失敗，結束代碼為 {0}。</value></data>
   <data name="Unsupported service command." xml:space="preserve"><value>不支援的服務命令。</value></data>
+  <data name="FTP Security Agent" xml:space="preserve"><value>FTP 安全性代理程式</value></data>
+  <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP 安全性代理程式</value></data>
+  <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server 安全性代理程式</value></data>
+  <data name="MySql Server Security Agent" xml:space="preserve"><value>MySQL Server 安全性代理程式</value></data>
+  <data name="TLS/SSL Security Agent" xml:space="preserve"><value>遠端桌面安全性代理程式</value></data>
+  <data name="Web Security Agent" xml:space="preserve"><value>Web 安全性代理程式</value></data>
+  <data name="Cyberarms.Agents.MailServer.Pop3Agent" xml:space="preserve"><value>POP3 安全性代理程式</value></data>
+  <data name="Cyberarms.Agents.MailServer.SmtpAgent" xml:space="preserve"><value>郵件伺服器 SMTP 安全性代理程式</value></data>
+  <data name="Agent status" xml:space="preserve"><value>代理程式狀態</value></data>
+  <data name="enabled" xml:space="preserve"><value>已啟用</value></data>
+  <data name="disabled" xml:space="preserve"><value>已停用</value></data>
+  <data name="The security agent {0} is {1}. Double-click to configure this agent." xml:space="preserve"><value>安全性代理程式 {0} 目前為{1}。按兩下即可設定此代理程式。</value></data>
+  <data name="FtpPort" xml:space="preserve"><value>FTP 連接埠</value></data>
+  <data name="Pop3Port" xml:space="preserve"><value>POP3 連接埠</value></data>
+  <data name="SmtpPort" xml:space="preserve"><value>SMTP 連接埠</value></data>
+  <data name="RdpPort" xml:space="preserve"><value>遠端桌面連接埠</value></data>
+  <data name="WindowSeconds" xml:space="preserve"><value>偵測時間範圍（秒）</value></data>
+  <data name="QueryRateThreshold" xml:space="preserve"><value>查詢速率門檻</value></data>
+  <data name="NxDomainThreshold" xml:space="preserve"><value>NXDOMAIN 查詢門檻</value></data>
+  <data name="AnyQueryThreshold" xml:space="preserve"><value>ANY 查詢門檻</value></data>
+  <data name="DynamicUpdateThreshold" xml:space="preserve"><value>動態更新門檻</value></data>
+  <data name="ZoneTransferThreshold" xml:space="preserve"><value>區域傳送門檻</value></data>
+  <data name="MaximumTrackedClients" xml:space="preserve"><value>最大追蹤用戶端數量</value></data>
+  <data name="ExcludedAddresses" xml:space="preserve"><value>排除的 IP 位址</value></data>
 </root>

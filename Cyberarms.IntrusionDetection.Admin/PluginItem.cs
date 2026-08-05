@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using Cyberarms.IntrusionDetection.Shared;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 using System.Windows.Forms;
 
 namespace Cyberarms.IntrusionDetection.Admin;
@@ -83,8 +84,13 @@ public partial class PluginItem : UserControl
         pictureBoxEnabledState.Image = SecurityAgent.Enabled ?
                         Properties.Resources.status_agent_enabled_dark :
                         Properties.Resources.status_agent_disabled_dark;
-        toolTip1.SetToolTip(pictureBoxEnabledState, string.Format("The security agent {0} is {1}. Double-click to configure this agent.",
-            SecurityAgent.DisplayName, SecurityAgent.Enabled ? "enabled" : "disabled"));
+        toolTip1.ToolTipTitle = Strings.Get("Agent status");
+        toolTip1.SetToolTip(
+            pictureBoxEnabledState,
+            Strings.Format(
+                "The security agent {0} is {1}. Double-click to configure this agent.",
+                SecurityAgent.DisplayName,
+                Strings.Get(SecurityAgent.Enabled ? "enabled" : "disabled")));
     }
 
     /// <summary>

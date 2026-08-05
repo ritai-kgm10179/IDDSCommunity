@@ -159,7 +159,7 @@ public sealed class WindowsDnsSecurityAgentTest
         using FakeEventSource source = new();
         WindowsDnsSecurityAgent agent = new(source, TimeProvider.System);
 
-        Assert.AreEqual("Windows DNS 安全防護 Agent", agent.DisplayName);
+            Assert.AreEqual("Windows DNS 安全性代理程式", agent.DisplayName);
     }
 
     private static WindowsDnsConfiguration CreateConfiguration() => new()

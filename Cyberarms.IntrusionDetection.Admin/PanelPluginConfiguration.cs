@@ -89,8 +89,9 @@ public partial class PanelPluginConfiguration : UserControl
         {
             SmartLabelTextbox ltx = new()
             {
-                LabelText = propName,
-                TextBoxText = Agent.CustomConfiguration[propName]
+                LabelText = global::Cyberarms.IntrusionDetection.Shared.Localization.Strings.Get(propName),
+                TextBoxText = Agent.CustomConfiguration[propName],
+                Tag = propName
             };
             flowLayoutPanelCustomPluginSettings.Controls.Add(ltx);
             ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
@@ -108,7 +109,7 @@ public partial class PanelPluginConfiguration : UserControl
             if (o is SmartLabelTextbox)
             {
                 SmartLabelTextbox setting = (SmartLabelTextbox)o;
-                string name = setting.LabelText;
+                string name = setting.Tag as string ?? setting.LabelText;
                 string value = setting.TextBoxText;
                 Agent.CustomConfiguration[name] = value;
             }

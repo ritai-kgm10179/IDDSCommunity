@@ -131,7 +131,7 @@
             // smartLabelLatestEntry
             // 
             this.smartLabelLatestEntry.AutoSize = true;
-            this.smartLabelLatestEntry.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabelLatestEntry.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabelLatestEntry.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabelLatestEntry.Location = new System.Drawing.Point(116, 7);
             this.smartLabelLatestEntry.Name = "smartLabelLatestEntry";
@@ -144,7 +144,7 @@
             // smartLabelMessage
             // 
             this.smartLabelMessage.AutoSize = true;
-            this.smartLabelMessage.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabelMessage.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabelMessage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabelMessage.Location = new System.Drawing.Point(441, 8);
             this.smartLabelMessage.Name = "smartLabelMessage";
@@ -157,7 +157,7 @@
             // smartLabelNumberOfEvents
             // 
             this.smartLabelNumberOfEvents.AutoSize = true;
-            this.smartLabelNumberOfEvents.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabelNumberOfEvents.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabelNumberOfEvents.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabelNumberOfEvents.Location = new System.Drawing.Point(235, 8);
             this.smartLabelNumberOfEvents.Name = "smartLabelNumberOfEvents";
@@ -170,7 +170,7 @@
             // smartLabelpAddress
             // 
             this.smartLabelpAddress.AutoSize = true;
-            this.smartLabelpAddress.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabelpAddress.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabelpAddress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabelpAddress.Location = new System.Drawing.Point(341, 7);
             this.smartLabelpAddress.Name = "smartLabelpAddress";
@@ -183,7 +183,7 @@
             // smartLabelType
             // 
             this.smartLabelType.AutoSize = true;
-            this.smartLabelType.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold);
+            this.smartLabelType.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabelType.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(159)))), ((int)(((byte)(227)))));
             this.smartLabelType.Location = new System.Drawing.Point(9, 7);
             this.smartLabelType.Name = "smartLabelType";
@@ -226,7 +226,7 @@
             this.AgentId});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
@@ -237,7 +237,7 @@
             this.dataGridViewIntrusionLog.Name = "dataGridViewIntrusionLog";
             this.dataGridViewIntrusionLog.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dataGridViewIntrusionLog.RowHeadersVisible = false;
-            this.dataGridViewIntrusionLog.RowTemplate.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dataGridViewIntrusionLog.RowTemplate.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dataGridViewIntrusionLog.RowTemplate.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.dataGridViewIntrusionLog.RowTemplate.ReadOnly = true;
             this.dataGridViewIntrusionLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -266,7 +266,7 @@
             // comboBoxAgentSelection
             // 
             this.comboBoxAgentSelection.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.comboBoxAgentSelection.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxAgentSelection.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxAgentSelection.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.comboBoxAgentSelection.FormattingEnabled = true;
             this.comboBoxAgentSelection.Location = new System.Drawing.Point(10, 7);
@@ -281,7 +281,7 @@
             this.checkBoxSystemMessages.AutoSize = true;
             this.checkBoxSystemMessages.Checked = true;
             this.checkBoxSystemMessages.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxSystemMessages.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxSystemMessages.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxSystemMessages.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxSystemMessages.Location = new System.Drawing.Point(523, 9);
             this.checkBoxSystemMessages.Name = "checkBoxSystemMessages";
@@ -296,7 +296,7 @@
             this.checkBoxHardLocks.AutoSize = true;
             this.checkBoxHardLocks.Checked = true;
             this.checkBoxHardLocks.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxHardLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxHardLocks.Location = new System.Drawing.Point(437, 9);
             this.checkBoxHardLocks.Name = "checkBoxHardLocks";
@@ -311,7 +311,7 @@
             this.checkBoxSoftLocks.AutoSize = true;
             this.checkBoxSoftLocks.Checked = true;
             this.checkBoxSoftLocks.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxSoftLocks.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxSoftLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxSoftLocks.Location = new System.Drawing.Point(355, 9);
             this.checkBoxSoftLocks.Name = "checkBoxSoftLocks";
@@ -326,7 +326,7 @@
             this.checkBoxFailedLogins.AutoSize = true;
             this.checkBoxFailedLogins.Checked = true;
             this.checkBoxFailedLogins.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxFailedLogins.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBoxFailedLogins.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxFailedLogins.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.checkBoxFailedLogins.Location = new System.Drawing.Point(257, 9);
             this.checkBoxFailedLogins.Name = "checkBoxFailedLogins";
