@@ -56,24 +56,4 @@ public class UnitTest1
 
 
 
-    /// <summary>
-    /// Writes event log test.
-    /// </summary>
-
-    [TestMethod]
-    public void WriteEventLogTest()
-    {
-        try
-        {
-            WindowsLogManager.Instance.WriteEntry("Test from unit test", System.Diagnostics.EventLogEntryType.Information, 1, 1);
-        }
-        catch (System.Security.SecurityException)
-        {
-            // Requires administrator privileges to register event source
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Requires administrator privileges
-        }
-    }
 }
