@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using Dapper;
 using Microsoft.Data.Sqlite;
@@ -20,6 +21,10 @@ public sealed record DatabaseMaintenanceStatus(
     string IntegrityResult);
 
 public sealed record DatabaseBackupResult(string FilePath, long Length, string Sha256, DateTimeOffset CreatedUtc);
+
+public sealed record DatabaseBackupInfo(string FilePath, long Length, DateTimeOffset CreatedUtc);
+
+public sealed record DatabaseMaintenanceHistory(DateTimeOffset OccurredUtc, string EventType, string Outcome, string Subject, string Details);
 
 public sealed record DatabaseRetentionPolicy(int IntrusionLogDays = 180, int UnlockedLockDays = 180, int AuditDays = 365, int CompletedInboxDays = 30, int BatchSize = 1000);
 
@@ -86,6 +91,56 @@ public sealed class SqliteMaintenanceService(Database database)
         return backupResult;
     }
 
+    public DatabaseBackupResult VerifyBackup(string backupPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(backupPath);
+        if (!File.Exists(backupPath)) throw new FileNotFoundException(MaintenanceError.BackupFileNotFound.ToString(), backupPath);
+        ValidateDatabaseFile(backupPath);
+        FileInfo file = new(backupPath);
+        return new DatabaseBackupResult(file.FullName, file.Length, ComputeSha256(file.FullName), file.CreationTimeUtc);
+    }
+
+    public IReadOnlyList<DatabaseBackupInfo> ListBackups(string backupDirectory)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(backupDirectory);
+        if (!Directory.Exists(backupDirectory)) return [];
+        return Directory.EnumerateFiles(backupDirectory, "iddscommunity-*.db", SearchOption.TopDirectoryOnly)
+            .Select(path => new FileInfo(path))
+            .OrderByDescending(file => file.CreationTimeUtc)
+            .Select(file => new DatabaseBackupInfo(file.FullName, file.Length, file.CreationTimeUtc))
+            .ToArray();
+    }
+
+    public int PruneBackups(string backupDirectory, int retentionDays = 30, int maximumCount = 10, DateTimeOffset? now = null)
+    {
+        if (retentionDays < 1) throw new ArgumentOutOfRangeException(nameof(retentionDays));
+        if (maximumCount < 1) throw new ArgumentOutOfRangeException(nameof(maximumCount));
+        DateTimeOffset boundary = (now ?? DateTimeOffset.UtcNow).AddDays(-retentionDays);
+        DatabaseBackupInfo[] backups = [.. ListBackups(backupDirectory)];
+        int deleted = 0;
+        for (int index = 0; index < backups.Length; index++)
+        {
+            if (index < maximumCount && backups[index].CreatedUtc >= boundary) continue;
+            File.Delete(backups[index].FilePath);
+            deleted++;
+        }
+        RecordAudit("Database.BackupRetention", backupDirectory, deleted.ToString(CultureInfo.InvariantCulture));
+        return deleted;
+    }
+
+    public IReadOnlyList<DatabaseMaintenanceHistory> GetHistory(int maximumRows = 50)
+    {
+        EnsureConfigured();
+        if (maximumRows is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(maximumRows));
+        return database.Connection.Query<DatabaseMaintenanceHistoryRow>(
+            "SELECT OccurredUtc,EventType,Outcome,Subject,Details FROM ProtectionAuditLog WHERE EventType LIKE 'Database.%' ORDER BY OccurredUtc DESC LIMIT @MaximumRows",
+            new { MaximumRows = maximumRows })
+            .Select(row => new DatabaseMaintenanceHistory(
+                DateTimeOffset.Parse(row.OccurredUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                row.EventType, row.Outcome, row.Subject, row.Details))
+            .ToArray();
+    }
+
     public void Optimize()
     {
         EnsureConfigured();
@@ -129,6 +184,7 @@ public sealed class SqliteMaintenanceService(Database database)
         string dataSource = Path.GetFullPath(database.DataSource);
         string directory = Path.GetDirectoryName(dataSource) ?? throw new InvalidOperationException(MaintenanceError.DatabaseDirectoryUnavailable.ToString());
         string fileName = Path.GetFileName(dataSource);
+        EnsureFreeSpace(directory, checked(Math.Max(GetLength(backupPath) + GetLength(dataSource), 64L * 1024 * 1024)));
         string candidate = Path.Combine(directory, $".{fileName}.restore-{Guid.NewGuid():N}");
         Directory.CreateDirectory(rollbackDirectory);
         string rollback = Path.Combine(rollbackDirectory, $"{fileName}.rollback-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}");
@@ -165,6 +221,54 @@ public sealed class SqliteMaintenanceService(Database database)
         }
     }
 
+    public DatabaseBackupResult CompactAndReplace(string backupDirectory, bool exclusiveAccessConfirmed)
+    {
+        EnsureConfigured();
+        if (!exclusiveAccessConfirmed) throw new InvalidOperationException(MaintenanceError.ExclusiveAccessRequired.ToString());
+        string dataSource = Path.GetFullPath(database.DataSource);
+        string directory = Path.GetDirectoryName(dataSource) ?? throw new InvalidOperationException(MaintenanceError.DatabaseDirectoryUnavailable.ToString());
+        EnsureFreeSpace(directory, checked(Math.Max(GetLength(dataSource) * 2, 64L * 1024 * 1024)));
+        DatabaseBackupResult safetyBackup = CreateVerifiedBackup(backupDirectory);
+        string fileName = Path.GetFileName(dataSource);
+        string candidate = Path.Combine(directory, $".{fileName}.compact-{Guid.NewGuid():N}");
+        string rollback = Path.Combine(backupDirectory, "Rollback", $"{fileName}.precompact-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.GetDirectoryName(rollback)!);
+
+        database.ExecuteNonQuery("PRAGMA wal_checkpoint(TRUNCATE)");
+        using (SqliteCommand command = database.Connection.CreateCommand())
+        {
+            command.CommandText = "VACUUM INTO $path";
+            command.Parameters.AddWithValue("$path", candidate);
+            command.ExecuteNonQuery();
+        }
+        ValidateDatabaseFile(candidate);
+        database.Close();
+        try
+        {
+            File.Replace(candidate, dataSource, rollback, true);
+            DeleteSidecar(dataSource + "-wal");
+            DeleteSidecar(dataSource + "-shm");
+            database.Configure(directory, fileName);
+            if (!string.Equals(RunIntegrityCheck(true), "ok", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException(MaintenanceError.CompactedDatabaseIntegrityCheckFailed.ToString());
+            RecordAudit("Database.Compact", dataSource, safetyBackup.Sha256);
+            return safetyBackup;
+        }
+        catch
+        {
+            database.Close();
+            if (File.Exists(rollback)) File.Replace(rollback, dataSource, null, true);
+            DeleteSidecar(dataSource + "-wal");
+            DeleteSidecar(dataSource + "-shm");
+            if (File.Exists(dataSource)) database.Configure(directory, fileName);
+            throw;
+        }
+        finally
+        {
+            DeleteSidecar(candidate);
+        }
+    }
+
     private static int DeleteBatch(SqliteConnection connection, SqliteTransaction transaction, string sql, DateTimeOffset boundary, int batchSize, int? unlocked = null)
     {
         return connection.Execute(sql, new { Boundary = boundary.UtcDateTime, BatchSize = batchSize, Unlocked = unlocked }, transaction);
@@ -185,6 +289,13 @@ public sealed class SqliteMaintenanceService(Database database)
         if (!string.Equals(result, "ok", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException($"{MaintenanceError.IntegrityCheckFailed}:{result}");
     }
 
+    private static void EnsureFreeSpace(string directory, long requiredBytes)
+    {
+        string root = Path.GetPathRoot(Path.GetFullPath(directory)) ?? throw new InvalidOperationException(MaintenanceError.DatabaseDirectoryUnavailable.ToString());
+        if (new DriveInfo(root).AvailableFreeSpace < requiredBytes)
+            throw new IOException(MaintenanceError.InsufficientDiskSpace.ToString());
+    }
+
     private long ReadInt64(string sql) => Convert.ToInt64(database.ExecuteScalar(sql), CultureInfo.InvariantCulture);
     private void EnsureConfigured() { if (!database.IsConfigured) throw new InvalidOperationException(MaintenanceError.DatabaseNotConfigured.ToString()); }
     private static long GetLength(string path) => File.Exists(path) ? new FileInfo(path).Length : 0;
@@ -199,6 +310,8 @@ public sealed class SqliteMaintenanceService(Database database)
         "INSERT INTO ProtectionAuditLog(OccurredUtc, EventType, Outcome, Actor, Subject, Details) VALUES (@p0,@p1,@p2,@p3,@p4,@p5)",
         DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture), eventType, "Succeeded", "DatabaseMaintenance", subject, details);
 
+    private sealed record DatabaseMaintenanceHistoryRow(string OccurredUtc, string EventType, string Outcome, string Subject, string Details);
+
     private enum MaintenanceError
     {
         BackupIntegrityCheckFailed,
@@ -206,6 +319,9 @@ public sealed class SqliteMaintenanceService(Database database)
         DatabaseDirectoryUnavailable,
         RestoredDatabaseIntegrityCheckFailed,
         IntegrityCheckFailed,
-        DatabaseNotConfigured
+        DatabaseNotConfigured,
+        ExclusiveAccessRequired,
+        CompactedDatabaseIntegrityCheckFailed,
+        InsufficientDiskSpace
     }
 }

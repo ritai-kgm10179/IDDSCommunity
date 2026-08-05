@@ -679,4 +679,13 @@
   <data name="Select a verified database backup" xml:space="preserve"><value>Select a verified database backup</value></data>
   <data name="Restore the selected database backup? The current database will be preserved as a rollback copy." xml:space="preserve"><value>Restore the selected database backup? The current database will be preserved as a rollback copy.</value></data>
   <data name="Database restored. Rollback copy: {0}" xml:space="preserve"><value>Database restored. Rollback copy: {0}</value></data>
+  <data name="Reclaim database space" xml:space="preserve"><value>Reclaim database space</value></data>
+  <data name="Verify selected backup" xml:space="preserve"><value>Verify selected backup</value></data>
+  <data name="Verified backups" xml:space="preserve"><value>Verified backups</value></data>
+  <data name="Maintenance history" xml:space="preserve"><value>Maintenance history</value></data>
+  <data name="Backup verified. SHA-256: {0}" xml:space="preserve"><value>Backup verified. SHA-256: {0}</value></data>
+  <data name="Stop the IDDS Community service before reclaiming database space." xml:space="preserve"><value>Stop the IDDS Community service before reclaiming database space.</value></data>
+  <data name="Reclaim database space now? A verified safety backup and rollback copy will be created first." xml:space="preserve"><value>Reclaim database space now? A verified safety backup and rollback copy will be created first.</value></data>
+  <data name="Database space reclaimed. Safety backup: {0}" xml:space="preserve"><value>Database space reclaimed. Safety backup: {0}</value></data>
+  <data name="Database maintenance failed: {0}" xml:space="preserve"><value>Database maintenance failed: {0}</value></data>
 </root>

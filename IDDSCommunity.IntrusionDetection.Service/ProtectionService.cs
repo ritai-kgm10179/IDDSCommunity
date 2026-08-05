@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
@@ -36,7 +37,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
     // private LogAlerts logAlerts;
     private readonly System.Timers.Timer cleanupTimer = new();
+    private readonly System.Timers.Timer maintenanceTimer = new();
     private int cleanupActive;
+    private int maintenanceActive;
 
 
     // private bool restartPending = false;
@@ -456,10 +459,47 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
         cleanupTimer.Interval = 1000;
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
+        maintenanceTimer.Interval = TimeSpan.FromHours(protectionOptions.MaintenanceIntervalHours).TotalMilliseconds;
+        maintenanceTimer.AutoReset = true;
+        maintenanceTimer.Elapsed += maintenanceTimer_Elapsed;
         // restartTimer.Elapsed += new System.Timers.ElapsedEventHandler(restartTimer_Elapsed);
         logManager.WriteEntry(Strings.Get("Intrusion Detection Service was initialized successfully."), EventLogEntryType.Information,
            Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         isInitialized = true;
+    }
+
+    private void maintenanceTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) => RunScheduledDatabaseMaintenance();
+
+    private void RunScheduledDatabaseMaintenance()
+    {
+        if (System.Threading.Interlocked.Exchange(ref maintenanceActive, 1) != 0) return;
+        try
+        {
+            SqliteMaintenanceService maintenance = new(database);
+            maintenance.PurgeExpired(new DatabaseRetentionPolicy(
+                protectionOptions.IntrusionLogRetentionDays,
+                protectionOptions.LockHistoryRetentionDays,
+                protectionOptions.AuditRetentionDays,
+                protectionOptions.CompletedEventRetentionDays,
+                protectionOptions.MaintenanceBatchSize));
+            if (protectionOptions.AutomaticBackupEnabled)
+            {
+                string directory = Path.GetDirectoryName(database.DataSource) ?? AppContext.BaseDirectory;
+                string backupDirectory = Path.Combine(directory, "Backups");
+                maintenance.CreateVerifiedBackup(backupDirectory);
+                maintenance.PruneBackups(backupDirectory, protectionOptions.BackupRetentionDays, protectionOptions.MaximumBackupCount);
+            }
+            maintenance.Optimize();
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry(Strings.Format("Database maintenance failed: {0}", ex.GetType().Name),
+                EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+        }
+        finally
+        {
+            System.Threading.Interlocked.Exchange(ref maintenanceActive, 0);
+        }
     }
 
 
@@ -638,6 +678,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             securityAgents.StartAgents();
             securityEventPipeline.RecoverPending(protectionOptions.SecurityEventRecoveryBatchSize);
             cleanupTimer.Enabled = true;
+            maintenanceTimer.Enabled = true;
             reportingStarted = true;
             reportScheduler.StartReporting();
             runtimeStarted = true;
@@ -696,6 +737,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         reportingStarted = false;
 
         cleanupTimer.Enabled = false;
+        maintenanceTimer.Enabled = false;
         if (agentsStarted)
             TryStop(securityAgents.StopAgents, failures);
         agentsStarted = false;
@@ -779,6 +821,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         reportScheduler.RunWeeklyReportAsync -= Instance_RunWeeklyReportAsync;
         reportScheduler.RunMonthlyReportAsync -= Instance_RunMonthlyReportAsync;
         cleanupTimer.Dispose();
+        maintenanceTimer.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
     }

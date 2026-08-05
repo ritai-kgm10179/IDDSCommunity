@@ -679,4 +679,13 @@
   <data name="Select a verified database backup" xml:space="preserve"><value>選擇已驗證的資料庫備份</value></data>
   <data name="Restore the selected database backup? The current database will be preserved as a rollback copy." xml:space="preserve"><value>要還原選取的資料庫備份嗎？目前的資料庫會保留為回滾副本。</value></data>
   <data name="Database restored. Rollback copy: {0}" xml:space="preserve"><value>資料庫已還原。回滾副本：{0}</value></data>
+  <data name="Reclaim database space" xml:space="preserve"><value>回收資料庫空間</value></data>
+  <data name="Verify selected backup" xml:space="preserve"><value>驗證選取的備份</value></data>
+  <data name="Verified backups" xml:space="preserve"><value>已驗證備份</value></data>
+  <data name="Maintenance history" xml:space="preserve"><value>維護歷程</value></data>
+  <data name="Backup verified. SHA-256: {0}" xml:space="preserve"><value>備份驗證成功。SHA-256：{0}</value></data>
+  <data name="Stop the IDDS Community service before reclaiming database space." xml:space="preserve"><value>回收資料庫空間前，請先停止 IDDS Community 服務。</value></data>
+  <data name="Reclaim database space now? A verified safety backup and rollback copy will be created first." xml:space="preserve"><value>要立即回收資料庫空間嗎？系統會先建立已驗證的安全備份與回滾副本。</value></data>
+  <data name="Database space reclaimed. Safety backup: {0}" xml:space="preserve"><value>資料庫空間已回收。安全備份：{0}</value></data>
+  <data name="Database maintenance failed: {0}" xml:space="preserve"><value>資料庫維護失敗：{0}</value></data>
 </root>
