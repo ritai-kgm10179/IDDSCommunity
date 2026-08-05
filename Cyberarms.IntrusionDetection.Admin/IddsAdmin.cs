@@ -342,11 +342,13 @@ public partial class IddsAdmin : Form
         {
             smartLabelServiceStatus.Text = Strings.Get("Service not found!");
             smartLabelServiceStatus.ForeColor = Color.FromArgb(225, 50, 50);
+            buttonManageService.Text = Strings.Get("Install service");
             return;
         }
+        buttonManageService.Text = Strings.Get("Uninstall service");
         try
         {
-            if (status == System.ServiceProcess.ServiceControllerStatus.Running && !IsServiceRunning)
+            if (status == System.ServiceProcess.ServiceControllerStatus.Running)
             {
                 IsServiceRunning = true;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start_deactivated;
@@ -356,7 +358,7 @@ public partial class IddsAdmin : Form
                 smartLabelServiceStatus.Text = Strings.Get("Service is running");
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(0, 159, 227);
             }
-            else if (status == System.ServiceProcess.ServiceControllerStatus.Stopped && IsServiceRunning)
+            else if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
             {
                 IsServiceRunning = false;
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start;
@@ -845,13 +847,7 @@ public partial class IddsAdmin : Form
             MarkServiceUnavailable(serviceController, ex);
         }
         if (serviceController is null)
-        {
-            using GenericErrorDialog errdlg = new(
-                Strings.Get("Error starting application"),
-                Strings.Get("The Cyberarms service is not installed or is unavailable. Install or repair the service, then restart the application."),
-                false);
-            errdlg.ShowDialog();
-        }
+            ApplyServiceStatus(null);
         logReader = new Timer
         {
             Interval = 1000
@@ -1162,6 +1158,62 @@ public partial class IddsAdmin : Form
     /// <param name="e">The event data.</param>
 
     private async void pictureBoxStopService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: false);
+
+    /// <summary>
+    /// Confirms and performs installation or removal of the Windows service with on-demand elevation.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The event data.</param>
+    private async void buttonManageService_Click(object sender, EventArgs e)
+    {
+        bool install = serviceController is null;
+        string prompt = Strings.Get(install
+            ? "Install the Cyberarms protection service on this computer?"
+            : "Uninstall the Cyberarms protection service? Active protection will stop.");
+        if (MessageBox.Show(this, prompt, Strings.Get("Confirm service change"), MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            return;
+
+        buttonManageService.Enabled = false;
+        try
+        {
+            await ElevatedServiceCommand.RunElevatedAsync(ServiceName, install ? "install" : "uninstall", uiRefreshCancellation.Token).ConfigureAwait(false);
+            await this.InvokeAsync(() => ResetServiceController(), uiRefreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (Exception exception)
+        {
+            Trace.TraceError("Service installation state change failed: {0}", exception);
+            if (!IsDisposed && IsHandleCreated)
+                await this.InvokeAsync(() => MessageBox.Show(this, Strings.Get("The service change could not be completed."),
+                    Strings.Get("Service operation failed"), MessageBoxButtons.OK, MessageBoxIcon.Error));
+        }
+        finally
+        {
+            if (!IsDisposed && IsHandleCreated)
+                await this.InvokeAsync(() => buttonManageService.Enabled = true);
+        }
+    }
+
+    private void ResetServiceController()
+    {
+        serviceController?.Dispose();
+        serviceController = null;
+        ServiceError = false;
+        try
+        {
+            serviceController = new System.ServiceProcess.ServiceController(ServiceName);
+            System.ServiceProcess.ServiceControllerStatus? status = ReadServiceStatus();
+            ApplyServiceStatus(status);
+            timerRefreshServiceStatus?.Start();
+        }
+        catch (Exception exception)
+        {
+            MarkServiceUnavailable(serviceController, exception);
+            ApplyServiceStatus(null);
+            timerRefreshServiceStatus?.Stop();
+        }
+    }
 
     /// <summary>
     /// Changes the Windows service state without blocking the WinForms message loop.

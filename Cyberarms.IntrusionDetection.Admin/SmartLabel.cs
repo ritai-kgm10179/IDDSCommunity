@@ -20,11 +20,12 @@ public partial class SmartLabel : Label
     {
         e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-        Pen pen = new(Selected ? SelectedColor : BackColor);
-        e.Graphics.DrawLines(pen, [ new(0, Height),
+        using Pen pen = new(Selected ? SelectedColor : BackColor);
+        int bottom = System.Math.Max(0, Height - 1);
+        e.Graphics.DrawLines(pen, [ new(0, bottom),
             new(0, 0),
             new(Width-1, 0),
-            new(Width-1, Height) ]);
+            new(Width-1, bottom) ]);
         base.OnPaint(e);
 
     }

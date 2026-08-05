@@ -624,6 +624,24 @@
   <data name="Web Security Agent" xml:space="preserve"><value>Web Security Agent</value></data>
   <data name="Cyberarms.Agents.MailServer.Pop3Agent" xml:space="preserve"><value>POP3 Security Agent</value></data>
   <data name="Cyberarms.Agents.MailServer.SmtpAgent" xml:space="preserve"><value>Mail Server SMTP Security Agent</value></data>
+  <data name="Cyberarms.Agents.MailServer.ImapAgent" xml:space="preserve"><value>IMAP Security Agent</value></data>
+  <data name="ImapPort" xml:space="preserve"><value>Cleartext IMAP / STARTTLS port</value></data>
+  <data name="IMAP authentication failure" xml:space="preserve"><value>IMAP authentication failure</value></data>
+  <data name="Install service" xml:space="preserve"><value>Install service</value></data>
+  <data name="Uninstall service" xml:space="preserve"><value>Uninstall service</value></data>
+  <data name="Install the Cyberarms protection service on this computer?" xml:space="preserve"><value>Install the Cyberarms protection service on this computer?</value></data>
+  <data name="Uninstall the Cyberarms protection service? Active protection will stop." xml:space="preserve"><value>Uninstall the Cyberarms protection service? Active protection will stop.</value></data>
+  <data name="Confirm service change" xml:space="preserve"><value>Confirm service change</value></data>
+  <data name="The service change could not be completed." xml:space="preserve"><value>The service change could not be completed.</value></data>
+  <data name="Service operation failed" xml:space="preserve"><value>Service operation failed</value></data>
+  <data name="The Cyberarms service executable could not be found." xml:space="preserve"><value>The Cyberarms service executable could not be found.</value></data>
+  <data name="The Windows service management command could not be started." xml:space="preserve"><value>The Windows service management command could not be started.</value></data>
+  <data name="The Windows service management command failed with exit code {0}." xml:space="preserve"><value>The Windows service management command failed with exit code {0}.</value></data>
+  <data name="Unsupported service name." xml:space="preserve"><value>Unsupported service name.</value></data>
+  <data name="Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned.</value></data>
+  <data name="Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned.</value></data>
+  <data name="Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned.</value></data>
+  <data name="Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs." xml:space="preserve"><value>Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs.</value></data>
   <data name="Agent status" xml:space="preserve"><value>Agent status</value></data>
   <data name="enabled" xml:space="preserve"><value>enabled</value></data>
   <data name="disabled" xml:space="preserve"><value>disabled</value></data>

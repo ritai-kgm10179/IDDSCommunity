@@ -2,6 +2,7 @@
 using System.Drawing;
 using Cyberarms.IntrusionDetection.Shared;
 using System.Windows.Forms;
+using Cyberarms.IntrusionDetection.Shared.Localization;
 
 namespace Cyberarms.IntrusionDetection.Admin;
 
@@ -74,7 +75,7 @@ public partial class PanelPluginConfiguration : UserControl
         checkBoxOverrideConfiguration.Checked = Agent.OverrideConfig;
         SetEnabledMode(checkBoxOverrideConfiguration.Checked);
         LoadCustomSettings();
-        smartLabelCustomConfig.Visible = Agent.CustomConfiguration.Count > 0;
+        smartLabelCustomConfig.Visible = flowLayoutPanelCustomPluginSettings.Controls.Count > 0;
         SetEditMode(false);
     }
 
@@ -85,6 +86,20 @@ public partial class PanelPluginConfiguration : UserControl
     private void LoadCustomSettings()
     {
         flowLayoutPanelCustomPluginSettings.Controls.Clear();
+        string? protectionDetails = GetProtectionDetails(Agent.Name);
+        if (protectionDetails is not null)
+        {
+            Label details = new()
+            {
+                AutoSize = false,
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.FromArgb(102, 102, 102),
+                Margin = new Padding(3, 3, 3, 6),
+                Size = new Size(330, 38),
+                Text = protectionDetails
+            };
+            flowLayoutPanelCustomPluginSettings.Controls.Add(details);
+        }
         foreach (string propName in Agent.CustomConfiguration.Keys)
         {
             SmartLabelTextbox ltx = new()
@@ -97,6 +112,20 @@ public partial class PanelPluginConfiguration : UserControl
             ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
         }
     }
+
+    /// <summary>
+    /// Gets a localized description of the authoritative detection source and encrypted-traffic limitations.
+    /// </summary>
+    /// <param name="agentName">The fully qualified Agent type name.</param>
+    /// <returns>The localized details, or <see langword="null"/> when no specialized disclosure is required.</returns>
+    private static string? GetProtectionDetails(string agentName) => agentName switch
+    {
+        "Cyberarms.Agents.SqlServer.SqlFailedLoginWatcher" => Strings.Get("Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned."),
+        "Cyberarms.Agents.MySql.MySqlFailedLoginWatcher" => Strings.Get("Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned."),
+        "Cyberarms.Agents.FileMaker.FileMakerSecurityAgent" => Strings.Get("Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned."),
+        "Cyberarms.Agents.MailServer.ImapAgent" => Strings.Get("Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs."),
+        _ => null
+    };
 
     /// <summary>
     /// Saves custom configuration.
