@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
-using Cyberarms.IntrusionDetection.Api.Plugin;         // use theIntrusion Detectionplugin API
+using IDDSCommunity.IntrusionDetection.Api.Plugin;         // use theIntrusion Detectionplugin API
 
 namespace DemoAgent;
 
 /// <summary>
-/// Simple security agent for demonstration of Cyberarms Intrusion Detection plugin functionality.
+/// Simple security agent for demonstration of IDDSCommunity Intrusion Detection plugin functionality.
 /// To create the plugin, this Class must be inherited from AgentPlugin
 /// </summary>
 public class DemoAgent : AgentPlugin
@@ -43,7 +43,7 @@ public class DemoAgent : AgentPlugin
         watcher.Filter = "*.agentTest";
         watcher.IncludeSubdirectories = false;
         watcher.EnableRaisingEvents = true;
-        watcher.Changed += new FileSystemEventHandler(watcher_Changed);
+        watcher.Changed += new FileSystemEventHandler(Watcher_Changed);
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public class DemoAgent : AgentPlugin
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    void watcher_Changed(object sender, FileSystemEventArgs e)
+    void Watcher_Changed(object sender, FileSystemEventArgs e)
     {
         if (e.ChangeType == WatcherChangeTypes.Changed)
         {

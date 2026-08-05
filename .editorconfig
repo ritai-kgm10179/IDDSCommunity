@@ -1,4 +1,4 @@
-# Cyberarms EditorConfig Specification (.NET 10 / C# 13)
+# IDDSCommunity EditorConfig Specification (.NET 10 / C# 13)
 root = true
 
 # Top-level settings across all files

@@ -23,20 +23,20 @@
 
 `Protection:SecurityEventQueueCapacity` 允許 16 至 1,048,576，預設 4,096。`Protection:SecurityEventDrainTimeoutSeconds` 允許 1 至 300 秒，預設 30 秒。`Protection:SecurityEventRecoveryBatchSize` 允許 1 至 1,000,000，預設每次啟動重播 10,000 筆。容量必須以壓力測試、尖峰偵測率、平均防火牆延遲與可用記憶體決定，不能只增加到任意大值。
 
-事件處理採 at-least-once 語意；防火牆效果由資料庫 lock 狀態與啟動時 reconciliation 收斂。Lock 先保存為 requested，只有 Windows Firewall 確認套用後才轉為最終 soft/hard 狀態；啟動時會補套缺少的規則、完成 requested 狀態，並移除已不在有效 lock 集合中的 Cyberarms 規則。
+事件處理採 at-least-once 語意；防火牆效果由資料庫 lock 狀態與啟動時 reconciliation 收斂。Lock 先保存為 requested，只有 Windows Firewall 確認套用後才轉為最終 soft/hard 狀態；啟動時會補套缺少的規則、完成 requested 狀態，並移除已不在有效 lock 集合中的 IDDSCommunity 規則。
 
-Metrics meter `Cyberarms.SecurityEvents` 提供：
+Metrics meter `IDDSCommunity.SecurityEvents` 提供：
 
-- `cyberarms.security_events.accepted`
-- `cyberarms.security_events.processed`
-- `cyberarms.security_events.rejected`
-- `cyberarms.security_events.failures`
-- `cyberarms.security_events.queued`
-- `cyberarms.security_events.recovered`
-- `cyberarms.security_events.queue_delay`（毫秒）
-- `cyberarms.security_events.processing_duration`（毫秒）
-- `cyberarms.security_events.recovery_age`（秒）
-- `cyberarms.security_events.drain_timeouts`
+- `iddscommunity.security_events.accepted`
+- `iddscommunity.security_events.processed`
+- `iddscommunity.security_events.rejected`
+- `iddscommunity.security_events.failures`
+- `iddscommunity.security_events.queued`
+- `iddscommunity.security_events.recovered`
+- `iddscommunity.security_events.queue_delay`（毫秒）
+- `iddscommunity.security_events.processing_duration`（毫秒）
+- `iddscommunity.security_events.recovery_age`（秒）
+- `iddscommunity.security_events.drain_timeouts`
 
 Runtime health check 會回報 `unfinished_security_events`；未完成數超過設定的記憶體佇列容量時回傳 degraded，供 Windows 服務監控或外部 health-check host 告警。
 

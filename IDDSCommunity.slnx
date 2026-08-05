@@ -1,0 +1,25 @@
+﻿<Solution>
+  <Project Path="IDDSCommunity.Agents.FileMaker/IDDSCommunity.Agents.FileMaker.csproj" />
+  <Project Path="IDDSCommunity.Agents.FtpServer/IDDSCommunity.Agents.FtpServer.csproj" />
+  <Project Path="IDDSCommunity.Agents.MailServer/IDDSCommunity.Agents.MailServer.csproj" />
+  <Project Path="IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
+  <Project Path="IDDSCommunity.Agents.MySql/IDDSCommunity.Agents.MySql.csproj" />
+  <Project Path="IDDSCommunity.Agents.Smtp/IDDSCommunity.Agents.Smtp.csproj" />
+  <Project Path="IDDSCommunity.Agents.SqlServer/IDDSCommunity.Agents.SqlServer.csproj" />
+  <Project Path="IDDSCommunity.Agents.TerminalServer/IDDSCommunity.Agents.TerminalServer.csproj" />
+  <Project Path="IDDSCommunity.Agents.WebSecurity/IDDSCommunity.Agents.WebSecurity.csproj" />
+  <Project Path="IDDSCommunity.Agents.WindowsDns/IDDSCommunity.Agents.WindowsDns.csproj" />
+  <Project Path="IDDSCommunity.Agents.WindowsDns.Test/IDDSCommunity.Agents.WindowsDns.Test.csproj" />
+  <Project Path="IDDSCommunity.IDDS.Management/IDDSCommunity.IDDS.Management.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Admin/IDDSCommunity.IntrusionDetection.Admin.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Api/IDDSCommunity.IntrusionDetection.Api.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Base/IDDSCommunity.IntrusionDetection.Base.Plugins.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Cmd/IDDSCommunity.IntrusionDetection.Cmd.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Cmd.Test/IDDSCommunityIntrusionDetection.Cmd.Test.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Service/IDDSCommunity.IntrusionDetection.Service.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Shared/IDDSCommunity.IntrusionDetection.Shared.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Shared.Test/IDDSCommunity.IntrusionDetection.Shared.Test.csproj" />
+  <Project Path="DemoAgent/DemoAgent.csproj" />
+</Solution>
