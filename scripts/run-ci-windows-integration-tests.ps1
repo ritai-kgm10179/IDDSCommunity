@@ -9,9 +9,8 @@ $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $serviceName = 'IDDSCommunity Integration Test Runtime'
 $serviceExecutable = Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service\bin\Release\net10.0-windows\IDDSCommunity.IntrusionDetection.Service.exe'
 $eventSource = 'IDDS Community'
-$eventLogName = 'IDDS Community'
+$eventLogName = 'Application'
 $createdEventSource = $false
-$createdEventLog = $false
 
 if (-not (Test-Path -LiteralPath $serviceExecutable -PathType Leaf)) {
     throw "Integration-test service executable was not found: $serviceExecutable"
@@ -27,7 +26,6 @@ function Invoke-ServiceControl {
 
 try {
     Invoke-ServiceControl -Arguments @('delete', $serviceName) -AcceptFailure
-    $createdEventLog = -not [System.Diagnostics.EventLog]::Exists($eventLogName)
     if (-not [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
         [System.Diagnostics.EventLog]::CreateEventSource($eventSource, $eventLogName)
         $createdEventSource = $true
@@ -41,8 +39,5 @@ finally {
     Invoke-ServiceControl -Arguments @('delete', $serviceName) -AcceptFailure
     if ($createdEventSource -and [System.Diagnostics.EventLog]::SourceExists($eventSource)) {
         [System.Diagnostics.EventLog]::DeleteEventSource($eventSource)
-    }
-    if ($createdEventLog -and [System.Diagnostics.EventLog]::Exists($eventLogName)) {
-        [System.Diagnostics.EventLog]::Delete($eventLogName)
     }
 }
