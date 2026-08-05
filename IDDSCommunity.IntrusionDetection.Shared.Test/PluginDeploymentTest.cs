@@ -101,6 +101,7 @@ public sealed class PluginDeploymentTest
     private static string[] GetProductionAgentProjectNames(string root) =>
         Directory.EnumerateDirectories(root, "IDDSCommunity.Agents.*", SearchOption.TopDirectoryOnly)
             .Where(path => !path.EndsWith(".Test", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !path.EndsWith(".Common", StringComparison.OrdinalIgnoreCase))
             .Where(path => Directory.EnumerateFiles(path, "*.csproj", SearchOption.TopDirectoryOnly).Any())
             .Select(path => Path.GetFileName(path)!)
             .Order(StringComparer.Ordinal)

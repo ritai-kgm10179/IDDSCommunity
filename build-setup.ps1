@@ -18,6 +18,12 @@ if (Test-Path -LiteralPath $packageRoot) {
 }
 New-Item -ItemType Directory -Path $payloadRoot, $pluginRoot -Force | Out-Null
 
+# 一般方案還原不會建立執行階段專屬資產；以單一節點還原並停用節點重用，
+# 避免 Windows SDK 在大量專案還原時留下不必要的 MSBuild 子程序。
+$env:MSBUILDDISABLENODEREUSE = '1'
+dotnet restore (Join-Path $repositoryRoot 'IDDSCommunity.slnx') --runtime $RuntimeIdentifier --disable-parallel -m:1 -p:NuGetAudit=false --nologo
+if ($LASTEXITCODE -ne 0) { throw '執行階段相依套件還原失敗。' }
+
 # Vulnerability auditing belongs to the explicit restore/CI step. Publishing uses the already-audited lock state.
 $commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj') @commonArguments --output $payloadRoot
@@ -27,9 +33,11 @@ if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot
 
 $pluginProjects = @(
-    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.MailServer',
-    'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.SqlServer',
+    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.IisAuthentication',
+    'IDDSCommunity.Agents.MailServer', 'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.OpenSsh',
+    'IDDSCommunity.Agents.PostgreSql', 'IDDSCommunity.Agents.Radius', 'IDDSCommunity.Agents.SqlServer',
     'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',
+    'IDDSCommunity.Agents.WindowsNetworkLogon',
     'IDDSCommunity.IntrusionDetection.Base'
 )
 foreach ($projectName in $pluginProjects) {

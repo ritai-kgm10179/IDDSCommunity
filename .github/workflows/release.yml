@@ -39,7 +39,7 @@ jobs:
           "version=$($Matches.version)" >> $env:GITHUB_OUTPUT
 
       - name: Checkout signed tag
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           ref: ${{ steps.version.outputs.tag }}
           fetch-depth: 0
@@ -91,7 +91,7 @@ jobs:
         rid: [win-x64, win-arm64]
     steps:
       - name: Checkout signed tag
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           ref: ${{ needs.validate.outputs.tag }}
 
@@ -99,9 +99,6 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.302
-
-      - name: Restore runtime assets
-        run: dotnet restore IDDSCommunity.slnx --runtime ${{ matrix.rid }} --nologo
 
       - name: Build self-contained installer package
         shell: pwsh
