@@ -92,4 +92,39 @@ public sealed class SqliteMaintenanceServiceTest
         Assert.AreEqual(1, results["ProtectionEventInbox"]);
         Assert.AreEqual(1L, Convert.ToInt64(database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status=3")));
     }
+
+    [TestMethod]
+    public void BackupInventoryVerificationAndRetentionAreBounded()
+    {
+        SqliteMaintenanceService maintenance = new(database);
+        string directory = Path.Combine(testDirectory, "backups");
+        DatabaseBackupResult first = maintenance.CreateVerifiedBackup(directory);
+        File.SetCreationTimeUtc(first.FilePath, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        DatabaseBackupResult second = maintenance.CreateVerifiedBackup(directory);
+
+        DatabaseBackupResult verified = maintenance.VerifyBackup(second.FilePath);
+        int deleted = maintenance.PruneBackups(directory, 30, 1, new DateTimeOffset(2026, 8, 5, 0, 0, 0, TimeSpan.Zero));
+
+        Assert.AreEqual(second.Sha256, verified.Sha256);
+        Assert.AreEqual(1, deleted);
+        Assert.HasCount(1, maintenance.ListBackups(directory));
+        Assert.IsFalse(File.Exists(first.FilePath));
+    }
+
+    [TestMethod]
+    public void CompactRequiresExclusiveAccessAndPreservesDatabase()
+    {
+        SqliteMaintenanceService maintenance = new(database);
+        database.ExecuteNonQuery("CREATE TABLE CompactMarker(Value TEXT NOT NULL)");
+        database.ExecuteNonQuery("INSERT INTO CompactMarker(Value) VALUES('preserved')");
+        string directory = Path.Combine(testDirectory, "backups");
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => maintenance.CompactAndReplace(directory, false));
+        DatabaseBackupResult safetyBackup = maintenance.CompactAndReplace(directory, true);
+
+        Assert.IsTrue(File.Exists(safetyBackup.FilePath));
+        Assert.AreEqual("preserved", Convert.ToString(database.ExecuteScalar("SELECT Value FROM CompactMarker")));
+        Assert.AreEqual("ok", maintenance.RunIntegrityCheck(true), true);
+        Assert.IsGreaterThanOrEqualTo(2, maintenance.GetHistory().Count);
+    }
 }

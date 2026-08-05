@@ -19,6 +19,10 @@ public sealed class PanelDatabaseMaintenance : UserControl
     private readonly Button optimizeButton;
     private readonly Button purgeButton;
     private readonly Button restoreButton;
+    private readonly Button compactButton;
+    private readonly Button verifyButton;
+    private readonly ListBox backupList;
+    private readonly ListBox historyList;
 
     public PanelDatabaseMaintenance()
     {
@@ -29,7 +33,7 @@ public sealed class PanelDatabaseMaintenance : UserControl
 
         statusLabel = CreateLabel(Strings.Get("Reading database status..."), 9F, BodyTextColor, new Point(15, 73));
         statusLabel.AutoSize = false;
-        statusLabel.Size = new Size(430, 94);
+        statusLabel.Size = new Size(620, 90);
         Controls.Add(statusLabel);
 
         checkButton = CreateButton(Strings.Get("Run integrity check"), new Point(15, 178));
@@ -37,26 +41,56 @@ public sealed class PanelDatabaseMaintenance : UserControl
         optimizeButton = CreateButton(Strings.Get("Optimize database"), new Point(275, 178));
         purgeButton = CreateButton(Strings.Get("Clean expired data"), new Point(15, 216));
         restoreButton = CreateButton(Strings.Get("Restore backup"), new Point(145, 216));
+        compactButton = CreateButton(Strings.Get("Reclaim database space"), new Point(275, 216));
+        verifyButton = CreateButton(Strings.Get("Verify selected backup"), new Point(405, 216));
         checkButton.Click += async (_, _) => await RunAsync(() => maintenance.GetStatus(true), ShowStatus);
         backupButton.Click += async (_, _) => await RunAsync(CreateBackup, result =>
-            statusLabel.Text = Strings.Format("Verified backup created: {0}", result.FilePath));
+        {
+            maintenance.PruneBackups(BackupDirectory);
+            statusLabel.Text = Strings.Format("Verified backup created: {0}", result.FilePath);
+            RefreshInventory();
+        });
         optimizeButton.Click += async (_, _) => await RunAsync(() => { maintenance.Optimize(); return maintenance.GetStatus(); }, ShowStatus);
         purgeButton.Click += async (_, _) => await RunAsync(() => maintenance.PurgeExpired(new DatabaseRetentionPolicy()), result =>
             statusLabel.Text = Strings.Format("Expired rows removed: {0}", string.Join(", ", result)));
         restoreButton.Click += RestoreBackup;
+        compactButton.Click += CompactDatabase;
+        verifyButton.Click += VerifySelectedBackup;
         Controls.Add(checkButton);
         Controls.Add(backupButton);
         Controls.Add(optimizeButton);
         Controls.Add(purgeButton);
         Controls.Add(restoreButton);
+        Controls.Add(compactButton);
+        Controls.Add(verifyButton);
+
+        Controls.Add(CreateLabel(Strings.Get("Verified backups"), 9F, BodyTextColor, new Point(15, 258)));
+        backupList = new ListBox { Font = new Font("Segoe UI", 9F), Location = new Point(15, 282), Size = new Size(620, 92) };
+        Controls.Add(backupList);
+        Controls.Add(CreateLabel(Strings.Get("Maintenance history"), 9F, BodyTextColor, new Point(15, 386)));
+        historyList = new ListBox { Font = new Font("Segoe UI", 9F), Location = new Point(15, 410), Size = new Size(620, 92) };
+        Controls.Add(historyList);
     }
 
-    public void RefreshStatus() => _ = RunAsync(() => maintenance.GetStatus(), ShowStatus);
+    public void RefreshStatus() => _ = RunAsync(() => maintenance.GetStatus(), status => { ShowStatus(status); RefreshInventory(); });
 
     private DatabaseBackupResult CreateBackup()
     {
         string databaseDirectory = Path.GetDirectoryName(Database.Instance.DataSource) ?? AppContext.BaseDirectory;
         return maintenance.CreateVerifiedBackup(Path.Combine(databaseDirectory, "Backups"));
+    }
+
+    private string BackupDirectory => Path.Combine(Path.GetDirectoryName(Database.Instance.DataSource) ?? AppContext.BaseDirectory, "Backups");
+
+    private void RefreshInventory()
+    {
+        backupList.Items.Clear();
+        foreach (DatabaseBackupInfo backup in maintenance.ListBackups(BackupDirectory))
+            backupList.Items.Add(backup);
+        backupList.DisplayMember = nameof(DatabaseBackupInfo.FilePath);
+        historyList.Items.Clear();
+        foreach (DatabaseMaintenanceHistory item in maintenance.GetHistory())
+            historyList.Items.Add($"{item.OccurredUtc.LocalDateTime:g}  {item.EventType}  {item.Outcome}");
     }
 
     private void ShowStatus(DatabaseMaintenanceStatus status)
@@ -115,6 +149,28 @@ public sealed class PanelDatabaseMaintenance : UserControl
             result => statusLabel.Text = Strings.Format("Database restored. Rollback copy: {0}", result.FilePath));
     }
 
+    private async void VerifySelectedBackup(object? sender, EventArgs e)
+    {
+        if (backupList.SelectedItem is not DatabaseBackupInfo backup) return;
+        await RunAsync(() => maintenance.VerifyBackup(backup.FilePath), result =>
+            statusLabel.Text = Strings.Format("Backup verified. SHA-256: {0}", result.Sha256));
+    }
+
+    private async void CompactDatabase(object? sender, EventArgs e)
+    {
+        if (!IsServiceStopped())
+        {
+            MessageBox.Show(Strings.Get("Stop the IDDS Community service before reclaiming database space."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+        if (MessageBox.Show(Strings.Get("Reclaim database space now? A verified safety backup and rollback copy will be created first."), Strings.AppTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+        await RunAsync(() => maintenance.CompactAndReplace(BackupDirectory, true), result =>
+        {
+            statusLabel.Text = Strings.Format("Database space reclaimed. Safety backup: {0}", result.FilePath);
+            RefreshInventory();
+        });
+    }
+
     private static bool IsServiceStopped()
     {
         try
@@ -136,6 +192,8 @@ public sealed class PanelDatabaseMaintenance : UserControl
         optimizeButton.Enabled = enabled;
         purgeButton.Enabled = enabled;
         restoreButton.Enabled = enabled;
+        compactButton.Enabled = enabled;
+        verifyButton.Enabled = enabled;
     }
 
     private static SmartLabel CreateLabel(string text, float size, Color color, Point location) => new()

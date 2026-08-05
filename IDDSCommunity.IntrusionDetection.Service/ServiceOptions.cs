@@ -47,6 +47,17 @@ internal sealed class ProtectionOptions
     [Range(1, 10000)]
     public int MaintenanceBatchSize { get; init; } = 1000;
 
+    [Range(1, 168)]
+    public int MaintenanceIntervalHours { get; init; } = 24;
+
+    [Range(1, 3650)]
+    public int BackupRetentionDays { get; init; } = 30;
+
+    [Range(1, 1000)]
+    public int MaximumBackupCount { get; init; } = 10;
+
+    public bool AutomaticBackupEnabled { get; init; } = true;
+
     [Range(16, 1048576)]
     public int SecurityEventQueueCapacity { get; init; } = 4096;
 
