@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -59,7 +60,49 @@ public sealed class ConfigurationTransferServiceTest
         service.ExportToFile(path, true, "correct horse battery staple");
         string json = File.ReadAllText(path);
         Assert.IsFalse(json.Contains("portable-secret", StringComparison.Ordinal));
+        ConfigurationTransferPackage package = service.ReadPackage(path);
+        Assert.IsNotNull(package.Secrets);
+        Assert.AreEqual("Argon2id/AES-256-GCM", package.Secrets.Algorithm);
+        Assert.AreEqual(19, package.Secrets.Argon2Version);
+        Assert.AreEqual(65536, package.Secrets.MemoryKiB);
+        Assert.AreEqual(3, package.Secrets.Iterations);
+        Assert.AreEqual(1, package.Secrets.Parallelism);
         Assert.ThrowsExactly<InvalidDataException>(() => service.ImportFromFile(path, Path.Combine(testDirectory, "backups"), "wrong passphrase"));
+    }
+
+    [TestMethod]
+    public void EncryptedSecretExportRejectsShortPassphrase()
+    {
+        ConfigurationTransferService service = new(database);
+        Assert.ThrowsExactly<ArgumentException>(() => service.Export(true, "too-short"));
+    }
+
+    [TestMethod]
+    public void EncryptedSecretParametersAreAuthenticatedAndBounded()
+    {
+        ConfigurationTransferService service = new(database);
+        string path = Path.Combine(testDirectory, "settings.json");
+        service.ExportToFile(path, true, "correct horse battery staple");
+        ConfigurationTransferPackage package = service.ReadPackage(path);
+        package.Secrets!.MemoryKiB--;
+        File.WriteAllText(path, JsonSerializer.Serialize(package));
+        Assert.ThrowsExactly<InvalidDataException>(() => service.ImportFromFile(path, Path.Combine(testDirectory, "backups"), "correct horse battery staple"));
+
+        package.Secrets.MemoryKiB = 256 * 1024 + 1;
+        File.WriteAllText(path, JsonSerializer.Serialize(package));
+        Assert.ThrowsExactly<InvalidDataException>(() => service.ReadPackage(path));
+    }
+
+    [TestMethod]
+    public void Pbkdf2PackageIsRejectedBecauseSchemaOneWasNotReleased()
+    {
+        ConfigurationTransferService service = new(database);
+        string path = Path.Combine(testDirectory, "settings.json");
+        service.ExportToFile(path, true, "correct horse battery staple");
+        ConfigurationTransferPackage package = service.ReadPackage(path);
+        package.Secrets!.Algorithm = "AES-256-GCM/PBKDF2-SHA256";
+        File.WriteAllText(path, JsonSerializer.Serialize(package));
+        Assert.ThrowsExactly<InvalidDataException>(() => service.ReadPackage(path));
     }
 
     [TestMethod]

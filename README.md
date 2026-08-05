@@ -16,7 +16,7 @@ IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護�
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
 - Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
 - 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限及預設 `10 次／5 分鐘` 門檻；各 Agent 可個別調整，且封鎖仍由既有漸進式政策執行。
-- 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 AES-256-GCM 與 PBKDF2-SHA256 保護。匯入前會驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
+- 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 Argon2id（64 MiB、3 次、單一平行度）衍生金鑰，再由 AES-256-GCM 加密及驗證。匯入前會限制密碼衍生參數、驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
 - 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。
 
 ## 支援界線
@@ -42,6 +42,8 @@ dotnet test IDDSCommunity.slnx
 ```powershell
 .\build-setup.ps1 -RuntimeIdentifier win-x64 -Configuration Release
 ```
+
+推送符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 後，Release CI 會驗證標籤與專案版本、執行完整測試、建立 `win-x64` 與 `win-arm64` 自帶 Runtime 安裝包，並發布 GitHub Release。每個平台都會附上目前規格的 SPDX 3.0 SBOM、相容性較廣的 SPDX 2.2 SBOM、SHA-256 雜湊與 GitHub artifact attestation；兩種 SBOM 也會收錄於對應安裝包內。
 
 輸出位於 `artifacts\setup\idds-community-3.0.0-win-x64`。只有安裝程式與需要變更服務／防火牆的短生命週期操作要求 UAC 提權；一般 Visual Studio 偵錯及管理介面啟動不強制以系統管理員執行。
 
