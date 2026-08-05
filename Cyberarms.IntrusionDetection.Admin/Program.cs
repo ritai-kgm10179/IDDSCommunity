@@ -11,8 +11,14 @@ static class Program
     /// The main entry point for the application.
     /// </summary>
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
+        if (ElevatedServiceCommand.TryExecute(args, out int exitCode))
+        {
+            Environment.ExitCode = exitCode;
+            return;
+        }
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         InitializeDisplayLanguage();

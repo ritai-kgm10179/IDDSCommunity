@@ -63,6 +63,24 @@ public sealed class PluginDeploymentTest
     }
 
     /// <summary>
+    /// Verifies that the administration UI runs unelevated and requests elevation only for service state changes.
+    /// </summary>
+    [TestMethod]
+    public void AdminUsesOnDemandElevationForServiceCommands()
+    {
+        string root = FindRepositoryRoot();
+        string adminDirectory = Path.Combine(root, "Cyberarms.IntrusionDetection.Admin");
+        string manifest = File.ReadAllText(Path.Combine(adminDirectory, "PaladinConfig.exe.manifest"));
+        string commandSource = File.ReadAllText(Path.Combine(adminDirectory, "ElevatedServiceCommand.cs"));
+        string adminSource = File.ReadAllText(Path.Combine(adminDirectory, "IddsAdmin.cs"));
+
+        StringAssert.Contains(manifest, "level=\"asInvoker\"");
+        Assert.DoesNotContain("requireAdministrator", manifest, StringComparison.Ordinal);
+        StringAssert.Contains(commandSource, "Verb = \"runas\"");
+        StringAssert.Contains(adminSource, "ElevatedServiceCommand.RunElevatedAsync");
+    }
+
+    /// <summary>
     /// Gets all production Agent project names while excluding test and removed project folders.
     /// </summary>
     /// <param name="root">The repository root.</param>

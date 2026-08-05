@@ -612,4 +612,8 @@
   <data name="Protection unavailable" xml:space="preserve"><value>防護無法使用</value></data>
   <data name="Display name for status {0} was not found." xml:space="preserve"><value>找不到狀態 {0} 的顯示名稱。</value></data>
   <data name="Status {0} not found in LockStatusNames!" xml:space="preserve"><value>封鎖狀態名稱中找不到狀態 {0}。</value></data>
+  <data name="The application executable path is unavailable." xml:space="preserve"><value>無法取得應用程式執行檔路徑。</value></data>
+  <data name="The elevated service command could not be started." xml:space="preserve"><value>無法啟動已提升權限的服務命令。</value></data>
+  <data name="The elevated service command failed with exit code {0}." xml:space="preserve"><value>已提升權限的服務命令執行失敗，結束代碼為 {0}。</value></data>
+  <data name="Unsupported service command." xml:space="preserve"><value>不支援的服務命令。</value></data>
 </root>
