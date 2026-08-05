@@ -35,6 +35,18 @@ internal sealed class ProtectionOptions
     [Range(30, 3650)]
     public int AuditRetentionDays { get; init; } = 365;
 
+    [Range(30, 3650)]
+    public int IntrusionLogRetentionDays { get; init; } = 180;
+
+    [Range(30, 3650)]
+    public int LockHistoryRetentionDays { get; init; } = 180;
+
+    [Range(1, 3650)]
+    public int CompletedEventRetentionDays { get; init; } = 30;
+
+    [Range(1, 10000)]
+    public int MaintenanceBatchSize { get; init; } = 1000;
+
     [Range(16, 1048576)]
     public int SecurityEventQueueCapacity { get; init; } = 4096;
 

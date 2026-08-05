@@ -31,6 +31,11 @@ public class Database
     private SqliteConnection? _connection;
 
     /// <summary>
+    /// Gets the absolute path of the configured SQLite database.
+    /// </summary>
+    public string DataSource => connBuilder.DataSource;
+
+    /// <summary>
     /// Closes the active database connection and releases its file handle.
     /// </summary>
     public void Close()

@@ -616,9 +616,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             cancellationToken.ThrowIfCancellationRequested();
             ConfigureSystem();
             ReconcileFirewallState();
-            await protectionAuditTrail.PurgeOlderThanAsync(TimeSpan.FromDays(protectionOptions.AuditRetentionDays), cancellationToken).ConfigureAwait(false);
+            SqliteMaintenanceService maintenance = new(database);
+            maintenance.PurgeExpired(new DatabaseRetentionPolicy(
+                protectionOptions.IntrusionLogRetentionDays,
+                protectionOptions.LockHistoryRetentionDays,
+                protectionOptions.AuditRetentionDays,
+                protectionOptions.CompletedEventRetentionDays,
+                protectionOptions.MaintenanceBatchSize));
             SecurityEventInbox securityEventInbox = new(database, TimeProvider.System);
-            securityEventInbox.PurgeCompleted(TimeSpan.FromDays(protectionOptions.AuditRetentionDays));
             securityEventPipeline = new SecurityEventPipeline(
                 protectionOptions.SecurityEventQueueCapacity,
                 ProcessAttackDetected,

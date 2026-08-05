@@ -661,4 +661,22 @@
   <data name="MaximumTrackedClients" xml:space="preserve"><value>Maximum tracked clients</value></data>
   <data name="ExcludedAddresses" xml:space="preserve"><value>Excluded addresses</value></data>
   <data name="Documentation is available in README.md." xml:space="preserve"><value>Documentation is available in README.md.</value></data>
+  <data name="Database maintenance" xml:space="preserve"><value>Database maintenance</value></data>
+  <data name="SQLite database health, verified backups, retention cleanup, and safe optimization." xml:space="preserve"><value>SQLite database health, verified backups, retention cleanup, and safe optimization.</value></data>
+  <data name="Reading database status..." xml:space="preserve"><value>Reading database status...</value></data>
+  <data name="Run integrity check" xml:space="preserve"><value>Run integrity check</value></data>
+  <data name="Create verified backup" xml:space="preserve"><value>Create verified backup</value></data>
+  <data name="Optimize database" xml:space="preserve"><value>Optimize database</value></data>
+  <data name="Clean expired data" xml:space="preserve"><value>Clean expired data</value></data>
+  <data name="Verified backup created: {0}" xml:space="preserve"><value>Verified backup created: {0}</value></data>
+  <data name="Expired rows removed: {0}" xml:space="preserve"><value>Expired rows removed: {0}</value></data>
+  <data name="Database status summary" xml:space="preserve"><value>Database status: {0}&#xA;Database: {1:N0} bytes; WAL: {2:N0} bytes&#xA;Pages: {3:N0}; reusable pages: {4:N0}; journal: {5}</value></data>
+  <data name="Database maintenance is running..." xml:space="preserve"><value>Database maintenance is running...</value></data>
+  <data name="Database maintenance failed. Review the application log for details." xml:space="preserve"><value>Database maintenance failed. Review the application log for details.</value></data>
+  <data name="Restore backup" xml:space="preserve"><value>Restore backup</value></data>
+  <data name="Stop the IDDS Community service before restoring a database backup." xml:space="preserve"><value>Stop the IDDS Community service before restoring a database backup.</value></data>
+  <data name="SQLite backup files (*.db)|*.db|All files (*.*)|*.*" xml:space="preserve"><value>SQLite backup files (*.db)|*.db|All files (*.*)|*.*</value></data>
+  <data name="Select a verified database backup" xml:space="preserve"><value>Select a verified database backup</value></data>
+  <data name="Restore the selected database backup? The current database will be preserved as a rollback copy." xml:space="preserve"><value>Restore the selected database backup? The current database will be preserved as a rollback copy.</value></data>
+  <data name="Database restored. Rollback copy: {0}" xml:space="preserve"><value>Database restored. Rollback copy: {0}</value></data>
 </root>

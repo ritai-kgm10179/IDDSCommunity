@@ -661,4 +661,22 @@
   <data name="MaximumTrackedClients" xml:space="preserve"><value>最大追蹤用戶端數量</value></data>
   <data name="ExcludedAddresses" xml:space="preserve"><value>排除的 IP 位址</value></data>
   <data name="Documentation is available in README.md." xml:space="preserve"><value>使用說明位於 README.md。</value></data>
+  <data name="Database maintenance" xml:space="preserve"><value>資料庫維護</value></data>
+  <data name="SQLite database health, verified backups, retention cleanup, and safe optimization." xml:space="preserve"><value>管理 SQLite 資料庫健康狀態、可驗證備份、保留清理與安全最佳化。</value></data>
+  <data name="Reading database status..." xml:space="preserve"><value>正在讀取資料庫狀態...</value></data>
+  <data name="Run integrity check" xml:space="preserve"><value>執行完整性檢查</value></data>
+  <data name="Create verified backup" xml:space="preserve"><value>建立可驗證備份</value></data>
+  <data name="Optimize database" xml:space="preserve"><value>最佳化資料庫</value></data>
+  <data name="Clean expired data" xml:space="preserve"><value>清理過期資料</value></data>
+  <data name="Verified backup created: {0}" xml:space="preserve"><value>已建立並驗證備份：{0}</value></data>
+  <data name="Expired rows removed: {0}" xml:space="preserve"><value>已移除過期資料列：{0}</value></data>
+  <data name="Database status summary" xml:space="preserve"><value>資料庫狀態：{0}&#xA;資料庫：{1:N0} 位元組；WAL：{2:N0} 位元組&#xA;頁面：{3:N0}；可回收頁面：{4:N0}；日誌模式：{5}</value></data>
+  <data name="Database maintenance is running..." xml:space="preserve"><value>正在執行資料庫維護...</value></data>
+  <data name="Database maintenance failed. Review the application log for details." xml:space="preserve"><value>資料庫維護失敗，請查看應用程式記錄以取得詳細資訊。</value></data>
+  <data name="Restore backup" xml:space="preserve"><value>還原備份</value></data>
+  <data name="Stop the IDDS Community service before restoring a database backup." xml:space="preserve"><value>還原資料庫備份前，請先停止 IDDS Community 服務。</value></data>
+  <data name="SQLite backup files (*.db)|*.db|All files (*.*)|*.*" xml:space="preserve"><value>SQLite 備份檔案 (*.db)|*.db|所有檔案 (*.*)|*.*</value></data>
+  <data name="Select a verified database backup" xml:space="preserve"><value>選擇已驗證的資料庫備份</value></data>
+  <data name="Restore the selected database backup? The current database will be preserved as a rollback copy." xml:space="preserve"><value>要還原選取的資料庫備份嗎？目前的資料庫會保留為回滾副本。</value></data>
+  <data name="Database restored. Rollback copy: {0}" xml:space="preserve"><value>資料庫已還原。回滾副本：{0}</value></data>
 </root>

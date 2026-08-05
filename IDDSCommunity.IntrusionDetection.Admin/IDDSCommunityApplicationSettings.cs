@@ -13,6 +13,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
     public const string MENU_SMTP_SETTINGS = "SMTP configuration";
     public const string MENU_LANGUAGE_SETTINGS = "Language settings";
+    public const string MENU_DATABASE_MAINTENANCE = "Database maintenance";
     public event EventHandler? ConfigurationChanged;
 
 
@@ -41,6 +42,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null!, null!);
     }
 
     private PanelLockoutConfiguration? _lockoutConfiguration;
@@ -131,8 +133,17 @@ public partial class IDDSCommunityApplicationSettings : UserControl
 
     private PanelNotificationSettings? _panelNotificationSettings;
     private PanelLanguageSettings? _panelLanguageSettings;
+    private PanelDatabaseMaintenance? _panelDatabaseMaintenance;
 
     public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
+    public PanelDatabaseMaintenance PanelDatabaseMaintenance => _panelDatabaseMaintenance ??= CreateDatabaseMaintenancePanel();
+
+    private PanelDatabaseMaintenance CreateDatabaseMaintenancePanel()
+    {
+        PanelDatabaseMaintenance panel = new();
+        configurationPanel.Controls.Add(panel);
+        return panel;
+    }
 
     /// <summary>
     /// Creates and attaches the language settings panel.
@@ -195,6 +206,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
                 break;
             case var displayName when displayName == Strings.Get(MENU_LANGUAGE_SETTINGS):
                 PanelLanguageSettings.BringToFront();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_DATABASE_MAINTENANCE):
+                PanelDatabaseMaintenance.BringToFront();
+                PanelDatabaseMaintenance.RefreshStatus();
                 break;
         }
     }
