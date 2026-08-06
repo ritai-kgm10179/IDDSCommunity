@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -192,32 +192,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    public Image Icon
-    {
-        get => Resource.agent15px_rdp_dark;
-        set
-        {
-
-        }
-    }
-
-    public Image SelectedIcon
-    {
-        get => Resource.agent15px_rdp_white;
-        set
-        {
-
-        }
-    }
-
-    public Image UnselectedIcon
-    {
-        get => Resource.agent15px_rdp_dark;
-        set
-        {
-
-        }
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
 
     public Guid Id => new("{A682433B-852F-4150-ADF4-FB7F75090015}");

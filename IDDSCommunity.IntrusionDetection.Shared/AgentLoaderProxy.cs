@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -56,17 +56,19 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 if (agentPlugin is IExtendedInformation exInfo)
                                 {
                                     securityAgent.DisplayName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get(exInfo.DisplayName);
-                                    securityAgent.UnselectedIcon = NormalizeIcon(exInfo.UnselectedIcon);
-                                    securityAgent.SelectedIcon = NormalizeIcon(exInfo.SelectedIcon);
-                                    securityAgent.Icon = NormalizeIcon(exInfo.Icon);
+                                    AgentThemeCategory category = AgentThemeIconFactory.DetectCategory(securityAgent.DisplayName + " " + typeName);
+                                    securityAgent.UnselectedIcon = NormalizeIcon(exInfo.UnselectedIcon, category, false);
+                                    securityAgent.SelectedIcon = NormalizeIcon(exInfo.SelectedIcon, category, true);
+                                    securityAgent.Icon = NormalizeIcon(exInfo.Icon, category, false);
                                     securityAgent.Id = exInfo.Id;
                                 }
                                 else
                                 {
                                     securityAgent.DisplayName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get(typeName);
-                                    securityAgent.UnselectedIcon = NormalizeIcon(Resources.agent15px_default_dark);
-                                    securityAgent.SelectedIcon = NormalizeIcon(Resources.agent15px_default_white);
-                                    securityAgent.Icon = NormalizeIcon(Resources.agent15px_default_dark);
+                                    AgentThemeCategory category = AgentThemeIconFactory.DetectCategory(securityAgent.DisplayName + " " + typeName);
+                                    securityAgent.UnselectedIcon = NormalizeIcon(null, category, false);
+                                    securityAgent.SelectedIcon = NormalizeIcon(null, category, true);
+                                    securityAgent.Icon = NormalizeIcon(null, category, false);
                                 }
                                 securityAgent.Name = typeName;
                                 securityAgent.Enabled = false;
@@ -91,7 +93,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                 }
                 catch (Exception exception)
                 {
-                    System.Diagnostics.Trace.TraceWarning("Failed to load security agent type {0} from {1}: {2}", type?.FullName, fileName, exception);
+                    System.Diagnostics.Trace.WriteLine(exception.ToString());
                 }
             }
             return result;
@@ -106,16 +108,19 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// Normalizes Plugin artwork to the administration UI's standard visual icon size.
     /// </summary>
     /// <param name="source">The Plugin-provided icon.</param>
+    /// <param name="fallbackCategory">The theme category fallback.</param>
+    /// <param name="selected">Whether the icon represents selected state.</param>
     /// <returns>A 16-by-16 pixel icon suitable for consistent list presentation.</returns>
-    private static Image NormalizeIcon(Image source)
+    private static Image NormalizeIcon(Image? source, AgentThemeCategory fallbackCategory, bool selected)
     {
+        Image actual = source ?? AgentThemeIconFactory.Create(fallbackCategory, selected);
         const int iconSize = 16;
         Bitmap result = new(iconSize, iconSize);
         using Graphics graphics = Graphics.FromImage(result);
         graphics.CompositingQuality = CompositingQuality.HighQuality;
         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
         graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-        graphics.DrawImage(source, new Rectangle(0, 0, iconSize, iconSize));
+        graphics.DrawImage(actual, new Rectangle(0, 0, iconSize, iconSize));
         return result;
     }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -143,23 +143,9 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         get => IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("FileMaker Security Agent"); set => throw new NotSupportedException(IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    private Image _icon = FileMakerResource.agent15px_filemaker_dark;
-    public Image Icon
-    {
-        get => _icon; set => _icon = value;
-    }
-
-    private Image _selectedIcon = FileMakerResource.agent15px_filemaker_white;
-    public Image SelectedIcon
-    {
-        get => _selectedIcon; set => _selectedIcon = value;
-    }
-
-    private Image _unselectedIcon = FileMakerResource.agent15px_filemaker_dark;
-    public Image UnselectedIcon
-    {
-        get => _unselectedIcon; set => _unselectedIcon = value;
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
     public Guid Id => new("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
 

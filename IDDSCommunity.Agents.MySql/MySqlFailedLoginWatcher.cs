@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -82,23 +82,9 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         set { }
     }
 
-    public Image Icon
-    {
-        get => Resource.agent15px_sql_dark;
-        set { }
-    }
-
-    public Image SelectedIcon
-    {
-        get => Resource.agent15px_sql_white;
-        set { }
-    }
-
-    public Image UnselectedIcon
-    {
-        get => Resource.agent15px_sql_dark;
-        set { }
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
     public Guid Id => new("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
@@ -124,23 +124,9 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
         get => Api.Localization.Strings.Get("AD Credential Validation Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    private Image _icon = Resources.WindowsSecurityAgent_dark;
-    public Image Icon
-    {
-        get => _icon; set => _icon = value;
-    }
-
-    private Image _selectedIcon = Resources.WindowsSecurityAgent_white;
-    public Image SelectedIcon
-    {
-        get => _selectedIcon; set => _selectedIcon = value;
-    }
-
-    private Image _unselectedIcon = Resources.WindowsSecurityAgent_dark;
-    public Image UnselectedIcon
-    {
-        get => _unselectedIcon; set => _unselectedIcon = value;
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
 
     public Guid Id => new("{D67852B4-DBEF-4831-877C-E37DAB764952}");

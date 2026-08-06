@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
@@ -102,23 +102,9 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
         set { }
     }
 
-    public Image Icon
-    {
-        get => Resource.agent15px_dns_dark;
-        set { }
-    }
-
-    public Image SelectedIcon
-    {
-        get => Resource.agent15px_dns_white;
-        set { }
-    }
-
-    public Image UnselectedIcon
-    {
-        get => Resource.agent15px_dns_dark;
-        set { }
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
     public Guid Id => new("{0E5C35B5-7B2E-4DD5-970D-89A33C935A51}");
 }
