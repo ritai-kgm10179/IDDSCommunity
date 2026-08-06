@@ -757,4 +757,8 @@
   <data name="Bidirectional blocking" xml:space="preserve"><value>雙向封鎖</value></data>
   <data name="Blocks inbound traffic from the selected remote addresses. Recommended for most servers." xml:space="preserve"><value>封鎖所選遠端位址的入站流量，適合大多數伺服器。</value></data>
   <data name="Blocks inbound traffic and outbound replies for the selected remote addresses." xml:space="preserve"><value>同時封鎖所選遠端位址的入站流量與對外回應。</value></data>
+  <data name="Application startup failed due to insufficient permissions. Restart as Administrator?" xml:space="preserve"><value>應用程式啟動失敗：{0}
+
+這通常是由於權限不足所致。是否要以系統管理員身分重新啟動？</value></data>
+  <data name="Administrator Privileges Required" xml:space="preserve"><value>需要系統管理員權限</value></data>
 </root>

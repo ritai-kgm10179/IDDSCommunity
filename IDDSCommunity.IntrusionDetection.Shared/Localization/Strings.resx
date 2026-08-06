@@ -757,4 +757,8 @@
   <data name="Bidirectional blocking" xml:space="preserve"><value>Bidirectional blocking</value></data>
   <data name="Blocks inbound traffic from the selected remote addresses. Recommended for most servers." xml:space="preserve"><value>Blocks inbound traffic from the selected remote addresses. Recommended for most servers.</value></data>
   <data name="Blocks inbound traffic and outbound replies for the selected remote addresses." xml:space="preserve"><value>Blocks inbound traffic and outbound replies for the selected remote addresses.</value></data>
+  <data name="Application startup failed due to insufficient permissions. Restart as Administrator?" xml:space="preserve"><value>Application startup failed: {0}
+
+This may be due to insufficient permissions. Would you like to restart as Administrator?</value></data>
+  <data name="Administrator Privileges Required" xml:space="preserve"><value>Administrator Privileges Required</value></data>
 </root>

@@ -88,12 +88,29 @@ public partial class SplashScreen : Form
             Close();
             return;
         }
-        string detail = failure?.GetType().Name ?? Strings.Get("The administration interface did not complete initialization.");
-        MessageBox.Show(
-            Strings.Format("Application startup failed: {0}", detail),
-            Strings.Get("Application startup failed"),
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Error);
+        string detail = failure?.Message ?? failure?.GetType().Name ?? Strings.Get("The administration interface did not complete initialization.");
+        DialogResult result = MessageBox.Show(
+            Strings.Format("Application startup failed due to insufficient permissions. Restart as Administrator?", detail),
+            Strings.Get("Administrator Privileges Required"),
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Warning);
+
+        if (result == DialogResult.Yes)
+        {
+            try
+            {
+                System.Diagnostics.ProcessStartInfo startInfo = new(Application.ExecutablePath)
+                {
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+                System.Diagnostics.Process.Start(startInfo);
+            }
+            catch (System.ComponentModel.Win32Exception)
+            {
+                // User cancelled the UAC prompt
+            }
+        }
         Close();
     }
 
