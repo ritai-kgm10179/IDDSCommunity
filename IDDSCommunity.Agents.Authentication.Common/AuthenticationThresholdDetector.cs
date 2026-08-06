@@ -7,7 +7,6 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 public sealed class AuthenticationThresholdDetector
 {
     private readonly AuthenticationAgentConfiguration configuration;
-    private readonly ExcludedAddressRange[] excluded;
     private readonly TimeProvider timeProvider;
     private readonly Dictionary<IPAddress, SourceState> sources = [];
     private readonly LinkedList<IPAddress> recency = [];
@@ -22,13 +21,6 @@ public sealed class AuthenticationThresholdDetector
         configuration.Validate();
         this.configuration = configuration;
         this.timeProvider = timeProvider;
-        List<ExcludedAddressRange> ranges = [];
-        foreach (string value in configuration.ExcludedAddresses.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            _ = ExcludedAddressRange.TryParse(value, out ExcludedAddressRange range);
-            ranges.Add(range);
-        }
-        excluded = [.. ranges];
     }
 
     internal int TrackedSourceCount { get { lock (sync) return sources.Count; } }
@@ -41,8 +33,6 @@ public sealed class AuthenticationThresholdDetector
     private bool AnalyzeCore(AuthenticationFailureEvent failure)
     {
         IPAddress source = Normalize(failure.SourceAddress);
-        if (IPAddress.IsLoopback(source) || IsExcluded(source))
-            return false;
         DateTimeOffset observedAt = timeProvider.GetUtcNow();
         RemoveExpiredSources(observedAt);
         if (!sources.TryGetValue(source, out SourceState? state))
@@ -78,13 +68,6 @@ public sealed class AuthenticationThresholdDetector
         DateTimeOffset cutoff = now.AddSeconds(-configuration.SourceStateRetentionSeconds);
         while (recency.First is not null && sources[recency.First.Value].LastObservedAt <= cutoff)
             RemoveSource(recency.First.Value);
-    }
-
-    private bool IsExcluded(IPAddress source)
-    {
-        foreach (ExcludedAddressRange range in excluded)
-            if (range.Contains(source)) return true;
-        return false;
     }
 
     private void RemoveOldestSource()

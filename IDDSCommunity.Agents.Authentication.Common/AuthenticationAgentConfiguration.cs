@@ -9,7 +9,6 @@ public class AuthenticationAgentConfiguration : PluginConfiguration
     public int FailureThreshold { get; set; } = 10;
     public int MaximumTrackedSources { get; set; } = 10000;
     public int SourceStateRetentionSeconds { get; set; } = 1800;
-    public string ExcludedAddresses { get; set; } = "127.0.0.1;::1";
 
     public virtual void Validate()
     {
@@ -21,8 +20,5 @@ public class AuthenticationAgentConfiguration : PluginConfiguration
             throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("Tracked source capacity must be between 100 and 1000000."));
         if (SourceStateRetentionSeconds < WindowSeconds || SourceStateRetentionSeconds > 604800)
             throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("Source state retention must be at least the detection window and no more than 604800 seconds."));
-        foreach (string value in ExcludedAddresses.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            if (!ExcludedAddressRange.TryParse(value, out _))
-                throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("Excluded addresses must contain valid IP addresses or CIDR networks."));
     }
 }

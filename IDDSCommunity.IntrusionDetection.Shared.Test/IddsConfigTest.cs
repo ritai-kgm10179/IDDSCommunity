@@ -154,6 +154,22 @@ public class IddsConfigTest
         Assert.IsFalse(IddsConfig.IsValidSubnetMask("255.0.255.0"));
     }
 
+    [TestMethod]
+    public void SafeNetworkInputNormalizesIpv4AndIpv6RangesTest()
+    {
+        Assert.AreEqual("192.0.2.1/255.255.255.255", IddsConfig.ConvertStringToIpAddressNetwork("192.0.2.1"));
+        Assert.AreEqual("192.0.2.0/255.255.255.0", IddsConfig.ConvertStringToIpAddressNetwork("192.0.2.0/24"));
+        Assert.AreEqual("0.0.0.0/0.0.0.0", IddsConfig.ConvertStringToIpAddressNetwork("0.0.0.0/0"));
+        Assert.AreEqual("::1/128", IddsConfig.ConvertStringToIpAddressNetwork("::1"));
+        Assert.AreEqual("2001:db8::/32", IddsConfig.ConvertStringToIpAddressNetwork("2001:db8::/32"));
+        Assert.ThrowsExactly<ArgumentException>(() => IddsConfig.ConvertStringToIpAddressNetwork("2001:db8::/129"));
+
+        IddsConfig.Instance.SafeNetworks.Clear();
+        IddsConfig.Instance.SafeNetworks.Add(new IddsConfig.CSafeNetwork("2001:db8::", "32"));
+        Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("2001:db8:1::20"));
+        Assert.IsFalse(IddsConfig.Instance.IsInSafeNetwork("2001:db9::20"));
+    }
+
     /// <summary>
     /// Verifies that validation exceptions remain diagnostic and culture-independent.
     /// </summary>

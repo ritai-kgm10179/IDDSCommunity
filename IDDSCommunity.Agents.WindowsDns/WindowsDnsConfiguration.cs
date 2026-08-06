@@ -15,7 +15,6 @@ public sealed class WindowsDnsConfiguration : PluginConfiguration
     public int DynamicUpdateThreshold { get; set; } = 10;
     public int ZoneTransferThreshold { get; set; } = 1;
     public int MaximumTrackedClients { get; set; } = 10000;
-    public string ExcludedAddresses { get; set; } = "127.0.0.1;::1";
 
     /// <summary>
     /// Validates that every detection boundary is positive and memory usage remains bounded.

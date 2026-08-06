@@ -29,14 +29,17 @@
             //
             // smartLabel1
             //
-            this.smartLabel1.AutoSize = true;
+            this.smartLabel1.AutoEllipsis = true;
+            this.smartLabel1.AutoSize = false;
+            this.smartLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.smartLabel1.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.smartLabel1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.smartLabel1.Location = new System.Drawing.Point(0, 7);
             this.smartLabel1.Name = "smartLabel1";
             this.smartLabel1.Selected = false;
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
-            this.smartLabel1.Size = new System.Drawing.Size(68, 13);
+            this.smartLabel1.Size = new System.Drawing.Size(258, 18);
             this.smartLabel1.TabIndex = 0;
             this.smartLabel1.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("smartLabel1");
             //
@@ -46,9 +49,9 @@
             this.textBox1.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
             this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(290, 3);
+            this.textBox1.Location = new System.Drawing.Point(270, 3);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 22);
+            this.textBox1.Size = new System.Drawing.Size(120, 22);
             this.textBox1.TabIndex = 20;
             //
             // SmartLabelTextbox

@@ -6,5 +6,5 @@ using System.Runtime.Versioning;
 [assembly: AssemblyProduct("IDDSCommunity Intrusion Detection")]
 [assembly: AssemblyVersion("3.0.0.0")]
 [assembly: AssemblyFileVersion("3.0.0.0")]
-[assembly: InternalsVisibleTo("IDDSCommunity.Agents.Authentication.Test")]
+[assembly: InternalsVisibleTo("IDDSCommunity.Agents.Radius.Test")]
 [assembly: SupportedOSPlatform("windows")]
