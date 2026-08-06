@@ -34,7 +34,7 @@ dotnet restore (Join-Path $repositoryRoot 'IDDSCommunity.slnx') --runtime $Runti
 if ($LASTEXITCODE -ne 0) { throw '執行階段相依套件還原失敗。' }
 
 # Vulnerability auditing belongs to the explicit restore/CI step. Publishing uses the already-audited lock state.
-$commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
+$commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true', '-p:EnableCompressionInSingleFile=true', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
 $pluginArguments = @('--configuration', $Configuration, '--self-contained', 'false', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
 
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj') @commonArguments --output $payloadRoot
@@ -61,8 +61,9 @@ foreach ($projectName in $pluginProjects) {
 # Compress payload directory into a zip archive and embed it into the Setup project for a 100% self-contained Single EXE
 $setupProjectDir = Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Setup'
 $setupZipPath = Join-Path $setupProjectDir 'payload.zip'
-$setupTempOut = Join-Path $packageRoot 'temp_setup'
+$setupTempOut = Join-Path $repositoryRoot 'artifacts\setup\temp_setup_out'
 if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }
+if (Test-Path -LiteralPath $setupTempOut) { Remove-Item -LiteralPath $setupTempOut -Recurse -Force -ErrorAction SilentlyContinue }
 
 Compress-Archive -Path "$payloadRoot\*" -DestinationPath $setupZipPath -Force
 
@@ -71,20 +72,17 @@ $setupArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIden
 try {
     dotnet publish (Join-Path $setupProjectDir 'IDDSCommunity.IntrusionDetection.Setup.csproj') @setupArguments --output $setupTempOut
     if ($LASTEXITCODE -ne 0) { throw '安裝程式發佈失敗。' }
-    
-    # Move the single EXE setup file to packageRoot
-    $singleExe = Get-ChildItem -LiteralPath $setupTempOut -Filter '*.exe' | Select-Object -First 1
-    if ($null -ne $singleExe) {
-        Move-Item -LiteralPath $singleExe.FullName -Destination (Join-Path $packageRoot 'IDDSCommunity.IntrusionDetection.Setup.exe') -Force
+
+    if (-not (Test-Path -LiteralPath $packageRoot)) {
+        New-Item -ItemType Directory -Path $packageRoot -Force | Out-Null
     }
+    Copy-Item -LiteralPath (Join-Path $setupTempOut 'IDDSCommunity.IntrusionDetection.Setup.exe') -Destination $packageRoot -Force
 }
 finally {
     if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }
     if (Test-Path -LiteralPath $setupTempOut) { Remove-Item -LiteralPath $setupTempOut -Recurse -Force -ErrorAction SilentlyContinue }
+    if (Test-Path -LiteralPath $payloadRoot) { Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }
-
-# Clean up redundant payload directory from package output since it is now embedded inside the Single EXE
-if (Test-Path -LiteralPath $payloadRoot) { Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue }
 
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $packageRoot
