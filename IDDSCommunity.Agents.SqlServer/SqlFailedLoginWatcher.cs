@@ -7,7 +7,7 @@ using System.Drawing;
 
 namespace IDDSCommunity.Agents.SqlServer;
 
-//  [PluginAttribute("Intrusion Detection Base Windows Security Agent", "This agent scans and monitors the system eventlog for possible attacks.")]
+//  [PluginAttribute("Intrusion Detection Base Windows Security Agent", "此 Agent 掃描並監控系統事件紀錄以偵測可能的攻擊。")]
 public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 {
 
@@ -25,7 +25,7 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
                 </QueryList>";
 
     /// <summary>
-    /// Initialize the Agent
+    /// 初始化 Agent。
     /// </summary>
     public SqlFailedLoginWatcher()
     {
@@ -34,7 +34,7 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 
 
     /// <summary>
-    /// Agent Startup, initialization of our EventLog watcher
+    /// 啟動 Agent 服務並初始化事件紀錄監聽器。
     /// </summary>
     protected override void OnStartAgent()
     {
@@ -46,17 +46,17 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Resume from Pause
+    /// 從暫停狀態復原 Agent 服務。
     /// </summary>
     protected override void OnContinueAgent() => SetWatcherEnabled(true);
 
     /// <summary>
-    /// Pause the agent
+    /// 暫停 Agent 服務。
     /// </summary>
     protected override void OnPauseAgent() => SetWatcherEnabled(false);
 
     /// <summary>
-    /// Stop the agent
+    /// 停止 Agent 服務。
     /// </summary>
     protected override void OnStopAgent()
     {
@@ -70,9 +70,9 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Sets watcher enabled.
+    /// 設定監聽器啟用狀態。
     /// </summary>
-    /// <param name="enabled">The enabled value.</param>
+    /// <param name="enabled">是否啟用的數值。</param>
 
     private void SetWatcherEnabled(bool enabled)
     {
@@ -83,10 +83,10 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Handles the event record written event.
+    /// 處理事件紀錄寫入事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
@@ -128,6 +128,9 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName
     {
         get => "SQL Server Security Agent";
@@ -137,18 +140,30 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get; set; }
 
 
 
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => new("{0F470A49-594D-4895-ADE1-46B48B9B8A58}");
 
     /// <summary>
-    /// Executes the my regex operation.
+    /// 取得匹配規則運算式。
     /// </summary>
-    /// <returns>The my regex result.</returns>
+    /// <returns>傳回規則運算式執行個體。</returns>
 
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();

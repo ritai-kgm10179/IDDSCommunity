@@ -16,7 +16,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TlsSslAgent"/> class.
+    /// 初始化 <see cref="TlsSslAgent"/> 類別的新執行個體。
     /// </summary>
 
     public TlsSslAgent()
@@ -27,7 +27,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Processes the start agent notification.
+    /// 處理啟動 Agent 的通知。
     /// </summary>
 
     protected override void OnStartAgent()
@@ -37,7 +37,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Executes the run watcher operation.
+    /// 執行監聽器啟動作業。
     /// </summary>
 
     void RunWatcher()
@@ -58,9 +58,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
 
     /// <summary>
-    /// Executes the watch address operation.
+    /// 執行監聽指定位址作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     void WatchAddress(object? ipAddress)
     {
@@ -75,10 +75,10 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Handles the ip packet sent event.
+    /// 處理 IP 封包傳送事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void s_IpPacketSent(object? sender, EventArgs e)
     {
@@ -122,14 +122,14 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Processes the trace notification.
+    /// 處理追蹤通知。
     /// </summary>
-    /// <param name="tlsPackage">The tls package value.</param>
+    /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     /// <summary>
-    /// Processes the continue agent notification.
+    /// 處理繼續執行 Agent 的通知。
     /// </summary>
 
     protected override void OnContinueAgent()
@@ -139,7 +139,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Processes the pause agent notification.
+    /// 處理暫停 Agent 的通知。
     /// </summary>
 
     protected override void OnPauseAgent()
@@ -149,7 +149,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Processes the stop agent notification.
+    /// 處理停止 Agent 的通知。
     /// </summary>
 
     protected override void OnStopAgent()
@@ -166,9 +166,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     public override bool IsRunning => base.IsRunning;
 
     /// <summary>
-    /// Executes the unsuccessful login operation.
+    /// 處理登入失敗作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     void UnsuccessfulLogin(string ipAddress)
     {
@@ -183,6 +183,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     }
 
 
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName
     {
         get => "TLS/SSL Security Agent";
@@ -192,10 +195,22 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get; set; }
 
 
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => new("{A682433B-852F-4150-ADF4-FB7F75090015}");
 }

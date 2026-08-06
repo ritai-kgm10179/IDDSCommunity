@@ -13,8 +13,8 @@ public class Locks
     /// <summary>
     /// Determines whether s updates.
     /// </summary>
-    /// <param name="lastUpdate">The last update value.</param>
-    /// <returns><see langword="true"/> if s updates; otherwise, <see langword="false"/>.</returns>
+    /// <param name="lastUpdate">last update參數。</param>
+    /// <returns>若s updates傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool HasUpdates(DateTime lastUpdate)
     {
@@ -68,7 +68,7 @@ public class Locks
     /// <summary>
     /// Reads locks.
     /// </summary>
-    /// <returns>The read locks result.</returns>
+    /// <returns>傳回read locks結果。</returns>
 
     public static IDataReader ReadLocks()
     {
@@ -86,9 +86,9 @@ public class Locks
     }
 
     /// <summary>
-    /// Executes the today operation.
+    /// 執行today作業。
     /// </summary>
-    /// <returns>The today result.</returns>
+    /// <returns>傳回today結果。</returns>
 
     public static int Today()
     {
@@ -114,7 +114,7 @@ public class Locks
     /// <summary>
     /// Reads current soft locks.
     /// </summary>
-    /// <returns>The read current soft locks result.</returns>
+    /// <returns>傳回read current soft locks結果。</returns>
 
     public static int ReadCurrentSoftLocks()
     {
@@ -126,7 +126,7 @@ public class Locks
     /// <summary>
     /// Reads current hard locks.
     /// </summary>
-    /// <returns>The read current hard locks result.</returns>
+    /// <returns>傳回read current hard locks結果。</returns>
 
     public static int ReadCurrentHardLocks()
     {
@@ -138,8 +138,8 @@ public class Locks
     /// <summary>
     /// Reads unsuccessful login attempts.
     /// </summary>
-    /// <param name="startDate">The start date value.</param>
-    /// <returns>The read unsuccessful login attempts result.</returns>
+    /// <param name="startDate">start date參數。</param>
+    /// <returns>傳回read unsuccessful login attempts結果。</returns>
 
     public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
     {
@@ -166,7 +166,7 @@ public class Locks
     /// <summary>
     /// Gets current locks.
     /// </summary>
-    /// <returns>The get current locks result.</returns>
+    /// <returns>傳回get current locks結果。</returns>
 
     public static List<Lock> GetCurrentLocks()
     {
@@ -200,8 +200,8 @@ public class Locks
     /// <summary>
     /// Gets lock by id.
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <returns>The get lock by id result.</returns>
+    /// <param name="id">id參數。</param>
+    /// <returns>傳回get lock by id結果。</returns>
 
     public static Lock GetLockById(long id)
     {
@@ -230,10 +230,10 @@ public class Locks
     }
 
     /// <summary>
-    /// Executes the lock exists operation.
+    /// 執行lock exists作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <param name="ipAddress">ip address參數。</param>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool LockExists(string ipAddress)
     {
@@ -259,15 +259,15 @@ public class Locks
     }
 
     /// <summary>
-    /// Creates lock.
+    /// 建立鎖定記錄。
     /// </summary>
-    /// <param name="lockDate">The lock date value.</param>
-    /// <param name="unlockDate">The unlock date value.</param>
-    /// <param name="triggerIncident">The trigger incident value.</param>
-    /// <param name="status">The status value.</param>
-    /// <param name="port">The port value.</param>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <returns>The create lock result.</returns>
+    /// <param name="lockDate">lock date參數。</param>
+    /// <param name="unlockDate">unlock date參數。</param>
+    /// <param name="triggerIncident">trigger incident參數。</param>
+    /// <param name="status">status參數。</param>
+    /// <param name="port">port參數。</param>
+    /// <param name="ipAddress">ip address參數。</param>
+    /// <returns>傳回create lock結果。</returns>
 
     public static Lock CreateLock(DateTime lockDate, DateTime unlockDate, long triggerIncident, int status, int port, string ipAddress)
     {
@@ -285,10 +285,10 @@ public class Locks
     }
 
     /// <summary>
-    /// Creates lock.
+    /// 建立鎖定記錄。
     /// </summary>
-    /// <param name="l">The l value.</param>
-    /// <returns>The create lock result.</returns>
+    /// <param name="l">l參數。</param>
+    /// <returns>傳回create lock結果。</returns>
 
     public static long CreateLock(Lock l)
     {
@@ -307,9 +307,9 @@ public class Locks
     }
 
     /// <summary>
-    /// Updates lock.
+    /// 更新鎖定記錄。
     /// </summary>
-    /// <param name="l">The l value.</param>
+    /// <param name="l">l參數。</param>
 
     public static void UpdateLock(Lock l)
     {
@@ -325,9 +325,9 @@ public class Locks
     }
 
     /// <summary>
-    /// Gets unlock list.
+    /// 取得解鎖清單。
     /// </summary>
-    /// <returns>The get unlock list result.</returns>
+    /// <returns>傳回get unlock list結果。</returns>
 
     public static List<Lock> GetUnlockList()
     {

@@ -12,13 +12,13 @@ namespace IDDSCommunity.Agents.WindowsDns.Test;
 public sealed class WindowsDnsSecurityAgentTest
 {
     /// <summary>
-    /// Restores the process UI culture after localization assertions.
+    /// 在地化斷言驗證後復原程序的 UI 文化特性。
     /// </summary>
     [TestCleanup]
     public void Cleanup() => CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
     /// <summary>
-    /// Verifies the documented payload positions for responses, updates, transfers, and audit events.
+    /// 驗證回應、更新、轉移與稽核事件的事件負載位置。
     /// </summary>
     [TestMethod]
     public void TryParse_DocumentedEvents_ExtractsSourceAndDnsFields()
@@ -43,7 +43,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies unsupported events and invalid source addresses are rejected.
+    /// 驗證不支援的事件與無效的來源位址皆會被拒絕。
     /// </summary>
     [TestMethod]
     public void TryParse_UnsupportedOrInvalidEvent_ReturnsFalse()
@@ -53,7 +53,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies each suspicious DNS category emits once when its configured boundary is crossed.
+    /// 驗證每個可疑的 DNS 類別於超越設定界限時均會引發一次通知。
     /// </summary>
     [TestMethod]
     public void Analyze_ThresholdCrossings_ReturnExpectedDetections()
@@ -82,7 +82,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies excluded addresses, window resets, and client tracking capacity.
+    /// 驗證排除位址、視窗重置與用戶端追蹤容量。
     /// </summary>
     [TestMethod]
     public void Analyze_ExclusionsWindowsAndCapacity_RemainBounded()
@@ -104,7 +104,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies Agent lifecycle wiring and conversion of one detector signal to the existing attack contract.
+    /// 驗證 Agent 生命週期配置與偵測器訊號轉換至現有攻擊合約。
     /// </summary>
     [TestMethod]
     public void Agent_LifecycleAndDetection_UseExistingAttackContract()
@@ -132,7 +132,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies source errors do not terminate the Agent event pipeline.
+    /// 驗證來源錯誤不會終止 Agent 的事件管線。
     /// </summary>
     [TestMethod]
     public void Agent_EventSourceError_DoesNotStopSubscription()
@@ -150,7 +150,7 @@ public sealed class WindowsDnsSecurityAgentTest
     }
 
     /// <summary>
-    /// Verifies the Agent display name and detection messages are localized.
+    /// 驗證 Agent 顯示名稱與偵測訊息皆已在地化。
     /// </summary>
     [TestMethod]
     public void DisplayName_TraditionalChinese_IsLocalized()

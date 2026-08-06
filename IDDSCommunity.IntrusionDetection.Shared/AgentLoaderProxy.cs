@@ -13,9 +13,9 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// <summary>
     /// Gets security agents.
     /// </summary>
-    /// <param name="fileName">The file name value.</param>
+    /// <param name="fileName">file name參數。</param>
     /// <param name="pluginRoot">The trusted plug-in directory.</param>
-    /// <returns>The get security agents result.</returns>
+    /// <returns>傳回get security agents結果。</returns>
 
     public List<SecurityAgent> GetSecurityAgents(string fileName, string pluginRoot)
     {
@@ -128,8 +128,8 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// <summary>
     /// Gets custom configuration objects.
     /// </summary>
-    /// <param name="config">The config value.</param>
-    /// <returns>The get custom configuration objects result.</returns>
+    /// <param name="config">config參數。</param>
+    /// <returns>傳回get custom configuration objects結果。</returns>
 
     public static Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
     {

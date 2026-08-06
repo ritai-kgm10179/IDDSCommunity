@@ -27,7 +27,7 @@ public class Pop3Client
     private DateTime lastInteraction;
 
     /// <summary>
-    /// Gets or sets the most recent POP3 command observed for this connection.
+    /// 取得或設定此連線觀察到的最新 POP3 命令。
     /// </summary>
     public Pop3Message LastMessage
     {
@@ -44,7 +44,7 @@ public class Pop3Client
     }
 
     /// <summary>
-    /// Gets or sets the timestamp of the most recent packet observed for this connection.
+    /// 取得或設定此連線觀察到的最新封包時間戳記。
     /// </summary>
     public DateTime LastInteraction
     {

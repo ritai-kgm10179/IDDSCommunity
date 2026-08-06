@@ -31,7 +31,7 @@ public class Database
     private SqliteConnection? _connection;
 
     /// <summary>
-    /// Gets the absolute path of the configured SQLite database.
+    /// 取得 absolute path of the configured SQLite database.
     /// </summary>
     public string DataSource => connBuilder.DataSource;
 
@@ -123,7 +123,7 @@ public class Database
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Database"/> class.
+    /// 初始化 <see cref="Database"/> class的新執行個體。
     /// </summary>
 
     public Database() => _instance = this;
@@ -131,19 +131,19 @@ public class Database
     /// <summary>
     /// Executes reader.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="parameters">The parameters value.</param>
-    /// <returns>The execute reader result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="parameters">parameters參數。</param>
+    /// <returns>傳回execute reader結果。</returns>
 
     public IDataReader ExecuteReader(string sqlString, params object[] parameters) => ExecuteReader(sqlString, null, parameters);
 
     /// <summary>
     /// Executes reader.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="transaction">The transaction value.</param>
-    /// <param name="parameters">The parameters value.</param>
-    /// <returns>The execute reader result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="transaction">transaction參數。</param>
+    /// <param name="parameters">parameters參數。</param>
+    /// <returns>傳回execute reader結果。</returns>
 
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -163,17 +163,17 @@ public class Database
     /// <summary>
     /// Executes non query.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="parameters">The parameters value.</param>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="parameters">parameters參數。</param>
 
     public void ExecuteNonQuery(string sqlString, params object[] parameters) => ExecuteNonQuery(sqlString, null, parameters);
 
     /// <summary>
     /// Executes non query.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="transaction">The transaction value.</param>
-    /// <param name="parameters">The parameters value.</param>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="transaction">transaction參數。</param>
+    /// <param name="parameters">parameters參數。</param>
 
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -191,19 +191,19 @@ public class Database
     /// <summary>
     /// Executes scalar.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="parameters">The parameters value.</param>
-    /// <returns>The execute scalar result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="parameters">parameters參數。</param>
+    /// <returns>傳回execute scalar結果。</returns>
 
     public object? ExecuteScalar(string sqlString, params object[] parameters) => ExecuteScalar(sqlString, null, parameters);
 
     /// <summary>
     /// Executes scalar.
     /// </summary>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="transaction">The transaction value.</param>
-    /// <param name="parameters">The parameters value.</param>
-    /// <returns>The execute scalar result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="transaction">transaction參數。</param>
+    /// <param name="parameters">parameters參數。</param>
+    /// <returns>傳回execute scalar結果。</returns>
 
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
@@ -360,7 +360,7 @@ public class Database
     /// <summary>
     /// Applies connection-local integrity and contention settings.
     /// </summary>
-    /// <param name="connection">The open SQLite connection.</param>
+    /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
     private static void ConfigureConnection(SqliteConnection connection)
     {
         using SqliteCommand command = connection.CreateCommand();
@@ -383,13 +383,13 @@ public class Database
     private static TimeSpan GetRetryDelay(int attempt) => TimeSpan.FromMilliseconds(50 * (1 << Math.Min(attempt, 4)));
 
     /// <summary>
-    /// Executes the query operation.
+    /// 執行query作業。
     /// </summary>
     /// <typeparam name="T">The t type.</typeparam>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="param">The param value.</param>
-    /// <param name="transaction">The transaction value.</param>
-    /// <returns>The query result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="param">param參數。</param>
+    /// <param name="transaction">transaction參數。</param>
+    /// <returns>傳回query結果。</returns>
 
     public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
     {
@@ -403,13 +403,13 @@ public class Database
     }
 
     /// <summary>
-    /// Executes the query first or default operation.
+    /// 執行query first or default作業。
     /// </summary>
     /// <typeparam name="T">The t type.</typeparam>
-    /// <param name="sqlString">The sql string value.</param>
-    /// <param name="param">The param value.</param>
-    /// <param name="transaction">The transaction value.</param>
-    /// <returns>The query first or default result.</returns>
+    /// <param name="sqlString">sql string參數。</param>
+    /// <param name="param">param參數。</param>
+    /// <param name="transaction">transaction參數。</param>
+    /// <returns>傳回query first or default結果。</returns>
 
     public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
     {
@@ -425,8 +425,8 @@ public class Database
     /// <summary>
     /// Builds dynamic parameters.
     /// </summary>
-    /// <param name="parameters">The parameters value.</param>
-    /// <returns>The build dynamic parameters result.</returns>
+    /// <param name="parameters">parameters參數。</param>
+    /// <returns>傳回build dynamic parameters結果。</returns>
 
     private static DynamicParameters? BuildDynamicParameters(object[] parameters)
     {

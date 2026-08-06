@@ -26,7 +26,7 @@ public sealed class LanguageManager
     public static LanguageManager Instance => LazyInstance.Value;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LanguageManager"/> class.
+    /// 初始化 <see cref="LanguageManager"/> class的新執行個體。
     /// </summary>
 
     private LanguageManager()
@@ -38,17 +38,17 @@ public sealed class LanguageManager
     public CultureInfo CurrentCulture => _currentCulture;
 
     /// <summary>
-    /// Executes the register resource manager operation.
+    /// 執行register resource manager作業。
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="resourceManager">The resource manager value.</param>
+    /// <param name="name">name參數。</param>
+    /// <param name="resourceManager">resource manager參數。</param>
 
     public void RegisterResourceManager(string name, ResourceManager resourceManager) => _resourceManagers[name] = resourceManager;
 
     /// <summary>
-    /// Executes the initialize operation.
+    /// 執行initialize作業。
     /// </summary>
-    /// <param name="userLanguageSetting">The user language setting value.</param>
+    /// <param name="userLanguageSetting">user language setting參數。</param>
 
     public void Initialize(string? userLanguageSetting)
     {
@@ -85,9 +85,9 @@ public sealed class LanguageManager
     }
 
     /// <summary>
-    /// Executes the detect system culture with fallback operation.
+    /// 執行detect system culture with fallback作業。
     /// </summary>
-    /// <returns>The detect system culture with fallback result.</returns>
+    /// <returns>傳回detect system culture with fallback結果。</returns>
 
     public static CultureInfo DetectSystemCultureWithFallback()
     {
@@ -107,12 +107,12 @@ public sealed class LanguageManager
     }
 
     /// <summary>
-    /// Gets string.
+    /// 取得字串。
     /// </summary>
-    /// <param name="key">The key value.</param>
-    /// <param name="defaultValue">The default value value.</param>
-    /// <param name="resourceCategory">The resource category value.</param>
-    /// <returns>The get string result.</returns>
+    /// <param name="key">key參數。</param>
+    /// <param name="defaultValue">default value參數。</param>
+    /// <param name="resourceCategory">resource category參數。</param>
+    /// <returns>傳回get string結果。</returns>
 
     public string GetString(string key, string? defaultValue = null, string resourceCategory = "Strings")
     {

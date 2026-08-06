@@ -16,7 +16,7 @@ public class SmtpAgent : AgentPlugin
     private readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SmtpAgent"/> class.
+    /// 初始化 <see cref="SmtpAgent"/> 類別的新執行個體。
     /// </summary>
 
     public SmtpAgent()
@@ -27,7 +27,7 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the start agent notification.
+    /// 處理啟動 Agent 的通知。
     /// </summary>
 
     protected override void OnStartAgent()
@@ -37,7 +37,7 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Executes the run watcher operation.
+    /// 執行監聽器啟動作業。
     /// </summary>
 
     private void RunWatcher()
@@ -56,9 +56,9 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Executes the watch address operation.
+    /// 執行監聽指定位址作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     private void WatchAddress(object? ipAddress)
     {
@@ -80,10 +80,10 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Handles the ip packet sent event.
+    /// 處理 IP 封包傳送事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void s_IpPacketSent(object? sender, EventArgs e)
     {
@@ -120,14 +120,14 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the trace notification.
+    /// 處理追蹤通知。
     /// </summary>
-    /// <param name="tlsPackage">The tls package value.</param>
+    /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     /// <summary>
-    /// Processes the continue agent notification.
+    /// 處理繼續執行 Agent 的通知。
     /// </summary>
 
     protected override void OnContinueAgent()
@@ -137,7 +137,7 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the pause agent notification.
+    /// 處理暫停 Agent 的通知。
     /// </summary>
 
     protected override void OnPauseAgent()
@@ -147,7 +147,7 @@ public class SmtpAgent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the stop agent notification.
+    /// 處理停止 Agent 的通知。
     /// </summary>
 
     protected override void OnStopAgent()
@@ -164,9 +164,9 @@ public class SmtpAgent : AgentPlugin
     public override bool IsRunning => base.IsRunning;
 
     /// <summary>
-    /// Executes the unsuccessful login operation.
+    /// 處理登入失敗作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     private void UnsuccessfulLogin(string ipAddress)
     {

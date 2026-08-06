@@ -12,10 +12,10 @@ public class AppLayerSmtp
     public string SmtpReplyCode { get; set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AppLayerSmtp"/> class.
+    /// 初始化 <see cref="AppLayerSmtp"/> 類別的新執行個體。
     /// </summary>
-    /// <param name="byBuffer">The by buffer value.</param>
-    /// <param name="nReceived">The n received value.</param>
+    /// <param name="byBuffer">緩衝區位元組陣列。</param>
+    /// <param name="nReceived">接收到的位元組數量。</param>
 
     public AppLayerSmtp(byte[] byBuffer, int nReceived)
     {

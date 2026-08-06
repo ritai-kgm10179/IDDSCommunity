@@ -3,27 +3,29 @@
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// Base class for agents
+/// Agent 擴充元件之基底類別。
 /// </summary>
 public class AgentPlugin : IAgentPlugin
 {
     private readonly object lifecycleSync = new();
     private bool isPaused;
     private bool isRunning;
+
+    /// <summary>
+    /// 當偵測到入侵攻擊時發生的事件。
+    /// </summary>
     public event AttackDetectedHandler? AttackDetected;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentPlugin"/> class.
+    /// 初始化 <see cref="AgentPlugin"/> 類別的新執行個體。
     /// </summary>
-
     public AgentPlugin() => IsPaused = false;
 
     /// <summary>
-    /// Handles the on attack detected event.
+    /// 引發偵測到攻擊事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="data">The event data.</param>
-
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="data">包含攻擊資訊的事件資料。</param>
     protected void OnAttackDetected(object sender, INotificationEventArgs data)
     {
         foreach (AttackDetectedHandler handler in AttackDetected?.GetInvocationList() ?? [])
@@ -47,9 +49,8 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Starts requested operation.
+    /// 啟動 Agent 服務。
     /// </summary>
-
     public void Start()
     {
         lock (lifecycleSync)
@@ -63,9 +64,8 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Stops requested operation.
+    /// 停止 Agent 服務。
     /// </summary>
-
     public void Stop()
     {
         lock (lifecycleSync)
@@ -79,9 +79,8 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Executes the pause operation.
+    /// 暫停 Agent 服務。
     /// </summary>
-
     public void Pause()
     {
         lock (lifecycleSync)
@@ -94,9 +93,8 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Executes the continue operation.
+    /// 繼續執行暫停的 Agent 服務。
     /// </summary>
-
     public void Continue()
     {
         lock (lifecycleSync)
@@ -109,26 +107,28 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Determines whether n pause.
+    /// 判斷目前 Agent 是否可進行暫停。
     /// </summary>
-    /// <returns><see langword="true"/> if n pause; otherwise, <see langword="false"/>.</returns>
-
+    /// <returns>若可暫停傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public bool CanPause()
     {
         lock (lifecycleSync)
             return !isPaused && isRunning;
     }
-    /// <summary>
-    /// Determines whether n continue.
-    /// </summary>
-    /// <returns><see langword="true"/> if n continue; otherwise, <see langword="false"/>.</returns>
 
+    /// <summary>
+    /// 判斷目前 Agent 是否可繼續執行。
+    /// </summary>
+    /// <returns>若可繼續執行傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public bool CanContinue()
     {
         lock (lifecycleSync)
             return isPaused && isRunning;
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 是否處於暫停狀態。
+    /// </summary>
     public bool IsPaused
     {
         get
@@ -143,6 +143,9 @@ public class AgentPlugin : IAgentPlugin
         }
     }
 
+    /// <summary>
+    /// 取得 Agent 是否正在執行中。
+    /// </summary>
     public virtual bool IsRunning
     {
         get
@@ -153,6 +156,10 @@ public class AgentPlugin : IAgentPlugin
     }
 
     private IAgentConfiguration? _configuration;
+
+    /// <summary>
+    /// 取得或設定 Agent 的設定物件。
+    /// </summary>
     public IAgentConfiguration Configuration
     {
         get => _configuration ??= new AgentConfigurationBase();
@@ -160,23 +167,22 @@ public class AgentPlugin : IAgentPlugin
     }
 
     /// <summary>
-    /// Processes the start agent notification.
+    /// 處理啟動 Agent 的通知。
     /// </summary>
-
     protected virtual void OnStartAgent() { }
-    /// <summary>
-    /// Processes the pause agent notification.
-    /// </summary>
 
+    /// <summary>
+    /// 處理暫停 Agent 的通知。
+    /// </summary>
     protected virtual void OnPauseAgent() { }
-    /// <summary>
-    /// Processes the stop agent notification.
-    /// </summary>
 
+    /// <summary>
+    /// 處理停止 Agent 的通知。
+    /// </summary>
     protected virtual void OnStopAgent() { }
-    /// <summary>
-    /// Processes the continue agent notification.
-    /// </summary>
 
+    /// <summary>
+    /// 處理繼續執行 Agent 的通知。
+    /// </summary>
     protected virtual void OnContinueAgent() { }
 }

@@ -10,7 +10,7 @@ using IDDSCommunity.IntrusionDetection.Shared;
 namespace IDDSCommunity.Agents.MailServer;
 
 /// <summary>
-/// Detects failed cleartext IMAP authentication attempts and stops parsing after STARTTLS succeeds.
+/// 偵測明文 IMAP 驗證失敗嘗試，並於 STARTTLS 成功後停止解析。
 /// </summary>
 public sealed class ImapAgent : AgentPlugin
 {
@@ -18,7 +18,7 @@ public sealed class ImapAgent : AgentPlugin
     private readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ImapAgent"/> class.
+    /// 初始化 <see cref="ImapAgent"/> 類別的新執行個體。
     /// </summary>
     public ImapAgent()
     {

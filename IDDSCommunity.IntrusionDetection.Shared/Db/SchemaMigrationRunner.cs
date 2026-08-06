@@ -9,9 +9,9 @@ internal static class SchemaMigrationRunner
     private const string CreateJournal = "CREATE TABLE IF NOT EXISTS SchemaMigrations (Version INTEGER PRIMARY KEY NOT NULL, AppliedUtc TEXT NOT NULL)";
 
     /// <summary>
-    /// Applies all pending schema migrations atomically and records their versions.
+    /// 原子化地套用所有未處理的結構描述移轉並紀錄其版本。
     /// </summary>
-    /// <param name="connection">The open SQLite connection to migrate.</param>
+    /// <param name="connection">要進行移轉的已開啟 SQLite 資料庫連線。</param>
     internal static void Migrate(SqliteConnection connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
@@ -67,10 +67,10 @@ internal static class SchemaMigrationRunner
     }
 
     /// <summary>
-    /// Rejects incomplete legacy databases instead of incorrectly marking them as migrated.
+    /// 拒絕不完整的舊版資料庫，而非錯誤地將其標記為已移轉。
     /// </summary>
-    /// <param name="connection">The open SQLite connection.</param>
-    /// <param name="transaction">The active migration transaction.</param>
+    /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
+    /// <param name="transaction">作用中的移轉交易。</param>
     private static void ValidateExistingSchema(SqliteConnection connection, SqliteTransaction transaction)
     {
         foreach (string tableName in RequiredInitialTables)

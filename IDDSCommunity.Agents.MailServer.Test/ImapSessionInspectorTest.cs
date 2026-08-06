@@ -4,13 +4,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IDDSCommunity.Agents.MailServer.Test;
 
 /// <summary>
-/// Verifies IMAP authentication correlation and TLS transition behavior.
+/// 驗證 IMAP 驗證關聯與 TLS 轉移行為。
 /// </summary>
 [TestClass]
 public sealed class ImapSessionInspectorTest
 {
     /// <summary>
-    /// Verifies that only a tagged NO for the pending LOGIN command is reported.
+    /// 驗證僅傳回未處理 LOGIN 命令之標記 NO 狀態。
     /// </summary>
     [TestMethod]
     public void LoginTaggedNoIsReportedAsAuthenticationFailure()
@@ -24,7 +24,7 @@ public sealed class ImapSessionInspectorTest
     }
 
     /// <summary>
-    /// Verifies that protocol errors are not misclassified as rejected credentials.
+    /// 驗證協定錯誤不會被誤分類為拒絕憑證。
     /// </summary>
     [TestMethod]
     public void TaggedBadIsNotReportedAsAuthenticationFailure()
@@ -38,7 +38,7 @@ public sealed class ImapSessionInspectorTest
     }
 
     /// <summary>
-    /// Verifies that successful STARTTLS permanently disables application-data parsing for the session.
+    /// 驗證成功的 STARTTLS 會永久停用該會話的應用程式資料解析。
     /// </summary>
     [TestMethod]
     public void StartTlsSuccessStopsFurtherParsing()
@@ -53,7 +53,7 @@ public sealed class ImapSessionInspectorTest
     }
 
     /// <summary>
-    /// Verifies that fragmented TCP payloads are reassembled before command correlation.
+    /// 驗證分割的 TCP 負載會在命令關聯之前重組。
     /// </summary>
     [TestMethod]
     public void FragmentedAuthenticateResponseIsCorrelated()

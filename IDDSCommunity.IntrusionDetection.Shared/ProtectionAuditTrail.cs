@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 /// <summary>
-/// Persists and exports bounded, non-sensitive evidence for protection-control operation.
+/// 持久化並匯出保護控制作業所需界限內且非機密的證據。
 /// </summary>
 public sealed class ProtectionAuditTrail(Database database, TimeProvider timeProvider)
 {
@@ -17,13 +17,13 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
     private const int MaximumExportRecords = 10000;
 
     /// <summary>
-    /// Records one protection event using parameterized storage.
+    /// 使用參數化儲存紀錄一個保護事件。
     /// </summary>
-    /// <param name="eventType">The stable machine-readable event type.</param>
-    /// <param name="outcome">The stable outcome code.</param>
-    /// <param name="actor">The service or user identity that initiated the action.</param>
-    /// <param name="subject">The protected resource or address affected by the action.</param>
-    /// <param name="details">Optional non-sensitive diagnostic details.</param>
+    /// <param name="eventType">穩定的機器可讀事件型別。</param>
+    /// <param name="outcome">穩定的結果代碼。</param>
+    /// <param name="actor">發起動作的服務或使用者識別碼。</param>
+    /// <param name="subject">受動作影響的受保護資源或位址。</param>
+    /// <param name="details">選擇性的非機密診斷詳細資訊。</param>
     public void Record(string eventType, string outcome, string actor, string subject, string? details = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
@@ -40,13 +40,13 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
     }
 
     /// <summary>
-    /// Reads a bounded audit window in deterministic chronological order.
+    /// 依確定性時間順序讀取界限內的稽核視窗。
     /// </summary>
-    /// <param name="fromUtc">The inclusive UTC lower bound.</param>
-    /// <param name="toUtc">The exclusive UTC upper bound.</param>
-    /// <param name="maximumRecords">The maximum number of records to return.</param>
-    /// <param name="cancellationToken">Cancels the database query.</param>
-    /// <returns>The materialized audit records.</returns>
+    /// <param name="fromUtc">包含在內的 UTC 下限時間。</param>
+    /// <param name="toUtc">不包含在內的 UTC 上限時間。</param>
+    /// <param name="maximumRecords">傳回記錄的最大數量。</param>
+    /// <param name="cancellationToken">取消資料庫查詢。</param>
+    /// <returns>傳回實體化的稽核紀錄。</returns>
     public async Task<IReadOnlyList<ProtectionAuditEvent>> ReadAsync(
         DateTimeOffset fromUtc,
         DateTimeOffset toUtc,
@@ -74,13 +74,13 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
     }
 
     /// <summary>
-    /// Exports a bounded audit window as UTF-8 JSON for an external evidence repository or SIEM.
+    /// 將界限內的稽核視窗匯出為 UTF-8 JSON，供外部證據儲存庫或 SIEM 使用。
     /// </summary>
-    /// <param name="destination">The writable destination stream.</param>
-    /// <param name="fromUtc">The inclusive UTC lower bound.</param>
-    /// <param name="toUtc">The exclusive UTC upper bound.</param>
-    /// <param name="cancellationToken">Cancels querying or serialization.</param>
-    /// <returns>A task that completes after the JSON document is written.</returns>
+    /// <param name="destination">可寫入的目標串流。</param>
+    /// <param name="fromUtc">包含在內的 UTC 下限時間。</param>
+    /// <param name="toUtc">不包含在內的 UTC 上限時間。</param>
+    /// <param name="cancellationToken">取消查詢或序列化作業。</param>
+    /// <returns>傳回待 JSON 文件寫入完成後結束的 Task。</returns>
     public async Task ExportJsonAsync(Stream destination, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -91,11 +91,11 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
     }
 
     /// <summary>
-    /// Deletes audit evidence older than the approved retention boundary.
+    /// 刪除早於核可保留界限的稽核證據。
     /// </summary>
-    /// <param name="retentionPeriod">The duration for which evidence must be retained.</param>
-    /// <param name="cancellationToken">Cancels the database command.</param>
-    /// <returns>The number of deleted records.</returns>
+    /// <param name="retentionPeriod">必須保留證據的持續時間。</param>
+    /// <param name="cancellationToken">取消資料庫命令。</param>
+    /// <returns>傳回刪除的紀錄數量。</returns>
     public async Task<int> PurgeOlderThanAsync(TimeSpan retentionPeriod, CancellationToken cancellationToken = default)
     {
         if (retentionPeriod <= TimeSpan.Zero)

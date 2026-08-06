@@ -25,10 +25,10 @@ public class AppLayerPop3
     public string Pop3Code { get; set; } = string.Empty;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AppLayerPop3"/> class.
+    /// 初始化 <see cref="AppLayerPop3"/> 類別的新執行個體。
     /// </summary>
-    /// <param name="byBuffer">The by buffer value.</param>
-    /// <param name="nReceived">The n received value.</param>
+    /// <param name="byBuffer">緩衝區位元組陣列。</param>
+    /// <param name="nReceived">接收到的位元組數量。</param>
 
     public AppLayerPop3(byte[] byBuffer, int nReceived)
     {

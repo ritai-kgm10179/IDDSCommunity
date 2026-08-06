@@ -11,17 +11,17 @@ internal static class WindowsDnsMetrics
     private static readonly Counter<long> ParseFailures = Meter.CreateCounter<long>("iddscommunity.dns.events.parse_failures");
 
     /// <summary>
-    /// Records one normalized DNS event accepted by the Agent.
+    /// 紀錄此 Agent 接受的一個標準化 DNS 事件。
     /// </summary>
     internal static void RecordObserved() => EventsObserved.Add(1);
 
     /// <summary>
-    /// Records one DNS threshold crossing emitted to the IDDSCommunity protection pipeline.
+    /// 紀錄一個已引發至 IDDSCommunity 保護管線的 DNS 門檻值超越事件。
     /// </summary>
     internal static void RecordDetected() => ThreatsDetected.Add(1);
 
     /// <summary>
-    /// Records one supported Windows DNS event whose payload could not be normalized.
+    /// 紀錄一個無法進行負載標準化的已知 Windows DNS 事件。
     /// </summary>
     internal static void RecordParseFailure() => ParseFailures.Add(1);
 }

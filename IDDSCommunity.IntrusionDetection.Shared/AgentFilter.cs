@@ -5,17 +5,17 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 public class AgentFilter : IAgentFilter
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentFilter"/> class.
+    /// 初始化 <see cref="AgentFilter"/> class的新執行個體。
     /// </summary>
 
     public AgentFilter()
     {
     }
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentFilter"/> class.
+    /// 初始化 <see cref="AgentFilter"/> class的新執行個體。
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <param name="displayName">The display name value.</param>
+    /// <param name="id">id參數。</param>
+    /// <param name="displayName">display name參數。</param>
 
     public AgentFilter(Guid id, string displayName)
     {

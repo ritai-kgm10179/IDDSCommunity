@@ -5,7 +5,7 @@ using System.Net;
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 /// <summary>
-/// Provides the single shared raw-packet capture adapter used by protocol agents.
+/// 提供協定 Agent 使用的單一共用原始封包擷取轉接器。
 /// </summary>
 public sealed class PacketSniffer : IDisposable
 {

@@ -7,17 +7,31 @@ using System.Reflection;
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// This class can be used as base class for custom configuration.
-/// Using this base class, Intrusion Detection automatically loads and saves configuration values needed by your plugin.
+/// 可作為自訂 Agent 設定基礎之基底類別。
+/// 使用此基底類別，入侵偵測系統會自動載入與儲存擴充元件所需的設定值。
 /// </summary>
 public class AgentConfigurationBase : IAgentConfiguration
 {
+    /// <summary>
+    /// 取得或設定組件名稱。
+    /// </summary>
     public string AssemblyName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 取得或設定 Agent 名稱。
+    /// </summary>
     public string AgentName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 取得或設定是否啟用此 Agent。
+    /// </summary>
     public bool Enabled { get; set; }
 
     private PluginConfiguration? _agentSettings;
 
+    /// <summary>
+    /// 取得或設定 Agent 的自訂設定物件。
+    /// </summary>
     [XmlIgnore]
     public PluginConfiguration? AgentSettings
     {
@@ -40,8 +54,14 @@ public class AgentConfigurationBase : IAgentConfiguration
         set => _agentSettings = value;
     }
 
+    /// <summary>
+    /// 取得或設定自訂設定型別名稱。
+    /// </summary>
     public string ConfigurationSettingsTypeName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// 取得或設定擴充元件設定的 XML 序列化內容。
+    /// </summary>
     public string? PluginConfigurationXml
     {
         get
@@ -64,19 +84,45 @@ public class AgentConfigurationBase : IAgentConfiguration
         }
     }
 
+    /// <summary>
+    /// 取得或設定硬封鎖持續小時數。
+    /// </summary>
     public int HardLockDurationHrs { get; set; }
+
+    /// <summary>
+    /// 取得或設定硬封鎖觸發次數。
+    /// </summary>
     public int HardLockAttempts { get; set; }
+
+    /// <summary>
+    /// 取得或設定軟封鎖持續分鐘數。
+    /// </summary>
     public int SoftLockDurationMins { get; set; }
+
+    /// <summary>
+    /// 取得或設定軟封鎖觸發次數。
+    /// </summary>
     public int SoftLockAttempts { get; set; }
+
+    /// <summary>
+    /// 取得或設定是否覆寫此 Agent 的全域設定。
+    /// </summary>
     public bool OverwriteConfiguration { get; set; }
+
+    /// <summary>
+    /// 取得或設定是否永不解鎖攻擊者的 IP 位址。
+    /// </summary>
     public bool NeverUnlock { get; set; }
+
+    /// <summary>
+    /// 取得或設定設定檔路徑名稱。
+    /// </summary>
     public string FileName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Executes the clone from operation.
+    /// 複製指定 Agent 設定的屬性值。
     /// </summary>
-    /// <param name="source">The source value.</param>
-
+    /// <param name="source">來源 Agent 設定物件。</param>
     public void CloneFrom(IAgentConfiguration source)
     {
         AssemblyName = source.AssemblyName;
@@ -101,10 +147,9 @@ public class AgentConfigurationBase : IAgentConfiguration
     }
 
     /// <summary>
-    /// Gets configuration type.
+    /// 取得擴充元件設定之 Type 執行個體。
     /// </summary>
-    /// <returns>The get configuration type result.</returns>
-
+    /// <returns>傳回組件中對應的 <see cref="Type"/> 執行個體；若找不到則傳回 <see langword="null"/>。</returns>
     public Type? GetConfigurationType()
     {
         if (File.Exists(AssemblyName))

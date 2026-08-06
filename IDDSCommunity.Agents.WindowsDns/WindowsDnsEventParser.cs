@@ -8,13 +8,13 @@ namespace IDDSCommunity.Agents.WindowsDns;
 internal static class WindowsDnsEventParser
 {
     /// <summary>
-    /// Maps documented Windows DNS event payload positions to a stable internal event.
+    /// 將記錄的 Windows DNS 事件負載位置對映至穩定的內部事件。
     /// </summary>
-    /// <param name="eventId">The Windows DNS event identifier.</param>
-    /// <param name="values">The ordered event payload values.</param>
-    /// <param name="occurredAt">The event occurrence time.</param>
-    /// <param name="record">Receives the parsed event when successful.</param>
-    /// <returns><see langword="true"/> when the event is supported and contains a valid source address.</returns>
+    /// <param name="eventId">Windows DNS 事件識別碼。</param>
+    /// <param name="values">順序排列的事件負載數值。</param>
+    /// <param name="occurredAt">事件發生時間。</param>
+    /// <param name="record">解析成功時接收解析後的事件。</param>
+    /// <returns>當事件受支援且包含有效的來源位址時傳回 <see langword="true"/>。</returns>
     internal static bool TryParse(int eventId, IReadOnlyList<object?> values, DateTimeOffset occurredAt, out DnsEventRecord? record)
     {
         record = null;

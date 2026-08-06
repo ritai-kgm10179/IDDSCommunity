@@ -11,15 +11,15 @@ public class Statistics
     private readonly Database database;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Statistics"/> class.
+    /// 初始化 <see cref="Statistics"/> class的新執行個體。
     /// </summary>
 
     private Statistics() : this(Database.Instance) { }
 
     /// <summary>
-    /// Initializes statistics persistence with an explicit database dependency.
+    /// 初始化包含明確資料庫相依性的統計資料持久化服務。
     /// </summary>
-    /// <param name="database">The statistics database.</param>
+    /// <param name="database">統計資料庫。</param>
     public Statistics(Database database)
     {
         ArgumentNullException.ThrowIfNull(database);
@@ -30,9 +30,9 @@ public class Statistics
     public static Statistics Instance => _instance ??= new();
 
     /// <summary>
-    /// Executes the increase failed login statistics operation.
+    /// 執行increase failed login statistics作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent參數。</param>
 
     public void IncreaseFailedLoginStatistics(SecurityAgent agent)
     {
@@ -45,9 +45,9 @@ public class Statistics
     }
 
     /// <summary>
-    /// Executes the increase hard lock statistics operation.
+    /// 執行increase hard lock statistics作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent參數。</param>
 
     public void IncreaseHardLockStatistics(SecurityAgent agent)
     {
@@ -56,9 +56,9 @@ public class Statistics
     }
 
     /// <summary>
-    /// Configures statistics.
+    /// 設定統計資料。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent參數。</param>
 
     public void ConfigureStatistics(SecurityAgent agent)
     {
@@ -76,9 +76,9 @@ public class Statistics
     }
 
     /// <summary>
-    /// Executes the increase soft lock statistics operation.
+    /// 執行increase soft lock statistics作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent參數。</param>
 
     public void IncreaseSoftLockStatistics(SecurityAgent agent)
     {
@@ -87,10 +87,10 @@ public class Statistics
     }
 
     /// <summary>
-    /// Executes the increase statistics operation.
+    /// 執行increase statistics作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
-    /// <param name="statisticsColumn">The statistics column value.</param>
+    /// <param name="agent">agent參數。</param>
+    /// <param name="statisticsColumn">statistics column參數。</param>
 
     public void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
     {

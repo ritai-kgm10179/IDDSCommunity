@@ -20,9 +20,9 @@ public sealed class RawSocketReceiver : IDisposable
     public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
 
     /// <summary>
-    /// Initializes a raw socket receiver with a bounded dispatch queue.
+    /// 初始化包含界限分發佇列的 Raw Socket 接收器。
     /// </summary>
-    /// <param name="queueCapacity">The maximum number of packets waiting for subscribers.</param>
+    /// <param name="queueCapacity">等待訂閱者處理的封包最大數量。</param>
     public RawSocketReceiver(int queueCapacity = 1024)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueCapacity);
@@ -30,34 +30,34 @@ public sealed class RawSocketReceiver : IDisposable
     }
 
     /// <summary>
-    /// Gets the active receive-loop task so callers can supervise its lifetime.
+    /// 取得 active receive-loop task so callers can supervise its lifetime.
     /// </summary>
     public Task Completion { get; private set; } = Task.CompletedTask;
 
     /// <summary>
-    /// Gets the number of packets offered to the dispatch queue during the current capture.
+    /// 取得 number of packets offered to the dispatch queue during the current capture.
     /// </summary>
     public long ReceivedPacketCount => dispatcher?.ReceivedCount ?? 0;
 
     /// <summary>
-    /// Gets the number of packets delivered to subscribers during the current capture.
+    /// 取得 number of packets delivered to subscribers during the current capture.
     /// </summary>
     public long DispatchedPacketCount => dispatcher?.DispatchedCount ?? 0;
 
     /// <summary>
-    /// Gets the number of newest packets dropped because the bounded queue was full.
+    /// 取得 number of newest packets dropped because the bounded queue was full.
     /// </summary>
     public long DroppedPacketCount => dispatcher?.DroppedCount ?? 0;
 
     /// <summary>
-    /// Gets the number of packet subscriber callbacks that threw an exception.
+    /// 取得 number of packet subscriber callbacks that threw an exception.
     /// </summary>
     public long SubscriberFailureCount => Interlocked.Read(ref subscriberFailureCount);
 
     /// <summary>
-    /// Starts capturing IPv4 packets on the specified local address.
+    /// 於指定的本機位址啟動 IPv4 封包擷取。
     /// </summary>
-    /// <param name="address">The local IPv4 address to monitor.</param>
+    /// <param name="address">要監控的本機 IPv4 位址。</param>
     public void Start(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
@@ -77,7 +77,7 @@ public sealed class RawSocketReceiver : IDisposable
     }
 
     /// <summary>
-    /// Stops packet capture and cancels the pending receive operation.
+    /// 停止封包擷取並取消未處理的接收作業。
     /// </summary>
     public void Stop()
     {
@@ -90,7 +90,7 @@ public sealed class RawSocketReceiver : IDisposable
     }
 
     /// <summary>
-    /// Releases the socket and cancellation resources.
+    /// 釋放通訊埠與取消權杖資源。
     /// </summary>
     public void Dispose() => Stop();
 
@@ -122,9 +122,9 @@ public sealed class RawSocketReceiver : IDisposable
     }
 
     /// <summary>
-    /// Notifies each packet subscriber independently so one faulty consumer cannot stop capture.
+    /// 獨立通知每個封包訂閱者，避免單一故障的消費者影響封包擷取作業。
     /// </summary>
-    /// <param name="eventArgs">The received packet.</param>
+    /// <param name="eventArgs">接收到的封包資料。</param>
     private void NotifyPacketReceived(RawPacketEventArgs eventArgs)
     {
         foreach (EventHandler<RawPacketEventArgs> handler in PacketReceived?.GetInvocationList() ?? [])
@@ -142,9 +142,9 @@ public sealed class RawSocketReceiver : IDisposable
     }
 
     /// <summary>
-    /// Publishes a capture error without allowing an error observer to fault the receive loop.
+    /// 發布擷取錯誤，同時避免錯誤觀察者中斷接收迴圈。
     /// </summary>
-    /// <param name="exception">The capture or subscriber exception.</param>
+    /// <param name="exception">擷取作業或訂閱者的例外狀況。</param>
     private void NotifyCaptureFailed(Exception exception)
     {
         foreach (Delegate subscriber in CaptureFailed?.GetInvocationList() ?? [])
@@ -164,19 +164,19 @@ public sealed class RawSocketReceiver : IDisposable
 public sealed class RawPacketEventArgs(byte[] packet) : EventArgs
 {
     /// <summary>
-    /// Gets the immutable-by-contract packet buffer owned by this event instance.
+    /// 取得 immutable-by-contract packet buffer owned by this event instance.
     /// </summary>
     public byte[] Packet { get; } = packet;
 }
 
 /// <summary>
-/// Describes a raw packet capture or subscriber failure.
+/// 描述原始通訊埠封包擷取或訂閱者的失敗狀況。
 /// </summary>
-/// <param name="exception">The exception that interrupted processing.</param>
+/// <param name="exception">中斷處理流程的例外狀況。</param>
 public sealed class RawSocketErrorEventArgs(Exception exception) : EventArgs
 {
     /// <summary>
-    /// Gets the capture or subscriber exception.
+    /// 取得 capture or subscriber exception.
     /// </summary>
     public Exception Exception { get; } = exception;
 }

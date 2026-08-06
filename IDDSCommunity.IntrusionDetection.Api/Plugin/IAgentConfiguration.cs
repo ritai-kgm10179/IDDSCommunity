@@ -3,63 +3,74 @@
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// This interface provídes any property needed forIntrusion Detectionto load and save configuration values for your agent plugin.
-/// It is used byIntrusion Detectioninternally, as agent developer, you don't have to care about this interface
+/// 提供入侵偵測系統載入與儲存 Agent 擴充元件設定所需的屬性與方法介面。
 /// </summary>
 public interface IAgentConfiguration
 {
     /// <summary>
-    /// The name of your assembly, this property is used byIntrusion Detectionand is set automatically when adding your plugin toIntrusion Detectionplugins
+    /// 取得或設定組件檔名。
     /// </summary>
     string AssemblyName { get; set; }
+
     /// <summary>
-    /// The name of your agent, used by Intrusion Detection
+    /// 取得或設定 Agent 名稱。
     /// </summary>
     string AgentName { get; set; }
+
     /// <summary>
-    /// Is used to check if the agent should be loaded by IntrusionDetection. This value is set by theIntrusion Detectionadministration software
+    /// 取得或設定是否啟用此 Agent。
     /// </summary>
     bool Enabled { get; set; }
+
     /// <summary>
-    /// Agent settings containing your custom settings
+    /// 取得或設定 Agent 的自訂設定物件。
     /// </summary>
     PluginConfiguration? AgentSettings { get; set; }
+
     /// <summary>
-    /// String value of your custom configuration settings type.
+    /// 取得或設定自訂設定型別名稱。
     /// </summary>
     string ConfigurationSettingsTypeName { get; set; }
+
     /// <summary>
-    /// Returns the configuration type
+    /// 取得擴充元件設定之型別。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>傳回對應的 <see cref="Type"/> 執行個體；若找不到則傳回 <see langword="null"/>。</returns>
     Type? GetConfigurationType();
+
     /// <summary>
-    /// Override value for soft lock attempts
+    /// 取得或設定軟封鎖觸發次數。
     /// </summary>
     int SoftLockAttempts { get; set; }
+
     /// <summary>
-    /// Override of hard lock attempts
+    /// 取得或設定硬封鎖觸發次數。
     /// </summary>
     int HardLockAttempts { get; set; }
+
     /// <summary>
-    /// Override of soft lock duration
+    /// 取得或設定軟封鎖持續分鐘數。
     /// </summary>
     int SoftLockDurationMins { get; set; }
+
     /// <summary>
-    /// Override of hard lock duration
+    /// 取得或設定硬封鎖持續小時數。
     /// </summary>
     int HardLockDurationHrs { get; set; }
+
     /// <summary>
-    /// Override of hard lock setting to never unlock an attacker's IP address
+    /// 取得或設定是否永不解鎖攻擊者的 IP 位址。
     /// </summary>
     bool NeverUnlock { get; set; }
+
     /// <summary>
-    /// ConfigureIntrusion Detectionto use custom settings for this agent
+    /// 取得或設定是否覆寫此 Agent 的全域設定。
     /// </summary>
     bool OverwriteConfiguration { get; set; }
+
     /// <summary>
-    /// Used to clone objects
+    /// 複製指定 Agent 設定物件的屬性值。
     /// </summary>
-    /// <param name="source"></param>
+    /// <param name="source">來源 Agent 設定物件。</param>
     void CloneFrom(IAgentConfiguration source);
 }

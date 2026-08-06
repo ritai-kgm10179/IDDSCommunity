@@ -3,25 +3,27 @@
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// Base class for notification arguments containing attacker information
+/// 包含攻擊者資訊之事件通知參數基底類別。
 /// </summary>
 public class NotificationEventArgs : INotificationEventArgs
 {
-
     /// <summary>
-    /// IP address of the attacker. This can be in TCP/IP version 4 (123.123.123.123 format, dotted notation) or TCP/IP version 6 (abab:abab::1234:abcd format, 128 bits)
+    /// 取得或設定攻擊者的 IP 位址（支援 IPv4 點分十進位格式或 IPv6 格式）。
     /// </summary>
     public string IpAddress { get; set; } = string.Empty;
+
     /// <summary>
-    /// Notification date
+    /// 取得或設定通知發生時間。
     /// </summary>
     public DateTime CreateDate { get; set; }
+
     /// <summary>
-    /// Event id, for internal purposes. You can include an own Id of forward a log event id
+    /// 取得或設定事件識別碼。
     /// </summary>
     public int EventId { get; set; }
+
     /// <summary>
-    /// Optionally include a message to an event listener.
+    /// 取得或設定傳遞至事件監聽器的選擇性訊息。
     /// </summary>
     public string EventMessage { get; set; } = string.Empty;
 }

@@ -4,7 +4,7 @@ using System.Text;
 namespace IDDSCommunity.Agents.MailServer;
 
 /// <summary>
-/// Correlates IMAP authentication commands with tagged server responses without retaining credentials.
+/// 將 IMAP 驗證命令與標記的伺服器回應進行關聯，且不保留憑證。
 /// </summary>
 public sealed class ImapSessionInspector
 {
@@ -15,14 +15,14 @@ public sealed class ImapSessionInspector
     private string? startTlsTag;
 
     /// <summary>
-    /// Gets a value indicating whether the session has upgraded to TLS and must no longer be parsed.
+    /// 取得一個值，指出該會話是否已升級至 TLS 且不得再進行解析。
     /// </summary>
     public bool IsEncrypted { get; private set; }
 
     /// <summary>
-    /// Processes bytes sent by an IMAP client.
+    /// 處理 IMAP 用戶端傳送的位元組。
     /// </summary>
-    /// <param name="data">The TCP application payload.</param>
+    /// <param name="data">TCP 應用程式負載資料。</param>
     public void ProcessClientData(ReadOnlySpan<byte> data)
     {
         if (IsEncrypted) return;
@@ -44,10 +44,10 @@ public sealed class ImapSessionInspector
     }
 
     /// <summary>
-    /// Processes bytes sent by an IMAP server.
+    /// 處理 IMAP 伺服器傳送的位元組。
     /// </summary>
-    /// <param name="data">The TCP application payload.</param>
-    /// <returns><see langword="true"/> when a pending LOGIN or AUTHENTICATE command receives a tagged NO response.</returns>
+    /// <param name="data">TCP 應用程式負載資料。</param>
+    /// <returns>當未處理的 LOGIN 或 AUTHENTICATE 命令收到標記的 NO 回應時傳回 <see langword="true"/>。</returns>
     public bool ProcessServerData(ReadOnlySpan<byte> data)
     {
         if (IsEncrypted) return false;

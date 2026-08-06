@@ -13,35 +13,35 @@ public class SecurityAgent : IAgentFilter
     public event EventHandler? StatisticsUpdated;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
 
     public SecurityAgent() { }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="id">The id value.</param>
+    /// <param name="name">name參數。</param>
+    /// <param name="id">id參數。</param>
 
     public SecurityAgent(string name, Guid id)
         : this(name) => Id = id;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
-    /// <param name="name">The name value.</param>
+    /// <param name="name">name參數。</param>
 
     public SecurityAgent(string name) => Name = name;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="failedLogins">The failed logins value.</param>
-    /// <param name="hardLocks">The hard locks value.</param>
-    /// <param name="softLocks">The soft locks value.</param>
-    /// <param name="icon">The icon value.</param>
+    /// <param name="name">name參數。</param>
+    /// <param name="failedLogins">failed logins參數。</param>
+    /// <param name="hardLocks">hard locks參數。</param>
+    /// <param name="softLocks">soft locks參數。</param>
+    /// <param name="icon">icon參數。</param>
 
     public SecurityAgent(string name, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name)
@@ -54,22 +54,22 @@ public class SecurityAgent : IAgentFilter
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgent"/> class.
+    /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="id">The id value.</param>
-    /// <param name="failedLogins">The failed logins value.</param>
-    /// <param name="hardLocks">The hard locks value.</param>
-    /// <param name="softLocks">The soft locks value.</param>
-    /// <param name="icon">The icon value.</param>
+    /// <param name="name">name參數。</param>
+    /// <param name="id">id參數。</param>
+    /// <param name="failedLogins">failed logins參數。</param>
+    /// <param name="hardLocks">hard locks參數。</param>
+    /// <param name="softLocks">soft locks參數。</param>
+    /// <param name="icon">icon參數。</param>
 
     public SecurityAgent(string name, Guid id, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name, failedLogins, hardLocks, softLocks, icon) => Id = id;
 
     /// <summary>
-    /// Executes the check config version by id operation.
+    /// 執行check config version by id作業。
     /// </summary>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool CheckConfigVersionById()
     {
@@ -88,9 +88,9 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Executes the check config version by name operation.
+    /// 執行check config version by name作業。
     /// </summary>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool CheckConfigVersionByName()
     {
@@ -108,7 +108,7 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Executes the reload operation.
+    /// 執行reload作業。
     /// </summary>
 
     public void Reload()
@@ -140,7 +140,7 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Loads custom config.
+    /// 載入自訂 Agent 設定。
     /// </summary>
 
     public void LoadCustomConfig()
@@ -169,10 +169,10 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Executes the from image operation.
+    /// 執行from image作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The from image result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回from image結果。</returns>
 
     private static byte[] FromImage(Image value)
     {
@@ -182,10 +182,10 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Executes the from byte operation.
+    /// 執行from byte作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The from byte result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回from byte結果。</returns>
 
     private static Image FromByte(byte[] value)
     {
@@ -208,7 +208,7 @@ public class SecurityAgent : IAgentFilter
     }
 
     /// <summary>
-    /// Saves requested operation.
+    /// 儲存設定變更作業。
     /// </summary>
 
     public void Save()
@@ -241,10 +241,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
-    /// Executes the does exist in db operation.
+    /// 執行does exist in db作業。
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <param name="id">id參數。</param>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool DoesExistInDb(Guid id)
     {
@@ -255,10 +255,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
-    /// Determines whether an Agent exists using the caller-owned transaction.
+    /// 使用呼叫者擁有的交易判斷 Agent 是否存在。
     /// </summary>
-    /// <param name="transaction">The transaction that owns the database connection.</param>
-    /// <param name="id">The Agent identifier.</param>
+    /// <param name="transaction">擁有資料庫連線的交易物件。</param>
+    /// <param name="id">Agent 識別碼。</param>
     /// <returns><see langword="true"/> when the Agent exists; otherwise, <see langword="false"/>.</returns>
     private static bool DoesExistInDb(IDbTransaction transaction, Guid id)
     {
@@ -267,15 +267,15 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
-    /// Saves custom config.
+    /// 儲存自訂 Agent 設定。
     /// </summary>
 
     public void SaveCustomConfig() => Database.Instance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction));
 
     /// <summary>
-    /// Persists custom Agent configuration using the caller-owned transaction.
+    /// 使用呼叫者擁有的交易持久化自訂 Agent 設定。
     /// </summary>
-    /// <param name="transaction">The transaction that owns the database connection.</param>
+    /// <param name="transaction">擁有資料庫連線的交易物件。</param>
     private void SaveCustomConfig(IDbTransaction transaction)
     {
         string agentIdStr = Id.ToString();
@@ -297,7 +297,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
-    /// Updates statistics.
+    /// 更新統計資料。
     /// </summary>
 
     public void UpdateStatistics()
@@ -336,15 +336,15 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     }
 
     /// <summary>
-    /// Processes the statistics updated notification.
+    /// 處理統計資料更新通知。
     /// </summary>
 
     private void OnStatisticsUpdated() => StatisticsUpdated?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    /// Gets id.
+    /// 取得識別碼 (ID)。
     /// </summary>
-    /// <returns>The get id result.</returns>
+    /// <returns>傳回get id結果。</returns>
 
     public Guid GetId()
     {
@@ -380,10 +380,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
 
     /// <summary>
-    /// Gets current lock type.
+    /// 取得目前鎖定型別。
     /// </summary>
-    /// <param name="IpAddress">The ip address value.</param>
-    /// <returns>The get current lock type result.</returns>
+    /// <param name="IpAddress">ip address參數。</param>
+    /// <returns>傳回get current lock type結果。</returns>
 
     public LockType GetCurrentLockType(string IpAddress)
     {

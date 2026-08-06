@@ -127,9 +127,9 @@ CREATE TABLE AgentStatistics(
     SoftLocks int not null default 0)";
 
     /// <summary>
-    /// Executes the upgrade database operation.
+    /// 執行upgrade database作業。
     /// </summary>
-    /// <param name="connection">The connection value.</param>
+    /// <param name="connection">connection參數。</param>
 
     public override void UpgradeDatabase(System.Data.IDbConnection connection)
     {

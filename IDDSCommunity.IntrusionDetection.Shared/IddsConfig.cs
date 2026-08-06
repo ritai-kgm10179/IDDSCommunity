@@ -59,7 +59,7 @@ public class IddsConfig
 
 
     /// <summary>
-    /// Saves requested operation.
+    /// 儲存設定變更作業。
     /// </summary>
 
     public void Save()
@@ -158,8 +158,8 @@ public class IddsConfig
     /// <summary>
     /// Gets config value.
     /// </summary>
-    /// <param name="key">The key value.</param>
-    /// <returns>The get config value result.</returns>
+    /// <param name="key">key參數。</param>
+    /// <returns>傳回get config value結果。</returns>
 
     public string GetConfigValue(string key)
     {
@@ -170,8 +170,8 @@ public class IddsConfig
     /// <summary>
     /// Sets config value.
     /// </summary>
-    /// <param name="key">The key value.</param>
-    /// <param name="value">The value to process.</param>
+    /// <param name="key">key參數。</param>
+    /// <param name="value">要處理的value。</param>
 
     public void SetConfigValue(string key, string value)
     {
@@ -217,8 +217,8 @@ public class IddsConfig
     /// <summary>
     /// Loads config.
     /// </summary>
-    /// <param name="configTable">The config table value.</param>
-    /// <returns>The load config result.</returns>
+    /// <param name="configTable">config table參數。</param>
+    /// <returns>傳回load config結果。</returns>
 
     private Dictionary<string, string> LoadConfig(string configTable)
     {
@@ -279,8 +279,8 @@ public class IddsConfig
     /// <summary>
     /// Loads network list.
     /// </summary>
-    /// <param name="list">The list value.</param>
-    /// <returns>The load network list result.</returns>
+    /// <param name="list">list參數。</param>
+    /// <returns>傳回load network list結果。</returns>
 
     public CSafeNetworks LoadNetworkList(string list)
     {
@@ -301,7 +301,7 @@ public class IddsConfig
 
 
     /// <summary>
-    /// Executes the configure database operation.
+    /// 執行configure database作業。
     /// </summary>
 
     internal void configureDatabase()
@@ -324,7 +324,7 @@ public class IddsConfig
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IddsConfig"/> class.
+    /// 初始化 <see cref="IddsConfig"/> class的新執行個體。
     /// </summary>
 
     public IddsConfig(Database database)
@@ -376,7 +376,7 @@ public class IddsConfig
     /// <summary>
     /// Gets default configuration.
     /// </summary>
-    /// <returns>The get default configuration result.</returns>
+    /// <returns>傳回get default configuration結果。</returns>
 
     public static IddsConfig GetDefaultConfiguration()
     {
@@ -403,17 +403,17 @@ public class IddsConfig
         public string SubnetMask { get; set; } = string.Empty;
         public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
         /// <summary>
-        /// Initializes a new instance of the <see cref="CSafeNetwork"/> class.
+        /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
 
         public CSafeNetwork()
         {
         }
         /// <summary>
-        /// Initializes a new instance of the <see cref="CSafeNetwork"/> class.
+        /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
-        /// <param name="ipAddress">The ip address value.</param>
-        /// <param name="subnetmask">The subnetmask value.</param>
+        /// <param name="ipAddress">ip address參數。</param>
+        /// <param name="subnetmask">subnetmask參數。</param>
 
         public CSafeNetwork(string ipAddress, string subnetmask)
         {
@@ -483,7 +483,7 @@ public class IddsConfig
     }
 
     /// <summary>
-    /// Gets or sets the supported Windows Firewall blocking mode. Invalid or obsolete values fail closed to inbound blocking.
+    /// 取得或設定 supported Windows Firewall blocking mode. Invalid or obsolete values fail closed to inbound blocking.
     /// </summary>
     public FirewallBlockMode FirewallBlockMode
     {
@@ -501,7 +501,7 @@ public class IddsConfig
     /// <summary>
     /// Gets smtp password.
     /// </summary>
-    /// <returns>The get smtp password result.</returns>
+    /// <returns>傳回get smtp password結果。</returns>
 
     public string GetSmtpPassword()
     {
@@ -520,8 +520,8 @@ public class IddsConfig
     /// <summary>
     /// Determines whether in safe network.
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <returns><see langword="true"/> if in safe network; otherwise, <see langword="false"/>.</returns>
+    /// <param name="ipAddress">ip address參數。</param>
+    /// <returns>若in safe network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsInSafeNetwork(string ipAddress)
     {
@@ -566,21 +566,21 @@ public class IddsConfig
     /// <summary>
     /// Determines whether ip4 in network.
     /// </summary>
-    /// <param name="address">The address value.</param>
-    /// <param name="networkAddress">The network address value.</param>
-    /// <param name="subnetMask">The subnet mask value.</param>
-    /// <returns><see langword="true"/> if ip4 in network; otherwise, <see langword="false"/>.</returns>
+    /// <param name="address">address參數。</param>
+    /// <param name="networkAddress">network address參數。</param>
+    /// <param name="subnetMask">subnet mask參數。</param>
+    /// <returns>若ip4 in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) => IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
 
     /// <summary>
     /// Determines whether ip in network.
     /// </summary>
-    /// <param name="address">The address value.</param>
-    /// <param name="networkAddress">The network address value.</param>
-    /// <param name="maskBits">The mask bits value.</param>
-    /// <param name="addressLength">The address length value.</param>
-    /// <returns><see langword="true"/> if ip in network; otherwise, <see langword="false"/>.</returns>
+    /// <param name="address">address參數。</param>
+    /// <param name="networkAddress">network address參數。</param>
+    /// <param name="maskBits">mask bits參數。</param>
+    /// <param name="addressLength">address length參數。</param>
+    /// <returns>若ip in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
@@ -610,8 +610,8 @@ public class IddsConfig
     /// <summary>
     /// Determines whether ip address local.
     /// </summary>
-    /// <param name="address">The address value.</param>
-    /// <returns><see langword="true"/> if ip address local; otherwise, <see langword="false"/>.</returns>
+    /// <param name="address">address參數。</param>
+    /// <returns>若ip address local傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsIpAddressLocal(IPAddress address)
     {
@@ -634,8 +634,8 @@ public class IddsConfig
     /// <summary>
     /// Gets subnet mask bits.
     /// </summary>
-    /// <param name="subnetMask">The subnet mask value.</param>
-    /// <returns>The get subnet mask bits result.</returns>
+    /// <param name="subnetMask">subnet mask參數。</param>
+    /// <returns>傳回get subnet mask bits結果。</returns>
 
     public static int GetSubnetMaskBits(string subnetMask)
     {
@@ -667,10 +667,10 @@ public class IddsConfig
     /// <summary>
     /// Determines whether ip6 in network.
     /// </summary>
-    /// <param name="address">The address value.</param>
-    /// <param name="networkAddress">The network address value.</param>
-    /// <param name="subnetMask">The subnet mask value.</param>
-    /// <returns><see langword="true"/> if ip6 in network; otherwise, <see langword="false"/>.</returns>
+    /// <param name="address">address參數。</param>
+    /// <param name="networkAddress">network address參數。</param>
+    /// <param name="subnetMask">subnet mask參數。</param>
+    /// <returns>若ip6 in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
@@ -678,16 +678,16 @@ public class IddsConfig
     /// <summary>
     /// Determines whether valid ip address.
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <returns><see langword="true"/> if valid ip address; otherwise, <see langword="false"/>.</returns>
+    /// <param name="ipAddress">ip address參數。</param>
+    /// <returns>若valid ip address傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
 
     /// <summary>
     /// Determines whether valid subnet mask.
     /// </summary>
-    /// <param name="subnetMask">The subnet mask value.</param>
-    /// <returns><see langword="true"/> if valid subnet mask; otherwise, <see langword="false"/>.</returns>
+    /// <param name="subnetMask">subnet mask參數。</param>
+    /// <returns>若valid subnet mask傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool IsValidSubnetMask(string subnetMask)
     {
@@ -705,8 +705,8 @@ public class IddsConfig
     /// <summary>
     /// Converts string to ip address network.
     /// </summary>
-    /// <param name="ipAddressNetwork">The ip address network value.</param>
-    /// <returns>The convert string to ip address network result.</returns>
+    /// <param name="ipAddressNetwork">ip address network參數。</param>
+    /// <returns>傳回convert string to ip address network結果。</returns>
 
     public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
     {
@@ -768,7 +768,7 @@ public class IddsConfig
     /// <summary>
     /// Sets smtp password.
     /// </summary>
-    /// <param name="password">The password value.</param>
+    /// <param name="password">password參數。</param>
 
     public void SetSmtpPassword(string password) => SmtpPassword = CryptoHelper.Encrypt(password, true);
 
@@ -809,8 +809,8 @@ public class IddsConfig
     /// <summary>
     /// Gets soft lock minutes.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
-    /// <returns>The get soft lock minutes result.</returns>
+    /// <param name="agent">agent參數。</param>
+    /// <returns>傳回get soft lock minutes結果。</returns>
 
     public int GetSoftLockMinutes(SecurityAgent agent)
     {
@@ -825,8 +825,8 @@ public class IddsConfig
     /// <summary>
     /// Gets hard lock hours.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
-    /// <returns>The get hard lock hours result.</returns>
+    /// <param name="agent">agent參數。</param>
+    /// <returns>傳回get hard lock hours結果。</returns>
 
     public int GetHardLockHours(SecurityAgent agent)
     {

@@ -29,7 +29,7 @@ public sealed record DatabaseMaintenanceHistory(DateTimeOffset OccurredUtc, stri
 public sealed record DatabaseRetentionPolicy(int IntrusionLogDays = 180, int UnlockedLockDays = 180, int AuditDays = 365, int CompletedInboxDays = 30, int BatchSize = 1000);
 
 /// <summary>
-/// Provides bounded, auditable SQLite maintenance operations.
+/// 提供界限內且可稽核的 SQLite 維護作業。
 /// </summary>
 public sealed class SqliteMaintenanceService(Database database)
 {

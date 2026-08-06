@@ -11,15 +11,15 @@ internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, T
     private readonly ConcurrentDictionary<IPAddress, ClientWindow> clients = new();
 
     /// <summary>
-    /// Gets the current bounded number of client windows retained in memory.
+    /// 取得目前記憶體中保留的用戶端視窗上限數量。
     /// </summary>
     internal int TrackedClientCount => clients.Count;
 
     /// <summary>
-    /// Evaluates one supported DNS activity event and emits only when a threshold is crossed.
+    /// 評估一項支援的 DNS 活動事件，僅於超越門檻值時引發通知。
     /// </summary>
-    /// <param name="record">The normalized DNS event.</param>
-    /// <returns>The detected threat, or <see langword="null"/> when no threshold was crossed.</returns>
+    /// <param name="record">標準化 DNS 事件。</param>
+    /// <returns>傳回偵測到的威脅；若未超越門檻值則傳回 <see langword="null"/>。</returns>
     internal DnsDetection? Analyze(DnsEventRecord record)
     {
         DateTimeOffset now = timeProvider.GetUtcNow();
