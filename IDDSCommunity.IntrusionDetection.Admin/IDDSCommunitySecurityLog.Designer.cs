@@ -99,7 +99,6 @@
             //
             // pictureBox2
             //
-            this.pictureBox2.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.IDDSCommunity_32;
             this.pictureBox2.Location = new System.Drawing.Point(24, 28);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(32, 32);

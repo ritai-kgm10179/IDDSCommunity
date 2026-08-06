@@ -14,7 +14,12 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// Initializes a new instance of the <see cref="IDDSCommunityCurrentLocks"/> class.
     /// </summary>
 
-    public IDDSCommunityCurrentLocks() => InitializeComponent();
+    public IDDSCommunityCurrentLocks()
+    {
+        InitializeComponent();
+        pictureBox3.Image = InterfaceIcons.CreateLock(32);
+        pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(20, true);
+    }
 
 
     /// <summary>

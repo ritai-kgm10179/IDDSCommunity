@@ -81,16 +81,17 @@ public partial class PluginItem : UserControl
         SetHardLocks(hardLocks);
         SetSoftLocks(softLocks);
         SetIcon(icon);
-        pictureBoxEnabledState.Image = SecurityAgent.Enabled ?
-                        Properties.Resources.status_agent_enabled_dark :
-                        Properties.Resources.status_agent_disabled_dark;
+        Image? previousStatusImage = pictureBoxEnabledState.Image;
+        pictureBoxEnabledState.Image = InterfaceIcons.CreateAgentStatus(16, SecurityAgent.Enabled);
+        previousStatusImage?.Dispose();
+        string localizedStatus = Strings.Get(SecurityAgent.Enabled ? "enabled" : "disabled");
+        pictureBoxEnabledState.AccessibleName = $"{Strings.Get("Agent status")}: {localizedStatus}";
+        pictureBoxEnabledState.AccessibleDescription = Strings.Format(
+            "The security agent {0} is {1}. Double-click to configure this agent.",
+            SecurityAgent.DisplayName,
+            localizedStatus);
         toolTip1.ToolTipTitle = Strings.Get("Agent status");
-        toolTip1.SetToolTip(
-            pictureBoxEnabledState,
-            Strings.Format(
-                "The security agent {0} is {1}. Double-click to configure this agent.",
-                SecurityAgent.DisplayName,
-                Strings.Get(SecurityAgent.Enabled ? "enabled" : "disabled")));
+        toolTip1.SetToolTip(pictureBoxEnabledState, pictureBoxEnabledState.AccessibleDescription);
     }
 
     /// <summary>

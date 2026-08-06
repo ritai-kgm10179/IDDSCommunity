@@ -277,19 +277,7 @@ public class SecurityAgents : List<SecurityAgent>
                     proxy.Configuration.SoftLockDurationMins = agent.SoftLockTimeMinutes;
                     PluginConfiguration? pc = proxy.Configuration.AgentSettings;
                     if (pc != null)
-                    {
-                        foreach (PropertyInfo pi in pc.GetType().GetProperties())
-                        {
-                            if (agent.CustomConfiguration.ContainsKey(pi.Name))
-                            {
-                                if (pi.PropertyType == typeof(int))
-                                {
-                                    int.TryParse(agent.CustomConfiguration[pi.Name], out int result);
-                                    pi.SetValue(pc, result, null);
-                                }
-                            }
-                        }
-                    }
+                        ApplyCustomConfiguration(pc, agent.CustomConfiguration);
                     agent.AppDomain = domain;
                     agent.Reload();
                     LoadedAgents.Add(agent, proxy);
@@ -299,6 +287,20 @@ public class SecurityAgents : List<SecurityAgent>
                     throw;
                 }
             }
+        }
+    }
+
+    internal static void ApplyCustomConfiguration(PluginConfiguration configuration, IReadOnlyDictionary<string, string> values)
+    {
+        foreach (PropertyInfo property in configuration.GetType().GetProperties())
+        {
+            if (!values.TryGetValue(property.Name, out string? value)) continue;
+            if (property.PropertyType == typeof(string))
+                property.SetValue(configuration, value, null);
+            else if (property.PropertyType == typeof(int) && int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int integerValue))
+                property.SetValue(configuration, integerValue, null);
+            else if (property.PropertyType == typeof(bool) && bool.TryParse(value, out bool booleanValue))
+                property.SetValue(configuration, booleanValue, null);
         }
     }
 
@@ -390,6 +392,7 @@ public class SecurityAgents : List<SecurityAgent>
                 agent.DisplayName = a.DisplayName;
                 agent.BinaryMissing = false;
                 agent.CustomConfiguration = a.CustomConfiguration;
+                agent.CustomConfigurationTypes = a.CustomConfigurationTypes;
                 agent.LoadCustomConfig();
                 result.Remove(a);
             }

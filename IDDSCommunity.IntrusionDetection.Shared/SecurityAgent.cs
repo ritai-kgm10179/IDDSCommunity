@@ -412,5 +412,17 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         set => _customConfiguration = value;
     }
 
+    private Dictionary<string, string>? _customConfigurationTypes;
+    public Dictionary<string, string> CustomConfigurationTypes
+    {
+        get
+        {
+            _customConfigurationTypes ??= [];
+            return _customConfigurationTypes;
+        }
+
+        set => _customConfigurationTypes = value;
+    }
+
 }
 

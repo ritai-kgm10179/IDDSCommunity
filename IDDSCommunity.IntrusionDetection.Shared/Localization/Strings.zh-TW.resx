@@ -665,6 +665,18 @@
   <data name="DynamicUpdateThreshold" xml:space="preserve"><value>動態更新門檻</value></data>
   <data name="ZoneTransferThreshold" xml:space="preserve"><value>區域傳送門檻</value></data>
   <data name="MaximumTrackedClients" xml:space="preserve"><value>最大追蹤用戶端數量</value></data>
+  <data name="ReadEventLog" xml:space="preserve"><value>讀取 Windows 事件記錄</value></data>
+  <data name="LogFilePath" xml:space="preserve"><value>日誌檔案路徑（選填）</value></data>
+  <data name="LogDirectory" xml:space="preserve"><value>日誌資料夾</value></data>
+  <data name="SearchPattern" xml:space="preserve"><value>日誌檔案搜尋模式</value></data>
+  <data name="ProtectedPaths" xml:space="preserve"><value>受保護的 URL 路徑（選填）</value></data>
+  <data name="DirectoryName" xml:space="preserve"><value>資料夾</value></data>
+  <data name="Browse" xml:space="preserve"><value>瀏覽</value></data>
+  <data name="Source state retention must not be shorter than the detection window." xml:space="preserve"><value>來源狀態保留時間不得短於偵測時間範圍。</value></data>
+  <data name="Select an absolute log directory." xml:space="preserve"><value>請選擇完整的日誌資料夾路徑。</value></data>
+  <data name="Select an absolute log file path." xml:space="preserve"><value>請選擇完整的日誌檔案路徑。</value></data>
+  <data name="Enter a valid log file search pattern." xml:space="preserve"><value>請輸入有效的日誌檔案搜尋模式。</value></data>
+  <data name="Enable Windows event log reading or select a log file." xml:space="preserve"><value>請啟用 Windows 事件記錄讀取，或選擇一個日誌檔案。</value></data>
   <data name="ExcludedAddresses" xml:space="preserve"><value>排除的 IP 位址或 CIDR 網路</value></data>
   <data name="Documentation is available in README.md." xml:space="preserve"><value>使用說明位於 README.md。</value></data>
   <data name="Database maintenance" xml:space="preserve"><value>資料庫維護</value></data>
@@ -725,6 +737,7 @@
   <data name="Agent configuration is unavailable." xml:space="preserve"><value>代理程式設定無法使用。</value></data>
   <data name="IIS log directory must be an absolute path." xml:space="preserve"><value>IIS 記錄目錄必須是絕對路徑。</value></data>
   <data name="OpenSSH log file must be an absolute path." xml:space="preserve"><value>OpenSSH 記錄檔必須是絕對路徑。</value></data>
+  <data name="OpenSSH requires Windows event log reading or a log file." xml:space="preserve"><value>OpenSSH 必須啟用 Windows 事件記錄讀取，或指定一個記錄檔。</value></data>
   <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL 記錄目錄必須是絕對路徑。</value></data>
   <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL 記錄檔搜尋模式無效。</value></data>
   <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}：驗證失敗次數已超過門檻。</value></data>

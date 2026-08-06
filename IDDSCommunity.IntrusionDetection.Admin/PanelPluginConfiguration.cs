@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Drawing;
+using System.Collections.Generic;
+using System.IO;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -103,17 +105,19 @@ public partial class PanelPluginConfiguration : UserControl
         }
         foreach (string propName in Agent.CustomConfiguration.Keys)
         {
-            SmartLabelTextbox ltx = new()
-            {
-                LabelText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get(propName),
-                TextBoxText = Agent.CustomConfiguration[propName],
-                Margin = new Padding(0, 0, 0, 4),
-                Size = new Size(390, 28),
-                Tag = propName
-            };
-            flowLayoutPanelCustomPluginSettings.Controls.Add(ltx);
-            ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
+            string propertyType = Agent.CustomConfigurationTypes.TryGetValue(propName, out string? declaredType)
+                ? declaredType
+                : typeof(string).FullName!;
+            PluginSettingEditor editor = new(propName, propertyType, Agent.CustomConfiguration[propName], Agent.Name);
+            editor.ValueChanged += (_, _) => SetEditMode(true);
+            flowLayoutPanelCustomPluginSettings.Controls.Add(editor);
         }
+        flowLayoutPanelCustomPluginSettings.Controls.Add(new Panel
+        {
+            Height = 16,
+            Margin = Padding.Empty,
+            TabStop = false
+        });
         UpdateCustomSettingsLayout();
     }
 
@@ -150,12 +154,9 @@ public partial class PanelPluginConfiguration : UserControl
     {
         foreach (Control o in flowLayoutPanelCustomPluginSettings.Controls)
         {
-            if (o is SmartLabelTextbox)
+            if (o is PluginSettingEditor setting)
             {
-                SmartLabelTextbox setting = (SmartLabelTextbox)o;
-                string name = setting.Tag as string ?? setting.LabelText;
-                string value = setting.TextBoxText;
-                Agent.CustomConfiguration[name] = value;
+                Agent.CustomConfiguration[setting.PropertyName] = setting.Value;
             }
         }
     }
@@ -249,11 +250,60 @@ public partial class PanelPluginConfiguration : UserControl
             Agent.Enabled = checkBoxEnableSecurityAgent.Checked;
             Agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
             SaveCustomConfiguration();
+            if (!ValidateCustomConfiguration())
+            {
+                SetEditMode(true);
+                return;
+            }
             Agent.Save();
             OnAgentConfigurationChanged();
 
         }
         SetEditMode(false);
+    }
+
+    private bool ValidateCustomConfiguration()
+    {
+        Dictionary<string, string> values = Agent.CustomConfiguration;
+        if (TryInteger(values, "WindowSeconds", out int windowSeconds)
+            && TryInteger(values, "SourceStateRetentionSeconds", out int retentionSeconds)
+            && retentionSeconds < windowSeconds)
+            return ShowCustomValidationError("Source state retention must not be shorter than the detection window.");
+
+        if (values.TryGetValue("LogDirectory", out string? directory)
+            && (string.IsNullOrWhiteSpace(directory) || !Path.IsPathFullyQualified(directory)))
+            return ShowCustomValidationError("Select an absolute log directory.");
+
+        if (values.TryGetValue("LogFilePath", out string? filePath)
+            && !string.IsNullOrWhiteSpace(filePath)
+            && !Path.IsPathFullyQualified(filePath))
+            return ShowCustomValidationError("Select an absolute log file path.");
+
+        if (values.TryGetValue("SearchPattern", out string? pattern)
+            && (string.IsNullOrWhiteSpace(pattern) || pattern.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0))
+            return ShowCustomValidationError("Enter a valid log file search pattern.");
+
+        if (values.TryGetValue("ReadEventLog", out string? readEventLog)
+            && bool.TryParse(readEventLog, out bool shouldReadEventLog)
+            && !shouldReadEventLog
+            && values.TryGetValue("LogFilePath", out filePath)
+            && string.IsNullOrWhiteSpace(filePath))
+            return ShowCustomValidationError("Enable Windows event log reading or select a log file.");
+
+        return true;
+    }
+
+    private static bool TryInteger(IReadOnlyDictionary<string, string> values, string key, out int result)
+    {
+        result = default;
+        return values.TryGetValue(key, out string? value)
+            && int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out result);
+    }
+
+    private bool ShowCustomValidationError(string key)
+    {
+        MessageBox.Show(this, Strings.Get(key), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return false;
     }
 
     /// <summary>

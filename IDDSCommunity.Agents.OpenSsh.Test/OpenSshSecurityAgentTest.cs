@@ -16,4 +16,12 @@ public sealed class OpenSshSecurityAgentTest
         Assert.AreEqual("203.0.113.8", failure.SourceAddress.ToString());
         Assert.AreEqual("admin", failure.AccountName);
     }
+
+    [TestMethod]
+    public void ConfigurationRequiresAtLeastOneLogSource()
+    {
+        OpenSshConfiguration configuration = new() { ReadEventLog = false, LogFilePath = string.Empty };
+
+        Assert.ThrowsExactly<InvalidOperationException>(configuration.Validate);
+    }
 }

@@ -109,7 +109,6 @@
             // pictureBox1
             //
             this.pictureBox1.ContextMenuStrip = this.contextMenuStripControlBox;
-            this.pictureBox1.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.IDDSCommunity_16;
             this.pictureBox1.Location = new System.Drawing.Point(6, 6);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(16, 16);

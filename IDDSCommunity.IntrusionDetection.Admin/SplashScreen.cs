@@ -24,7 +24,8 @@ public partial class SplashScreen : Form
     public SplashScreen()
     {
         InitializeComponent();
-        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Application;
+        pictureBox1.Image = BrandingIcons.CreateBitmap(128);
+        Icon = BrandingIcons.CreateIcon();
         smartLabelVersion.Text = string.Format(Strings.Get("Version {0}"), Application.ProductVersion);
         smartLabelStatus.Text = Strings.Get("Loading components...");
         BackColor = Color.White;
