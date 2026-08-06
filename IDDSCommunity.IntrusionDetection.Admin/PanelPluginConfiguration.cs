@@ -66,20 +66,34 @@ public partial class PanelPluginConfiguration : UserControl
     /// Loads data.
     /// </summary>
 
+    private bool _isLoadingData;
+
+    /// <summary>
+    /// Loads data.
+    /// </summary>
+
     private void LoadData()
     {
-        if (IsInEditMode) ToggleEditMode();
-        checkBoxLockForever.Checked = Agent.LockForever;
-        textBoxHardLocks.Text = Agent.HardLockAttempts.ToString();
-        textBoxHardLockDuration.Text = Agent.HardLockTimeHours.ToString();
-        textBoxSoftLocks.Text = Agent.SoftLockAttempts.ToString();
-        textBoxSoftLockDuration.Text = Agent.SoftLockTimeMinutes.ToString();
-        checkBoxEnableSecurityAgent.Checked = Agent.Enabled;
-        checkBoxOverrideConfiguration.Checked = Agent.OverrideConfig;
-        SetEnabledMode(checkBoxOverrideConfiguration.Checked);
-        LoadCustomSettings();
-        smartLabelCustomConfig.Visible = flowLayoutPanelCustomPluginSettings.Controls.Count > 0;
-        SetEditMode(false);
+        _isLoadingData = true;
+        try
+        {
+            if (IsInEditMode) ToggleEditMode();
+            checkBoxLockForever.Checked = Agent.LockForever;
+            textBoxHardLocks.Text = Agent.HardLockAttempts.ToString();
+            textBoxHardLockDuration.Text = Agent.HardLockTimeHours.ToString();
+            textBoxSoftLocks.Text = Agent.SoftLockAttempts.ToString();
+            textBoxSoftLockDuration.Text = Agent.SoftLockTimeMinutes.ToString();
+            checkBoxEnableSecurityAgent.Checked = Agent.Enabled;
+            checkBoxOverrideConfiguration.Checked = Agent.OverrideConfig;
+            SetEnabledMode(checkBoxOverrideConfiguration.Checked);
+            LoadCustomSettings();
+            smartLabelCustomConfig.Visible = flowLayoutPanelCustomPluginSettings.Controls.Count > 0;
+            SetEditMode(false);
+        }
+        finally
+        {
+            _isLoadingData = false;
+        }
     }
 
     /// <summary>
@@ -218,6 +232,12 @@ public partial class PanelPluginConfiguration : UserControl
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
+        if (_agent is null) return;
+        SaveAgentChanges(_agent);
+    }
+
+    private void SaveAgentChanges(SecurityAgent agent)
+    {
         bool hasError = false;
         ClearErrors();
         if (!int.TryParse(textBoxHardLocks.Text, out int hardLocks))
@@ -242,22 +262,21 @@ public partial class PanelPluginConfiguration : UserControl
         }
         if (!hasError)
         {
-            Agent.LockForever = checkBoxLockForever.Checked;
-            Agent.HardLockAttempts = hardLocks;
-            Agent.HardLockTimeHours = hardLockDuration;
-            Agent.SoftLockAttempts = softLocks;
-            Agent.SoftLockTimeMinutes = softLockDuration;
-            Agent.Enabled = checkBoxEnableSecurityAgent.Checked;
-            Agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
+            agent.LockForever = checkBoxLockForever.Checked;
+            agent.HardLockAttempts = hardLocks;
+            agent.HardLockTimeHours = hardLockDuration;
+            agent.SoftLockAttempts = softLocks;
+            agent.SoftLockTimeMinutes = softLockDuration;
+            agent.Enabled = checkBoxEnableSecurityAgent.Checked;
+            agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
             SaveCustomConfiguration();
             if (!ValidateCustomConfiguration())
             {
                 SetEditMode(true);
                 return;
             }
-            Agent.Save();
+            agent.Save();
             OnAgentConfigurationChanged();
-
         }
         SetEditMode(false);
     }
@@ -324,6 +343,10 @@ public partial class PanelPluginConfiguration : UserControl
         get => _agent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
+            if (_agent != null && buttonSave.Visible)
+            {
+                SaveAgentChanges(_agent);
+            }
             _agent = value;
             AgentChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -346,6 +369,8 @@ public partial class PanelPluginConfiguration : UserControl
     private void checkBoxOverrideConfiguration_CheckedChanged(object sender, EventArgs e)
     {
         SetEnabledMode(checkBoxOverrideConfiguration.Checked);
+        if (_isLoadingData || _agent is null) return;
+        _agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
         SetEditMode(true);
     }
 
@@ -375,6 +400,12 @@ public partial class PanelPluginConfiguration : UserControl
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
+    private void checkBox_CheckedChanged(object sender, EventArgs e)
+    {
+        if (_isLoadingData || _agent is null) return;
+        _agent.Enabled = checkBoxEnableSecurityAgent.Checked;
+        _agent.LockForever = checkBoxLockForever.Checked;
+        SetEditMode(true);
+    }
 
 }
