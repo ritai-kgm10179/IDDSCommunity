@@ -25,15 +25,25 @@ public class AgentLoaderProxy : MarshalByRefObject
         {
             var assembly = loadContext.LoadFromAssemblyPath(pluginPath);
             List<SecurityAgent> result = [];
-            foreach (Type type in assembly.GetTypes())
+            IEnumerable<Type> types;
+            try
             {
-                if (type.IsPublic && !type.IsAbstract)
+                types = assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException exception)
+            {
+                types = System.Linq.Enumerable.Where(exception.Types, type => type is not null)!;
+            }
+
+            foreach (Type type in types)
+            {
+                try
                 {
-                    Type? typeInterface = type.GetInterface(typeof(IAgentPlugin).FullName!, false);
-                    //Make sure the interface we want to use actually exists
-                    if (typeInterface != null)
+                    if (type.IsPublic && !type.IsAbstract)
                     {
-                        try
+                        Type? typeInterface = type.GetInterface(typeof(IAgentPlugin).FullName!, false);
+                        //Make sure the interface we want to use actually exists
+                        if (typeInterface != null)
                         {
                             string typeName = type.FullName ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent type has no full name."));
                             object? instance = Activator.CreateInstance(type);
@@ -77,12 +87,11 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 result.Add(securityAgent);
                             }
                         }
-                        catch (Exception exception)
-                        {
-                            System.Diagnostics.Debug.WriteLine(exception.Message);
-                            throw;
-                        }
                     }
+                }
+                catch (Exception exception)
+                {
+                    System.Diagnostics.Trace.TraceWarning("Failed to load security agent type {0} from {1}: {2}", type?.FullName, fileName, exception);
                 }
             }
             return result;
