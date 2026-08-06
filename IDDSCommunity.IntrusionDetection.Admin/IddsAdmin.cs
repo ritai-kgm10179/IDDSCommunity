@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -337,6 +337,8 @@ public partial class IddsAdmin : Form
 
     /// <summary>
     /// Applies one service-status snapshot on the UI thread.
+    private const char StatusDot = '●';
+
     /// <summary>
     /// Applies background-refreshed status to the header indicators and controls.
     /// </summary>
@@ -346,7 +348,8 @@ public partial class IddsAdmin : Form
         smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
         if (ServiceError)
         {
-            smartLabelServiceStatus.Text = "● " + Strings.Get("Service not found!");
+            string notFound = Strings.Get("Service not found!");
+            smartLabelServiceStatus.Text = StatusDot + " " + notFound;
             smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68);
             buttonManageService.Text = Strings.Get("Install service");
             pictureBoxStartService.Enabled = false;
@@ -367,7 +370,8 @@ public partial class IddsAdmin : Form
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop;
                 pictureBoxStopService.Enabled = true;
                 pictureBoxStopService.Cursor = Cursors.Hand;
-                smartLabelServiceStatus.Text = "● " + Strings.Get("Service is running");
+                string running = Strings.Get("Service is running");
+                smartLabelServiceStatus.Text = StatusDot + " " + running;
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(16, 185, 129); // Vibrant Emerald Green
             }
             else if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
@@ -379,12 +383,14 @@ public partial class IddsAdmin : Form
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop_deactivated;
                 pictureBoxStopService.Enabled = false;
                 pictureBoxStopService.Cursor = Cursors.Default;
-                smartLabelServiceStatus.Text = "● " + Strings.Get("Service is stopped");
+                string stopped = Strings.Get("Service is stopped");
+                smartLabelServiceStatus.Text = StatusDot + " " + stopped;
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68); // Vibrant Crimson Red
             }
             else
             {
-                smartLabelServiceStatus.Text = "● " + Strings.Get("reading status....");
+                string reading = Strings.Get("reading status....");
+                smartLabelServiceStatus.Text = StatusDot + " " + reading;
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11); // Amber Yellow
             }
         }
@@ -1242,7 +1248,8 @@ public partial class IddsAdmin : Form
     private async Task ChangeServiceStateAsync(bool start)
     {
         smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        smartLabelServiceStatus.Text = "● " + Strings.Get(start ? "Starting service..." : "Stopping service...");
+        string pending = Strings.Get(start ? "Starting service..." : "Stopping service...");
+        smartLabelServiceStatus.Text = StatusDot + " " + pending;
         smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11);
         System.ServiceProcess.ServiceController? controller = serviceController;
         if (controller is null)
