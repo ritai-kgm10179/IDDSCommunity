@@ -70,7 +70,10 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 securityAgent.SoftLockTimeMinutes = IddsConfig.DefaultSoftLockMinutes;
                                 securityAgent.OverrideConfig = false;
                                 if (agentPlugin.Configuration.AgentSettings != null)
+                                {
                                     securityAgent.CustomConfiguration = GetCustomConfigurationObjects(agentPlugin.Configuration.AgentSettings);
+                                    securityAgent.CustomConfigurationTypes = GetCustomConfigurationTypes(agentPlugin.Configuration.AgentSettings);
+                                }
                                 result.Add(securityAgent);
                             }
                         }
@@ -121,6 +124,14 @@ public class AgentLoaderProxy : MarshalByRefObject
         {
             result.Add(pi.Name, pi.GetValue(config, null)?.ToString() ?? string.Empty);
         }
+        return result;
+    }
+
+    public static Dictionary<string, string> GetCustomConfigurationTypes(PluginConfiguration config)
+    {
+        Dictionary<string, string> result = [];
+        foreach (PropertyInfo property in config.GetType().GetProperties())
+            result[property.Name] = property.PropertyType.FullName ?? property.PropertyType.Name;
         return result;
     }
 

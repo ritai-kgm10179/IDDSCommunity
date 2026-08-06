@@ -443,56 +443,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap IDDSCommunity_128 {
-            get {
-                object obj = ResourceManager.GetObject("IDDSCommunity_128", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
-        internal static System.Drawing.Bitmap IDDSCommunity_16 {
-            get {
-                object obj = ResourceManager.GetObject("IDDSCommunity_16", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
-        internal static System.Drawing.Bitmap IDDSCommunity_256 {
-            get {
-                object obj = ResourceManager.GetObject("IDDSCommunity_256", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
-        internal static System.Drawing.Bitmap IDDSCommunity_32 {
-            get {
-                object obj = ResourceManager.GetObject("IDDSCommunity_32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
-        internal static System.Drawing.Bitmap IDDSCommunity_64 {
-            get {
-                object obj = ResourceManager.GetObject("IDDSCommunity_64", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
-        /// <summary>
-        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
-        /// </summary>
         internal static System.Drawing.Bitmap loading2 {
             get {
                 object obj = ResourceManager.GetObject("loading2", resourceCulture);
@@ -833,21 +783,8 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap status_agent_disabled_dark {
-            get {
-                object obj = ResourceManager.GetObject("status-agent-disabled-dark", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
-        internal static System.Drawing.Bitmap status_agent_enabled_dark {
-            get {
-                object obj = ResourceManager.GetObject("status-agent-enabled-dark", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }

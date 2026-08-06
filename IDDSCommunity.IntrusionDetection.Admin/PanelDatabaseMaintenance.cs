@@ -65,11 +65,21 @@ public sealed class PanelDatabaseMaintenance : UserControl
         Controls.Add(verifyButton);
 
         Controls.Add(CreateLabel(Strings.Get("Verified backups"), 9F, BodyTextColor, new Point(15, 258)));
-        backupList = new ListBox { Font = new Font("Segoe UI", 9F), Location = new Point(15, 282), Size = new Size(620, 92) };
+        backupList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 282), Size = new Size(620, 92) };
         Controls.Add(backupList);
         Controls.Add(CreateLabel(Strings.Get("Maintenance history"), 9F, BodyTextColor, new Point(15, 386)));
-        historyList = new ListBox { Font = new Font("Segoe UI", 9F), Location = new Point(15, 410), Size = new Size(620, 92) };
+        historyList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 410), Size = new Size(620, 92) };
         Controls.Add(historyList);
+        SizeChanged += (_, _) => UpdateResponsiveWidths();
+        UpdateResponsiveWidths();
+    }
+
+    private void UpdateResponsiveWidths()
+    {
+        int contentWidth = Math.Max(240, ClientSize.Width - 30);
+        statusLabel.Width = contentWidth;
+        backupList.Width = contentWidth;
+        historyList.Width = contentWidth;
     }
 
     public void RefreshStatus() => _ = RunAsync(() => maintenance.GetStatus(), status => { ShowStatus(status); RefreshInventory(); });

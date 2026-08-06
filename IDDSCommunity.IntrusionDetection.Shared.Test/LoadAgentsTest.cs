@@ -75,6 +75,7 @@ public class LoadAgentsTest
         SecurityAgent stored = new("Existing.Agent", existingId) { Enabled = true, DisplayName = "Stored display name" };
         agents.Add(stored);
         SecurityAgent discoveredExisting = new("Existing.Agent", existingId) { AssemblyFilename = "IDDSCommunity.Agents.Existing.dll", DisplayName = "Discovered display name" };
+        discoveredExisting.CustomConfigurationTypes["ReadEventLog"] = typeof(bool).FullName!;
         SecurityAgent discoveredNew = new("New.Agent", Guid.NewGuid()) { AssemblyFilename = "IDDSCommunity.Agents.New.dll", Enabled = true };
 
         List<SecurityAgent> merged = agents.MergeDbInformation([discoveredExisting, discoveredNew]);
@@ -85,6 +86,7 @@ public class LoadAgentsTest
         Assert.IsFalse(stored.BinaryMissing);
         Assert.AreEqual(discoveredExisting.AssemblyFilename, stored.AssemblyFilename);
         Assert.AreEqual(discoveredExisting.DisplayName, stored.DisplayName);
+        Assert.AreEqual(typeof(bool).FullName, stored.CustomConfigurationTypes["ReadEventLog"]);
         Assert.IsFalse(merged[1].Enabled);
         Assert.AreEqual(discoveredNew.Id, merged[1].Id);
     }
@@ -112,6 +114,30 @@ public class LoadAgentsTest
         agents.UnloadAgents();
         Assert.HasCount(0, agents.LoadedAgents);
         Assert.ThrowsExactly<ObjectDisposedException>(() => _ = proxy.Configuration);
+    }
+
+    [TestMethod]
+    public void ApplyCustomConfigurationSupportsBooleanIntegerAndStringValues()
+    {
+        TestPluginConfiguration configuration = new();
+
+        SecurityAgents.ApplyCustomConfiguration(configuration, new Dictionary<string, string>
+        {
+            [nameof(TestPluginConfiguration.Enabled)] = "False",
+            [nameof(TestPluginConfiguration.Port)] = "2222",
+            [nameof(TestPluginConfiguration.Path)] = @"C:\Logs\agent.log"
+        });
+
+        Assert.IsFalse(configuration.Enabled);
+        Assert.AreEqual(2222, configuration.Port);
+        Assert.AreEqual(@"C:\Logs\agent.log", configuration.Path);
+    }
+
+    private sealed class TestPluginConfiguration : IntrusionDetection.Api.Plugin.PluginConfiguration
+    {
+        public bool Enabled { get; set; } = true;
+        public int Port { get; set; } = 1;
+        public string Path { get; set; } = string.Empty;
     }
 
     private static string FindBuiltPluginDirectory()

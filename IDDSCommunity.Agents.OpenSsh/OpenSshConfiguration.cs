@@ -13,6 +13,8 @@ public sealed class OpenSshConfiguration : AuthenticationAgentConfiguration
     public override void Validate()
     {
         base.Validate();
+        if (!ReadEventLog && string.IsNullOrWhiteSpace(LogFilePath))
+            throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("OpenSSH requires Windows event log reading or a log file."));
         if (!string.IsNullOrWhiteSpace(LogFilePath) && !Path.IsPathFullyQualified(LogFilePath))
             throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("OpenSSH log file must be an absolute path."));
     }

@@ -353,7 +353,6 @@
             //
             // pictureBox3
             //
-            this.pictureBox3.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.IDDSCommunity_32;
             this.pictureBox3.Location = new System.Drawing.Point(24, 28);
             this.pictureBox3.Name = "pictureBox3";
             this.pictureBox3.Size = new System.Drawing.Size(32, 32);

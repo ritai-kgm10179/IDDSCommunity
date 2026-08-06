@@ -61,6 +61,7 @@ public partial class IDDSCommunitySecurityLog : UserControl
     public IDDSCommunitySecurityLog()
     {
         InitializeComponent();
+        pictureBox2.Image = InterfaceIcons.CreateSecurityLog(32);
         comboBoxAgentSelection.DisplayMember = "DisplayName";
         comboBoxAgentSelection.ValueMember = "Id";
         comboBoxAgentSelection.DropDownStyle = ComboBoxStyle.DropDownList;
