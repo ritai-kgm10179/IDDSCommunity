@@ -653,13 +653,18 @@
   <data name="SmtpPort" xml:space="preserve"><value>SMTP port</value></data>
   <data name="RdpPort" xml:space="preserve"><value>Remote Desktop port</value></data>
   <data name="WindowSeconds" xml:space="preserve"><value>Detection window (seconds)</value></data>
+  <data name="FailureThreshold" xml:space="preserve"><value>Authentication failure threshold</value></data>
+  <data name="MaximumTrackedSources" xml:space="preserve"><value>Maximum tracked sources</value></data>
+  <data name="SourceStateRetentionSeconds" xml:space="preserve"><value>Source state retention (seconds)</value></data>
+  <data name="Source state retention must be at least the detection window and no more than 604800 seconds." xml:space="preserve"><value>Source state retention must be at least the detection window and no more than 604800 seconds.</value></data>
+  <data name="Excluded addresses must contain valid IP addresses or CIDR networks." xml:space="preserve"><value>Excluded addresses must contain valid IP addresses or CIDR networks.</value></data>
   <data name="QueryRateThreshold" xml:space="preserve"><value>Query rate threshold</value></data>
   <data name="NxDomainThreshold" xml:space="preserve"><value>NXDOMAIN threshold</value></data>
   <data name="AnyQueryThreshold" xml:space="preserve"><value>ANY query threshold</value></data>
   <data name="DynamicUpdateThreshold" xml:space="preserve"><value>Dynamic update threshold</value></data>
   <data name="ZoneTransferThreshold" xml:space="preserve"><value>Zone transfer threshold</value></data>
   <data name="MaximumTrackedClients" xml:space="preserve"><value>Maximum tracked clients</value></data>
-  <data name="ExcludedAddresses" xml:space="preserve"><value>Excluded addresses</value></data>
+  <data name="ExcludedAddresses" xml:space="preserve"><value>Excluded IP addresses or CIDR networks</value></data>
   <data name="Documentation is available in README.md." xml:space="preserve"><value>Documentation is available in README.md.</value></data>
   <data name="Database maintenance" xml:space="preserve"><value>Database maintenance</value></data>
   <data name="SQLite database health, verified backups, retention cleanup, and safe optimization." xml:space="preserve"><value>SQLite database health, verified backups, retention cleanup, and safe optimization.</value></data>

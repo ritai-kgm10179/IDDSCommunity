@@ -13,4 +13,7 @@
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="IDDSCommunity.Agents.Authentication.Test" />
+  </ItemGroup>
 </Project>
