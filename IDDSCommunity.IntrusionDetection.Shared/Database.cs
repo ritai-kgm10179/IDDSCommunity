@@ -125,7 +125,7 @@ public class Database
     /// Initializes a new instance of the <see cref="Database"/> class.
     /// </summary>
 
-    public Database() { }
+    public Database() => _instance = this;
 
     /// <summary>
     /// Executes reader.
