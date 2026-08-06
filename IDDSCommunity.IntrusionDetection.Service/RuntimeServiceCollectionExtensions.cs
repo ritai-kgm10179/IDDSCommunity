@@ -17,7 +17,9 @@ internal static class RuntimeServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IWindowsEventLog, WindowsEventLog>();
         services.TryAddSingleton<IRuntimeLog, WindowsLogManager>();
-        services.TryAddSingleton<IFirewallPolicy>(provider => new FirewallPolicyManager(provider.GetRequiredService<IRuntimeLog>()));
+        services.TryAddSingleton<IFirewallPolicy>(provider => new FirewallPolicyManager(
+            provider.GetRequiredService<IRuntimeLog>(),
+            provider.GetRequiredService<IddsConfig>().FirewallBlockMode));
         services.AddSingleton<Database>();
         services.AddSingleton<IddsConfig>();
         services.AddSingleton<NotificationSettings>();

@@ -165,6 +165,9 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         if (package.GlobalPolicy.SoftLockAttempts is < 1 or > 100000 || package.GlobalPolicy.HardLockAttempts < package.GlobalPolicy.SoftLockAttempts || package.GlobalPolicy.SmtpPort is < 1 or > 65535) throw Invalid("Global policy values are invalid.");
         if (package.ApplicationSettings.Count > 10000 || package.SafeNetworks.Count > 10000 || package.Agents.Count > 1000) throw Invalid("Configuration package exceeds supported limits.");
         if (package.ApplicationSettings.Any(item => item.Key.Length is 0 or > 250 || item.Value is null || item.Value.Length > 250)) throw Invalid("Application setting names or values exceed supported limits.");
+        if (package.ApplicationSettings.TryGetValue(IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, out string? firewallMode)
+            && (!Enum.TryParse(firewallMode, true, out FirewallBlockMode parsedMode) || !Enum.IsDefined(parsedMode)))
+            throw Invalid("The firewall blocking mode is unsupported.");
         foreach (SafeNetworkTransfer network in package.SafeNetworks)
         {
             if (!IPAddress.TryParse(network.IpAddress, out IPAddress? address)) throw Invalid($"Invalid safe-network address: {network.IpAddress}");

@@ -752,4 +752,9 @@
   <data name="Report period: {0:d} - {1:d}" xml:space="preserve"><value>Report period: {0:d} - {1:d}</value></data>
   <data name="Report exported: {0}" xml:space="preserve"><value>Report exported: {0}</value></data>
   <data name="Report export failed. Review the application log for details." xml:space="preserve"><value>Report export failed. Review the application log for details.</value></data>
+  <data name="Firewall blocking mode" xml:space="preserve"><value>Firewall blocking mode</value></data>
+  <data name="Inbound blocking (recommended)" xml:space="preserve"><value>Inbound blocking (recommended)</value></data>
+  <data name="Bidirectional blocking" xml:space="preserve"><value>Bidirectional blocking</value></data>
+  <data name="Blocks inbound traffic from the selected remote addresses. Recommended for most servers." xml:space="preserve"><value>Blocks inbound traffic from the selected remote addresses. Recommended for most servers.</value></data>
+  <data name="Blocks inbound traffic and outbound replies for the selected remote addresses." xml:space="preserve"><value>Blocks inbound traffic and outbound replies for the selected remote addresses.</value></data>
 </root>

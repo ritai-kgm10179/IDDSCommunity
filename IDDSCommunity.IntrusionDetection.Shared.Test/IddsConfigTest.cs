@@ -111,6 +111,26 @@ public class IddsConfigTest
     }
 
     /// <summary>
+    /// Verifies that firewall mode is persisted and unsupported values safely use inbound blocking.
+    /// </summary>
+    [TestMethod]
+    public void FirewallBlockModePersistsAndRejectsUnsupportedValuesTest()
+    {
+        IddsConfig.Instance.FirewallBlockMode = FirewallBlockMode.Bidirectional;
+        IddsConfig.Instance.SaveAppConfig();
+        IddsConfig.Instance.LoadAppConfig();
+        Assert.AreEqual(FirewallBlockMode.Bidirectional, IddsConfig.Instance.FirewallBlockMode);
+
+        IddsConfig.Instance.SetConfigValue(IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, "BlackholeRouting");
+        Assert.AreEqual(FirewallBlockMode.Inbound, IddsConfig.Instance.FirewallBlockMode);
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+            IddsConfig.Instance.FirewallBlockMode = (FirewallBlockMode)999);
+
+        IddsConfig.Instance.FirewallBlockMode = FirewallBlockMode.Inbound;
+        IddsConfig.Instance.SaveAppConfig();
+    }
+
+    /// <summary>
     /// Executes the config is in safe network test operation.
     /// </summary>
 

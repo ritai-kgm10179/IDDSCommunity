@@ -41,6 +41,9 @@
             this.smartLabel1 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.buttonDiscard = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
+            this.comboBoxFirewallMode = new System.Windows.Forms.ComboBox();
+            this.labelFirewallMode = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
+            this.labelFirewallModeDescription = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
             this.SuspendLayout();
@@ -283,6 +286,45 @@
             this.buttonSave.Visible = false;
             this.buttonSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
             //
+            // comboBoxFirewallMode
+            //
+            this.comboBoxFirewallMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxFirewallMode.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.comboBoxFirewallMode.ForeColor = System.Drawing.Color.FromArgb(102, 102, 102);
+            this.comboBoxFirewallMode.FormattingEnabled = true;
+            this.comboBoxFirewallMode.Items.AddRange(new object[] {
+            global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Inbound blocking (recommended)"),
+            global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Bidirectional blocking")});
+            this.comboBoxFirewallMode.Location = new System.Drawing.Point(257, 187);
+            this.comboBoxFirewallMode.Name = "comboBoxFirewallMode";
+            this.comboBoxFirewallMode.Size = new System.Drawing.Size(181, 23);
+            this.comboBoxFirewallMode.TabIndex = 5;
+            this.comboBoxFirewallMode.SelectedIndexChanged += new System.EventHandler(this.comboBoxFirewallMode_SelectedIndexChanged);
+            //
+            // labelFirewallMode
+            //
+            this.labelFirewallMode.AutoSize = true;
+            this.labelFirewallMode.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.labelFirewallMode.ForeColor = System.Drawing.Color.FromArgb(102, 102, 102);
+            this.labelFirewallMode.Location = new System.Drawing.Point(24, 190);
+            this.labelFirewallMode.Name = "labelFirewallMode";
+            this.labelFirewallMode.Selected = false;
+            this.labelFirewallMode.SelectedColor = System.Drawing.Color.Empty;
+            this.labelFirewallMode.Size = new System.Drawing.Size(103, 15);
+            this.labelFirewallMode.TabIndex = 31;
+            this.labelFirewallMode.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Firewall blocking mode");
+            //
+            // labelFirewallModeDescription
+            //
+            this.labelFirewallModeDescription.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.labelFirewallModeDescription.ForeColor = System.Drawing.Color.FromArgb(102, 102, 102);
+            this.labelFirewallModeDescription.Location = new System.Drawing.Point(24, 216);
+            this.labelFirewallModeDescription.Name = "labelFirewallModeDescription";
+            this.labelFirewallModeDescription.Selected = false;
+            this.labelFirewallModeDescription.SelectedColor = System.Drawing.Color.Empty;
+            this.labelFirewallModeDescription.Size = new System.Drawing.Size(414, 29);
+            this.labelFirewallModeDescription.TabIndex = 32;
+            //
             // PanelLockoutConfiguration
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -291,6 +333,9 @@
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.buttonDiscard);
             this.Controls.Add(this.buttonSave);
+            this.Controls.Add(this.comboBoxFirewallMode);
+            this.Controls.Add(this.labelFirewallMode);
+            this.Controls.Add(this.labelFirewallModeDescription);
             this.Controls.Add(this.errHardLockDuration);
             this.Controls.Add(this.errHardLocks);
             this.Controls.Add(this.errSoftLockDuration);
@@ -336,5 +381,8 @@
         private SmartLabel errHardLockDuration;
         private System.Windows.Forms.Button buttonDiscard;
         private System.Windows.Forms.Button buttonSave;
+        private System.Windows.Forms.ComboBox comboBoxFirewallMode;
+        private SmartLabel labelFirewallMode;
+        private SmartLabel labelFirewallModeDescription;
     }
 }

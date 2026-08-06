@@ -50,6 +50,7 @@ public partial class PanelLockoutConfiguration : UserControl
         textBoxSoftLockDuration.Text = IddsConfig.Instance.SoftLockTimeMinutes.ToString();
         textBoxSoftLocks.Text = IddsConfig.Instance.SoftLockAttempts.ToString();
         checkBoxLockForever.Checked = IddsConfig.Instance.LockForever;
+        comboBoxFirewallMode.SelectedIndex = IddsConfig.Instance.FirewallBlockMode == FirewallBlockMode.Bidirectional ? 1 : 0;
         SetEditMode(false);
     }
 
@@ -137,6 +138,10 @@ public partial class PanelLockoutConfiguration : UserControl
             IddsConfig.Instance.SoftLockAttempts = softLocks;
             IddsConfig.Instance.SoftLockTimeMinutes = softLockDuration;
             IddsConfig.Instance.Save();
+            IddsConfig.Instance.FirewallBlockMode = comboBoxFirewallMode.SelectedIndex == 1
+                ? FirewallBlockMode.Bidirectional
+                : FirewallBlockMode.Inbound;
+            IddsConfig.Instance.SaveAppConfig();
             ToggleEditMode();
             OnLockoutConfigurationChanged();
         }
@@ -187,4 +192,12 @@ public partial class PanelLockoutConfiguration : UserControl
     /// <param name="e">The event data.</param>
 
     private void checkBoxLockForever_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
+
+    private void comboBoxFirewallMode_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        labelFirewallModeDescription.Text = comboBoxFirewallMode.SelectedIndex == 1
+            ? Shared.Localization.Strings.Get("Blocks inbound traffic and outbound replies for the selected remote addresses.")
+            : Shared.Localization.Strings.Get("Blocks inbound traffic from the selected remote addresses. Recommended for most servers.");
+        SetEditMode(true);
+    }
 }

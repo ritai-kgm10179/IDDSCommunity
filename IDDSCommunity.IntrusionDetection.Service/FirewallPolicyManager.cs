@@ -11,13 +11,14 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 {
     private readonly INetFwPolicy2 firewallPolicyManager;
     private readonly IRuntimeLog logManager;
+    private readonly FirewallBlockMode blockMode;
     private static FirewallPolicyManager? _instance;
 
     internal static FirewallPolicyManager Instance
     {
         get
         {
-            _instance ??= new FirewallPolicyManager(WindowsLogManager.Instance);
+            _instance ??= new FirewallPolicyManager(WindowsLogManager.Instance, IddsConfig.Instance.FirewallBlockMode);
             return _instance;
         }
     }
@@ -26,13 +27,16 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// Initializes a new instance of the <see cref="FirewallPolicyManager"/> class.
     /// </summary>
 
-    internal FirewallPolicyManager(IRuntimeLog logManager)
+    internal FirewallPolicyManager(IRuntimeLog logManager, FirewallBlockMode blockMode = FirewallBlockMode.Inbound)
     {
         ArgumentNullException.ThrowIfNull(logManager);
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Windows Firewall integration requires Windows."));
         this.logManager = logManager;
+        this.blockMode = Enum.IsDefined(blockMode) ? blockMode : throw new ArgumentOutOfRangeException(nameof(blockMode));
         firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
+        if (blockMode == FirewallBlockMode.Inbound)
+            RemoveRuleIfPresent(GetRuleName("BlockAttackerOutbound", 0));
     }
 
     /// <summary>
@@ -57,6 +61,11 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             AddRule("BlockAttacker", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN,
                 NET_FW_ACTION.NET_FW_ACTION_BLOCK, ipAddress);
+            if (blockMode == FirewallBlockMode.Bidirectional)
+            {
+                AddRule("BlockAttackerOutbound", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT,
+                    NET_FW_ACTION.NET_FW_ACTION_BLOCK, ipAddress);
+            }
         }
         catch (Exception ex)
         {
@@ -76,10 +85,15 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     {
         try
         {
-            INetFwRule? rule = GetRule(GetRuleName("BlockAttacker", 0));
-            if (rule is null)
+            INetFwRule? inboundRule = GetRule(GetRuleName("BlockAttacker", 0));
+            if (!IsEffectiveRule(inboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
+                || !ContainsAddress(FirewallComString.Get(inboundRule!.RemoteAddresses), ipAddress))
                 return false;
-            return ContainsAddress(FirewallComString.Get(rule.RemoteAddresses), ipAddress);
+            if (blockMode == FirewallBlockMode.Inbound)
+                return true;
+            INetFwRule? outboundRule = GetRule(GetRuleName("BlockAttackerOutbound", 0));
+            return IsEffectiveRule(outboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT)
+                && ContainsAddress(FirewallComString.Get(outboundRule!.RemoteAddresses), ipAddress);
         }
         catch (Exception ex)
         {
@@ -95,16 +109,19 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <returns>The normalized firewall address entries.</returns>
     public IReadOnlyCollection<string> GetBlockedAddresses()
     {
-        INetFwRule? rule = GetRule(GetRuleName("BlockAttacker", 0));
-        if (rule is null || !rule.Enabled)
-            return [];
-        List<string> addresses = [];
-        foreach (string entry in FirewallComString.Get(rule.RemoteAddresses).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        HashSet<string> addresses = new(StringComparer.Ordinal);
+        foreach (string ruleName in GetActiveRuleNames())
         {
-            if (System.Net.IPAddress.TryParse(entry, out System.Net.IPAddress? address))
-                addresses.Add(address.ToString());
+            INetFwRule? rule = GetRule(ruleName);
+            if (rule is null || !rule.Enabled)
+                continue;
+            foreach (string entry in FirewallComString.Get(rule.RemoteAddresses).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (System.Net.IPAddress.TryParse(entry, out System.Net.IPAddress? address))
+                    addresses.Add(address.ToString());
+            }
         }
-        return addresses;
+        return [.. addresses];
     }
 
     /// <summary>
@@ -114,22 +131,24 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 
     public void RemoveIpAddressFromBlockList(string ipAddress)
     {
-        string ruleName = GetRuleName("BlockAttacker", 0);
-        INetFwRule? rule = GetRule(ruleName);
-        if (rule is null)
-            throw new ArgumentException(string.Format(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Firewall rule {0} was not found."), ruleName), nameof(ipAddress));
-        string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
-        if (!ContainsAddress(remoteAddresses, ipAddress))
+        bool removed = false;
+        foreach (string ruleName in GetActiveRuleNames())
         {
+            INetFwRule? rule = GetRule(ruleName);
+            if (rule is null)
+                continue;
+            string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
+            if (!ContainsAddress(remoteAddresses, ipAddress))
+                continue;
+            string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, ipAddress);
+            FirewallComString.Set(cleanedAddresses, value => rule.RemoteAddresses = value);
+            if (cleanedAddresses == "*" || string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+                rule.Enabled = false;
+            removed = true;
+        }
+        if (!removed)
             throw new ArgumentException(string.Format(
-                "The IP address {0} is not blocked and might has been automatically removed by schedule. Please refresh the list to view current locks.", ipAddress));
-        }
-        string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, ipAddress);
-        FirewallComString.Set(cleanedAddresses, value => rule.RemoteAddresses = value);
-        if (cleanedAddresses == "*" || string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
-        {
-            rule.Enabled = false;
-        }
+                "The IP address {0} is not blocked and might have been automatically removed by schedule. Please refresh the list to view current locks.", ipAddress), nameof(ipAddress));
     }
 
     /// <summary>
@@ -235,6 +254,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 
     private static string GetRuleName(string name, int port) => string.Format("{0}_{1}_{2}", Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
 
+    private IEnumerable<string> GetActiveRuleNames()
+    {
+        yield return GetRuleName("BlockAttacker", 0);
+        if (blockMode == FirewallBlockMode.Bidirectional)
+            yield return GetRuleName("BlockAttackerOutbound", 0);
+    }
+
+    private static bool IsEffectiveRule(INetFwRule? rule, NET_FW_RULE_DIRECTION direction) =>
+        rule is not null
+        && rule.Enabled
+        && rule.Action == NET_FW_ACTION.NET_FW_ACTION_BLOCK
+        && rule.Direction == direction
+        && rule.Protocol == 256;
+
+    private void RemoveRuleIfPresent(string ruleName)
+    {
+        if (GetRule(ruleName) is not null)
+            FirewallComString.Set(ruleName, firewallPolicyManager.Rules.Remove);
+    }
+
     /// <summary>
     /// Adds rule.
     /// </summary>
@@ -280,7 +319,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             rule.Action = action;
             FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => rule.Grouping = value);
-            rule.Protocol = 6;
+            rule.Protocol = 256;
             FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME + " rule", value => rule.Description = value);
             rule.Direction = direction;
             rule.Enabled = true;
@@ -294,6 +333,9 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         else
         {
+            rule.Action = action;
+            rule.Direction = direction;
+            rule.Protocol = 256;
             rule.Enabled = true;
             string existingAddresses = FirewallComString.Get(rule.RemoteAddresses);
             FirewallComString.Set(MergeRemoteAddresses(existingAddresses, ipAddress), value => rule.RemoteAddresses = value);
