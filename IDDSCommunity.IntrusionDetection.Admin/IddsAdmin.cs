@@ -384,7 +384,7 @@ public partial class IddsAdmin : Form
             }
             else
             {
-                smartLabelServiceStatus.Text = "● " + Strings.Get("Reading status...");
+                smartLabelServiceStatus.Text = "● " + Strings.Get("reading status....");
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11); // Amber Yellow
             }
         }
