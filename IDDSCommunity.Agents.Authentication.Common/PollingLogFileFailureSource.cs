@@ -8,9 +8,10 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 
 public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 {
+    private const int AnchorBytes = 32;
     private readonly Func<IEnumerable<string>> paths;
     private readonly Func<string, AuthenticationFailureEvent?> parser;
-    private readonly Dictionary<string, long> offsets = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, LogFileState> states = new(StringComparer.OrdinalIgnoreCase);
     private Timer? timer;
     private int reading;
 
@@ -27,6 +28,7 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
     public void Resume() => timer?.Change(TimeSpan.Zero, TimeSpan.FromSeconds(2));
     public void Stop() { timer?.Dispose(); timer = null; }
     public void Dispose() => Stop();
+    internal void ReadAvailableForTest() => ReadAvailable();
 
     private void ReadAvailable()
     {
@@ -43,16 +45,88 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
     {
         if (!File.Exists(path)) return;
         using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        bool known = offsets.TryGetValue(path, out long saved);
-        long offset = !known ? stream.Length : saved <= stream.Length ? saved : 0;
-        stream.Position = offset;
-        using StreamReader reader = new(stream, new UTF8Encoding(false, true), true, leaveOpen: true);
-        string? line;
-        while ((line = reader.ReadLine()) is not null)
+        DateTime creationTimeUtc = File.GetCreationTimeUtc(path);
+        if (!states.TryGetValue(path, out LogFileState? state))
         {
-            AuthenticationFailureEvent? failure = parser(line);
-            if (failure is not null) EventReceived?.Invoke(this, failure);
+            long initialOffset = FindLastCompleteLineOffset(stream);
+            states[path] = new LogFileState(initialOffset, creationTimeUtc, ReadAnchor(stream, initialOffset));
+            return;
         }
-        offsets[path] = stream.Position;
+        long offset = state.CreationTimeUtc == creationTimeUtc && state.Offset <= stream.Length && AnchorMatches(stream, state)
+            ? state.Offset
+            : 0;
+        stream.Position = offset;
+        long committedOffset = offset;
+        byte[] readBuffer = new byte[4096];
+        using MemoryStream lineBuffer = new();
+        int bytesRead;
+        while ((bytesRead = stream.Read(readBuffer, 0, readBuffer.Length)) > 0)
+        {
+            long bufferStart = stream.Position - bytesRead;
+            for (int index = 0; index < bytesRead; index++)
+            {
+                if (readBuffer[index] != (byte)'\n')
+                {
+                    lineBuffer.WriteByte(readBuffer[index]);
+                    continue;
+                }
+                ProcessCompleteLine(lineBuffer);
+                lineBuffer.SetLength(0);
+                committedOffset = bufferStart + index + 1;
+            }
+        }
+        state.Offset = committedOffset;
+        state.CreationTimeUtc = creationTimeUtc;
+        state.Anchor = ReadAnchor(stream, committedOffset);
+    }
+
+    private void ProcessCompleteLine(MemoryStream buffer)
+    {
+        byte[] bytes = buffer.ToArray();
+        int start = bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
+        int length = bytes.Length - start;
+        if (length > 0 && bytes[start + length - 1] == (byte)'\r') length--;
+        string line = new UTF8Encoding(false, true).GetString(bytes, start, length);
+        AuthenticationFailureEvent? failure = parser(line);
+        if (failure is not null) EventReceived?.Invoke(this, failure);
+    }
+
+    private static bool AnchorMatches(FileStream stream, LogFileState state) =>
+        ReadAnchor(stream, state.Offset).AsSpan().SequenceEqual(state.Anchor);
+
+    private static long FindLastCompleteLineOffset(FileStream stream)
+    {
+        byte[] buffer = new byte[4096];
+        long end = stream.Length;
+        while (end > 0)
+        {
+            int length = (int)Math.Min(end, buffer.Length);
+            long start = end - length;
+            stream.Position = start;
+            stream.ReadExactly(buffer.AsSpan(0, length));
+            for (int index = length - 1; index >= 0; index--)
+                if (buffer[index] == (byte)'\n') return start + index + 1;
+            end = start;
+        }
+        return 0;
+    }
+
+    private static byte[] ReadAnchor(FileStream stream, long offset)
+    {
+        int length = (int)Math.Min(offset, AnchorBytes);
+        if (length == 0) return [];
+        byte[] anchor = new byte[length];
+        long originalPosition = stream.Position;
+        stream.Position = offset - length;
+        stream.ReadExactly(anchor);
+        stream.Position = originalPosition;
+        return anchor;
+    }
+
+    private sealed class LogFileState(long offset, DateTime creationTimeUtc, byte[] anchor)
+    {
+        internal long Offset { get; set; } = offset;
+        internal DateTime CreationTimeUtc { get; set; } = creationTimeUtc;
+        internal byte[] Anchor { get; set; } = anchor;
     }
 }

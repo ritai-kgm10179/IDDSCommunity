@@ -653,13 +653,18 @@
   <data name="SmtpPort" xml:space="preserve"><value>SMTP 連接埠</value></data>
   <data name="RdpPort" xml:space="preserve"><value>遠端桌面連接埠</value></data>
   <data name="WindowSeconds" xml:space="preserve"><value>偵測時間範圍（秒）</value></data>
+  <data name="FailureThreshold" xml:space="preserve"><value>驗證失敗門檻</value></data>
+  <data name="MaximumTrackedSources" xml:space="preserve"><value>最大追蹤來源數量</value></data>
+  <data name="SourceStateRetentionSeconds" xml:space="preserve"><value>來源狀態保留時間（秒）</value></data>
+  <data name="Source state retention must be at least the detection window and no more than 604800 seconds." xml:space="preserve"><value>來源狀態保留時間不得短於偵測時間範圍，且不得超過 604800 秒。</value></data>
+  <data name="Excluded addresses must contain valid IP addresses or CIDR networks." xml:space="preserve"><value>排除位址必須是有效的 IP 位址或 CIDR 網路。</value></data>
   <data name="QueryRateThreshold" xml:space="preserve"><value>查詢速率門檻</value></data>
   <data name="NxDomainThreshold" xml:space="preserve"><value>NXDOMAIN 查詢門檻</value></data>
   <data name="AnyQueryThreshold" xml:space="preserve"><value>ANY 查詢門檻</value></data>
   <data name="DynamicUpdateThreshold" xml:space="preserve"><value>動態更新門檻</value></data>
   <data name="ZoneTransferThreshold" xml:space="preserve"><value>區域傳送門檻</value></data>
   <data name="MaximumTrackedClients" xml:space="preserve"><value>最大追蹤用戶端數量</value></data>
-  <data name="ExcludedAddresses" xml:space="preserve"><value>排除的 IP 位址</value></data>
+  <data name="ExcludedAddresses" xml:space="preserve"><value>排除的 IP 位址或 CIDR 網路</value></data>
   <data name="Documentation is available in README.md." xml:space="preserve"><value>使用說明位於 README.md。</value></data>
   <data name="Database maintenance" xml:space="preserve"><value>資料庫維護</value></data>
   <data name="SQLite database health, verified backups, retention cleanup, and safe optimization." xml:space="preserve"><value>管理 SQLite 資料庫健康狀態、可驗證備份、保留清理與安全最佳化。</value></data>

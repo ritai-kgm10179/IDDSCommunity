@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 
 namespace IDDSCommunity.Agents.Authentication.Common;
@@ -8,22 +7,31 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 public sealed class AuthenticationThresholdDetector
 {
     private readonly AuthenticationAgentConfiguration configuration;
-    private readonly HashSet<IPAddress> excluded;
-    private readonly Dictionary<IPAddress, Queue<DateTimeOffset>> failures = [];
-    private readonly Dictionary<IPAddress, HashSet<FailureIdentity>> identities = [];
+    private readonly ExcludedAddressRange[] excluded;
+    private readonly TimeProvider timeProvider;
+    private readonly Dictionary<IPAddress, SourceState> sources = [];
+    private readonly LinkedList<IPAddress> recency = [];
     private readonly object sync = new();
 
-    public AuthenticationThresholdDetector(AuthenticationAgentConfiguration configuration)
+    public AuthenticationThresholdDetector(AuthenticationAgentConfiguration configuration) : this(configuration, TimeProvider.System) { }
+
+    internal AuthenticationThresholdDetector(AuthenticationAgentConfiguration configuration, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(timeProvider);
         configuration.Validate();
         this.configuration = configuration;
-        excluded = configuration.ExcludedAddresses.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(value => IPAddress.TryParse(value, out IPAddress? address) ? address : null)
-            .Where(address => address is not null)
-            .Cast<IPAddress>()
-            .ToHashSet();
+        this.timeProvider = timeProvider;
+        List<ExcludedAddressRange> ranges = [];
+        foreach (string value in configuration.ExcludedAddresses.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _ = ExcludedAddressRange.TryParse(value, out ExcludedAddressRange range);
+            ranges.Add(range);
+        }
+        excluded = [.. ranges];
     }
+
+    internal int TrackedSourceCount { get { lock (sync) return sources.Count; } }
 
     public bool Analyze(AuthenticationFailureEvent failure)
     {
@@ -33,47 +41,73 @@ public sealed class AuthenticationThresholdDetector
     private bool AnalyzeCore(AuthenticationFailureEvent failure)
     {
         IPAddress source = Normalize(failure.SourceAddress);
-        if (IPAddress.IsLoopback(source) || excluded.Contains(source))
+        if (IPAddress.IsLoopback(source) || IsExcluded(source))
             return false;
-        if (!failures.TryGetValue(source, out Queue<DateTimeOffset>? timestamps))
+        DateTimeOffset observedAt = timeProvider.GetUtcNow();
+        RemoveExpiredSources(observedAt);
+        if (!sources.TryGetValue(source, out SourceState? state))
         {
-            if (failures.Count >= configuration.MaximumTrackedSources)
+            if (sources.Count >= configuration.MaximumTrackedSources)
                 RemoveOldestSource();
-            timestamps = new Queue<DateTimeOffset>();
-            failures[source] = timestamps;
-            identities[source] = [];
+            LinkedListNode<IPAddress> node = recency.AddLast(source);
+            state = new SourceState(node, observedAt);
+            sources[source] = state;
+        }
+        else
+        {
+            state.LastObservedAt = observedAt;
+            recency.Remove(state.RecencyNode);
+            recency.AddLast(state.RecencyNode);
         }
         DateTimeOffset cutoff = failure.OccurredAt.AddSeconds(-configuration.WindowSeconds);
-        while (timestamps.Count > 0 && timestamps.Peek() < cutoff)
-            timestamps.Dequeue();
-        HashSet<FailureIdentity> sourceIdentities = identities[source];
-        sourceIdentities.RemoveWhere(item => item.OccurredAt < cutoff);
+        while (state.Timestamps.Count > 0 && state.Timestamps.Peek() < cutoff)
+            state.Timestamps.Dequeue();
+        state.Identities.RemoveWhere(item => item.OccurredAt < cutoff);
         FailureIdentity identity = new(failure.OccurredAt, failure.EventId, failure.Category, failure.AccountName);
-        if (!sourceIdentities.Add(identity)) return false;
-        timestamps.Enqueue(failure.OccurredAt);
-        if (timestamps.Count < configuration.FailureThreshold)
+        if (!state.Identities.Add(identity)) return false;
+        state.Timestamps.Enqueue(failure.OccurredAt);
+        if (state.Timestamps.Count < configuration.FailureThreshold)
             return false;
-        timestamps.Clear();
-        sourceIdentities.Clear();
+        state.Timestamps.Clear();
+        state.Identities.Clear();
         return true;
+    }
+
+    private void RemoveExpiredSources(DateTimeOffset now)
+    {
+        DateTimeOffset cutoff = now.AddSeconds(-configuration.SourceStateRetentionSeconds);
+        while (recency.First is not null && sources[recency.First.Value].LastObservedAt <= cutoff)
+            RemoveSource(recency.First.Value);
+    }
+
+    private bool IsExcluded(IPAddress source)
+    {
+        foreach (ExcludedAddressRange range in excluded)
+            if (range.Contains(source)) return true;
+        return false;
     }
 
     private void RemoveOldestSource()
     {
-        IPAddress? oldest = failures.Where(item => item.Value.Count > 0).OrderBy(item => item.Value.Peek()).Select(item => item.Key).FirstOrDefault();
-        if (oldest is not null)
-        {
-            failures.Remove(oldest);
-            identities.Remove(oldest);
-        }
-        else if (failures.Count > 0)
-        {
-            IPAddress first = failures.Keys.First();
-            failures.Remove(first);
-            identities.Remove(first);
-        }
+        if (recency.First is not null) RemoveSource(recency.First.Value);
+    }
+
+    private void RemoveSource(IPAddress source)
+    {
+        SourceState state = sources[source];
+        recency.Remove(state.RecencyNode);
+        sources.Remove(source);
     }
 
     private static IPAddress Normalize(IPAddress address) => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
+
+    private sealed class SourceState(LinkedListNode<IPAddress> recencyNode, DateTimeOffset lastObservedAt)
+    {
+        internal Queue<DateTimeOffset> Timestamps { get; } = [];
+        internal HashSet<FailureIdentity> Identities { get; } = [];
+        internal LinkedListNode<IPAddress> RecencyNode { get; } = recencyNode;
+        internal DateTimeOffset LastObservedAt { get; set; } = lastObservedAt;
+    }
+
     private readonly record struct FailureIdentity(DateTimeOffset OccurredAt, int EventId, string Category, string AccountName);
 }

@@ -18,6 +18,8 @@
   <data name="Detection window must be between 10 and 86400 seconds." xml:space="preserve"><value>Detection window must be between 10 and 86400 seconds.</value></data>
   <data name="Failure threshold must be between 2 and 100000." xml:space="preserve"><value>Failure threshold must be between 2 and 100000.</value></data>
   <data name="Tracked source capacity must be between 100 and 1000000." xml:space="preserve"><value>Tracked source capacity must be between 100 and 1000000.</value></data>
+  <data name="Source state retention must be at least the detection window and no more than 604800 seconds." xml:space="preserve"><value>Source state retention must be at least the detection window and no more than 604800 seconds.</value></data>
+  <data name="Excluded addresses must contain valid IP addresses or CIDR networks." xml:space="preserve"><value>Excluded addresses must contain valid IP addresses or CIDR networks.</value></data>
   <data name="Agent configuration is unavailable." xml:space="preserve"><value>Agent configuration is unavailable.</value></data>
   <data name="IIS log directory must be an absolute path." xml:space="preserve"><value>IIS log directory must be an absolute path.</value></data>
   <data name="OpenSSH log file must be an absolute path." xml:space="preserve"><value>OpenSSH log file must be an absolute path.</value></data>
