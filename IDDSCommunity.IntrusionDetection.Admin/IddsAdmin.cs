@@ -36,9 +36,7 @@ public partial class IddsAdmin : Form
     {
         InitializeComponent();
         Icon = BrandingIcons.CreateIcon();
-        pictureBox1.Location = new Point(6, 4);
-        pictureBox1.Size = new Size(16, 16);
-        pictureBox1.Image = BrandingIcons.CreateBitmap(16);
+        BrandingIcons.ApplyTo(pictureBox1);
         Text = Strings.Format("IDDSCommunity Intrusion Detection - Version {0}", "3.0.0");
         labelFormText.Text = Text;
 

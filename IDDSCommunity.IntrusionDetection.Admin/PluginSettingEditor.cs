@@ -12,14 +12,15 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 internal sealed class PluginSettingEditor : UserControl
 {
     private readonly Control editor;
+    private readonly Button? browseButton;
 
     internal PluginSettingEditor(string propertyName, string propertyType, string value, string agentName)
     {
         PropertyName = propertyName;
         Font = new Font("Segoe UI", 9F);
         ForeColor = Color.FromArgb(102, 102, 102);
-        Margin = new Padding(0, 0, 0, 5);
-        Size = new Size(390, 30);
+        Margin = new Padding(0, 0, 0, 6);
+        Size = new Size(390, 34);
 
         Label label = new()
         {
@@ -79,7 +80,7 @@ internal sealed class PluginSettingEditor : UserControl
             if (IsPathProperty(propertyName))
             {
                 textBox.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-                Button browse = new()
+                browseButton = new Button
                 {
                     AccessibleName = Strings.Get("Browse"),
                     Anchor = AnchorStyles.Top | AnchorStyles.Right,
@@ -89,13 +90,13 @@ internal sealed class PluginSettingEditor : UserControl
                     Text = "…",
                     UseVisualStyleBackColor = true
                 };
-                browse.Click += (_, _) => Browse(textBox, propertyName);
-                Controls.Add(browse);
+                browseButton.Click += (_, _) => Browse(textBox, propertyName);
+                Controls.Add(browseButton);
             }
         }
         Controls.Add(editor);
-        SizeChanged += (_, _) => label.Width = Math.Max(120, Width - (editor is CheckBox ? 40 : 165));
-        label.Width = Math.Max(120, Width - (editor is CheckBox ? 40 : 165));
+        SizeChanged += (_, _) => LayoutControls(label);
+        LayoutControls(label);
     }
 
     internal event EventHandler? ValueChanged;
@@ -110,6 +111,33 @@ internal sealed class PluginSettingEditor : UserControl
     };
 
     private void OnValueChanged() => ValueChanged?.Invoke(this, EventArgs.Empty);
+
+    private void LayoutControls(Label label)
+    {
+        int editorHeight = Math.Max(editor.PreferredSize.Height, editor.Height);
+        int desiredHeight = Math.Max(34, editorHeight + 10);
+        if (Height != desiredHeight) Height = desiredHeight;
+
+        int editorTop = Math.Max(0, (Height - editorHeight) / 2);
+        if (editor is CheckBox)
+        {
+            editor.Location = new Point(Math.Max(0, Width - editor.Width - 2), Math.Max(0, (Height - editor.Height) / 2));
+        }
+        else if (browseButton is not null)
+        {
+            browseButton.Location = new Point(Math.Max(0, Width - browseButton.Width - 2), Math.Max(0, (Height - browseButton.Height) / 2));
+            editor.Width = 120;
+            editor.Location = new Point(Math.Max(0, browseButton.Left - editor.Width - 4), editorTop);
+        }
+        else
+        {
+            editor.Width = editor is NumericUpDown ? 120 : 150;
+            editor.Location = new Point(Math.Max(0, Width - editor.Width - 2), editorTop);
+        }
+
+        label.Location = new Point(0, Math.Max(0, (Height - label.Height) / 2));
+        label.Width = Math.Max(120, editor.Left - 10);
+    }
 
     private static bool IsPathProperty(string propertyName) =>
         propertyName.EndsWith("Path", StringComparison.Ordinal) ||

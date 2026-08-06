@@ -19,9 +19,7 @@ public partial class SmartForm : Form
     {
         InitializeComponent();
         Icon = BrandingIcons.CreateIcon();
-        pictureBox1.Location = new Point(6, 4);
-        pictureBox1.Size = new Size(16, 16);
-        pictureBox1.Image = BrandingIcons.CreateBitmap(16);
+        BrandingIcons.ApplyTo(pictureBox1);
         Text = Name;
         labelFormText.Text = Text;
 

@@ -19,16 +19,16 @@ internal static class InterfaceIcons
         using (SolidBrush body = new(Teal))
         using (SolidBrush keyhole = new(Navy))
         {
-            float x = size * 0.2F;
-            float y = size * 0.43F;
-            float width = size * 0.6F;
-            float height = size * 0.43F;
+            float x = size * 0.08F;
+            float y = size * 0.42F;
+            float width = size * 0.84F;
+            float height = size * 0.5F;
             graphics.FillRoundedRectangle(body, new RectangleF(x, y, width, height), size * 0.09F);
 
             RectangleF shackleBounds = unlocked
-                ? new RectangleF(size * 0.42F, size * 0.13F, size * 0.42F, size * 0.48F)
-                : new RectangleF(size * 0.31F, size * 0.13F, size * 0.38F, size * 0.48F);
-            graphics.DrawArc(shackle, shackleBounds, 180F, -180F);
+                ? new RectangleF(size * 0.4F, size * 0.06F, size * 0.5F, size * 0.52F)
+                : new RectangleF(size * 0.22F, size * 0.06F, size * 0.56F, size * 0.52F);
+            graphics.DrawArc(shackle, shackleBounds, 180F, 180F);
             if (!unlocked)
             {
                 graphics.DrawLine(shackle, shackleBounds.Left, shackleBounds.Top + shackleBounds.Height / 2F, shackleBounds.Left, y);
@@ -39,7 +39,7 @@ internal static class InterfaceIcons
                 graphics.DrawLine(shackle, shackleBounds.Right, shackleBounds.Top + shackleBounds.Height / 2F, shackleBounds.Right, y);
             }
 
-            graphics.FillEllipse(keyhole, size * 0.45F, size * 0.57F, size * 0.1F, size * 0.1F);
+            graphics.FillEllipse(keyhole, size * 0.44F, size * 0.58F, size * 0.12F, size * 0.12F);
         }
         return bitmap;
     }

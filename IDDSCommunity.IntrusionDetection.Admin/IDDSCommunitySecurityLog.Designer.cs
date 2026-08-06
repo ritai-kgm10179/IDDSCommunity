@@ -347,7 +347,7 @@
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(196, 20);
             this.smartLabel1.TabIndex = 9;
-            this.smartLabel1.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IDDSCOMMUNITY SECURITY LOG");
+            this.smartLabel1.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("SECURITY LOG");
             this.smartLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // LogIcon
