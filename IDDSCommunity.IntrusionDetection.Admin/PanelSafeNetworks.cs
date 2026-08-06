@@ -77,7 +77,7 @@ public partial class PanelSafeNetworks : UserControl
         }
         catch (ArgumentException)
         {
-            smartLabelInvalidNetwork.Text = Strings.Get("No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!");
+            smartLabelInvalidNetwork.Text = Strings.Get("Enter a valid IPv4 or IPv6 address, optionally followed by a CIDR prefix.");
             smartLabelInvalidNetwork.Visible = true;
         }
     }

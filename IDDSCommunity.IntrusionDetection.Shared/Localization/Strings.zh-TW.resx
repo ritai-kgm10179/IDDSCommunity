@@ -447,6 +447,7 @@
   <data name="IP address must be given in IP version 4 or IP version 6 format!" xml:space="preserve"><value>IP 位址必須採用 IPv4 或 IPv6 格式！</value></data>
   <data name="No valid IP address provided!" xml:space="preserve"><value>未提供有效的 IP 位址！</value></data>
   <data name="No valid IP address was provided. Please enter a valid IP address in the form xxx.xxx.xxx.xxx!" xml:space="preserve"><value>未提供有效的 IP 位址。請輸入 xxx.xxx.xxx.xxx 格式的有效 IP 位址！</value></data>
+  <data name="Enter a valid IPv4 or IPv6 address, optionally followed by a CIDR prefix." xml:space="preserve"><value>請輸入有效的 IPv4 或 IPv6 位址，亦可加上 CIDR 前綴長度。</value></data>
   <data name="No valid subnet mask entered." xml:space="preserve"><value>未輸入有效的子網路遮罩。</value></data>
   <data name="Operation not supported. EventArgs must be passed as NotificationEventArgs" xml:space="preserve"><value>不支援此操作。EventArgs 必須為 NotificationEventArgs</value></data>
   <data name="Plugin error: the lock delegate was called, but notificationEventArgs must not be null!" xml:space="preserve"><value>外掛錯誤：已呼叫封鎖委派，但 notificationEventArgs 不得為 null！</value></data>

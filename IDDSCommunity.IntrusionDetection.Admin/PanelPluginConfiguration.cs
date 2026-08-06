@@ -17,6 +17,7 @@ public partial class PanelPluginConfiguration : UserControl
     public PanelPluginConfiguration()
     {
         InitializeComponent();
+        flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
     }
 
@@ -113,6 +114,18 @@ public partial class PanelPluginConfiguration : UserControl
             flowLayoutPanelCustomPluginSettings.Controls.Add(ltx);
             ltx.TextBoxKeyPress += new KeyPressEventHandler(textBox_KeyPress);
         }
+        UpdateCustomSettingsLayout();
+    }
+
+    /// <summary>
+    /// Keeps custom setting rows inside the visible client area at all DPI scaling levels.
+    /// </summary>
+    private void UpdateCustomSettingsLayout()
+    {
+        int availableWidth = Math.Max(240, flowLayoutPanelCustomPluginSettings.ClientSize.Width
+            - flowLayoutPanelCustomPluginSettings.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 2);
+        foreach (Control control in flowLayoutPanelCustomPluginSettings.Controls)
+            control.Width = availableWidth;
     }
 
     /// <summary>

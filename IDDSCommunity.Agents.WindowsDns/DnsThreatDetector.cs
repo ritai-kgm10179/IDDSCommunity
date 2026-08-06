@@ -9,7 +9,6 @@ namespace IDDSCommunity.Agents.WindowsDns;
 internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, TimeProvider timeProvider)
 {
     private readonly ConcurrentDictionary<IPAddress, ClientWindow> clients = new();
-    private readonly HashSet<IPAddress> excludedAddresses = ParseExcludedAddresses(configuration.ExcludedAddresses);
 
     /// <summary>
     /// Gets the current bounded number of client windows retained in memory.
@@ -23,8 +22,6 @@ internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, T
     /// <returns>The detected threat, or <see langword="null"/> when no threshold was crossed.</returns>
     internal DnsDetection? Analyze(DnsEventRecord record)
     {
-        if (excludedAddresses.Contains(record.SourceAddress))
-            return null;
         DateTimeOffset now = timeProvider.GetUtcNow();
         EnsureCapacity(now);
         ClientWindow window = clients.GetOrAdd(record.SourceAddress, _ => new ClientWindow(now));
@@ -77,17 +74,6 @@ internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, T
             return;
         KeyValuePair<IPAddress, ClientWindow> oldest = clients.OrderBy(pair => pair.Value.LastSeenAt).First();
         clients.TryRemove(oldest.Key, out _);
-    }
-
-    private static HashSet<IPAddress> ParseExcludedAddresses(string value)
-    {
-        HashSet<IPAddress> result = [];
-        foreach (string candidate in value.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            if (IPAddress.TryParse(candidate, out IPAddress? address))
-                result.Add(address);
-        }
-        return result;
     }
 
     private sealed class ClientWindow(DateTimeOffset startedAt)

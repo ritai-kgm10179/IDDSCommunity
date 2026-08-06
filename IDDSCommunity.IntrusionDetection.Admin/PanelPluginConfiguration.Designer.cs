@@ -197,11 +197,12 @@
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.flowLayoutPanelCustomPluginSettings.AutoScroll = true;
+            this.flowLayoutPanelCustomPluginSettings.AutoScrollMargin = new System.Drawing.Size(0, 8);
             this.flowLayoutPanelCustomPluginSettings.BackColor = System.Drawing.Color.FromArgb(248, 250, 251);
             this.flowLayoutPanelCustomPluginSettings.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanelCustomPluginSettings.Location = new System.Drawing.Point(8, 268);
             this.flowLayoutPanelCustomPluginSettings.Name = "flowLayoutPanelCustomPluginSettings";
-            this.flowLayoutPanelCustomPluginSettings.Padding = new System.Windows.Forms.Padding(8, 6, 8, 6);
+            this.flowLayoutPanelCustomPluginSettings.Padding = new System.Windows.Forms.Padding(8, 8, 8, 8);
             this.flowLayoutPanelCustomPluginSettings.Size = new System.Drawing.Size(428, 70);
             this.flowLayoutPanelCustomPluginSettings.TabIndex = 29;
             this.flowLayoutPanelCustomPluginSettings.WrapContents = false;

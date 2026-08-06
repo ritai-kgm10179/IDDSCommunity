@@ -694,57 +694,49 @@ public class IddsConfig
 
     public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
     {
-        string ip, net;
         ipAddressNetwork = ipAddressNetwork.Trim();
-        if (!ipAddressNetwork.Contains("/"))
+        string[] parts = ipAddressNetwork.Split('/');
+        if (parts.Length is < 1 or > 2 || !IPAddress.TryParse(parts[0], out IPAddress? address))
+            throw new ArgumentException(nameof(NetworkInputError.InvalidIpAddress), nameof(ipAddressNetwork));
+
+        if (parts.Length == 1)
         {
-            if (!IsValidIpAddress(ipAddressNetwork))
-            {
-                throw new ArgumentException(nameof(NetworkInputError.InvalidIpAddress), nameof(ipAddressNetwork));
-            }
-            return ipAddressNetwork + "/255.255.255.255";
+            return address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                ? address + "/255.255.255.255"
+                : address + "/128";
         }
-        else
+
+        string net = parts[1];
+        if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
         {
-            ip = ipAddressNetwork.Split('/')[0];
-            net = ipAddressNetwork.Split('/')[1];
-            if (!IsValidIpAddress(ip))
+            if (int.TryParse(net, out int prefixLength))
             {
-                throw new ArgumentException(nameof(NetworkInputError.InvalidIpAddress), nameof(ipAddressNetwork));
+                if (prefixLength is < 0 or > 32)
+                    throw new ArgumentException(nameof(NetworkInputError.InvalidSubnetMask), nameof(ipAddressNetwork));
+                net = PrefixLengthToIpv4Mask(prefixLength);
             }
-            int subnetMaskBits;
-            if (int.TryParse(net, out subnetMaskBits))
+            else if (!IsValidSubnetMask(net))
             {
-                if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && 7 < subnetMaskBits && subnetMaskBits < 33)
-                {
-                    long netmask = 0;
-                    for (int b = 31; b > 31 - subnetMaskBits; b--)
-                    {
-                        netmask += (long)Math.Pow(2, b);
-                    }
-                    net = netmask.ToString();
-                }
-                else if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-                {
-                    if (subnetMaskBits < 12 || subnetMaskBits > 128)
-                    {
-                        throw new ArgumentException(nameof(NetworkInputError.InvalidIpv6PrefixLength), nameof(ipAddressNetwork));
-                    }
-                }
+                throw new ArgumentException(nameof(NetworkInputError.InvalidSubnetMask), nameof(ipAddressNetwork));
             }
             else
             {
-
-                if (!IsValidSubnetMask(net))
-                {
-                    throw new ArgumentException(nameof(NetworkInputError.InvalidSubnetMask), nameof(ipAddressNetwork));
-                }
+                net = IPAddress.Parse(net).ToString();
             }
-            ip = IPAddress.Parse(ip).ToString();
-            if (IPAddress.Parse(ip).AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) net = IPAddress.Parse(net).ToString();
-            ipAddressNetwork = ip + "/" + net;
         }
-        return ipAddressNetwork;
+        else if (!int.TryParse(net, out int prefixLength) || prefixLength is < 0 or > 128)
+        {
+            throw new ArgumentException(nameof(NetworkInputError.InvalidIpv6PrefixLength), nameof(ipAddressNetwork));
+        }
+
+        return address + "/" + net;
+    }
+
+    private static string PrefixLengthToIpv4Mask(int prefixLength)
+    {
+        uint mask = prefixLength == 0 ? 0U : uint.MaxValue << (32 - prefixLength);
+        return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}.{1}.{2}.{3}",
+            mask >> 24, (mask >> 16) & 0xff, (mask >> 8) & 0xff, mask & 0xff);
     }
 
     private enum NetworkInputError

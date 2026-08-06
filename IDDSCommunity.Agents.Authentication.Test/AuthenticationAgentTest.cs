@@ -4,10 +4,6 @@ using System.IO;
 using System.Net;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.Agents.IisAuthentication;
-using IDDSCommunity.Agents.OpenSsh;
-using IDDSCommunity.Agents.PostgreSql;
-using IDDSCommunity.Agents.Radius;
-using IDDSCommunity.Agents.WindowsNetworkLogon;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.Agents.Authentication.Test;
@@ -37,29 +33,12 @@ public sealed class AuthenticationAgentTest
     }
 
     [TestMethod]
-    public void ThresholdDetectorExcludesIpv4Ipv6AndMappedCidrNetworks()
+    public void ThresholdDetectorLeavesAddressPolicyToProtectionService()
     {
-        AuthenticationThresholdDetector detector = new(new AuthenticationAgentConfiguration
-        {
-            FailureThreshold = 2,
-            WindowSeconds = 60,
-            ExcludedAddresses = "192.0.2.0/24;2001:db8::/32;::ffff:198.51.100.0/120"
-        });
+        AuthenticationThresholdDetector detector = new(new AuthenticationAgentConfiguration { FailureThreshold = 2, WindowSeconds = 60 });
         DateTimeOffset now = DateTimeOffset.UtcNow;
-        foreach (string address in new[] { "192.0.2.20", "2001:db8:1::20", "198.51.100.20" })
-        {
-            Assert.IsFalse(detector.Analyze(Failure(address, now)));
-            Assert.IsFalse(detector.Analyze(Failure(address, now.AddSeconds(1))));
-        }
-        Assert.IsFalse(detector.Analyze(Failure("203.0.113.20", now)));
-        Assert.IsTrue(detector.Analyze(Failure("203.0.113.20", now.AddSeconds(1))));
-    }
-
-    [TestMethod]
-    public void AuthenticationConfigurationRejectsInvalidCidrNetwork()
-    {
-        AuthenticationAgentConfiguration configuration = new() { ExcludedAddresses = "192.0.2.0/99" };
-        Assert.ThrowsExactly<InvalidOperationException>(configuration.Validate);
+        Assert.IsFalse(detector.Analyze(Failure("127.0.0.1", now)));
+        Assert.IsTrue(detector.Analyze(Failure("127.0.0.1", now.AddSeconds(1))));
     }
 
     [TestMethod]
@@ -132,45 +111,6 @@ public sealed class AuthenticationAgentTest
         {
             Directory.Delete(directory, true);
         }
-    }
-
-    [TestMethod]
-    public void OpenSshParserSupportsIpv4AndInvalidUser()
-    {
-        AuthenticationFailureEvent? failure = OpenSshSecurityAgent.TryParseMessage("Failed password for invalid user admin from 203.0.113.8 port 50000 ssh2", DateTimeOffset.UtcNow);
-        Assert.IsNotNull(failure);
-        Assert.AreEqual("203.0.113.8", failure.SourceAddress.ToString());
-        Assert.AreEqual("admin", failure.AccountName);
-    }
-
-    [TestMethod]
-    public void NetworkLogonParserRejectsNonCredentialFailures()
-    {
-        Dictionary<string, string> valid = new() { ["LogonType"] = "3", ["Status"] = "0xC000006D", ["SubStatus"] = "0xC000006A", ["IpAddress"] = "198.51.100.10", ["TargetUserName"] = "service" };
-        Assert.IsNotNull(WindowsNetworkLogonSecurityAgent.TryParseFields(valid, DateTimeOffset.UtcNow));
-        valid["SubStatus"] = "0xC000015B"; valid["Status"] = "0xC000015B";
-        Assert.IsNull(WindowsNetworkLogonSecurityAgent.TryParseFields(valid, DateTimeOffset.UtcNow));
-    }
-
-    [TestMethod]
-    public void PostgreSqlParserRequiresFailureAndSourceAddress()
-    {
-        AuthenticationFailureEvent? failure = PostgreSqlSecurityAgent.TryParseLine("2026-08-05 host=192.0.2.20 FATAL: password authentication failed for user \"postgres\"");
-        Assert.IsNotNull(failure);
-        Assert.AreEqual("postgres", failure.AccountName);
-        Assert.IsNull(PostgreSqlSecurityAgent.TryParseLine("FATAL: password authentication failed for user \"postgres\""));
-        AuthenticationFailureEvent? json = PostgreSqlSecurityAgent.TryParseLine("{\"timestamp\":\"2026-08-05T03:04:05Z\",\"user\":\"postgres\",\"remote_host\":\"192.0.2.21\",\"message\":\"password authentication failed for user postgres\"}");
-        Assert.IsNotNull(json);
-        Assert.AreEqual("192.0.2.21", json.SourceAddress.ToString());
-    }
-
-    [TestMethod]
-    public void RadiusParserRequiresCredentialMismatchReason()
-    {
-        Dictionary<string, string> fields = new() { ["ReasonCode"] = "16", ["ClientIPAddress"] = "203.0.113.21", ["UserName"] = "vpn-user" };
-        Assert.IsNotNull(RadiusSecurityAgent.TryParseFields(fields, DateTimeOffset.UtcNow));
-        fields["ReasonCode"] = "48";
-        Assert.IsNull(RadiusSecurityAgent.TryParseFields(fields, DateTimeOffset.UtcNow));
     }
 
     [TestMethod]

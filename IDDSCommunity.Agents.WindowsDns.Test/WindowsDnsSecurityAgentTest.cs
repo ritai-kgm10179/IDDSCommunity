@@ -170,8 +170,7 @@ public sealed class WindowsDnsSecurityAgentTest
         AnyQueryThreshold = 2,
         DynamicUpdateThreshold = 2,
         ZoneTransferThreshold = 1,
-        MaximumTrackedClients = 100,
-        ExcludedAddresses = "127.0.0.1;::1"
+        MaximumTrackedClients = 100
     };
 
     private static DnsEventRecord CreateQuery(IPAddress source, string queryType = "A", string responseCode = "0") =>
