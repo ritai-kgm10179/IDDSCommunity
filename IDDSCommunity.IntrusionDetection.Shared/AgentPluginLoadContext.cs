@@ -9,6 +9,12 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
 {
     private readonly AssemblyDependencyResolver resolver = new(pluginPath);
 
+    private static readonly System.Collections.Generic.HashSet<string> SharedAssemblyNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        typeof(IAgentPlugin).Assembly.GetName().Name!,
+        typeof(SecurityAgent).Assembly.GetName().Name!
+    };
+
     /// <summary>
     /// Loads a managed dependency from the plugin deployment directory.
     /// </summary>
@@ -16,7 +22,7 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
     /// <returns>The loaded assembly, or <see langword="null"/> to use the default context.</returns>
     protected override Assembly? Load(AssemblyName assemblyName)
     {
-        if (assemblyName.Name == typeof(IAgentPlugin).Assembly.GetName().Name)
+        if (assemblyName.Name is not null && SharedAssemblyNames.Contains(assemblyName.Name))
             return null;
         string? path = resolver.ResolveAssemblyToPath(assemblyName);
         return path is null ? null : LoadFromAssemblyPath(path);
