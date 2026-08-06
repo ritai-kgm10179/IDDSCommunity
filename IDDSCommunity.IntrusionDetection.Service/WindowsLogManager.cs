@@ -40,7 +40,9 @@ internal sealed class WindowsLogManager : IRuntimeLog
         //    }
         //    EventLog.CreateEventSource(new EventSourceCreationData(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE, Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME));
         //}
-        eventLog.WriteEntry(LogSanitizer.Sanitize(text), type, eventId, category);
+        string sanitized = LogSanitizer.Sanitize(text);
+        try { eventLog.WriteEntry(sanitized, type, eventId, category); }
+        catch (Exception exception) { RollingFallbackLog.Write(exception, sanitized); }
     }
 
 

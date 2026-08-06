@@ -36,9 +36,12 @@ public class AgentPlugin : IAgentPlugin
             {
                 try
                 {
-                    System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Api.Plugin.AgentPlugin", ex.Message);
+                    System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Api.Plugin.AgentPlugin", ex.ToString());
                 }
-                catch { }
+                catch (Exception logException)
+                {
+                    System.Diagnostics.Trace.TraceError("Agent event handler failed: {0}; event-log fallback failed: {1}", ex, logException);
+                }
             }
         }
     }

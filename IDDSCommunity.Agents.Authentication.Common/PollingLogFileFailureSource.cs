@@ -10,15 +10,25 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 {
     private const int AnchorBytes = 32;
     private readonly Func<IEnumerable<string>> paths;
-    private readonly Func<string, AuthenticationFailureEvent?> parser;
+    private readonly Func<string, string, AuthenticationFailureEvent?> parser;
+    private readonly Action<string>? resetParser;
     private readonly Dictionary<string, LogFileState> states = new(StringComparer.OrdinalIgnoreCase);
     private Timer? timer;
     private int reading;
 
     public PollingLogFileFailureSource(Func<IEnumerable<string>> paths, Func<string, AuthenticationFailureEvent?> parser)
+        : this(paths, (_, line) => parser(line), null)
+    {
+    }
+
+    public PollingLogFileFailureSource(
+        Func<IEnumerable<string>> paths,
+        Func<string, string, AuthenticationFailureEvent?> parser,
+        Action<string>? resetParser = null)
     {
         this.paths = paths;
         this.parser = parser;
+        this.resetParser = resetParser;
     }
 
     public event EventHandler<AuthenticationFailureEvent>? EventReceived;
@@ -35,7 +45,11 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         if (Interlocked.Exchange(ref reading, 1) != 0) return;
         try
         {
-            foreach (string path in paths()) ReadFile(path);
+            foreach (string path in paths())
+            {
+                try { ReadFile(path); }
+                catch (Exception exception) { Error?.Invoke(new IOException($"Could not process authentication log '{path}'.", exception)); }
+            }
         }
         catch (Exception exception) { Error?.Invoke(exception); }
         finally { Volatile.Write(ref reading, 0); }
@@ -48,13 +62,19 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         DateTime creationTimeUtc = File.GetCreationTimeUtc(path);
         if (!states.TryGetValue(path, out LogFileState? state))
         {
+            resetParser?.Invoke(path);
+            PrimeMetadata(stream, path);
             long initialOffset = FindLastCompleteLineOffset(stream);
             states[path] = new LogFileState(initialOffset, creationTimeUtc, ReadAnchor(stream, initialOffset));
             return;
         }
-        long offset = state.CreationTimeUtc == creationTimeUtc && state.Offset <= stream.Length && AnchorMatches(stream, state)
-            ? state.Offset
-            : 0;
+        bool sameFile = state.CreationTimeUtc == creationTimeUtc && state.Offset <= stream.Length && AnchorMatches(stream, state);
+        long offset = sameFile ? state.Offset : 0;
+        if (!sameFile)
+        {
+            resetParser?.Invoke(path);
+            PrimeMetadata(stream, path);
+        }
         stream.Position = offset;
         long committedOffset = offset;
         byte[] readBuffer = new byte[4096];
@@ -70,7 +90,7 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
                     lineBuffer.WriteByte(readBuffer[index]);
                     continue;
                 }
-                ProcessCompleteLine(lineBuffer);
+                ProcessCompleteLine(path, lineBuffer);
                 lineBuffer.SetLength(0);
                 committedOffset = bufferStart + index + 1;
             }
@@ -80,15 +100,27 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         state.Anchor = ReadAnchor(stream, committedOffset);
     }
 
-    private void ProcessCompleteLine(MemoryStream buffer)
+    private void ProcessCompleteLine(string path, MemoryStream buffer)
     {
         byte[] bytes = buffer.ToArray();
         int start = bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
         int length = bytes.Length - start;
         if (length > 0 && bytes[start + length - 1] == (byte)'\r') length--;
         string line = new UTF8Encoding(false, true).GetString(bytes, start, length);
-        AuthenticationFailureEvent? failure = parser(line);
+        AuthenticationFailureEvent? failure = parser(path, line);
         if (failure is not null) EventReceived?.Invoke(this, failure);
+    }
+
+    private void PrimeMetadata(FileStream stream, string path)
+    {
+        stream.Position = 0;
+        using StreamReader reader = new(stream, new UTF8Encoding(false, true), true, 1024, true);
+        while (reader.ReadLine() is string line)
+        {
+            if (!line.StartsWith('#')) break;
+            _ = parser(path, line);
+        }
+        stream.Position = 0;
     }
 
     private static bool AnchorMatches(FileStream stream, LogFileState state) =>

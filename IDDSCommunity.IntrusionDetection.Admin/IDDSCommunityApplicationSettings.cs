@@ -15,6 +15,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     public const string MENU_LANGUAGE_SETTINGS = "Language settings";
     public const string MENU_DATABASE_MAINTENANCE = "Database maintenance";
     public const string MENU_CONFIGURATION_TRANSFER = "Configuration import and export";
+    public const string MENU_REPORT_EXPORT = "Report export";
     public event EventHandler? ConfigurationChanged;
 
 
@@ -45,6 +46,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null!, null!);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CONFIGURATION_TRANSFER), null!, null!);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_REPORT_EXPORT), null!, null!);
     }
 
     private PanelLockoutConfiguration? _lockoutConfiguration;
@@ -137,10 +139,19 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     private PanelLanguageSettings? _panelLanguageSettings;
     private PanelDatabaseMaintenance? _panelDatabaseMaintenance;
     private PanelConfigurationTransfer? _panelConfigurationTransfer;
+    private PanelReportExport? _panelReportExport;
 
     public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
     public PanelDatabaseMaintenance PanelDatabaseMaintenance => _panelDatabaseMaintenance ??= CreateDatabaseMaintenancePanel();
     public PanelConfigurationTransfer PanelConfigurationTransfer => _panelConfigurationTransfer ??= CreateConfigurationTransferPanel();
+    public PanelReportExport PanelReportExport => _panelReportExport ??= CreateReportExportPanel();
+
+    private PanelReportExport CreateReportExportPanel()
+    {
+        PanelReportExport panel = new();
+        configurationPanel.Controls.Add(panel);
+        return panel;
+    }
 
     private PanelConfigurationTransfer CreateConfigurationTransferPanel()
     {
@@ -224,6 +235,9 @@ public partial class IDDSCommunityApplicationSettings : UserControl
                 break;
             case var displayName when displayName == Strings.Get(MENU_CONFIGURATION_TRANSFER):
                 PanelConfigurationTransfer.BringToFront();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_REPORT_EXPORT):
+                PanelReportExport.BringToFront();
                 break;
         }
     }

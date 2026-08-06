@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.IisAuthentication;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.OpenSsh;IDDSCommunity.Agents.PostgreSql;IDDSCommunity.Agents.Radius;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;IDDSCommunity.Agents.WindowsNetworkLogon;</IDDSCommunityAgentPluginProjects>
   </PropertyGroup>
@@ -7,7 +7,6 @@
   </Target>
   <Target Name="RemoveLegacyAgentPlugins" BeforeTargets="Build" Condition="'$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Admin' Or '$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Service'">
     <ItemGroup>
-      <LegacyAgentPlugin Include="$(OutputPath)Plugins\**\Cyberarms.Agents.*" />
       <LegacyAgentPlugin Include="$(OutputPath)Plugins\**\IDDSCommunity.Agents.Smtp.dll" />
       <LegacyAgentPlugin Include="$(OutputPath)Plugins\**\IDDSCommunity.Agents.Authentication.Common.dll" />
     </ItemGroup>

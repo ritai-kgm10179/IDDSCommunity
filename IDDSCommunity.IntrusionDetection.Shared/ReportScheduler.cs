@@ -101,16 +101,17 @@ public class ReportScheduler
         {
             while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
-                notificationSettings.Reload();
                 try
                 {
+                    notificationSettings.Reload();
                     if (notificationSettings.SummaryReportDaily) await CheckDailyReportAsync(cancellationToken).ConfigureAwait(false);
                     if (notificationSettings.SummaryReportWeekly) await CheckWeeklyReportAsync(cancellationToken).ConfigureAwait(false);
                     if (notificationSettings.SummaryReportMonthly) await CheckMonthlyReportAsync(cancellationToken).ConfigureAwait(false);
                 }
-                catch (Exception) when (!cancellationToken.IsCancellationRequested)
+                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                 {
-                    // The report handler logs the operational error. Leave the checkpoint unchanged so the next tick retries it.
+                    System.Diagnostics.Trace.TraceError("Scheduled report check failed: {0}", exception);
+                    // Leave the checkpoint unchanged so the next tick retries it.
                 }
             }
         }

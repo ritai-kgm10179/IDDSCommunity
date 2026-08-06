@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
@@ -14,7 +15,7 @@ namespace IDDSCommunity.Agents.MailServer;
 public sealed class ImapAgent : AgentPlugin
 {
     private readonly ConcurrentDictionary<int, ImapSessionInspector> sessions = [];
-    private readonly List<Sniffer> sniffers = [];
+    private readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ImapAgent"/> class.
@@ -62,7 +63,7 @@ public sealed class ImapAgent : AgentPlugin
     private void WatchAddress(IPAddress address)
     {
         if (Configuration.AgentSettings is not ImapConfig settings) return;
-        Sniffer sniffer = new() { TcpPort = settings.ImapPort };
+        PacketSniffer sniffer = new() { TcpPort = settings.ImapPort };
         sniffer.IpPacketReceived += ClientPacketReceived;
         sniffer.IpPacketSent += ServerPacketSent;
         try
@@ -72,12 +73,12 @@ public sealed class ImapAgent : AgentPlugin
         }
         catch (SocketException exception)
         {
-            Sniffer.LogTrace(exception);
+            PacketSniffer.LogTrace(exception);
             sniffer.CloseSocket();
         }
         catch (UnauthorizedAccessException exception)
         {
-            Sniffer.LogTrace(exception);
+            PacketSniffer.LogTrace(exception);
             sniffer.CloseSocket();
         }
     }
@@ -93,7 +94,7 @@ public sealed class ImapAgent : AgentPlugin
         }
         catch (Exception exception)
         {
-            Sniffer.LogTrace(exception);
+            PacketSniffer.LogTrace(exception);
         }
     }
 
@@ -118,13 +119,13 @@ public sealed class ImapAgent : AgentPlugin
         }
         catch (Exception exception)
         {
-            Sniffer.LogTrace(exception);
+            PacketSniffer.LogTrace(exception);
         }
     }
 
     private void StopWatchers()
     {
-        foreach (Sniffer sniffer in sniffers)
+        foreach (PacketSniffer sniffer in sniffers)
         {
             sniffer.Abort();
             sniffer.CloseSocket();

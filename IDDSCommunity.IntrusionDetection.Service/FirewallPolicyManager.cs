@@ -296,15 +296,18 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             rule.Enabled = true;
             string existingAddresses = FirewallComString.Get(rule.RemoteAddresses);
-            if (existingAddresses.Trim().Equals("*", StringComparison.Ordinal))
-            {
-                FirewallComString.Set(ipAddress, value => rule.RemoteAddresses = value);
-            }
-            else
-            {
-                FirewallComString.Set(string.Format("{0},{1}", existingAddresses, ipAddress), value => rule.RemoteAddresses = value);
-            }
+            FirewallComString.Set(MergeRemoteAddresses(existingAddresses, ipAddress), value => rule.RemoteAddresses = value);
         }
+    }
+
+    internal static string MergeRemoteAddresses(string existingAddresses, string address)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(address);
+        if (string.IsNullOrWhiteSpace(existingAddresses) || existingAddresses.Trim().Equals("*", StringComparison.Ordinal))
+            return address;
+        if (existingAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Contains(address, StringComparer.OrdinalIgnoreCase)) return existingAddresses;
+        return string.Concat(existingAddresses, ",", address);
     }
 
     /// <summary>

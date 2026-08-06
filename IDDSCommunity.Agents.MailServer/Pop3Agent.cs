@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Collections.Concurrent;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
@@ -15,7 +16,7 @@ public class Pop3Agent : AgentPlugin
     public bool Tracing { get; set; }
     public System.Timers.Timer cleanupTimer;
 
-    readonly List<Sniffer> sniffers = [];
+    readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Pop3Agent"/> class.
@@ -94,7 +95,7 @@ public class Pop3Agent : AgentPlugin
     void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not Pop3Config settings) return;
-        Sniffer s = new();
+        PacketSniffer s = new();
         s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
         s.IpPacketSent += new EventHandler(s_IpPacketSent);
         s.TcpPort = settings.Pop3Port;
@@ -210,7 +211,7 @@ public class Pop3Agent : AgentPlugin
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                PacketSniffer.LogTrace(ex);
             }
 
         }
@@ -257,7 +258,7 @@ public class Pop3Agent : AgentPlugin
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                PacketSniffer.LogTrace(ex);
             }
 
         }
@@ -309,7 +310,7 @@ public class Pop3Agent : AgentPlugin
     protected override void OnStopAgent()
     {
         cleanupTimer.Stop();
-        foreach (Sniffer s in sniffers)
+        foreach (PacketSniffer s in sniffers)
         {
             s.Abort();
             s.CloseSocket();

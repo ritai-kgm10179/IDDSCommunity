@@ -4,6 +4,7 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.TerminalServer;
 
@@ -12,7 +13,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
 
-    readonly List<Sniffer> sniffers = [];
+    readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TlsSslAgent"/> class.
@@ -64,7 +65,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not TslSslConfig settings) return;
-        Sniffer s = new();
+        PacketSniffer s = new();
         // s.IpPacketReceived += new EventHandler(s_IpPacketReceived);
         s.IpPacketSent += new EventHandler(s_IpPacketSent);
         s.TcpPort = settings.RdpPort;
@@ -114,7 +115,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                PacketSniffer.LogTrace(ex);
             }
 
         }
@@ -153,7 +154,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnStopAgent()
     {
-        foreach (Sniffer s in sniffers)
+        foreach (PacketSniffer s in sniffers)
         {
             s.Abort();
             s.CloseSocket();

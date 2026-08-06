@@ -49,9 +49,7 @@ public class IddsConfig
         {
             _pluginsDirectory = value;
             if (!string.IsNullOrEmpty(_pluginsDirectory) && !System.IO.Directory.Exists(_pluginsDirectory))
-            {
-                try { System.IO.Directory.CreateDirectory(_pluginsDirectory); } catch { }
-            }
+                System.IO.Directory.CreateDirectory(_pluginsDirectory);
         }
     }
 
@@ -533,14 +531,17 @@ public class IddsConfig
                     }
                     if (result) return true;
                 }
-                catch
+                catch (Exception exception)
                 {
-                    // ignore error, function returns false if none found
+                    System.Diagnostics.Trace.TraceWarning("Invalid safe-network entry {0}/{1}: {2}", net.IpAddress, net.SubnetMask, exception.Message);
                 }
             }
 
         }
-        catch { }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceWarning("Invalid address supplied to safe-network evaluation: {0}", exception.Message);
+        }
         return false;
 
     }

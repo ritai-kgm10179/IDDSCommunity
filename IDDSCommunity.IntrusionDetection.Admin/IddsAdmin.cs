@@ -289,8 +289,9 @@ public partial class IddsAdmin : Form
                 }, uiRefreshCancellation.Token);
         }
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
-        catch (Exception)
+        catch (Exception exception)
         {
+            Trace.TraceError("Service status refresh failed: {0}", exception);
             ServiceError = true;
         }
         finally
@@ -370,8 +371,9 @@ public partial class IddsAdmin : Form
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(225, 50, 50);
             }
         }
-        catch
+        catch (Exception exception)
         {
+            Trace.TraceError("Applying service status failed: {0}", exception);
             ServiceError = true;
         }
 

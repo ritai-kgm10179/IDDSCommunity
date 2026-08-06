@@ -4,6 +4,7 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Net.Sockets;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
@@ -12,7 +13,7 @@ public class SmtpAgent : AgentPlugin
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
 
-    private readonly List<Sniffer> sniffers = [];
+    private readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SmtpAgent"/> class.
@@ -62,19 +63,19 @@ public class SmtpAgent : AgentPlugin
     private void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not SmtpConfig settings) return;
-        Sniffer s = new();
+        PacketSniffer s = new();
         s.IpPacketSent += s_IpPacketSent;
         s.TcpPort = settings.SmtpPort;
         try
         {
             System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.Agents.SmtpServer", $"Smtp Server Security Agent is listening on port {s.TcpPort}");
         }
-        catch { }
+        catch (Exception exception) { System.Diagnostics.Trace.TraceWarning("SMTP agent startup log failed: {0}", exception); }
         try
         {
             s.WatchAddress(address);
         }
-        catch { }
+        catch (Exception exception) { PacketSniffer.LogTrace(exception); }
         sniffers.Add(s);
     }
 
@@ -113,7 +114,7 @@ public class SmtpAgent : AgentPlugin
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                PacketSniffer.LogTrace(ex);
             }
         }
     }
@@ -151,7 +152,7 @@ public class SmtpAgent : AgentPlugin
 
     protected override void OnStopAgent()
     {
-        foreach (Sniffer s in sniffers)
+        foreach (PacketSniffer s in sniffers)
         {
             s.Abort();
             s.CloseSocket();
