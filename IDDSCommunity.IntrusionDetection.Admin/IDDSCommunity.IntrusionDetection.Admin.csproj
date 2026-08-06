@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -8,6 +8,10 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>ProtectionConfig.exe.manifest</ApplicationManifest>
     <ApplicationIcon>..\assets\branding\idds-community.ico</ApplicationIcon>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\assets\branding\idds-community.ico" LogicalName="IDDSCommunity.Branding.idds-community.ico" />
