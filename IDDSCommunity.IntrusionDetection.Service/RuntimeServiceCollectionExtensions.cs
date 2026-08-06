@@ -20,7 +20,7 @@ internal static class RuntimeServiceCollectionExtensions
         services.TryAddSingleton<IFirewallPolicy>(provider => new FirewallPolicyManager(
             provider.GetRequiredService<IRuntimeLog>(),
             provider.GetRequiredService<IddsConfig>().FirewallBlockMode));
-        services.AddSingleton<Database>(_ => Database.Instance);
+        services.AddSingleton<Database>();
         services.AddSingleton<IddsConfig>();
         services.AddSingleton<NotificationSettings>();
         services.AddSingleton<SecurityAgents>();
