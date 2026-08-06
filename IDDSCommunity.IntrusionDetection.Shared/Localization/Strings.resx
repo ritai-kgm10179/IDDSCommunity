@@ -729,4 +729,16 @@
   <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}: authentication failure threshold exceeded.</value></data>
   <data name="Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM." xml:space="preserve"><value>Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM.</value></data>
   <data name="Enter a passphrase containing at least 12 characters before exporting secrets." xml:space="preserve"><value>Enter a passphrase containing at least 12 characters before exporting secrets.</value></data>
+  <data name="Report export" xml:space="preserve"><value>Report export</value></data>
+  <data name="Export a localized HTML security report for the selected date range." xml:space="preserve"><value>Export a localized HTML security report for the selected date range.</value></data>
+  <data name="Start date" xml:space="preserve"><value>Start date</value></data>
+  <data name="End date" xml:space="preserve"><value>End date</value></data>
+  <data name="Export HTML report" xml:space="preserve"><value>Export HTML report</value></data>
+  <data name="The end date must not be earlier than the start date." xml:space="preserve"><value>The end date must not be earlier than the start date.</value></data>
+  <data name="HTML report (*.html)|*.html" xml:space="preserve"><value>HTML report (*.html)|*.html</value></data>
+  <data name="Export security report" xml:space="preserve"><value>Export security report</value></data>
+  <data name="Security report" xml:space="preserve"><value>Security report</value></data>
+  <data name="Report period: {0:d} - {1:d}" xml:space="preserve"><value>Report period: {0:d} - {1:d}</value></data>
+  <data name="Report exported: {0}" xml:space="preserve"><value>Report exported: {0}</value></data>
+  <data name="Report export failed. Review the application log for details." xml:space="preserve"><value>Report export failed. Review the application log for details.</value></data>
 </root>

@@ -327,7 +327,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             rdr.Close();
 
         }
-        catch { }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceError("Security-agent statistics refresh failed: {0}", exception);
+        }
     }
 
     /// <summary>

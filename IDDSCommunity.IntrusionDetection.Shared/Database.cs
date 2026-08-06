@@ -76,13 +76,7 @@ public class Database
 
         string? dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
-        {
-            try
-            {
-                System.IO.Directory.CreateDirectory(dbDir);
-            }
-            catch { }
-        }
+            System.IO.Directory.CreateDirectory(dbDir);
 
         _connection = new SqliteConnection(connBuilder.ConnectionString);
         _connection.Open();

@@ -9,7 +9,13 @@ namespace IDDSCommunity.Agents.IisAuthentication;
 public sealed class IisAuthenticationSecurityAgent : AuthenticationAgentBase<IisAuthenticationConfiguration>
 {
     public IisAuthenticationSecurityAgent() : this(new IisAuthenticationConfiguration()) { }
-    private IisAuthenticationSecurityAgent(IisAuthenticationConfiguration configuration) : base(new PollingLogFileFailureSource(configuration.EnumerateLogFiles, new IisW3cAuthenticationParser(configuration.GetProtectedPaths()).Parse)) => Configuration.AgentSettings = configuration;
+    private IisAuthenticationSecurityAgent(IisAuthenticationConfiguration configuration) : base(CreateSource(configuration)) => Configuration.AgentSettings = configuration;
+
+    private static PollingLogFileFailureSource CreateSource(IisAuthenticationConfiguration configuration)
+    {
+        IisW3cAuthenticationParser parser = new(configuration.GetProtectedPaths());
+        return new PollingLogFileFailureSource(configuration.EnumerateLogFiles, parser.Parse, parser.Reset);
+    }
     internal IisAuthenticationSecurityAgent(IAuthenticationEventSource source) : base(source) { }
     protected override Color AgentColor => Color.FromArgb(48, 138, 158);
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("IIS Authentication Security Agent"); set { } }

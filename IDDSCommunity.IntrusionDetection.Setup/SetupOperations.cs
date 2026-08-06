@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
 
@@ -32,6 +33,7 @@ internal static class SetupOperations
             RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
             RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
             RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+            ConfigureEventLog();
             RunSc("start", ServiceName);
             if (Directory.Exists(backup)) Directory.Delete(backup, true);
         }
@@ -45,6 +47,17 @@ internal static class SetupOperations
             }
             throw;
         }
+    }
+
+    private static void ConfigureEventLog()
+    {
+        if (!EventLog.SourceExists(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE))
+            EventLog.CreateEventSource(new EventSourceCreationData(
+                Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE,
+                Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME));
+        using EventLog log = new(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME);
+        log.MaximumKilobytes = 20 * 1024;
+        log.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 0);
     }
 
     /// <summary>Stops and unregisters the Windows service.</summary>

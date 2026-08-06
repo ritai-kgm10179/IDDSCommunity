@@ -6,6 +6,8 @@ IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護�
 
 本專案現行發行內容中的程式碼、文件、圖片及其他資源皆由人工智慧協作產生，並由專案維護者檢視、測試與整合。AI 產製聲明不取代各項第三方套件、歷史來源與授權文件；相關權利與授權仍以 [`LICENSE`](LICENSE)、[`LICENSE-PROVENANCE.md`](LICENSE-PROVENANCE.md) 及 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) 為準。
 
+UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.md`](ASSET-PROVENANCE.md)。禁止重新加入來源不明或舊專案圖檔。
+
 本專案源自過去於 CodePlex 發布的 IDDS 前身原始碼，但不是原權利人目前商業產品的官方版本，也未獲其贊助或背書。專案、組件與根命名空間已統一改為 `IDDSCommunity.*`；歷史名稱僅保留於授權來源紀錄。
 
 ## 主要功能

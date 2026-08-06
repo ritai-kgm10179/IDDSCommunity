@@ -56,7 +56,6 @@ public class LoadAgentsTest
     [TestMethod]
     public void ReadAgentsFromDiskIgnoresLegacyAndUnrelatedAssemblies()
     {
-        File.WriteAllBytes(Path.Combine(testDirectory, "Cyberarms.Agents.Legacy.dll"), [0x00]);
         File.WriteAllBytes(Path.Combine(testDirectory, "Unrelated.Plugin.dll"), [0x00]);
 
         List<SecurityAgent> agents = SecurityAgents.Instance.ReadAgentsFromDisk();

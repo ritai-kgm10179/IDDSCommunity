@@ -13,4 +13,8 @@
     <Version>3.0.0</Version>
     <InformationalVersion>3.0.0</InformationalVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
+  </ItemGroup>
 </Project>

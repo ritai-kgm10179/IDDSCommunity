@@ -187,6 +187,18 @@ public sealed class AuthenticationAgentTest
         Assert.IsNull(filtered.Parse("2026-08-05 03:04:06 192.0.2.30 user /login 401 1"));
     }
 
+    [TestMethod]
+    public void IisParserIsolatesFieldDeclarationsByLogFile()
+    {
+        IisW3cAuthenticationParser parser = new();
+        _ = parser.Parse("site-a.log", "#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus");
+        _ = parser.Parse("site-b.log", "#Fields: sc-status c-ip date time cs-uri-stem cs-username sc-substatus");
+        Assert.IsNotNull(parser.Parse("site-a.log", "2026-08-05 03:04:05 192.0.2.30 user /owa 401 1"));
+        Assert.IsNotNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 0"));
+        parser.Reset("site-b.log");
+        Assert.IsNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 0"));
+    }
+
     private static AuthenticationFailureEvent Failure(string address, DateTimeOffset time) => new(time, IPAddress.Parse(address), 1, "test", string.Empty, string.Empty);
 
     private sealed class ManualTimeProvider(DateTimeOffset utcNow) : TimeProvider

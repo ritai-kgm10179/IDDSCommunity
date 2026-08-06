@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.FtpServer;
 
@@ -12,7 +13,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 {
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
-    private readonly List<Sniffer> sniffers = [];
+    private readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FtpAgent"/> class.
@@ -62,7 +63,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     private void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address) return;
-        Sniffer s = new();
+        PacketSniffer s = new();
         s.IpPacketSent += IpPacketSent;
         if (Configuration.AgentSettings is not FtpConfig settings) return;
         s.TcpPort = settings.FtpPort;
@@ -70,12 +71,12 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         {
             System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.Agents.FtpServer", $"Ftp Server Security Agent is listening on port {s.TcpPort}");
         }
-        catch { }
+        catch (Exception exception) { System.Diagnostics.Trace.TraceWarning("FTP agent startup log failed: {0}", exception); }
         try
         {
             s.WatchAddress(address);
         }
-        catch { }
+        catch (Exception exception) { PacketSniffer.LogTrace(exception); }
         sniffers.Add(s);
     }
 
@@ -114,7 +115,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
             }
             catch (Exception ex)
             {
-                Sniffer.LogTrace(ex);
+                PacketSniffer.LogTrace(ex);
             }
         }
     }
@@ -152,7 +153,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
 
     protected override void OnStopAgent()
     {
-        foreach (Sniffer s in sniffers)
+        foreach (PacketSniffer s in sniffers)
         {
             s.Abort();
             s.CloseSocket();
