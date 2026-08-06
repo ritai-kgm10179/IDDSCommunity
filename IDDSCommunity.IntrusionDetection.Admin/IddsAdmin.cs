@@ -339,6 +339,24 @@ public partial class IddsAdmin : Form
     /// Applies one service-status snapshot on the UI thread.
     private const char StatusDot = '●';
 
+    private static Bitmap CreateDisabledImage(Image original)
+    {
+        Bitmap bitmap = new(original.Width, original.Height);
+        using Graphics g = Graphics.FromImage(bitmap);
+        System.Drawing.Imaging.ColorMatrix colorMatrix = new([
+            [0.3f, 0.3f, 0.3f, 0, 0],
+            [0.59f, 0.59f, 0.59f, 0, 0],
+            [0.11f, 0.11f, 0.11f, 0, 0],
+            [0, 0, 0, 0.3f, 0],
+            [0, 0, 0, 0, 1]
+        ]);
+        using System.Drawing.Imaging.ImageAttributes attributes = new();
+        attributes.SetColorMatrix(colorMatrix);
+        g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+            0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+        return bitmap;
+    }
+
     /// <summary>
     /// Applies background-refreshed status to the header indicators and controls.
     /// </summary>
@@ -352,6 +370,8 @@ public partial class IddsAdmin : Form
             smartLabelServiceStatus.Text = StatusDot + " " + notFound;
             smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68);
             buttonManageService.Text = Strings.Get("Install service");
+            pictureBoxStartService.Image = CreateDisabledImage(Properties.Resources.service_controller_start);
+            pictureBoxStopService.Image = CreateDisabledImage(Properties.Resources.service_controller_stop);
             pictureBoxStartService.Enabled = false;
             pictureBoxStopService.Enabled = false;
             pictureBoxStartService.Cursor = Cursors.Default;
@@ -364,7 +384,7 @@ public partial class IddsAdmin : Form
             if (status == System.ServiceProcess.ServiceControllerStatus.Running)
             {
                 IsServiceRunning = true;
-                pictureBoxStartService.Image = Properties.Resources.service_controller_start_deactivated;
+                pictureBoxStartService.Image = CreateDisabledImage(Properties.Resources.service_controller_start);
                 pictureBoxStartService.Enabled = false;
                 pictureBoxStartService.Cursor = Cursors.Default;
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop;
@@ -380,7 +400,7 @@ public partial class IddsAdmin : Form
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start;
                 pictureBoxStartService.Enabled = true;
                 pictureBoxStartService.Cursor = Cursors.Hand;
-                pictureBoxStopService.Image = Properties.Resources.service_controller_stop_deactivated;
+                pictureBoxStopService.Image = CreateDisabledImage(Properties.Resources.service_controller_stop);
                 pictureBoxStopService.Enabled = false;
                 pictureBoxStopService.Cursor = Cursors.Default;
                 string stopped = Strings.Get("Service is stopped");
