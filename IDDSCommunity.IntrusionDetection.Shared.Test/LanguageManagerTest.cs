@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;

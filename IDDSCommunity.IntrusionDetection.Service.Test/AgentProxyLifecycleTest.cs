@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
