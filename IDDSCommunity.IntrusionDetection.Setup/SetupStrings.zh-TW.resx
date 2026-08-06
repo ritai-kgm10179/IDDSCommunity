@@ -5,11 +5,18 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Title" xml:space="preserve"><value>IDDS Community 安裝程式</value></data>
-  <data name="Description" xml:space="preserve"><value>安裝或解除安裝 IDDS Community 3.0.0 與其 Windows 服務。本社群分支為獨立專案，與 IDDSCOMMUNITY AG 無隸屬或背書關係。</value></data>
+  <data name="Description" xml:space="preserve"><value>安裝或解除安裝 IDDS Community 3.0.0 與其 Windows 服務。本社群分支為獨立專案，與 CYBERARMS AG 無隸屬或背書關係。</value></data>
   <data name="Install" xml:space="preserve"><value>安裝</value></data>
   <data name="Uninstall" xml:space="preserve"><value>解除安裝</value></data>
   <data name="Confirm" xml:space="preserve"><value>確定要{0} IDDS Community？</value></data>
-  <data name="Completed" xml:space="preserve"><value>{0}已完成。</value></data>
+  <data name="Completed" xml:space="preserve"><value>{0}已完成。
+
+目標位置：{1}</value></data>
+  <data name="InstallLocation" xml:space="preserve"><value>安裝目標目錄：{0}</value></data>
+  <data name="StatusInstalled" xml:space="preserve"><value>目前狀態：已安裝</value></data>
+  <data name="StatusNotInstalled" xml:space="preserve"><value>目前狀態：未安裝</value></data>
+  <data name="Reinstall" xml:space="preserve"><value>重新安裝</value></data>
+  <data name="LaunchApp" xml:space="preserve"><value>開啟應用程式</value></data>
   <data name="PayloadMissing" xml:space="preserve"><value>找不到安裝檔案 payload 目錄。</value></data>
   <data name="ServiceExecutableMissing" xml:space="preserve"><value>找不到 IDDS Community 服務執行檔。</value></data>
   <data name="ServiceControlStartFailed" xml:space="preserve"><value>無法啟動 Windows 服務控制程式。</value></data>

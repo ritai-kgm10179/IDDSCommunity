@@ -26,6 +26,8 @@ if ($LASTEXITCODE -ne 0) { throw '執行階段相依套件還原失敗。' }
 
 # Vulnerability auditing belongs to the explicit restore/CI step. Publishing uses the already-audited lock state.
 $commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
+$pluginArguments = @('--configuration', $Configuration, '--self-contained', 'false', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
+
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '服務發佈失敗。' }
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
@@ -33,6 +35,7 @@ if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot
 
 $pluginProjects = @(
+    'IDDSCommunity.Agents.Authentication.Common',
     'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.IisAuthentication',
     'IDDSCommunity.Agents.MailServer', 'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.OpenSsh',
     'IDDSCommunity.Agents.PostgreSql', 'IDDSCommunity.Agents.Radius', 'IDDSCommunity.Agents.SqlServer',
@@ -42,7 +45,7 @@ $pluginProjects = @(
 )
 foreach ($projectName in $pluginProjects) {
     $project = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot $projectName) -Filter '*.csproj' | Select-Object -First 1
-    dotnet publish $project.FullName @commonArguments --output $pluginRoot
+    dotnet publish $project.FullName @pluginArguments --output $pluginRoot
     if ($LASTEXITCODE -ne 0) { throw "代理程式發佈失敗：$projectName" }
 }
 

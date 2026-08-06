@@ -9,7 +9,23 @@ internal static class SetupOperations
 {
     private const string ServiceName = "IDDSCommunityProtection";
     private const string ServiceDisplayName = "IDDS Community Protection Service";
-    private static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
+    internal static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
+    internal static readonly string AdminExecutablePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Admin.exe");
+
+    /// <summary>Checks whether the IDDS Community service executable is installed.</summary>
+    internal static bool IsInstalled =>
+        Directory.Exists(InstallDirectory) &&
+        File.Exists(Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe"));
+
+    /// <summary>Checks whether the administration UI executable is available for launching.</summary>
+    internal static bool CanLaunchApp => IsInstalled && File.Exists(AdminExecutablePath);
+
+    /// <summary>Launches the IDDS Community administration UI.</summary>
+    internal static void LaunchApp()
+    {
+        if (!CanLaunchApp) return;
+        Process.Start(new ProcessStartInfo(AdminExecutablePath) { UseShellExecute = true });
+    }
 
     /// <summary>Deploys the packaged payload and registers the Windows service.</summary>
     internal static void Install()
@@ -94,7 +110,7 @@ internal static class SetupOperations
         foreach (string argument in arguments) startInfo.ArgumentList.Add(argument);
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException(SetupText.Get("ServiceControlStartFailed"));
         process.WaitForExit();
-        if (process.ExitCode != 0 && !(acceptMissing && process.ExitCode == 1060))
+        if (process.ExitCode != 0 && !(acceptMissing && (process.ExitCode == 1060 || process.ExitCode == 1062)))
             throw new InvalidOperationException(SetupText.Format("ServiceControlFailed", process.ExitCode));
     }
 }
