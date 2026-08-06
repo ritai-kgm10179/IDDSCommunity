@@ -59,6 +59,7 @@ public class Database
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        _instance = this;
         if (!string.Equals(System.IO.Path.GetFileName(fileName), fileName, StringComparison.Ordinal))
             throw new ArgumentException(Localization.Strings.Get("The database file name cannot contain a directory path."), nameof(fileName));
 
