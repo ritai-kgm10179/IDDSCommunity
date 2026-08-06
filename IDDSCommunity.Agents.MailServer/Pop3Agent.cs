@@ -19,7 +19,7 @@ public class Pop3Agent : AgentPlugin
     readonly List<PacketSniffer> sniffers = [];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Pop3Agent"/> class.
+    /// 初始化 <see cref="Pop3Agent"/> 類別的新執行個體。
     /// </summary>
 
     public Pop3Agent()
@@ -36,10 +36,10 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Handles the elapsed event.
+    /// 處理定時器觸發事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         => RemoveExpiredClients(DateTime.Now);
@@ -57,7 +57,7 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the start agent notification.
+    /// 處理啟動 Agent 的通知。
     /// </summary>
 
     protected override void OnStartAgent()
@@ -67,7 +67,7 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Executes the run watcher operation.
+    /// 執行監聽器啟動作業。
     /// </summary>
 
     void RunWatcher()
@@ -88,9 +88,9 @@ public class Pop3Agent : AgentPlugin
 
 
     /// <summary>
-    /// Executes the watch address operation.
+    /// 執行監聽指定位址作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     void WatchAddress(object? ipAddress)
     {
@@ -123,9 +123,9 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Executes the test receive operation.
+    /// 執行接收測試作業。
     /// </summary>
-    /// <param name="data">The data value.</param>
+    /// <param name="data">資料參數。</param>
 
     public void TestReceive(byte[] data)
     {
@@ -134,9 +134,9 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Executes the test send operation.
+    /// 執行傳送測試作業。
     /// </summary>
-    /// <param name="data">The data value.</param>
+    /// <param name="data">資料參數。</param>
 
     public void TestSend(byte[] data)
     {
@@ -145,10 +145,10 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Handles the ip packet received event.
+    /// 處理 IP 封包接收事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void s_IpPacketReceived(object? sender, EventArgs e)
     {
@@ -218,10 +218,10 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Handles the ip packet sent event.
+    /// 處理 IP 封包傳送事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void s_IpPacketSent(object? sender, EventArgs e)
     {
@@ -277,14 +277,14 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the trace notification.
+    /// 處理追蹤通知。
     /// </summary>
-    /// <param name="tlsPackage">The tls package value.</param>
+    /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
 
     /// <summary>
-    /// Processes the continue agent notification.
+    /// 處理繼續執行 Agent 的通知。
     /// </summary>
 
     protected override void OnContinueAgent()
@@ -294,7 +294,7 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the pause agent notification.
+    /// 處理暫停 Agent 的通知。
     /// </summary>
 
     protected override void OnPauseAgent()
@@ -304,7 +304,7 @@ public class Pop3Agent : AgentPlugin
     }
 
     /// <summary>
-    /// Processes the stop agent notification.
+    /// 處理停止 Agent 的通知。
     /// </summary>
 
     protected override void OnStopAgent()
@@ -322,9 +322,9 @@ public class Pop3Agent : AgentPlugin
     public override bool IsRunning => base.IsRunning;
 
     /// <summary>
-    /// Executes the unsuccessful login operation.
+    /// 處理登入失敗作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">IP 位址參數。</param>
 
     void UnsuccessfulLogin(string ipAddress)
     {

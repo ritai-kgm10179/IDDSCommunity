@@ -10,9 +10,9 @@ public class DbUpgrader
 
 
     /// <summary>
-    /// Executes the run upgrade scripts operation.
+    /// 執行run upgrade scripts作業。
     /// </summary>
-    /// <param name="connection">The connection value.</param>
+    /// <param name="connection">connection參數。</param>
 
     public void RunUpgradeScripts(System.Data.IDbConnection connection)
     {
@@ -46,10 +46,10 @@ public class DbUpgrader
     }
 
     /// <summary>
-    /// Executes the upgrade all operation.
+    /// 執行upgrade all作業。
     /// </summary>
-    /// <param name="connection">The connection value.</param>
-    /// <param name="latestVersionNumber">The latest version number value.</param>
+    /// <param name="connection">connection參數。</param>
+    /// <param name="latestVersionNumber">latest version number參數。</param>
 
     public void UpgradeAll(System.Data.IDbConnection connection, int latestVersionNumber)
     {
@@ -66,7 +66,7 @@ public class DbUpgrader
     private SortedList<int, DbUpgradeScript> upgradeScripts = [];
 
     /// <summary>
-    /// Executes the init scripts operation.
+    /// 執行init scripts作業。
     /// </summary>
 
     private void InitScripts()
@@ -78,7 +78,7 @@ public class DbUpgrader
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DbUpgrader"/> class.
+    /// 初始化 <see cref="DbUpgrader"/> class的新執行個體。
     /// </summary>
 
     public DbUpgrader()

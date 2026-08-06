@@ -18,11 +18,11 @@ internal class CryptoHelper
     internal static bool IsCurrentFormat(string cipherText) => cipherText.StartsWith(CurrentPrefix, StringComparison.Ordinal);
 
     /// <summary>
-    /// Executes the encrypt operation.
+    /// 執行encrypt作業。
     /// </summary>
-    /// <param name="toEncrypt">The to encrypt value.</param>
-    /// <param name="useHashing">The use hashing value.</param>
-    /// <returns>The encrypt result.</returns>
+    /// <param name="toEncrypt">to encrypt參數。</param>
+    /// <param name="useHashing">use hashing參數。</param>
+    /// <returns>傳回encrypt結果。</returns>
 
     internal static string Encrypt(string toEncrypt, bool useHashing)
     {
@@ -40,11 +40,11 @@ internal class CryptoHelper
     }
 
     /// <summary>
-    /// Executes the decrypt operation.
+    /// 執行decrypt作業。
     /// </summary>
-    /// <param name="cipherString">The cipher string value.</param>
-    /// <param name="useHashing">The use hashing value.</param>
-    /// <returns>The decrypt result.</returns>
+    /// <param name="cipherString">cipher string參數。</param>
+    /// <param name="useHashing">use hashing參數。</param>
+    /// <returns>傳回decrypt結果。</returns>
 
     internal static string Decrypt(string cipherString, bool useHashing)
     {
@@ -69,7 +69,7 @@ internal class CryptoHelper
     /// <summary>
     /// Decrypts a legacy TripleDES value solely for one-time migration to protected storage.
     /// </summary>
-    /// <param name="cipherString">The legacy encrypted value.</param>
+    /// <param name="cipherString">legacy encrypted參數。</param>
     /// <param name="useHashing">Whether the legacy key used MD5 derivation.</param>
     /// <returns>The decrypted legacy value.</returns>
     private static string LegacyDecrypt(string cipherString, bool useHashing)

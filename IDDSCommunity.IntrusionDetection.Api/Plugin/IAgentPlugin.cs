@@ -1,57 +1,67 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// Event handler for sending intrusion attempts to theIntrusion DetectionService
+/// 傳送入侵攻擊事件至入侵偵測服務之委派事件處理常式。
 /// </summary>
-/// <param name="sender">The agent itself</param>
-/// <param name="data">Intrusion notification details</param>
+/// <param name="sender">發送事件之 Agent 物件。</param>
+/// <param name="data">入侵事件通知詳細資料。</param>
 public delegate void AttackDetectedHandler(object sender, INotificationEventArgs data);
+
 /// <summary>
-/// Interface for agents, must be implemented to create aIntrusion Detectionagent
+/// 入侵偵測 Agent 擴充元件必須實作之介面。
 /// </summary>
 public interface IAgentPlugin
 {
     /// <summary>
-    /// The AttackDetected Event, using AttackDetectedHandler
+    /// 當偵測到攻擊時發生的事件。
     /// </summary>
     /// <seealso cref="AttackDetectedHandler"/>
     event AttackDetectedHandler AttackDetected;
+
     /// <summary>
-    /// Agent start command, is called when the service starts
+    /// 啟動 Agent 命令（於服務啟動時呼叫）。
     /// </summary>
     void Start();
+
     /// <summary>
-    /// Agent stop command, is called when the service stops
+    /// 停止 Agent 命令（於服務停止時呼叫）。
     /// </summary>
     void Stop();
+
     /// <summary>
-    /// Agent pause command, is called when the service is paused
+    /// 暫停 Agent 命令（於服務暫停時呼叫）。
     /// </summary>
     void Pause();
+
     /// <summary>
-    /// Agent continue command to resume from pause
+    /// 繼續執行 Agent 命令（自暫停狀態復原時呼叫）。
     /// </summary>
     void Continue();
+
     /// <summary>
-    /// Returns if the agent supports pause
+    /// 傳回 Agent 是否支援暫停。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>若支援暫停傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     bool CanPause();
+
     /// <summary>
-    /// Returns if the agent can be continued at this time
+    /// 傳回 Agent 目前是否可進行繼續執行。
     /// </summary>
-    /// <returns></returns>
+    /// <returns>若可繼續執行傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     bool CanContinue();
+
     /// <summary>
-    /// Returns if the agent is in paused state
+    /// 取得或設定 Agent 是否處於暫停狀態。
     /// </summary>
     bool IsPaused { get; set; }
+
     /// <summary>
-    /// Returns if the agent is in the running state
+    /// 取得 Agent 是否處於執行狀態。
     /// </summary>
     bool IsRunning { get; }
+
     /// <summary>
-    /// Agent configuration, usually AgentConfigurationBase, which can be used by the administration program by default without any alteration
+    /// 取得或設定 Agent 設定物件。
     /// </summary>
     IAgentConfiguration Configuration { get; set; }
 }

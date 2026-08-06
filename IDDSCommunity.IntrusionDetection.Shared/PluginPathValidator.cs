@@ -6,11 +6,11 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 internal static class PluginPathValidator
 {
     /// <summary>
-    /// Resolves and validates a managed plug-in path beneath its configured root.
+    /// 於設定的根目錄下解析並驗證受控擴充元件路徑。
     /// </summary>
-    /// <param name="pluginRoot">The configured plug-in directory.</param>
-    /// <param name="pluginPath">The candidate assembly path.</param>
-    /// <returns>The normalized full assembly path.</returns>
+    /// <param name="pluginRoot">設定的擴充元件目錄。</param>
+    /// <param name="pluginPath">候選組件路徑。</param>
+    /// <returns>傳回標準化的完整組件路徑。</returns>
     internal static string Validate(string pluginRoot, string pluginPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(pluginRoot);

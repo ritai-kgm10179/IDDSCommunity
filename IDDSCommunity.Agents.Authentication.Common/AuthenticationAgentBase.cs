@@ -69,7 +69,16 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
     protected abstract Color AgentColor { get; }
     public abstract string DisplayName { get; set; }
     public abstract Guid Id { get; }
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get => AgentIconFactory.Create(AgentColor, false); set { } }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get => AgentIconFactory.Create(AgentColor, true); set { } }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get => AgentIconFactory.Create(AgentColor, false); set { } }
 }

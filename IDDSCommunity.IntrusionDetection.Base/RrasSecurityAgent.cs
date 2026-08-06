@@ -7,11 +7,12 @@ using System.Text.RegularExpressions;
 
 namespace IDDSCommunity.IntrusionDetection.Base.Plugins;
 
+/// <summary>
+/// 掃描與監控系統事件紀錄中 RRAS 路由與遠端存取攻擊之入侵偵測 Agent。
+/// </summary>
 [Plugin("Intrusion Detection RRAS Security Agent", "This agent scans and monitors the system eventlog for possible RRAS attacks.")]
-
 public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
 {
-
     private EventLogQuery? query;
     private EventLogWatcher? watcher;
 
@@ -25,16 +26,14 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
                 </QueryList>";
 
     /// <summary>
-    /// Initialize the Agent
+    /// 初始化 <see cref="RrasSecurityAgent"/> 類別的新執行個體。
     /// </summary>
     public RrasSecurityAgent()
     {
-
     }
 
-
     /// <summary>
-    /// Agent Startup, initialization of our EventLog watcher
+    /// 啟動 Agent 服務並初始化事件紀錄監聽器。
     /// </summary>
     protected override void OnStartAgent()
     {
@@ -46,17 +45,17 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Resume from Pause
+    /// 從暫停狀態復原 Agent 服務。
     /// </summary>
     protected override void OnContinueAgent() => watcher!.Enabled = true;
 
     /// <summary>
-    /// Pause the agent
+    /// 暫停 Agent 服務。
     /// </summary>
     protected override void OnPauseAgent() => watcher!.Enabled = false;
 
     /// <summary>
-    /// Stop the agent
+    /// 停止 Agent 服務並釋放事件紀錄監聽器。
     /// </summary>
     protected override void OnStopAgent()
     {
@@ -66,11 +65,10 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Handles the event record written event.
+    /// 處理事件紀錄寫入事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
-
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件紀錄寫入參數。</param>
     private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
@@ -96,7 +94,6 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
                     }
                 }
             }
-
         }
         catch (Exception ex)
         {
@@ -104,24 +101,38 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName
     {
         get => Api.Localization.Strings.Get("RRAS Security Agent - Routing and Remote Access"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get; set; }
+
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get; set; }
+
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get; set; }
 
-
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => new("{FDA41145-2E75-400E-882C-E06EC4790EBE}");
 
     /// <summary>
-    /// Executes the my regex operation.
+    /// 取得匹配 IP 位址的規則運算式。
     /// </summary>
-    /// <returns>The my regex result.</returns>
-
+    /// <returns>傳回 <see cref="Regex"/> 執行個體。</returns>
     [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
     private static partial Regex MyRegex();
 }

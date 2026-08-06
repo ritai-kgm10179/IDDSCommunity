@@ -9,7 +9,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Adds requested operation.
     /// </summary>
-    /// <param name="agentConfig">The agent config value.</param>
+    /// <param name="agentConfig">agent config參數。</param>
 
     public new void Add(AgentConfigurationBase agentConfig)
     {
@@ -34,9 +34,9 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Determines whether configured.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <returns><see langword="true"/> if configured; otherwise, <see langword="false"/>.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <returns>若configured傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsConfigured(string assemblyName, string agentName)
     {
@@ -51,9 +51,9 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Determines whether agent enabled.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <returns><see langword="true"/> if agent enabled; otherwise, <see langword="false"/>.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <returns>若agent enabled傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsAgentEnabled(string assemblyName, string agentName)
     {
@@ -65,19 +65,19 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Gets agent config.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <returns>The get agent config result.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <returns>傳回get agent config結果。</returns>
 
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName) => GetAgentConfig(assemblyName, agentName, null);
 
     /// <summary>
     /// Gets agent config.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <param name="configurationSettingsType">The configuration settings type value.</param>
-    /// <returns>The get agent config result.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <param name="configurationSettingsType">configuration settings type參數。</param>
+    /// <returns>傳回get agent config結果。</returns>
 
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName, string? configurationSettingsType)
     {
@@ -95,10 +95,10 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Creates agent config.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <param name="configurationSettingsTypeName">The configuration settings type name value.</param>
-    /// <returns>The create agent config result.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <param name="configurationSettingsTypeName">configuration settings type name參數。</param>
+    /// <returns>傳回create agent config結果。</returns>
 
     public AgentConfigurationBase CreateAgentConfig(string assemblyName, string agentName, string? configurationSettingsTypeName)
     {
@@ -114,27 +114,27 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     }
 
     /// <summary>
-    /// Executes the enable agent operation.
+    /// 執行enable agent作業。
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
 
     public void EnableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, true);
 
     /// <summary>
-    /// Executes the disable agent operation.
+    /// 執行disable agent作業。
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
 
     public void DisableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, false);
 
     /// <summary>
     /// Sets enabled.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="agentName">The agent name value.</param>
-    /// <param name="enabled">The enabled value.</param>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="agentName">agent name參數。</param>
+    /// <param name="enabled">enabled參數。</param>
 
     public void SetEnabled(string assemblyName, string agentName, bool enabled)
     {
@@ -145,7 +145,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Loads plugins from directory.
     /// </summary>
-    /// <param name="pluginDirectory">The plugin directory value.</param>
+    /// <param name="pluginDirectory">plugin directory參數。</param>
 
     public void LoadPluginsFromDirectory(string pluginDirectory)
     {
@@ -202,10 +202,10 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Processes the load plugin exception raised notification.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <param name="moduleName">The module name value.</param>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <param name="moduleName">module name參數。</param>
     /// <param name="exception">The exception associated with the operation.</param>
-    /// <param name="source">The source value.</param>
+    /// <param name="source">source參數。</param>
 
     protected internal void OnLoadPluginExceptionRaised(string assemblyName, string? moduleName, Exception exception, PluginExceptionSource source)
     {
@@ -222,7 +222,7 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Gets assembly names.
     /// </summary>
-    /// <returns>The get assembly names result.</returns>
+    /// <returns>傳回get assembly names結果。</returns>
 
     public List<string> GetAssemblyNames()
     {
@@ -237,8 +237,8 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <summary>
     /// Gets modules.
     /// </summary>
-    /// <param name="assemblyName">The assembly name value.</param>
-    /// <returns>The get modules result.</returns>
+    /// <param name="assemblyName">assembly name參數。</param>
+    /// <returns>傳回get modules結果。</returns>
 
     public List<string> GetModules(string assemblyName)
     {

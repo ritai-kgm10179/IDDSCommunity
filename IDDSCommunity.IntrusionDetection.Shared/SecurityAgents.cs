@@ -14,7 +14,7 @@ public class SecurityAgents : List<SecurityAgent>
     private readonly IddsConfig configuration;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SecurityAgents"/> class.
+    /// 初始化 <see cref="SecurityAgents"/> class的新執行個體。
     /// </summary>
 
     private SecurityAgents() : this(Database.Instance, IddsConfig.Instance)
@@ -22,10 +22,10 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Initializes an agent collection with explicit persistence and configuration dependencies.
+    /// 初始化包含明確持久化與設定相依性的 Agent 集合。
     /// </summary>
-    /// <param name="database">The agent configuration database.</param>
-    /// <param name="configuration">The application and plug-in configuration.</param>
+    /// <param name="database">Agent 設定資料庫。</param>
+    /// <param name="configuration">應用程式與擴充元件設定。</param>
     public SecurityAgents(Database database, IddsConfig configuration)
     {
         ArgumentNullException.ThrowIfNull(database);
@@ -50,7 +50,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Executes the initialize agents operation.
+    /// 執行initialize agents作業。
     /// </summary>
 
     public void InitializeAgents()
@@ -87,9 +87,9 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Reads agents from disk.
+    /// 自磁碟讀取 Agent 設定。
     /// </summary>
-    /// <returns>The read agents from disk result.</returns>
+    /// <returns>傳回read agents from disk結果。</returns>
 
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
@@ -129,10 +129,10 @@ public class SecurityAgents : List<SecurityAgent>
     public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
 
     /// <summary>
-    /// Finds by display name.
+    /// 依顯示名稱尋找 Agent。
     /// </summary>
-    /// <param name="displayName">The display name value.</param>
-    /// <returns>The find by display name result.</returns>
+    /// <param name="displayName">display name參數。</param>
+    /// <returns>傳回find by display name結果。</returns>
 
     public SecurityAgent? FindByDisplayName(string displayName)
     {
@@ -147,10 +147,10 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Finds by name.
+    /// 依名稱尋找 Agent。
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <returns>The find by name result.</returns>
+    /// <param name="name">name參數。</param>
+    /// <returns>傳回find by name結果。</returns>
 
     public SecurityAgent? FindByName(string name)
     {
@@ -165,10 +165,10 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Gets display name.
+    /// 取得顯示名稱。
     /// </summary>
-    /// <param name="agentId">The agent id value.</param>
-    /// <returns>The get display name result.</returns>
+    /// <param name="agentId">agent id參數。</param>
+    /// <returns>傳回get display name結果。</returns>
 
     public string GetDisplayName(string agentId)
     {
@@ -187,7 +187,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Executes the register security agents operation.
+    /// 執行register security agents作業。
     /// </summary>
 
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
@@ -195,7 +195,7 @@ public class SecurityAgents : List<SecurityAgent>
     public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
 
     /// <summary>
-    /// Executes the unload agents operation.
+    /// 執行unload agents作業。
     /// </summary>
 
     public void UnloadAgents()
@@ -216,9 +216,9 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Executes the unload agent operation.
+    /// 執行unload agent作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent參數。</param>
 
     public void UnloadAgent(SecurityAgent agent)
     {
@@ -237,7 +237,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Handles the domain unload event.
+    /// 處理應用程式域卸載事件。
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
@@ -245,7 +245,7 @@ public class SecurityAgents : List<SecurityAgent>
     void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
 
     /// <summary>
-    /// Loads agents.
+    /// 載入 Agent 擴充元件。
     /// </summary>
 
     public void LoadAgents()
@@ -305,7 +305,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Starts agents.
+    /// 啟動所有 Agent 擴充元件。
     /// </summary>
 
     public void StartAgents()
@@ -317,7 +317,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Stops agents.
+    /// 停止所有 Agent 擴充元件。
     /// </summary>
 
     public void StopAgents()
@@ -329,7 +329,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Executes the pause agents operation.
+    /// 執行pause agents作業。
     /// </summary>
 
     public void PauseAgents()
@@ -348,7 +348,7 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Executes the continue agents operation.
+    /// 執行continue agents作業。
     /// </summary>
 
     public void ContinueAgents()
@@ -368,10 +368,10 @@ public class SecurityAgents : List<SecurityAgent>
 
 
     /// <summary>
-    /// Merges db information.
+    /// 合併資料庫資訊。
     /// </summary>
-    /// <param name="agents">The agents value.</param>
-    /// <returns>The merge db information result.</returns>
+    /// <param name="agents">agents參數。</param>
+    /// <returns>傳回merge db information結果。</returns>
 
     public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
     {
@@ -434,11 +434,11 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// Gets list index.
+    /// 取得清單索引。
     /// </summary>
-    /// <param name="list">The list value.</param>
-    /// <param name="name">The name value.</param>
-    /// <returns>The get list index result.</returns>
+    /// <param name="list">list參數。</param>
+    /// <param name="name">name參數。</param>
+    /// <returns>傳回get list index結果。</returns>
 
     private static int GetListIndex(List<SecurityAgent> list, string name)
     {

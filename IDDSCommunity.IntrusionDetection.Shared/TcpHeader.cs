@@ -20,10 +20,10 @@ public class TCPHeader
     private readonly byte[] byTCPData = new byte[128];
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TCPHeader"/> class.
+    /// 初始化 <see cref="TCPHeader"/> class的新執行個體。
     /// </summary>
-    /// <param name="byBuffer">The by buffer value.</param>
-    /// <param name="nReceived">The n received value.</param>
+    /// <param name="byBuffer">by buffer參數。</param>
+    /// <param name="nReceived">n received參數。</param>
 
     public TCPHeader(byte[] byBuffer, int nReceived)
     {

@@ -22,11 +22,11 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     private int watchdogActive;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentProxy"/> class.
+    /// 初始化 <see cref="AgentProxy"/> class的新執行個體。
     /// </summary>
     /// <param name="pluginRoot">The trusted plug-in directory.</param>
-    /// <param name="assemblyFilename">The assembly filename value.</param>
-    /// <param name="typeName">The type name value.</param>
+    /// <param name="assemblyFilename">assembly filename參數。</param>
+    /// <param name="typeName">type name參數。</param>
 
     public AgentProxy(string pluginRoot, string assemblyFilename, string typeName)
     {
@@ -73,12 +73,12 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
 
     public void Stop() => GetAgent().Stop();
     /// <summary>
-    /// Executes the pause operation.
+    /// 執行pause作業。
     /// </summary>
 
     public void Pause() => GetAgent().Pause();
     /// <summary>
-    /// Executes the continue operation.
+    /// 執行continue作業。
     /// </summary>
 
     public void Continue() => GetAgent().Continue();
@@ -86,13 +86,13 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// Determines whether n pause.
     /// </summary>
-    /// <returns><see langword="true"/> if n pause; otherwise, <see langword="false"/>.</returns>
+    /// <returns>若n pause傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool CanPause() => GetAgent().CanPause();
     /// <summary>
     /// Determines whether n continue.
     /// </summary>
-    /// <returns><see langword="true"/> if n continue; otherwise, <see langword="false"/>.</returns>
+    /// <returns>若n continue傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool CanContinue() => GetAgent().CanContinue();
 
@@ -113,19 +113,19 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// Gets memory usage.
     /// </summary>
-    /// <returns>The get memory usage result.</returns>
+    /// <returns>傳回get memory usage結果。</returns>
 
     public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 
     /// <summary>
     /// Gets cpu time.
     /// </summary>
-    /// <returns>The get cpu time result.</returns>
+    /// <returns>傳回get cpu time結果。</returns>
 
     public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
 
     /// <summary>
-    /// Executes the enable monitoring operation.
+    /// 執行enable monitoring作業。
     /// </summary>
 
     public void EnableMonitoring()
@@ -188,7 +188,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     /// <summary>
-    /// Executes the disable monitoring operation.
+    /// 執行disable monitoring作業。
     /// </summary>
 
     public void DisableMonitoring()
@@ -202,7 +202,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     /// <summary>
-    /// Executes the dispose operation.
+    /// 執行dispose作業。
     /// </summary>
 
     public void Dispose()
@@ -219,7 +219,7 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     /// <summary>
-    /// Gets the active plug-in instance or rejects access after unload.
+    /// 取得 active plug-in instance or rejects access after unload.
     /// </summary>
     /// <returns>The active plug-in.</returns>
     private IAgentPlugin GetAgent() => _agent ?? throw new ObjectDisposedException(nameof(AgentProxy));

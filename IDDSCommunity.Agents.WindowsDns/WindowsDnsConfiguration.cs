@@ -4,7 +4,7 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 namespace IDDSCommunity.Agents.WindowsDns;
 
 /// <summary>
-/// Defines bounded detection windows and thresholds for Windows DNS Server activity.
+/// 定義 Windows DNS 伺服器活動的界限偵測視窗與門檻值。
 /// </summary>
 public sealed class WindowsDnsConfiguration : PluginConfiguration
 {
@@ -17,7 +17,7 @@ public sealed class WindowsDnsConfiguration : PluginConfiguration
     public int MaximumTrackedClients { get; set; } = 10000;
 
     /// <summary>
-    /// Validates that every detection boundary is positive and memory usage remains bounded.
+    /// 驗證每個偵測界限均為正數且記憶體使用量維持在界限內。
     /// </summary>
     internal void Validate()
     {

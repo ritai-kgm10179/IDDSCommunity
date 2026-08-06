@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -10,7 +10,7 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
 /// <summary>
-/// Executes Windows service state changes in a short-lived, elevated instance of the administration application.
+/// 於短生命週期提權之管理應用程式執行個體中執行 Windows 服務狀態變更作業。
 /// </summary>
 internal static class ElevatedServiceCommand
 {
@@ -19,11 +19,11 @@ internal static class ElevatedServiceCommand
     private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// Executes an elevated service command when the supplied arguments select command mode.
+    /// 當傳入引數選取命令模式時，執行提升權限之服務命令。
     /// </summary>
-    /// <param name="args">The application command-line arguments.</param>
-    /// <param name="exitCode">Receives the process exit code when command mode is selected.</param>
-    /// <returns><see langword="true"/> when command mode was selected; otherwise, <see langword="false"/>.</returns>
+    /// <param name="args">應用程式命令列引數。</param>
+    /// <param name="exitCode">當選取命令模式時傳回處理程序結束碼。</param>
+    /// <returns>若選取命令模式傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     internal static bool TryExecute(string[] args, out int exitCode)
     {
         exitCode = 0;
@@ -44,14 +44,14 @@ internal static class ElevatedServiceCommand
     }
 
     /// <summary>
-    /// Starts an elevated process and waits asynchronously for the requested service operation.
+    /// 啟動提權處理程序並非同步等待要求的服務操作完成。
     /// </summary>
-    /// <param name="serviceName">The Windows service name.</param>
-    /// <param name="command">The requested install, uninstall, start, stop, or restart command.</param>
-    /// <param name="cancellationToken">Cancels waiting for the elevated child process.</param>
-    /// <returns>A task that completes after the elevated operation succeeds.</returns>
-    /// <exception cref="InvalidOperationException">The application executable path is unavailable or the elevated operation fails.</exception>
-    /// <exception cref="Win32Exception">Windows rejects process creation or the user cancels the UAC prompt.</exception>
+    /// <param name="serviceName">Windows 服務名稱參數。</param>
+    /// <param name="command">要求的安裝、解除安裝、啟動、停止或重新啟動命令參數。</param>
+    /// <param name="cancellationToken">取消等待提權子處理程序之取消權杖。</param>
+    /// <returns>傳回於提權操作成功後完成之工作。</returns>
+    /// <exception cref="InvalidOperationException">當應用程式執行檔路徑不可用或提權操作失敗時拋出。</exception>
+    /// <exception cref="Win32Exception">當 Windows 拒絕建立處理程序或使用者取消 UAC 提示時拋出。</exception>
     internal static async Task RunElevatedAsync(string serviceName, string command, CancellationToken cancellationToken)
     {
         string executablePath = Environment.ProcessPath

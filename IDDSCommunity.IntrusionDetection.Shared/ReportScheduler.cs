@@ -11,12 +11,12 @@ public class ReportScheduler
     private CancellationTokenSource? cancellation;
 
     /// <summary>
-    /// Gets or sets how often enabled reports are checked.
+    /// 取得或設定已啟用報表的檢查間隔時間。
     /// </summary>
     public TimeSpan CheckInterval { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>
-    /// Gets whether the scheduler loop has been started.
+    /// 取得排程器迴圈是否已啟動。
     /// </summary>
     public bool IsRunning => cancellation is not null;
 
@@ -25,7 +25,7 @@ public class ReportScheduler
     public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ReportScheduler"/> class.
+    /// 初始化 <see cref="ReportScheduler"/> class的新執行個體。
     /// </summary>
 
     private ReportScheduler() : this(TimeProvider.System, NotificationSettings.Instance)
@@ -33,18 +33,18 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Initializes a scheduler with an explicit time source for deterministic tests.
+    /// 初始化具備明確時間來源的排程器以供確定性測試。
     /// </summary>
-    /// <param name="timeProvider">The source of current time and timer ticks.</param>
+    /// <param name="timeProvider">目前時間與定時器 Tick 的來源。</param>
     internal ReportScheduler(TimeProvider timeProvider) : this(timeProvider, NotificationSettings.Instance)
     {
     }
 
     /// <summary>
-    /// Initializes a scheduler with explicit time and notification dependencies.
+    /// 初始化具備明確時間與通知相依性的排程器。
     /// </summary>
-    /// <param name="timeProvider">The source of current time and timer ticks.</param>
-    /// <param name="notificationSettings">The persisted report settings and checkpoints.</param>
+    /// <param name="timeProvider">目前時間與定時器 Tick 的來源。</param>
+    /// <param name="notificationSettings">持久化的報表設定與檢查點。</param>
     public ReportScheduler(TimeProvider timeProvider, NotificationSettings notificationSettings)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
@@ -67,7 +67,7 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Starts reporting.
+    /// 啟動報表排程作業。
     /// </summary>
 
     public void StartReporting()
@@ -79,7 +79,7 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Stops the reporting loop.
+    /// 停止報表排程迴圈。
     /// </summary>
 
     public void StopReporting()
@@ -90,10 +90,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Runs the reporting checks at a fixed interval using the configured time provider.
+    /// 使用設定的時間提供者以固定間隔執行報表檢查。
     /// </summary>
-    /// <param name="cancellationToken">Stops the reporting loop.</param>
-    /// <returns>A task representing the reporting loop.</returns>
+    /// <param name="cancellationToken">停止報表排程迴圈。</param>
+    /// <returns>傳回代表報表排程迴圈的 Task。</returns>
     private async Task RunAsync(CancellationToken cancellationToken)
     {
         using PeriodicTimer timer = new(CheckInterval, timeProvider);
@@ -119,10 +119,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Executes the check daily report operation.
+    /// 執行check daily report作業。
     /// </summary>
-    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
-    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
+    /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
+    /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
 
     public async Task CheckDailyReportAsync(CancellationToken cancellationToken = default)
     {
@@ -141,10 +141,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Executes the check weekly report operation.
+    /// 執行check weekly report作業。
     /// </summary>
-    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
-    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
+    /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
+    /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
 
     public async Task CheckWeeklyReportAsync(CancellationToken cancellationToken = default)
     {
@@ -164,10 +164,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Executes the check monthly report operation.
+    /// 執行check monthly report作業。
     /// </summary>
-    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
-    /// <returns>A task that completes after the report succeeds or no report is due.</returns>
+    /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
+    /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
 
     public async Task CheckMonthlyReportAsync(CancellationToken cancellationToken = default)
     {
@@ -187,13 +187,13 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Persists report delivery transitions and advances the checkpoint only after successful delivery.
+    /// 持久化報表傳送狀態轉換，並僅於傳送成功後推進檢查點。
     /// </summary>
-    /// <param name="handlers">The report delivery handlers.</param>
-    /// <param name="setState">Updates the report delivery state.</param>
-    /// <param name="advanceCheckpoint">Advances the successful report checkpoint.</param>
-    /// <param name="cancellationToken">Signals cancellation of delivery.</param>
-    /// <returns>A task that completes after the durable state is updated.</returns>
+    /// <param name="handlers">報表傳送處理常式。</param>
+    /// <param name="setState">更新報表傳送狀態。</param>
+    /// <param name="advanceCheckpoint">推進成功傳送之報表檢查點。</param>
+    /// <param name="cancellationToken">發送取消傳送作業的訊號。</param>
+    /// <returns>傳回待持久化狀態更新完成後結束的 Task。</returns>
     private async Task DeliverAsync(
         Func<CancellationToken, Task>? handlers,
         Action<ReportDeliveryState> setState,
@@ -220,11 +220,11 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Invokes asynchronous report handlers sequentially and propagates failures to preserve retry semantics.
+    /// 依序呼叫非同步報表處理常式並傳播失敗資訊以保留重試語意。
     /// </summary>
-    /// <param name="handlers">The handlers to invoke.</param>
-    /// <param name="cancellationToken">Signals cancellation of report generation.</param>
-    /// <returns>A task that completes after every handler succeeds.</returns>
+    /// <param name="handlers">要呼叫的處理常式。</param>
+    /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
+    /// <returns>傳回待所有處理常式成功後結束的 Task。</returns>
     private static async Task InvokeAsync(Func<CancellationToken, Task>? handlers, CancellationToken cancellationToken)
     {
         if (handlers is null)
@@ -235,10 +235,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Gets week of year string.
+    /// 取得年份週次字串。
     /// </summary>
-    /// <param name="d">The d value.</param>
-    /// <returns>The get week of year string result.</returns>
+    /// <param name="d">d參數。</param>
+    /// <returns>傳回get week of year string結果。</returns>
 
     public string GetWeekOfYearString(DateTime d)
     {
@@ -249,10 +249,10 @@ public class ReportScheduler
     }
 
     /// <summary>
-    /// Gets week of year.
+    /// 取得年份週次。
     /// </summary>
-    /// <param name="d">The d value.</param>
-    /// <returns>The get week of year result.</returns>
+    /// <param name="d">d參數。</param>
+    /// <returns>傳回get week of year結果。</returns>
 
     public static int GetWeekOfYear(DateTime d)
     {

@@ -8,7 +8,7 @@ namespace IDDSCommunity.Agents.MailServer.Test;
 public class Pop3Test
 {
     /// <summary>
-    /// Executes the test pop3 parser operation.
+    /// 測試 POP3 解析器功能。
     /// </summary>
 
     [TestMethod]
@@ -24,7 +24,7 @@ public class Pop3Test
     }
 
     /// <summary>
-    /// Executes the test pop3 err msg operation.
+    /// 測試 POP3 錯誤訊息處理解析。
     /// </summary>
 
     [TestMethod]
@@ -45,10 +45,10 @@ public class Pop3Test
     bool attackDetected = false;
 
     /// <summary>
-    /// Handles the attack detected event.
+    /// 處理偵測到攻擊事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="data">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="data">事件資料。</param>
 
     void agent_AttackDetected(object sender, IntrusionDetection.Api.Plugin.INotificationEventArgs data)
     {
@@ -57,7 +57,7 @@ public class Pop3Test
     }
 
     /// <summary>
-    /// Verifies that the watcher cleanup removes only expired client state.
+    /// 驗證監聽器清理作業僅移除過期的用戶端狀態。
     /// </summary>
 
     [TestMethod]

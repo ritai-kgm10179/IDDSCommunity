@@ -33,7 +33,7 @@ public class Lock
     public long TriggerIncident { get; set; }
 
     /// <summary>
-    /// Saves requested operation.
+    /// 儲存設定變更作業。
     /// </summary>
 
     public void Save()

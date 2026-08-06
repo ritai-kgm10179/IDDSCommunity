@@ -116,7 +116,7 @@ internal static class SetupOperations
     private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
     private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
 
-    /// <summary>Stops and unregisters the Windows service, terminates associated processes, and removes files.</summary>
+    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案。</summary>
     internal static void Uninstall()
     {
         RunSc("stop", ServiceName, acceptMissing: true);

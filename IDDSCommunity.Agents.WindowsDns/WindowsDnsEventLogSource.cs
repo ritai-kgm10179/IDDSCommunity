@@ -16,7 +16,7 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
     public event Action<Exception>? Error;
 
     /// <summary>
-    /// Starts live subscriptions to the documented DNS analytical and audit channels.
+    /// 啟動已記錄之 DNS 分析與稽核通道的即時訂閱。
     /// </summary>
     public void Start()
     {
@@ -29,17 +29,17 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
     }
 
     /// <summary>
-    /// Temporarily disables both live subscriptions.
+    /// 暫時停用兩個即時訂閱通道。
     /// </summary>
     public void Pause() => SetEnabled(false);
 
     /// <summary>
-    /// Resumes both live subscriptions.
+    /// 復原兩個即時訂閱通道。
     /// </summary>
     public void Resume() => SetEnabled(true);
 
     /// <summary>
-    /// Stops and releases both live subscriptions.
+    /// 停止並釋放兩個即時訂閱通道。
     /// </summary>
     public void Stop()
     {
@@ -48,7 +48,7 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
     }
 
     /// <summary>
-    /// Releases event subscriptions and operating-system handles.
+    /// 釋放事件訂閱與作業系統控制代碼。
     /// </summary>
     public void Dispose() => Stop();
 

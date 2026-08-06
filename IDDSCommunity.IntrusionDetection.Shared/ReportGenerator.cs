@@ -13,7 +13,7 @@ public class ReportGenerator
     const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime>@p0 AND IncidentTime<@p1 AND Action=@p2 GROUP BY ClientIp ORDER BY COUNT(*)";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ReportGenerator"/> class.
+    /// 初始化 <see cref="ReportGenerator"/> class的新執行個體。
     /// </summary>
 
     private ReportGenerator()
@@ -31,9 +31,9 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Executes the daily report operation.
+    /// 執行daily report作業。
     /// </summary>
-    /// <returns>The daily report result.</returns>
+    /// <returns>傳回daily report結果。</returns>
 
     public static string DailyReport() => string.Empty;
 
@@ -42,11 +42,11 @@ public class ReportGenerator
     public long TotalHardLocks { get; set; }
 
     /// <summary>
-    /// Gets events per agent.
+    /// 取得每個 Agent 的事件數。
     /// </summary>
-    /// <param name="start">The start value.</param>
-    /// <param name="end">The end value.</param>
-    /// <returns>The get events per agent result.</returns>
+    /// <param name="start">start參數。</param>
+    /// <param name="end">end參數。</param>
+    /// <returns>傳回get events per agent結果。</returns>
 
     public string GetEventsPerAgent(DateTime start, DateTime end)
     {
@@ -101,12 +101,12 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Gets incidents by ip.
+    /// 取得依 IP 分組的事件數。
     /// </summary>
-    /// <param name="action">The action value.</param>
-    /// <param name="start">The start value.</param>
-    /// <param name="end">The end value.</param>
-    /// <returns>The get incidents by ip result.</returns>
+    /// <param name="action">action參數。</param>
+    /// <param name="start">start參數。</param>
+    /// <param name="end">end參數。</param>
+    /// <returns>傳回get incidents by ip結果。</returns>
 
     public string GetIncidentsByIP(int action, DateTime start, DateTime end)
     {
@@ -125,27 +125,27 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Gets incident by iptemplate.
+    /// 取得依 IP 範本分組的事件數。
     /// </summary>
-    /// <returns>The get incident by iptemplate result.</returns>
+    /// <returns>傳回get incident by iptemplate結果。</returns>
 
     public static string GetIncidentByIPTemplate() => Resources.IntrusionAttemptsByIp;
 
     /// <summary>
-    /// Gets events per agent template.
+    /// 取得依 Agent 範本分組的事件數。
     /// </summary>
-    /// <returns>The get events per agent template result.</returns>
+    /// <returns>傳回get events per agent template結果。</returns>
 
     public static string GetEventsPerAgentTemplate() => Resources.EventsPerAgent;
 
     /// <summary>
-    /// Sets events per agent.
+    /// 設定每個 Agent 的事件數。
     /// </summary>
-    /// <param name="agentName">The agent name value.</param>
-    /// <param name="intrusionAttempts">The intrusion attempts value.</param>
-    /// <param name="softLocks">The soft locks value.</param>
-    /// <param name="hardLocks">The hard locks value.</param>
-    /// <returns>The set events per agent result.</returns>
+    /// <param name="agentName">agent name參數。</param>
+    /// <param name="intrusionAttempts">intrusion attempts參數。</param>
+    /// <param name="softLocks">soft locks參數。</param>
+    /// <param name="hardLocks">hard locks參數。</param>
+    /// <returns>傳回set events per agent結果。</returns>
 
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
@@ -160,14 +160,14 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Gets report.
+    /// 取得報表內容。
     /// </summary>
-    /// <param name="title">The title value.</param>
-    /// <param name="subtitle">The subtitle value.</param>
-    /// <param name="installationInformation">The installation information value.</param>
-    /// <param name="start">The start value.</param>
-    /// <param name="end">The end value.</param>
-    /// <returns>The get report result.</returns>
+    /// <param name="title">title參數。</param>
+    /// <param name="subtitle">subtitle參數。</param>
+    /// <param name="installationInformation">installation information參數。</param>
+    /// <param name="start">start參數。</param>
+    /// <param name="end">end參數。</param>
+    /// <returns>傳回get report結果。</returns>
 
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
@@ -188,10 +188,10 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Replaces every user-facing report label with the selected application language.
+    /// 使用選取的應用程式語言替換每個使用者介面報表標籤。
     /// </summary>
-    /// <param name="template">The invariant report template containing localization tokens.</param>
-    /// <returns>The localized report template.</returns>
+    /// <param name="template">包含在地化標記的不變報表範本。</param>
+    /// <returns>傳回在地化報表範本。</returns>
     internal static string LocalizeReportTemplate(string template)
     {
         ArgumentNullException.ThrowIfNull(template);

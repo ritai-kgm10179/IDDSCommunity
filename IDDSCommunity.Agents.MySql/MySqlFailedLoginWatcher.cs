@@ -76,15 +76,30 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName
     {
         get => "MySQL and MariaDB Security Agent";
         set { }
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get; set; }
 
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => new("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
 }

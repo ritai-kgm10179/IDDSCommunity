@@ -26,7 +26,7 @@ public class IntrusionLog
     /// <summary>
     /// Gets system id.
     /// </summary>
-    /// <returns>The get system id result.</returns>
+    /// <returns>傳回get system id結果。</returns>
 
     public static Guid GetSystemId() => new(SYSTEM_ID);
 
@@ -110,8 +110,8 @@ public class IntrusionLog
     /// <summary>
     /// Gets status icon.
     /// </summary>
-    /// <param name="status">The status value.</param>
-    /// <returns>The get status icon result.</returns>
+    /// <param name="status">status參數。</param>
+    /// <returns>傳回get status icon結果。</returns>
 
     public static Image GetStatusIcon(int status)
     {
@@ -128,8 +128,8 @@ public class IntrusionLog
     /// <summary>
     /// Gets status class.
     /// </summary>
-    /// <param name="status">The status value.</param>
-    /// <returns>The get status class result.</returns>
+    /// <param name="status">status參數。</param>
+    /// <returns>傳回get status class結果。</returns>
 
     public static string GetStatusClass(int status)
     {
@@ -146,8 +146,8 @@ public class IntrusionLog
     /// <summary>
     /// Gets status name.
     /// </summary>
-    /// <param name="status">The status value.</param>
-    /// <returns>The get status name result.</returns>
+    /// <param name="status">status參數。</param>
+    /// <returns>傳回get status name結果。</returns>
 
     public static string GetStatusName(int status)
     {
@@ -164,8 +164,8 @@ public class IntrusionLog
     /// <summary>
     /// Reads interval.
     /// </summary>
-    /// <param name="timeSpan">The time span value.</param>
-    /// <returns>The read interval result.</returns>
+    /// <param name="timeSpan">time span參數。</param>
+    /// <returns>傳回read interval結果。</returns>
 
     public static IDataReader ReadInterval(TimeSpan timeSpan)
     {
@@ -183,7 +183,7 @@ public class IntrusionLog
     /// <summary>
     /// Gets last log id.
     /// </summary>
-    /// <returns>The get last log id result.</returns>
+    /// <returns>傳回get last log id結果。</returns>
 
     public static int GetLastLogId()
     {
@@ -203,8 +203,8 @@ public class IntrusionLog
     /// <summary>
     /// Reads interval grouped.
     /// </summary>
-    /// <param name="timeSpan">The time span value.</param>
-    /// <returns>The read interval grouped result.</returns>
+    /// <param name="timeSpan">time span參數。</param>
+    /// <returns>傳回read interval grouped結果。</returns>
 
     public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
     {
@@ -221,8 +221,8 @@ public class IntrusionLog
     /// <summary>
     /// Determines whether s updates.
     /// </summary>
-    /// <param name="lastSequenceNumber">The last sequence number value.</param>
-    /// <returns><see langword="true"/> if s updates; otherwise, <see langword="false"/>.</returns>
+    /// <param name="lastSequenceNumber">last sequence number參數。</param>
+    /// <returns>若s updates傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool HasUpdates(int lastSequenceNumber)
     {
@@ -247,8 +247,8 @@ public class IntrusionLog
     /// <summary>
     /// Reads differential.
     /// </summary>
-    /// <param name="lastSequenceNumber">The last sequence number value.</param>
-    /// <returns>The read differential result.</returns>
+    /// <param name="lastSequenceNumber">last sequence number參數。</param>
+    /// <returns>傳回read differential結果。</returns>
 
     public static IDataReader ReadDifferential(int lastSequenceNumber)
     {
@@ -266,8 +266,8 @@ public class IntrusionLog
     /// <summary>
     /// Reads unsuccessful attempts.
     /// </summary>
-    /// <param name="startDate">The start date value.</param>
-    /// <returns>The read unsuccessful attempts result.</returns>
+    /// <param name="startDate">start date參數。</param>
+    /// <returns>傳回read unsuccessful attempts結果。</returns>
 
     public static int ReadUnsuccessfulAttempts(DateTime startDate)
     {
@@ -285,12 +285,12 @@ public class IntrusionLog
     /// <summary>
     /// Adds entry.
     /// </summary>
-    /// <param name="incidentTime">The incident time value.</param>
-    /// <param name="agentId">The agent id value.</param>
-    /// <param name="clientIp">The client ip value.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="actionTriggeredByUser">The action triggered by user value.</param>
-    /// <returns>The add entry result.</returns>
+    /// <param name="incidentTime">incident time參數。</param>
+    /// <param name="agentId">agent id參數。</param>
+    /// <param name="clientIp">client ip參數。</param>
+    /// <param name="action">action參數。</param>
+    /// <param name="actionTriggeredByUser">action triggered by user參數。</param>
+    /// <returns>傳回add entry結果。</returns>
 
     public static long AddEntry(DateTime incidentTime, Guid agentId, string clientIp, int action, bool actionTriggeredByUser)
     {
@@ -310,9 +310,9 @@ values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
     /// <summary>
     /// Gets incidents by agent id.
     /// </summary>
-    /// <param name="agentId">The agent id value.</param>
-    /// <param name="IpAddress">The ip address value.</param>
-    /// <returns>The get incidents by agent id result.</returns>
+    /// <param name="agentId">agent id參數。</param>
+    /// <param name="IpAddress">ip address參數。</param>
+    /// <returns>傳回get incidents by agent id結果。</returns>
 
     public static int GetIncidentsByAgentId(Guid agentId, string IpAddress)
     {

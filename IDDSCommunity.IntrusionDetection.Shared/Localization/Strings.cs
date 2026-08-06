@@ -16,18 +16,18 @@ public static class Strings
     }
 
     /// <summary>
-    /// Gets a localized user-facing string from the shared string resources.
+    /// 取得 localized user-facing string from the shared string resources.
     /// </summary>
-    /// <param name="key">The invariant resource key.</param>
-    /// <returns>The localized value, or <paramref name="key"/> when the resource is missing.</returns>
+    /// <param name="key">不變資源金鑰。</param>
+    /// <returns>傳回在地化數值；當資源不存在時傳回 <paramref name="key"/>。</returns>
     public static string Get(string key) => LanguageManager.Instance.GetString(key, key);
 
     /// <summary>
-    /// Formats a localized user-facing string using the selected application culture.
+    /// 使用選取的應用程式文化特性格式化在地化的使用者介面字串。
     /// </summary>
-    /// <param name="key">The invariant resource key and fallback format.</param>
-    /// <param name="arguments">The values inserted into the localized format.</param>
-    /// <returns>The localized and culture-aware formatted value.</returns>
+    /// <param name="key">不變資源金鑰與後備格式字串。</param>
+    /// <param name="arguments">插入在地化格式的引數。</param>
+    /// <returns>傳回符合文化特性的格式化在地化數值。</returns>
     public static string Format(string key, params object?[] arguments) =>
         string.Format(LanguageManager.Instance.CurrentCulture, Get(key), arguments);
 

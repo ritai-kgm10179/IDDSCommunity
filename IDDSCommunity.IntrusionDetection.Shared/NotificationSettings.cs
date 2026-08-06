@@ -102,7 +102,7 @@ public class NotificationSettings
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="NotificationSettings"/> class.
+    /// 初始化 <see cref="NotificationSettings"/> class的新執行個體。
     /// </summary>
 
     public NotificationSettings(IddsConfig configuration)
@@ -112,10 +112,10 @@ public class NotificationSettings
     }
 
     /// <summary>
-    /// Executes the string to bool operation.
+    /// 執行string to bool作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     private static bool StringToBool(string value)
     {
@@ -124,21 +124,21 @@ public class NotificationSettings
     }
 
     /// <summary>
-    /// Reads a persisted report delivery state and safely handles missing or invalid values.
+    /// 讀取持久化的報表傳送狀態，並安全處理缺失或無效的數值。
     /// </summary>
-    /// <param name="key">The report state key.</param>
-    /// <returns>The parsed state, or <see cref="ReportDeliveryState.None"/>.</returns>
+    /// <param name="key">報表狀態金鑰。</param>
+    /// <returns>傳回解析後的狀態；若無效則傳回 <see cref="ReportDeliveryState.None"/>。</returns>
     private ReportDeliveryState GetReportState(string key) =>
         Enum.TryParse(configuration.GetConfigValue(key), ignoreCase: true, out ReportDeliveryState state) ? state : ReportDeliveryState.None;
 
     /// <summary>
-    /// Executes the reload operation.
+    /// 執行reload作業。
     /// </summary>
 
     public void Reload() => configuration.LoadAppConfig();
 
     /// <summary>
-    /// Saves requested operation.
+    /// 儲存設定變更作業。
     /// </summary>
 
     public void Save() => configuration.SaveAppConfig();

@@ -1,17 +1,17 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
-
 /// <summary>
-/// Plugin types
+/// 擴充元件型別列舉。
 /// </summary>
 public enum PluginTypes
 {
     /// <summary>
-    /// Type is agent
+    /// 型別為 Agent。
     /// </summary>
     Agent = 0,
+
     /// <summary>
-    /// Type is Listener
+    /// 型別為事件監聽器。
     /// </summary>
     NotificationListener = 1
 }

@@ -6,11 +6,12 @@ using System.Drawing;
 
 namespace IDDSCommunity.IntrusionDetection.Base.Plugins;
 
+/// <summary>
+/// 掃描與監控系統事件紀錄中 Windows 登入失敗攻擊之基礎入侵偵測 Agent。
+/// </summary>
 [Plugin("Intrusion Detection Base Windows Security Agent", "This agent scans and monitors the system eventlog for possible attacks.")]
 public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
 {
-
-
     private EventLogQuery? query;
     private EventLogWatcher? watcher;
 
@@ -24,16 +25,14 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
                 </QueryList>";
 
     /// <summary>
-    /// Initialize the Agent
+    /// 初始化 <see cref="WindowsSecurityBase"/> 類別的新執行個體。
     /// </summary>
     public WindowsSecurityBase()
     {
-
     }
 
-
     /// <summary>
-    /// Agent Startup, initialization of our EventLog watcher
+    /// 啟動 Agent 服務並初始化事件紀錄監聽器。
     /// </summary>
     protected override void OnStartAgent()
     {
@@ -45,17 +44,17 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Resume from Pause
+    /// 從暫停狀態復原 Agent 服務。
     /// </summary>
     protected override void OnContinueAgent() => watcher!.Enabled = true;
 
     /// <summary>
-    /// Pause the agent
+    /// 暫停 Agent 服務。
     /// </summary>
     protected override void OnPauseAgent() => watcher!.Enabled = false;
 
     /// <summary>
-    /// Stop the agent
+    /// 停止 Agent 服務並釋放事件紀錄監聽器。
     /// </summary>
     protected override void OnStopAgent()
     {
@@ -65,11 +64,10 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     }
 
     /// <summary>
-    /// Handles the event record written event.
+    /// 處理事件紀錄寫入事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
-
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件紀錄寫入參數。</param>
     private void watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try
@@ -93,17 +91,31 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
         }
     }
 
-
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName
     {
         get => Api.Localization.Strings.Get("Windows Base Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public Image? Icon { get; set; }
+
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? SelectedIcon { get; set; }
+
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public Image? UnselectedIcon { get; set; }
 
-
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => new("{CC03AE88-51B4-426C-BA68-50875D70409F}");
-
 }

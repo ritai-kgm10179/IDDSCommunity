@@ -47,10 +47,10 @@ public class LockStatusAdapter
     }
 
     /// <summary>
-    /// Gets lock status name.
+    /// 取得鎖定狀態名稱。
     /// </summary>
-    /// <param name="status">The status value.</param>
-    /// <returns>The get lock status name result.</returns>
+    /// <param name="status">status參數。</param>
+    /// <returns>傳回get lock status name結果。</returns>
 
     public static string GetLockStatusName(int status)
     {

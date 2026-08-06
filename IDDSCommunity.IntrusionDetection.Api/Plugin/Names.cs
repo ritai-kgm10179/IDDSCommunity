@@ -1,12 +1,12 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 /// <summary>
-/// Internal class needed for naming
+/// 提供擴充元件型別命名定義之類別。
 /// </summary>
 public class Names
 {
     /// <summary>
-    /// Returns display names
+    /// 取得擴充元件型別之顯示名稱陣列。
     /// </summary>
     public static readonly string[] pluginTypeNames = ["Agent", "NotificationListener"];
 }

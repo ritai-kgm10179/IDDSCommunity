@@ -3,42 +3,42 @@
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 /// <summary>
-/// Represents one persisted protection-control action or failure for operational review.
+/// 代表供營運審查使用的一個持久化保護控制動作或失敗紀錄。
 /// </summary>
 public sealed class ProtectionAuditEvent
 {
     /// <summary>
-    /// Gets the database sequence number.
+    /// 取得 database sequence number.
     /// </summary>
     public long Id { get; init; }
 
     /// <summary>
-    /// Gets the UTC occurrence time.
+    /// 取得 UTC occurrence time.
     /// </summary>
     public DateTimeOffset OccurredUtc { get; init; }
 
     /// <summary>
-    /// Gets the stable machine-readable event type.
+    /// 取得 stable machine-readable event type.
     /// </summary>
     public string EventType { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets the stable outcome code, such as Succeeded or Failed.
+    /// 取得 stable outcome code, such as Succeeded or Failed.
     /// </summary>
     public string Outcome { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets the service or user identity that initiated the action.
+    /// 取得 service or user identity that initiated the action.
     /// </summary>
     public string Actor { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets the protected resource or address affected by the action.
+    /// 取得 protected resource or address affected by the action.
     /// </summary>
     public string Subject { get; init; } = string.Empty;
 
     /// <summary>
-    /// Gets non-sensitive diagnostic details.
+    /// 取得非機密的診斷詳細資訊。
     /// </summary>
     public string Details { get; init; } = string.Empty;
 }

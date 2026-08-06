@@ -5,10 +5,10 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 public class DbValueConverter
 {
     /// <summary>
-    /// Executes the to bool operation.
+    /// 執行to bool作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns><see langword="true"/> if the operation succeeds; otherwise, <see langword="false"/>.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool ToBool(object? value)
     {
@@ -18,10 +18,10 @@ public class DbValueConverter
     }
 
     /// <summary>
-    /// Executes the to string operation.
+    /// 執行to string作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The to string result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回to string結果。</returns>
 
     public static string ToString(object? value)
     {
@@ -30,10 +30,10 @@ public class DbValueConverter
     }
 
     /// <summary>
-    /// Executes the to int operation.
+    /// 執行to int作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The to int result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回to int結果。</returns>
 
     public static int ToInt(object? value)
     {
@@ -43,10 +43,10 @@ public class DbValueConverter
     }
 
     /// <summary>
-    /// Executes the to int64 operation.
+    /// 執行to int64作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The to int64 result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回to int64結果。</returns>
 
     public static long ToInt64(object? value)
     {
@@ -56,10 +56,10 @@ public class DbValueConverter
     }
 
     /// <summary>
-    /// Executes the to guid operation.
+    /// 執行to guid作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The to guid result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回to guid結果。</returns>
 
     public static Guid ToGuid(object? value)
     {
@@ -72,10 +72,10 @@ public class DbValueConverter
     }
 
     /// <summary>
-    /// Executes the to date time operation.
+    /// 執行to date time作業。
     /// </summary>
-    /// <param name="value">The value to process.</param>
-    /// <returns>The to date time result.</returns>
+    /// <param name="value">要處理的value。</param>
+    /// <returns>傳回to date time結果。</returns>
 
     public static DateTime ToDateTime(object? value)
     {
