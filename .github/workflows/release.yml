@@ -109,7 +109,7 @@ jobs:
           ./build-setup.ps1 -RuntimeIdentifier $env:RELEASE_RID -Configuration Release -Version $env:RELEASE_VERSION
           $package = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID"
           $archive = "artifacts/setup/idds-community-$env:RELEASE_VERSION-$env:RELEASE_RID.zip"
-          if (-not (Test-Path "$package/IDDSCommunity.IntrusionDetection.Setup.exe")) { throw 'Setup executable is missing.' }
+          if (-not (Test-Path "$package/Setup.exe")) { throw 'Setup executable is missing.' }
           if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Service.exe")) { throw 'Service payload is missing.' }
           if (-not (Test-Path "$package/payload/IDDSCommunity.IntrusionDetection.Admin.exe")) { throw 'Admin payload is missing.' }
 
