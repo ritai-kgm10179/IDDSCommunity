@@ -619,7 +619,7 @@
   <data name="FTP Security Agent" xml:space="preserve"><value>FTP 安全性代理程式</value></data>
   <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP 安全性代理程式</value></data>
   <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server 安全性代理程式</value></data>
-  <data name="MySql Server Security Agent" xml:space="preserve"><value>MySQL Server 安全性代理程式</value></data>
+  <data name="MySQL and MariaDB Security Agent" xml:space="preserve"><value>MySQL／MariaDB 安全性代理程式</value></data>
   <data name="TLS/SSL Security Agent" xml:space="preserve"><value>遠端桌面安全性代理程式</value></data>
   <data name="Web Security Agent" xml:space="preserve"><value>Web 安全性代理程式</value></data>
   <data name="IDDSCommunity.Agents.MailServer.Pop3Agent" xml:space="preserve"><value>POP3 安全性代理程式</value></data>
@@ -639,7 +639,7 @@
   <data name="The Windows service management command failed with exit code {0}." xml:space="preserve"><value>Windows 服務管理命令失敗，結束代碼為 {0}。</value></data>
   <data name="Unsupported service name." xml:space="preserve"><value>不支援的服務名稱。</value></data>
   <data name="Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned." xml:space="preserve"><value>偵測來源：Windows 應用程式事件記錄，事件識別碼 18456；不會掃描資料庫連接埠。</value></data>
-  <data name="Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned." xml:space="preserve"><value>偵測來源：Windows 應用程式事件記錄，事件識別碼 100；不會掃描資料庫連接埠。</value></data>
+  <data name="Detection source: MySQL or MariaDB entries in the Windows Application Event Log. The database port is not scanned." xml:space="preserve"><value>偵測來源：Windows 應用程式事件記錄中的 MySQL 或 MariaDB 事件；不會掃描資料庫連接埠。</value></data>
   <data name="Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned." xml:space="preserve"><value>偵測來源：Windows 應用程式事件記錄，事件識別碼 661；不會掃描資料庫連接埠。</value></data>
   <data name="Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs." xml:space="preserve"><value>分析設定連接埠上的未加密 IMAP；STARTTLS 成功後停止解析。連接埠 993 的隱含式 TLS 必須改用伺服器端記錄。</value></data>
   <data name="Agent status" xml:space="preserve"><value>代理程式狀態</value></data>

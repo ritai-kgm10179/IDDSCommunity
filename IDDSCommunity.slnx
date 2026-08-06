@@ -7,6 +7,7 @@
   <Project Path="IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.IisAuthentication/IDDSCommunity.Agents.IisAuthentication.csproj" />
   <Project Path="IDDSCommunity.Agents.MySql/IDDSCommunity.Agents.MySql.csproj" />
+  <Project Path="IDDSCommunity.Agents.MySql.Test/IDDSCommunity.Agents.MySql.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.OpenSsh/IDDSCommunity.Agents.OpenSsh.csproj" />
   <Project Path="IDDSCommunity.Agents.OpenSsh.Test/IDDSCommunity.Agents.OpenSsh.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.PostgreSql/IDDSCommunity.Agents.PostgreSql.csproj" />

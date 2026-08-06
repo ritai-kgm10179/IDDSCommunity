@@ -140,7 +140,7 @@ public partial class PanelPluginConfiguration : UserControl
     private static string? GetProtectionDetails(string agentName) => agentName switch
     {
         "IDDSCommunity.Agents.SqlServer.SqlFailedLoginWatcher" => Strings.Get("Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned."),
-        "IDDSCommunity.Agents.MySql.MySqlFailedLoginWatcher" => Strings.Get("Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned."),
+        "IDDSCommunity.Agents.MySql.MySqlFailedLoginWatcher" => Strings.Get("Detection source: MySQL or MariaDB entries in the Windows Application Event Log. The database port is not scanned."),
         "IDDSCommunity.Agents.FileMaker.FileMakerSecurityAgent" => Strings.Get("Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned."),
         "IDDSCommunity.Agents.MailServer.ImapAgent" => Strings.Get("Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs."),
         _ => null

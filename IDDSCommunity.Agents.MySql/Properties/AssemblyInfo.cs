@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("IDDSCommunity.Agents.MySql")]
+[assembly: InternalsVisibleTo("IDDSCommunity.Agents.MySql.Test")]
 [assembly: AssemblyCopyright("Copyright © IDDSCommunity 2016")]
 [assembly: AssemblyTrademark("IDDSCommunity Limited")]
 [assembly: AssemblyCulture("")]

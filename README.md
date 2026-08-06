@@ -16,7 +16,7 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - 硬封鎖、軟封鎖、安全網路允許清單與自動解除封鎖。
 - Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
-- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
+- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
 - 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各 Agent 可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。
 - 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 Argon2id（64 MiB、3 次、單一平行度）衍生金鑰，再由 AES-256-GCM 加密及驗證。匯入前會限制密碼衍生參數、驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
 - 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。
@@ -29,6 +29,17 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - Agent 是否適用取決於伺服器版本、事件記錄設定、通訊協定及部署權限；上線前必須在隔離環境驗證。
 - Windows 網路登入 Agent 僅處理事件 `4625`、登入類型 `3` 與高可信度認證失敗狀態；它涵蓋 SMB 等網路登入來源，但不宣稱能僅依該事件精確辨識 SMB。
 - OpenSSH 預設讀取 `OpenSSH/Operational`，亦可設定文字記錄檔；PostgreSQL 支援一般文字與 `jsonlog`；IIS 讀取 W3C `401` 記錄，並可選擇限制受保護 URL 前綴。
+- MySQL／MariaDB Agent 讀取 Windows Application Event Log，只接受標準 `MySQL` 或 `MariaDB` 來源中同時具有 `Access denied for user` 與有效來源 IP 的事件；不掃描資料庫連接埠。MySQL 8 可能需要啟用 `log_sink_syseventlog`；設定 `syseventlog.tag` 產生的自訂 Provider 名稱目前不支援。
+
+## 快速開始
+
+1. 從 GitHub Release 下載與 Windows 架構相符的自帶 Runtime 安裝包並完成安裝。
+2. 啟動管理介面；若顯示找不到服務，按「安裝服務」並接受 UAC 提示。
+3. 先到「設定 > 安全網路」加入管理主機的 IP 或 CIDR，再啟用任何硬封鎖。
+4. 到「代理程式」只啟用本機實際使用的服務，確認事件記錄或日誌來源後儲存設定。
+5. 啟動服務，從隔離測試主機製造受控的失敗登入，再到「安全性記錄」及「目前封鎖」確認結果。
+
+完整的 Agent 支援矩陣、首次設定、驗證、備份、報表、誤封鎖復原與移除步驟請參閱 [`docs/USER-GUIDE.zh-TW.md`](docs/USER-GUIDE.zh-TW.md)。
 
 ## 建置與測試
 
