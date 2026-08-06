@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
@@ -12,7 +12,6 @@
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Base\IDDSCommunity.IntrusionDetection.Base.Plugins.csproj" />
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj" />
-    <ProjectReference Include="..\DemoAgent\DemoAgent.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,9 +14,9 @@ public sealed class AgentProxyLifecycleTest
     [TestMethod]
     public void Dispose_ReleasesPluginAndRejectsFurtherAccess()
     {
-        string assemblyPath = typeof(DemoAgent.DemoAgent).Assembly.Location;
+        string assemblyPath = typeof(IDDSCommunity.IntrusionDetection.Base.Plugins.WindowsSecurityBase).Assembly.Location;
         string pluginRoot = Path.GetDirectoryName(assemblyPath)!;
-        AgentProxy proxy = new(pluginRoot, assemblyPath, typeof(DemoAgent.DemoAgent).FullName!);
+        AgentProxy proxy = new(pluginRoot, assemblyPath, typeof(IDDSCommunity.IntrusionDetection.Base.Plugins.WindowsSecurityBase).FullName!);
 
         proxy.Dispose();
 
