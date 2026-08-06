@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
@@ -76,12 +77,85 @@ internal static class SetupOperations
         log.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 0);
     }
 
-    /// <summary>Stops and unregisters the Windows service.</summary>
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
+    private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
+
+    /// <summary>Stops and unregisters the Windows service, terminates associated processes, and removes files.</summary>
     internal static void Uninstall()
     {
         RunSc("stop", ServiceName, acceptMissing: true);
         RunSc("delete", ServiceName, acceptMissing: true);
-        if (Directory.Exists(InstallDirectory)) Directory.Delete(InstallDirectory, true);
+        KillRunningProcesses();
+        System.Threading.Thread.Sleep(500);
+        SafeDeleteDirectory(InstallDirectory);
+    }
+
+    private static void KillRunningProcesses()
+    {
+        string[] targetProcessNames = ["IDDSCommunity.IntrusionDetection.Service", "IDDSCommunity.IntrusionDetection.Admin"];
+        foreach (string name in targetProcessNames)
+        {
+            try
+            {
+                foreach (Process p in Process.GetProcessesByName(name))
+                {
+                    try
+                    {
+                        string? mainModulePath = p.MainModule?.FileName;
+                        if (mainModulePath != null && mainModulePath.StartsWith(InstallDirectory, StringComparison.OrdinalIgnoreCase))
+                        {
+                            p.Kill(true);
+                            p.WaitForExit(2000);
+                        }
+                    }
+                    catch
+                    {
+                        // Fallback if MainModule inspect fails (e.g. process exiting)
+                        try { p.Kill(true); } catch { }
+                    }
+                }
+            }
+            catch { }
+        }
+    }
+
+    private static void SafeDeleteDirectory(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath)) return;
+
+        foreach (string file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+        {
+            try
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
+            catch (Exception)
+            {
+                // Handle file locks (e.g. runtime DLLs like clrjit.dll) via Win32 delay until reboot
+                try
+                {
+                    MoveFileEx(file, null, MOVEFILE_DELAY_UNTIL_REBOOT);
+                }
+                catch { }
+            }
+        }
+
+        foreach (string subDir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories).OrderByDescending(d => d.Length))
+        {
+            try
+            {
+                Directory.Delete(subDir, false);
+            }
+            catch { }
+        }
+
+        try
+        {
+            Directory.Delete(directoryPath, true);
+        }
+        catch { }
     }
 
     private static void CopyDirectory(string source, string destination)
