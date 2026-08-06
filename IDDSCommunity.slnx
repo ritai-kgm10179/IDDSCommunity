@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Project Path="IDDSCommunity.Agents.Authentication.Common/IDDSCommunity.Agents.Authentication.Common.csproj" />
   <Project Path="IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.FileMaker/IDDSCommunity.Agents.FileMaker.csproj" />
@@ -21,16 +21,12 @@
   <Project Path="IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsNetworkLogon.Test/IDDSCommunity.Agents.WindowsNetworkLogon.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsDns.Test/IDDSCommunity.Agents.WindowsDns.Test.csproj" />
-  <Project Path="IDDSCommunity.IDDS.Management/IDDSCommunity.IDDS.Management.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Admin/IDDSCommunity.IntrusionDetection.Admin.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Api/IDDSCommunity.IntrusionDetection.Api.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Base/IDDSCommunity.IntrusionDetection.Base.Plugins.csproj" />
-  <Project Path="IDDSCommunity.IntrusionDetection.Cmd/IDDSCommunity.IntrusionDetection.Cmd.csproj" />
-  <Project Path="IDDSCommunity.IntrusionDetection.Cmd.Test/IDDSCommunityIntrusionDetection.Cmd.Test.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Service/IDDSCommunity.IntrusionDetection.Service.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared/IDDSCommunity.IntrusionDetection.Shared.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared.Test/IDDSCommunity.IntrusionDetection.Shared.Test.csproj" />
-  <Project Path="DemoAgent/DemoAgent.csproj" />
 </Solution>

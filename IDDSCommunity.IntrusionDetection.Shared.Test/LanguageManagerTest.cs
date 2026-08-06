@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -147,8 +147,7 @@ public class LanguageManagerTest
         string root = FindRepositoryRoot();
         string[] sourceRoots =
         [
-            Path.Combine(root, "IDDSCommunity.IntrusionDetection.Admin"),
-            Path.Combine(root, "IDDSCommunity.IDDS.Management")
+            Path.Combine(root, "IDDSCommunity.IntrusionDetection.Admin")
         ];
         Regex removedFeature = new("\\b(?:licen[cs](?:e|ing|ed)?|activation|pro edition|unlimited edition|register online)\\b|授權|僅限專業版|無限版本|線上註冊", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         List<string> violations = [];
