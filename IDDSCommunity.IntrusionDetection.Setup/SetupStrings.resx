@@ -5,11 +5,18 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Title" xml:space="preserve"><value>IDDS Community Setup</value></data>
-  <data name="Description" xml:space="preserve"><value>Install or remove IDDS Community 3.0.0 and its Windows service. This independent community fork is not affiliated with IDDSCOMMUNITY AG.</value></data>
+  <data name="Description" xml:space="preserve"><value>Install or remove IDDS Community 3.0.0 and its Windows service. This independent community fork is not affiliated with CYBERARMS AG.</value></data>
   <data name="Install" xml:space="preserve"><value>Install</value></data>
   <data name="Uninstall" xml:space="preserve"><value>Uninstall</value></data>
   <data name="Confirm" xml:space="preserve"><value>Are you sure you want to {0} IDDS Community?</value></data>
-  <data name="Completed" xml:space="preserve"><value>{0} completed.</value></data>
+  <data name="Completed" xml:space="preserve"><value>{0} completed.
+
+Target location: {1}</value></data>
+  <data name="InstallLocation" xml:space="preserve"><value>Target directory: {0}</value></data>
+  <data name="StatusInstalled" xml:space="preserve"><value>Status: Installed</value></data>
+  <data name="StatusNotInstalled" xml:space="preserve"><value>Status: Not Installed</value></data>
+  <data name="Reinstall" xml:space="preserve"><value>Reinstall</value></data>
+  <data name="LaunchApp" xml:space="preserve"><value>Launch Application</value></data>
   <data name="PayloadMissing" xml:space="preserve"><value>The setup payload directory was not found.</value></data>
   <data name="ServiceExecutableMissing" xml:space="preserve"><value>The IDDS Community service executable was not found.</value></data>
   <data name="ServiceControlStartFailed" xml:space="preserve"><value>Windows Service Control Manager could not be started.</value></data>
