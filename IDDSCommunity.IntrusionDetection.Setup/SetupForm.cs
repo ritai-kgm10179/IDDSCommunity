@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -41,12 +41,44 @@ internal sealed class SetupForm : Form
     private void UpdateStatus()
     {
         bool installed = SetupOperations.IsInstalled;
-        statusLabel.Text = SetupText.Get(installed ? "StatusInstalled" : "StatusNotInstalled");
-        statusLabel.ForeColor = installed ? Teal : Color.FromArgb(100, 116, 139);
+        SetupOperations.InstallAction action = SetupOperations.CurrentInstallAction;
+        Version? installedVer = SetupOperations.InstalledVersion;
+        Version setupVer = SetupOperations.CurrentSetupVersion;
+
+        if (action == SetupOperations.InstallAction.FreshInstall)
+        {
+            statusLabel.Text = SetupText.Get("StatusNotInstalled");
+            statusLabel.ForeColor = Color.FromArgb(100, 116, 139);
+            installButton.Text = SetupText.Get("Install");
+            installButton.BackColor = Teal;
+            installButton.ForeColor = Color.White;
+        }
+        else if (action == SetupOperations.InstallAction.Upgrade)
+        {
+            statusLabel.Text = SetupText.Format("StatusUpgradeAvailable", installedVer?.ToString(3) ?? "3.0.0", setupVer.ToString(3));
+            statusLabel.ForeColor = Teal;
+            installButton.Text = SetupText.Get("Upgrade");
+            installButton.BackColor = Teal;
+            installButton.ForeColor = Color.White;
+        }
+        else if (action == SetupOperations.InstallAction.Downgrade)
+        {
+            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? setupVer.ToString(3));
+            statusLabel.ForeColor = Color.FromArgb(225, 29, 72);
+            installButton.Text = SetupText.Get("Downgrade");
+            installButton.BackColor = Color.FromArgb(225, 29, 72);
+            installButton.ForeColor = Color.White;
+        }
+        else
+        {
+            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? setupVer.ToString(3));
+            statusLabel.ForeColor = Teal;
+            installButton.Text = SetupText.Get("Reinstall");
+            installButton.BackColor = Color.White;
+            installButton.ForeColor = Navy;
+        }
+
         launchAppButton.Visible = installed && SetupOperations.CanLaunchApp;
-        installButton.Text = SetupText.Get(installed ? "Reinstall" : "Install");
-        installButton.BackColor = installed ? Color.White : Teal;
-        installButton.ForeColor = installed ? Navy : Color.White;
         uninstallButton.Enabled = installed;
     }
 
@@ -64,9 +96,28 @@ internal sealed class SetupForm : Form
 
     private async Task ExecuteAsync(bool install)
     {
-        string action = SetupText.Get(install ? "Install" : "Uninstall");
-        if (MessageBox.Show(SetupText.Format("Confirm", action), Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-            return;
+        SetupOperations.InstallAction currentAction = SetupOperations.CurrentInstallAction;
+        string actionName = install ? (currentAction switch
+        {
+            SetupOperations.InstallAction.Upgrade => SetupText.Get("Upgrade"),
+            SetupOperations.InstallAction.Downgrade => SetupText.Get("Downgrade"),
+            SetupOperations.InstallAction.Reinstall => SetupText.Get("Reinstall"),
+            _ => SetupText.Get("Install")
+        }) : SetupText.Get("Uninstall");
+
+        if (install && currentAction == SetupOperations.InstallAction.Downgrade)
+        {
+            Version installedVer = SetupOperations.InstalledVersion ?? new Version(3, 0, 0);
+            Version setupVer = SetupOperations.CurrentSetupVersion;
+            if (MessageBox.Show(SetupText.Format("DowngradeConfirm", installedVer.ToString(3), setupVer.ToString(3)), Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+        }
+        else
+        {
+            if (MessageBox.Show(SetupText.Format("Confirm", actionName), Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+        }
+
         installButton.Enabled = uninstallButton.Enabled = false;
         try
         {
@@ -75,7 +126,7 @@ internal sealed class SetupForm : Form
                 if (install) SetupOperations.Install();
                 else SetupOperations.Uninstall();
             });
-            MessageBox.Show(SetupText.Format("Completed", action, SetupOperations.InstallDirectory), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(SetupText.Format("Completed", actionName, SetupOperations.InstallDirectory), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception exception)
         {

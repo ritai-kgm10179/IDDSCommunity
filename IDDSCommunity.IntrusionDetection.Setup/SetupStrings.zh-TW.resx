@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -23,4 +23,9 @@
   <data name="ServiceControlFailed" xml:space="preserve"><value>Windows 服務操作失敗，結束碼：{0}。</value></data>
   <data name="ServiceDescription" xml:space="preserve"><value>IDDS Community 入侵偵測與主動防護服務</value></data>
   <data name="ReparsePointRejected" xml:space="preserve"><value>安裝 payload 不得包含重新解析點。</value></data>
+  <data name="Upgrade" xml:space="preserve"><value>升級</value></data>
+  <data name="Downgrade" xml:space="preserve"><value>降級</value></data>
+  <data name="StatusInstalledWithVersion" xml:space="preserve"><value>目前狀態：已安裝 (v{0})</value></data>
+  <data name="StatusUpgradeAvailable" xml:space="preserve"><value>目前狀態：已安裝 (v{0})，可升級至 v{1}</value></data>
+  <data name="DowngradeConfirm" xml:space="preserve"><value>系統目前已安裝較新版本 (v{0})。您確定要降級安裝至版本 v{1} 嗎？</value></data>
 </root>
