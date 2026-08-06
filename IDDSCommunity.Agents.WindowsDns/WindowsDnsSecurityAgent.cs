@@ -102,9 +102,9 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
         set { }
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
     public Guid Id => new("{0E5C35B5-7B2E-4DD5-970D-89A33C935A51}");
 }

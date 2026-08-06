@@ -76,7 +76,7 @@ try {
     if (-not (Test-Path -LiteralPath $packageRoot)) {
         New-Item -ItemType Directory -Path $packageRoot -Force | Out-Null
     }
-    Copy-Item -LiteralPath (Join-Path $setupTempOut 'IDDSCommunity.IntrusionDetection.Setup.exe') -Destination $packageRoot -Force
+    Copy-Item -LiteralPath (Join-Path $setupTempOut 'Setup.exe') -Destination $packageRoot -Force
 }
 finally {
     if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }
