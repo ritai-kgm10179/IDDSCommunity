@@ -22,6 +22,7 @@ public class IddsConfig
 
     public const string CONFIG_VALUE_IS_DEBUG = "Configuration.IsDebug";
     public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
+    public const string CONFIG_VALUE_FIREWALL_BLOCK_MODE = "Configuration.FirewallBlockMode";
 
 
     private const int IDDS_PRODUCT_ID = 0x66;
@@ -478,6 +479,21 @@ public class IddsConfig
         {
             SetConfigValue(CONFIG_VALUE_LANGUAGE, value);
             Localization.LanguageManager.Instance.Initialize(value);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the supported Windows Firewall blocking mode. Invalid or obsolete values fail closed to inbound blocking.
+    /// </summary>
+    public FirewallBlockMode FirewallBlockMode
+    {
+        get => Enum.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_BLOCK_MODE), true, out FirewallBlockMode mode)
+            && Enum.IsDefined(mode) ? mode : FirewallBlockMode.Inbound;
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetConfigValue(CONFIG_VALUE_FIREWALL_BLOCK_MODE, value.ToString());
         }
     }
 
