@@ -17,8 +17,8 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     public IDDSCommunityCurrentLocks()
     {
         InitializeComponent();
-        pictureBox3.Image = InterfaceIcons.CreateLock(32);
-        pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(20, true);
+        pictureBox3.Image = InterfaceIcons.CreateLock(Math.Min(pictureBox3.ClientSize.Width, pictureBox3.ClientSize.Height));
+        pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(Math.Min(pictureBoxActionMenuUnlock.ClientSize.Width, pictureBoxActionMenuUnlock.ClientSize.Height), true);
     }
 
 

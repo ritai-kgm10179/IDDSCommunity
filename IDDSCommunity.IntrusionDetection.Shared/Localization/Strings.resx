@@ -161,9 +161,6 @@
   <data name="IDDSCommunity IDDS is starting..." xml:space="preserve">
     <value>IDDS Community is starting...</value>
   </data>
-  <data name="IDDSCOMMUNITY SECURITY LOG" xml:space="preserve">
-    <value>IDDS COMMUNITY SECURITY LOG</value>
-  </data>
   <data name="Daily report" xml:space="preserve">
     <value>Daily report</value>
   </data>

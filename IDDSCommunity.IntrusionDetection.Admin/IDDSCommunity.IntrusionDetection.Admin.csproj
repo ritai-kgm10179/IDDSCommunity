@@ -10,6 +10,9 @@
     <ApplicationIcon>..\assets\branding\idds-community.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\assets\branding\idds-community.ico" LogicalName="IDDSCommunity.Branding.idds-community.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\IDDSCommunity.Agents.FileMaker\IDDSCommunity.Agents.FileMaker.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.FtpServer\IDDSCommunity.Agents.FtpServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.Agents.IisAuthentication\IDDSCommunity.Agents.IisAuthentication.csproj" ReferenceOutputAssembly="false" />
