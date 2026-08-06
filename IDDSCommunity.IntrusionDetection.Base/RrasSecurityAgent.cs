@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -110,23 +110,9 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
         get => Api.Localization.Strings.Get("RRAS Security Agent - Routing and Remote Access"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    private Image _icon = Resources.agent15px_rras_dark;
-    public Image Icon
-    {
-        get => _icon; set => _icon = value;
-    }
-
-    private Image _selectedIcon = Resources.agent15px_rras_white;
-    public Image SelectedIcon
-    {
-        get => _selectedIcon; set => _selectedIcon = value;
-    }
-
-    private Image _unselectedIcon = Resources.agent15px_rras_dark;
-    public Image UnselectedIcon
-    {
-        get => _unselectedIcon; set => _unselectedIcon = value;
-    }
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
 
     public Guid Id => new("{FDA41145-2E75-400E-882C-E06EC4790EBE}");

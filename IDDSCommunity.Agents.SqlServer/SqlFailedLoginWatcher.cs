@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
@@ -137,32 +137,9 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         }
     }
 
-    public Image Icon
-    {
-        get => Resource.agent15px_sql_dark;
-        set
-        {
-
-        }
-    }
-
-    public Image SelectedIcon
-    {
-        get => Resource.agent15px_sql_white;
-        set
-        {
-
-        }
-    }
-
-    public Image UnselectedIcon
-    {
-        get => Resource.agent15px_sql_dark;
-        set
-        {
-
-        }
-    }
+    public Image Icon { get; set; } = null!;
+    public Image SelectedIcon { get; set; } = null!;
+    public Image UnselectedIcon { get; set; } = null!;
 
 
 

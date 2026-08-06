@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -99,23 +99,9 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
         get => Api.Localization.Strings.Get("Kerberos pre-authentication Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    private Image _icon = Resources.WindowsSecurityAgent_dark;
-    public Image Icon
-    {
-        get => _icon; set => _icon = value;
-    }
-
-    private Image _selectedIcon = Resources.WindowsSecurityAgent_white;
-    public Image SelectedIcon
-    {
-        get => _selectedIcon; set => _selectedIcon = value;
-    }
-
-    private Image _unselectedIcon = Resources.WindowsSecurityAgent_dark;
-    public Image UnselectedIcon
-    {
-        get => _unselectedIcon; set => _unselectedIcon = value;
-    }
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
 
     public Guid Id => new("{880435D7-AB31-4498-B872-1512E7D723F0}");
