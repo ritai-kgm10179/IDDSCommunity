@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -12,9 +12,14 @@
     <Company>IDDS Community contributors</Company>
     <Version>3.0.0</Version>
     <InformationalVersion>3.0.0</InformationalVersion>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
     <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
+    <EmbeddedResource Include="payload.zip" Condition="Exists('payload.zip')" />
   </ItemGroup>
 </Project>

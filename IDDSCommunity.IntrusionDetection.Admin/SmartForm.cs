@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -116,6 +116,7 @@ public partial class SmartForm : Form
     {
         if (WindowState != FormWindowState.Maximized)
         {
+            MaximizedBounds = Screen.FromHandle(Handle).WorkingArea;
             WindowState = FormWindowState.Maximized;
             pictureBoxMaximizeButton.Image = Properties.Resources.icon_scale;
         }
@@ -124,6 +125,46 @@ public partial class SmartForm : Form
             WindowState = FormWindowState.Normal;
             pictureBoxMaximizeButton.Image = Properties.Resources.icon_maximize;
         }
+    }
+
+    private const int WM_GETMINMAXINFO = 0x0024;
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int x;
+        public int y;
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == WM_GETMINMAXINFO && m.LParam != IntPtr.Zero)
+        {
+            MINMAXINFO mmi = (MINMAXINFO)System.Runtime.InteropServices.Marshal.PtrToStructure(m.LParam, typeof(MINMAXINFO))!;
+            Screen screen = Screen.FromHandle(Handle);
+            Rectangle workingArea = screen.WorkingArea;
+            Rectangle bounds = screen.Bounds;
+
+            mmi.ptMaxPosition.x = Math.Abs(workingArea.Left - bounds.Left);
+            mmi.ptMaxPosition.y = Math.Abs(workingArea.Top - bounds.Top);
+            mmi.ptMaxSize.x = workingArea.Width;
+            mmi.ptMaxSize.y = workingArea.Height;
+
+            System.Runtime.InteropServices.Marshal.StructureToPtr(mmi, m.LParam, true);
+            m.Result = IntPtr.Zero;
+            return;
+        }
+        base.WndProc(ref m);
     }
 
 

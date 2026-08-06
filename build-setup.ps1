@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
@@ -10,13 +10,22 @@ param(
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = $PSScriptRoot
 $packageRoot = Join-Path $repositoryRoot "artifacts\setup\idds-community-$Version-$RuntimeIdentifier"
-$payloadRoot = Join-Path $packageRoot 'payload'
+$payloadRoot = Join-Path $repositoryRoot 'artifacts\setup\temp_payload'
 $pluginRoot = Join-Path $payloadRoot 'Plugins'
 
 if (Test-Path -LiteralPath $packageRoot) {
-    Remove-Item -LiteralPath $packageRoot -Recurse -Force
+    try {
+        Remove-Item -LiteralPath $packageRoot -Recurse -Force -ErrorAction Stop
+    }
+    catch {
+        Start-Sleep -Milliseconds 1000
+        Remove-Item -LiteralPath $packageRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }
-New-Item -ItemType Directory -Path $payloadRoot, $pluginRoot -Force | Out-Null
+if (Test-Path -LiteralPath $payloadRoot) {
+    Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue
+}
+New-Item -ItemType Directory -Path $packageRoot, $payloadRoot, $pluginRoot -Force | Out-Null
 
 # 一般方案還原不會建立執行階段專屬資產；以單一節點還原並停用節點重用，
 # 避免 Windows SDK 在大量專案還原時留下不必要的 MSBuild 子程序。
@@ -49,8 +58,34 @@ foreach ($projectName in $pluginProjects) {
     if ($LASTEXITCODE -ne 0) { throw "代理程式發佈失敗：$projectName" }
 }
 
-dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Setup\IDDSCommunity.IntrusionDetection.Setup.csproj') @commonArguments --output $packageRoot
-if ($LASTEXITCODE -ne 0) { throw '安裝程式發佈失敗。' }
+# Compress payload directory into a zip archive and embed it into the Setup project for a 100% self-contained Single EXE
+$setupProjectDir = Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Setup'
+$setupZipPath = Join-Path $setupProjectDir 'payload.zip'
+$setupTempOut = Join-Path $packageRoot 'temp_setup'
+if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }
+
+Compress-Archive -Path "$payloadRoot\*" -DestinationPath $setupZipPath -Force
+
+$setupArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true', '-p:EnableCompressionInSingleFile=true', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
+
+try {
+    dotnet publish (Join-Path $setupProjectDir 'IDDSCommunity.IntrusionDetection.Setup.csproj') @setupArguments --output $setupTempOut
+    if ($LASTEXITCODE -ne 0) { throw '安裝程式發佈失敗。' }
+    
+    # Move the single EXE setup file to packageRoot
+    $singleExe = Get-ChildItem -LiteralPath $setupTempOut -Filter '*.exe' | Select-Object -First 1
+    if ($null -ne $singleExe) {
+        Move-Item -LiteralPath $singleExe.FullName -Destination (Join-Path $packageRoot 'IDDSCommunity.IntrusionDetection.Setup.exe') -Force
+    }
+}
+finally {
+    if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }
+    if (Test-Path -LiteralPath $setupTempOut) { Remove-Item -LiteralPath $setupTempOut -Recurse -Force -ErrorAction SilentlyContinue }
+}
+
+# Clean up redundant payload directory from package output since it is now embedded inside the Single EXE
+if (Test-Path -LiteralPath $payloadRoot) { Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue }
+
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE-PROVENANCE.md') -Destination $packageRoot
