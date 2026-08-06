@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
@@ -31,27 +32,73 @@ internal static class SetupOperations
     /// <summary>Deploys the packaged payload and registers the Windows service.</summary>
     internal static void Install()
     {
-        string payload = Path.Combine(AppContext.BaseDirectory, "payload");
-        if (!Directory.Exists(payload)) throw new DirectoryNotFoundException(SetupText.Get("PayloadMissing"));
-        string parent = Directory.GetParent(InstallDirectory)?.FullName ?? throw new InvalidOperationException();
-        Directory.CreateDirectory(parent);
+        string payloadDir = Path.Combine(AppContext.BaseDirectory, "payload");
+        string tempExtractedPayload = string.Empty;
 
-        RunSc("stop", ServiceName, acceptMissing: true);
-        RunSc("delete", ServiceName, acceptMissing: true);
-        KillRunningProcesses();
-        System.Threading.Thread.Sleep(500);
+        try
+        {
+            if (!Directory.Exists(payloadDir))
+            {
+                string payloadZip = Path.Combine(AppContext.BaseDirectory, "payload.zip");
+                if (File.Exists(payloadZip))
+                {
+                    tempExtractedPayload = Path.Combine(Path.GetTempPath(), "idds_payload_" + Guid.NewGuid().ToString("N"));
+                    System.IO.Compression.ZipFile.ExtractToDirectory(payloadZip, tempExtractedPayload);
+                    payloadDir = tempExtractedPayload;
+                }
+                else
+                {
+                    Assembly asm = Assembly.GetExecutingAssembly();
+                    string[] resNames = asm.GetManifestResourceNames();
+                    string? payloadRes = Array.Find(resNames, r => r.EndsWith("payload.zip", StringComparison.OrdinalIgnoreCase));
+                    if (payloadRes != null)
+                    {
+                        using Stream? resourceStream = asm.GetManifestResourceStream(payloadRes);
+                        if (resourceStream != null)
+                        {
+                            tempExtractedPayload = Path.Combine(Path.GetTempPath(), "idds_payload_" + Guid.NewGuid().ToString("N"));
+                            Directory.CreateDirectory(tempExtractedPayload);
+                            string tempZipPath = Path.Combine(tempExtractedPayload, "payload.zip");
+                            using (FileStream fs = File.Create(tempZipPath))
+                            {
+                                resourceStream.CopyTo(fs);
+                            }
+                            string extractedDir = Path.Combine(tempExtractedPayload, "extracted");
+                            System.IO.Compression.ZipFile.ExtractToDirectory(tempZipPath, extractedDir);
+                            payloadDir = extractedDir;
+                        }
+                    }
+                }
+            }
 
-        Directory.CreateDirectory(InstallDirectory);
-        CopyDirectoryOverwrite(payload, InstallDirectory);
+            if (!Directory.Exists(payloadDir)) throw new DirectoryNotFoundException(SetupText.Get("PayloadMissing"));
+            string parent = Directory.GetParent(InstallDirectory)?.FullName ?? throw new InvalidOperationException();
+            Directory.CreateDirectory(parent);
 
-        string service = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
-        if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("ServiceExecutableMissing"), service);
+            RunSc("stop", ServiceName, acceptMissing: true);
+            RunSc("delete", ServiceName, acceptMissing: true);
+            KillRunningProcesses();
+            System.Threading.Thread.Sleep(500);
 
-        RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
-        RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
-        RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
-        ConfigureEventLog();
-        RunSc("start", ServiceName);
+            Directory.CreateDirectory(InstallDirectory);
+            CopyDirectoryOverwrite(payloadDir, InstallDirectory);
+
+            string service = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
+            if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("ServiceExecutableMissing"), service);
+
+            RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
+            RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
+            RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+            ConfigureEventLog();
+            RunSc("start", ServiceName);
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(tempExtractedPayload) && Directory.Exists(tempExtractedPayload))
+            {
+                try { Directory.Delete(tempExtractedPayload, true); } catch { }
+            }
+        }
     }
 
     private static void ConfigureEventLog()

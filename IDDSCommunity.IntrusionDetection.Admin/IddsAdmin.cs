@@ -782,6 +782,7 @@ public partial class IddsAdmin : Form
     {
         if (WindowState != FormWindowState.Maximized)
         {
+            MaximizedBounds = Screen.FromHandle(Handle).WorkingArea;
             WindowState = FormWindowState.Maximized;
             pictureBoxMaximizeButton.Image = Properties.Resources.icon_scale;
         }
