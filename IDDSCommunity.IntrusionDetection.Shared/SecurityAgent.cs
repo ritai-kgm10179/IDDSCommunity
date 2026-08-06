@@ -75,7 +75,7 @@ public class SecurityAgent : IAgentFilter
     {
         if (Id.Equals(Guid.Empty)) return false;
         string sqlCommand = "Select Serial from SecurityAgents where AgentId=@p0";
-        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id);
+        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id.ToString());
         if (dbVersion != null)
         {
             if (Db.DbValueConverter.ToInt(dbVersion) > Serial)
@@ -118,7 +118,7 @@ public class SecurityAgent : IAgentFilter
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
         if (Id.Equals(Guid.Empty)) return;
-        IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id);
+        IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id.ToString());
         // load all agents
         if (rdr.Read())
         {
@@ -145,7 +145,7 @@ public class SecurityAgent : IAgentFilter
 
     public void LoadCustomConfig()
     {
-        IDataReader rdr = Database.Instance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id);
+        IDataReader rdr = Database.Instance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
         while (rdr.Read())
         {
             string propName = Db.DbValueConverter.ToString(rdr["PropertyName"]);
@@ -214,6 +214,7 @@ public class SecurityAgent : IAgentFilter
     public void Save()
     {
         if (Id == Guid.Empty) Id = GetId();
+        string agentIdStr = Id.ToString();
         string sqlString;
         Database.Instance.ExecuteInTransaction((_, trans) =>
         {
@@ -230,9 +231,10 @@ values (@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,0)";
 HardLockAttempts=@p2, HardLockTimeHours=@p3, LockForever=@p4, SoftLockAttempts=@p5, SoftLockTimeMinutes=@p6,
 OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentId=@p0";
             }
-            Database.Instance.ExecuteNonQuery(sqlString, trans, Id, AssemblyName, HardLockAttempts, HardLockTimeHours,
+            Database.Instance.ExecuteNonQuery(sqlString, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
                 LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
-            Database.Instance.ExecuteNonQuery("UPDATE SecurityAgents set Serial = Serial+1 where AgentId=@p0", trans, Id);
+            Database.Instance.ExecuteNonQuery("UPDATE SecurityAgents set Serial = Serial+1 where AgentId=@p0", trans, agentIdStr);
+            Serial++;
             SaveCustomConfig(trans);
         });
         OnStatisticsUpdated();
@@ -247,7 +249,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public static bool DoesExistInDb(Guid id)
     {
         string sqlString = "select AgentId from SecurityAgents where AgentId = @p0";
-        object? result = Database.Instance.ExecuteScalar(sqlString, id);
+        object? result = Database.Instance.ExecuteScalar(sqlString, id.ToString());
         if (result != null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId)) return true;
         return false;
     }
@@ -260,7 +262,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// <returns><see langword="true"/> when the Agent exists; otherwise, <see langword="false"/>.</returns>
     private static bool DoesExistInDb(IDbTransaction transaction, Guid id)
     {
-        object? result = Database.Instance.ExecuteScalar("select AgentId from SecurityAgents where AgentId = @p0", transaction, id);
+        object? result = Database.Instance.ExecuteScalar("select AgentId from SecurityAgents where AgentId = @p0", transaction, id.ToString());
         return result is not null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId);
     }
 
@@ -276,10 +278,10 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// <param name="transaction">The transaction that owns the database connection.</param>
     private void SaveCustomConfig(IDbTransaction transaction)
     {
+        string agentIdStr = Id.ToString();
         foreach (string key in CustomConfiguration.Keys)
         {
-            //select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id);
-            object? dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", transaction, Id, key);
+            object? dbResult = Database.Instance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", transaction, agentIdStr, key);
             int found = Db.DbValueConverter.ToInt(dbResult);
             string sql;
             if (found > 0)
@@ -290,7 +292,7 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             {
                 sql = "insert into SecurityAgentConfig (PropertyValueString, AgentId, PropertyName) values(@p0,@p1,@p2)";
             }
-            Database.Instance.ExecuteNonQuery(sql, transaction, CustomConfiguration[key], Id, key);
+            Database.Instance.ExecuteNonQuery(sql, transaction, CustomConfiguration[key], agentIdStr, key);
         }
     }
 
