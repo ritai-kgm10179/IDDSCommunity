@@ -619,7 +619,7 @@
   <data name="FTP Security Agent" xml:space="preserve"><value>FTP Security Agent</value></data>
   <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP Security Agent</value></data>
   <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server Security Agent</value></data>
-  <data name="MySql Server Security Agent" xml:space="preserve"><value>MySQL Server Security Agent</value></data>
+  <data name="MySQL and MariaDB Security Agent" xml:space="preserve"><value>MySQL and MariaDB Security Agent</value></data>
   <data name="TLS/SSL Security Agent" xml:space="preserve"><value>Remote Desktop Security Agent</value></data>
   <data name="Web Security Agent" xml:space="preserve"><value>Web Security Agent</value></data>
   <data name="IDDSCommunity.Agents.MailServer.Pop3Agent" xml:space="preserve"><value>POP3 Security Agent</value></data>
@@ -639,7 +639,7 @@
   <data name="The Windows service management command failed with exit code {0}." xml:space="preserve"><value>The Windows service management command failed with exit code {0}.</value></data>
   <data name="Unsupported service name." xml:space="preserve"><value>Unsupported service name.</value></data>
   <data name="Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned.</value></data>
-  <data name="Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 100. The database port is not scanned.</value></data>
+  <data name="Detection source: MySQL or MariaDB entries in the Windows Application Event Log. The database port is not scanned." xml:space="preserve"><value>Detection source: MySQL or MariaDB entries in the Windows Application Event Log. The database port is not scanned.</value></data>
   <data name="Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned." xml:space="preserve"><value>Detection source: Windows Application Event Log, Event ID 661. The database port is not scanned.</value></data>
   <data name="Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs." xml:space="preserve"><value>Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs.</value></data>
   <data name="Agent status" xml:space="preserve"><value>Agent status</value></data>
