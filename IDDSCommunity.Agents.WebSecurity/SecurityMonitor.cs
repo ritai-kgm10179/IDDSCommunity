@@ -148,9 +148,9 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
 
 

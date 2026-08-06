@@ -192,9 +192,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
 
     public Guid Id => new("{A682433B-852F-4150-ADF4-FB7F75090015}");

@@ -124,9 +124,9 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
         get => Api.Localization.Strings.Get("AD Credential Validation Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
 
     public Guid Id => new("{D67852B4-DBEF-4831-877C-E37DAB764952}");

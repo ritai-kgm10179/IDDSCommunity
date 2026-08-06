@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\assets\branding\idds-community.ico</ApplicationIcon>
-    <AssemblyName>IDDSCommunity.IntrusionDetection.Setup</AssemblyName>
+    <AssemblyName>Setup</AssemblyName>
     <Product>IDDS Community</Product>
     <Company>IDDS Community contributors</Company>
     <Version>3.0.0</Version>

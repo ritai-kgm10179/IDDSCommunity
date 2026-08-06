@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -39,14 +39,14 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
         iddscommunitySettingsNavigation.NavigationChanged += new EventHandler(iddscommunitySettingsNavigation_NavigationChanged);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CONFIGURATION_TRANSFER), null!, null!);
-        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_REPORT_EXPORT), null!, null!);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CONFIGURATION_TRANSFER), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_REPORT_EXPORT), null, null);
     }
 
     private PanelLockoutConfiguration? _lockoutConfiguration;

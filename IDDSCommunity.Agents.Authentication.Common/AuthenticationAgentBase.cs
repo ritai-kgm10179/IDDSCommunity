@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
@@ -69,7 +69,7 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
     protected abstract Color AgentColor { get; }
     public abstract string DisplayName { get; set; }
     public abstract Guid Id { get; }
-    public Image Icon { get => AgentIconFactory.Create(AgentColor, false); set { } }
-    public Image SelectedIcon { get => AgentIconFactory.Create(AgentColor, true); set { } }
-    public Image UnselectedIcon { get => AgentIconFactory.Create(AgentColor, false); set { } }
+    public Image? Icon { get => AgentIconFactory.Create(AgentColor, false); set { } }
+    public Image? SelectedIcon { get => AgentIconFactory.Create(AgentColor, true); set { } }
+    public Image? UnselectedIcon { get => AgentIconFactory.Create(AgentColor, false); set { } }
 }

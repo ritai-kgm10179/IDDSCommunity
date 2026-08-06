@@ -82,9 +82,9 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         set { }
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
     public Guid Id => new("{EE4906AD-7242-4940-A3B0-81B4E3F16B71}");
 }

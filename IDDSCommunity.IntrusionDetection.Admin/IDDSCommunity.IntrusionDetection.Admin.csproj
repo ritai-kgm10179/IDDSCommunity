@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>ProtectionConfig.exe.manifest</ApplicationManifest>
     <ApplicationIcon>..\assets\branding\idds-community.ico</ApplicationIcon>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\assets\branding\idds-community.ico" LogicalName="IDDSCommunity.Branding.idds-community.ico" />

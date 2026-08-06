@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -92,7 +92,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="selectedIcon">The selected icon value.</param>
     /// <param name="unselectedIcon">The unselected icon value.</param>
 
-    public void AddNavigationItem(string name, Image selectedIcon, Image unselectedIcon)
+    public void AddNavigationItem(string name, Image? selectedIcon, Image? unselectedIcon)
     {
         IDDSCommunitySettingsNavigationItem item = new()
         {

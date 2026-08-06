@@ -187,9 +187,9 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         set { }
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
     public Guid Id => new("{F040A37F-8A53-428E-85A3-EDC858144742}");
 }

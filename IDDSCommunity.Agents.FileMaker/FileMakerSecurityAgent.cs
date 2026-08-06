@@ -143,9 +143,9 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         get => IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("FileMaker Security Agent"); set => throw new NotSupportedException(IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
 
-    public Image Icon { get; set; } = null!;
-    public Image SelectedIcon { get; set; } = null!;
-    public Image UnselectedIcon { get; set; } = null!;
+    public Image? Icon { get; set; }
+    public Image? SelectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
     public Guid Id => new("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
 
