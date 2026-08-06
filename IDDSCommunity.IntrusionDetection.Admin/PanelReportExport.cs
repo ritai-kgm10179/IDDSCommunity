@@ -89,6 +89,10 @@ public sealed class PanelReportExport : UserControl
 
     private static Label CreateLabel(string text, float size, Color color, int x, int y) => new()
     {
-        AutoSize = true, Font = new Font("Segoe UI", size), ForeColor = color, Location = new Point(x, y), Text = text
+        AutoSize = true,
+        Font = new Font("Segoe UI", size),
+        ForeColor = color,
+        Location = new Point(x, y),
+        Text = text
     };
 }
