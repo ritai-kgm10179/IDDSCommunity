@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -14,10 +14,71 @@ internal static class SetupOperations
     internal static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
     internal static readonly string AdminExecutablePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Admin.exe");
 
-    /// <summary>Checks whether the IDDS Community service executable is installed.</summary>
+    /// <summary>
+    /// 定義安裝程式之動作型別。
+    /// </summary>
+    internal enum InstallAction
+    {
+        /// <summary>全新安裝。</summary>
+        FreshInstall,
+        /// <summary>升級安裝。</summary>
+        Upgrade,
+        /// <summary>重新安裝或修復。</summary>
+        Reinstall,
+        /// <summary>降級安裝。</summary>
+        Downgrade
+    }
+
+    /// <summary>檢查 IDDS Community 服務執行檔是否已安裝。</summary>
     internal static bool IsInstalled =>
         Directory.Exists(InstallDirectory) &&
         File.Exists(Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe"));
+
+    /// <summary>取得已安裝 IDDS Community 服務之版本，若未安裝則傳回 null。</summary>
+    internal static Version? InstalledVersion
+    {
+        get
+        {
+            string servicePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
+            if (!File.Exists(servicePath)) return null;
+            try
+            {
+                FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(servicePath);
+                string? verStr = fvi.ProductVersion ?? fvi.FileVersion;
+                if (!string.IsNullOrEmpty(verStr) && Version.TryParse(verStr.Split('+')[0], out Version? version))
+                {
+                    return version;
+                }
+            }
+            catch { }
+            return null;
+        }
+    }
+
+    /// <summary>取得當前 Setup 安裝程式之套件版本。</summary>
+    internal static Version CurrentSetupVersion
+    {
+        get
+        {
+            Version? ver = Assembly.GetExecutingAssembly().GetName().Version;
+            return ver ?? new Version(3, 0, 0, 0);
+        }
+    }
+
+    /// <summary>依據目前系統與當前套件版本判斷預期的安裝動作。</summary>
+    internal static InstallAction CurrentInstallAction
+    {
+        get
+        {
+            Version? installed = InstalledVersion;
+            if (installed == null) return InstallAction.FreshInstall;
+            Version current = CurrentSetupVersion;
+            int comp = current.CompareTo(installed);
+            if (comp > 0) return InstallAction.Upgrade;
+            if (comp == 0) return InstallAction.Reinstall;
+            return InstallAction.Downgrade;
+        }
+    }
 
     /// <summary>Checks whether the administration UI executable is available for launching.</summary>
     internal static bool CanLaunchApp => IsInstalled && File.Exists(AdminExecutablePath);
