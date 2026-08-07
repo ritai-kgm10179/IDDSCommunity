@@ -27,7 +27,6 @@ public sealed class LanguageManager
     /// <summary>
     /// 初始化 <see cref="LanguageManager"/> class的新執行個體。
     /// </summary>
-
     private LanguageManager()
     {
         RegisterResourceManager("Strings", Strings.ResourceManager);
@@ -40,13 +39,11 @@ public sealed class LanguageManager
     /// </summary>
     /// <param name="name">name參數。</param>
     /// <param name="resourceManager">resource manager參數。</param>
-
     public void RegisterResourceManager(string name, ResourceManager resourceManager) => _resourceManagers[name] = resourceManager;
     /// <summary>
     /// 執行initialize作業。
     /// </summary>
     /// <param name="userLanguageSetting">user language setting參數。</param>
-
     public void Initialize(string? userLanguageSetting)
     {
         lock (_lock)
@@ -84,7 +81,6 @@ public sealed class LanguageManager
     /// 執行detect system culture with fallback作業。
     /// </summary>
     /// <returns>傳回detect system culture with fallback結果。</returns>
-
     public static CultureInfo DetectSystemCultureWithFallback()
     {
         CultureInfo currentUI = CultureInfo.CurrentUICulture;
@@ -108,7 +104,6 @@ public sealed class LanguageManager
     /// <param name="defaultValue">default value參數。</param>
     /// <param name="resourceCategory">resource category參數。</param>
     /// <returns>傳回get string結果。</returns>
-
     public string GetString(string key, string? defaultValue = null, string resourceCategory = "Strings")
     {
         if (_resourceManagers.TryGetValue(resourceCategory, out ResourceManager? resourceManager))

@@ -11,7 +11,6 @@ public partial class GenericErrorDialog : Form
     /// <param name="caption">caption 的值。</param>
     /// <param name="text">text 的值。</param>
     /// <param name="cancelButton">cancel button 的值。</param>
-
     public GenericErrorDialog(string caption, string text, bool cancelButton)
     {
         InitializeComponent();
@@ -29,13 +28,11 @@ public partial class GenericErrorDialog : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonOK_Click(object sender, EventArgs e) => DialogResult = DialogResult.OK;
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonCancel_Click(object sender, EventArgs e) => DialogResult = DialogResult.Cancel;
 }

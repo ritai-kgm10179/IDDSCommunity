@@ -47,7 +47,6 @@ public class Pop3Test
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="data">事件資料。</param>
-
     void agent_AttackDetected(object sender, IntrusionDetection.Api.Plugin.INotificationEventArgs data)
     {
         attackDetected = true;

@@ -57,7 +57,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySecurityLog"/> 類別的新執行個體。
     /// </summary>
-
     private readonly System.Windows.Forms.Timer searchDebounceTimer = new() { Interval = 250 };
     private string? pendingSearchQuery;
 
@@ -102,7 +101,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
     /// <summary>
     /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件（附帶 250ms 防抖遲延）。
@@ -184,7 +182,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void comboBoxAgentSelection_SelectionChangeCommitted(object? sender, EventArgs? e)
     {
 
@@ -201,7 +198,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <param name="ipAddress">ip address 的值。</param>
     /// <param name="message">message 的值。</param>
     /// <returns>新增日誌紀錄的 DataRow 傳回結果。</returns>
-
     public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
     {
         DataTable t = DataSetIntrusionLog.Tables["IntrusionLog"]
@@ -227,7 +223,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// 執行 count events 作業。
     /// </summary>
     /// <returns>計算所得的事件總數。</returns>
-
     private int CountEvents()
     {
         int result = 0;
@@ -253,7 +248,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <param name="message">message 的值。</param>
     /// <param name="numberOfEvents">number of events 的值。</param>
     /// <returns>填入日誌紀錄的 DataRow 傳回結果。</returns>
-
     public DataRow FillLogEntry(int maxId, int action, string agentId, Image logIcon, string logType, DateTime lastEventDate, string ipAddress, string message, int numberOfEvents)
     {
         DataRow row = AddLogEntry(maxId, action, agentId, logIcon, logType, lastEventDate, ipAddress, message);
@@ -267,13 +261,11 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// Adds agent.
     /// </summary>
     /// <param name="agent">agent 的值。</param>
-
     public void AddAgent(SecurityAgent agent) => comboBoxAgentSelection.Items.Add(agent);
     /// <summary>
     /// Removes agent.
     /// </summary>
     /// <param name="agent">agent 的值。</param>
-
     public void RemoveAgent(SecurityAgent agent)
     {
         try
@@ -290,12 +282,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
     /// <summary>
     /// 執行 position labels 作業。
     /// </summary>
-
     private void PositionLabels()
     {
         smartLabelType.Left = 3;

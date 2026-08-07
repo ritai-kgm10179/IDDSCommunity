@@ -18,7 +18,6 @@ public partial class SplashScreen : Form
     /// <summary>
     /// 初始化 <see cref="SplashScreen"/> 類別的新執行個體。
     /// </summary>
-
     public SplashScreen()
     {
         InitializeComponent();
@@ -34,7 +33,6 @@ public partial class SplashScreen : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void SplashScreen_Load(object? sender, EventArgs e)
     {
         t.Interval = 100;
@@ -45,7 +43,6 @@ public partial class SplashScreen : Form
     /// <summary>
     /// Starts up components.
     /// </summary>
-
     public void StartupComponents()
     {
         smartLabelStatus.Text = Strings.Get("Configuring database...");
@@ -72,7 +69,6 @@ public partial class SplashScreen : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void t_Tick(object? sender, EventArgs e)
     {
         if (!startupOperation.TryRun(StartupComponents, out Exception? failure))

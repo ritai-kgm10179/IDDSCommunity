@@ -13,7 +13,6 @@ public partial class SmartForm : Form
     /// <summary>
     /// 初始化 <see cref="SmartForm"/> 類別的新執行個體。
     /// </summary>
-
     public SmartForm()
     {
         InitializeComponent();
@@ -29,14 +28,12 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
         IsMoving = true;
@@ -50,14 +47,12 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
     /// <summary>
     /// 處理 mouse move 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
         if (IsMoving)
@@ -72,14 +67,12 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Application.Exit();
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(pictureBox1.Location));
 
     public event EventHandler? HelpClicked;
@@ -88,21 +81,18 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxHelpButon_Click(object sender, EventArgs e) => HelpClicked?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
         if (WindowState != FormWindowState.Maximized)
@@ -163,34 +153,29 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
     /// <summary>
     /// 處理 mouse leave 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
     /// <summary>
     /// 執行 resize form 作業。
     /// </summary>
     /// <param name="mouseLocation">mouse location 的值。</param>
-
     private void resizeForm(Point mouseLocation)
     {
         int deltaX = resizeStartLocation.X - mouseLocation.X;
@@ -225,7 +210,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelContent_MouseDown(object sender, MouseEventArgs e)
     {
         isResizing = (resizeDirection == ResizeDirection.None) ? false : true;
@@ -236,14 +220,12 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelContent_MouseUp(object sender, MouseEventArgs e) => isResizing = false;
     /// <summary>
     /// 處理 mouse leave 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void panelContent_MouseLeave(object sender, EventArgs e)
     {
         if (!isResizing) resizeDirection = ResizeDirection.None;
@@ -253,7 +235,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderN_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Top;
@@ -265,7 +246,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderE_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Right;
@@ -277,7 +257,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderS_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Bottom;
@@ -289,7 +268,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left;
@@ -301,14 +279,12 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderNE_MouseDown(object sender, MouseEventArgs e) => resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderSE_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Right | ResizeDirection.Bottom;
@@ -320,7 +296,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderSW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Bottom;
@@ -332,7 +307,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void borderNW_MouseDown(object sender, MouseEventArgs e)
     {
         resizeDirection = ResizeDirection.Left | ResizeDirection.Top;
@@ -344,7 +318,6 @@ public partial class SmartForm : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void border_MouseMove(object sender, MouseEventArgs e)
     {
         if (isResizing)

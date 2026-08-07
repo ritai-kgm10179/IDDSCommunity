@@ -8,13 +8,11 @@ public partial class SmartLabel : Label
     /// <summary>
     /// 初始化 <see cref="SmartLabel"/> 類別的新執行個體。
     /// </summary>
-
     public SmartLabel() => InitializeComponent();
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>
     /// <param name="e">事件資料。</param>
-
     protected override void OnPaint(PaintEventArgs e)
     {
         e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;

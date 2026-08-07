@@ -12,7 +12,6 @@ public class ApiTest
     /// <summary>
     /// 初始化 <see cref="ApiTest"/> 類別的新執行個體。
     /// </summary>
-
     public ApiTest()
     {
         //

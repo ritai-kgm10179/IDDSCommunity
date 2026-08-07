@@ -51,7 +51,6 @@ public class Database
     /// </summary>
     /// <param name="directory">The directory containing the database.</param>
     /// <param name="fileName">The database file name without directory components.</param>
-
     public void Configure(string directory, string fileName = "iddscommunity.dbf")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
@@ -89,7 +88,6 @@ public class Database
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void _connection_StateChange(object sender, StateChangeEventArgs e) => System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
 
     public SqliteConnection Connection
@@ -120,7 +118,6 @@ public class Database
     /// <summary>
     /// 初始化 <see cref="Database"/> class的新執行個體。
     /// </summary>
-
     public Database() => _instance = this;
     /// <summary>
     /// Executes reader.
@@ -128,7 +125,6 @@ public class Database
     /// <param name="sqlString">sql string參數。</param>
     /// <param name="parameters">parameters參數。</param>
     /// <returns>傳回execute reader結果。</returns>
-
     public IDataReader ExecuteReader(string sqlString, params object[] parameters) => ExecuteReader(sqlString, null, parameters);
     /// <summary>
     /// Executes reader.
@@ -137,7 +133,6 @@ public class Database
     /// <param name="transaction">transaction參數。</param>
     /// <param name="parameters">parameters參數。</param>
     /// <returns>傳回execute reader結果。</returns>
-
     public IDataReader ExecuteReader(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
@@ -157,7 +152,6 @@ public class Database
     /// </summary>
     /// <param name="sqlString">sql string參數。</param>
     /// <param name="parameters">parameters參數。</param>
-
     public void ExecuteNonQuery(string sqlString, params object[] parameters) => ExecuteNonQuery(sqlString, null, parameters);
     /// <summary>
     /// Executes non query.
@@ -165,7 +159,6 @@ public class Database
     /// <param name="sqlString">sql string參數。</param>
     /// <param name="transaction">transaction參數。</param>
     /// <param name="parameters">parameters參數。</param>
-
     public void ExecuteNonQuery(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
@@ -184,7 +177,6 @@ public class Database
     /// <param name="sqlString">sql string參數。</param>
     /// <param name="parameters">parameters參數。</param>
     /// <returns>傳回execute scalar結果。</returns>
-
     public object? ExecuteScalar(string sqlString, params object[] parameters) => ExecuteScalar(sqlString, null, parameters);
     /// <summary>
     /// Executes scalar.
@@ -193,7 +185,6 @@ public class Database
     /// <param name="transaction">transaction參數。</param>
     /// <param name="parameters">parameters參數。</param>
     /// <returns>傳回execute scalar結果。</returns>
-
     public object? ExecuteScalar(string sqlString, IDbTransaction? transaction, params object[] parameters)
     {
         DynamicParameters? paramObj = BuildDynamicParameters(parameters);
@@ -368,7 +359,6 @@ public class Database
     /// <param name="param">param參數。</param>
     /// <param name="transaction">transaction參數。</param>
     /// <returns>傳回query結果。</returns>
-
     public IEnumerable<T> Query<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
     {
         if (transaction is not null)
@@ -387,7 +377,6 @@ public class Database
     /// <param name="param">param參數。</param>
     /// <param name="transaction">transaction參數。</param>
     /// <returns>傳回query first or default結果。</returns>
-
     public T? QueryFirstOrDefault<T>(string sqlString, object? param = null, IDbTransaction? transaction = null)
     {
         if (transaction is not null)
@@ -403,7 +392,6 @@ public class Database
     /// </summary>
     /// <param name="parameters">parameters參數。</param>
     /// <returns>傳回build dynamic parameters結果。</returns>
-
     private static DynamicParameters? BuildDynamicParameters(object[] parameters)
     {
         if (parameters == null || parameters.Length == 0) return null;
@@ -421,7 +409,6 @@ public class Database
     /// <summary>
     /// Opens or create.
     /// </summary>
-
     private void OpenOrCreate()
     {
         Connection.Execute("PRAGMA journal_mode=WAL");

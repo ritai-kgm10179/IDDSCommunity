@@ -10,7 +10,6 @@ public class DbUpgradeScript
     /// 執行upgrade database作業。
     /// </summary>
     /// <param name="connection">connection參數。</param>
-
     public virtual void UpgradeDatabase(System.Data.IDbConnection connection)
     {
 
@@ -20,7 +19,6 @@ public class DbUpgradeScript
     /// </summary>
     /// <param name="connection">connection參數。</param>
     /// <param name="command">command參數。</param>
-
     internal static void RunCommand(System.Data.IDbConnection connection, string command)
     {
         System.Data.IDbCommand cmd = connection.CreateCommand();

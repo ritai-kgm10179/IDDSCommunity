@@ -10,7 +10,6 @@ internal static class Program
     /// The main entry point for the application.
     /// </summary>
     /// <param name="args">The event data.</param>
-
     private static async System.Threading.Tasks.Task Main(string[] args)
     {
         System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
@@ -35,6 +34,5 @@ internal static class Program
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) => System.Diagnostics.EventLog.WriteEntry(Shared.Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE, e.Exception.Message, System.Diagnostics.EventLogEntryType.Error);
 }

@@ -21,7 +21,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityApplicationSettings"/> 類別的新執行個體。
     /// </summary>
-
     public IDDSCommunityApplicationSettings()
     {
         InitializeComponent();
@@ -33,7 +32,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
         iddscommunitySettingsNavigation.NavigationChanged += new EventHandler(iddscommunitySettingsNavigation_NavigationChanged);
@@ -70,7 +68,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _lockoutConfiguration_LockoutConfigurationChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
 
@@ -101,7 +98,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _panelSafeNetworks_SafeNetworksChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelSmtpSettings? _panelSmtpSettings;
@@ -127,7 +123,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelNotificationSettings? _panelNotificationSettings;
@@ -192,14 +187,12 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void iddscommunitySettingsNavigation_NavigationChanged(object? sender, EventArgs? e)
     {
         switch ((sender as IDDSCommunitySettingsNavigationItem)?.DisplayName)
@@ -236,7 +229,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// <summary>
     /// Processes the configuration changed notification.
     /// </summary>
-
     private void OnConfigurationChanged() => ConfigurationChanged?.Invoke(this, EventArgs.Empty);
 
 

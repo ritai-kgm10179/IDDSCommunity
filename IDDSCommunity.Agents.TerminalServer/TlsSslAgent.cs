@@ -17,7 +17,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// 初始化 <see cref="TlsSslAgent"/> 類別的新執行個體。
     /// </summary>
-
     public TlsSslAgent()
     {
         TslSslConfig settings = new();
@@ -27,7 +26,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
-
     protected override void OnStartAgent()
     {
         RunWatcher();
@@ -36,7 +34,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// 執行監聽器啟動作業。
     /// </summary>
-
     void RunWatcher()
     {
         IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
@@ -57,7 +54,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// 執行監聽指定位址作業。
     /// </summary>
     /// <param name="ipAddress">IP 位址參數。</param>
-
     void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not TslSslConfig settings) return;
@@ -74,7 +70,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void s_IpPacketSent(object? sender, EventArgs e)
     {
         if (sender is not IPHeader ipHeader) return;
@@ -119,12 +114,10 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// 處理追蹤通知。
     /// </summary>
     /// <param name="tlsPackage">TLS 封包資料。</param>
-
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>
-
     protected override void OnContinueAgent()
     {
         OnStartAgent();
@@ -133,7 +126,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
-
     protected override void OnPauseAgent()
     {
         OnStopAgent();
@@ -142,7 +134,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
-
     protected override void OnStopAgent()
     {
         foreach (PacketSniffer s in sniffers)
@@ -159,7 +150,6 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// 處理登入失敗作業。
     /// </summary>
     /// <param name="ipAddress">IP 位址參數。</param>
-
     void UnsuccessfulLogin(string ipAddress)
     {
         NotificationEventArgs args = new()

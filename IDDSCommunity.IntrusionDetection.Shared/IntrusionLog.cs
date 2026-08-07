@@ -26,7 +26,6 @@ public class IntrusionLog
     /// Gets system id.
     /// </summary>
     /// <returns>傳回get system id結果。</returns>
-
     public static Guid GetSystemId() => new(SYSTEM_ID);
 
     private static Dictionary<int, string>? _statusNames;
@@ -110,7 +109,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="status">status參數。</param>
     /// <returns>傳回get status icon結果。</returns>
-
     public static Image GetStatusIcon(int status)
     {
         if (StatusIcons.TryGetValue(status, out Image? value))
@@ -127,7 +125,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="status">status參數。</param>
     /// <returns>傳回get status class結果。</returns>
-
     public static string GetStatusClass(int status)
     {
         if (StatusClasses.TryGetValue(status, out string? value))
@@ -144,7 +141,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="status">status參數。</param>
     /// <returns>傳回get status name結果。</returns>
-
     public static string GetStatusName(int status)
     {
         if (StatusNames.TryGetValue(status, out string? value))
@@ -161,7 +157,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="timeSpan">time span參數。</param>
     /// <returns>傳回read interval結果。</returns>
-
     public static IDataReader ReadInterval(TimeSpan timeSpan)
     {
         if (Database.Instance.IsConfigured)
@@ -178,7 +173,6 @@ public class IntrusionLog
     /// Gets last log id.
     /// </summary>
     /// <returns>傳回get last log id結果。</returns>
-
     public static int GetLastLogId()
     {
         object? result = Database.Instance.ExecuteScalar("select Max(Id) from IntrusionLog");
@@ -198,7 +192,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="timeSpan">time span參數。</param>
     /// <returns>傳回read interval grouped結果。</returns>
-
     public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
     {
         if (Database.Instance.IsConfigured)
@@ -215,7 +208,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="lastSequenceNumber">last sequence number參數。</param>
     /// <returns>若s updates傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool HasUpdates(int lastSequenceNumber)
     {
         if (Database.Instance.IsConfigured)
@@ -240,7 +232,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="lastSequenceNumber">last sequence number參數。</param>
     /// <returns>傳回read differential結果。</returns>
-
     public static IDataReader ReadDifferential(int lastSequenceNumber)
     {
         if (Database.Instance.IsConfigured)
@@ -258,7 +249,6 @@ public class IntrusionLog
     /// </summary>
     /// <param name="startDate">start date參數。</param>
     /// <returns>傳回read unsuccessful attempts結果。</returns>
-
     public static int ReadUnsuccessfulAttempts(DateTime startDate)
     {
         if (Database.Instance.IsConfigured)
@@ -280,7 +270,6 @@ public class IntrusionLog
     /// <param name="action">action參數。</param>
     /// <param name="actionTriggeredByUser">action triggered by user參數。</param>
     /// <returns>傳回add entry結果。</returns>
-
     public static long AddEntry(DateTime incidentTime, Guid agentId, string clientIp, int action, bool actionTriggeredByUser)
     {
         if (Database.Instance.IsConfigured)
@@ -301,7 +290,6 @@ values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
     /// <param name="agentId">agent id參數。</param>
     /// <param name="IpAddress">ip address參數。</param>
     /// <returns>傳回get incidents by agent id結果。</returns>
-
     public static int GetIncidentsByAgentId(Guid agentId, string IpAddress)
     {
         if (Database.Instance.IsConfigured)

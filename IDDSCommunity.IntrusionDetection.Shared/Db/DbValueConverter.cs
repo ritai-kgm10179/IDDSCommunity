@@ -9,7 +9,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool ToBool(object? value)
     {
         if (value is null or DBNull) return false;
@@ -21,7 +20,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to string結果。</returns>
-
     public static string ToString(object? value)
     {
         if (value is null or DBNull) return string.Empty;
@@ -32,7 +30,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to int結果。</returns>
-
     public static int ToInt(object? value)
     {
         if (value is null or DBNull) return 0;
@@ -44,7 +41,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to int64結果。</returns>
-
     public static long ToInt64(object? value)
     {
         if (value is null or DBNull) return 0;
@@ -56,7 +52,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to guid結果。</returns>
-
     public static Guid ToGuid(object? value)
     {
         string textValue = ToString(value);
@@ -71,7 +66,6 @@ public class DbValueConverter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to date time結果。</returns>
-
     public static DateTime ToDateTime(object? value)
     {
         if (value is null or DBNull) return DateTime.MinValue;

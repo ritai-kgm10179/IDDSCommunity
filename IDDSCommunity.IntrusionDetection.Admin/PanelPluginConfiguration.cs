@@ -15,7 +15,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// 初始化 <see cref="PanelPluginConfiguration"/> 類別的新執行個體。
     /// </summary>
-
     public PanelPluginConfiguration()
     {
         InitializeComponent();
@@ -27,7 +26,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void PanelPluginConfiguration_AgentChanged(object? sender, EventArgs e)
     {
         LoadData();
@@ -39,7 +37,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
     {
         if (sender is PictureBox pictureBox)
@@ -50,7 +47,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
     {
         if (sender is PictureBox pictureBox)
@@ -61,12 +57,10 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Loads data.
     /// </summary>
-
     private bool _isLoadingData;
     /// <summary>
     /// Loads data.
     /// </summary>
-
     private void LoadData()
     {
         _isLoadingData = true;
@@ -93,7 +87,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Loads custom settings.
     /// </summary>
-
     private void LoadCustomSettings()
     {
         flowLayoutPanelCustomPluginSettings.Controls.Clear();
@@ -154,7 +147,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Saves custom configuration.
     /// </summary>
-
     private void SaveCustomConfiguration()
     {
         foreach (Control o in flowLayoutPanelCustomPluginSettings.Controls)
@@ -171,7 +163,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         if (IsInEditMode) LoadData(); else ToggleEditMode();
@@ -180,7 +171,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
-
     private void ToggleEditMode()
     {
         IsInEditMode = true;
@@ -190,7 +180,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// Sets enabled mode.
     /// </summary>
     /// <param name="enabled">enabled 的值。</param>
-
     public void SetEnabledMode(bool enabled)
     {
         textBoxHardLockDuration.Enabled = enabled;
@@ -202,7 +191,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Clears errors.
     /// </summary>
-
     private void ClearErrors()
     {
         errHardLockDuration.Visible = false;
@@ -215,7 +203,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
         if (_agent is null) return;
@@ -313,12 +300,10 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Processes the agent configuration changed notification.
     /// </summary>
-
     private void OnAgentConfigurationChanged() => AgentConfigurationChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// Processes the agent changed notification.
     /// </summary>
-
     private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
     private SecurityAgent? _agent;
@@ -340,14 +325,12 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void checkBoxOverrideConfiguration_CheckedChanged(object sender, EventArgs e)
     {
         SetEnabledMode(checkBoxOverrideConfiguration.Checked);
@@ -361,13 +344,11 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
     /// <summary>
     /// Sets edit mode.
     /// </summary>
     /// <param name="hasChanges">A value indicating whether s changes.</param>
-
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
@@ -378,7 +359,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void checkBox_CheckedChanged(object sender, EventArgs e)
     {
         if (_isLoadingData || _agent is null) return;

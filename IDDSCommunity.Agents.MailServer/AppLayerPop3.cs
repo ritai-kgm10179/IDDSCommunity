@@ -28,7 +28,6 @@ public class AppLayerPop3
     /// </summary>
     /// <param name="byBuffer">緩衝區位元組陣列。</param>
     /// <param name="nReceived">接收到的位元組數量。</param>
-
     public AppLayerPop3(byte[] byBuffer, int nReceived)
     {
         try

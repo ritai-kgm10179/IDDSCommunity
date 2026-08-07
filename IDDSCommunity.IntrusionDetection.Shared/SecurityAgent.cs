@@ -14,21 +14,18 @@ public class SecurityAgent : IAgentFilter
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
-
     public SecurityAgent() { }
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
     /// <param name="name">name參數。</param>
     /// <param name="id">id參數。</param>
-
     public SecurityAgent(string name, Guid id)
         : this(name) => Id = id;
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
     /// <param name="name">name參數。</param>
-
     public SecurityAgent(string name) => Name = name;
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
@@ -38,7 +35,6 @@ public class SecurityAgent : IAgentFilter
     /// <param name="hardLocks">hard locks參數。</param>
     /// <param name="softLocks">soft locks參數。</param>
     /// <param name="icon">icon參數。</param>
-
     public SecurityAgent(string name, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name)
     {
@@ -57,14 +53,12 @@ public class SecurityAgent : IAgentFilter
     /// <param name="hardLocks">hard locks參數。</param>
     /// <param name="softLocks">soft locks參數。</param>
     /// <param name="icon">icon參數。</param>
-
     public SecurityAgent(string name, Guid id, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name, failedLogins, hardLocks, softLocks, icon) => Id = id;
     /// <summary>
     /// 執行check config version by id作業。
     /// </summary>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool CheckConfigVersionById()
     {
         if (Id.Equals(Guid.Empty)) return false;
@@ -84,7 +78,6 @@ public class SecurityAgent : IAgentFilter
     /// 執行check config version by name作業。
     /// </summary>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool CheckConfigVersionByName()
     {
         string sqlCommand = "Select Serial from SecurityAgents where Name=@p0";
@@ -102,7 +95,6 @@ public class SecurityAgent : IAgentFilter
     /// <summary>
     /// 執行reload作業。
     /// </summary>
-
     public void Reload()
     {
         if (!Database.Instance.IsConfigured)
@@ -133,7 +125,6 @@ public class SecurityAgent : IAgentFilter
     /// <summary>
     /// 載入自訂 Agent 設定。
     /// </summary>
-
     public void LoadCustomConfig()
     {
         IDataReader rdr = Database.Instance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
@@ -163,7 +154,6 @@ public class SecurityAgent : IAgentFilter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回from image結果。</returns>
-
     private static byte[] FromImage(Image value)
     {
         MemoryStream ms = new();
@@ -175,7 +165,6 @@ public class SecurityAgent : IAgentFilter
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回from byte結果。</returns>
-
     private static Image FromByte(byte[] value)
     {
         if (value.Length == 0) return Resources.agent15px_default_dark;
@@ -198,7 +187,6 @@ public class SecurityAgent : IAgentFilter
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
-
     public void Save()
     {
         if (Id == Guid.Empty) Id = GetId();
@@ -232,7 +220,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// </summary>
     /// <param name="id">id參數。</param>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool DoesExistInDb(Guid id)
     {
         string sqlString = "select AgentId from SecurityAgents where AgentId = @p0";
@@ -254,7 +241,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// <summary>
     /// 儲存自訂 Agent 設定。
     /// </summary>
-
     public void SaveCustomConfig() => Database.Instance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction));
     /// <summary>
     /// 使用呼叫者擁有的交易持久化自訂 Agent 設定。
@@ -282,7 +268,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// <summary>
     /// 更新統計資料。
     /// </summary>
-
     public void UpdateStatistics()
     {
         string sqlString = "select FailedLogins, HardLocks, SoftLocks from AgentStatistics where AgentId=@p0";
@@ -320,13 +305,11 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// <summary>
     /// 處理統計資料更新通知。
     /// </summary>
-
     private void OnStatisticsUpdated() => StatisticsUpdated?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// 取得識別碼 (ID)。
     /// </summary>
     /// <returns>傳回get id結果。</returns>
-
     public Guid GetId()
     {
         if (!Id.Equals(Guid.Empty)) return Id;
@@ -364,7 +347,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     /// </summary>
     /// <param name="IpAddress">ip address參數。</param>
     /// <returns>傳回get current lock type結果。</returns>
-
     public LockType GetCurrentLockType(string IpAddress)
     {
         int unsuccessfulLogins = IntrusionLog.GetIncidentsByAgentId(Id, IpAddress);

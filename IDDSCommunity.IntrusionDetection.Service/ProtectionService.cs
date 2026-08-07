@@ -123,7 +123,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
     /// <returns>表示非同步工作完成的 Task。</returns>
-
     async Task Instance_RunMonthlyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
@@ -148,7 +147,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
     /// <returns>表示非同步工作完成的 Task。</returns>
-
     async Task Instance_RunWeeklyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
@@ -173,7 +171,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="cancellationToken">Signals cancellation of report delivery.</param>
     /// <returns>表示非同步工作完成的 Task。</returns>
-
     async Task Instance_RunDailyReportAsync(System.Threading.CancellationToken cancellationToken)
     {
         try
@@ -196,7 +193,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <summary>
     /// Configures system.
     /// </summary>
-
     void ConfigureSystem()
     {
         database.Configure(System.Windows.Forms.Application.StartupPath, databaseOptions.FileName);
@@ -218,7 +214,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void Service_ClientIpAddressHardLocked(object? sender, EventArgs e)
     {
         if (sender is not ClientOperationInformation op)
@@ -231,7 +226,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void Service_ClientIpAddressUnlocked(object? sender, EventArgs e)
     {
         if (sender is not ClientOperationInformation op)
@@ -251,7 +245,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void Service_ClientIpAddressSoftLocked(object? sender, EventArgs e)
     {
         if (sender is not ClientOperationInformation op)
@@ -265,7 +258,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="lockItem">lock item 的值。</param>
     /// <param name="ex">The exception associated with the operation.</param>
     /// <param name="agentId">agent id 的值。</param>
-
     void OnClientIpAddressHardLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
         if (ClientIpAddressHardLocked != null)
@@ -282,7 +274,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="ex">The exception associated with the operation.</param>
     /// <param name="info">info 的值。</param>
     /// <returns>傳回 get client operation information 的結果。</returns>
-
     private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception? ex, string info)
     {
         ClientOperationInformation op = new()
@@ -307,7 +298,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="lockItem">lock item 的值。</param>
     /// <param name="ex">The exception associated with the operation.</param>
     /// <param name="agentId">agent id 的值。</param>
-
     void OnClientIpAddressSoftLocked(Lock lockItem, Exception? ex, Guid agentId)
     {
         if (ClientIpAddressSoftLocked != null)
@@ -322,7 +312,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="lockItem">lock item 的值。</param>
     /// <param name="ex">The exception associated with the operation.</param>
-
     void OnClientIpAddressUnlocked(Lock lockItem, Exception? ex)
     {
         if (ClientIpAddressUnlocked != null)
@@ -351,7 +340,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="o">o 的值。</param>
     /// <param name="lockOperation">lock operation 的值。</param>
-
     void SendInfoMail(object o, LockType lockOperation)
     {
         if (o == null || !(o is ClientOperationInformation)) return;
@@ -391,7 +379,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="cancellationToken">Signals cancellation of SMTP delivery.</param>
     /// <param name="rethrowOnFailure"><see langword="true"/> to propagate delivery failures to the scheduler.</param>
     /// <returns>表示非同步執行的 Task。</returns>
-
     async Task SendMailAsync(string subject, string message, bool isHtml, System.Threading.CancellationToken cancellationToken = default, bool rethrowOnFailure = false)
     {
         try
@@ -438,7 +425,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <summary>
     /// 執行 init 作業。
     /// </summary>
-
     private void Init()
     {
 
@@ -493,7 +479,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
         if (System.Threading.Interlocked.Exchange(ref cleanupActive, 1) != 0)
@@ -546,7 +531,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="lockItem">lock item 的值。</param>
     /// <param name="lockType">lock type 的值。</param>
     /// <param name="reportingAgent">reporting agent 的值。</param>
-
     void LockDownIp(Lock lockItem, LockType lockType, SecurityAgent reportingAgent)
     {
         int locksForToday = Locks.Today();
@@ -806,7 +790,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <summary>
     /// 執行 init agent configuration 作業。
     /// </summary>
-
     private void InitAgentConfiguration() => securityAgents.RegisterSecurityAgents();
 
 
@@ -815,7 +798,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="notificationEventArgs">The event data.</param>
-
     void Service_AttackDetected(object sender, INotificationEventArgs notificationEventArgs)
     {
         SecurityEventPipeline? pipeline = securityEventPipeline;
@@ -972,7 +954,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <summary>
     /// Loads agents.
     /// </summary>
-
     private void LoadAgents()
     {
         securityAgents.LoadAgents();
@@ -989,7 +970,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <summary>
     /// 執行 unload agents 作業。
     /// </summary>
-
     private void UnloadAgents() => securityAgents.UnloadAgents();
 
 }
