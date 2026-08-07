@@ -127,14 +127,12 @@ public class SecurityAgent : IAgentFilter
     /// </summary>
     public void LoadCustomConfig()
     {
-        IDataReader rdr = Database.Instance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
+        IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
         while (rdr.Read())
         {
-            string propName = Db.DbValueConverter.ToString(rdr["PropertyName"]);
-            if (CustomConfiguration.ContainsKey(propName))
-            {
-                CustomConfiguration[propName] = Db.DbValueConverter.ToString(rdr["PropertyValueString"]);
-            }
+            string propName = Shared.Db.DbValueConverter.ToString(rdr["PropertyName"]);
+            string propVal = Shared.Db.DbValueConverter.ToString(rdr["PropertyValueString"]);
+            CustomConfiguration[propName] = propVal;
         }
         rdr.Close();
     }

@@ -75,7 +75,8 @@ public class SecurityAgents : List<SecurityAgent>
                 Enabled = Db.DbValueConverter.ToBool(rdr["Enabled"]),
                 Serial = Db.DbValueConverter.ToInt(rdr["Serial"])
             };
-            //agent.LoadCustomConfig();
+            agent.DatabaseInstance = database;
+            agent.LoadCustomConfig();
             Add(agent);
         }
         rdr.Close();
@@ -276,8 +277,8 @@ public class SecurityAgents : List<SecurityAgent>
                 property.SetValue(configuration, value, null);
             else if (property.PropertyType == typeof(int) && int.TryParse(value, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int integerValue))
                 property.SetValue(configuration, integerValue, null);
-            else if (property.PropertyType == typeof(bool) && bool.TryParse(value, out bool booleanValue))
-                property.SetValue(configuration, booleanValue, null);
+            else if (property.PropertyType == typeof(bool))
+                property.SetValue(configuration, Db.DbValueConverter.ToBool(value), null);
         }
     }
     /// <summary>
