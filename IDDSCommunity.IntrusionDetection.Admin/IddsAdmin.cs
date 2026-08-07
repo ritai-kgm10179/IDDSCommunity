@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -700,15 +700,31 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
-        string readmePath = System.IO.Path.Combine(AppContext.BaseDirectory, "README.md");
-        if (System.IO.File.Exists(readmePath))
+        string[] candidatePaths =
+        [
+            System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
+        ];
+
+        foreach (string path in candidatePaths)
         {
-            Process.Start(new ProcessStartInfo(readmePath) { UseShellExecute = true });
-            return;
+            if (System.IO.File.Exists(path))
+            {
+                Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                return;
+            }
         }
 
-        MessageBox.Show(Strings.Get("Documentation is available in README.md."), Strings.AppTitle,
-            MessageBoxButtons.OK, MessageBoxIcon.Information);
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/ritai-kgm10179/IDDSCommunity#readme") { UseShellExecute = true });
+        }
+        catch
+        {
+            MessageBox.Show(Strings.Get("Documentation is available in README.md."), Strings.AppTitle,
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
     /// <summary>
     /// 處理 click 事件。

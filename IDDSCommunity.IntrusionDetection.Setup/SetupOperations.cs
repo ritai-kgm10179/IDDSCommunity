@@ -272,20 +272,34 @@ internal static class SetupOperations
     /// </summary>
     internal static void OpenUserGuide()
     {
-        string localGuide = Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md");
-        if (!File.Exists(localGuide))
+        string[] candidatePaths =
+        [
+            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
+            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
+            Path.Combine(InstallDirectory, "USER-GUIDE.md"),
+            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.md"),
+            Path.Combine(AppContext.BaseDirectory, "README.md"),
+            Path.Combine(InstallDirectory, "README.md")
+        ];
+
+        foreach (string path in candidatePaths)
         {
-            localGuide = Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.md");
+            if (File.Exists(path))
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                    return;
+                }
+                catch { }
+            }
         }
 
-        if (File.Exists(localGuide))
-        {
-            Process.Start(new ProcessStartInfo(localGuide) { UseShellExecute = true });
-        }
-        else
+        try
         {
             Process.Start(new ProcessStartInfo("https://github.com/ritai-kgm10179/IDDSCommunity#readme") { UseShellExecute = true });
         }
+        catch { }
     }
     /// <summary>
     /// 檢查管理控制台執行檔是否可供啟動。
