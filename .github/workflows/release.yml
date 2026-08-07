@@ -40,7 +40,7 @@ jobs:
           "version=$($Matches.version)" >> $env:GITHUB_OUTPUT
 
       - name: Checkout signed tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ steps.version.outputs.tag }}
           fetch-depth: 0
@@ -68,7 +68,7 @@ jobs:
           if ($projectVersion -ne $env:RELEASE_VERSION) { throw "Tag version $env:RELEASE_VERSION does not match setup version $projectVersion." }
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.302
           cache: true
@@ -97,12 +97,12 @@ jobs:
         rid: [win-x64, win-arm64]
     steps:
       - name: Checkout signed tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ needs.validate.outputs.tag }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.302
           cache: true
@@ -160,7 +160,7 @@ jobs:
           }
 
       - name: Upload installer package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.rid }}
           path: |
@@ -182,14 +182,14 @@ jobs:
       artifact-metadata: write
     steps:
       - name: Download installer packages
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           pattern: installer-*
           path: release
           merge-multiple: true
 
       - name: Attest installer and SBOM provenance
-        uses: actions/attest@v4
+        uses: actions/attest@v2
         with:
           subject-path: |
             release/*.zip
