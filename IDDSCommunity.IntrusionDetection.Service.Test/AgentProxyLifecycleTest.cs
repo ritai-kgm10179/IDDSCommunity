@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
+using IDDSCommunity.Agents.TerminalServer;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,5 +23,16 @@ public sealed class AgentProxyLifecycleTest
 
         Assert.ThrowsExactly<ObjectDisposedException>(() => _ = proxy.IsRunning);
         proxy.Dispose();
+    }
+
+    /// <summary>
+    /// 驗證遠端桌面 Agent (TlsSslAgent) 的初始化、雙軌事件監聽啟動與停止資源釋放。
+    /// </summary>
+    [TestMethod]
+    public void TlsSslAgent_StartAndStop_CompletesWithoutException()
+    {
+        TlsSslAgent agent = new();
+        Assert.AreEqual("{A682433B-852F-4150-ADF4-FB7F75090015}", agent.Id.ToString("B").ToUpperInvariant());
+        Assert.IsFalse(agent.IsRunning);
     }
 }

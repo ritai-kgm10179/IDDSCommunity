@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.IO;
@@ -312,12 +312,20 @@ public partial class PanelPluginConfiguration : UserControl
         get => _agent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
-            if (_agent != null && buttonSave.Visible)
-            {
-                SaveAgentChanges(_agent);
-            }
+            FlushUnsavedChanges();
             _agent = value;
             AgentChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
+    /// </summary>
+    public void FlushUnsavedChanges()
+    {
+        if (_agent != null && buttonSave.Visible)
+        {
+            SaveAgentChanges(_agent);
         }
     }
     /// <summary>

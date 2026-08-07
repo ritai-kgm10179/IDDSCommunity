@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -39,7 +39,7 @@ static class Program
         LanguageManager.Instance.Initialize("auto");
         try
         {
-            Database.Instance.Configure(Application.StartupPath);
+            Database.Instance.Configure(IddsConfig.GetDefaultDataDirectory());
             IddsConfig.Instance.Load();
             LanguageManager.Instance.Initialize(IddsConfig.Instance.Language);
         }

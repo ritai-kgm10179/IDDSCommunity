@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -46,7 +46,7 @@ public partial class SplashScreen : Form
     public void StartupComponents()
     {
         smartLabelStatus.Text = Strings.Get("Configuring database...");
-        Database.Instance.Configure(Application.StartupPath);
+        Database.Instance.Configure(IddsConfig.GetDefaultDataDirectory());
         smartLabelStatus.Text = Strings.Get("Checking database...");
 
         smartLabelStatus.Text = Strings.Get("Setting environment variables...");

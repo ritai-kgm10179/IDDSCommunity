@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -131,6 +131,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             {
                 UnselectAll();
                 item.IsSelected = true;
+                flowLayoutPanelNavigationItems.ScrollControlIntoView(item);
                 OnNavigationChanged(this);
             }
         }

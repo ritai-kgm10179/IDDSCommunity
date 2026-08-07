@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -336,22 +336,34 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     /// <summary>
-    /// 合併資料庫資訊。
+    /// 合併資料庫設定資訊至硬碟已載入之 Agent 清單。
     /// </summary>
-    /// <param name="agents">agents參數。</param>
-    /// <returns>傳回merge db information結果。</returns>
+    /// <param name="agents">硬碟所掃描出的 Agent 清單。</param>
+    /// <returns>傳回合併後的 Agent 集合。</returns>
     public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
     {
         List<SecurityAgent> result = [.. agents];
         foreach (SecurityAgent agent in this)
         {
-            int listIndex = GetListIndex(result, agent.Name);
             SecurityAgent? a = result.Find(x => x.Id == agent.Id);
-            // fallback if previous installation was made
-            a ??= (result.Find(x => x.Name == agent.Name));
+            a ??= result.Find(x => !string.IsNullOrEmpty(agent.Name) && x.Name.Equals(agent.Name, StringComparison.OrdinalIgnoreCase));
+            a ??= result.Find(x => !string.IsNullOrEmpty(agent.DisplayName) && x.DisplayName.Equals(agent.DisplayName, StringComparison.OrdinalIgnoreCase));
+            a ??= result.Find(x => !string.IsNullOrEmpty(agent.AssemblyName) && x.AssemblyName.Equals(agent.AssemblyName, StringComparison.OrdinalIgnoreCase));
+
+            // 針對自舊版 Cyberarms 重構命名至 IDDSCommunity 的情況提供 ShortName/ShortAssembly 模糊比對
+            if (a == null)
+            {
+                string dbShortName = GetShortName(agent.Name);
+                string dbShortAssy = GetShortName(agent.AssemblyName);
+                a = result.Find(x =>
+                    (!string.IsNullOrEmpty(dbShortName) && dbShortName.Equals(GetShortName(x.Name), StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(dbShortAssy) && dbShortAssy.Equals(GetShortName(x.AssemblyName), StringComparison.OrdinalIgnoreCase)));
+            }
 
             if (a != null)
             {
+                if (agent.Id == Guid.Empty) agent.Id = a.Id;
+                agent.Name = a.Name;
                 agent.AssemblyFilename = a.AssemblyFilename;
                 agent.Icon = a.Icon;
                 agent.SelectedIcon = a.SelectedIcon;
@@ -369,28 +381,7 @@ public class SecurityAgents : List<SecurityAgent>
                 agent.SelectedIcon = Resources.agent15px_custom_white;
                 agent.UnselectedIcon = Resources.agent15px_custom_dark;
                 agent.BinaryMissing = true;
-                agent.Enabled = false;
-                if (a is not null)
-                    Remove(a);
             }
-            //int listIndex = GetListIndex(result, agent.Name);
-            //if (listIndex >= 0) {
-            //    agent.AssemblyFilename = result[listIndex].AssemblyFilename;
-            //    agent.Icon = result[listIndex].Icon;
-            //    agent.SelectedIcon = result[listIndex].SelectedIcon;
-            //    agent.UnselectedIcon = result[listIndex].UnselectedIcon;
-            //    agent.DisplayName = result[listIndex].DisplayName;
-            //    agent.BinaryMissing = false;
-            //    agent.CustomConfiguration = result[listIndex].CustomConfiguration;
-            //    agent.LoadCustomConfig();
-            //    result.RemoveAt(listIndex);
-            //} else {
-            //    agent.Icon = global::IDDSCommunity.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-            //    agent.SelectedIcon = global::IDDSCommunity.IntrusionDetection.Shared.Resources.agent15px_custom_white;
-            //    agent.UnselectedIcon = global::IDDSCommunity.IntrusionDetection.Shared.Resources.agent15px_custom_dark;
-            //    agent.BinaryMissing = true;
-            //    agent.Enabled = false;
-            //}
         }
         foreach (SecurityAgent agent in result)
         {
@@ -399,6 +390,15 @@ public class SecurityAgents : List<SecurityAgent>
         AddRange(result);
         return this;
     }
+
+    private static string GetShortName(string fullName)
+    {
+        if (string.IsNullOrEmpty(fullName)) return string.Empty;
+        string nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fullName);
+        int idx = nameWithoutExt.LastIndexOf('.');
+        return idx >= 0 ? nameWithoutExt[(idx + 1)..] : nameWithoutExt;
+    }
+
     /// <summary>
     /// 取得清單索引。
     /// </summary>

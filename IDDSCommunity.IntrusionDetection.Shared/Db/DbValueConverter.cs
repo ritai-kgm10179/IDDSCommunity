@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 
@@ -12,8 +12,11 @@ public class DbValueConverter
     public static bool ToBool(object? value)
     {
         if (value is null or DBNull) return false;
-        bool.TryParse(value.ToString(), out bool result);
-        return result;
+        if (value is bool b) return b;
+        string str = value.ToString() ?? string.Empty;
+        if (bool.TryParse(str, out bool result)) return result;
+        if (int.TryParse(str, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int intVal)) return intVal != 0;
+        return false;
     }
     /// <summary>
     /// 執行to string作業。

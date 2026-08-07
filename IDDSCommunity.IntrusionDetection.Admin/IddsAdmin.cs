@@ -626,11 +626,22 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
+    /// 處理 FormClosing 事件，確保關閉應用程式前自動持久化儲存尚未存檔的 Agent 變更。
+    /// </summary>
+    /// <param name="e">FormClosingEventArgs 物件。</param>
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _panelAgentConfiguration?.FlushUnsavedChanges();
+        base.OnFormClosing(e);
+    }
+
+    /// <summary>
     /// 執行 show menu 作業。
     /// </summary>
     /// <param name="newMenu">new menu 的值。</param>
     private void ShowMenu(SmartLabel newMenu)
     {
+        _panelAgentConfiguration?.FlushUnsavedChanges();
         //if (newMenu == CurrentMenu) return;
         if (CurrentMenu != null && newMenu != CurrentMenu)
         {
