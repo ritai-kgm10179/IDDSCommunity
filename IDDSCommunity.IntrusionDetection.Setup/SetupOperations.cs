@@ -80,6 +80,91 @@ internal static class SetupOperations
         }
     }
 
+    internal static readonly string DesktopShortcutPath =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "IDDS Community Admin.lnk");
+
+    internal static readonly string StartMenuDirectory =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "IDDS Community");
+
+    internal static readonly string StartMenuShortcutPath =
+        Path.Combine(StartMenuDirectory, "IDDS Community Admin.lnk");
+
+    /// <summary>檢查桌面捷徑是否存在。</summary>
+    internal static bool HasDesktopShortcut => File.Exists(DesktopShortcutPath);
+
+    /// <summary>檢查開始功能表捷徑是否存在。</summary>
+    internal static bool HasStartMenuShortcut => File.Exists(StartMenuShortcutPath);
+
+    /// <summary>建立或清理桌面與開始功能表捷徑。</summary>
+    /// <param name="desktop">是否建立桌面捷徑。</param>
+    /// <param name="startMenu">是否建立開始功能表捷徑。</param>
+    internal static void CreateShortcuts(bool desktop, bool startMenu)
+    {
+        if (!IsInstalled) return;
+
+        if (desktop)
+        {
+            CreateLnk(DesktopShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+        }
+        else if (File.Exists(DesktopShortcutPath))
+        {
+            try { File.Delete(DesktopShortcutPath); } catch { }
+        }
+
+        if (startMenu)
+        {
+            Directory.CreateDirectory(StartMenuDirectory);
+            CreateLnk(StartMenuShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+        }
+        else if (File.Exists(StartMenuShortcutPath))
+        {
+            try { File.Delete(StartMenuShortcutPath); } catch { }
+        }
+    }
+
+    /// <summary>移除桌面與開始功能表捷徑。</summary>
+    internal static void RemoveShortcuts()
+    {
+        try { if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath); } catch { }
+        try
+        {
+            if (Directory.Exists(StartMenuDirectory))
+                Directory.Delete(StartMenuDirectory, true);
+        }
+        catch { }
+    }
+
+    private static void CreateLnk(string shortcutPath, string targetPath, string description)
+    {
+        string script = $"$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('{shortcutPath}'); $Shortcut.TargetPath = '{targetPath}'; $Shortcut.WorkingDirectory = '{Path.GetDirectoryName(targetPath)}'; $Shortcut.Description = '{description}'; $Shortcut.Save()";
+        ProcessStartInfo psi = new("powershell.exe", $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{script}\"")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        using Process p = Process.Start(psi)!;
+        p.WaitForExit();
+    }
+
+    /// <summary>開啟 IDDS Community 安裝與使用說明文件。</summary>
+    internal static void OpenUserGuide()
+    {
+        string localGuide = Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md");
+        if (!File.Exists(localGuide))
+        {
+            localGuide = Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.md");
+        }
+
+        if (File.Exists(localGuide))
+        {
+            Process.Start(new ProcessStartInfo(localGuide) { UseShellExecute = true });
+        }
+        else
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/ritai-kgm10179/IDDSCommunity#readme") { UseShellExecute = true });
+        }
+    }
+
     /// <summary>Checks whether the administration UI executable is available for launching.</summary>
     internal static bool CanLaunchApp => IsInstalled && File.Exists(AdminExecutablePath);
 
@@ -90,8 +175,10 @@ internal static class SetupOperations
         Process.Start(new ProcessStartInfo(AdminExecutablePath) { UseShellExecute = true });
     }
 
-    /// <summary>Deploys the packaged payload and registers the Windows service.</summary>
-    internal static void Install()
+    /// <summary>Deploys the packaged payload, registers the Windows service, and configures shortcuts.</summary>
+    /// <param name="desktopShortcut">是否建立桌面捷徑。</param>
+    /// <param name="startMenuShortcut">是否建立開始功能表捷徑。</param>
+    internal static void Install(bool desktopShortcut = true, bool startMenuShortcut = true)
     {
         string payloadDir = Path.Combine(AppContext.BaseDirectory, "payload");
         string tempExtractedPayload = string.Empty;
@@ -152,6 +239,7 @@ internal static class SetupOperations
             RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
             ConfigureEventLog();
             RunSc("start", ServiceName);
+            CreateShortcuts(desktopShortcut, startMenuShortcut);
         }
         finally
         {
@@ -177,9 +265,10 @@ internal static class SetupOperations
     private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
     private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
 
-    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案。</summary>
+    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案與捷徑。</summary>
     internal static void Uninstall()
     {
+        RemoveShortcuts();
         RunSc("stop", ServiceName, acceptMissing: true);
         RunSc("delete", ServiceName, acceptMissing: true);
         KillRunningProcesses();

@@ -28,4 +28,7 @@ Target location: {1}</value></data>
   <data name="StatusInstalledWithVersion" xml:space="preserve"><value>Status: Installed (v{0})</value></data>
   <data name="StatusUpgradeAvailable" xml:space="preserve"><value>Status: Installed (v{0}). Upgrade available to v{1}</value></data>
   <data name="DowngradeConfirm" xml:space="preserve"><value>A newer version (v{0}) of IDDS Community is currently installed. Are you sure you want to downgrade to version v{1}?</value></data>
+  <data name="CreateDesktopShortcut" xml:space="preserve"><value>Create Desktop Shortcut</value></data>
+  <data name="CreateStartMenuShortcut" xml:space="preserve"><value>Create Start Menu Shortcut</value></data>
+  <data name="OpenUserGuide" xml:space="preserve"><value>User Guide</value></data>
 </root>
