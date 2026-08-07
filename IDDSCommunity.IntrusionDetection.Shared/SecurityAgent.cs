@@ -330,8 +330,8 @@ public class SecurityAgent : IAgentFilter
     {
         if (!Id.Equals(Guid.Empty)) return Id;
         // if agent does not provide ID, set the ID from this agent. Otherwise read from database
-        if (!Database.Instance.IsConfigured) Database.Instance.Configure(IddsConfig.PluginDirectory);
-        object? result = Database.Instance.ExecuteScalar("Select AgentId from SecurityAgents where AssemblyName = @p0", AssemblyName);
+        if (!DatabaseInstance.IsConfigured) DatabaseInstance.Configure(IddsConfig.GetDefaultDataDirectory());
+        object? result = DatabaseInstance.ExecuteScalar("Select AgentId from SecurityAgents where Name = @p0 or AssemblyName = @p1", Name, AssemblyName);
         if (result != null)
         {
             var id = Db.DbValueConverter.ToGuid(result);
@@ -340,7 +340,14 @@ public class SecurityAgent : IAgentFilter
                 return id;
             }
         }
-        // last thing, return new guid --> should never happen when agents are configured properly
+        if (!string.IsNullOrEmpty(Name))
+        {
+            return new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(Name)));
+        }
+        if (!string.IsNullOrEmpty(AssemblyName))
+        {
+            return new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(AssemblyName)));
+        }
         return Guid.NewGuid();
     }
 

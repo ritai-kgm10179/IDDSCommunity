@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -9,8 +9,15 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
-public class Pop3Agent : AgentPlugin
+public class Pop3Agent : AgentPlugin, IExtendedInformation
 {
+    public static Guid AgentId => new("{1F917251-2661-473A-970B-B2BB62EA6E1A}");
+    public Guid Id => AgentId;
+    public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.Pop3Agent";
+    public System.Drawing.Image? Icon { get; set; }
+    public System.Drawing.Image? SelectedIcon { get; set; }
+    public System.Drawing.Image? UnselectedIcon { get; set; }
+
     public const int CLEANUP_INTERVAL_MINS = 2;
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
@@ -309,8 +316,4 @@ public class Pop3Agent : AgentPlugin
         };
         OnAttackDetected(this, args);
     }
-
-
-    public static Guid Id => new("{1F917251-2661-473A-970B-B2BB62EA6E1A}");
-
 }

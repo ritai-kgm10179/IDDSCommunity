@@ -221,6 +221,107 @@ public class LoadAgentsTest
         }
     }
 
+    /// <summary>
+    /// 測試 MailServer 下的 3 個 Agent (IMAP, POP3, SMTP) 具備獨一無二的 Guid，可同時啟用且不互相覆蓋。
+    /// </summary>
+    [TestMethod]
+    public void MailServerAgents_HaveUniqueGuids_AndCanAllBeEnabledSimultaneously()
+    {
+        string testDbDir = Path.Combine(Path.GetTempPath(), "idds_test_mail_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDbDir);
+        try
+        {
+            Database testDb = new();
+            testDb.Configure(testDbDir);
+
+            SecurityAgent imap = new()
+            {
+                Id = new Guid("{3F8B715C-4A2D-4C98-9C6E-7F89B219E022}"),
+                Name = "IDDSCommunity.Agents.MailServer.ImapAgent",
+                DisplayName = "IMAP Security Agent",
+                AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+                Enabled = true,
+                DatabaseInstance = testDb
+            };
+
+            SecurityAgent pop3 = new()
+            {
+                Id = new Guid("{1F917251-2661-473A-970B-B2BB62EA6E1A}"),
+                Name = "IDDSCommunity.Agents.MailServer.Pop3Agent",
+                DisplayName = "POP3 Security Agent",
+                AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+                Enabled = true,
+                DatabaseInstance = testDb
+            };
+
+            SecurityAgent smtp = new()
+            {
+                Id = new Guid("{EB69BF23-939C-4F89-97D0-50274306D018}"),
+                Name = "IDDSCommunity.Agents.MailServer.SmtpAgent",
+                DisplayName = "Mail Server SMTP Security Agent",
+                AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+                Enabled = true,
+                DatabaseInstance = testDb
+            };
+
+            Assert.AreNotEqual(imap.Id, pop3.Id);
+            Assert.AreNotEqual(pop3.Id, smtp.Id);
+            Assert.AreNotEqual(imap.Id, smtp.Id);
+
+            imap.Save();
+            pop3.Save();
+            smtp.Save();
+
+            SecurityAgents agents = new(testDb, IddsConfig.Instance);
+            agents.InitializeAgents();
+
+            Assert.AreEqual(3, agents.Count);
+            Assert.IsTrue(agents.FindByName("IDDSCommunity.Agents.MailServer.ImapAgent")!.Enabled);
+            Assert.IsTrue(agents.FindByName("IDDSCommunity.Agents.MailServer.Pop3Agent")!.Enabled);
+            Assert.IsTrue(agents.FindByName("IDDSCommunity.Agents.MailServer.SmtpAgent")!.Enabled);
+        }
+        finally
+        {
+            try { Directory.Delete(testDbDir, true); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// 測試 GetDisplayName 支援大小寫不敏感之 Guid 比對。
+    /// </summary>
+    [TestMethod]
+    public void GetDisplayName_CaseInsensitiveGuid_ReturnsCorrectDisplayName()
+    {
+        string testDbDir = Path.Combine(Path.GetTempPath(), "idds_test_disp_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDbDir);
+        try
+        {
+            Database testDb = new();
+            testDb.Configure(testDbDir);
+            SecurityAgents agents = new(testDb, IddsConfig.Instance);
+
+            Guid targetId = new("{A682433B-852F-4150-ADF4-FB7F75090015}");
+            SecurityAgent rdpAgent = new()
+            {
+                Id = targetId,
+                Name = "IDDSCommunity.Agents.TerminalServer.TlsSslAgent",
+                DisplayName = "RDP / Terminal Server Agent",
+                DatabaseInstance = testDb
+            };
+            agents.Add(rdpAgent);
+
+            string upperGuid = targetId.ToString().ToUpperInvariant();
+            string lowerGuid = targetId.ToString().ToLowerInvariant();
+
+            Assert.AreEqual("RDP / Terminal Server Agent", agents.GetDisplayName(upperGuid));
+            Assert.AreEqual("RDP / Terminal Server Agent", agents.GetDisplayName(lowerGuid));
+        }
+        finally
+        {
+            try { Directory.Delete(testDbDir, true); } catch { }
+        }
+    }
+
     private sealed class TestPluginConfiguration : IntrusionDetection.Api.Plugin.PluginConfiguration
     {
         public bool Enabled { get; set; } = true;
