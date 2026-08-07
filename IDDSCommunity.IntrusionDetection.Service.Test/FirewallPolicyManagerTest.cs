@@ -41,4 +41,18 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsTrue(aggregated.Contains("10.0.0.1"));
         Assert.IsFalse(aggregated.Contains("192.168.1.1"));
     }
+
+    /// <summary>
+    /// 驗證當 C 段子網中含有 Safe Networks 白名單 IP 時，取消 CIDR 聚合以避免誤殺。
+    /// </summary>
+    [TestMethod]
+    public void AggregateIpAddresses_SkipsAggregationWhenWhitelistCollides()
+    {
+        System.Collections.Generic.List<string> ips = ["192.168.1.1", "192.168.1.2", "192.168.1.3", "192.168.1.4", "192.168.1.5"];
+        System.Collections.Generic.List<string> safeNetworks = ["192.168.1.254"];
+        System.Collections.Generic.List<string> aggregated = FirewallPolicyManager.AggregateIpAddresses(ips, safeNetworks: safeNetworks, subnetThreshold: 5);
+        Assert.IsFalse(aggregated.Contains("192.168.1.0/24"));
+        Assert.IsTrue(aggregated.Contains("192.168.1.1"));
+        Assert.IsTrue(aggregated.Contains("192.168.1.5"));
+    }
 }

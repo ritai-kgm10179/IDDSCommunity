@@ -399,15 +399,33 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 
     /// <summary>
     /// 聚合 IP 位址。當同一 /24 C 段子網出現超過指定門檻個 IP 時，自動轉換為 CIDR 條目。
+    /// 若目標 C 段中含有 Safe Networks 白名單 IP，則跳過 CIDR 聚合以避免誤殺合法流量。
     /// </summary>
     /// <param name="addresses">原始 IP 位址集合。</param>
+    /// <param name="safeNetworks">全域白名單 / 安全網路 IP 與 CIDR 集合。</param>
     /// <param name="subnetThreshold">觸發 C 段聚合的 IP 數量門檻。</param>
-    /// <returns>傳回經過 CIDR 聚合後的位址清單。</returns>
-    internal static List<string> AggregateIpAddresses(IEnumerable<string> addresses, int subnetThreshold = 5)
+    /// <returns>傳回經過 CIDR 聚合與白名單保護後的位址清單。</returns>
+    internal static List<string> AggregateIpAddresses(IEnumerable<string> addresses, IEnumerable<string>? safeNetworks = null, int subnetThreshold = 5)
     {
         List<string> result = [];
         Dictionary<string, List<string>> subnetGroups = new(StringComparer.Ordinal);
         List<string> nonIpv4OrCidr = [];
+        HashSet<string> safeIpPrefixes = new(StringComparer.OrdinalIgnoreCase);
+
+        if (safeNetworks is not null)
+        {
+            foreach (string safe in safeNetworks)
+            {
+                string s = safe.Trim();
+                if (string.IsNullOrEmpty(s)) continue;
+                if (System.Net.IPAddress.TryParse(s.Split('/')[0], out System.Net.IPAddress? safeIp) &&
+                    safeIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    byte[] bytes = safeIp.GetAddressBytes();
+                    safeIpPrefixes.Add($"{bytes[0]}.{bytes[1]}.{bytes[2]}");
+                }
+            }
+        }
 
         foreach (string addr in addresses)
         {
@@ -434,7 +452,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 
         foreach (var (prefix, group) in subnetGroups)
         {
-            if (group.Count >= subnetThreshold)
+            if (group.Count >= subnetThreshold && !safeIpPrefixes.Contains(prefix))
             {
                 result.Add($"{prefix}.0/24");
             }
