@@ -14,7 +14,6 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
 
     public event EventHandler<DnsEventRecord>? EventReceived;
     public event Action<Exception>? Error;
-
     /// <summary>
     /// 啟動已記錄之 DNS 分析與稽核通道的即時訂閱。
     /// </summary>
@@ -27,17 +26,14 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
         analyticalWatcher.Enabled = true;
         auditWatcher.Enabled = true;
     }
-
     /// <summary>
     /// 暫時停用兩個即時訂閱通道。
     /// </summary>
     public void Pause() => SetEnabled(false);
-
     /// <summary>
     /// 復原兩個即時訂閱通道。
     /// </summary>
     public void Resume() => SetEnabled(true);
-
     /// <summary>
     /// 停止並釋放兩個即時訂閱通道。
     /// </summary>
@@ -46,7 +42,6 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
         DisposeWatcher(ref analyticalWatcher);
         DisposeWatcher(ref auditWatcher);
     }
-
     /// <summary>
     /// 釋放事件訂閱與作業系統控制代碼。
     /// </summary>

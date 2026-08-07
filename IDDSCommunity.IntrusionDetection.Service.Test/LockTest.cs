@@ -5,7 +5,6 @@ using System.Net;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Service.Test;
-
 /// <summary>
 /// Summary description for LockTest
 /// </summary>
@@ -24,7 +23,6 @@ public class LockTest
     }
 
     private TestContext testContextInstance = null!;
-
     /// <summary>
     ///Gets or sets the test context which provides
     ///information about and functionality for the current test run.
@@ -57,7 +55,6 @@ public class LockTest
     #endregion
 
 
-
     /// <summary>
     /// 執行 test ip address local 作業。
     /// </summary>
@@ -77,7 +74,6 @@ public class LockTest
         Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("192.168.13.1")));
         Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("73.24.12.42")));
     }
-
     /// <summary>
     /// 執行 test is ip address local performance test 作業。
     /// </summary>

@@ -9,7 +9,6 @@ using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Exports a localized security report for an administrator-selected interval.
 /// </summary>

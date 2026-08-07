@@ -26,7 +26,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
                     </Select>
                   </Query>
                 </QueryList>";
-
     /// <summary>
     /// 初始化 Agent。
     /// </summary>
@@ -34,7 +33,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     {
 
     }
-
 
     /// <summary>
     /// 啟動 Agent 服務並初始化事件紀錄監聽器。
@@ -47,7 +45,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
-
     /// <summary>
     /// 從暫停狀態復原 Agent 服務。
     /// </summary>
@@ -58,7 +55,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
             watcher.Enabled = true;
         }
     }
-
     /// <summary>
     /// 暫停 Agent 服務。
     /// </summary>
@@ -69,7 +65,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
             watcher.Enabled = false;
         }
     }
-
     /// <summary>
     /// 停止 Agent 服務。
     /// </summary>
@@ -83,7 +78,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         watcher = null;
         query = null;
     }
-
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -137,7 +131,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -145,7 +138,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     {
         get => IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("FileMaker Security Agent"); set => throw new NotSupportedException(IDDSCommunity.IntrusionDetection.Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
@@ -158,12 +150,10 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
     /// <summary>
     /// 取得 Agent 的全域唯一識別碼 (GUID)。
     /// </summary>
     public Guid Id => new("{F0F28CC4-8103-4781-927E-CFD4C5991092}");
-
     /// <summary>
     /// 取得匹配規則運算式。
     /// </summary>

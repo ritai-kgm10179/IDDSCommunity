@@ -25,7 +25,6 @@ public sealed class PacketHeaderTest
         Assert.AreEqual("443", tcpHeader.DestinationPort);
         CollectionAssert.AreEqual(new byte[] { 0x41, 0x42, 0x43 }, tcpHeader.Data[..tcpHeader.MessageLength]);
     }
-
     /// <summary>
     /// Verifies that a truncated IPv4 packet never copies beyond the received input.
     /// </summary>
@@ -39,7 +38,6 @@ public sealed class PacketHeaderTest
         Assert.AreEqual(23, header.MessageLength);
         CollectionAssert.AreEqual(new byte[23], header.Data);
     }
-
     /// <summary>
     /// Verifies that a TCP header without application data reports an empty payload.
     /// </summary>
@@ -53,7 +51,6 @@ public sealed class PacketHeaderTest
 
         Assert.AreEqual((ushort)0, tcpHeader.MessageLength);
     }
-
     /// <summary>
     /// Creates a deterministic IPv4 TCP packet for parser characterization tests.
     /// </summary>

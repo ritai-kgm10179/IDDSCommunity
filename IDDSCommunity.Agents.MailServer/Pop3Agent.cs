@@ -17,7 +17,6 @@ public class Pop3Agent : AgentPlugin
     public System.Timers.Timer cleanupTimer;
 
     readonly List<PacketSniffer> sniffers = [];
-
     /// <summary>
     /// 初始化 <see cref="Pop3Agent"/> 類別的新執行個體。
     /// </summary>
@@ -34,7 +33,6 @@ public class Pop3Agent : AgentPlugin
         };
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
     }
-
     /// <summary>
     /// 處理定時器觸發事件。
     /// </summary>
@@ -55,7 +53,6 @@ public class Pop3Agent : AgentPlugin
                 _currentClients.TryRemove(key, out _);
         }
     }
-
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
@@ -65,7 +62,6 @@ public class Pop3Agent : AgentPlugin
         RunWatcher();
         base.OnStartAgent();
     }
-
     /// <summary>
     /// 執行監聽器啟動作業。
     /// </summary>
@@ -84,7 +80,6 @@ public class Pop3Agent : AgentPlugin
             }
         }
     }
-
 
 
     /// <summary>
@@ -121,7 +116,6 @@ public class Pop3Agent : AgentPlugin
         }
         sniffers.Add(s);
     }
-
     /// <summary>
     /// 執行接收測試作業。
     /// </summary>
@@ -132,7 +126,6 @@ public class Pop3Agent : AgentPlugin
         IPHeader hdr = new(data, data.Length);
         s_IpPacketReceived(hdr, EventArgs.Empty);
     }
-
     /// <summary>
     /// 執行傳送測試作業。
     /// </summary>
@@ -143,7 +136,6 @@ public class Pop3Agent : AgentPlugin
         IPHeader hdr = new(data, data.Length);
         s_IpPacketSent(hdr, EventArgs.Empty);
     }
-
     /// <summary>
     /// 處理 IP 封包接收事件。
     /// </summary>
@@ -216,7 +208,6 @@ public class Pop3Agent : AgentPlugin
 
         }
     }
-
     /// <summary>
     /// 處理 IP 封包傳送事件。
     /// </summary>
@@ -275,14 +266,12 @@ public class Pop3Agent : AgentPlugin
 
         set => _currentClients = new ConcurrentDictionary<int, Pop3Client>(value);
     }
-
     /// <summary>
     /// 處理追蹤通知。
     /// </summary>
     /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
-
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>
@@ -292,7 +281,6 @@ public class Pop3Agent : AgentPlugin
         OnStartAgent();
         base.OnContinueAgent();
     }
-
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
@@ -302,7 +290,6 @@ public class Pop3Agent : AgentPlugin
         OnStopAgent();
         base.OnPauseAgent();
     }
-
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
@@ -320,7 +307,6 @@ public class Pop3Agent : AgentPlugin
     }
 
     public override bool IsRunning => base.IsRunning;
-
     /// <summary>
     /// 處理登入失敗作業。
     /// </summary>

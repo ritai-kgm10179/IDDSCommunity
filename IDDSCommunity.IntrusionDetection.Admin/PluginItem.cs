@@ -9,13 +9,11 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class PluginItem : UserControl
 {
     public event EventHandler? SecurityAgentConfigurationRequest;
-
     /// <summary>
     /// 初始化 <see cref="PluginItem"/> 類別的新執行個體。
     /// </summary>
 
     public PluginItem() => InitializeComponent();
-
     /// <summary>
     /// Sets soft locks.
     /// </summary>
@@ -23,28 +21,24 @@ public partial class PluginItem : UserControl
 
     public void SetSoftLocks(int softLocks) => labelSoftLocksValue.Text = softLocks.ToString();
 
-
     /// <summary>
     /// Sets hard locks.
     /// </summary>
     /// <param name="hardLocks">hard locks 的值。</param>
 
     public void SetHardLocks(int hardLocks) => labelHardLocksValue.Text = hardLocks.ToString();
-
     /// <summary>
     /// Sets name.
     /// </summary>
     /// <param name="name">name 的值。</param>
 
     public void SetName(string name) => labelAgentName.Text = name;
-
     /// <summary>
     /// Sets icon.
     /// </summary>
     /// <param name="icon">icon 的值。</param>
 
     public void SetIcon(Image? icon) => pictureBoxAgentIcon.Image = icon;
-
 
     /// <summary>
     /// Sets failed logins.
@@ -64,7 +58,6 @@ public partial class PluginItem : UserControl
             _securityAgent.StatisticsUpdated += new EventHandler(_securityAgent_StatisticsUpdated);
         }
     }
-
     /// <summary>
     /// Updates values.
     /// </summary>
@@ -93,7 +86,6 @@ public partial class PluginItem : UserControl
         toolTip1.ToolTipTitle = Strings.Get("Agent status");
         toolTip1.SetToolTip(pictureBoxEnabledState, pictureBoxEnabledState.AccessibleDescription);
     }
-
     /// <summary>
     /// Updates values.
     /// </summary>
@@ -110,7 +102,6 @@ public partial class PluginItem : UserControl
             UpdateValues("", 0, 0, 0, null);
         }
     }
-
     /// <summary>
     /// 處理 statistics updated 事件。
     /// </summary>
@@ -118,7 +109,6 @@ public partial class PluginItem : UserControl
     /// <param name="e">事件資料。</param>
 
     void _securityAgent_StatisticsUpdated(object? sender, EventArgs e) => UpdateValues(SecurityAgent);
-
     /// <summary>
     /// 處理 popup 事件。
     /// </summary>
@@ -129,7 +119,6 @@ public partial class PluginItem : UserControl
     {
 
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -140,7 +129,6 @@ public partial class PluginItem : UserControl
     {
 
     }
-
     /// <summary>
     /// 處理 double click 事件。
     /// </summary>

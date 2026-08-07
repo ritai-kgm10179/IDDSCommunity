@@ -2,7 +2,6 @@
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.Agents.WindowsDns;
-
 /// <summary>
 /// 定義 Windows DNS 伺服器活動的界限偵測視窗與門檻值。
 /// </summary>
@@ -15,7 +14,6 @@ public sealed class WindowsDnsConfiguration : PluginConfiguration
     public int DynamicUpdateThreshold { get; set; } = 10;
     public int ZoneTransferThreshold { get; set; } = 1;
     public int MaximumTrackedClients { get; set; } = 10000;
-
     /// <summary>
     /// 驗證每個偵測界限均為正數且記憶體使用量維持在界限內。
     /// </summary>

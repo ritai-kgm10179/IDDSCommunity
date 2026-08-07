@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
-
 /// <summary>
 /// Verifies that every production Agent project participates in Admin debug builds and shared deployment.
 /// </summary>
@@ -38,7 +37,6 @@ public sealed class PluginDeploymentTest
         CollectionAssert.AreEqual(expected, referenced, "Admin Debug build references are incomplete.");
         CollectionAssert.AreEqual(expected, deployed, "Shared Plugin deployment list is incomplete.");
     }
-
     /// <summary>
     /// Verifies that the current Admin build output contains every Plugin and that each assembly is discoverable.
     /// </summary>
@@ -61,7 +59,6 @@ public sealed class PluginDeploymentTest
         foreach (string assemblyPath in Directory.EnumerateFiles(pluginDirectory, "IDDSCommunity.Agents.*.dll", SearchOption.TopDirectoryOnly))
             Assert.IsGreaterThan(0, loader.GetSecurityAgents(assemblyPath, pluginDirectory).Count, $"No Agent was discovered in {Path.GetFileName(assemblyPath)}.");
     }
-
     /// <summary>
     /// Verifies that Plugin-provided display keys are localized at the shared loading boundary.
     /// </summary>
@@ -74,7 +71,6 @@ public sealed class PluginDeploymentTest
         StringAssert.Contains(source, "Localization.Strings.Get(exInfo.DisplayName)");
         StringAssert.Contains(source, "Localization.Strings.Get(typeName)");
     }
-
     /// <summary>
     /// Verifies that the administration UI runs unelevated and requests elevation only for service state changes.
     /// </summary>
@@ -92,7 +88,6 @@ public sealed class PluginDeploymentTest
         StringAssert.Contains(commandSource, "Verb = \"runas\"");
         StringAssert.Contains(adminSource, "ElevatedServiceCommand.RunElevatedAsync");
     }
-
     /// <summary>
     /// Gets all production Agent project names while excluding test and removed project folders.
     /// </summary>
@@ -106,7 +101,6 @@ public sealed class PluginDeploymentTest
             .Select(path => Path.GetFileName(path)!)
             .Order(StringComparer.Ordinal)
             .ToArray();
-
     /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>

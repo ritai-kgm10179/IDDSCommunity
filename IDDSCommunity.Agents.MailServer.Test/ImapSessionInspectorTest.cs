@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.Agents.MailServer.Test;
-
 /// <summary>
 /// 驗證 IMAP 驗證關聯與 TLS 轉移行為。
 /// </summary>
@@ -22,7 +21,6 @@ public sealed class ImapSessionInspectorTest
 
         Assert.IsTrue(failed);
     }
-
     /// <summary>
     /// 驗證協定錯誤不會被誤分類為拒絕憑證。
     /// </summary>
@@ -36,7 +34,6 @@ public sealed class ImapSessionInspectorTest
 
         Assert.IsFalse(failed);
     }
-
     /// <summary>
     /// 驗證成功的 STARTTLS 會永久停用該會話的應用程式資料解析。
     /// </summary>
@@ -51,7 +48,6 @@ public sealed class ImapSessionInspectorTest
         inspector.ProcessClientData(Encoding.ASCII.GetBytes("A004 LOGIN user secret\r\n"));
         Assert.IsFalse(inspector.ProcessServerData(Encoding.ASCII.GetBytes("A004 NO rejected\r\n")));
     }
-
     /// <summary>
     /// 驗證分割的 TCP 負載會在命令關聯之前重組。
     /// </summary>

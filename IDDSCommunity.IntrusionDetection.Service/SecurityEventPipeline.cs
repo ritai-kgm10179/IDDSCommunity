@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
-
 /// <summary>
 /// Decouples synchronous Agent callbacks from protection work through a bounded, single-reader channel.
 /// </summary>
@@ -32,7 +31,6 @@ internal sealed class SecurityEventPipeline
     private readonly Func<string, object?> resolveAgent;
     private long queueDepth;
     private int accepting = 1;
-
     /// <summary>
     /// Initializes and starts one bounded security-event consumer.
     /// </summary>
@@ -64,17 +62,14 @@ internal sealed class SecurityEventPipeline
         });
         Completion = ConsumeAsync();
     }
-
     /// <summary>
     /// Gets the number of security events currently waiting for protection processing.
     /// </summary>
     internal long QueueDepth => Interlocked.Read(ref queueDepth);
-
     /// <summary>
     /// Gets the task that completes after the writer closes and the queue drains.
     /// </summary>
     internal Task Completion { get; }
-
     /// <summary>
     /// Attempts to publish without blocking an Event Log or packet-capture callback.
     /// </summary>
@@ -104,7 +99,6 @@ internal sealed class SecurityEventPipeline
         Accepted.Add(1);
         return true;
     }
-
     /// <summary>
     /// Publishes with bounded-channel backpressure, waiting only while the runtime is accepting work.
     /// </summary>
@@ -138,7 +132,6 @@ internal sealed class SecurityEventPipeline
             return false;
         }
     }
-
     /// <summary>
     /// Stops accepting events and allows the single consumer to drain accepted work.
     /// </summary>
@@ -147,7 +140,6 @@ internal sealed class SecurityEventPipeline
         Interlocked.Exchange(ref accepting, 0);
         channel.Writer.TryComplete();
     }
-
     /// <summary>
     /// Waits for accepted work to drain and records timeout evidence.
     /// </summary>
@@ -164,7 +156,6 @@ internal sealed class SecurityEventPipeline
             throw;
         }
     }
-
     /// <summary>
     /// Requeues durable unfinished events whose Agents are loaded in the current runtime.
     /// </summary>
@@ -192,7 +183,6 @@ internal sealed class SecurityEventPipeline
             }
         }
     }
-
     /// <summary>
     /// Processes accepted events sequentially and isolates one failure from later work.
     /// </summary>
@@ -240,7 +230,6 @@ internal sealed class SecurityEventPipeline
             }
         }
     }
-
     /// <summary>
     /// Copies mutable plug-in event arguments before crossing the asynchronous boundary.
     /// </summary>
@@ -253,7 +242,6 @@ internal sealed class SecurityEventPipeline
         EventId = eventArgs.EventId,
         EventMessage = eventArgs.EventMessage
     };
-
     /// <summary>
     /// Obtains the stable Agent identity required to resolve a durable event after restart.
     /// </summary>

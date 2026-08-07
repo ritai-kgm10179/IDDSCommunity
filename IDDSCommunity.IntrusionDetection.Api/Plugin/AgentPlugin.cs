@@ -1,7 +1,6 @@
 ﻿using System;
 
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
-
 /// <summary>
 /// Agent 擴充元件之基底類別。
 /// </summary>
@@ -10,17 +9,14 @@ public class AgentPlugin : IAgentPlugin
     private readonly object lifecycleSync = new();
     private bool isPaused;
     private bool isRunning;
-
     /// <summary>
     /// 當偵測到入侵攻擊時發生的事件。
     /// </summary>
     public event AttackDetectedHandler? AttackDetected;
-
     /// <summary>
     /// 初始化 <see cref="AgentPlugin"/> 類別的新執行個體。
     /// </summary>
     public AgentPlugin() => IsPaused = false;
-
     /// <summary>
     /// 引發偵測到攻擊事件。
     /// </summary>
@@ -47,7 +43,6 @@ public class AgentPlugin : IAgentPlugin
             }
         }
     }
-
     /// <summary>
     /// 啟動 Agent 服務。
     /// </summary>
@@ -62,7 +57,6 @@ public class AgentPlugin : IAgentPlugin
             isPaused = false;
         }
     }
-
     /// <summary>
     /// 停止 Agent 服務。
     /// </summary>
@@ -77,7 +71,6 @@ public class AgentPlugin : IAgentPlugin
             isPaused = false;
         }
     }
-
     /// <summary>
     /// 暫停 Agent 服務。
     /// </summary>
@@ -91,7 +84,6 @@ public class AgentPlugin : IAgentPlugin
             isPaused = true;
         }
     }
-
     /// <summary>
     /// 繼續執行暫停的 Agent 服務。
     /// </summary>
@@ -105,7 +97,6 @@ public class AgentPlugin : IAgentPlugin
             isPaused = false;
         }
     }
-
     /// <summary>
     /// 判斷目前 Agent 是否可進行暫停。
     /// </summary>
@@ -115,7 +106,6 @@ public class AgentPlugin : IAgentPlugin
         lock (lifecycleSync)
             return !isPaused && isRunning;
     }
-
     /// <summary>
     /// 判斷目前 Agent 是否可繼續執行。
     /// </summary>
@@ -125,7 +115,6 @@ public class AgentPlugin : IAgentPlugin
         lock (lifecycleSync)
             return isPaused && isRunning;
     }
-
     /// <summary>
     /// 取得或設定 Agent 是否處於暫停狀態。
     /// </summary>
@@ -142,7 +131,6 @@ public class AgentPlugin : IAgentPlugin
                 isPaused = value;
         }
     }
-
     /// <summary>
     /// 取得 Agent 是否正在執行中。
     /// </summary>
@@ -156,7 +144,6 @@ public class AgentPlugin : IAgentPlugin
     }
 
     private IAgentConfiguration? _configuration;
-
     /// <summary>
     /// 取得或設定 Agent 的設定物件。
     /// </summary>
@@ -165,22 +152,18 @@ public class AgentPlugin : IAgentPlugin
         get => _configuration ??= new AgentConfigurationBase();
         set => _configuration = value;
     }
-
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
     protected virtual void OnStartAgent() { }
-
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
     protected virtual void OnPauseAgent() { }
-
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
     protected virtual void OnStopAgent() { }
-
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>

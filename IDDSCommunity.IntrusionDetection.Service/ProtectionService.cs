@@ -50,7 +50,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private bool reportingStarted;
     private bool runtimeStarted;
     private bool disposed;
-
     /// <summary>
     /// Initializes a service with an explicit firewall policy implementation.
     /// </summary>
@@ -119,7 +118,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         // Configuration.Instance.ConfigurationChanged += new EventHandler(Instance_ConfigurationChanged);
 
     }
-
     /// <summary>
     /// 處理 run monthly report 事件。
     /// </summary>
@@ -145,7 +143,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             throw;
         }
     }
-
     /// <summary>
     /// 處理 run weekly report 事件。
     /// </summary>
@@ -171,7 +168,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             throw;
         }
     }
-
     /// <summary>
     /// 處理 run daily report 事件。
     /// </summary>
@@ -197,7 +193,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
     }
 
-
     /// <summary>
     /// Configures system.
     /// </summary>
@@ -218,7 +213,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     //    restartPending = true;
     //    restartTimer.Enabled = true;
     //}
-
     /// <summary>
     /// 處理 client ip address hard locked 事件。
     /// </summary>
@@ -232,7 +226,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
         SendInfoMail(op, LockType.HardLock);
     }
-
     /// <summary>
     /// 處理 client ip address unlocked 事件。
     /// </summary>
@@ -253,7 +246,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         SendInfoMail(op, LockType.None);
     }
-
     /// <summary>
     /// 處理 client ip address soft locked 事件。
     /// </summary>
@@ -267,7 +259,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
         SendInfoMail(op, LockType.SoftLock);
     }
-
     /// <summary>
     /// Processes the client ip address hard locked notification.
     /// </summary>
@@ -284,7 +275,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             ClientIpAddressHardLocked(co, EventArgs.Empty);
         }
     }
-
     /// <summary>
     /// Gets client operation information.
     /// </summary>
@@ -311,7 +301,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         return op;
     }
-
     /// <summary>
     /// Processes the client ip address soft locked notification.
     /// </summary>
@@ -328,7 +317,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             ClientIpAddressSoftLocked(co, EventArgs.Empty);
         }
     }
-
     /// <summary>
     /// Processes the client ip address unlocked notification.
     /// </summary>
@@ -357,7 +345,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             ClientIpAddressUnlocked(op, EventArgs.Empty);
         }
     }
-
 
     /// <summary>
     /// Sends info mail.
@@ -395,7 +382,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                         EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
         }
     }
-
     /// <summary>
     /// Sends mail.
     /// </summary>
@@ -447,7 +433,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 throw;
         }
     }
-
 
 
     /// <summary>
@@ -503,7 +488,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     }
 
 
-
     /// <summary>
     /// 處理 elapsed 事件。
     /// </summary>
@@ -556,7 +540,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
 
     public bool LimitMailSent { get; set; }
-
     /// <summary>
     /// 執行 lock down ip 作業。
     /// </summary>
@@ -638,7 +621,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     }
 
 
-
     /// <summary>
     /// Starts the complete intrusion-detection runtime and rolls back partial startup on failure.
     /// </summary>
@@ -706,7 +688,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             lifecycleLock.Release();
         }
     }
-
     /// <summary>
     /// Stops the runtime once and releases every component that completed startup.
     /// </summary>
@@ -724,7 +705,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             lifecycleLock.Release();
         }
     }
-
     /// <summary>
     /// Stops started components in reverse order and optionally propagates shutdown failures.
     /// </summary>
@@ -767,7 +747,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (throwOnFailure && failures.Count > 1)
             throw new AggregateException(failures);
     }
-
     /// <summary>
     /// Executes one shutdown action while preserving failures so later cleanup still runs.
     /// </summary>
@@ -808,7 +787,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             failures.Add(ex);
         }
     }
-
     /// <summary>
     /// Releases lifecycle resources and event subscriptions.
     /// </summary>
@@ -825,13 +803,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         lifecycleLock.Dispose();
         disposed = true;
     }
-
     /// <summary>
     /// 執行 init agent configuration 作業。
     /// </summary>
 
     private void InitAgentConfiguration() => securityAgents.RegisterSecurityAgents();
-
 
 
     /// <summary>
@@ -851,7 +827,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             Globals.IDDSCOMMUNITY_EVENT_ID_PLUGIN_ERROR,
             Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
     }
-
     /// <summary>
     /// Processes one accepted Agent detection on the dedicated protection consumer.
     /// </summary>
@@ -952,7 +927,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             throw;
         }
     }
-
     /// <summary>
     /// Records an isolated security-event consumer failure.
     /// </summary>
@@ -962,7 +936,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         EventLogEntryType.Error,
         Globals.IDDSCOMMUNITY_EVENT_ID_PLUGIN_ERROR,
         Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
-
     /// <summary>
     /// Resolves a persisted Agent name to its currently loaded proxy for event replay.
     /// </summary>
@@ -977,7 +950,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         }
         return null;
     }
-
     /// <summary>
     /// Reconciles the persisted desired lock state with the IDDSCommunity Windows Firewall rule.
     /// </summary>
@@ -997,7 +969,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     }
 
 
-
     /// <summary>
     /// Loads agents.
     /// </summary>
@@ -1014,7 +985,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             }
         }
     }
-
 
     /// <summary>
     /// 執行 unload agents 作業。

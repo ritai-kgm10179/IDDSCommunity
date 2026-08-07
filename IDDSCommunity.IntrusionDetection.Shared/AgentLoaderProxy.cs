@@ -103,7 +103,6 @@ public class AgentLoaderProxy : MarshalByRefObject
             loadContext.Unload();
         }
     }
-
     /// <summary>
     /// Normalizes Plugin artwork to the administration UI's standard visual icon size.
     /// </summary>
@@ -123,7 +122,6 @@ public class AgentLoaderProxy : MarshalByRefObject
         graphics.DrawImage(actual, new Rectangle(0, 0, iconSize, iconSize));
         return result;
     }
-
 
     /// <summary>
     /// Gets custom configuration objects.

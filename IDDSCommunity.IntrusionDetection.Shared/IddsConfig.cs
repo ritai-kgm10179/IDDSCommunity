@@ -57,7 +57,6 @@ public class IddsConfig
 
 
 
-
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
@@ -85,7 +84,6 @@ public class IddsConfig
             throw;
         }
     }
-
     /// <summary>
     /// Loads requested operation.
     /// </summary>
@@ -148,13 +146,11 @@ public class IddsConfig
             return _appConfig!;
         }
     }
-
     /// <summary>
     /// Loads app config.
     /// </summary>
 
     public void LoadAppConfig() => _appConfig = LoadConfig("AppConfig");
-
     /// <summary>
     /// Gets config value.
     /// </summary>
@@ -166,7 +162,6 @@ public class IddsConfig
         if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
         return AppConfig[key];
     }
-
     /// <summary>
     /// Sets config value.
     /// </summary>
@@ -185,7 +180,6 @@ public class IddsConfig
         }
         changedAppConfigKeys.Add(key);
     }
-
     /// <summary>
     /// Saves app config.
     /// </summary>
@@ -213,7 +207,6 @@ public class IddsConfig
         });
         changedAppConfigKeys.Clear();
     }
-
     /// <summary>
     /// Loads config.
     /// </summary>
@@ -232,13 +225,11 @@ public class IddsConfig
         rdr.Close();
         return config;
     }
-
     /// <summary>
     /// Loads safe networks.
     /// </summary>
 
     public void LoadSafeNetworks() => SafeNetworks = LoadNetworkList("WhiteList");
-
     /// <summary>
     /// Saves safe networks.
     /// </summary>
@@ -256,7 +247,6 @@ public class IddsConfig
             RecordConfigurationAudit(trans, "SafeNetworks");
         });
     }
-
     /// <summary>
     /// Records an atomic configuration-change audit event without persisting the setting value.
     /// </summary>
@@ -275,7 +265,6 @@ public class IddsConfig
             subject,
             string.Empty);
     }
-
     /// <summary>
     /// Loads network list.
     /// </summary>
@@ -299,7 +288,6 @@ public class IddsConfig
         return net;
     }
 
-
     /// <summary>
     /// 執行configure database作業。
     /// </summary>
@@ -321,7 +309,6 @@ public class IddsConfig
     public int ConfigVersionNumber { get; set; }
     public DateTime? Expires { get; set; }
     public string Edition { get; set; } = string.Empty;
-
 
     /// <summary>
     /// 初始化 <see cref="IddsConfig"/> class的新執行個體。
@@ -372,7 +359,6 @@ public class IddsConfig
 
         set => _safeNetworks = value;
     }
-
     /// <summary>
     /// Gets default configuration.
     /// </summary>
@@ -481,7 +467,6 @@ public class IddsConfig
             Localization.LanguageManager.Instance.Initialize(value);
         }
     }
-
     /// <summary>
     /// 取得或設定 supported Windows Firewall blocking mode. Invalid or obsolete values fail closed to inbound blocking.
     /// </summary>
@@ -496,7 +481,6 @@ public class IddsConfig
             SetConfigValue(CONFIG_VALUE_FIREWALL_BLOCK_MODE, value.ToString());
         }
     }
-
 
     /// <summary>
     /// Gets smtp password.
@@ -516,7 +500,6 @@ public class IddsConfig
         }
         return smtpPassword;
     }
-
     /// <summary>
     /// Determines whether in safe network.
     /// </summary>
@@ -562,7 +545,6 @@ public class IddsConfig
 
     }
 
-
     /// <summary>
     /// Determines whether ip4 in network.
     /// </summary>
@@ -572,7 +554,6 @@ public class IddsConfig
     /// <returns>若ip4 in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) => IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
-
     /// <summary>
     /// Determines whether ip in network.
     /// </summary>
@@ -606,7 +587,6 @@ public class IddsConfig
 
     private List<IPAddress>? _localAddresses;
 
-
     /// <summary>
     /// Determines whether ip address local.
     /// </summary>
@@ -629,7 +609,6 @@ public class IddsConfig
         }
         return _localAddresses.Contains(address);
     }
-
 
     /// <summary>
     /// Gets subnet mask bits.
@@ -663,7 +642,6 @@ public class IddsConfig
         }
         return result;
     }
-
     /// <summary>
     /// Determines whether ip6 in network.
     /// </summary>
@@ -674,7 +652,6 @@ public class IddsConfig
 
     public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
-
     /// <summary>
     /// Determines whether valid ip address.
     /// </summary>
@@ -682,7 +659,6 @@ public class IddsConfig
     /// <returns>若valid ip address傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
 
     public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
-
     /// <summary>
     /// Determines whether valid subnet mask.
     /// </summary>
@@ -701,7 +677,6 @@ public class IddsConfig
             return false;
         }
     }
-
     /// <summary>
     /// Converts string to ip address network.
     /// </summary>
@@ -764,7 +739,6 @@ public class IddsConfig
 
 
 
-
     /// <summary>
     /// Sets smtp password.
     /// </summary>
@@ -805,7 +779,6 @@ public class IddsConfig
     //    }
     //    return Guid.Empty;
     //}
-
     /// <summary>
     /// Gets soft lock minutes.
     /// </summary>
@@ -820,7 +793,6 @@ public class IddsConfig
         }
         return SoftLockTimeMinutes;
     }
-
 
     /// <summary>
     /// Gets hard lock hours.

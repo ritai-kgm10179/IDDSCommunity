@@ -12,13 +12,11 @@ public class SearchBox : Control
     Rectangle searchButtonPosition;
     Rectangle clearSearchButtonPosition;
     bool isEmpty;
-
     /// <summary>
     /// 初始化 <see cref="SearchBox"/> 類別的新執行個體。
     /// </summary>
 
     public SearchBox() => InitializeComponents();
-
 
     /// <summary>
     /// 執行 initialize components 作業。
@@ -55,7 +53,6 @@ public class SearchBox : Control
         MinimumSize = new Size(80, 12);
         textBoxSearch.TextChanged += new EventHandler(textBoxSearch_TextChanged);
     }
-
     /// <summary>
     /// 處理 text changed 事件。
     /// </summary>
@@ -70,7 +67,6 @@ public class SearchBox : Control
             isEmpty = string.IsNullOrEmpty(Text);
         }
     }
-
     /// <summary>
     /// 處理 font changed 事件。
     /// </summary>
@@ -78,7 +74,6 @@ public class SearchBox : Control
     /// <param name="e">事件資料。</param>
 
     void SearchBox_FontChanged(object? sender, EventArgs e) => textBoxSearch.Font = Font;
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -99,7 +94,6 @@ public class SearchBox : Control
                 break;
         }
     }
-
     /// <summary>
     /// 處理 size changed 事件。
     /// </summary>
@@ -114,7 +108,6 @@ public class SearchBox : Control
         searchButtonPosition.Location = new Point(Width - 20, 0);
     }
 
-
     /// <summary>
     /// 處理 back color changed 事件。
     /// </summary>
@@ -122,7 +115,6 @@ public class SearchBox : Control
     /// <param name="e">事件資料。</param>
 
     void SearchBox_BackColorChanged(object? sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
-
     /// <summary>
     /// 處理 fore color changed 事件。
     /// </summary>
@@ -130,7 +122,6 @@ public class SearchBox : Control
     /// <param name="e">事件資料。</param>
 
     void SearchBox_ForeColorChanged(object? sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
-
 
 
     /// <summary>
@@ -150,7 +141,6 @@ public class SearchBox : Control
 
     public Image? SearchImage { get; set; }
     public Image? ClearImage { get; set; }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -172,13 +162,11 @@ public class SearchBox : Control
         }
     }
 
-
     /// <summary>
     /// Processes the search notification.
     /// </summary>
 
     private void OnSearch() => Search?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// Processes the clear search notification.
     /// </summary>
@@ -189,7 +177,6 @@ public class SearchBox : Control
         ClearSearch?.Invoke(this, EventArgs.Empty);
 
     }
-
     /// <summary>
     /// Removes clear button.
     /// </summary>
@@ -199,7 +186,6 @@ public class SearchBox : Control
         var g = Graphics.FromHwnd(Handle);
         g.FillRectangle(new SolidBrush(BackColor), clearSearchButtonPosition);
     }
-
     /// <summary>
     /// 執行 paint clear button 作業。
     /// </summary>
@@ -243,7 +229,6 @@ public class SearchBox : Control
     /// </summary>
 
         public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
-
         /// <summary>
     /// 處理 text changed 事件。
     /// </summary>

@@ -7,7 +7,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 internal static class SchemaMigrationRunner
 {
     private const string CreateJournal = "CREATE TABLE IF NOT EXISTS SchemaMigrations (Version INTEGER PRIMARY KEY NOT NULL, AppliedUtc TEXT NOT NULL)";
-
     /// <summary>
     /// 原子化地套用所有未處理的結構描述移轉並紀錄其版本。
     /// </summary>
@@ -65,7 +64,6 @@ internal static class SchemaMigrationRunner
         command.CommandText = sql;
         command.ExecuteNonQuery();
     }
-
     /// <summary>
     /// 拒絕不完整的舊版資料庫，而非錯誤地將其標記為已移轉。
     /// </summary>

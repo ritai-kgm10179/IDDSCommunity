@@ -2,7 +2,6 @@
 using System.Text;
 
 namespace IDDSCommunity.Agents.MailServer;
-
 /// <summary>
 /// 將 IMAP 驗證命令與標記的伺服器回應進行關聯，且不保留憑證。
 /// </summary>
@@ -13,12 +12,10 @@ public sealed class ImapSessionInspector
     private readonly StringBuilder serverBuffer = new();
     private string? authenticationTag;
     private string? startTlsTag;
-
     /// <summary>
     /// 取得一個值，指出該會話是否已升級至 TLS 且不得再進行解析。
     /// </summary>
     public bool IsEncrypted { get; private set; }
-
     /// <summary>
     /// 處理 IMAP 用戶端傳送的位元組。
     /// </summary>
@@ -42,7 +39,6 @@ public sealed class ImapSessionInspector
             }
         }
     }
-
     /// <summary>
     /// 處理 IMAP 伺服器傳送的位元組。
     /// </summary>

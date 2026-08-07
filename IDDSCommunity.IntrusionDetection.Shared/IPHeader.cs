@@ -27,7 +27,6 @@ public class IPHeader
 
     private readonly byte byHeaderLength;
     private readonly byte[] byIPData = [];
-
     /// <summary>
     /// 初始化 <see cref="IPHeader"/> class的新執行個體。
     /// </summary>

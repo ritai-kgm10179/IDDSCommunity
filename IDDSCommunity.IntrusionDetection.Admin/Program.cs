@@ -31,7 +31,6 @@ static class Program
         IddsAdmin.Instance.Visible = true;
         Application.Run(IddsAdmin.Instance);
     }
-
     /// <summary>
     /// Loads the persisted language before constructing any localized WinForms controls.
     /// </summary>

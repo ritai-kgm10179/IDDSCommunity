@@ -11,7 +11,6 @@
 namespace IDDSCommunity.Agents.FileMaker {
     using System;
 
-
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -31,7 +30,6 @@ namespace IDDSCommunity.Agents.FileMaker {
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal FileMakerResource() {
         }
-
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +43,6 @@ namespace IDDSCommunity.Agents.FileMaker {
                 return resourceMan;
             }
         }
-
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +56,6 @@ namespace IDDSCommunity.Agents.FileMaker {
                 resourceCulture = value;
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -69,7 +65,6 @@ namespace IDDSCommunity.Agents.FileMaker {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>

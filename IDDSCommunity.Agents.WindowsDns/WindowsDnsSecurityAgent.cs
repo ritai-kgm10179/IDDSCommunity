@@ -11,7 +11,6 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
     private readonly IWindowsDnsEventSource eventSource;
     private readonly TimeProvider timeProvider;
     private DnsThreatDetector? detector;
-
     /// <summary>
     /// 初始化包含 Windows 事件紀錄訂閱的正式 Agent。
     /// </summary>
@@ -95,7 +94,6 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
 
     private WindowsDnsConfiguration GetConfiguration() =>
         Configuration.AgentSettings as WindowsDnsConfiguration ?? throw new InvalidOperationException(DnsStrings.Get("Windows DNS Agent configuration is unavailable."));
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -104,7 +102,6 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
         get => DnsStrings.Get("Windows DNS Security Agent");
         set { }
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
@@ -117,7 +114,6 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
     /// <summary>
     /// 取得 Agent 的全域唯一識別碼 (GUID)。
     /// </summary>

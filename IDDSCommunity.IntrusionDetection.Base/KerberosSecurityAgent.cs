@@ -5,7 +5,6 @@ using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 
 namespace IDDSCommunity.IntrusionDetection.Base.Plugins;
-
 /// <summary>
 /// 掃描與監控系統事件紀錄中 Kerberos 預先驗證失敗攻擊之入侵偵測 Agent。
 /// </summary>
@@ -23,14 +22,12 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
                     </Select>
                   </Query>
                 </QueryList>";
-
     /// <summary>
     /// 初始化 <see cref="KerberosSecurityAgent"/> 類別的新執行個體。
     /// </summary>
     public KerberosSecurityAgent()
     {
     }
-
     /// <summary>
     /// 啟動 Agent 服務並初始化事件紀錄監聽器。
     /// </summary>
@@ -42,17 +39,14 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
         watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
-
     /// <summary>
     /// 從暫停狀態復原 Agent 服務。
     /// </summary>
     protected override void OnContinueAgent() => watcher!.Enabled = true;
-
     /// <summary>
     /// 暫停 Agent 服務。
     /// </summary>
     protected override void OnPauseAgent() => watcher!.Enabled = false;
-
     /// <summary>
     /// 停止 Agent 服務並釋放事件紀錄監聽器。
     /// </summary>
@@ -62,7 +56,6 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
         watcher = null;
         query = null;
     }
-
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -90,7 +83,6 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
             EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Base.Plugins.WindowsSecurityBase.Kerberos", ex.Message);
         }
     }
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -98,22 +90,18 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
     {
         get => Api.Localization.Strings.Get("Kerberos pre-authentication Security Agent"); set => throw new NotSupportedException(Api.Localization.Strings.Get("DisplayName cannot be changed!"));
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
     public Image? Icon { get; set; }
-
     /// <summary>
     /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? SelectedIcon { get; set; }
-
     /// <summary>
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
     /// <summary>
     /// 取得 Agent 的全域唯一識別碼 (GUID)。
     /// </summary>

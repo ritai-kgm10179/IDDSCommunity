@@ -9,12 +9,10 @@ namespace IDDSCommunity.Agents.WindowsDns;
 internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, TimeProvider timeProvider)
 {
     private readonly ConcurrentDictionary<IPAddress, ClientWindow> clients = new();
-
     /// <summary>
     /// 取得目前記憶體中保留的用戶端視窗上限數量。
     /// </summary>
     internal int TrackedClientCount => clients.Count;
-
     /// <summary>
     /// 評估一項支援的 DNS 活動事件，僅於超越門檻值時引發通知。
     /// </summary>

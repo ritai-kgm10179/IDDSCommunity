@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
-
 /// <summary>
 /// Defines categories for Agent theme icons.
 /// </summary>
@@ -17,14 +16,12 @@ public enum AgentThemeCategory
     Dns,           // Windows DNS
     AuthAndShield  // Windows Network Logon, RADIUS, AD, Kerberos, RRAS
 }
-
 /// <summary>
 /// Factory for generating high-quality 15x15 vector theme icons for security agents.
 /// </summary>
 public static class AgentThemeIconFactory
 {
     private static readonly Color DarkIconColor = Color.FromArgb(0, 150, 136); // Teal theme accent
-
     /// <summary>
     /// Creates a 15x15 vector icon bitmap corresponding to the specified theme category and selection state.
     /// </summary>
@@ -121,7 +118,6 @@ public static class AgentThemeIconFactory
 
         return bitmap;
     }
-
     /// <summary>
     /// Detects the AgentThemeCategory based on agent name or class type.
     /// </summary>

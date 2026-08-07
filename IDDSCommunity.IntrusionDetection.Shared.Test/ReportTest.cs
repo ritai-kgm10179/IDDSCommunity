@@ -3,7 +3,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
-
 /// <summary>
 /// Summary description for ReportTest
 /// </summary>
@@ -22,7 +21,6 @@ public class ReportTest
     }
 
     private TestContext testContextInstance = null!;
-
     /// <summary>
     ///Gets or sets the test context which provides
     ///information about and functionality for the current test run.
@@ -53,7 +51,6 @@ public class ReportTest
     // public void MyTestCleanup() { }
     //
     #endregion
-
     /// <summary>
     /// 執行 test report by agent 作業。
     /// </summary>
@@ -65,7 +62,6 @@ public class ReportTest
         string result = ReportGenerator.Instance.GetEventsPerAgent(DateTime.Now.AddDays(-3), DateTime.Now);
         System.Diagnostics.Debug.Print(result);
     }
-
     /// <summary>
     /// 執行 test report 作業。
     /// </summary>

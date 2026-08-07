@@ -1,5 +1,4 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
-
 /// <summary>
 /// 通知接收器擴充元件介面。
 /// </summary>

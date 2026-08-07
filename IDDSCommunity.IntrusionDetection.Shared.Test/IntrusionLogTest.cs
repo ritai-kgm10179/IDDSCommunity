@@ -12,7 +12,6 @@ public class IntrusionLogTest
     /// </summary>
 
     public IntrusionLogTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
-
     /// <summary>
     /// Reads interval test.
     /// </summary>
@@ -30,7 +29,6 @@ public class IntrusionLogTest
         }
 
     }
-
     /// <summary>
     /// Determines whether s updates test.
     /// </summary>
@@ -39,7 +37,6 @@ public class IntrusionLogTest
     public void HasUpdatesTest()
     {
     }
-
     /// <summary>
     /// Reads differential test.
     /// </summary>
@@ -48,7 +45,6 @@ public class IntrusionLogTest
     public void ReadDifferentialTest()
     {
     }
-
     /// <summary>
     /// 執行 prepare intrusion log 作業。
     /// </summary>

@@ -8,7 +8,6 @@ public class DbUpgrader
 {
 
 
-
     /// <summary>
     /// 執行run upgrade scripts作業。
     /// </summary>
@@ -44,7 +43,6 @@ public class DbUpgrader
         InitScripts();
         UpgradeAll(connection, latestVersion);
     }
-
     /// <summary>
     /// 執行upgrade all作業。
     /// </summary>
@@ -64,7 +62,6 @@ public class DbUpgrader
 
 
     private SortedList<int, DbUpgradeScript> upgradeScripts = [];
-
     /// <summary>
     /// 執行init scripts作業。
     /// </summary>
@@ -76,7 +73,6 @@ public class DbUpgrader
             { 1, new Version_2_1() }
         };
     }
-
     /// <summary>
     /// 初始化 <see cref="DbUpgrader"/> class的新執行個體。
     /// </summary>

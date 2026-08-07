@@ -32,7 +32,6 @@ public sealed class RuntimeLogIsolationTest
         internal int EventId { get; private set; }
 
         internal short Category { get; private set; }
-
         /// <summary>
         /// Records an event without accessing Windows.
         /// </summary>
@@ -47,7 +46,6 @@ public sealed class RuntimeLogIsolationTest
             EventId = eventId;
             Category = category;
         }
-
         /// <summary>
         /// Releases no resources in the test double.
         /// </summary>

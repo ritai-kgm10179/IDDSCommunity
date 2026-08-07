@@ -33,7 +33,6 @@ public sealed class FirewallStateReconcilerTest
         CollectionAssert.Contains(audits, "Succeeded:192.0.2.10:AddOrVerify");
         CollectionAssert.Contains(audits, "Succeeded:198.51.100.9:RemoveStale");
     }
-
     /// <summary>
     /// Verifies a firewall failure preserves the requested state for a later reconciliation attempt.
     /// </summary>

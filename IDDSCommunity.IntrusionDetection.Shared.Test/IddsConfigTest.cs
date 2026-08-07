@@ -10,7 +10,6 @@ public class IddsConfigTest
     private string TestDirectory => TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? AppDomain.CurrentDomain.BaseDirectory;
 
     public TestContext TestContext { get; set; } = null!;
-
     /// <summary>
     /// Configures test database.
     /// </summary>
@@ -21,7 +20,6 @@ public class IddsConfigTest
         Database.Instance.Configure(TestDirectory);
         IddsConfig.Instance.ApplicationPath = TestDirectory;
     }
-
     /// <summary>
     /// Saves config test.
     /// </summary>
@@ -52,7 +50,6 @@ public class IddsConfigTest
         IddsConfig.Instance.Save();
 
     }
-
     /// <summary>
     /// Verifies that new installations use the reviewed two-stage source-IP throttling defaults.
     /// </summary>
@@ -89,7 +86,6 @@ public class IddsConfigTest
     //}
 
 
-
     /// <summary>
     /// Reads write app config test.
     /// </summary>
@@ -109,7 +105,6 @@ public class IddsConfigTest
         IddsConfig.Instance.AppConfig.Remove("TestConfigSetting2");
         IddsConfig.Instance.SaveAppConfig();
     }
-
     /// <summary>
     /// Verifies that firewall mode is persisted and unsupported values safely use inbound blocking.
     /// </summary>
@@ -129,7 +124,6 @@ public class IddsConfigTest
         IddsConfig.Instance.FirewallBlockMode = FirewallBlockMode.Inbound;
         IddsConfig.Instance.SaveAppConfig();
     }
-
     /// <summary>
     /// 執行 config is in safe network test 作業。
     /// </summary>
@@ -144,7 +138,6 @@ public class IddsConfigTest
         Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("192.168.1.1"));
         Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("192.168.1.2"));
     }
-
     /// <summary>
     /// Verifies that SMTP credentials use protected storage and remain decryptable.
     /// </summary>
@@ -159,7 +152,6 @@ public class IddsConfigTest
         StringAssert.StartsWith(IddsConfig.Instance.SmtpPassword, "dpapi:v1:");
         Assert.AreEqual(password, IddsConfig.Instance.GetSmtpPassword());
     }
-
     /// <summary>
     /// Verifies prefix matching and rejection of noncontiguous IPv4 subnet masks.
     /// </summary>
@@ -189,7 +181,6 @@ public class IddsConfigTest
         Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("2001:db8:1::20"));
         Assert.IsFalse(IddsConfig.Instance.IsInSafeNetwork("2001:db9::20"));
     }
-
     /// <summary>
     /// Verifies that validation exceptions remain diagnostic and culture-independent.
     /// </summary>
@@ -211,7 +202,6 @@ public class IddsConfigTest
             CultureInfo.CurrentUICulture = originalCulture;
         }
     }
-
     /// <summary>
     /// Verifies that asynchronous database operations use an independently owned connection.
     /// </summary>

@@ -22,7 +22,6 @@ public partial class PanelPluginConfiguration : UserControl
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
     }
-
     /// <summary>
     /// 處理 agent changed 事件。
     /// </summary>
@@ -35,7 +34,6 @@ public partial class PanelPluginConfiguration : UserControl
         smartLabelAgentName.Text = Agent.DisplayName;
         ClearErrors();
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -47,7 +45,6 @@ public partial class PanelPluginConfiguration : UserControl
         if (sender is PictureBox pictureBox)
             pictureBox.Location = new Point(pictureBox.Location.X + 1, pictureBox.Location.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -61,13 +58,11 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     public bool IsInEditMode { get; set; }
-
     /// <summary>
     /// Loads data.
     /// </summary>
 
     private bool _isLoadingData;
-
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -95,7 +90,6 @@ public partial class PanelPluginConfiguration : UserControl
             _isLoadingData = false;
         }
     }
-
     /// <summary>
     /// Loads custom settings.
     /// </summary>
@@ -134,7 +128,6 @@ public partial class PanelPluginConfiguration : UserControl
         });
         UpdateCustomSettingsLayout();
     }
-
     /// <summary>
     /// Keeps custom setting rows inside the visible client area at all DPI scaling levels.
     /// </summary>
@@ -145,7 +138,6 @@ public partial class PanelPluginConfiguration : UserControl
         foreach (Control control in flowLayoutPanelCustomPluginSettings.Controls)
             control.Width = availableWidth;
     }
-
     /// <summary>
     /// Gets a localized description of the authoritative detection source and encrypted-traffic limitations.
     /// </summary>
@@ -159,7 +151,6 @@ public partial class PanelPluginConfiguration : UserControl
         "IDDSCommunity.Agents.MailServer.ImapAgent" => Strings.Get("Inspects cleartext IMAP on the configured port. Parsing stops after STARTTLS; implicit TLS on port 993 requires server-side logs."),
         _ => null
     };
-
     /// <summary>
     /// Saves custom configuration.
     /// </summary>
@@ -175,7 +166,6 @@ public partial class PanelPluginConfiguration : UserControl
         }
     }
 
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -187,7 +177,6 @@ public partial class PanelPluginConfiguration : UserControl
         if (IsInEditMode) LoadData(); else ToggleEditMode();
         ClearErrors();
     }
-
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
@@ -197,7 +186,6 @@ public partial class PanelPluginConfiguration : UserControl
         IsInEditMode = true;
         return;
     }
-
     /// <summary>
     /// Sets enabled mode.
     /// </summary>
@@ -211,7 +199,6 @@ public partial class PanelPluginConfiguration : UserControl
         textBoxSoftLocks.Enabled = enabled;
         checkBoxLockForever.Enabled = enabled;
     }
-
     /// <summary>
     /// Clears errors.
     /// </summary>
@@ -223,7 +210,6 @@ public partial class PanelPluginConfiguration : UserControl
         errSoftLockDuration.Visible = false;
         errSoftLocks.Visible = false;
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -324,13 +310,11 @@ public partial class PanelPluginConfiguration : UserControl
         MessageBox.Show(this, Strings.Get(key), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         return false;
     }
-
     /// <summary>
     /// Processes the agent configuration changed notification.
     /// </summary>
 
     private void OnAgentConfigurationChanged() => AgentConfigurationChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// Processes the agent changed notification.
     /// </summary>
@@ -351,7 +335,6 @@ public partial class PanelPluginConfiguration : UserControl
             AgentChanged?.Invoke(this, EventArgs.Empty);
         }
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -359,7 +342,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>
@@ -374,7 +356,6 @@ public partial class PanelPluginConfiguration : UserControl
         SetEditMode(true);
     }
 
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -382,7 +363,6 @@ public partial class PanelPluginConfiguration : UserControl
     /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
-
     /// <summary>
     /// Sets edit mode.
     /// </summary>
@@ -393,7 +373,6 @@ public partial class PanelPluginConfiguration : UserControl
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>

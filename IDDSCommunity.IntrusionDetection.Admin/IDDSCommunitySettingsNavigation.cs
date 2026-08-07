@@ -11,7 +11,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
 {
 
     public event EventHandler? PluginsChanged;
-
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigation"/> 類別的新執行個體。
     /// </summary>
@@ -25,7 +24,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     public bool ShowSeparator { get; set; }
 
     public bool ShowTopMenu { get; set; }
-
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>
@@ -51,7 +49,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             e.Graphics.DrawLine(new Pen(SeparatorColor, 1), Width - 5, 0, Width - 5, Height);
         }
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -77,14 +74,12 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             return _navigationItems;
         }
     }
-
     /// <summary>
     /// Adds navigation item.
     /// </summary>
     /// <param name="item">item 的值。</param>
 
     public void AddNavigationItem(IDDSCommunitySettingsNavigationItem item) => NavigationItems.Add(item);
-
     /// <summary>
     /// Adds navigation item.
     /// </summary>
@@ -108,7 +103,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             OnNavigationChanged(item);
         }
     }
-
     /// <summary>
     /// Clears requested operation.
     /// </summary>
@@ -131,7 +125,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             return null;
         }
     }
-
     /// <summary>
     /// Sets selected item.
     /// </summary>
@@ -149,7 +142,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             }
         }
     }
-
     /// <summary>
     /// Processes the navigation changed notification.
     /// </summary>
@@ -168,7 +160,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             return string.Empty;
         }
     }
-
     /// <summary>
     /// 執行 unselect all 作業。
     /// </summary>
@@ -188,7 +179,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
         }
     }
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -196,7 +186,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -204,7 +193,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -212,7 +200,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxRemove_MouseUp(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X - 1, pictureBoxRemove.Location.Y - 1);
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -220,7 +207,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxRemove_MouseDown(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X + 1, pictureBoxRemove.Location.Y + 1);
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -287,7 +273,6 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
             OnPluginsChanged();
         }
     }
-
     /// <summary>
     /// Processes the plugins changed notification.
     /// </summary>

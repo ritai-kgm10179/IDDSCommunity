@@ -11,7 +11,6 @@ public class BadAgent : AgentPlugin
     public BadAgent()
     {
     }
-
     /// <summary>
     /// Processes the start agent notification.
     /// </summary>

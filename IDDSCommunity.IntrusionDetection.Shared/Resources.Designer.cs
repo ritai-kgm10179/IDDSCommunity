@@ -11,7 +11,6 @@
 namespace IDDSCommunity.IntrusionDetection.Shared {
     using System;
 
-
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -31,7 +30,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +43,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return resourceMan;
             }
         }
-
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -59,7 +56,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 resourceCulture = value;
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -69,7 +65,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -79,7 +74,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -89,7 +83,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -99,7 +92,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized string similar to
         ///                                                    &lt;tr style=&quot;mso-yfti-irow:2&quot;&gt;
@@ -113,7 +105,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ResourceManager.GetString("EventsPerAgent", resourceCulture);
             }
         }
-
         /// <summary>
         ///   Looks up a localized string similar to       &lt;tr style=&quot;mso-yfti-irow:2&quot;&gt;
         ///                                                        &lt;td style=&quot;padding:3.75pt 0cm 3.75pt 3.75pt; text-align:left;&quot;&gt;
@@ -127,7 +118,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ResourceManager.GetString("HardLocksByIp", resourceCulture);
             }
         }
-
         /// <summary>
         ///   Looks up a localized string similar to
         ///                                                    &lt;tr style=&quot;mso-yfti-irow:2&quot;&gt;
@@ -142,7 +132,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ResourceManager.GetString("IntrusionAttemptsByIp", resourceCulture);
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -152,7 +141,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -162,7 +150,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -172,7 +159,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -182,7 +168,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -192,7 +177,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -202,7 +186,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   Looks up a localized string similar to &lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot; &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
         ///&lt;html&gt;
@@ -225,7 +208,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
                 return ResourceManager.GetString("ReportTemplate", resourceCulture);
             }
         }
-
         /// <summary>
         ///   Looks up a localized string similar to &lt;tr style=&quot;mso-yfti-irow:2&quot;&gt;
         ///                                                        &lt;td style=&quot;padding:3.75pt 0cm 3.75pt 3.75pt; text-align:left;&quot;&gt;

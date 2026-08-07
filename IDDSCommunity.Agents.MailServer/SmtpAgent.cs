@@ -14,7 +14,6 @@ public class SmtpAgent : AgentPlugin
     public bool Tracing { get; set; }
 
     private readonly List<PacketSniffer> sniffers = [];
-
     /// <summary>
     /// 初始化 <see cref="SmtpAgent"/> 類別的新執行個體。
     /// </summary>
@@ -25,7 +24,6 @@ public class SmtpAgent : AgentPlugin
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
-
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
@@ -35,7 +33,6 @@ public class SmtpAgent : AgentPlugin
         RunWatcher();
         base.OnStartAgent();
     }
-
     /// <summary>
     /// 執行監聽器啟動作業。
     /// </summary>
@@ -54,7 +51,6 @@ public class SmtpAgent : AgentPlugin
             }
         }
     }
-
     /// <summary>
     /// 執行監聽指定位址作業。
     /// </summary>
@@ -78,7 +74,6 @@ public class SmtpAgent : AgentPlugin
         catch (Exception exception) { PacketSniffer.LogTrace(exception); }
         sniffers.Add(s);
     }
-
     /// <summary>
     /// 處理 IP 封包傳送事件。
     /// </summary>
@@ -118,14 +113,12 @@ public class SmtpAgent : AgentPlugin
             }
         }
     }
-
     /// <summary>
     /// 處理追蹤通知。
     /// </summary>
     /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
-
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>
@@ -135,7 +128,6 @@ public class SmtpAgent : AgentPlugin
         OnStartAgent();
         base.OnContinueAgent();
     }
-
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
@@ -145,7 +137,6 @@ public class SmtpAgent : AgentPlugin
         OnStopAgent();
         base.OnPauseAgent();
     }
-
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
@@ -162,7 +153,6 @@ public class SmtpAgent : AgentPlugin
     }
 
     public override bool IsRunning => base.IsRunning;
-
     /// <summary>
     /// 處理登入失敗作業。
     /// </summary>

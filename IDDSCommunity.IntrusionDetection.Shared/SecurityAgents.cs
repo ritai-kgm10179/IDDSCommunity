@@ -12,7 +12,6 @@ public class SecurityAgents : List<SecurityAgent>
 {
     private readonly Database database;
     private readonly IddsConfig configuration;
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgents"/> class的新執行個體。
     /// </summary>
@@ -20,7 +19,6 @@ public class SecurityAgents : List<SecurityAgent>
     private SecurityAgents() : this(Database.Instance, IddsConfig.Instance)
     {
     }
-
     /// <summary>
     /// 初始化包含明確持久化與設定相依性的 Agent 集合。
     /// </summary>
@@ -48,7 +46,6 @@ public class SecurityAgents : List<SecurityAgent>
             return _instance;
         }
     }
-
     /// <summary>
     /// 執行initialize agents作業。
     /// </summary>
@@ -85,7 +82,6 @@ public class SecurityAgents : List<SecurityAgent>
         }
         rdr.Close();
     }
-
     /// <summary>
     /// 自磁碟讀取 Agent 設定。
     /// </summary>
@@ -127,7 +123,6 @@ public class SecurityAgents : List<SecurityAgent>
     }
 
     public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
-
     /// <summary>
     /// 依顯示名稱尋找 Agent。
     /// </summary>
@@ -145,7 +140,6 @@ public class SecurityAgents : List<SecurityAgent>
         }
         return null;
     }
-
     /// <summary>
     /// 依名稱尋找 Agent。
     /// </summary>
@@ -163,7 +157,6 @@ public class SecurityAgents : List<SecurityAgent>
         }
         return null;
     }
-
     /// <summary>
     /// 取得顯示名稱。
     /// </summary>
@@ -185,7 +178,6 @@ public class SecurityAgents : List<SecurityAgent>
         }
         return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }
-
     /// <summary>
     /// 執行register security agents作業。
     /// </summary>
@@ -193,7 +185,6 @@ public class SecurityAgents : List<SecurityAgent>
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
     public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
-
     /// <summary>
     /// 執行unload agents作業。
     /// </summary>
@@ -214,7 +205,6 @@ public class SecurityAgents : List<SecurityAgent>
         }
         LoadedAgents.Clear();
     }
-
     /// <summary>
     /// 執行unload agent作業。
     /// </summary>
@@ -235,7 +225,6 @@ public class SecurityAgents : List<SecurityAgent>
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent ") + agent.DisplayName + " is not loaded.");
         }
     }
-
     /// <summary>
     /// 處理應用程式域卸載事件。
     /// </summary>
@@ -243,7 +232,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <param name="e">事件資料。</param>
 
     void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
-
     /// <summary>
     /// 載入 Agent 擴充元件。
     /// </summary>
@@ -303,7 +291,6 @@ public class SecurityAgents : List<SecurityAgent>
                 property.SetValue(configuration, booleanValue, null);
         }
     }
-
     /// <summary>
     /// 啟動所有 Agent 擴充元件。
     /// </summary>
@@ -315,7 +302,6 @@ public class SecurityAgents : List<SecurityAgent>
             agent.Start();
         }
     }
-
     /// <summary>
     /// 停止所有 Agent 擴充元件。
     /// </summary>
@@ -327,7 +313,6 @@ public class SecurityAgents : List<SecurityAgent>
             agent.Stop();
         }
     }
-
     /// <summary>
     /// 執行pause agents作業。
     /// </summary>
@@ -346,7 +331,6 @@ public class SecurityAgents : List<SecurityAgent>
             }
         }
     }
-
     /// <summary>
     /// 執行continue agents作業。
     /// </summary>
@@ -365,7 +349,6 @@ public class SecurityAgents : List<SecurityAgent>
             }
         }
     }
-
 
     /// <summary>
     /// 合併資料庫資訊。
@@ -432,7 +415,6 @@ public class SecurityAgents : List<SecurityAgent>
         AddRange(result);
         return this;
     }
-
     /// <summary>
     /// 取得清單索引。
     /// </summary>

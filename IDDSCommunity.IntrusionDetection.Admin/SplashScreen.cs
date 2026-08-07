@@ -11,12 +11,10 @@ public partial class SplashScreen : Form
 
     readonly Timer t = new();
     private readonly StartupOperation startupOperation = new();
-
     /// <summary>
     /// Gets whether both bootstrap work and the administration interface completed initialization.
     /// </summary>
     internal bool StartupSucceeded => startupOperation.Succeeded && IddsAdmin.Instance.IsInitialized;
-
     /// <summary>
     /// 初始化 <see cref="SplashScreen"/> 類別的新執行個體。
     /// </summary>
@@ -31,7 +29,6 @@ public partial class SplashScreen : Form
         BackColor = Color.White;
         Load += new EventHandler(SplashScreen_Load);
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -45,7 +42,6 @@ public partial class SplashScreen : Form
         t.Start();
 
     }
-
     /// <summary>
     /// Starts up components.
     /// </summary>
@@ -71,7 +67,6 @@ public partial class SplashScreen : Form
         IddsAdmin.Instance.InitAdmin();
         IddsAdmin.Instance.Visible = false;
     }
-
     /// <summary>
     /// 處理 tick 事件。
     /// </summary>
@@ -113,7 +108,6 @@ public partial class SplashScreen : Form
         }
         Close();
     }
-
     /// <summary>
     /// Releases the splash timer when the form closes on either success or failure.
     /// </summary>

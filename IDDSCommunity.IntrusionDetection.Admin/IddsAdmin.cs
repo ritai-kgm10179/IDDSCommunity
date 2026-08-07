@@ -45,7 +45,6 @@ public partial class IddsAdmin : Form
 
         Load += new EventHandler(IddsAdmin_Load);
     }
-
     /// <summary>
     /// Cancels pending background snapshots before WinForms destroys control handles.
     /// </summary>
@@ -87,7 +86,6 @@ public partial class IddsAdmin : Form
             return _panelApplicationSettings;
         }
     }
-
     /// <summary>
     /// 處理 configuration changed 事件。
     /// </summary>
@@ -113,7 +111,6 @@ public partial class IddsAdmin : Form
             return _panelAgentConfiguration;
         }
     }
-
     /// <summary>
     /// 處理 agent settings changed 事件。
     /// </summary>
@@ -121,7 +118,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => await RestartServiceAsync();
-
     /// <summary>
     /// 處理 plugins changed 事件。
     /// </summary>
@@ -129,7 +125,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     void _panelAgentConfiguration_PluginsChanged(object? sender, EventArgs e) => InitAgentSettings();//RestartService();
-
     /// <summary>
     /// 執行 restart service 作業。
     /// </summary>
@@ -205,7 +200,6 @@ public partial class IddsAdmin : Form
             return _panelSecurityLog;
         }
     }
-
     /// <summary>
     /// 執行 fill log 作業。
     /// </summary>
@@ -247,7 +241,6 @@ public partial class IddsAdmin : Form
             return _dashboard;
         }
     }
-
     /// <summary>
     /// 處理 security agent configuration request 事件。
     /// </summary>
@@ -267,7 +260,6 @@ public partial class IddsAdmin : Form
     }
 
     public bool IsServiceRunning { get; set; }
-
     /// <summary>
     /// 處理 tick 事件。
     /// </summary>
@@ -303,7 +295,6 @@ public partial class IddsAdmin : Form
 
 
     public bool ServiceError { get; set; }
-
     /// <summary>
     /// 執行 refresh service status 作業。
     /// </summary>
@@ -312,7 +303,6 @@ public partial class IddsAdmin : Form
     {
         ApplyServiceStatus(ReadServiceStatus());
     }
-
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
     /// </summary>
@@ -334,7 +324,6 @@ public partial class IddsAdmin : Form
         }
         return null;
     }
-
     /// <summary>
     /// Applies one service-status snapshot on the UI thread.
     private const char StatusDot = '●';
@@ -356,7 +345,6 @@ public partial class IddsAdmin : Form
             0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
         return bitmap;
     }
-
     /// <summary>
     /// Applies background-refreshed status to the header indicators and controls.
     /// </summary>
@@ -422,7 +410,6 @@ public partial class IddsAdmin : Form
     }
 
     public bool IsUpdating { get; set; }
-
     /// <summary>
     /// Gets log message.
     /// </summary>
@@ -440,7 +427,6 @@ public partial class IddsAdmin : Form
         }
         return string.Format("{0}{1}", message, IntrusionLog.GetStatusName(action));
     }
-
     /// <summary>
     /// 處理 tick 事件。
     /// </summary>
@@ -494,7 +480,6 @@ public partial class IddsAdmin : Form
             catch (InvalidOperationException) when (IsDisposed || !IsHandleCreated) { }
         }
     }
-
     /// <summary>
     /// Loads one immutable administration snapshot without accessing WinForms controls.
     /// </summary>
@@ -548,7 +533,6 @@ public partial class IddsAdmin : Form
         }
         return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, unsuccessfulLogins, softLocks, hardLocks);
     }
-
     /// <summary>
     /// Applies a background-loaded administration snapshot on the UI thread.
     /// </summary>
@@ -584,7 +568,6 @@ public partial class IddsAdmin : Form
     public int LastLogId { get; set; }
 
     public DateTime LastLockUpdate { get; set; }
-
     /// <summary>
     /// 處理 invalidated 事件。
     /// </summary>
@@ -592,7 +575,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     void panelContent_Invalidated(object sender, InvalidateEventArgs e) => paintPanelTopBorder();
-
 
     /// <summary>
     /// 執行 paint panel top border 作業。
@@ -613,7 +595,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -635,7 +616,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
-
     /// <summary>
     /// 處理 mouse move 事件。
     /// </summary>
@@ -650,7 +630,6 @@ public partial class IddsAdmin : Form
 
         }
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -663,7 +642,6 @@ public partial class IddsAdmin : Form
         Dashboard.BringToFront();
         panelOnlineServices.Hide();
     }
-
 
     /// <summary>
     /// 執行 show menu 作業。
@@ -685,7 +663,6 @@ public partial class IddsAdmin : Form
     }
 
     public SmartLabel? CurrentMenu { get; set; }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -700,7 +677,6 @@ public partial class IddsAdmin : Form
         panelOnlineServices.Hide();
 
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -713,7 +689,6 @@ public partial class IddsAdmin : Form
         PanelAgentConfiguration.BringToFront();
         panelOnlineServices.Hide();
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -728,7 +703,6 @@ public partial class IddsAdmin : Form
     }
 
 
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -736,7 +710,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -744,7 +717,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -763,7 +735,6 @@ public partial class IddsAdmin : Form
         MessageBox.Show(Strings.Get("Documentation is available in README.md."), Strings.AppTitle,
             MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -771,7 +742,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -793,7 +763,6 @@ public partial class IddsAdmin : Form
         }
     }
 
-
     /// <summary>
     /// 處理 mouse enter 事件。
     /// </summary>
@@ -801,7 +770,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
-
     /// <summary>
     /// 處理 mouse leave 事件。
     /// </summary>
@@ -809,7 +777,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -817,7 +784,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -825,7 +791,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -836,7 +801,6 @@ public partial class IddsAdmin : Form
     {
 
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -847,7 +811,6 @@ public partial class IddsAdmin : Form
 
         //@DEMO: List demo agent
         InitAdmin();
-
     /// <summary>
     /// 執行 init agent settings 作業。
     /// </summary>
@@ -862,7 +825,6 @@ public partial class IddsAdmin : Form
             PanelAgentConfiguration.LoadSecurityAgent(agent);
         }
     }
-
     /// <summary>
     /// 執行 init admin 作業。
     /// </summary>
@@ -924,7 +886,6 @@ public partial class IddsAdmin : Form
 
     public bool IsInitialized { get; set; }
 
-
     /// <summary>
     /// Writes entry.
     /// </summary>
@@ -934,7 +895,6 @@ public partial class IddsAdmin : Form
     /// <param name="category">category 的值。</param>
 
     internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogIDDSCommunity?.WriteEntry(text, type, eventId, category);
-
     /// <summary>
     /// 執行 resize form 作業。
     /// </summary>
@@ -979,7 +939,6 @@ public partial class IddsAdmin : Form
     }
 
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -991,7 +950,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1003,7 +961,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Right;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1015,7 +972,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Bottom;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1027,7 +983,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Left;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1039,7 +994,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Right | ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1051,7 +1005,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Right | ResizeDirection.Bottom;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1063,7 +1016,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Left | ResizeDirection.Bottom;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1075,7 +1027,6 @@ public partial class IddsAdmin : Form
         resizeDirection = ResizeDirection.Left | ResizeDirection.Top;
         enterResizeMode(e.Location);
     }
-
     /// <summary>
     /// 執行 enter resize mode 作業。
     /// </summary>
@@ -1087,7 +1038,6 @@ public partial class IddsAdmin : Form
         isResizing = true;
         //this.SuspendLayout();
     }
-
     /// <summary>
     /// 處理 mouse move 事件。
     /// </summary>
@@ -1111,7 +1061,6 @@ public partial class IddsAdmin : Form
     {
 
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -1121,7 +1070,6 @@ public partial class IddsAdmin : Form
     private void border_MouseUp(object sender, MouseEventArgs e) => isResizing = false;//this.ResumeLayout();
 
     #endregion
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -1140,7 +1088,6 @@ public partial class IddsAdmin : Form
             panelOnlineServices.Show();
         }
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -1155,7 +1102,6 @@ public partial class IddsAdmin : Form
         panelOnlineServices.Hide();
     }
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -1167,7 +1113,6 @@ public partial class IddsAdmin : Form
         var c = (Control)sender;
         c.Location = new Point(c.Location.X + 1, c.Location.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -1180,7 +1125,6 @@ public partial class IddsAdmin : Form
         c.Location = new Point(c.Location.X - 1, c.Location.Y - 1);
     }
 
-
     /// <summary>
     /// 處理 paint 事件。
     /// </summary>
@@ -1188,7 +1132,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private void panelContent_Paint(object? sender, PaintEventArgs e) => paintPanelTopBorder();
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -1196,7 +1139,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private async void pictureBoxStartService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: true);
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -1204,7 +1146,6 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
 
     private async void pictureBoxStopService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: false);
-
     /// <summary>
     /// Confirms and performs installation or removal of the Windows service with on-demand elevation.
     /// </summary>
@@ -1260,7 +1201,6 @@ public partial class IddsAdmin : Form
             timerRefreshServiceStatus?.Stop();
         }
     }
-
     /// <summary>
     /// Changes the Windows service state without blocking the WinForms message loop.
     /// </summary>
@@ -1293,7 +1233,6 @@ public partial class IddsAdmin : Form
                 await this.InvokeAsync(() => ApplyServiceStatus(null));
         }
     }
-
     /// <summary>
     /// Detaches an unusable service controller, records diagnostics, and exposes the unavailable UI state.
     /// </summary>

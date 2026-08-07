@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Presents one Agent setting with an editor appropriate for its declared property type and purpose.
 /// </summary>

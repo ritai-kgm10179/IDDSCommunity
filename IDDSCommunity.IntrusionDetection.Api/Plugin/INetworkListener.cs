@@ -1,5 +1,4 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
-
 /// <summary>
 /// 網路監聽器擴充元件介面。
 /// </summary>

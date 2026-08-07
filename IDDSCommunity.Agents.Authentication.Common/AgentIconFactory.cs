@@ -1,7 +1,6 @@
 ﻿using System.Drawing;
 
 namespace IDDSCommunity.Agents.Authentication.Common;
-
 /// <summary>
 /// 提供驗證 Agent 產生預設主題位元圖圖示之處理處理器。
 /// </summary>

@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
-
 /// <summary>
 /// 提供標準 IPv4 CIDR 網段解析與匹配比對。
 /// </summary>

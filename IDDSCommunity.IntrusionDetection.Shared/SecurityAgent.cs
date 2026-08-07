@@ -11,13 +11,11 @@ public class SecurityAgent : IAgentFilter
 {
 
     public event EventHandler? StatisticsUpdated;
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
 
     public SecurityAgent() { }
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
@@ -26,14 +24,12 @@ public class SecurityAgent : IAgentFilter
 
     public SecurityAgent(string name, Guid id)
         : this(name) => Id = id;
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
     /// <param name="name">name參數。</param>
 
     public SecurityAgent(string name) => Name = name;
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
@@ -52,7 +48,6 @@ public class SecurityAgent : IAgentFilter
         Icon = icon;
     }
 
-
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
@@ -65,7 +60,6 @@ public class SecurityAgent : IAgentFilter
 
     public SecurityAgent(string name, Guid id, int failedLogins, int hardLocks, int softLocks, Image icon)
         : this(name, failedLogins, hardLocks, softLocks, icon) => Id = id;
-
     /// <summary>
     /// 執行check config version by id作業。
     /// </summary>
@@ -86,7 +80,6 @@ public class SecurityAgent : IAgentFilter
         }
         return false;
     }
-
     /// <summary>
     /// 執行check config version by name作業。
     /// </summary>
@@ -106,7 +99,6 @@ public class SecurityAgent : IAgentFilter
         }
         return false;
     }
-
     /// <summary>
     /// 執行reload作業。
     /// </summary>
@@ -138,7 +130,6 @@ public class SecurityAgent : IAgentFilter
         rdr.Close();
         LoadCustomConfig();
     }
-
     /// <summary>
     /// 載入自訂 Agent 設定。
     /// </summary>
@@ -167,7 +158,6 @@ public class SecurityAgent : IAgentFilter
     {
         get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
     }
-
     /// <summary>
     /// 執行from image作業。
     /// </summary>
@@ -180,7 +170,6 @@ public class SecurityAgent : IAgentFilter
         value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         return ms.ToArray();
     }
-
     /// <summary>
     /// 執行from byte作業。
     /// </summary>
@@ -206,7 +195,6 @@ public class SecurityAgent : IAgentFilter
     {
         get => FromByte(_icon); set => _icon = FromImage(value);
     }
-
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
@@ -239,7 +227,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         });
         OnStatisticsUpdated();
     }
-
     /// <summary>
     /// 執行does exist in db作業。
     /// </summary>
@@ -253,7 +240,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         if (result != null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId)) return true;
         return false;
     }
-
     /// <summary>
     /// 使用呼叫者擁有的交易判斷 Agent 是否存在。
     /// </summary>
@@ -265,13 +251,11 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
         object? result = Database.Instance.ExecuteScalar("select AgentId from SecurityAgents where AgentId = @p0", transaction, id.ToString());
         return result is not null && Guid.TryParse(result.ToString(), out Guid agentId) && id.Equals(agentId);
     }
-
     /// <summary>
     /// 儲存自訂 Agent 設定。
     /// </summary>
 
     public void SaveCustomConfig() => Database.Instance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction));
-
     /// <summary>
     /// 使用呼叫者擁有的交易持久化自訂 Agent 設定。
     /// </summary>
@@ -295,7 +279,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             Database.Instance.ExecuteNonQuery(sql, transaction, CustomConfiguration[key], agentIdStr, key);
         }
     }
-
     /// <summary>
     /// 更新統計資料。
     /// </summary>
@@ -334,13 +317,11 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
             System.Diagnostics.Trace.TraceError("Security-agent statistics refresh failed: {0}", exception);
         }
     }
-
     /// <summary>
     /// 處理統計資料更新通知。
     /// </summary>
 
     private void OnStatisticsUpdated() => StatisticsUpdated?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// 取得識別碼 (ID)。
     /// </summary>
@@ -378,7 +359,6 @@ OverwriteConfiguration=@p7, DisplayName=@p8, Enabled=@p9, Name=@p10 where AgentI
     public string AssemblyFilename { get; set; } = string.Empty;
     public bool BinaryMissing { get; set; }
     public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
-
     /// <summary>
     /// 取得目前鎖定型別。
     /// </summary>

@@ -2,7 +2,6 @@
 using System.Drawing.Drawing2D;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Draws original, semantic interface icons without reusing the application brand mark.
 /// </summary>

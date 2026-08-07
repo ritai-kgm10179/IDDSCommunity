@@ -11,7 +11,6 @@ public partial class PanelSafeNetworks : UserControl
 {
 
     public event EventHandler? SafeNetworksChanged;
-
     /// <summary>
     /// 初始化 <see cref="PanelSafeNetworks"/> 類別的新執行個體。
     /// </summary>
@@ -24,7 +23,6 @@ public partial class PanelSafeNetworks : UserControl
         listBoxSafeNetworks.DisplayMember = "DisplayName";
         Load += new EventHandler(PanelSafeNetworks_Load);
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -32,7 +30,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="e">事件資料。</param>
 
     void PanelSafeNetworks_Load(object? sender, EventArgs e) => LoadData();
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -52,7 +49,6 @@ public partial class PanelSafeNetworks : UserControl
             e.Handled = true;
         }
     }
-
     /// <summary>
     /// Adds network.
     /// </summary>
@@ -81,7 +77,6 @@ public partial class PanelSafeNetworks : UserControl
             smartLabelInvalidNetwork.Visible = true;
         }
     }
-
     /// <summary>
     /// 執行 show add network panel 作業。
     /// </summary>
@@ -91,7 +86,6 @@ public partial class PanelSafeNetworks : UserControl
         smartPanelAdd.Visible = true;
         textBoxAddNetwork.Focus();
     }
-
     /// <summary>
     /// 執行 hide network panel 作業。
     /// </summary>
@@ -102,7 +96,6 @@ public partial class PanelSafeNetworks : UserControl
         EditExisting = false;
         smartPanelAdd.Visible = false;
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -114,7 +107,6 @@ public partial class PanelSafeNetworks : UserControl
         ShowAddNetworkPanel();
         SetEditMode(true);
     }
-
     /// <summary>
     /// 處理 double click 事件。
     /// </summary>
@@ -130,7 +122,6 @@ public partial class PanelSafeNetworks : UserControl
             ShowAddNetworkPanel();
         }
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -150,7 +141,6 @@ public partial class PanelSafeNetworks : UserControl
         }
         SetEditMode(true);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -158,7 +148,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="e">事件資料。</param>
 
     private void button1_Click(object sender, EventArgs e) => HideNetworkPanel();
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -166,7 +155,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="e">事件資料。</param>
 
     private void buttonAddNetwork_Click(object sender, EventArgs e) => AddNetwork();
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -186,7 +174,6 @@ public partial class PanelSafeNetworks : UserControl
             ShowAddNetworkPanel();
         }
     }
-
     /// <summary>
     /// Processes the safe networks changed notification.
     /// </summary>
@@ -194,7 +181,6 @@ public partial class PanelSafeNetworks : UserControl
     private void OnSafeNetworksChanged() => SafeNetworksChanged?.Invoke(this, EventArgs.Empty);
 
     public bool EditExisting { get; set; }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -207,7 +193,6 @@ public partial class PanelSafeNetworks : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -220,7 +205,6 @@ public partial class PanelSafeNetworks : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -231,7 +215,6 @@ public partial class PanelSafeNetworks : UserControl
     {
 
     }
-
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -246,7 +229,6 @@ public partial class PanelSafeNetworks : UserControl
         }
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -260,7 +242,6 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     public bool IsInEditMode { get; set; }
-
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
@@ -283,7 +264,6 @@ public partial class PanelSafeNetworks : UserControl
         listBoxSafeNetworks.Enabled = IsInEditMode;
         checkBoxConfigureSafeNetworks.Enabled = IsInEditMode;
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -291,7 +271,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -316,7 +295,6 @@ public partial class PanelSafeNetworks : UserControl
         OnSafeNetworksChanged();
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -324,7 +302,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-
     /// <summary>
     /// Sets edit mode.
     /// </summary>
@@ -335,7 +312,6 @@ public partial class PanelSafeNetworks : UserControl
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>

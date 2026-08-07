@@ -23,7 +23,6 @@ public class AppLayerPop3
 
 
     public string Pop3Code { get; set; } = string.Empty;
-
     /// <summary>
     /// 初始化 <see cref="AppLayerPop3"/> 類別的新執行個體。
     /// </summary>

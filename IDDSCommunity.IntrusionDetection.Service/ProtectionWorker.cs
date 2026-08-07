@@ -7,7 +7,6 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal sealed class ProtectionWorker(IIntrusionDetectionRuntime runtime) : BackgroundService
 {
     private bool started;
-
     /// <summary>
     /// Starts the protected runtime before the host reports that startup completed.
     /// </summary>
@@ -28,7 +27,6 @@ internal sealed class ProtectionWorker(IIntrusionDetectionRuntime runtime) : Bac
             throw;
         }
     }
-
     /// <summary>
     /// Starts the intrusion-detection runtime and waits until service shutdown is requested.
     /// </summary>
@@ -38,11 +36,8 @@ internal sealed class ProtectionWorker(IIntrusionDetectionRuntime runtime) : Bac
     {
         await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
     }
-
     /// <summary>
-
     /// 停止執行階段服務。
-
     /// </summary>
     /// <param name="cancellationToken">取消權杖。</param>
     /// <returns>執行階段服務停止後完成之 Task。</returns>

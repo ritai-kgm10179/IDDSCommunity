@@ -22,7 +22,6 @@ public class IntrusionLog
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.
     public const int STATUS_PROTECTION_UNAVAILABLE = 999;
     public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
-
     /// <summary>
     /// Gets system id.
     /// </summary>
@@ -106,7 +105,6 @@ public class IntrusionLog
             return _statusIcons;
         }
     }
-
     /// <summary>
     /// Gets status icon.
     /// </summary>
@@ -124,7 +122,6 @@ public class IntrusionLog
             return Resources.logIcon_systemMessage;
         }
     }
-
     /// <summary>
     /// Gets status class.
     /// </summary>
@@ -142,7 +139,6 @@ public class IntrusionLog
             return Localization.Strings.Get("System");
         }
     }
-
     /// <summary>
     /// Gets status name.
     /// </summary>
@@ -160,7 +156,6 @@ public class IntrusionLog
             return Localization.Strings.Format("Display name for status {0} was not found.", status);
         }
     }
-
     /// <summary>
     /// Reads interval.
     /// </summary>
@@ -178,7 +173,6 @@ public class IntrusionLog
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
 
     /// <summary>
     /// Gets last log id.
@@ -199,7 +193,6 @@ public class IntrusionLog
     //ClientIP nvarchar(80) null,
     //Action int null,
     //ActionTriggeredByUser bit null
-
     /// <summary>
     /// Reads interval grouped.
     /// </summary>
@@ -217,7 +210,6 @@ public class IntrusionLog
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Determines whether s updates.
     /// </summary>
@@ -243,7 +235,6 @@ public class IntrusionLog
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Reads differential.
     /// </summary>
@@ -261,7 +252,6 @@ public class IntrusionLog
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
 
     /// <summary>
     /// Reads unsuccessful attempts.
@@ -281,7 +271,6 @@ public class IntrusionLog
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Adds entry.
     /// </summary>
@@ -306,7 +295,6 @@ values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Gets incidents by agent id.
     /// </summary>

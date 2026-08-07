@@ -3,7 +3,6 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
-
 /// <summary>
 /// Verifies that report labels, dates, and mail subjects follow the configured application language.
 /// </summary>
@@ -12,13 +11,11 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 public sealed class ReportLocalizationTest
 {
     private const string Template = "[%LABEL_INSTALLATION_INFORMATION%]|[%LABEL_EVENTS_PER_AGENT%]|[%LABEL_INTRUSION_ATTEMPTS%]|[%LABEL_REPORT_CONFIGURATION_HINT%]";
-
     /// <summary>
     /// Restores the invariant test culture after each global language-manager assertion.
     /// </summary>
     [TestCleanup]
     public void RestoreLanguage() => LanguageManager.Instance.Initialize("en");
-
     /// <summary>
     /// Verifies the invariant English report output.
     /// </summary>
@@ -34,7 +31,6 @@ public sealed class ReportLocalizationTest
         StringAssert.Contains(result, "Intrusion attempts");
         Assert.IsFalse(result.Contains("[%LABEL_", StringComparison.Ordinal));
     }
-
     /// <summary>
     /// Verifies Traditional Chinese labels and culture-aware report subject formatting.
     /// </summary>

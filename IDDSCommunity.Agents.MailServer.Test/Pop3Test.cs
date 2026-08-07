@@ -22,7 +22,6 @@ public class Pop3Test
             Assert.AreEqual(Pop3Message.PASS, agent.CurrentClients[key].LastMessage);
         }
     }
-
     /// <summary>
     /// 測試 POP3 錯誤訊息處理解析。
     /// </summary>
@@ -43,7 +42,6 @@ public class Pop3Test
     }
 
     bool attackDetected = false;
-
     /// <summary>
     /// 處理偵測到攻擊事件。
     /// </summary>
@@ -55,7 +53,6 @@ public class Pop3Test
         attackDetected = true;
         System.Diagnostics.Debug.Print(data.EventMessage);
     }
-
     /// <summary>
     /// 驗證監聽器清理作業僅移除過期的用戶端狀態。
     /// </summary>

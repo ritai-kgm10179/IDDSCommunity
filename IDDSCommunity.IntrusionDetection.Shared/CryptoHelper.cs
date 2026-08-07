@@ -9,14 +9,12 @@ internal class CryptoHelper
     private const string CurrentPrefix = "dpapi:v1:";
     private const string YYHAU_SDBN = "usHN,:_ADs24adH:S";
     private static readonly byte[] OptionalEntropy = SHA256.HashData(Encoding.UTF8.GetBytes("IDDSCommunity.IntrusionDetection.SmtpPassword.v1"));
-
     /// <summary>
     /// Determines whether encrypted text uses the current protected-data format.
     /// </summary>
     /// <param name="cipherText">The encrypted text.</param>
     /// <returns><see langword="true"/> when the current format prefix is present.</returns>
     internal static bool IsCurrentFormat(string cipherText) => cipherText.StartsWith(CurrentPrefix, StringComparison.Ordinal);
-
     /// <summary>
     /// 執行encrypt作業。
     /// </summary>
@@ -38,7 +36,6 @@ internal class CryptoHelper
             CryptographicOperations.ZeroMemory(clearText);
         }
     }
-
     /// <summary>
     /// 執行decrypt作業。
     /// </summary>
@@ -65,7 +62,6 @@ internal class CryptoHelper
             CryptographicOperations.ZeroMemory(clearText);
         }
     }
-
     /// <summary>
     /// Decrypts a legacy TripleDES value solely for one-time migration to protected storage.
     /// </summary>

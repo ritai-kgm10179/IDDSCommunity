@@ -30,7 +30,6 @@ internal static class Program
             System.Diagnostics.EventLog.WriteEntry(Shared.Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE, ex.Message);
         }
     }
-
     /// <summary>
     /// 處理 thread exception 事件。
     /// </summary>

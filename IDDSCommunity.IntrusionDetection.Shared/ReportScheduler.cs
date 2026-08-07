@@ -9,12 +9,10 @@ public class ReportScheduler
     private readonly TimeProvider timeProvider;
     private readonly NotificationSettings notificationSettings;
     private CancellationTokenSource? cancellation;
-
     /// <summary>
     /// 取得或設定已啟用報表的檢查間隔時間。
     /// </summary>
     public TimeSpan CheckInterval { get; set; } = TimeSpan.FromMinutes(10);
-
     /// <summary>
     /// 取得排程器迴圈是否已啟動。
     /// </summary>
@@ -23,7 +21,6 @@ public class ReportScheduler
     public event Func<CancellationToken, Task>? RunDailyReportAsync;
     public event Func<CancellationToken, Task>? RunWeeklyReportAsync;
     public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
-
     /// <summary>
     /// 初始化 <see cref="ReportScheduler"/> class的新執行個體。
     /// </summary>
@@ -31,7 +28,6 @@ public class ReportScheduler
     private ReportScheduler() : this(TimeProvider.System, NotificationSettings.Instance)
     {
     }
-
     /// <summary>
     /// 初始化具備明確時間來源的排程器以供確定性測試。
     /// </summary>
@@ -39,7 +35,6 @@ public class ReportScheduler
     internal ReportScheduler(TimeProvider timeProvider) : this(timeProvider, NotificationSettings.Instance)
     {
     }
-
     /// <summary>
     /// 初始化具備明確時間與通知相依性的排程器。
     /// </summary>
@@ -65,7 +60,6 @@ public class ReportScheduler
             return _instance;
         }
     }
-
     /// <summary>
     /// 啟動報表排程作業。
     /// </summary>
@@ -77,7 +71,6 @@ public class ReportScheduler
         cancellation = new CancellationTokenSource();
         _ = RunAsync(cancellation.Token);
     }
-
     /// <summary>
     /// 停止報表排程迴圈。
     /// </summary>
@@ -88,7 +81,6 @@ public class ReportScheduler
         cancellation?.Dispose();
         cancellation = null;
     }
-
     /// <summary>
     /// 使用設定的時間提供者以固定間隔執行報表檢查。
     /// </summary>
@@ -117,7 +109,6 @@ public class ReportScheduler
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
-
     /// <summary>
     /// 執行check daily report作業。
     /// </summary>
@@ -139,7 +130,6 @@ public class ReportScheduler
                 cancellationToken).ConfigureAwait(false);
         }
     }
-
     /// <summary>
     /// 執行check weekly report作業。
     /// </summary>
@@ -162,7 +152,6 @@ public class ReportScheduler
                 cancellationToken).ConfigureAwait(false);
         }
     }
-
     /// <summary>
     /// 執行check monthly report作業。
     /// </summary>
@@ -185,7 +174,6 @@ public class ReportScheduler
                 cancellationToken).ConfigureAwait(false);
         }
     }
-
     /// <summary>
     /// 持久化報表傳送狀態轉換，並僅於傳送成功後推進檢查點。
     /// </summary>
@@ -218,7 +206,6 @@ public class ReportScheduler
             throw;
         }
     }
-
     /// <summary>
     /// 依序呼叫非同步報表處理常式並傳播失敗資訊以保留重試語意。
     /// </summary>
@@ -233,7 +220,6 @@ public class ReportScheduler
         foreach (Delegate subscriber in handlers.GetInvocationList())
             await ((Func<CancellationToken, Task>)subscriber)(cancellationToken).ConfigureAwait(false);
     }
-
     /// <summary>
     /// 取得年份週次字串。
     /// </summary>
@@ -247,7 +233,6 @@ public class ReportScheduler
         if (weekOfYear > 50 && d.Month < 2) year--;
         return string.Format("{0}-{1}", year, weekOfYear);
     }
-
     /// <summary>
     /// 取得年份週次。
     /// </summary>

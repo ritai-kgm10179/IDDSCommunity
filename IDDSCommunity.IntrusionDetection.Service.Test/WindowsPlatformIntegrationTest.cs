@@ -38,7 +38,6 @@ public sealed class WindowsPlatformIntegrationTest
 
         Assert.IsNull(captureException, captureException?.ToString());
     }
-
     /// <summary>
     /// Verifies that an isolated Application event source can be registered, written, and removed.
     /// </summary>
@@ -59,7 +58,6 @@ public sealed class WindowsPlatformIntegrationTest
                 EventLog.DeleteEventSource(source);
         }
     }
-
     /// <summary>
     /// Verifies that an isolated disabled firewall rule can be created, located, and removed without touching product rules.
     /// </summary>
@@ -92,7 +90,6 @@ public sealed class WindowsPlatformIntegrationTest
             FirewallComString.Set(ruleName, policy.Rules.Remove);
         }
     }
-
     /// <summary>
     /// Verifies stop and start control against a dedicated, explicitly named integration-test service.
     /// </summary>
@@ -126,7 +123,6 @@ public sealed class WindowsPlatformIntegrationTest
             }
         }
     }
-
     /// <summary>
     /// Creates a Windows COM object and validates the requested interface.
     /// </summary>
@@ -136,7 +132,6 @@ public sealed class WindowsPlatformIntegrationTest
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type '{progId}' is unavailable.")) as T
         ?? throw new InvalidOperationException($"Unable to create COM object '{progId}'.");
-
     /// <summary>
     /// Stops a service when it is running or paused.
     /// </summary>

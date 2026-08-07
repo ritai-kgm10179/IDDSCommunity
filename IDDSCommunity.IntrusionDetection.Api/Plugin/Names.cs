@@ -1,5 +1,4 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
-
 /// <summary>
 /// 提供擴充元件型別命名定義之類別。
 /// </summary>

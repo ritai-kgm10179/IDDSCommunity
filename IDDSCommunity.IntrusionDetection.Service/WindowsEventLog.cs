@@ -6,7 +6,6 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal sealed class WindowsEventLog : IWindowsEventLog
 {
     private readonly EventLog eventLog = new(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME, ".", Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE);
-
     /// <summary>
     /// Writes one entry to the IDDSCommunity Windows Event Log.
     /// </summary>
@@ -15,7 +14,6 @@ internal sealed class WindowsEventLog : IWindowsEventLog
     /// <param name="eventId">The event identifier.</param>
     /// <param name="category">The event category.</param>
     public void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLog.WriteEntry(text, type, eventId, category);
-
     /// <summary>
     /// Releases the Windows Event Log handle.
     /// </summary>

@@ -1,7 +1,6 @@
 ﻿using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace DemoAgent;
-
 /// <summary>
 /// CustomIntrusion Detectionagent configuration
 /// In this simple demonstration, just one property "DirectoryName" is used.

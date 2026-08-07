@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
-
 /// <summary>
 /// 提供協定 Agent 使用的單一共用原始封包擷取轉接器。
 /// </summary>

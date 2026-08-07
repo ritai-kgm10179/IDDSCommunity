@@ -2,27 +2,22 @@
 
 public class Globals
 {
-
     /// <summary>
     /// Application name
     /// </summary>
     public const string APPLICATION_NAME = "IDDS Community";
-
     /// <summary>
     /// Windows service key used by the community distribution.
     /// </summary>
     public const string WINDOWS_SERVICE_NAME = "IDDSCommunityProtection";
-
     /// <summary>
     /// User-facing Windows service name.
     /// </summary>
     public const string WINDOWS_SERVICE_DISPLAY_NAME = "IDDS Community Protection Service";
-
     /// <summary>
     /// Plugin directory name
     /// </summary>
     public const string PLUGIN_DIRECTORY_NAME = "Plugins";
-
     /// <summary>
     /// Windows firewall group name of blocking rules
     /// </summary>
@@ -42,7 +37,6 @@ public class Globals
 
 
     // Event Log Information
-
     /// <summary>
     /// Windows event log category for configuration errors and information
     /// </summary>
@@ -62,27 +56,22 @@ public class Globals
     public const int IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED = 4001;
 
     public const int IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED = 4002;
-
     /// <summary>
     /// A file cannot be saved to disk
     /// </summary>
     public const int IDDSCOMMUNITY_EVENT_ID_PERSISTANCE_ERROR = 5000;
-
     /// <summary>
     /// Windows event log id for configuration file not found
     /// </summary>
     public const int IDDSCOMMUNITY_EVENT_ID_CONFIGURATION_ERROR = 9000;
-
     /// <summary>
     /// Event log id when calling delegate with invalid parameters
     /// </summary>
     public const int IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL = 9001;
-
     /// <summary>
     /// Windows event log id for plugin error
     /// </summary>
     public const int IDDSCOMMUNITY_EVENT_ID_PLUGIN_ERROR = 9002;
-
     /// <summary>
     /// Windows event log id for plugin error during initialisation
     /// </summary>

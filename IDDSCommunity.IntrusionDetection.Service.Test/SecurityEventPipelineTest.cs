@@ -13,7 +13,6 @@ public sealed class SecurityEventPipelineTest
 {
     private string testDirectory = null!;
     private Database database = null!;
-
     /// <summary>
     /// Creates an isolated durable inbox for each pipeline test.
     /// </summary>
@@ -25,7 +24,6 @@ public sealed class SecurityEventPipelineTest
         database = new Database();
         database.Configure(testDirectory, "pipeline.db");
     }
-
     /// <summary>
     /// Releases the isolated inbox database.
     /// </summary>
@@ -57,7 +55,6 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual(0, pipeline.QueueDepth);
         Assert.IsFalse(pipeline.TryPublish(this, CreateEvent("192.0.2.3")));
     }
-
     /// <summary>
     /// Verifies saturation rejects producers without blocking and one consumer failure does not stop later work.
     /// </summary>
@@ -91,7 +88,6 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual(2, processed);
         Assert.AreEqual(1, failures);
     }
-
     /// <summary>
     /// Verifies the lossless publishing path applies backpressure until bounded capacity becomes available.
     /// </summary>
@@ -122,7 +118,6 @@ public sealed class SecurityEventPipelineTest
         pipeline.Complete();
         await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
-
     /// <summary>
     /// Verifies an event persisted before interruption is replayed and marked completed by a new pipeline.
     /// </summary>
@@ -147,7 +142,6 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual("192.0.2.44", processedAddress);
         Assert.AreEqual(0, inbox.CountUnfinished());
     }
-
     /// <summary>
     /// Creates one test detection event.
     /// </summary>

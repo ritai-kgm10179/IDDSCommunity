@@ -24,7 +24,6 @@ public sealed class LanguageManager
 
     private static readonly Lazy<LanguageManager> LazyInstance = new(() => new LanguageManager(), true);
     public static LanguageManager Instance => LazyInstance.Value;
-
     /// <summary>
     /// 初始化 <see cref="LanguageManager"/> class的新執行個體。
     /// </summary>
@@ -36,7 +35,6 @@ public sealed class LanguageManager
     }
 
     public CultureInfo CurrentCulture => _currentCulture;
-
     /// <summary>
     /// 執行register resource manager作業。
     /// </summary>
@@ -44,7 +42,6 @@ public sealed class LanguageManager
     /// <param name="resourceManager">resource manager參數。</param>
 
     public void RegisterResourceManager(string name, ResourceManager resourceManager) => _resourceManagers[name] = resourceManager;
-
     /// <summary>
     /// 執行initialize作業。
     /// </summary>
@@ -83,7 +80,6 @@ public sealed class LanguageManager
             Thread.CurrentThread.CurrentUICulture = targetCulture;
         }
     }
-
     /// <summary>
     /// 執行detect system culture with fallback作業。
     /// </summary>
@@ -105,7 +101,6 @@ public sealed class LanguageManager
         // Fallback for all other unsupported cultures (e.g. ja-JP, fr-FR, de-DE) to English (en-US)
         return new CultureInfo(DEFAULT_CULTURE);
     }
-
     /// <summary>
     /// 取得字串。
     /// </summary>

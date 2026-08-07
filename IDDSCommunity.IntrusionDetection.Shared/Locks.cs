@@ -9,7 +9,6 @@ public class Locks
 {
 
 
-
     /// <summary>
     /// Determines whether s updates.
     /// </summary>
@@ -35,7 +34,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Returns every database lock whose desired state is an active firewall block.
     /// </summary>
@@ -64,7 +62,6 @@ public class Locks
         }
         return result;
     }
-
     /// <summary>
     /// Reads locks.
     /// </summary>
@@ -84,7 +81,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// 執行today作業。
     /// </summary>
@@ -110,7 +106,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Reads current soft locks.
     /// </summary>
@@ -122,7 +117,6 @@ public class Locks
         int.TryParse(result?.ToString(), out int softLocks);
         return softLocks;
     }
-
     /// <summary>
     /// Reads current hard locks.
     /// </summary>
@@ -134,7 +128,6 @@ public class Locks
         int.TryParse(result?.ToString(), out int hardLocks);
         return hardLocks;
     }
-
     /// <summary>
     /// Reads unsuccessful login attempts.
     /// </summary>
@@ -147,7 +140,6 @@ public class Locks
         int.TryParse(result?.ToString(), out int intrusionAttempts);
         return intrusionAttempts;
     }
-
     /// <summary>
     /// Counts recent locks created for the same Agent and source IP address.
     /// </summary>
@@ -162,7 +154,6 @@ public class Locks
             startDate);
         return Db.DbValueConverter.ToInt(result);
     }
-
     /// <summary>
     /// Gets current locks.
     /// </summary>
@@ -196,7 +187,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// Gets lock by id.
     /// </summary>
@@ -228,7 +218,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// 執行lock exists作業。
     /// </summary>
@@ -257,7 +246,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// 建立鎖定記錄。
     /// </summary>
@@ -283,7 +271,6 @@ public class Locks
         l.Id = CreateLock(l);
         return l;
     }
-
     /// <summary>
     /// 建立鎖定記錄。
     /// </summary>
@@ -305,7 +292,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// 更新鎖定記錄。
     /// </summary>
@@ -323,7 +309,6 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
-
     /// <summary>
     /// 取得解鎖清單。
     /// </summary>

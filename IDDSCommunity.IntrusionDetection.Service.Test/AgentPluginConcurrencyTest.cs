@@ -38,7 +38,6 @@ public sealed class AgentPluginConcurrencyTest
             }
         }
     }
-
     /// <summary>
     /// Verifies one faulty detection subscriber does not suppress later subscribers.
     /// </summary>
@@ -54,7 +53,6 @@ public sealed class AgentPluginConcurrencyTest
 
         Assert.AreEqual(1, delivered);
     }
-
     /// <summary>
     /// Verifies lifecycle state remains coherent across pause, continue, and stop.
     /// </summary>

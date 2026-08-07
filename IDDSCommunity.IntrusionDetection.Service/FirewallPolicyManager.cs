@@ -23,7 +23,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             return _instance;
         }
     }
-
     /// <summary>
     /// 初始化 <see cref="FirewallPolicyManager"/> 類別的新執行個體。
     /// </summary>
@@ -39,7 +38,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         if (blockMode == FirewallBlockMode.Inbound)
             RemoveRuleIfPresent(GetRuleName("BlockAttackerOutbound", 0));
     }
-
     /// <summary>
     /// Creates com object.
     /// </summary>
@@ -50,7 +48,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException(string.Format(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("COM type {0} is unavailable."), progId))) as T
         ?? throw new InvalidOperationException(string.Format(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Unable to create COM object {0}."), progId));
-
     /// <summary>
     /// 執行 block 作業。
     /// </summary>
@@ -75,7 +72,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             throw;
         }
     }
-
     /// <summary>
     /// Determines whether locked.
     /// </summary>
@@ -103,7 +99,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             throw;
         }
     }
-
     /// <summary>
     /// Returns the exact addresses currently present in the IDDSCommunity block rule.
     /// </summary>
@@ -124,7 +119,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         return [.. addresses];
     }
-
     /// <summary>
     /// Removes ip address from block list.
     /// </summary>
@@ -151,7 +145,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             throw new ArgumentException(string.Format(
                 "The IP address {0} is not blocked and might have been automatically removed by schedule. Please refresh the list to view current locks.", ipAddress), nameof(ipAddress));
     }
-
     /// <summary>
     /// Gets cleaned remote addresses.
     /// </summary>
@@ -190,7 +183,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         return result.ToString();
     }
-
     /// <summary>
     /// Determines whether a firewall address list contains an exact IP address or matching host CIDR entry.
     /// </summary>
@@ -216,7 +208,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         return false;
     }
-
     /// <summary>
     /// Determines whether an IP address belongs to a CIDR network.
     /// </summary>
@@ -245,7 +236,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         int mask = 0xFF << (8 - remainingBits);
         return (candidateBytes[fullBytes] & mask) == (networkBytes[fullBytes] & mask);
     }
-
     /// <summary>
     /// Gets rule name.
     /// </summary>
@@ -274,7 +264,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         if (GetRule(ruleName) is not null)
             FirewallComString.Set(ruleName, firewallPolicyManager.Rules.Remove);
     }
-
     /// <summary>
     /// Adds rule.
     /// </summary>
@@ -352,7 +341,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             .Contains(address, StringComparer.OrdinalIgnoreCase)) return existingAddresses;
         return string.Concat(existingAddresses, ",", address);
     }
-
     /// <summary>
     /// Clears up rules.
     /// </summary>
@@ -365,7 +353,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             FirewallComString.Set(FirewallComString.Get(rule.Name), firewallPolicyManager.Rules.Remove);
         }
     }
-
     /// <summary>
     /// Gets rule.
     /// </summary>
@@ -380,7 +367,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         return null;
     }
-
     /// <summary>
     /// Finds rules.
     /// </summary>
@@ -396,7 +382,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
         return rules;
     }
-
     /// <summary>
     /// 聚合 IP 位址。當同一 /24 C 段子網出現超過指定門檻個 IP 時，自動轉換為 CIDR 條目。
     /// 若目標 C 段中含有 Safe Networks 白名單 IP，則跳過 CIDR 聚合以避免誤殺合法流量。
@@ -465,7 +450,6 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         result.AddRange(nonIpv4OrCidr);
         return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
-
     /// <summary>
     /// Releases the COM firewall policy object owned by this manager.
     /// </summary>

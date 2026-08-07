@@ -2,19 +2,16 @@
 using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Ensures the synchronous application bootstrap runs once and exposes a terminal result.
 /// </summary>
 internal sealed class StartupOperation
 {
     private int started;
-
     /// <summary>
     /// Gets whether the one-time startup operation completed successfully.
     /// </summary>
     internal bool Succeeded { get; private set; }
-
     /// <summary>
     /// Runs the startup operation once and captures a terminal failure for the splash screen.
     /// </summary>

@@ -18,7 +18,6 @@ public partial class PanelNotificationSettings : UserControl
         InitializeComponent();
         Load += new EventHandler(PanelNotificationSettings_Load);
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -28,7 +27,6 @@ public partial class PanelNotificationSettings : UserControl
     void PanelNotificationSettings_Load(object? sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
-
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -46,7 +44,6 @@ public partial class PanelNotificationSettings : UserControl
         checkBoxMonthlyReport.Enabled = true;
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -58,7 +55,6 @@ public partial class PanelNotificationSettings : UserControl
         if (IsInEditMode) LoadData();
         ToggleEditMode();
     }
-
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
@@ -84,7 +80,6 @@ public partial class PanelNotificationSettings : UserControl
         checkBoxMonthlyReport.Enabled = IsInEditMode;
 
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -92,7 +87,6 @@ public partial class PanelNotificationSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e) => ToggleEditMode();
-
 
     /// <summary>
     /// 處理 mouse down 事件。
@@ -106,7 +100,6 @@ public partial class PanelNotificationSettings : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -119,7 +112,6 @@ public partial class PanelNotificationSettings : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -138,7 +130,6 @@ public partial class PanelNotificationSettings : UserControl
         OnNotificationSettingsChanged();
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -146,13 +137,11 @@ public partial class PanelNotificationSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
-
     /// <summary>
     /// Processes the notification settings changed notification.
     /// </summary>
 
     private void OnNotificationSettingsChanged() => NotificationSettingsChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -160,7 +149,6 @@ public partial class PanelNotificationSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-
     /// <summary>
     /// Sets edit mode.
     /// </summary>
@@ -171,7 +159,6 @@ public partial class PanelNotificationSettings : UserControl
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>

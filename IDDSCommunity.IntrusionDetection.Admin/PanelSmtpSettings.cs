@@ -12,7 +12,6 @@ public partial class PanelSmtpSettings : UserControl
 {
 
     public event EventHandler? SmtpSettingsChanged;
-
     /// <summary>
     /// 初始化 <see cref="PanelSmtpSettings"/> 類別的新執行個體。
     /// </summary>
@@ -23,7 +22,6 @@ public partial class PanelSmtpSettings : UserControl
         BackColor = Color.White;
         Load += new EventHandler(PanelSmtpSettings_Load);
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -33,7 +31,6 @@ public partial class PanelSmtpSettings : UserControl
     void PanelSmtpSettings_Load(object? sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
-
 
     /// <summary>
     /// 處理 click 事件。
@@ -47,7 +44,6 @@ public partial class PanelSmtpSettings : UserControl
         ToggleEditMode();
         ClearErrors();
     }
-
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
@@ -74,7 +70,6 @@ public partial class PanelSmtpSettings : UserControl
         textBoxUsername.Enabled = IsInEditMode;
         textBoxPassword.Enabled = IsInEditMode;
     }
-
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -91,7 +86,6 @@ public partial class PanelSmtpSettings : UserControl
         textBoxPassword.Text = IddsConfig.Instance.GetSmtpPassword();
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -102,13 +96,11 @@ public partial class PanelSmtpSettings : UserControl
     {
 
     }
-
     /// <summary>
     /// Processes the smtp settings changed notification.
     /// </summary>
 
     private void OnSmtpSettingsChanged() => SmtpSettingsChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// 執行 check form data 作業。
     /// </summary>
@@ -127,13 +119,11 @@ public partial class PanelSmtpSettings : UserControl
     }
 
 
-
     /// <summary>
     /// Clears errors.
     /// </summary>
 
     private void ClearErrors() => errSmtpPort.Visible = false;
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -177,7 +167,6 @@ public partial class PanelSmtpSettings : UserControl
             }
         }
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -190,7 +179,6 @@ public partial class PanelSmtpSettings : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X + 1, loc.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -203,7 +191,6 @@ public partial class PanelSmtpSettings : UserControl
         Point loc = control.Location;
         control.Location = new Point(loc.X - 1, loc.Y - 1);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -229,7 +216,6 @@ public partial class PanelSmtpSettings : UserControl
         }
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -237,7 +223,6 @@ public partial class PanelSmtpSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -245,7 +230,6 @@ public partial class PanelSmtpSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-
     /// <summary>
     /// Sets edit mode.
     /// </summary>
@@ -256,7 +240,6 @@ public partial class PanelSmtpSettings : UserControl
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>

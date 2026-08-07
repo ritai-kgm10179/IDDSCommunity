@@ -9,7 +9,6 @@ public partial class PanelLockoutConfiguration : UserControl
 {
 
     public event EventHandler? LockoutConfigurationChanged;
-
     /// <summary>
     /// 初始化 <see cref="PanelLockoutConfiguration"/> 類別的新執行個體。
     /// </summary>
@@ -20,7 +19,6 @@ public partial class PanelLockoutConfiguration : UserControl
         BackColor = Color.White;
         LoadData();
     }
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -28,7 +26,6 @@ public partial class PanelLockoutConfiguration : UserControl
     /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X + 1, pictureBoxEdit.Location.Y + 1);
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -38,7 +35,6 @@ public partial class PanelLockoutConfiguration : UserControl
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
 
     public bool IsInEditMode { get; set; }
-
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -53,7 +49,6 @@ public partial class PanelLockoutConfiguration : UserControl
         comboBoxFirewallMode.SelectedIndex = IddsConfig.Instance.FirewallBlockMode == FirewallBlockMode.Bidirectional ? 1 : 0;
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -66,7 +61,6 @@ public partial class PanelLockoutConfiguration : UserControl
         //ToggleEditMode();
         //ClearErrors();
     }
-
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
@@ -87,7 +81,6 @@ public partial class PanelLockoutConfiguration : UserControl
         //textBoxSoftLocks.Enabled = IsInEditMode;
         //checkBoxLockForever.Enabled = IsInEditMode;
     }
-
     /// <summary>
     /// Clears errors.
     /// </summary>
@@ -99,7 +92,6 @@ public partial class PanelLockoutConfiguration : UserControl
         errSoftLockDuration.Visible = false;
         errSoftLocks.Visible = false;
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -147,13 +139,11 @@ public partial class PanelLockoutConfiguration : UserControl
         }
         SetEditMode(false);
     }
-
     /// <summary>
     /// Processes the lockout configuration changed notification.
     /// </summary>
 
     private void OnLockoutConfigurationChanged() => LockoutConfigurationChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -165,7 +155,6 @@ public partial class PanelLockoutConfiguration : UserControl
         LoadData();
         SetEditMode(false);
     }
-
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
@@ -173,7 +162,6 @@ public partial class PanelLockoutConfiguration : UserControl
     /// <param name="e">事件資料。</param>
 
     private void textBoxSoftLocks_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-
     /// <summary>
     /// Sets edit mode.
     /// </summary>
@@ -184,7 +172,6 @@ public partial class PanelLockoutConfiguration : UserControl
         buttonSave.Visible = hasChanges;
         buttonDiscard.Visible = hasChanges;
     }
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>

@@ -10,7 +10,6 @@ public class AppLayerFtp
     public const string FTP_REPLY_CODE_LOGIN_DENIED = "530";
 
     public string FtpReplyCode { get; set; }
-
     /// <summary>
     /// 初始化 <see cref="AppLayerFtp"/> 類別的新執行個體。
     /// </summary>

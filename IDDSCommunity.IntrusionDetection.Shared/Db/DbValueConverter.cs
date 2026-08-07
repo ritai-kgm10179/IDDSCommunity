@@ -16,7 +16,6 @@ public class DbValueConverter
         bool.TryParse(value.ToString(), out bool result);
         return result;
     }
-
     /// <summary>
     /// 執行to string作業。
     /// </summary>
@@ -28,7 +27,6 @@ public class DbValueConverter
         if (value is null or DBNull) return string.Empty;
         return value.ToString() ?? string.Empty;
     }
-
     /// <summary>
     /// 執行to int作業。
     /// </summary>
@@ -41,7 +39,6 @@ public class DbValueConverter
         int.TryParse(value.ToString(), out int result);
         return result;
     }
-
     /// <summary>
     /// 執行to int64作業。
     /// </summary>
@@ -54,7 +51,6 @@ public class DbValueConverter
         long.TryParse(value.ToString(), out long result);
         return result;
     }
-
     /// <summary>
     /// 執行to guid作業。
     /// </summary>
@@ -70,7 +66,6 @@ public class DbValueConverter
         }
         return result;
     }
-
     /// <summary>
     /// 執行to date time作業。
     /// </summary>

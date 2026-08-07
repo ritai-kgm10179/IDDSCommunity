@@ -27,7 +27,6 @@ public sealed record DatabaseBackupInfo(string FilePath, long Length, DateTimeOf
 public sealed record DatabaseMaintenanceHistory(DateTimeOffset OccurredUtc, string EventType, string Outcome, string Subject, string Details);
 
 public sealed record DatabaseRetentionPolicy(int IntrusionLogDays = 180, int UnlockedLockDays = 180, int AuditDays = 365, int CompletedInboxDays = 30, int BatchSize = 1000);
-
 /// <summary>
 /// 提供界限內且可稽核的 SQLite 維護作業。
 /// </summary>

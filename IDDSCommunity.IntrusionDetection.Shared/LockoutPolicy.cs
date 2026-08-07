@@ -1,14 +1,12 @@
 ﻿using System;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
-
 /// <summary>
 /// Calculates bounded source-IP lockout delays for repeated authentication failures.
 /// </summary>
 public static class LockoutPolicy
 {
     public const int MaximumSoftLockMinutes = 60;
-
     /// <summary>
     /// Doubles the base delay for each recent lock and caps the result to prevent overflow and excessive denial of service.
     /// </summary>

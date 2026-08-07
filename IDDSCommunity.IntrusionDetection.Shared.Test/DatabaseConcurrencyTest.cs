@@ -13,7 +13,6 @@ public sealed class DatabaseConcurrencyTest
 {
     private string testDirectory = null!;
     private Database database = null!;
-
     /// <summary>
     /// Creates an isolated WAL database for each concurrency test.
     /// </summary>
@@ -25,7 +24,6 @@ public sealed class DatabaseConcurrencyTest
         database = new Database();
         database.Configure(testDirectory, "concurrency.db");
     }
-
     /// <summary>
     /// Closes and removes the isolated database.
     /// </summary>
@@ -36,7 +34,6 @@ public sealed class DatabaseConcurrencyTest
         if (Directory.Exists(testDirectory))
             Directory.Delete(testDirectory, recursive: true);
     }
-
     /// <summary>
     /// Verifies concurrent readers and writers use independent connections without reader lifetime races.
     /// </summary>
@@ -63,7 +60,6 @@ public sealed class DatabaseConcurrencyTest
 
         Assert.AreEqual(40L, Convert.ToInt64(database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionAuditLog")));
     }
-
     /// <summary>
     /// Verifies a failed independent transaction rolls back all of its writes.
     /// </summary>

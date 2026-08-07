@@ -26,7 +26,6 @@ public sealed class RuntimeDependencyInjectionTest
         Assert.AreNotSame(firstProvider.GetRequiredService<ReportScheduler>(), secondProvider.GetRequiredService<ReportScheduler>());
         Assert.AreNotSame(firstProvider.GetRequiredService<SecurityAgents>(), secondProvider.GetRequiredService<SecurityAgents>());
     }
-
     /// <summary>
     /// Verifies that the registered runtime health check reports an unconfigured database as unhealthy.
     /// </summary>
@@ -43,7 +42,6 @@ public sealed class RuntimeDependencyInjectionTest
         Assert.AreEqual(HealthStatus.Unhealthy, report.Status);
         Assert.IsTrue(report.Entries.ContainsKey("iddscommunity-runtime"));
     }
-
     /// <summary>
     /// Creates a validated runtime container with a non-COM firewall test double.
     /// </summary>
@@ -68,20 +66,17 @@ public sealed class RuntimeDependencyInjectionTest
         public void Block(string ipAddress)
         {
         }
-
         /// <summary>
         /// Reports that no address is blocked in dependency-registration tests.
         /// </summary>
         /// <param name="ipAddress">The address being queried.</param>
         /// <returns>恆傳回 <see langword="false"/>。</returns>
         public bool IsLocked(string ipAddress) => false;
-
         /// <summary>
         /// Returns an empty firewall snapshot for dependency-registration tests.
         /// </summary>
         /// <returns>空白的位址集合。</returns>
         public System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses() => [];
-
         /// <summary>
         /// Records no external firewall state in dependency-registration tests.
         /// </summary>

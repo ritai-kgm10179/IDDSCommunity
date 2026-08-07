@@ -21,7 +21,6 @@ internal sealed class WindowsLogManager : IRuntimeLog
         }
     }
 
-
     /// <summary>
     /// Writes entry.
     /// </summary>
@@ -44,7 +43,6 @@ internal sealed class WindowsLogManager : IRuntimeLog
         try { eventLog.WriteEntry(sanitized, type, eventId, category); }
         catch (Exception exception) { RollingFallbackLog.Write(exception, sanitized); }
     }
-
 
 
     /// <summary>

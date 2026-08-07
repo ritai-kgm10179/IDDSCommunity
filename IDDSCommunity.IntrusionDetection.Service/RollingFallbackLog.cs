@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
-
 /// <summary>
 /// Provides a bounded daily fallback when Windows Event Log is unavailable.
 /// </summary>

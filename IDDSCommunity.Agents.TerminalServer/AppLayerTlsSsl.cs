@@ -19,7 +19,6 @@ public class AppLayerTlsSsl
     }
 
     public TlsProtocolHeader TlsHeader = new();
-
     /// <summary>
     /// 初始化 <see cref="AppLayerTlsSsl"/> 類別的新執行個體。
     /// </summary>

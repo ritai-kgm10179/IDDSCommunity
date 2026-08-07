@@ -100,7 +100,6 @@ public class NotificationSettings
         set => configuration.SetConfigValue(MONTHLY_REPORT_STATE, value.ToString());
     }
 
-
     /// <summary>
     /// 初始化 <see cref="NotificationSettings"/> class的新執行個體。
     /// </summary>
@@ -110,7 +109,6 @@ public class NotificationSettings
         ArgumentNullException.ThrowIfNull(configuration);
         this.configuration = configuration;
     }
-
     /// <summary>
     /// 執行string to bool作業。
     /// </summary>
@@ -122,7 +120,6 @@ public class NotificationSettings
         bool.TryParse(value, out bool result);
         return result;
     }
-
     /// <summary>
     /// 讀取持久化的報表傳送狀態，並安全處理缺失或無效的數值。
     /// </summary>
@@ -130,13 +127,11 @@ public class NotificationSettings
     /// <returns>傳回解析後的狀態；若無效則傳回 <see cref="ReportDeliveryState.None"/>。</returns>
     private ReportDeliveryState GetReportState(string key) =>
         Enum.TryParse(configuration.GetConfigValue(key), ignoreCase: true, out ReportDeliveryState state) ? state : ReportDeliveryState.None;
-
     /// <summary>
     /// 執行reload作業。
     /// </summary>
 
     public void Reload() => configuration.LoadAppConfig();
-
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
