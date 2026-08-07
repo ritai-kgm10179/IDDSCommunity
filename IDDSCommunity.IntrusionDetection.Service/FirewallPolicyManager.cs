@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
@@ -394,6 +395,57 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             if (FirewallComString.Get(rule.Name).StartsWith(name, StringComparison.Ordinal)) rules.Add(rule);
         }
         return rules;
+    }
+
+    /// <summary>
+    /// 聚合 IP 位址。當同一 /24 C 段子網出現超過指定門檻個 IP 時，自動轉換為 CIDR 條目。
+    /// </summary>
+    /// <param name="addresses">原始 IP 位址集合。</param>
+    /// <param name="subnetThreshold">觸發 C 段聚合的 IP 數量門檻。</param>
+    /// <returns>傳回經過 CIDR 聚合後的位址清單。</returns>
+    internal static List<string> AggregateIpAddresses(IEnumerable<string> addresses, int subnetThreshold = 5)
+    {
+        List<string> result = [];
+        Dictionary<string, List<string>> subnetGroups = new(StringComparer.Ordinal);
+        List<string> nonIpv4OrCidr = [];
+
+        foreach (string addr in addresses)
+        {
+            string trimmed = addr.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+
+            if (System.Net.IPAddress.TryParse(trimmed, out System.Net.IPAddress? ip) &&
+                ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                byte[] bytes = ip.GetAddressBytes();
+                string prefix = $"{bytes[0]}.{bytes[1]}.{bytes[2]}";
+                if (!subnetGroups.TryGetValue(prefix, out List<string>? group))
+                {
+                    group = [];
+                    subnetGroups[prefix] = group;
+                }
+                if (!group.Contains(trimmed)) group.Add(trimmed);
+            }
+            else
+            {
+                nonIpv4OrCidr.Add(trimmed);
+            }
+        }
+
+        foreach (var (prefix, group) in subnetGroups)
+        {
+            if (group.Count >= subnetThreshold)
+            {
+                result.Add($"{prefix}.0/24");
+            }
+            else
+            {
+                result.AddRange(group);
+            }
+        }
+
+        result.AddRange(nonIpv4OrCidr);
+        return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     /// <summary>

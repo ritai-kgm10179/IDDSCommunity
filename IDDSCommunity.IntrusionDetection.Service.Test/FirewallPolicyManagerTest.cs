@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Service.Test;
 
@@ -27,5 +27,18 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("198.51.100.0/24", "198.51.100.42"));
         Assert.IsFalse(FirewallPolicyManager.ContainsAddress("198.51.100.0/24", "198.51.101.42"));
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("2001:db8::/32", "2001:db8::42"));
+    }
+
+    /// <summary>
+    /// 驗證當同一個 C 段子網超過門檻時，自動聚合為 CIDR 條目。
+    /// </summary>
+    [TestMethod]
+    public void AggregateIpAddresses_AggregatesCSubnetWhenThresholdReached()
+    {
+        System.Collections.Generic.List<string> ips = ["192.168.1.1", "192.168.1.2", "192.168.1.3", "192.168.1.4", "192.168.1.5", "10.0.0.1"];
+        System.Collections.Generic.List<string> aggregated = FirewallPolicyManager.AggregateIpAddresses(ips, subnetThreshold: 5);
+        Assert.IsTrue(aggregated.Contains("192.168.1.0/24"));
+        Assert.IsTrue(aggregated.Contains("10.0.0.1"));
+        Assert.IsFalse(aggregated.Contains("192.168.1.1"));
     }
 }
