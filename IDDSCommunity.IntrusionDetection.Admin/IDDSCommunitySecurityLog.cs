@@ -59,6 +59,9 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// Initializes a new instance of the <see cref="IDDSCommunitySecurityLog"/> class.
     /// </summary>
 
+    private readonly System.Windows.Forms.Timer searchDebounceTimer = new() { Interval = 250 };
+    private string? pendingSearchQuery;
+
     public IDDSCommunitySecurityLog()
     {
         InitializeComponent();
@@ -70,6 +73,7 @@ public partial class IDDSCommunitySecurityLog : UserControl
         comboBoxAgentSelection.SelectedIndex = 0;
         comboBoxAgentSelection.SelectionChangeCommitted += new EventHandler(comboBoxAgentSelection_SelectionChangeCommitted);
         dataGridViewIntrusionLog.AutoGenerateColumns = false;
+        EnableDoubleBuffering(dataGridViewIntrusionLog);
         dataGridViewIntrusionLog.DataSource = IntrusionLogView;
         //dataGridViewIntrusionLog.DataMember = "IntrusionLog";
         dataGridViewIntrusionLog.Columns["LogIcon"]!.DataPropertyName = "LogIcon";
@@ -80,7 +84,19 @@ public partial class IDDSCommunitySecurityLog : UserControl
         dataGridViewIntrusionLog.Columns["AgentId"]!.DataPropertyName = "AgentId";
         dataGridViewIntrusionLog.Columns["NumberOfEvents"]!.DataPropertyName = "NumberOfEvents";
 
+        searchDebounceTimer.Tick += (_, _) =>
+        {
+            searchDebounceTimer.Stop();
+            ExecuteAdvancedFilter(pendingSearchQuery);
+        };
+
         PositionLabels();
+    }
+
+    private static void EnableDoubleBuffering(Control control)
+    {
+        System.Reflection.PropertyInfo? property = typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        property?.SetValue(control, true, null);
     }
 
     /// <summary>
@@ -92,10 +108,17 @@ public partial class IDDSCommunitySecurityLog : UserControl
     void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
 
     /// <summary>
-    /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件。
+    /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件（附帶 250ms 防抖遲延）。
     /// </summary>
     /// <param name="searchQuery">搜尋關鍵字或 CIDR 網段（如 192.168.1.0/24）。</param>
     public void ApplyAdvancedFilter(string? searchQuery = null)
+    {
+        pendingSearchQuery = searchQuery;
+        searchDebounceTimer.Stop();
+        searchDebounceTimer.Start();
+    }
+
+    private void ExecuteAdvancedFilter(string? searchQuery)
     {
         List<string> filter = [];
         if (!checkBoxFailedLogins.Checked && !checkBoxHardLocks.Checked && !checkBoxSoftLocks.Checked && !checkBoxSystemMessages.Checked) filter.Add("0=1");
@@ -126,15 +149,19 @@ public partial class IDDSCommunitySecurityLog : UserControl
             if (query.Contains('/') && CidrMatcher.TryMatchCidr(query, "127.0.0.1"))
             {
                 DataTable table = DataSetIntrusionLog.Tables["IntrusionLog"]!;
-                HashSet<string> matchedIps = new(StringComparer.Ordinal);
+                HashSet<string> distinctIps = new(StringComparer.Ordinal);
                 foreach (DataRow row in table.Rows)
                 {
                     string ip = row["IpAddress"]?.ToString() ?? string.Empty;
-                    if (!string.IsNullOrEmpty(ip) && CidrMatcher.TryMatchCidr(query, ip))
-                    {
-                        matchedIps.Add(ip);
-                    }
+                    if (!string.IsNullOrEmpty(ip)) distinctIps.Add(ip);
                 }
+
+                List<string> matchedIps = [];
+                foreach (string ip in distinctIps)
+                {
+                    if (CidrMatcher.TryMatchCidr(query, ip)) matchedIps.Add(ip);
+                }
+
                 if (matchedIps.Count > 0)
                 {
                     string ipClause = string.Join(",", matchedIps.Select(ip => $"'{ip.Replace("'", "''")}'"));
