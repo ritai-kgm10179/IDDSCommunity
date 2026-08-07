@@ -12,13 +12,16 @@ internal sealed class SetupForm : Form
     private readonly Button launchAppButton = CreateActionButton(SetupText.Get("LaunchApp"), primary: true);
     private readonly Button installButton = CreateActionButton(SetupText.Get("Install"), primary: true);
     private readonly Button uninstallButton = CreateActionButton(SetupText.Get("Uninstall"), primary: false);
-    private readonly Label statusLabel = new() { AutoSize = true, Location = new Point(32, 146), Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
+    private readonly Button userGuideButton = CreateActionButton(SetupText.Get("OpenUserGuide"), primary: false);
+    private readonly CheckBox checkBoxDesktopShortcut = new() { Text = SetupText.Get("CreateDesktopShortcut"), AutoSize = true, Location = new Point(32, 142), Checked = true };
+    private readonly CheckBox checkBoxStartMenuShortcut = new() { Text = SetupText.Get("CreateStartMenuShortcut"), AutoSize = true, Location = new Point(220, 142), Checked = true };
+    private readonly Label statusLabel = new() { AutoSize = true, Location = new Point(32, 172), Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
 
     /// <summary>Initializes the setup window.</summary>
     internal SetupForm()
     {
         Text = SetupText.Get("Title");
-        ClientSize = new Size(560, 250);
+        ClientSize = new Size(580, 275);
         BackColor = Color.FromArgb(243, 246, 248);
         ForeColor = Navy;
         Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
@@ -26,13 +29,14 @@ internal sealed class SetupForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
-        Label title = new() { Text = SetupText.Get("Title"), AutoSize = true, Location = new Point(32, 24), Font = new Font(Font, FontStyle.Bold), ForeColor = Teal };
-        Label description = new() { Text = SetupText.Get("Description"), AutoSize = true, MaximumSize = new Size(496, 0), Location = new Point(32, 56) };
-        Label location = new() { Text = SetupText.Format("InstallLocation", SetupOperations.InstallDirectory), AutoSize = true, MaximumSize = new Size(496, 0), Location = new Point(32, 118), ForeColor = Color.FromArgb(100, 116, 139) };
-        FlowLayoutPanel actions = new() { AutoSize = true, Location = new Point(28, 185), Padding = new Padding(0), WrapContents = false };
-        actions.Controls.AddRange([launchAppButton, installButton, uninstallButton]);
-        Controls.AddRange([title, description, location, statusLabel, actions]);
+        Label title = new() { Text = SetupText.Get("Title"), AutoSize = true, Location = new Point(32, 20), Font = new Font(Font, FontStyle.Bold), ForeColor = Teal };
+        Label description = new() { Text = SetupText.Get("Description"), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 50) };
+        Label location = new() { Text = SetupText.Format("InstallLocation", SetupOperations.InstallDirectory), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 112), ForeColor = Color.FromArgb(100, 116, 139) };
+        FlowLayoutPanel actions = new() { AutoSize = true, Location = new Point(28, 210), Padding = new Padding(0), WrapContents = false };
+        actions.Controls.AddRange([launchAppButton, installButton, uninstallButton, userGuideButton]);
+        Controls.AddRange([title, description, location, checkBoxDesktopShortcut, checkBoxStartMenuShortcut, statusLabel, actions]);
         launchAppButton.Click += (_, _) => SetupOperations.LaunchApp();
+        userGuideButton.Click += (_, _) => SetupOperations.OpenUserGuide();
         installButton.Click += async (_, _) => await ExecuteAsync(true);
         uninstallButton.Click += async (_, _) => await ExecuteAsync(false);
         UpdateStatus();
@@ -119,11 +123,13 @@ internal sealed class SetupForm : Form
         }
 
         installButton.Enabled = uninstallButton.Enabled = false;
+        bool desktop = checkBoxDesktopShortcut.Checked;
+        bool startMenu = checkBoxStartMenuShortcut.Checked;
         try
         {
             await Task.Run(() =>
             {
-                if (install) SetupOperations.Install();
+                if (install) SetupOperations.Install(desktop, startMenu);
                 else SetupOperations.Uninstall();
             });
             MessageBox.Show(SetupText.Format("Completed", actionName, SetupOperations.InstallDirectory), Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
