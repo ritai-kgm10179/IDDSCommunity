@@ -196,7 +196,7 @@ internal sealed class SecurityEventPipeline
     /// <summary>
     /// Processes accepted events sequentially and isolates one failure from later work.
     /// </summary>
-    /// <returns>A task representing the consumer lifetime.</returns>
+    /// <returns>表示非同步執行的 Task。</returns>
     private async Task ConsumeAsync()
     {
         await foreach (SecurityEventEnvelope item in channel.Reader.ReadAllAsync().ConfigureAwait(false))
@@ -245,7 +245,7 @@ internal sealed class SecurityEventPipeline
     /// Copies mutable plug-in event arguments before crossing the asynchronous boundary.
     /// </summary>
     /// <param name="eventArgs">The plug-in supplied event arguments.</param>
-    /// <returns>An independently owned event snapshot.</returns>
+    /// <returns>獨立擁有之事件快照物件。</returns>
     private static NotificationEventArgs CreateSnapshot(INotificationEventArgs eventArgs) => new()
     {
         IpAddress = eventArgs.IpAddress,
@@ -258,7 +258,7 @@ internal sealed class SecurityEventPipeline
     /// Obtains the stable Agent identity required to resolve a durable event after restart.
     /// </summary>
     /// <param name="sender">The event-producing Agent instance.</param>
-    /// <returns>The configured Agent name, or a deterministic type name for compatible senders.</returns>
+    /// <returns>已設定之 Agent 名稱或決定性型別名稱。</returns>
     private static string GetAgentName(object sender) => sender is IAgentPlugin plugin
         ? plugin.Configuration.AgentName
         : sender.GetType().FullName ?? sender.GetType().Name;

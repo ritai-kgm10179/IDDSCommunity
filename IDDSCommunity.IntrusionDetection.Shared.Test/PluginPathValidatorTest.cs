@@ -64,7 +64,7 @@ public sealed class PluginPathValidatorTest
         /// Creates an empty test file beneath the trusted root.
         /// </summary>
         /// <param name="fileName">The test file name.</param>
-        /// <returns>The created path.</returns>
+        /// <returns>傳回 created path 的結果。</returns>
         internal string CreateFile(string fileName)
         {
             string path = Path.Combine(Root, fileName);

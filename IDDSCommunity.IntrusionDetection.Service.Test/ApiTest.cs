@@ -11,7 +11,7 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 public class ApiTest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ApiTest"/> class.
+    /// 初始化 <see cref="ApiTest"/> 類別的新執行個體。
     /// </summary>
 
     public ApiTest()
@@ -55,7 +55,7 @@ public class ApiTest
     #endregion
 
     /// <summary>
-    /// Executes the test serialization operation.
+    /// 執行 test serialization 作業。
     /// </summary>
 
     [TestMethod]

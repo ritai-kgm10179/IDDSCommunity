@@ -13,7 +13,7 @@ internal static class FirewallComString
     /// Gets the managed representation of a COM BSTR value.
     /// </summary>
     /// <param name="value">The COM string.</param>
-    /// <returns>The managed string, or an empty string when the pointer is null.</returns>
+    /// <returns>受控字串；若指標為 null 則傳回空字串。</returns>
     internal static string Get(BSTR value) => value.ToString() ?? string.Empty;
 
     /// <summary>

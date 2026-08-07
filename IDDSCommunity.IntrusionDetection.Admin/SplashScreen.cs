@@ -18,7 +18,7 @@ public partial class SplashScreen : Form
     internal bool StartupSucceeded => startupOperation.Succeeded && IddsAdmin.Instance.IsInitialized;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SplashScreen"/> class.
+    /// 初始化 <see cref="SplashScreen"/> 類別的新執行個體。
     /// </summary>
 
     public SplashScreen()
@@ -33,10 +33,10 @@ public partial class SplashScreen : Form
     }
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SplashScreen_Load(object? sender, EventArgs e)
     {
@@ -73,10 +73,10 @@ public partial class SplashScreen : Form
     }
 
     /// <summary>
-    /// Handles the tick event.
+    /// 處理 tick 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void t_Tick(object? sender, EventArgs e)
     {

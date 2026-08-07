@@ -75,7 +75,7 @@ internal static class ServiceOptionsExtensions
     /// </summary>
     /// <param name="services">The service collection receiving option registrations.</param>
     /// <param name="configuration">The application configuration root.</param>
-    /// <returns>The same service collection for chaining.</returns>
+    /// <returns>傳回 same service collection for chaining 的結果。</returns>
     internal static IServiceCollection AddIDDSCommunityOptions(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<DatabaseOptions>().Bind(configuration.GetSection(DatabaseOptions.SectionName)).ValidateDataAnnotations().ValidateOnStart();

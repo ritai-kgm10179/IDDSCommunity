@@ -20,7 +20,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunityApplicationSettings"/> class.
+    /// 初始化 <see cref="IDDSCommunityApplicationSettings"/> 類別的新執行個體。
     /// </summary>
 
     public IDDSCommunityApplicationSettings()
@@ -31,10 +31,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void CyberamsApplicationSettings_Load(object? sender, EventArgs? e)
     {
@@ -69,10 +69,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the lockout configuration changed event.
+    /// 處理 lockout configuration changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _lockoutConfiguration_LockoutConfigurationChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
@@ -101,10 +101,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the safe networks changed event.
+    /// 處理 safe networks changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _panelSafeNetworks_SafeNetworksChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
@@ -128,10 +128,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the smtp settings changed event.
+    /// 處理 smtp settings changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
@@ -170,7 +170,7 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// <summary>
     /// Creates and attaches the language settings panel.
     /// </summary>
-    /// <returns>The attached language settings panel.</returns>
+    /// <returns>附加的語言設定面板。</returns>
     private PanelLanguageSettings CreateLanguageSettingsPanel()
     {
         PanelLanguageSettings panel = new();
@@ -195,18 +195,18 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the notification settings changed event.
+    /// 處理 notification settings changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     /// <summary>
-    /// Handles the navigation changed event.
+    /// 處理 navigation changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void iddscommunitySettingsNavigation_NavigationChanged(object? sender, EventArgs? e)
     {

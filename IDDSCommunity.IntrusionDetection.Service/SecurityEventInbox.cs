@@ -22,7 +22,7 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     /// </summary>
     /// <param name="agentName">The stable Agent name used to resolve a plug-in after restart.</param>
     /// <param name="eventArgs">The copied detection event.</param>
-    /// <returns>The durable event identifier.</returns>
+    /// <returns>傳回 durable event identifier 的結果。</returns>
     internal Guid Add(string agentName, INotificationEventArgs eventArgs)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(agentName);
@@ -44,7 +44,7 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     /// Returns unfinished events in original receipt order and resets interrupted processing rows for replay.
     /// </summary>
     /// <param name="maximumCount">The maximum number of events to recover.</param>
-    /// <returns>The durable events to replay.</returns>
+    /// <returns>傳回 durable events to replay 的結果。</returns>
     internal IReadOnlyList<SecurityEventInboxItem> ReadPending(int maximumCount)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumCount);
@@ -99,7 +99,7 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     /// <summary>
     /// Counts durable events that have not completed successfully.
     /// </summary>
-    /// <returns>The unfinished event count.</returns>
+    /// <returns>傳回 unfinished event count 的結果。</returns>
     internal long CountUnfinished() => Convert.ToInt64(
         database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status<>@p0", CompletedStatus),
         CultureInfo.InvariantCulture);

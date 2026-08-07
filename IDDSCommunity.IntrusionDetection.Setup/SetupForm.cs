@@ -17,7 +17,11 @@ internal sealed class SetupForm : Form
     private readonly CheckBox checkBoxStartMenuShortcut = new() { Text = SetupText.Get("CreateStartMenuShortcut"), AutoSize = true, Location = new Point(220, 142), Checked = true };
     private readonly Label statusLabel = new() { AutoSize = true, Location = new Point(32, 172), Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
 
-    /// <summary>Initializes the setup window.</summary>
+    /// <summary>
+
+    /// 初始化安裝程式視窗。
+
+    /// </summary>
     internal SetupForm()
     {
         Text = SetupText.Get("Title");

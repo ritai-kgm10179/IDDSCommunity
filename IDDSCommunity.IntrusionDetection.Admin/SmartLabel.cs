@@ -6,15 +6,15 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class SmartLabel : Label
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SmartLabel"/> class.
+    /// 初始化 <see cref="SmartLabel"/> 類別的新執行個體。
     /// </summary>
 
     public SmartLabel() => InitializeComponent();
 
     /// <summary>
-    /// Handles the on paint event.
+    /// 處理 on paint 事件。
     /// </summary>
-    /// <param name="e">The event data.</param>
+    /// <param name="e">事件資料。</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {

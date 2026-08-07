@@ -58,7 +58,7 @@ public sealed class PacketHeaderTest
     /// Creates a deterministic IPv4 TCP packet for parser characterization tests.
     /// </summary>
     /// <param name="payload">The TCP application payload.</param>
-    /// <returns>The encoded IPv4 packet.</returns>
+    /// <returns>傳回 encoded IPv4 packet 的結果。</returns>
     private static byte[] CreateIPv4TcpPacket(byte[] payload)
     {
         byte[] packet = new byte[40 + payload.Length];

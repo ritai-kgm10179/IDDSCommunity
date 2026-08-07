@@ -13,7 +13,7 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 public class LockTest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="LockTest"/> class.
+    /// 初始化 <see cref="LockTest"/> 類別的新執行個體。
     /// </summary>
 
     public LockTest()
@@ -59,7 +59,7 @@ public class LockTest
 
 
     /// <summary>
-    /// Executes the test ip address local operation.
+    /// 執行 test ip address local 作業。
     /// </summary>
 
     [TestMethod]
@@ -79,7 +79,7 @@ public class LockTest
     }
 
     /// <summary>
-    /// Executes the test is ip address local performance test operation.
+    /// 執行 test is ip address local performance test 作業。
     /// </summary>
 
     [TestMethod]
@@ -99,9 +99,9 @@ public class LockTest
 
     private List<IPAddress>? _localAddresses;
     /// <summary>
-    /// Executes the get local ips operation.
+    /// 執行 get local ips 作業。
     /// </summary>
-    /// <returns>The get local ips result.</returns>
+    /// <returns>傳回 get local ips 的結果。</returns>
 
     private List<IPAddress> getLocalIps()
     {

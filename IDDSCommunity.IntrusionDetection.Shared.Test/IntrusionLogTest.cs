@@ -8,7 +8,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 public class IntrusionLogTest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="IntrusionLogTest"/> class.
+    /// 初始化 <see cref="IntrusionLogTest"/> 類別的新執行個體。
     /// </summary>
 
     public IntrusionLogTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
@@ -50,7 +50,7 @@ public class IntrusionLogTest
     }
 
     /// <summary>
-    /// Executes the prepare intrusion log operation.
+    /// 執行 prepare intrusion log 作業。
     /// </summary>
 
     private static void prepareIntrusionLog()

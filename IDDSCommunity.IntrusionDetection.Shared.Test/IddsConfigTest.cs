@@ -131,7 +131,7 @@ public class IddsConfigTest
     }
 
     /// <summary>
-    /// Executes the config is in safe network test operation.
+    /// 執行 config is in safe network test 作業。
     /// </summary>
 
     [TestMethod]

@@ -40,7 +40,7 @@ public sealed class DatabaseConcurrencyTest
     /// <summary>
     /// Verifies concurrent readers and writers use independent connections without reader lifetime races.
     /// </summary>
-    /// <returns>A task that completes after all concurrent operations finish.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task SyncOperations_ConcurrentReadersAndWriters_RemainConsistentAsync()
     {

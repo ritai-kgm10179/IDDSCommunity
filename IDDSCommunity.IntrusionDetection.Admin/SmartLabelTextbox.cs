@@ -8,7 +8,7 @@ public partial class SmartLabelTextbox : UserControl
     public event KeyPressEventHandler? TextBoxKeyPress;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SmartLabelTextbox"/> class.
+    /// 初始化 <see cref="SmartLabelTextbox"/> 類別的新執行個體。
     /// </summary>
 
     public SmartLabelTextbox()
@@ -18,10 +18,10 @@ public partial class SmartLabelTextbox : UserControl
     }
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void textBox1_KeyPress(object? sender, KeyPressEventArgs e) => TextBoxKeyPress?.Invoke(sender, e);
 

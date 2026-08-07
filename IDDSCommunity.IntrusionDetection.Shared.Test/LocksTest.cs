@@ -8,7 +8,7 @@ public class LocksTest
 {
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LocksTest"/> class.
+    /// 初始化 <see cref="LocksTest"/> 類別的新執行個體。
     /// </summary>
 
     public LocksTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
@@ -38,7 +38,7 @@ public class LocksTest
     /// <summary>
     /// Gets max locks id.
     /// </summary>
-    /// <returns>The get max locks id result.</returns>
+    /// <returns>傳回 get max locks id 的結果。</returns>
 
     private static long GetMaxLocksId()
     {
@@ -48,14 +48,14 @@ public class LocksTest
     }
 
     /// <summary>
-    /// Executes the test lock exists operation.
+    /// 執行 test lock exists 作業。
     /// </summary>
 
     [TestMethod]
     public void TestLockExists() => Assert.IsFalse(Locks.LockExists("192.158.178.120"));
 
     /// <summary>
-    /// Executes the test lock exists2 operation.
+    /// 執行 test lock exists2 作業。
     /// </summary>
 
     [TestMethod]

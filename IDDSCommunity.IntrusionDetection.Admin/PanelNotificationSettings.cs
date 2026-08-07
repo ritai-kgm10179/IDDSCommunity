@@ -10,7 +10,7 @@ public partial class PanelNotificationSettings : UserControl
 {
     public event EventHandler? NotificationSettingsChanged;
     /// <summary>
-    /// Initializes a new instance of the <see cref="PanelNotificationSettings"/> class.
+    /// 初始化 <see cref="PanelNotificationSettings"/> 類別的新執行個體。
     /// </summary>
 
     public PanelNotificationSettings()
@@ -20,10 +20,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void PanelNotificationSettings_Load(object? sender, EventArgs e) => LoadData();
 
@@ -48,10 +48,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
@@ -60,7 +60,7 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Executes the toggle edit mode operation.
+    /// 執行 toggle edit mode 作業。
     /// </summary>
 
     private void ToggleEditMode()
@@ -86,19 +86,19 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e) => ToggleEditMode();
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
@@ -108,10 +108,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
@@ -121,10 +121,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
@@ -140,10 +140,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
@@ -154,10 +154,10 @@ public partial class PanelNotificationSettings : UserControl
     private void OnNotificationSettingsChanged() => NotificationSettingsChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
@@ -173,10 +173,10 @@ public partial class PanelNotificationSettings : UserControl
     }
 
     /// <summary>
-    /// Handles the checked changed event.
+    /// 處理 checked changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 }

@@ -11,7 +11,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class IDDSCommunityCurrentLocks : UserControl
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunityCurrentLocks"/> class.
+    /// 初始化 <see cref="IDDSCommunityCurrentLocks"/> 類別的新執行個體。
     /// </summary>
 
     public IDDSCommunityCurrentLocks()
@@ -30,10 +30,10 @@ public partial class IDDSCommunityCurrentLocks : UserControl
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
@@ -42,10 +42,10 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
@@ -56,8 +56,8 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// Finds row.
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <returns>The find row result.</returns>
+    /// <param name="id">id 的值。</param>
+    /// <returns>搜尋到的 DataGridViewRow 傳回結果。</returns>
 
     public DataGridViewRow? FindRow(int id)
     {
@@ -80,14 +80,14 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// Adds requested operation.
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <param name="icon">The icon value.</param>
-    /// <param name="statusName">The status name value.</param>
-    /// <param name="clientIp">The client ip value.</param>
-    /// <param name="displayName">The display name value.</param>
-    /// <param name="lockDate">The lock date value.</param>
-    /// <param name="unlockDate">The unlock date value.</param>
-    /// <param name="status">The status value.</param>
+    /// <param name="id">id 的值。</param>
+    /// <param name="icon">icon 的值。</param>
+    /// <param name="statusName">status name 的值。</param>
+    /// <param name="clientIp">client ip 的值。</param>
+    /// <param name="displayName">display name 的值。</param>
+    /// <param name="lockDate">lock date 的值。</param>
+    /// <param name="unlockDate">unlock date 的值。</param>
+    /// <param name="status">status 的值。</param>
 
     public void Add(int id, Image icon, string statusName, string clientIp, string displayName, DateTime lockDate, DateTime unlockDate, int status)
     {
@@ -117,15 +117,15 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// Sets hard locks.
     /// </summary>
-    /// <param name="number">The number value.</param>
+    /// <param name="number">number 的值。</param>
 
     public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = Strings.Format("{0} hard locks", number);
 
     /// <summary>
-    /// Handles the checked changed event.
+    /// 處理 checked changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void checkBoxSelectAllLocks_CheckedChanged(object sender, EventArgs e)
     {
@@ -142,15 +142,15 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// Sets soft locks.
     /// </summary>
-    /// <param name="number">The number value.</param>
+    /// <param name="number">number 的值。</param>
 
     public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = Strings.Format("{0} soft locks", number);
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private async void actionMenuUnlock_Click(object sender, EventArgs e)
     {
@@ -201,7 +201,7 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// Persists manual-unlock requests without accessing WinForms controls.
     /// </summary>
     /// <param name="lockIds">The selected durable lock identifiers.</param>
-    /// <returns>The identifiers successfully changed to unlock-requested.</returns>
+    /// <returns>成功變更為解鎖要求的標籤識別碼集合。</returns>
     private static HashSet<long> RequestUnlocks(IReadOnlyList<long> lockIds)
     {
         HashSet<long> completed = [];

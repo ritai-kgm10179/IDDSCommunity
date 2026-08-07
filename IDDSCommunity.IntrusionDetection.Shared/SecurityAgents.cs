@@ -239,8 +239,8 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 處理應用程式域卸載事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
 

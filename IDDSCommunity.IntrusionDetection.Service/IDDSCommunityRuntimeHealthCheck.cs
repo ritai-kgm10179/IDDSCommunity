@@ -19,7 +19,7 @@ internal sealed class IDDSCommunityRuntimeHealthCheck(
     /// </summary>
     /// <param name="context">The health-check context.</param>
     /// <param name="cancellationToken">Cancels the health check.</param>
-    /// <returns>The current runtime health result.</returns>
+    /// <returns>傳回 current runtime health 的結果。</returns>
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

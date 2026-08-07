@@ -12,7 +12,7 @@ internal static partial class LogSanitizer
     /// Removes log-forging characters, redacts common secrets, and bounds Event Log message size.
     /// </summary>
     /// <param name="message">The untrusted diagnostic message.</param>
-    /// <returns>The safe bounded message.</returns>
+    /// <returns>傳回 safe bounded message 的結果。</returns>
     internal static string Sanitize(string? message)
     {
         if (string.IsNullOrEmpty(message))

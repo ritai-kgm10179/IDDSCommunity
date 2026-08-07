@@ -66,7 +66,7 @@ internal sealed class BoundedPacketDispatcher
     /// <summary>
     /// Dispatches queued packets sequentially on a worker task.
     /// </summary>
-    /// <returns>A task that completes when the channel is drained.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     private async Task DispatchAsync()
     {
         await foreach (RawPacketEventArgs packet in channel.Reader.ReadAllAsync().ConfigureAwait(false))

@@ -97,7 +97,7 @@ public sealed class PluginDeploymentTest
     /// Gets all production Agent project names while excluding test and removed project folders.
     /// </summary>
     /// <param name="root">The repository root.</param>
-    /// <returns>The sorted production Agent project names.</returns>
+    /// <returns>傳回 sorted production Agent project names 的結果。</returns>
     private static string[] GetProductionAgentProjectNames(string root) =>
         Directory.EnumerateDirectories(root, "IDDSCommunity.Agents.*", SearchOption.TopDirectoryOnly)
             .Where(path => !path.EndsWith(".Test", StringComparison.OrdinalIgnoreCase))
@@ -110,7 +110,7 @@ public sealed class PluginDeploymentTest
     /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
-    /// <returns>The repository root.</returns>
+    /// <returns>傳回 repository root 的結果。</returns>
     private static string FindRepositoryRoot()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);

@@ -19,7 +19,7 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
     /// Loads a managed dependency from the plugin deployment directory.
     /// </summary>
     /// <param name="assemblyName">The requested assembly identity.</param>
-    /// <returns>The loaded assembly, or <see langword="null"/> to use the default context.</returns>
+    /// <returns>已載入的組件；若使用預設快取內容則傳回 <see langword="null"/>。</returns>
     protected override Assembly? Load(AssemblyName assemblyName)
     {
         if (assemblyName.Name is not null && SharedAssemblyNames.Contains(assemblyName.Name))
@@ -32,7 +32,7 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
     /// Loads an unmanaged dependency from the plugin deployment directory.
     /// </summary>
     /// <param name="unmanagedDllName">The requested native library name.</param>
-    /// <returns>A native library handle, or zero when resolution is delegated.</returns>
+    /// <returns>原生函式庫句柄（Handle）；若交由委派處理則為零。</returns>
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
     {
         string? path = resolver.ResolveUnmanagedDllToPath(unmanagedDllName);

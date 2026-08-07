@@ -11,7 +11,7 @@ internal static class RuntimeServiceCollectionExtensions
     /// Registers one isolated set of intrusion-detection runtime dependencies in a host container.
     /// </summary>
     /// <param name="services">The host service collection.</param>
-    /// <returns>The same service collection for chaining.</returns>
+    /// <returns>傳回 same service collection for chaining 的結果。</returns>
     internal static IServiceCollection AddIDDSCommunityRuntime(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

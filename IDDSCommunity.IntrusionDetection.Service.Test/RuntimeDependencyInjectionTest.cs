@@ -30,7 +30,7 @@ public sealed class RuntimeDependencyInjectionTest
     /// <summary>
     /// Verifies that the registered runtime health check reports an unconfigured database as unhealthy.
     /// </summary>
-    /// <returns>A task that completes after the health check executes.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task AddIDDSCommunityRuntime_RegistersRuntimeHealthCheck()
     {
@@ -47,7 +47,7 @@ public sealed class RuntimeDependencyInjectionTest
     /// <summary>
     /// Creates a validated runtime container with a non-COM firewall test double.
     /// </summary>
-    /// <returns>The isolated service provider.</returns>
+    /// <returns>傳回 isolated service provider 的結果。</returns>
     private static ServiceProvider CreateProvider()
     {
         ServiceCollection services = new();
@@ -73,13 +73,13 @@ public sealed class RuntimeDependencyInjectionTest
         /// Reports that no address is blocked in dependency-registration tests.
         /// </summary>
         /// <param name="ipAddress">The address being queried.</param>
-        /// <returns>Always <see langword="false"/>.</returns>
+        /// <returns>恆傳回 <see langword="false"/>。</returns>
         public bool IsLocked(string ipAddress) => false;
 
         /// <summary>
         /// Returns an empty firewall snapshot for dependency-registration tests.
         /// </summary>
-        /// <returns>An empty address collection.</returns>
+        /// <returns>空白的位址集合。</returns>
         public System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses() => [];
 
         /// <summary>

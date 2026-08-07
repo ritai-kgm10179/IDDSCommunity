@@ -71,7 +71,7 @@ internal class CryptoHelper
     /// </summary>
     /// <param name="cipherString">legacy encrypted參數。</param>
     /// <param name="useHashing">Whether the legacy key used MD5 derivation.</param>
-    /// <returns>The decrypted legacy value.</returns>
+    /// <returns>傳回 decrypted legacy value 的結果。</returns>
     private static string LegacyDecrypt(string cipherString, bool useHashing)
     {
         byte[] keyArray;

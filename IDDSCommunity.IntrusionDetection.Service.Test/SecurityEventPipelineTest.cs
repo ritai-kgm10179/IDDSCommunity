@@ -39,7 +39,7 @@ public sealed class SecurityEventPipelineTest
     /// <summary>
     /// Verifies accepted events are processed sequentially and drained during completion.
     /// </summary>
-    /// <returns>A task that completes after the pipeline drains.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async System.Threading.Tasks.Task Complete_AcceptedEvents_DrainsInOrderAsync()
     {
@@ -61,7 +61,7 @@ public sealed class SecurityEventPipelineTest
     /// <summary>
     /// Verifies saturation rejects producers without blocking and one consumer failure does not stop later work.
     /// </summary>
-    /// <returns>A task that completes after the blocked consumer is released.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async System.Threading.Tasks.Task TryPublish_SaturationAndConsumerFailure_AreIsolatedAsync()
     {
@@ -95,7 +95,7 @@ public sealed class SecurityEventPipelineTest
     /// <summary>
     /// Verifies the lossless publishing path applies backpressure until bounded capacity becomes available.
     /// </summary>
-    /// <returns>A task that completes after the blocked producer and consumer drain.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async System.Threading.Tasks.Task Publish_SaturatedQueue_BackpressuresProducerAsync()
     {
@@ -126,7 +126,7 @@ public sealed class SecurityEventPipelineTest
     /// <summary>
     /// Verifies an event persisted before interruption is replayed and marked completed by a new pipeline.
     /// </summary>
-    /// <returns>A task that completes after recovered work drains.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async System.Threading.Tasks.Task RecoverPending_PersistedEvent_ReplaysAfterRestartAsync()
     {
@@ -152,7 +152,7 @@ public sealed class SecurityEventPipelineTest
     /// Creates one test detection event.
     /// </summary>
     /// <param name="address">The source address.</param>
-    /// <returns>The mutable test event.</returns>
+    /// <returns>傳回 mutable test event 的結果。</returns>
     private static NotificationEventArgs CreateEvent(string address) => new()
     {
         CreateDate = DateTime.UtcNow,

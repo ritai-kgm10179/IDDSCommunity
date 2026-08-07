@@ -56,7 +56,7 @@ public partial class IDDSCommunitySecurityLog : UserControl
 
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunitySecurityLog"/> class.
+    /// 初始化 <see cref="IDDSCommunitySecurityLog"/> 類別的新執行個體。
     /// </summary>
 
     private readonly System.Windows.Forms.Timer searchDebounceTimer = new() { Interval = 250 };
@@ -100,10 +100,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     /// <summary>
-    /// Handles the filter selection changed event.
+    /// 處理 filter selection changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
 
@@ -184,10 +184,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     /// <summary>
-    /// Handles the selection change committed event.
+    /// 處理 selection change committed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void comboBoxAgentSelection_SelectionChangeCommitted(object? sender, EventArgs? e)
     {
@@ -197,15 +197,15 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <summary>
     /// Adds log entry.
     /// </summary>
-    /// <param name="id">The id value.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="agentId">The agent id value.</param>
-    /// <param name="logIcon">The log icon value.</param>
-    /// <param name="logType">The log type value.</param>
-    /// <param name="eventDate">The event date value.</param>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <param name="message">The message value.</param>
-    /// <returns>The add log entry result.</returns>
+    /// <param name="id">id 的值。</param>
+    /// <param name="action">action 的值。</param>
+    /// <param name="agentId">agent id 的值。</param>
+    /// <param name="logIcon">log icon 的值。</param>
+    /// <param name="logType">log type 的值。</param>
+    /// <param name="eventDate">event date 的值。</param>
+    /// <param name="ipAddress">ip address 的值。</param>
+    /// <param name="message">message 的值。</param>
+    /// <returns>新增日誌紀錄的 DataRow 傳回結果。</returns>
 
     public DataRow AddLogEntry(int id, int action, string agentId, Image logIcon, string logType, DateTime eventDate, string ipAddress, string message)
     {
@@ -230,9 +230,9 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     /// <summary>
-    /// Executes the count events operation.
+    /// 執行 count events 作業。
     /// </summary>
-    /// <returns>The count events result.</returns>
+    /// <returns>計算所得的事件總數。</returns>
 
     private int CountEvents()
     {
@@ -248,18 +248,18 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     /// <summary>
-    /// Executes the fill log entry operation.
+    /// 執行 fill log entry 作業。
     /// </summary>
-    /// <param name="maxId">The max id value.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="agentId">The agent id value.</param>
-    /// <param name="logIcon">The log icon value.</param>
-    /// <param name="logType">The log type value.</param>
-    /// <param name="lastEventDate">The last event date value.</param>
-    /// <param name="ipAddress">The ip address value.</param>
-    /// <param name="message">The message value.</param>
-    /// <param name="numberOfEvents">The number of events value.</param>
-    /// <returns>The fill log entry result.</returns>
+    /// <param name="maxId">max id 的值。</param>
+    /// <param name="action">action 的值。</param>
+    /// <param name="agentId">agent id 的值。</param>
+    /// <param name="logIcon">log icon 的值。</param>
+    /// <param name="logType">log type 的值。</param>
+    /// <param name="lastEventDate">last event date 的值。</param>
+    /// <param name="ipAddress">ip address 的值。</param>
+    /// <param name="message">message 的值。</param>
+    /// <param name="numberOfEvents">number of events 的值。</param>
+    /// <returns>填入日誌紀錄的 DataRow 傳回結果。</returns>
 
     public DataRow FillLogEntry(int maxId, int action, string agentId, Image logIcon, string logType, DateTime lastEventDate, string ipAddress, string message, int numberOfEvents)
     {
@@ -274,14 +274,14 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <summary>
     /// Adds agent.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent 的值。</param>
 
     public void AddAgent(SecurityAgent agent) => comboBoxAgentSelection.Items.Add(agent);
 
     /// <summary>
     /// Removes agent.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent 的值。</param>
 
     public void RemoveAgent(SecurityAgent agent)
     {
@@ -296,15 +296,15 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     /// <summary>
-    /// Handles the resize event.
+    /// 處理 resize 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
 
     /// <summary>
-    /// Executes the position labels operation.
+    /// 執行 position labels 作業。
     /// </summary>
 
     private void PositionLabels()

@@ -32,10 +32,10 @@ internal static class Program
     }
 
     /// <summary>
-    /// Handles the thread exception event.
+    /// 處理 thread exception 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) => System.Diagnostics.EventLog.WriteEntry(Shared.Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE, e.Exception.Message, System.Diagnostics.EventLogEntryType.Error);
 }
