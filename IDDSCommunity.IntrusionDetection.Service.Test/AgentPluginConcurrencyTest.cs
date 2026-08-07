@@ -13,7 +13,7 @@ public sealed class AgentPluginConcurrencyTest
     /// <summary>
     /// Verifies concurrent starts invoke the Agent start hook exactly once.
     /// </summary>
-    /// <returns>A task that completes after both callers finish.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task Start_ConcurrentCallers_StartsExactlyOnceAsync()
     {

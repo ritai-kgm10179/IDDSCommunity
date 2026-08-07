@@ -42,9 +42,9 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     /// <summary>
-    /// Handles the attack detected event.
+    /// 處理 attack detected 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
+    /// <param name="sender">事件來源物件。</param>
     /// <param name="data">The event data.</param>
 
     private void agent_AttackDetected(object sender, INotificationEventArgs data)
@@ -141,10 +141,10 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     public List<AgentPerformanceRecord> PerformanceRecords { get; set; } = [];
 
     /// <summary>
-    /// Handles the elapsed event.
+    /// 處理 elapsed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void watchdog_Elapsed(object? sender, ElapsedEventArgs e)
     {
@@ -221,6 +221,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// 取得 active plug-in instance or rejects access after unload.
     /// </summary>
-    /// <returns>The active plug-in.</returns>
+    /// <returns>作用中的擴充元件實體。</returns>
     private IAgentPlugin GetAgent() => _agent ?? throw new ObjectDisposedException(nameof(AgentProxy));
 }

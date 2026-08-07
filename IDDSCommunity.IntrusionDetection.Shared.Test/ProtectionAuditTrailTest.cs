@@ -43,7 +43,7 @@ public sealed class ProtectionAuditTrailTest
     /// <summary>
     /// Verifies that protection evidence is persisted, queried, and exported without SQL or JSON injection.
     /// </summary>
-    /// <returns>A task that completes after the export is read.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task RecordAndExportJsonAsync_PersistsStructuredEvidence()
     {
@@ -79,7 +79,7 @@ public sealed class ProtectionAuditTrailTest
     /// <summary>
     /// Verifies that retention removes only evidence older than the approved period.
     /// </summary>
-    /// <returns>A task that completes after retained evidence is queried.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task PurgeOlderThanAsync_RemovesOnlyExpiredEvidence()
     {
@@ -100,7 +100,7 @@ public sealed class ProtectionAuditTrailTest
     /// <summary>
     /// Verifies that configuration persistence records keys but never sensitive values.
     /// </summary>
-    /// <returns>A task that completes after the audit event is queried.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task SaveAppConfig_RecordsChangedKeyWithoutValue()
     {
@@ -125,7 +125,7 @@ public sealed class ProtectionAuditTrailTest
         /// <summary>
         /// Gets the deterministic UTC time used by the retention test.
         /// </summary>
-        /// <returns>The configured UTC time.</returns>
+        /// <returns>傳回 configured UTC time 的結果。</returns>
         public override DateTimeOffset GetUtcNow() => UtcNow;
     }
 }

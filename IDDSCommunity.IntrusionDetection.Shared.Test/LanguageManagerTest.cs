@@ -14,7 +14,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 public class LanguageManagerTest
 {
     /// <summary>
-    /// Executes the test default culture fallback operation.
+    /// 執行 test default culture fallback 作業。
     /// </summary>
 
     [TestMethod]
@@ -26,7 +26,7 @@ public class LanguageManagerTest
     }
 
     /// <summary>
-    /// Executes the test explicit culture set operation.
+    /// 執行 test explicit culture set 作業。
     /// </summary>
 
     [TestMethod]
@@ -42,7 +42,7 @@ public class LanguageManagerTest
     }
 
     /// <summary>
-    /// Executes the test unsupported culture fallback operation.
+    /// 執行 test unsupported culture fallback 作業。
     /// </summary>
 
     [TestMethod]
@@ -55,7 +55,7 @@ public class LanguageManagerTest
     }
 
     /// <summary>
-    /// Executes the test get string fallback operation.
+    /// 執行 test get string fallback 作業。
     /// </summary>
 
     [TestMethod]
@@ -171,7 +171,7 @@ public class LanguageManagerTest
     /// Loads resource keys from a resx file.
     /// </summary>
     /// <param name="path">The resx path.</param>
-    /// <returns>The unique resource keys.</returns>
+    /// <returns>傳回 unique resource keys 的結果。</returns>
     private static HashSet<string> LoadResourceKeys(string path) => XDocument.Load(path).Root!.Elements("data")
         .Select(element => (string)element.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
 
@@ -191,7 +191,7 @@ public class LanguageManagerTest
     /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>
-    /// <returns>The repository root path.</returns>
+    /// <returns>傳回 repository root path 的結果。</returns>
     private static string FindRepositoryRoot()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);

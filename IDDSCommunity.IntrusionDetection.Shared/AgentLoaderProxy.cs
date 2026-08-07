@@ -110,7 +110,7 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// <param name="source">The Plugin-provided icon.</param>
     /// <param name="fallbackCategory">The theme category fallback.</param>
     /// <param name="selected">Whether the icon represents selected state.</param>
-    /// <returns>A 16-by-16 pixel icon suitable for consistent list presentation.</returns>
+    /// <returns>適用於清單呈現之 16x16 像素圖示。</returns>
     private static Image NormalizeIcon(Image? source, AgentThemeCategory fallbackCategory, bool selected)
     {
         Image actual = source ?? AgentThemeIconFactory.Create(fallbackCategory, selected);

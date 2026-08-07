@@ -20,7 +20,7 @@ public sealed class WindowsPlatformIntegrationTest
     /// <summary>
     /// Verifies that an elevated process can start and stop raw IPv4 packet capture without faulting its receive loop.
     /// </summary>
-    /// <returns>A task that completes after the receiver shuts down.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task RawSocketReceiver_StartAndStop_CompletesWithoutFailure()
     {
@@ -132,7 +132,7 @@ public sealed class WindowsPlatformIntegrationTest
     /// </summary>
     /// <typeparam name="T">The expected COM interface.</typeparam>
     /// <param name="progId">The registered COM program identifier.</param>
-    /// <returns>The created COM interface.</returns>
+    /// <returns>傳回 created COM interface 的結果。</returns>
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException($"COM type '{progId}' is unavailable.")) as T
         ?? throw new InvalidOperationException($"Unable to create COM object '{progId}'.");

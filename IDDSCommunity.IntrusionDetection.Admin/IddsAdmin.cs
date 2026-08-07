@@ -29,7 +29,7 @@ public partial class IddsAdmin : Form
     private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
     private int serviceRefreshActive;
     /// <summary>
-    /// Initializes a new instance of the <see cref="IddsAdmin"/> class.
+    /// 初始化 <see cref="IddsAdmin"/> 類別的新執行個體。
     /// </summary>
 
     public IddsAdmin()
@@ -89,10 +89,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the configuration changed event.
+    /// 處理 configuration changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
@@ -115,23 +115,23 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the agent settings changed event.
+    /// 處理 agent settings changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
     /// <summary>
-    /// Handles the plugins changed event.
+    /// 處理 plugins changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _panelAgentConfiguration_PluginsChanged(object? sender, EventArgs e) => InitAgentSettings();//RestartService();
 
     /// <summary>
-    /// Executes the restart service operation.
+    /// 執行 restart service 作業。
     /// </summary>
 
     public async Task RestartServiceAsync()
@@ -207,9 +207,9 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Executes the fill log operation.
+    /// 執行 fill log 作業。
     /// </summary>
-    /// <param name="rdr">The rdr value.</param>
+    /// <param name="rdr">rdr 的值。</param>
 
     private static void FillLog(IDataReader rdr)
     {
@@ -249,10 +249,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the security agent configuration request event.
+    /// 處理 security agent configuration request 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _dashboard_SecurityAgentConfigurationRequest(object? sender, EventArgs e)
     {
@@ -269,10 +269,10 @@ public partial class IddsAdmin : Form
     public bool IsServiceRunning { get; set; }
 
     /// <summary>
-    /// Handles the tick event.
+    /// 處理 tick 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     async void serviceReader_Tick(object? sender, EventArgs e)
     {
@@ -305,7 +305,7 @@ public partial class IddsAdmin : Form
     public bool ServiceError { get; set; }
 
     /// <summary>
-    /// Executes the refresh service status operation.
+    /// 執行 refresh service status 作業。
     /// </summary>
 
     public void RefreshServiceStatus()
@@ -316,7 +316,7 @@ public partial class IddsAdmin : Form
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
     /// </summary>
-    /// <returns>The service status, or <see langword="null"/> when no controller is available.</returns>
+    /// <returns>服務狀態；若無控制器則傳回 <see langword="null"/>。</returns>
     private System.ServiceProcess.ServiceControllerStatus? ReadServiceStatus()
     {
         System.ServiceProcess.ServiceController? controller = serviceController;
@@ -426,9 +426,9 @@ public partial class IddsAdmin : Form
     /// <summary>
     /// Gets log message.
     /// </summary>
-    /// <param name="agentId">The agent id value.</param>
-    /// <param name="action">The action value.</param>
-    /// <returns>The get log message result.</returns>
+    /// <param name="agentId">agent id 的值。</param>
+    /// <param name="action">action 的值。</param>
+    /// <returns>取得的日誌訊息內容。</returns>
 
     public static string GetLogMessage(string agentId, int action)
     {
@@ -442,10 +442,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the tick event.
+    /// 處理 tick 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     async void logReader_Tick(object? sender, EventArgs e)
     {
@@ -501,7 +501,7 @@ public partial class IddsAdmin : Form
     /// <param name="mode">The visible administration area.</param>
     /// <param name="lastLogId">The last log identifier already displayed.</param>
     /// <param name="lastLockUpdate">The last lock refresh timestamp.</param>
-    /// <returns>The background-loaded administration snapshot.</returns>
+    /// <returns>背景載入的管理快照物件。</returns>
     private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate)
     {
         List<AdminLogRow> logs = [];
@@ -586,16 +586,16 @@ public partial class IddsAdmin : Form
     public DateTime LastLockUpdate { get; set; }
 
     /// <summary>
-    /// Handles the invalidated event.
+    /// 處理 invalidated 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void panelContent_Invalidated(object sender, InvalidateEventArgs e) => paintPanelTopBorder();
 
 
     /// <summary>
-    /// Executes the paint panel top border operation.
+    /// 執行 paint panel top border 作業。
     /// </summary>
 
     void paintPanelTopBorder()
@@ -607,18 +607,18 @@ public partial class IddsAdmin : Form
 
     #region Form basics
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxCloseButton_Click(object sender, EventArgs e) => Close();
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void panelWindowGrip_MouseDown(object sender, MouseEventArgs e)
     {
@@ -629,18 +629,18 @@ public partial class IddsAdmin : Form
     public bool IsMoving { get; set; }
     public Point MoveStartPoint { get; set; }
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void panelWindowGrip_MouseUp(object sender, MouseEventArgs e) => IsMoving = false;
 
     /// <summary>
-    /// Handles the mouse move event.
+    /// 處理 mouse move 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void panelWindowGrip_MouseMove(object sender, MouseEventArgs e)
     {
@@ -652,10 +652,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuHome_Click(object sender, EventArgs e)
     {
@@ -666,9 +666,9 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Executes the show menu operation.
+    /// 執行 show menu 作業。
     /// </summary>
-    /// <param name="newMenu">The new menu value.</param>
+    /// <param name="newMenu">new menu 的值。</param>
 
     private void ShowMenu(SmartLabel newMenu)
     {
@@ -687,10 +687,10 @@ public partial class IddsAdmin : Form
     public SmartLabel? CurrentMenu { get; set; }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuSecurityLog_Click(object sender, EventArgs e)
     {
@@ -702,10 +702,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuAgents_Click(object sender, EventArgs e)
     {
@@ -715,10 +715,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuSettings_Click(object sender, EventArgs e)
     {
@@ -730,26 +730,26 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
@@ -765,18 +765,18 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxMinimizeButton_Click(object sender, EventArgs e) => WindowState = FormWindowState.Minimized;
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxMaximizeButton_Click(object sender, EventArgs e)
     {
@@ -795,42 +795,42 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Handles the mouse enter event.
+    /// 處理 mouse enter 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseEnter(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonHighlight; }
 
     /// <summary>
-    /// Handles the mouse leave event.
+    /// 處理 mouse leave 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseLeave(object sender, EventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseDown(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonPress; }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxButton_MouseUp(object sender, MouseEventArgs e) { if (sender is Control control) control.BackColor = buttonNormal; }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void panelUnsuccessfulLogins_Click(object sender, EventArgs e)
     {
@@ -838,10 +838,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void IddsAdmin_Load(object? sender, EventArgs e) =>
 
@@ -849,7 +849,7 @@ public partial class IddsAdmin : Form
         InitAdmin();
 
     /// <summary>
-    /// Executes the init agent settings operation.
+    /// 執行 init agent settings 作業。
     /// </summary>
 
     public void InitAgentSettings()
@@ -864,7 +864,7 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Executes the init admin operation.
+    /// 執行 init admin 作業。
     /// </summary>
 
     public void InitAdmin()
@@ -928,17 +928,17 @@ public partial class IddsAdmin : Form
     /// <summary>
     /// Writes entry.
     /// </summary>
-    /// <param name="text">The text value.</param>
-    /// <param name="type">The type value.</param>
-    /// <param name="eventId">The event id value.</param>
-    /// <param name="category">The category value.</param>
+    /// <param name="text">text 的值。</param>
+    /// <param name="type">type 的值。</param>
+    /// <param name="eventId">event id 的值。</param>
+    /// <param name="category">category 的值。</param>
 
     internal void WriteEntry(string text, EventLogEntryType type, int eventId, short category) => eventLogIDDSCommunity?.WriteEntry(text, type, eventId, category);
 
     /// <summary>
-    /// Executes the resize form operation.
+    /// 執行 resize form 作業。
     /// </summary>
-    /// <param name="mouseLocation">The mouse location value.</param>
+    /// <param name="mouseLocation">mouse location 的值。</param>
 
     private void resizeForm(Point mouseLocation)
     {
@@ -981,10 +981,10 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderN_MouseDown(object sender, MouseEventArgs e)
     {
@@ -993,10 +993,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1005,10 +1005,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderS_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1017,10 +1017,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderW_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1029,10 +1029,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderNE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1041,10 +1041,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderSE_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1053,10 +1053,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderSW_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1065,10 +1065,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void borderNW_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1077,9 +1077,9 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Executes the enter resize mode operation.
+    /// 執行 enter resize mode 作業。
     /// </summary>
-    /// <param name="currentLocation">The current location value.</param>
+    /// <param name="currentLocation">current location 的值。</param>
 
     private void enterResizeMode(Point currentLocation)
     {
@@ -1089,10 +1089,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse move event.
+    /// 處理 mouse move 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void border_MouseMove(object sender, MouseEventArgs e)
     {
@@ -1102,10 +1102,10 @@ public partial class IddsAdmin : Form
         }
     }
     /// <summary>
-    /// Handles the resize event.
+    /// 處理 resize 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void IddsAdmin_Resize(object sender, EventArgs e)
     {
@@ -1113,20 +1113,20 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void border_MouseUp(object sender, MouseEventArgs e) => isResizing = false;//this.ResumeLayout();
 
     #endregion
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuOnline_Click(object sender, EventArgs e)
     {
@@ -1142,10 +1142,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void labelMenuCurrentLocks_Click(object sender, EventArgs e)
     {
@@ -1157,10 +1157,10 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
@@ -1169,10 +1169,10 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
@@ -1182,34 +1182,34 @@ public partial class IddsAdmin : Form
 
 
     /// <summary>
-    /// Handles the paint event.
+    /// 處理 paint 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void panelContent_Paint(object? sender, PaintEventArgs e) => paintPanelTopBorder();
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private async void pictureBoxStartService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: true);
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private async void pictureBoxStopService_Click(object sender, EventArgs e) => await ChangeServiceStateAsync(start: false);
 
     /// <summary>
     /// Confirms and performs installation or removal of the Windows service with on-demand elevation.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
     private async void buttonManageService_Click(object sender, EventArgs e)
     {
         bool install = serviceController is null;
@@ -1265,7 +1265,7 @@ public partial class IddsAdmin : Form
     /// Changes the Windows service state without blocking the WinForms message loop.
     /// </summary>
     /// <param name="start"><see langword="true"/> to start the service; <see langword="false"/> to stop it.</param>
-    /// <returns>A task that completes after the requested state is observed or the operation fails.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     private async Task ChangeServiceStateAsync(bool start)
     {
         smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);

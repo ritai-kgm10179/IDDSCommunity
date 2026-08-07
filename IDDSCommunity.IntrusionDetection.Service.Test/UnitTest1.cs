@@ -7,7 +7,7 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 public class UnitTest1
 {
     /// <summary>
-    /// Executes the test event log reader operation.
+    /// 執行 test event log reader 作業。
     /// </summary>
 
     [TestMethod]

@@ -6,16 +6,16 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class RemoveLockForm : Form
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="RemoveLockForm"/> class.
+    /// 初始化 <see cref="RemoveLockForm"/> 類別的新執行個體。
     /// </summary>
 
     public RemoveLockForm() => InitializeComponent();
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void RemoveLockForm_Load(object sender, EventArgs e)
     {
@@ -23,18 +23,18 @@ public partial class RemoveLockForm : Form
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonOK_Click(object sender, EventArgs e) => DialogResult = DialogResult.OK;
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonCancel_Click(object sender, EventArgs e) => DialogResult = DialogResult.Cancel;
 }

@@ -10,7 +10,7 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     public event EventHandler? NavigationClicked;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunitySettingsNavigationItem"/> class.
+    /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
 
     public IDDSCommunitySettingsNavigationItem() => InitializeComponent();
@@ -27,9 +27,9 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     }
 
     /// <summary>
-    /// Handles the on paint event.
+    /// 處理 on paint 事件。
     /// </summary>
-    /// <param name="e">The event data.</param>
+    /// <param name="e">事件資料。</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -51,10 +51,10 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void IDDSCommunitySettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
     {
@@ -63,10 +63,10 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void IDDSCommunitySettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
     {
@@ -77,10 +77,10 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
 
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void IDDSCommunitySettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
 

@@ -39,6 +39,7 @@
 - **XML 文件註解規範**：
   - 所有 `public` 與 `protected` 之類別、介面、屬性、方法與事件，均必須補齊完整之 XML 文件註解 (`/// <summary>`, `<param>`, `<returns>`, `<exception>`)。
   - 所有 XML 註解內文一律統一使用**正體中文（台灣地區用語）**撰寫，並遵循標準技術用語（例如：`param` 使用「參數」、`argument` 使用「引數」、`returns` 使用「傳回」、`instance` 使用「執行個體」、`object` 使用「物件」、`type` 使用「型別」、`exception` 使用「例外狀況」、`plugin` 使用「擴充元件」）。
+  - **嚴禁使用單行式 `/// <summary>...</summary>` 格式**；所有 XML 摘要註解必須展開為標準的三行多行格式（即 `/// <summary>` 獨立成行、內文縮排獨立成行、`/// </summary>` 獨立成行）。
 
 ---
 

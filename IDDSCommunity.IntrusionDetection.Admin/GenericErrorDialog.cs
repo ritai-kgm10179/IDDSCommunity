@@ -6,11 +6,11 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class GenericErrorDialog : Form
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="GenericErrorDialog"/> class.
+    /// 初始化 <see cref="GenericErrorDialog"/> 類別的新執行個體。
     /// </summary>
-    /// <param name="caption">The caption value.</param>
-    /// <param name="text">The text value.</param>
-    /// <param name="cancelButton">The cancel button value.</param>
+    /// <param name="caption">caption 的值。</param>
+    /// <param name="text">text 的值。</param>
+    /// <param name="cancelButton">cancel button 的值。</param>
 
     public GenericErrorDialog(string caption, string text, bool cancelButton)
     {
@@ -26,18 +26,18 @@ public partial class GenericErrorDialog : Form
 
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonOK_Click(object sender, EventArgs e) => DialogResult = DialogResult.OK;
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonCancel_Click(object sender, EventArgs e) => DialogResult = DialogResult.Cancel;
 }

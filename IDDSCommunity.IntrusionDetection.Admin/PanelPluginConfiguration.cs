@@ -13,7 +13,7 @@ public partial class PanelPluginConfiguration : UserControl
     public event EventHandler? AgentChanged;
     public event EventHandler? AgentConfigurationChanged;
     /// <summary>
-    /// Initializes a new instance of the <see cref="PanelPluginConfiguration"/> class.
+    /// 初始化 <see cref="PanelPluginConfiguration"/> 類別的新執行個體。
     /// </summary>
 
     public PanelPluginConfiguration()
@@ -24,10 +24,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the agent changed event.
+    /// 處理 agent changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void PanelPluginConfiguration_AgentChanged(object? sender, EventArgs e)
     {
@@ -37,10 +37,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
     {
@@ -49,10 +49,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
     {
@@ -150,7 +150,7 @@ public partial class PanelPluginConfiguration : UserControl
     /// Gets a localized description of the authoritative detection source and encrypted-traffic limitations.
     /// </summary>
     /// <param name="agentName">The fully qualified Agent type name.</param>
-    /// <returns>The localized details, or <see langword="null"/> when no specialized disclosure is required.</returns>
+    /// <returns>在地化詳細資訊；若不需要則傳回 <see langword="null"/>。</returns>
     private static string? GetProtectionDetails(string agentName) => agentName switch
     {
         "IDDSCommunity.Agents.SqlServer.SqlFailedLoginWatcher" => Strings.Get("Detection source: Windows Application Event Log, Event ID 18456. The database port is not scanned."),
@@ -177,10 +177,10 @@ public partial class PanelPluginConfiguration : UserControl
 
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
@@ -189,7 +189,7 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Executes the toggle edit mode operation.
+    /// 執行 toggle edit mode 作業。
     /// </summary>
 
     private void ToggleEditMode()
@@ -201,7 +201,7 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Sets enabled mode.
     /// </summary>
-    /// <param name="enabled">The enabled value.</param>
+    /// <param name="enabled">enabled 的值。</param>
 
     public void SetEnabledMode(bool enabled)
     {
@@ -225,10 +225,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
@@ -353,18 +353,18 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
     /// <summary>
-    /// Handles the checked changed event.
+    /// 處理 checked changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void checkBoxOverrideConfiguration_CheckedChanged(object sender, EventArgs e)
     {
@@ -376,10 +376,10 @@ public partial class PanelPluginConfiguration : UserControl
 
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
 
@@ -395,10 +395,10 @@ public partial class PanelPluginConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the checked changed event.
+    /// 處理 checked changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e)
     {

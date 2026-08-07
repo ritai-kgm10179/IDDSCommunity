@@ -39,7 +39,7 @@ public class Locks
     /// <summary>
     /// Returns every database lock whose desired state is an active firewall block.
     /// </summary>
-    /// <returns>The active lock records.</returns>
+    /// <returns>傳回 active lock records 的結果。</returns>
     public static List<Lock> GetActiveLocks()
     {
         List<Lock> result = [];

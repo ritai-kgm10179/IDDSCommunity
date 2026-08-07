@@ -11,7 +11,7 @@ public partial class PluginItem : UserControl
     public event EventHandler? SecurityAgentConfigurationRequest;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PluginItem"/> class.
+    /// 初始化 <see cref="PluginItem"/> 類別的新執行個體。
     /// </summary>
 
     public PluginItem() => InitializeComponent();
@@ -19,7 +19,7 @@ public partial class PluginItem : UserControl
     /// <summary>
     /// Sets soft locks.
     /// </summary>
-    /// <param name="softLocks">The soft locks value.</param>
+    /// <param name="softLocks">soft locks 的值。</param>
 
     public void SetSoftLocks(int softLocks) => labelSoftLocksValue.Text = softLocks.ToString();
 
@@ -27,21 +27,21 @@ public partial class PluginItem : UserControl
     /// <summary>
     /// Sets hard locks.
     /// </summary>
-    /// <param name="hardLocks">The hard locks value.</param>
+    /// <param name="hardLocks">hard locks 的值。</param>
 
     public void SetHardLocks(int hardLocks) => labelHardLocksValue.Text = hardLocks.ToString();
 
     /// <summary>
     /// Sets name.
     /// </summary>
-    /// <param name="name">The name value.</param>
+    /// <param name="name">name 的值。</param>
 
     public void SetName(string name) => labelAgentName.Text = name;
 
     /// <summary>
     /// Sets icon.
     /// </summary>
-    /// <param name="icon">The icon value.</param>
+    /// <param name="icon">icon 的值。</param>
 
     public void SetIcon(Image? icon) => pictureBoxAgentIcon.Image = icon;
 
@@ -49,7 +49,7 @@ public partial class PluginItem : UserControl
     /// <summary>
     /// Sets failed logins.
     /// </summary>
-    /// <param name="failedLogins">The failed logins value.</param>
+    /// <param name="failedLogins">failed logins 的值。</param>
 
     public void SetFailedLogins(int failedLogins) => labelFailedLoginsValue.Text = failedLogins.ToString();
 
@@ -68,11 +68,11 @@ public partial class PluginItem : UserControl
     /// <summary>
     /// Updates values.
     /// </summary>
-    /// <param name="displayName">The display name value.</param>
-    /// <param name="failedLogins">The failed logins value.</param>
-    /// <param name="hardLocks">The hard locks value.</param>
-    /// <param name="softLocks">The soft locks value.</param>
-    /// <param name="icon">The icon value.</param>
+    /// <param name="displayName">display name 的值。</param>
+    /// <param name="failedLogins">failed logins 的值。</param>
+    /// <param name="hardLocks">hard locks 的值。</param>
+    /// <param name="softLocks">soft locks 的值。</param>
+    /// <param name="icon">icon 的值。</param>
 
     public void UpdateValues(string displayName, int failedLogins, int hardLocks, int softLocks, Image? icon)
     {
@@ -97,7 +97,7 @@ public partial class PluginItem : UserControl
     /// <summary>
     /// Updates values.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent 的值。</param>
 
     public void UpdateValues(SecurityAgent agent)
     {
@@ -112,18 +112,18 @@ public partial class PluginItem : UserControl
     }
 
     /// <summary>
-    /// Handles the statistics updated event.
+    /// 處理 statistics updated 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _securityAgent_StatisticsUpdated(object? sender, EventArgs e) => UpdateValues(SecurityAgent);
 
     /// <summary>
-    /// Handles the popup event.
+    /// 處理 popup 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void toolTip1_Popup(object sender, PopupEventArgs e)
     {
@@ -131,10 +131,10 @@ public partial class PluginItem : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEnabledState_Click(object sender, EventArgs e)
     {
@@ -142,10 +142,10 @@ public partial class PluginItem : UserControl
     }
 
     /// <summary>
-    /// Handles the double click event.
+    /// 處理 double click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEnabledState_DoubleClick(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(SecurityAgent, EventArgs.Empty);
 

@@ -16,7 +16,7 @@ public class LoadAgentsTest
     public TestContext TestContext { get; set; } = null!;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LoadAgentsTest"/> class.
+    /// 初始化 <see cref="LoadAgentsTest"/> 類別的新執行個體。
     /// </summary>
 
     public LoadAgentsTest()

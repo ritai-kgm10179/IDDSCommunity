@@ -10,7 +10,7 @@ public sealed class PacketPipelineSoakTest
     /// <summary>
     /// Verifies sustained bounded dispatch without packet reordering or unbounded queue growth.
     /// </summary>
-    /// <returns>A task that completes after all accepted packets are drained.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task Dispatcher_SustainedLoad_RemainsBoundedAndCompletes()
     {

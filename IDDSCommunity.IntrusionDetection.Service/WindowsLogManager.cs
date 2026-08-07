@@ -25,10 +25,10 @@ internal sealed class WindowsLogManager : IRuntimeLog
     /// <summary>
     /// Writes entry.
     /// </summary>
-    /// <param name="text">The text value.</param>
-    /// <param name="type">The type value.</param>
-    /// <param name="eventId">The event id value.</param>
-    /// <param name="category">The category value.</param>
+    /// <param name="text">text 的值。</param>
+    /// <param name="type">type 的值。</param>
+    /// <param name="eventId">event id 的值。</param>
+    /// <param name="category">category 的值。</param>
 
     public void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
     {

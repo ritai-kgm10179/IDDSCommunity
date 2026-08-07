@@ -11,7 +11,7 @@ public sealed class BoundedPacketDispatcherTest
     /// <summary>
     /// Verifies that queue capacity bounds memory and drops a new packet instead of blocking its producer.
     /// </summary>
-    /// <returns>A task that completes after queued packets are drained.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task TryEnqueue_WhenQueueIsFull_DropsNewestPacket()
     {
@@ -39,7 +39,7 @@ public sealed class BoundedPacketDispatcherTest
     /// <summary>
     /// Verifies that every accepted packet is delivered in FIFO order.
     /// </summary>
-    /// <returns>A task that completes after the queue is drained.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task DispatchAsync_PreservesAcceptedPacketOrder()
     {

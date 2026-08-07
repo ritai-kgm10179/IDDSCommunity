@@ -25,7 +25,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="FirewallPolicyManager"/> class.
+    /// 初始化 <see cref="FirewallPolicyManager"/> 類別的新執行個體。
     /// </summary>
 
     internal FirewallPolicyManager(IRuntimeLog logManager, FirewallBlockMode blockMode = FirewallBlockMode.Inbound)
@@ -44,17 +44,17 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// Creates com object.
     /// </summary>
     /// <typeparam name="T">The t type.</typeparam>
-    /// <param name="progId">The prog id value.</param>
-    /// <returns>The create com object result.</returns>
+    /// <param name="progId">prog id 的值。</param>
+    /// <returns>傳回 create com object 的結果。</returns>
 
     private static T CreateComObject<T>(string progId) where T : class =>
         Activator.CreateInstance(Type.GetTypeFromProgID(progId) ?? throw new InvalidOperationException(string.Format(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("COM type {0} is unavailable."), progId))) as T
         ?? throw new InvalidOperationException(string.Format(IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Unable to create COM object {0}."), progId));
 
     /// <summary>
-    /// Executes the block operation.
+    /// 執行 block 作業。
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">ip address 的值。</param>
 
     public void Block(string ipAddress)
     {
@@ -79,7 +79,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Determines whether locked.
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">ip address 的值。</param>
     /// <returns><see langword="true"/> if locked; otherwise, <see langword="false"/>.</returns>
 
     public bool IsLocked(string ipAddress)
@@ -107,7 +107,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Returns the exact addresses currently present in the IDDSCommunity block rule.
     /// </summary>
-    /// <returns>The normalized firewall address entries.</returns>
+    /// <returns>傳回 normalized firewall address entries 的結果。</returns>
     public IReadOnlyCollection<string> GetBlockedAddresses()
     {
         HashSet<string> addresses = new(StringComparer.Ordinal);
@@ -128,7 +128,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Removes ip address from block list.
     /// </summary>
-    /// <param name="ipAddress">The ip address value.</param>
+    /// <param name="ipAddress">ip address 的值。</param>
 
     public void RemoveIpAddressFromBlockList(string ipAddress)
     {
@@ -155,9 +155,9 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Gets cleaned remote addresses.
     /// </summary>
-    /// <param name="addresses">The addresses value.</param>
-    /// <param name="removeAddress">The remove address value.</param>
-    /// <returns>The get cleaned remote addresses result.</returns>
+    /// <param name="addresses">addresses 的值。</param>
+    /// <param name="removeAddress">remove address 的值。</param>
+    /// <returns>傳回 get cleaned remote addresses 的結果。</returns>
 
     private static string GetCleanedRemoteAddresses(string addresses, string removeAddress)
     {
@@ -249,9 +249,9 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Gets rule name.
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="port">The port value.</param>
-    /// <returns>The get rule name result.</returns>
+    /// <param name="name">name 的值。</param>
+    /// <param name="port">port 的值。</param>
+    /// <returns>傳回 get rule name 的結果。</returns>
 
     private static string GetRuleName(string name, int port) => string.Format("{0}_{1}_{2}", Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
 
@@ -278,11 +278,11 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Adds rule.
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="port">The port value.</param>
-    /// <param name="direction">The direction value.</param>
-    /// <param name="action">The action value.</param>
-    /// <param name="remoteAddress">The remote address value.</param>
+    /// <param name="name">name 的值。</param>
+    /// <param name="port">port 的值。</param>
+    /// <param name="direction">direction 的值。</param>
+    /// <param name="action">action 的值。</param>
+    /// <param name="remoteAddress">remote address 的值。</param>
 
     internal void AddRule(string name, int port, NET_FW_RULE_DIRECTION direction,
         NET_FW_ACTION action, string remoteAddress)
@@ -369,8 +369,8 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Gets rule.
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <returns>The get rule result.</returns>
+    /// <param name="name">name 的值。</param>
+    /// <returns>傳回 get rule 的結果。</returns>
 
     internal INetFwRule? GetRule(string name)
     {
@@ -384,8 +384,8 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <summary>
     /// Finds rules.
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <returns>The find rules result.</returns>
+    /// <param name="name">name 的值。</param>
+    /// <returns>傳回 find rules 的結果。</returns>
 
     internal List<INetFwRule> FindRules(string name)
     {

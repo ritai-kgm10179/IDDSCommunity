@@ -11,7 +11,7 @@ public sealed class ProtectionWorkerTest
     /// <summary>
     /// Verifies that the worker starts and stops the runtime exactly once.
     /// </summary>
-    /// <returns>A task that completes after the worker has stopped twice.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task StartAndStopAsync_ControlsRuntimeExactlyOnce()
     {
@@ -29,7 +29,7 @@ public sealed class ProtectionWorkerTest
     /// <summary>
     /// Verifies that a runtime startup failure propagates to the Generic Host.
     /// </summary>
-    /// <returns>A task that completes after startup fails.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task StartAsync_WhenRuntimeFails_PropagatesFailure()
     {
@@ -57,7 +57,7 @@ public sealed class ProtectionWorkerTest
         /// Records runtime startup and optionally throws the configured failure.
         /// </summary>
         /// <param name="cancellationToken">Signals cancellation of startup.</param>
-        /// <returns>A completed task when startup succeeds.</returns>
+        /// <returns>啟動成功時完成的 Task。</returns>
         public Task StartAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -71,7 +71,7 @@ public sealed class ProtectionWorkerTest
         /// Records runtime shutdown.
         /// </summary>
         /// <param name="cancellationToken">Signals cancellation of shutdown.</param>
-        /// <returns>A completed task.</returns>
+        /// <returns>已完成之 Task。</returns>
         public Task StopAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

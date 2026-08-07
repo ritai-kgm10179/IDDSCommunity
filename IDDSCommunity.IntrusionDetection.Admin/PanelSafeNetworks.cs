@@ -13,7 +13,7 @@ public partial class PanelSafeNetworks : UserControl
     public event EventHandler? SafeNetworksChanged;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PanelSafeNetworks"/> class.
+    /// 初始化 <see cref="PanelSafeNetworks"/> 類別的新執行個體。
     /// </summary>
 
     public PanelSafeNetworks()
@@ -26,18 +26,18 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the load event.
+    /// 處理 load 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void PanelSafeNetworks_Load(object? sender, EventArgs e) => LoadData();
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void textBoxAddNetwork_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -83,7 +83,7 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Executes the show add network panel operation.
+    /// 執行 show add network panel 作業。
     /// </summary>
 
     private void ShowAddNetworkPanel()
@@ -93,7 +93,7 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Executes the hide network panel operation.
+    /// 執行 hide network panel 作業。
     /// </summary>
 
     private void HideNetworkPanel()
@@ -104,10 +104,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
@@ -116,10 +116,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the double click event.
+    /// 處理 double click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void listBoxSafeNetworks_DoubleClick(object sender, EventArgs e)
     {
@@ -132,10 +132,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxDelete_Click(object sender, EventArgs e)
     {
@@ -152,26 +152,26 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void button1_Click(object sender, EventArgs e) => HideNetworkPanel();
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonAddNetwork_Click(object sender, EventArgs e) => AddNetwork();
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void listBoxSafeNetworks_KeyPress(object sender, KeyPressEventArgs e)
     {
@@ -196,10 +196,10 @@ public partial class PanelSafeNetworks : UserControl
     public bool EditExisting { get; set; }
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
@@ -209,10 +209,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
@@ -222,10 +222,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
@@ -248,10 +248,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
@@ -262,7 +262,7 @@ public partial class PanelSafeNetworks : UserControl
     public bool IsInEditMode { get; set; }
 
     /// <summary>
-    /// Executes the toggle edit mode operation.
+    /// 執行 toggle edit mode 作業。
     /// </summary>
 
     private void ToggleEditMode()
@@ -285,18 +285,18 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void buttonSave_Click(object sender, EventArgs e)
     {
@@ -318,10 +318,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
 
@@ -337,10 +337,10 @@ public partial class PanelSafeNetworks : UserControl
     }
 
     /// <summary>
-    /// Handles the checked changed event.
+    /// 處理 checked changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 

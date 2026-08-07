@@ -11,7 +11,7 @@ public class DatabaseUpgradeTest
     /// <summary>
     /// Verifies that asynchronous transaction failures roll back all writes.
     /// </summary>
-    /// <returns>A task that completes after rollback is verified.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async System.Threading.Tasks.Task ExecuteInTransactionAsync_WhenOperationFails_RollsBack()
     {
@@ -71,7 +71,7 @@ public class DatabaseUpgradeTest
     }
 
     /// <summary>
-    /// Executes the test database creation operation.
+    /// 執行 test database creation 作業。
     /// </summary>
 
     [TestMethod]

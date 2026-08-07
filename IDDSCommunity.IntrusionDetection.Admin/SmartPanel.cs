@@ -7,7 +7,7 @@ public class SmartPanel : Panel
 {
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SmartPanel"/> class.
+    /// 初始化 <see cref="SmartPanel"/> 類別的新執行個體。
     /// </summary>
 
     public SmartPanel() => BorderColor = ForeColor;
@@ -16,9 +16,9 @@ public class SmartPanel : Panel
     public bool PaintBorder { get; set; }
 
     /// <summary>
-    /// Handles the on paint event.
+    /// 處理 on paint 事件。
     /// </summary>
-    /// <param name="e">The event data.</param>
+    /// <param name="e">事件資料。</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {

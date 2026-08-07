@@ -14,14 +14,14 @@ public class SearchBox : Control
     bool isEmpty;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SearchBox"/> class.
+    /// 初始化 <see cref="SearchBox"/> 類別的新執行個體。
     /// </summary>
 
     public SearchBox() => InitializeComponents();
 
 
     /// <summary>
-    /// Executes the initialize components operation.
+    /// 執行 initialize components 作業。
     /// </summary>
 
     public void InitializeComponents()
@@ -57,10 +57,10 @@ public class SearchBox : Control
     }
 
     /// <summary>
-    /// Handles the text changed event.
+    /// 處理 text changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void textBoxSearch_TextChanged(object? sender, EventArgs e)
     {
@@ -72,18 +72,18 @@ public class SearchBox : Control
     }
 
     /// <summary>
-    /// Handles the font changed event.
+    /// 處理 font changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_FontChanged(object? sender, EventArgs e) => textBoxSearch.Font = Font;
 
     /// <summary>
-    /// Handles the key press event.
+    /// 處理 key press 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void textBoxSearch_KeyPress(object? sender, KeyPressEventArgs e)
     {
@@ -101,10 +101,10 @@ public class SearchBox : Control
     }
 
     /// <summary>
-    /// Handles the size changed event.
+    /// 處理 size changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_SizeChanged(object? sender, EventArgs e)
     {
@@ -116,28 +116,28 @@ public class SearchBox : Control
 
 
     /// <summary>
-    /// Handles the back color changed event.
+    /// 處理 back color changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_BackColorChanged(object? sender, EventArgs e) => textBoxSearch.BackColor = BackColor;
 
     /// <summary>
-    /// Handles the fore color changed event.
+    /// 處理 fore color changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_ForeColorChanged(object? sender, EventArgs e) => textBoxSearch.ForeColor = ForeColor;
 
 
 
     /// <summary>
-    /// Handles the paint event.
+    /// 處理 paint 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_Paint(object? sender, PaintEventArgs e)
     {
@@ -152,10 +152,10 @@ public class SearchBox : Control
     public Image? ClearImage { get; set; }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void SearchBox_Click(object? sender, EventArgs e)
     {
@@ -201,7 +201,7 @@ public class SearchBox : Control
     }
 
     /// <summary>
-    /// Executes the paint clear button operation.
+    /// 執行 paint clear button 作業。
     /// </summary>
 
     private void PaintClearButton()
@@ -239,16 +239,16 @@ public class SearchBox : Control
     public class SearchTextBox : TextBox
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SearchTextBox"/> class.
-        /// </summary>
+    /// 初始化 <see cref="SearchTextBox"/> 類別的新執行個體。
+    /// </summary>
 
         public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
 
         /// <summary>
-        /// Handles the text changed event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The event data.</param>
+    /// 處理 text changed 事件。
+    /// </summary>
+        /// <param name="sender">事件來源物件。</param>
+        /// <param name="e">事件資料。</param>
 
         void SearchTextBox_TextChanged(object? sender, EventArgs e)
         {

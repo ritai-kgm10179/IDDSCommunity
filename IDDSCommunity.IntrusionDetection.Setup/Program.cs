@@ -5,7 +5,9 @@ namespace IDDSCommunity.IntrusionDetection.Setup;
 
 internal static class Program
 {
-    /// <summary>Starts the elevated setup user interface.</summary>
+    /// <summary>
+    /// 啟動提升權限之安裝管理使用者介面。
+    /// </summary>
     [STAThread]
     private static void Main()
     {

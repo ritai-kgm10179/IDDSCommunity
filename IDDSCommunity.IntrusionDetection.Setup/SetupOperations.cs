@@ -19,22 +19,38 @@ internal static class SetupOperations
     /// </summary>
     internal enum InstallAction
     {
-        /// <summary>全新安裝。</summary>
+        /// <summary>
+        /// 全新安裝。
+        /// </summary>
         FreshInstall,
-        /// <summary>升級安裝。</summary>
+        /// <summary>
+        /// 升級安裝。
+        /// </summary>
         Upgrade,
-        /// <summary>重新安裝或修復。</summary>
+        /// <summary>
+        /// 重新安裝或修復。
+        /// </summary>
         Reinstall,
-        /// <summary>降級安裝。</summary>
+        /// <summary>
+        /// 降級安裝。
+        /// </summary>
         Downgrade
     }
 
-    /// <summary>檢查 IDDS Community 服務執行檔是否已安裝。</summary>
+    /// <summary>
+
+    /// 檢查 IDDS Community 服務執行檔是否已安裝。
+
+    /// </summary>
     internal static bool IsInstalled =>
         Directory.Exists(InstallDirectory) &&
         File.Exists(Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe"));
 
-    /// <summary>取得已安裝 IDDS Community 服務之版本，若未安裝則傳回 null。</summary>
+    /// <summary>
+
+    /// 取得已安裝 IDDS Community 服務之版本，若未安裝則傳回 null。
+
+    /// </summary>
     internal static Version? InstalledVersion
     {
         get
@@ -55,7 +71,11 @@ internal static class SetupOperations
         }
     }
 
-    /// <summary>取得當前 Setup 安裝程式之套件版本。</summary>
+    /// <summary>
+
+    /// 取得當前 Setup 安裝程式之套件版本。
+
+    /// </summary>
     internal static Version CurrentSetupVersion
     {
         get
@@ -65,7 +85,11 @@ internal static class SetupOperations
         }
     }
 
-    /// <summary>依據目前系統與當前套件版本判斷預期的安裝動作。</summary>
+    /// <summary>
+
+    /// 依據目前系統與當前套件版本判斷預期的安裝動作。
+
+    /// </summary>
     internal static InstallAction CurrentInstallAction
     {
         get
@@ -80,7 +104,11 @@ internal static class SetupOperations
         }
     }
 
-    /// <summary>正規化比較兩個 Version，忽視 -1 與 0 在 Revision/Build 的維度差異。</summary>
+    /// <summary>
+
+    /// 正規化比較兩個 Version，忽視 -1 與 0 在 Revision/Build 的維度差異。
+
+    /// </summary>
     internal static int CompareVersions(Version v1, Version v2)
     {
         Version n1 = NormalizeVersion(v1);
@@ -106,13 +134,25 @@ internal static class SetupOperations
     internal static readonly string StartMenuShortcutPath =
         Path.Combine(StartMenuDirectory, "IDDS Community Admin.lnk");
 
-    /// <summary>檢查桌面捷徑是否存在。</summary>
+    /// <summary>
+
+    /// 檢查桌面捷徑是否存在。
+
+    /// </summary>
     internal static bool HasDesktopShortcut => File.Exists(DesktopShortcutPath);
 
-    /// <summary>檢查開始功能表捷徑是否存在。</summary>
+    /// <summary>
+
+    /// 檢查開始功能表捷徑是否存在。
+
+    /// </summary>
     internal static bool HasStartMenuShortcut => File.Exists(StartMenuShortcutPath);
 
-    /// <summary>建立或清理桌面與開始功能表捷徑。</summary>
+    /// <summary>
+
+    /// 建立或清理桌面與開始功能表捷徑。
+
+    /// </summary>
     /// <param name="desktop">是否建立桌面捷徑。</param>
     /// <param name="startMenu">是否建立開始功能表捷徑。</param>
     internal static void CreateShortcuts(bool desktop, bool startMenu)
@@ -139,7 +179,11 @@ internal static class SetupOperations
         }
     }
 
-    /// <summary>移除桌面與開始功能表捷徑。</summary>
+    /// <summary>
+
+    /// 移除桌面與開始功能表捷徑。
+
+    /// </summary>
     internal static void RemoveShortcuts()
     {
         try { if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath); } catch { }
@@ -163,7 +207,11 @@ internal static class SetupOperations
         p.WaitForExit();
     }
 
-    /// <summary>開啟 IDDS Community 安裝與使用說明文件。</summary>
+    /// <summary>
+
+    /// 開啟 IDDS Community 安裝與使用說明文件。
+
+    /// </summary>
     internal static void OpenUserGuide()
     {
         string localGuide = Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md");
@@ -182,17 +230,29 @@ internal static class SetupOperations
         }
     }
 
-    /// <summary>Checks whether the administration UI executable is available for launching.</summary>
+    /// <summary>
+
+    /// 檢查管理控制台執行檔是否可供啟動。
+
+    /// </summary>
     internal static bool CanLaunchApp => IsInstalled && File.Exists(AdminExecutablePath);
 
-    /// <summary>Launches the IDDS Community administration UI.</summary>
+    /// <summary>
+
+    /// 啟動 IDDS Community 管理控制台 UI。
+
+    /// </summary>
     internal static void LaunchApp()
     {
         if (!CanLaunchApp) return;
         Process.Start(new ProcessStartInfo(AdminExecutablePath) { UseShellExecute = true });
     }
 
-    /// <summary>Deploys the packaged payload, registers the Windows service, and configures shortcuts.</summary>
+    /// <summary>
+
+    /// 部署封裝之軟體資產、註冊 Windows 服務並設定系統捷徑。
+
+    /// </summary>
     /// <param name="desktopShortcut">是否建立桌面捷徑。</param>
     /// <param name="startMenuShortcut">是否建立開始功能表捷徑。</param>
     internal static void Install(bool desktopShortcut = true, bool startMenuShortcut = true)
@@ -282,7 +342,11 @@ internal static class SetupOperations
     private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
     private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
 
-    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案、防火牆規則與捷徑。</summary>
+    /// <summary>
+
+    /// 停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案、防火牆規則與捷徑。
+
+    /// </summary>
     internal static void Uninstall()
     {
         RemoveShortcuts();

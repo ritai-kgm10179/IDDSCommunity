@@ -11,7 +11,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 public class ReportTest
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ReportTest"/> class.
+    /// 初始化 <see cref="ReportTest"/> 類別的新執行個體。
     /// </summary>
 
     public ReportTest()
@@ -55,7 +55,7 @@ public class ReportTest
     #endregion
 
     /// <summary>
-    /// Executes the test report by agent operation.
+    /// 執行 test report by agent 作業。
     /// </summary>
 
     [TestMethod]
@@ -67,7 +67,7 @@ public class ReportTest
     }
 
     /// <summary>
-    /// Executes the test report operation.
+    /// 執行 test report 作業。
     /// </summary>
 
     [TestMethod]

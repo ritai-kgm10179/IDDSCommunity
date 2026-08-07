@@ -12,7 +12,7 @@ public sealed class ReportSchedulerStateTest
     /// <summary>
     /// Verifies that a failed delivery persists failure without advancing its checkpoint and can later recover.
     /// </summary>
-    /// <returns>A task that completes after retry succeeds.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     [TestMethod]
     public async Task CheckDailyReportAsync_WhenDeliveryFails_PersistsFailureAndRetries()
     {
@@ -51,7 +51,7 @@ public sealed class ReportSchedulerStateTest
         /// <summary>
         /// Gets the deterministic UTC time used by the scheduler test.
         /// </summary>
-        /// <returns>The configured time.</returns>
+        /// <returns>傳回 configured time 的結果。</returns>
         public override DateTimeOffset GetUtcNow() => utcNow;
 
         public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;

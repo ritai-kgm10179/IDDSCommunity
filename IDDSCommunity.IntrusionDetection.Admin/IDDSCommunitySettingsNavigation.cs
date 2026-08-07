@@ -13,7 +13,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     public event EventHandler? PluginsChanged;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunitySettingsNavigation"/> class.
+    /// 初始化 <see cref="IDDSCommunitySettingsNavigation"/> 類別的新執行個體。
     /// </summary>
 
     public IDDSCommunitySettingsNavigation() => InitializeComponent();
@@ -27,9 +27,9 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     public bool ShowTopMenu { get; set; }
 
     /// <summary>
-    /// Handles the on paint event.
+    /// 處理 on paint 事件。
     /// </summary>
-    /// <param name="e">The event data.</param>
+    /// <param name="e">事件資料。</param>
 
     protected override void OnPaint(PaintEventArgs e)
     {
@@ -53,10 +53,10 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     }
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void iddscommunitySettingsNavigationItem_Click(object? sender, EventArgs e)
     {
@@ -81,16 +81,16 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <summary>
     /// Adds navigation item.
     /// </summary>
-    /// <param name="item">The item value.</param>
+    /// <param name="item">item 的值。</param>
 
     public void AddNavigationItem(IDDSCommunitySettingsNavigationItem item) => NavigationItems.Add(item);
 
     /// <summary>
     /// Adds navigation item.
     /// </summary>
-    /// <param name="name">The name value.</param>
-    /// <param name="selectedIcon">The selected icon value.</param>
-    /// <param name="unselectedIcon">The unselected icon value.</param>
+    /// <param name="name">name 的值。</param>
+    /// <param name="selectedIcon">selected icon 的值。</param>
+    /// <param name="unselectedIcon">unselected icon 的值。</param>
 
     public void AddNavigationItem(string name, Image? selectedIcon, Image? unselectedIcon)
     {
@@ -135,7 +135,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <summary>
     /// Sets selected item.
     /// </summary>
-    /// <param name="name">The name value.</param>
+    /// <param name="name">name 的值。</param>
 
     public void SetSelectedItem(string name)
     {
@@ -153,7 +153,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <summary>
     /// Processes the navigation changed notification.
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
+    /// <param name="sender">事件來源物件。</param>
 
     private void OnNavigationChanged(object sender) => NavigationChanged?.Invoke(sender, EventArgs.Empty);
 
@@ -170,7 +170,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     }
 
     /// <summary>
-    /// Executes the unselect all operation.
+    /// 執行 unselect all 作業。
     /// </summary>
 
     public void UnselectAll()
@@ -190,42 +190,42 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
 
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
 
     /// <summary>
-    /// Handles the mouse up event.
+    /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxRemove_MouseUp(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X - 1, pictureBoxRemove.Location.Y - 1);
 
     /// <summary>
-    /// Handles the mouse down event.
+    /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxRemove_MouseDown(object sender, MouseEventArgs e) => pictureBoxRemove.Location = new Point(pictureBoxRemove.Location.X + 1, pictureBoxRemove.Location.Y + 1);
 
     /// <summary>
-    /// Handles the click event.
+    /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {

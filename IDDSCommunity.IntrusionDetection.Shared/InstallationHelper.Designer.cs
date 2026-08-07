@@ -9,7 +9,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared {
         /// <summary>
         /// Clean up any resources being used.
         /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        /// <param name="disposing">若要釋放受控資源則為 true；否則為 false。</param>
         protected override void Dispose(bool disposing) {
             if (disposing && (components != null)) {
                 components.Dispose();

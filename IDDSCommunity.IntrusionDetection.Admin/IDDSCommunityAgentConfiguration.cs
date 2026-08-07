@@ -11,7 +11,7 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     public event EventHandler? AgentSettingsChanged;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="IDDSCommunityAgentConfiguration"/> class.
+    /// 初始化 <see cref="IDDSCommunityAgentConfiguration"/> 類別的新執行個體。
     /// </summary>
 
     public IDDSCommunityAgentConfiguration()
@@ -22,10 +22,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the plugins changed event.
+    /// 處理 plugins changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void iddscommunitySettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
 
@@ -48,10 +48,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the agent configuration changed event.
+    /// 處理 agent configuration changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _pluginConfigPanel_AgentConfigurationChanged(object? sender, EventArgs e) => OnAgentSettingsChanged();
 
@@ -62,10 +62,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    /// Handles the agent changed event.
+    /// 處理 agent changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     void _pluginConfigPanel_AgentChanged(object? sender, EventArgs e)
     {
@@ -87,14 +87,14 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// <summary>
     /// Loads security agent.
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent 的值。</param>
 
     public void LoadSecurityAgent(SecurityAgent agent) => iddscommunitySettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
 
     /// <summary>
-    /// Executes the show agent config operation.
+    /// 執行 show agent config 作業。
     /// </summary>
-    /// <param name="agent">The agent value.</param>
+    /// <param name="agent">agent 的值。</param>
 
     public void ShowAgentConfig(SecurityAgent agent)
     {
@@ -108,10 +108,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     }
 
     /// <summary>
-    /// Handles the navigation changed event.
+    /// 處理 navigation changed 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void iddscommunitySettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {

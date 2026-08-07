@@ -89,10 +89,10 @@ public class Database
     }
 
     /// <summary>
-    /// Handles the state change event.
+    /// 處理 state change 事件。
     /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The event data.</param>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
 
     private void _connection_StateChange(object sender, StateChangeEventArgs e) => System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
 
@@ -223,7 +223,7 @@ public class Database
     /// <param name="sqlString">The parameterized SQL command to execute.</param>
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and command execution.</param>
-    /// <returns>A task whose result is the number of affected rows.</returns>
+    /// <returns>包含受影響資料列數量的非同步 Task。</returns>
     public async Task<int> ExecuteNonQueryAsync(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
         await SqlitePipeline.ExecuteAsync(async token =>
         {
@@ -239,7 +239,7 @@ public class Database
     /// <param name="sqlString">The parameterized SQL query to execute.</param>
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection, retry delays, and query execution.</param>
-    /// <returns>A task whose result is the converted scalar value, or the default value when no value is returned.</returns>
+    /// <returns>包含轉換後純量值的非同步 Task。</returns>
     public async Task<T?> ExecuteScalarAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
         await SqlitePipeline.ExecuteAsync(async token =>
         {
@@ -255,7 +255,7 @@ public class Database
     /// <param name="sqlString">The parameterized SQL query to execute.</param>
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection and query execution.</param>
-    /// <returns>A task whose result contains the materialized rows.</returns>
+    /// <returns>包含實體化資料列集合的非同步 Task。</returns>
     public async Task<IEnumerable<T>> QueryAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
     {
         await using SqliteConnection connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -268,7 +268,7 @@ public class Database
     /// </summary>
     /// <param name="operation">The transaction operation.</param>
     /// <param name="cancellationToken">Cancels connection opening, the operation, or commit.</param>
-    /// <returns>A task that completes after the transaction commits.</returns>
+    /// <returns>表示非同步工作完成的 Task。</returns>
     public async Task ExecuteInTransactionAsync(
         Func<SqliteConnection, SqliteTransaction, CancellationToken, Task> operation,
         CancellationToken cancellationToken = default)
@@ -315,7 +315,7 @@ public class Database
     /// <summary>
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
-    /// <returns>The open connection.</returns>
+    /// <returns>傳回 open connection 的結果。</returns>
     private SqliteConnection OpenConnection()
     {
         if (!_isConfigured)
@@ -338,7 +338,7 @@ public class Database
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
     /// <param name="cancellationToken">Cancels opening the connection.</param>
-    /// <returns>The open connection.</returns>
+    /// <returns>傳回 open connection 的結果。</returns>
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
     {
         if (!_isConfigured)
@@ -379,7 +379,7 @@ public class Database
     /// Calculates the bounded exponential retry delay.
     /// </summary>
     /// <param name="attempt">The zero-based retry attempt.</param>
-    /// <returns>The delay before the next attempt.</returns>
+    /// <returns>傳回 delay before the next attempt 的結果。</returns>
     private static TimeSpan GetRetryDelay(int attempt) => TimeSpan.FromMilliseconds(50 * (1 << Math.Min(attempt, 4)));
 
     /// <summary>
