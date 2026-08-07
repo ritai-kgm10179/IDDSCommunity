@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -8,8 +8,15 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
-public class SmtpAgent : AgentPlugin
+public class SmtpAgent : AgentPlugin, IExtendedInformation
 {
+    public static Guid AgentId => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
+    public Guid Id => AgentId;
+    public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.SmtpAgent";
+    public System.Drawing.Image? Icon { get; set; }
+    public System.Drawing.Image? SelectedIcon { get; set; }
+    public System.Drawing.Image? UnselectedIcon { get; set; }
+
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
 
@@ -159,6 +166,4 @@ public class SmtpAgent : AgentPlugin
         };
         OnAttackDetected(this, args);
     }
-
-    public static Guid Id => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
 }

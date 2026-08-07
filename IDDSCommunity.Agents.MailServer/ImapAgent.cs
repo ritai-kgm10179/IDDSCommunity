@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -11,8 +11,15 @@ namespace IDDSCommunity.Agents.MailServer;
 /// <summary>
 /// 偵測明文 IMAP 驗證失敗嘗試，並於 STARTTLS 成功後停止解析。
 /// </summary>
-public sealed class ImapAgent : AgentPlugin
+public sealed class ImapAgent : AgentPlugin, IExtendedInformation
 {
+    public static Guid AgentId => new("{3F8B715C-4A2D-4C98-9C6E-7F89B219E022}");
+    public Guid Id => AgentId;
+    public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.ImapAgent";
+    public System.Drawing.Image? Icon { get; set; }
+    public System.Drawing.Image? SelectedIcon { get; set; }
+    public System.Drawing.Image? UnselectedIcon { get; set; }
+
     private readonly ConcurrentDictionary<int, ImapSessionInspector> sessions = [];
     private readonly List<PacketSniffer> sniffers = [];
     /// <summary>

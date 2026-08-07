@@ -160,17 +160,34 @@ public class SecurityAgents : List<SecurityAgent>
     /// <returns>傳回get display name結果。</returns>
     public string GetDisplayName(string agentId)
     {
-        if (Guid.Empty.ToString().Equals(agentId))
+        if (string.IsNullOrWhiteSpace(agentId) || Guid.Empty.ToString().Equals(agentId, StringComparison.OrdinalIgnoreCase))
         {
             return Localization.Strings.Get("None");
         }
+
+        bool isGuid = Guid.TryParse(agentId, out Guid targetGuid);
+
         foreach (SecurityAgent agent in this)
         {
-            if (agent.Id.ToString().Equals(agentId))
+            if (isGuid && agent.Id == targetGuid) return agent.DisplayName;
+            if (string.Equals(agent.Id.ToString(), agentId, StringComparison.OrdinalIgnoreCase)) return agent.DisplayName;
+            if (!string.IsNullOrEmpty(agent.Name) && string.Equals(agent.Name, agentId, StringComparison.OrdinalIgnoreCase)) return agent.DisplayName;
+            if (!string.IsNullOrEmpty(agent.DisplayName) && string.Equals(agent.DisplayName, agentId, StringComparison.OrdinalIgnoreCase)) return agent.DisplayName;
+        }
+
+        try
+        {
+            if (database != null && database.IsConfigured)
             {
-                return agent.DisplayName;
+                object? dbDisplayName = database.ExecuteScalar("SELECT DisplayName FROM SecurityAgents WHERE AgentId = @p0 OR Name = @p0", agentId);
+                if (dbDisplayName != null && !string.IsNullOrWhiteSpace(dbDisplayName.ToString()))
+                {
+                    return dbDisplayName.ToString()!;
+                }
             }
         }
+        catch { }
+
         return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }
     /// <summary>

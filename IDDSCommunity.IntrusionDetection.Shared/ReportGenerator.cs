@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Text;
 using System.Net;
@@ -9,7 +9,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 public class ReportGenerator
 {
 
-    const string SELECT_BY_AGENT = @"SELECT a.DisplayName as AgentName, i.Action as Action, COUNT(*) as Incidents FROM IntrusionLog i INNER JOIN SecurityAgents a ON a.AgentId=i.AgentId WHERE IncidentTime>@p0 AND IncidentTime<@p1 GROUP BY a.DisplayName, i.Action ORDER BY 1";
+    const string SELECT_BY_AGENT = @"SELECT i.AgentId AS RawAgentId, COALESCE(a.DisplayName, i.AgentId) AS AgentName, i.Action AS Action, COUNT(*) AS Incidents FROM IntrusionLog i LEFT JOIN SecurityAgents a ON (LOWER(a.AgentId) = LOWER(i.AgentId) OR LOWER(a.Name) = LOWER(i.AgentId)) WHERE i.IncidentTime > @p0 AND i.IncidentTime < @p1 GROUP BY i.AgentId, COALESCE(a.DisplayName, i.AgentId), i.Action ORDER BY 2";
     const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime>@p0 AND IncidentTime<@p1 AND Action=@p2 GROUP BY ClientIp ORDER BY COUNT(*)";
     /// <summary>
     /// 初始化 <see cref="ReportGenerator"/> class的新執行個體。
@@ -58,7 +58,15 @@ public class ReportGenerator
         while (rdr.Read())
         {
             int action = Db.DbValueConverter.ToInt(rdr["Action"]);
+            string rawAgentId = Db.DbValueConverter.ToString(rdr["RawAgentId"]);
             agent = Db.DbValueConverter.ToString(rdr["AgentName"]);
+
+            string resolvedName = SecurityAgents.Instance.GetDisplayName(rawAgentId);
+            if (!string.IsNullOrWhiteSpace(resolvedName) && !resolvedName.Contains("is not registered") && !resolvedName.Contains("尚未註冊"))
+            {
+                agent = resolvedName;
+            }
+
             long incidents = Db.DbValueConverter.ToInt64(rdr["Incidents"]);
             if (!agent.Equals(currentAgent) && hasValues)
             {
