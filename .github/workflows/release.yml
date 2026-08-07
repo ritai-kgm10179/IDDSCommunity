@@ -201,4 +201,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.validate.outputs.tag }}
-        run: gh release create "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "IDDS Community $RELEASE_TAG"
+        run: |
+          git tag -l --format="%(contents:subject)%0a%0a%(contents:body)" "$RELEASE_TAG" > release_notes.txt
+          gh release create "$RELEASE_TAG" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "IDDS Community $RELEASE_TAG" --notes-file release_notes.txt
