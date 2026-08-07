@@ -41,7 +41,11 @@ dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Serv
 if ($LASTEXITCODE -ne 0) { throw '服務發佈失敗。' }
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
-Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE-PROVENANCE.md') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $payloadRoot -Force
 $userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
 if (Test-Path -LiteralPath $userGuideSource) {
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.md') -Force
