@@ -161,7 +161,7 @@ jobs:
           }
 
       - name: Upload installer package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.rid }}
           path: |
@@ -183,15 +183,16 @@ jobs:
       artifact-metadata: write
     steps:
       - name: Download installer packages
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           pattern: installer-*
           path: release
           merge-multiple: true
 
       - name: Attest installer and SBOM provenance
-        uses: actions/attest@v2
+        uses: actions/attest@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           subject-path: |
             release/*.zip
             release/*.spdx-*.json
