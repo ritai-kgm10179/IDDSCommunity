@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace IDDSCommunity.Agents.Authentication.Common;
 
