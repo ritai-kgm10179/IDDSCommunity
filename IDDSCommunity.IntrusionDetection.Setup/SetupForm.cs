@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -84,7 +84,7 @@ internal sealed class SetupForm : Form
         }
 
         launchAppButton.Visible = installed && SetupOperations.CanLaunchApp;
-        uninstallButton.Enabled = installed;
+        uninstallButton.Visible = installed;
         checkBoxDesktopShortcut.Checked = installed ? SetupOperations.HasDesktopShortcut : true;
         checkBoxStartMenuShortcut.Checked = installed ? SetupOperations.HasStartMenuShortcut : true;
     }
