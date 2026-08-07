@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -14,6 +14,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     public bool Tracing { get; set; }
 
     readonly List<PacketSniffer> sniffers = [];
+    private System.Diagnostics.Eventing.Reader.EventLogWatcher? _securityWatcher;
+    private System.Diagnostics.Eventing.Reader.EventLogWatcher? _terminalServicesWatcher;
+
     /// <summary>
     /// 初始化 <see cref="TlsSslAgent"/> 類別的新執行個體。
     /// </summary>
@@ -29,7 +32,96 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     protected override void OnStartAgent()
     {
         RunWatcher();
+        StartEventLogWatchers();
         base.OnStartAgent();
+    }
+
+    /// <summary>
+    /// 啟動 Windows 事件日誌中針對 RDP (LogonType 10 / 7) 的即時監聽器。
+    /// </summary>
+    private void StartEventLogWatchers()
+    {
+        try
+        {
+            // 1. 監聽 Security 日誌中的 Event 4625 且 LogonType = 10 (RemoteInteractive) 或 7 (Unlock)
+            string securityQueryText = @"<QueryList>
+                <Query Id=""0"" Path=""Security"">
+                  <Select Path=""Security"">
+                    *[System[(EventID=4625)]] and (*[EventData[Data[@Name='LogonType']='10']] or *[EventData[Data[@Name='LogonType']='7']])
+                  </Select>
+                </Query>
+              </QueryList>";
+            var securityQuery = new System.Diagnostics.Eventing.Reader.EventLogQuery("Security", System.Diagnostics.Eventing.Reader.PathType.LogName, securityQueryText);
+            _securityWatcher = new System.Diagnostics.Eventing.Reader.EventLogWatcher(securityQuery);
+            _securityWatcher.EventRecordWritten += OnRdpSecurityEventWritten;
+            _securityWatcher.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.Agents.TlsSslAgent", "Failed to start Security EventLog watcher for RDP: " + ex.Message, System.Diagnostics.EventLogEntryType.Warning);
+        }
+
+        try
+        {
+            // 2. 監聽 TerminalServices-RemoteConnectionManager Operational 日誌中的 1149 事件
+            string tsQueryText = @"<QueryList>
+                <Query Id=""0"" Path=""Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational"">
+                  <Select Path=""Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational"">
+                    *[System[(EventID=1149)]]
+                  </Select>
+                </Query>
+              </QueryList>";
+            var tsQuery = new System.Diagnostics.Eventing.Reader.EventLogQuery("Microsoft-Windows-TerminalServices-RemoteConnectionManager/Operational", System.Diagnostics.Eventing.Reader.PathType.LogName, tsQueryText);
+            _terminalServicesWatcher = new System.Diagnostics.Eventing.Reader.EventLogWatcher(tsQuery);
+            _terminalServicesWatcher.EventRecordWritten += OnTerminalServicesEventWritten;
+            _terminalServicesWatcher.Enabled = true;
+        }
+        catch
+        {
+            // Operational 日誌在部分系統未開啟分析時屬正常備援
+        }
+    }
+
+    private void OnRdpSecurityEventWritten(object? sender, System.Diagnostics.Eventing.Reader.EventRecordWrittenEventArgs e)
+    {
+        try
+        {
+            if (e.EventRecord is not System.Diagnostics.Eventing.Reader.EventLogRecord record) return;
+            string[] xPathProperties = [@"Event/EventData/Data[@Name=""IpAddress""]"];
+            var props = new System.Diagnostics.Eventing.Reader.EventLogPropertySelector(xPathProperties);
+            var values = record.GetPropertyValues(props);
+            string rawIp = values != null && values.Count > 0 ? values[0]?.ToString() ?? string.Empty : string.Empty;
+            rawIp = rawIp.Trim('[', ']');
+            if (IPAddress.TryParse(rawIp, out IPAddress? address) && !IPAddress.IsLoopback(address))
+            {
+                UnsuccessfulLogin(address.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            PacketSniffer.LogTrace(ex);
+        }
+    }
+
+    private void OnTerminalServicesEventWritten(object? sender, System.Diagnostics.Eventing.Reader.EventRecordWrittenEventArgs e)
+    {
+        try
+        {
+            if (e.EventRecord is not System.Diagnostics.Eventing.Reader.EventLogRecord record) return;
+            string[] xPathProperties = [@"Event/UserData/EventXML/Param3"];
+            var props = new System.Diagnostics.Eventing.Reader.EventLogPropertySelector(xPathProperties);
+            var values = record.GetPropertyValues(props);
+            string rawIp = values != null && values.Count > 0 ? values[0]?.ToString() ?? string.Empty : string.Empty;
+            rawIp = rawIp.Trim('[', ']');
+            if (IPAddress.TryParse(rawIp, out IPAddress? address) && !IPAddress.IsLoopback(address))
+            {
+                UnsuccessfulLogin(address.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            PacketSniffer.LogTrace(ex);
+        }
     }
     /// <summary>
     /// 執行監聽器啟動作業。
@@ -136,6 +228,18 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
     /// </summary>
     protected override void OnStopAgent()
     {
+        if (_securityWatcher != null)
+        {
+            _securityWatcher.Enabled = false;
+            _securityWatcher.Dispose();
+            _securityWatcher = null;
+        }
+        if (_terminalServicesWatcher != null)
+        {
+            _terminalServicesWatcher.Enabled = false;
+            _terminalServicesWatcher.Dispose();
+            _terminalServicesWatcher = null;
+        }
         foreach (PacketSniffer s in sniffers)
         {
             s.Abort();

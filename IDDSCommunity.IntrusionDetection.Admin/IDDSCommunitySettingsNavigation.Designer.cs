@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Admin {
+namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class IDDSCommunitySettingsNavigation {
         /// <summary>
         /// Required designer variable.
@@ -34,6 +34,8 @@
             //
             this.flowLayoutPanelNavigationItems.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.flowLayoutPanelNavigationItems.AutoScroll = true;
+            this.flowLayoutPanelNavigationItems.WrapContents = false;
             this.flowLayoutPanelNavigationItems.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanelNavigationItems.Location = new System.Drawing.Point(3, 36);
             this.flowLayoutPanelNavigationItems.Name = "flowLayoutPanelNavigationItems";

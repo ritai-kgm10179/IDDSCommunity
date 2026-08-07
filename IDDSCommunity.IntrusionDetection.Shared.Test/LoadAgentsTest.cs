@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -126,6 +126,47 @@ public class LoadAgentsTest
         Assert.IsFalse(configuration.Enabled);
         Assert.AreEqual(2222, configuration.Port);
         Assert.AreEqual(@"C:\Logs\agent.log", configuration.Path);
+    }
+
+    /// <summary>
+    /// 驗證 Agent 勾選啟用並儲存後，模擬應用程式關閉並重新啟動載入，Enabled 狀態 100% 完整保留。
+    /// </summary>
+    [TestMethod]
+    public void SaveAndReopen_PreservesEnabledStateAcrossAppRestarts()
+    {
+        string testDbDir = Path.Combine(Path.GetTempPath(), "IDDS_Test_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDbDir);
+        try
+        {
+            Database testDb = new();
+            testDb.Configure(testDbDir);
+            IddsConfig testConfig = new(testDb) { PluginsDirectory = testDbDir };
+            SecurityAgents agents = new(testDb, testConfig);
+
+            Guid agentId = Guid.NewGuid();
+            SecurityAgent originalAgent = new("Test.Persistence.Agent", agentId)
+            {
+                DisplayName = "Test Persistence Agent",
+                Enabled = true,
+                AssemblyName = "IDDSCommunity.Agents.Test.dll"
+            };
+            originalAgent.DatabaseInstance = testDb;
+            originalAgent.Save();
+
+            testDb.Close();
+            testDb.Configure(testDbDir);
+
+            SecurityAgents reloadedAgents = new(testDb, testConfig);
+            reloadedAgents.InitializeAgents();
+
+            SecurityAgent? loaded = reloadedAgents.FindByName("Test.Persistence.Agent");
+            Assert.IsNotNull(loaded);
+            Assert.IsTrue(loaded.Enabled, "Agent Enabled state must remain True after reopening app!");
+        }
+        finally
+        {
+            try { Directory.Delete(testDbDir, true); } catch { }
+        }
     }
 
     private sealed class TestPluginConfiguration : IntrusionDetection.Api.Plugin.PluginConfiguration

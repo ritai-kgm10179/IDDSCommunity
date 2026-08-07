@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -279,21 +279,41 @@ public class IddsConfig
     }
 
     /// <summary>
+    /// 取得全系統共用之預設 SQLite 設定資料庫目錄。
+    /// </summary>
+    public static string GetDefaultDataDirectory()
+    {
+        try
+        {
+            string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            if (!string.IsNullOrEmpty(commonAppData))
+            {
+                string dir = System.IO.Path.Combine(commonAppData, "IDDSCommunity");
+                if (!System.IO.Directory.Exists(dir))
+                    System.IO.Directory.CreateDirectory(dir);
+                return dir;
+            }
+        }
+        catch
+        {
+            // Fallback for isolated test environments
+        }
+        return AppDomain.CurrentDomain.BaseDirectory;
+    }
+
+    /// <summary>
     /// 執行configure database作業。
     /// </summary>
     internal void configureDatabase()
     {
-        if (string.IsNullOrEmpty(ApplicationPath))
+        if (string.IsNullOrEmpty(ApplicationPath) || ApplicationPath == AppDomain.CurrentDomain.BaseDirectory)
         {
-            ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
+            ApplicationPath = GetDefaultDataDirectory();
         }
         database.Configure(ApplicationPath);
     }
 
-
-
-
-    public string ApplicationPath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
+    public string ApplicationPath { get; set; } = GetDefaultDataDirectory();
 
     public int ConfigVersionNumber { get; set; }
     public DateTime? Expires { get; set; }

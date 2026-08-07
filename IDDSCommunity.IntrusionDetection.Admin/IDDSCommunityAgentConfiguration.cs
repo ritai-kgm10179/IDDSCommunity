@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
@@ -65,6 +65,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// Processes the plugins changed notification.
     /// </summary>
     private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
+    /// <summary>
+    /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
+    /// </summary>
+    public void FlushUnsavedChanges() => PluginConfigPanel.FlushUnsavedChanges();
     /// <summary>
     /// Clears security agents.
     /// </summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -195,7 +195,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     void ConfigureSystem()
     {
-        database.Configure(System.Windows.Forms.Application.StartupPath, databaseOptions.FileName);
+        database.Configure(IddsConfig.GetDefaultDataDirectory(), databaseOptions.FileName);
 
         configuration.ApplicationPath = System.Windows.Forms.Application.StartupPath;
         configuration.PluginsDirectory = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath, pluginOptions.DirectoryName) + System.IO.Path.DirectorySeparatorChar;
