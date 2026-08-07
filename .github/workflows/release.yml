@@ -182,6 +182,12 @@ jobs:
       attestations: write
       artifact-metadata: write
     steps:
+      - name: Checkout signed tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.validate.outputs.tag }}
+          fetch-depth: 0
+
       - name: Download installer packages
         uses: actions/download-artifact@v7
         with:
