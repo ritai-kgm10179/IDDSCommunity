@@ -265,15 +265,31 @@ internal static class SetupOperations
     private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
     private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
 
-    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案與捷徑。</summary>
+    /// <summary>停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案、防火牆規則與捷徑。</summary>
     internal static void Uninstall()
     {
         RemoveShortcuts();
+        CleanUpFirewallRules();
         RunSc("stop", ServiceName, acceptMissing: true);
         RunSc("delete", ServiceName, acceptMissing: true);
         KillRunningProcesses();
         System.Threading.Thread.Sleep(500);
         SafeDeleteDirectory(InstallDirectory);
+    }
+
+    private static void CleanUpFirewallRules()
+    {
+        try
+        {
+            ProcessStartInfo psi = new(Path.Combine(Environment.SystemDirectory, "netsh.exe"), "advfirewall firewall delete rule name=all group=\"IDDS Community\"")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using Process? process = Process.Start(psi);
+            process?.WaitForExit(2000);
+        }
+        catch { }
     }
 
     private static void KillRunningProcesses()

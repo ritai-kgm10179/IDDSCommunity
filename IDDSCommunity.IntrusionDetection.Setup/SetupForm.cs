@@ -84,6 +84,8 @@ internal sealed class SetupForm : Form
 
         launchAppButton.Visible = installed && SetupOperations.CanLaunchApp;
         uninstallButton.Enabled = installed;
+        checkBoxDesktopShortcut.Checked = installed ? SetupOperations.HasDesktopShortcut : true;
+        checkBoxStartMenuShortcut.Checked = installed ? SetupOperations.HasStartMenuShortcut : true;
     }
 
     private static Button CreateActionButton(string text, bool primary) => new()
