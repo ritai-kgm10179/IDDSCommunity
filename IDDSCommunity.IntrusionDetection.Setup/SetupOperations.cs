@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -110,21 +110,24 @@ internal static class SetupOperations
     }
 
     internal static readonly string DesktopShortcutPath =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "IDDS Community Admin.lnk");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory), "IDDS Community Admin.lnk");
 
     internal static readonly string StartMenuDirectory =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "IDDS Community");
 
     internal static readonly string StartMenuShortcutPath =
         Path.Combine(StartMenuDirectory, "IDDS Community Admin.lnk");
+
     /// <summary>
     /// 檢查桌面捷徑是否存在。
     /// </summary>
     internal static bool HasDesktopShortcut => File.Exists(DesktopShortcutPath);
+
     /// <summary>
     /// 檢查開始功能表捷徑是否存在。
     /// </summary>
     internal static bool HasStartMenuShortcut => File.Exists(StartMenuShortcutPath);
+
     /// <summary>
     /// 建立或清理桌面與開始功能表捷徑。
     /// </summary>
@@ -132,15 +135,18 @@ internal static class SetupOperations
     /// <param name="startMenu">是否建立開始功能表捷徑。</param>
     internal static void CreateShortcuts(bool desktop, bool startMenu)
     {
-        if (!IsInstalled) return;
-
         if (desktop)
         {
             CreateLnk(DesktopShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
         }
         else if (File.Exists(DesktopShortcutPath))
         {
-            try { File.Delete(DesktopShortcutPath); } catch { }
+            try
+            {
+                File.Delete(DesktopShortcutPath);
+                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch { }
         }
 
         if (startMenu)
@@ -150,34 +156,117 @@ internal static class SetupOperations
         }
         else if (File.Exists(StartMenuShortcutPath))
         {
-            try { File.Delete(StartMenuShortcutPath); } catch { }
+            try
+            {
+                File.Delete(StartMenuShortcutPath);
+                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch { }
         }
     }
+
     /// <summary>
     /// 移除桌面與開始功能表捷徑。
     /// </summary>
     internal static void RemoveShortcuts()
     {
-        try { if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath); } catch { }
+        try
+        {
+            if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath);
+        }
+        catch { }
         try
         {
             if (Directory.Exists(StartMenuDirectory))
                 Directory.Delete(StartMenuDirectory, true);
         }
         catch { }
+        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
     }
 
     private static void CreateLnk(string shortcutPath, string targetPath, string description)
     {
-        string script = $"$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('{shortcutPath}'); $Shortcut.TargetPath = '{targetPath}'; $Shortcut.WorkingDirectory = '{Path.GetDirectoryName(targetPath)}'; $Shortcut.Description = '{description}'; $Shortcut.Save()";
-        ProcessStartInfo psi = new("powershell.exe", $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{script}\"")
+        try
         {
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        using Process p = Process.Start(psi)!;
-        p.WaitForExit();
+            IShellLinkW link = (IShellLinkW)new ShellLink();
+            link.SetPath(targetPath);
+            link.SetWorkingDirectory(Path.GetDirectoryName(targetPath) ?? string.Empty);
+            link.SetDescription(description);
+
+            IPersistFile file = (IPersistFile)link;
+            file.Save(shortcutPath, true);
+
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+        }
+        catch (Exception)
+        {
+            try
+            {
+                Type? wshType = Type.GetTypeFromCLSID(new Guid("72C24DD5-5D27-11CF-A9F3-00B0C08FDFC0"));
+                if (wshType != null)
+                {
+                    dynamic? wsh = Activator.CreateInstance(wshType);
+                    if (wsh != null)
+                    {
+                        dynamic shortcut = wsh.CreateShortcut(shortcutPath);
+                        shortcut.TargetPath = targetPath;
+                        shortcut.WorkingDirectory = Path.GetDirectoryName(targetPath);
+                        shortcut.Description = description;
+                        shortcut.Save();
+                        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+                    }
+                }
+            }
+            catch { }
+        }
     }
+
+    [System.Runtime.InteropServices.ComImport]
+    [System.Runtime.InteropServices.Guid("00021401-0000-0000-C000-000000000046")]
+    private class ShellLink { }
+
+    [System.Runtime.InteropServices.ComImport]
+    [System.Runtime.InteropServices.InterfaceType(System.Runtime.InteropServices.ComInterfaceType.InterfaceIsIUnknown)]
+    [System.Runtime.InteropServices.Guid("000214F9-0000-0000-C000-000000000046")]
+    private interface IShellLinkW
+    {
+        void GetPath([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder pszFile, int cchMaxPath, IntPtr pfd, uint fFlags);
+        void GetIDList(out IntPtr ppidl);
+        void SetIDList(IntPtr pidl);
+        void GetDescription([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder pszName, int cchMaxName);
+        void SetDescription([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszName);
+        void GetWorkingDirectory([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder pszDir, int cchMaxPath);
+        void SetWorkingDirectory([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszDir);
+        void GetArguments([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder pszArgs, int cchMaxPath);
+        void SetArguments([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszArgs);
+        void GetHotkey(out ushort pwHotkey);
+        void SetHotkey(ushort wHotkey);
+        void GetShowCmd(out int piShowCmd);
+        void SetShowCmd(int iShowCmd);
+        void GetIconLocation([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] System.Text.StringBuilder pszIconPath, int cchIconPath, out int piIcon);
+        void SetIconLocation([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
+        void SetRelativePath([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved);
+        void Resolve(IntPtr hwnd, uint fFlags);
+        void SetPath([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszFile);
+    }
+
+    [System.Runtime.InteropServices.ComImport]
+    [System.Runtime.InteropServices.InterfaceType(System.Runtime.InteropServices.ComInterfaceType.InterfaceIsIUnknown)]
+    [System.Runtime.InteropServices.Guid("0000010b-0000-0000-C000-000000000046")]
+    private interface IPersistFile
+    {
+        void GetClassID(out Guid pClassID);
+        void IsDirty();
+        void Load([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszFileName, uint dwMode);
+        void Save([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszFileName, bool fRemember);
+        void SaveCompleted([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string pszFileName);
+        void GetCurFile([System.Runtime.InteropServices.Out, System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] out string ppszFileName);
+    }
+
+    [System.Runtime.InteropServices.DllImport("shell32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+    private const int SHCNE_ASSOCCHANGED = 0x08000000;
+    private const uint SHCNF_FLUSH = 0x1000;
     /// <summary>
     /// 開啟 IDDS Community 安裝與使用說明文件。
     /// </summary>
