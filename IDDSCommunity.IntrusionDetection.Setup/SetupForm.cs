@@ -14,16 +14,29 @@ internal sealed class SetupForm : Form
     private readonly Button uninstallButton = CreateActionButton(SetupText.Get("Uninstall"), primary: false);
     private readonly Button userGuideButton = CreateActionButton(SetupText.Get("OpenUserGuide"), primary: false);
     private readonly Button closeButton = CreateActionButton(SetupText.Get("Close"), primary: false);
-    private readonly CheckBox checkBoxDesktopShortcut = new() { Text = SetupText.Get("CreateDesktopShortcut"), AutoSize = true, Location = new Point(32, 142), Checked = true };
-    private readonly CheckBox checkBoxStartMenuShortcut = new() { Text = SetupText.Get("CreateStartMenuShortcut"), AutoSize = true, Location = new Point(220, 142), Checked = true };
+    private readonly Button languageButton = new()
+    {
+        AutoSize = true,
+        Location = new Point(510, 16),
+        FlatStyle = FlatStyle.Flat,
+        BackColor = Color.White,
+        ForeColor = Navy,
+        Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point),
+        Cursor = Cursors.Hand
+    };
+    private readonly Label titleLabel = new() { AutoSize = true, Location = new Point(32, 20), Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = Teal };
+    private readonly Label descriptionLabel = new() { AutoSize = true, MaximumSize = new Size(576, 0), Location = new Point(32, 50) };
+    private readonly Label locationLabel = new() { AutoSize = true, MaximumSize = new Size(576, 0), Location = new Point(32, 112), ForeColor = Color.FromArgb(100, 116, 139) };
+    private readonly CheckBox checkBoxDesktopShortcut = new() { AutoSize = true, Location = new Point(32, 142), Checked = true };
+    private readonly CheckBox checkBoxStartMenuShortcut = new() { AutoSize = true, Location = new Point(220, 142), Checked = true };
     private readonly Label statusLabel = new() { AutoSize = true, Location = new Point(32, 172), Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
+
     /// <summary>
     /// 初始化安裝程式視窗。
     /// </summary>
     internal SetupForm()
     {
-        Text = SetupText.Get("Title");
-        ClientSize = new Size(580, 275);
+        ClientSize = new Size(640, 275);
         BackColor = Color.FromArgb(243, 246, 248);
         ForeColor = Navy;
         Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
@@ -31,18 +44,42 @@ internal sealed class SetupForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
-        Label title = new() { Text = SetupText.Get("Title"), AutoSize = true, Location = new Point(32, 20), Font = new Font(Font, FontStyle.Bold), ForeColor = Teal };
-        Label description = new() { Text = SetupText.Get("Description"), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 50) };
-        Label location = new() { Text = SetupText.Format("InstallLocation", SetupOperations.InstallDirectory), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 112), ForeColor = Color.FromArgb(100, 116, 139) };
+
         FlowLayoutPanel actions = new() { AutoSize = true, Location = new Point(28, 210), Padding = new Padding(0), WrapContents = false };
         actions.Controls.AddRange([launchAppButton, installButton, uninstallButton, userGuideButton, closeButton]);
-        Controls.AddRange([title, description, location, checkBoxDesktopShortcut, checkBoxStartMenuShortcut, statusLabel, actions]);
+        Controls.AddRange([languageButton, titleLabel, descriptionLabel, locationLabel, checkBoxDesktopShortcut, checkBoxStartMenuShortcut, statusLabel, actions]);
+
         launchAppButton.Click += (_, _) => SetupOperations.LaunchApp();
         userGuideButton.Click += (_, _) => SetupOperations.OpenUserGuide();
         closeButton.Click += (_, _) => Close();
         installButton.Click += async (_, _) => await ExecuteAsync(true);
         uninstallButton.Click += async (_, _) => await ExecuteAsync(false);
+        languageButton.Click += (_, _) => ToggleLanguage();
+
         CancelButton = closeButton;
+        RefreshLocalizedText();
+    }
+
+    private void ToggleLanguage()
+    {
+        bool isZh = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+        System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo(isZh ? "en-US" : "zh-TW");
+        RefreshLocalizedText();
+    }
+
+    private void RefreshLocalizedText()
+    {
+        Text = SetupText.Get("Title");
+        languageButton.Text = SetupText.Get("LanguageButtonText");
+        titleLabel.Text = SetupText.Get("Title");
+        descriptionLabel.Text = SetupText.Get("Description");
+        locationLabel.Text = SetupText.Format("InstallLocation", SetupOperations.InstallDirectory);
+        checkBoxDesktopShortcut.Text = SetupText.Get("CreateDesktopShortcut");
+        checkBoxStartMenuShortcut.Text = SetupText.Get("CreateStartMenuShortcut");
+        launchAppButton.Text = SetupText.Get("LaunchApp");
+        uninstallButton.Text = SetupText.Get("Uninstall");
+        userGuideButton.Text = SetupText.Get("OpenUserGuide");
+        closeButton.Text = SetupText.Get("Close");
         UpdateStatus();
     }
 
@@ -79,7 +116,7 @@ internal sealed class SetupForm : Form
         }
         else
         {
-            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? setupVer.ToString(3));
+            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? "3.0.0");
             statusLabel.ForeColor = Teal;
             installButton.Text = SetupText.Get("Reinstall");
             installButton.BackColor = Color.White;
@@ -96,8 +133,8 @@ internal sealed class SetupForm : Form
     {
         Text = text,
         AutoSize = true,
-        MinimumSize = new Size(112, 38),
-        Margin = new Padding(4),
+        MinimumSize = new Size(104, 38),
+        Margin = new Padding(3),
         FlatStyle = FlatStyle.Flat,
         BackColor = primary ? Teal : Color.White,
         ForeColor = primary ? Color.White : Navy,

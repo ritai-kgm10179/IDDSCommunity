@@ -32,4 +32,5 @@
   <data name="CreateStartMenuShortcut" xml:space="preserve"><value>建立開始功能表捷徑</value></data>
   <data name="OpenUserGuide" xml:space="preserve"><value>使用說明文件</value></data>
   <data name="Close" xml:space="preserve"><value>關閉</value></data>
+  <data name="LanguageButtonText" xml:space="preserve"><value>🌐 繁體中文</value></data>
 </root>
