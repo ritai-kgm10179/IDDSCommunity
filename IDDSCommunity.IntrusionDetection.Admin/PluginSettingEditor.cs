@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
@@ -56,7 +56,7 @@ internal sealed class PluginSettingEditor : UserControl
                 Minimum = minimum,
                 Maximum = maximum,
                 Size = new Size(120, 23),
-                ThousandsSeparator = true
+                ThousandsSeparator = false
             };
             if (decimal.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out decimal parsed))
                 numeric.Value = Math.Clamp(parsed, minimum, maximum);

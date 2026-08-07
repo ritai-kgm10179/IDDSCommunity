@@ -169,6 +169,58 @@ public class LoadAgentsTest
         }
     }
 
+    /// <summary>
+    /// 驗證包含 int (Port 9833)、string (Path) 與 bool 等所有自訂屬性型態在儲存並重開資料庫後，100% 正確還原。
+    /// </summary>
+    [TestMethod]
+    public void SaveAndReopen_CustomProperties_AllTypes_PersistedCorrectly()
+    {
+        string testDbDir = Path.Combine(Path.GetTempPath(), "IDDS_Test_Types_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(testDbDir);
+        try
+        {
+            Database testDb = new();
+            testDb.Configure(testDbDir);
+            IddsConfig testConfig = new(testDb) { PluginsDirectory = testDbDir };
+
+            Guid agentId = Guid.NewGuid();
+            SecurityAgent originalAgent = new("Test.Types.Agent", agentId)
+            {
+                DisplayName = "Test Types Agent",
+                Enabled = true,
+                AssemblyName = "IDDSCommunity.Agents.Test.dll"
+            };
+            originalAgent.DatabaseInstance = testDb;
+            originalAgent.CustomConfiguration["Port"] = "9833";
+            originalAgent.CustomConfiguration["Path"] = @"C:\Logs\idds.log";
+            originalAgent.CustomConfiguration["EnableFeature"] = "1";
+            originalAgent.Save();
+
+            testDb.Close();
+            testDb.Configure(testDbDir);
+
+            SecurityAgents reloadedAgents = new(testDb, testConfig);
+            reloadedAgents.InitializeAgents();
+
+            SecurityAgent? loaded = reloadedAgents.FindByName("Test.Types.Agent");
+            Assert.IsNotNull(loaded);
+            Assert.IsTrue(loaded.Enabled);
+            Assert.AreEqual("9833", loaded.CustomConfiguration["Port"]);
+            Assert.AreEqual(@"C:\Logs\idds.log", loaded.CustomConfiguration["Path"]);
+            Assert.AreEqual("1", loaded.CustomConfiguration["EnableFeature"]);
+
+            TestPluginConfiguration config = new();
+            SecurityAgents.ApplyCustomConfiguration(config, loaded.CustomConfiguration);
+            Assert.AreEqual(9833, config.Port);
+            Assert.AreEqual(@"C:\Logs\idds.log", config.Path);
+            Assert.IsTrue(config.Enabled);
+        }
+        finally
+        {
+            try { Directory.Delete(testDbDir, true); } catch { }
+        }
+    }
+
     private sealed class TestPluginConfiguration : IntrusionDetection.Api.Plugin.PluginConfiguration
     {
         public bool Enabled { get; set; } = true;
