@@ -31,4 +31,5 @@
   <data name="CreateDesktopShortcut" xml:space="preserve"><value>建立桌面捷徑</value></data>
   <data name="CreateStartMenuShortcut" xml:space="preserve"><value>建立開始功能表捷徑</value></data>
   <data name="OpenUserGuide" xml:space="preserve"><value>使用說明文件</value></data>
+  <data name="Close" xml:space="preserve"><value>關閉</value></data>
 </root>

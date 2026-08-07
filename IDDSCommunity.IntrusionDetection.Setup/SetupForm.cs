@@ -13,6 +13,7 @@ internal sealed class SetupForm : Form
     private readonly Button installButton = CreateActionButton(SetupText.Get("Install"), primary: true);
     private readonly Button uninstallButton = CreateActionButton(SetupText.Get("Uninstall"), primary: false);
     private readonly Button userGuideButton = CreateActionButton(SetupText.Get("OpenUserGuide"), primary: false);
+    private readonly Button closeButton = CreateActionButton(SetupText.Get("Close"), primary: false);
     private readonly CheckBox checkBoxDesktopShortcut = new() { Text = SetupText.Get("CreateDesktopShortcut"), AutoSize = true, Location = new Point(32, 142), Checked = true };
     private readonly CheckBox checkBoxStartMenuShortcut = new() { Text = SetupText.Get("CreateStartMenuShortcut"), AutoSize = true, Location = new Point(220, 142), Checked = true };
     private readonly Label statusLabel = new() { AutoSize = true, Location = new Point(32, 172), Font = new Font("Segoe UI", 9.5F, FontStyle.Bold) };
@@ -34,12 +35,14 @@ internal sealed class SetupForm : Form
         Label description = new() { Text = SetupText.Get("Description"), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 50) };
         Label location = new() { Text = SetupText.Format("InstallLocation", SetupOperations.InstallDirectory), AutoSize = true, MaximumSize = new Size(516, 0), Location = new Point(32, 112), ForeColor = Color.FromArgb(100, 116, 139) };
         FlowLayoutPanel actions = new() { AutoSize = true, Location = new Point(28, 210), Padding = new Padding(0), WrapContents = false };
-        actions.Controls.AddRange([launchAppButton, installButton, uninstallButton, userGuideButton]);
+        actions.Controls.AddRange([launchAppButton, installButton, uninstallButton, userGuideButton, closeButton]);
         Controls.AddRange([title, description, location, checkBoxDesktopShortcut, checkBoxStartMenuShortcut, statusLabel, actions]);
         launchAppButton.Click += (_, _) => SetupOperations.LaunchApp();
         userGuideButton.Click += (_, _) => SetupOperations.OpenUserGuide();
+        closeButton.Click += (_, _) => Close();
         installButton.Click += async (_, _) => await ExecuteAsync(true);
         uninstallButton.Click += async (_, _) => await ExecuteAsync(false);
+        CancelButton = closeButton;
         UpdateStatus();
     }
 
