@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
-
 /// <summary>
 /// Converts managed strings to temporary COM BSTR values for source-generated Windows Firewall interfaces.
 /// </summary>
@@ -15,7 +14,6 @@ internal static class FirewallComString
     /// <param name="value">The COM string.</param>
     /// <returns>受控字串；若指標為 null 則傳回空字串。</returns>
     internal static string Get(BSTR value) => value.ToString() ?? string.Empty;
-
     /// <summary>
     /// Invokes a COM property setter with a temporary BSTR that is always released.
     /// </summary>

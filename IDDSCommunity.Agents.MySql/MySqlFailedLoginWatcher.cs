@@ -75,7 +75,6 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
             EventLog.WriteEntry("IDDSCommunity.Agents.MySql.MySqlFailedLoginWatcher", exception.ToString());
         }
     }
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -84,7 +83,6 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         get => "MySQL and MariaDB Security Agent";
         set { }
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
@@ -97,7 +95,6 @@ public sealed class MySqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
     /// <summary>
     /// 取得 Agent 的全域唯一識別碼 (GUID)。
     /// </summary>

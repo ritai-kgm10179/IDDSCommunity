@@ -10,7 +10,6 @@ public class AppLayerSmtp
     public const string SMTP_REPLY_CODE_LOGIN_DENIED = "504";
 
     public string SmtpReplyCode { get; set; }
-
     /// <summary>
     /// 初始化 <see cref="AppLayerSmtp"/> 類別的新執行個體。
     /// </summary>

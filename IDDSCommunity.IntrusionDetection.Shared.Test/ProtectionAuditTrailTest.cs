@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
-
 /// <summary>
 /// Verifies durable protection-control evidence and bounded JSON export.
 /// </summary>
@@ -16,7 +15,6 @@ public sealed class ProtectionAuditTrailTest
 {
     private string testDirectory = null!;
     private Database database = null!;
-
     /// <summary>
     /// Creates an isolated database for each test.
     /// </summary>
@@ -28,7 +26,6 @@ public sealed class ProtectionAuditTrailTest
         database = new Database();
         database.Configure(testDirectory, "audit.db");
     }
-
     /// <summary>
     /// Releases the database and temporary files after each test.
     /// </summary>
@@ -39,7 +36,6 @@ public sealed class ProtectionAuditTrailTest
         if (Directory.Exists(testDirectory))
             Directory.Delete(testDirectory, recursive: true);
     }
-
     /// <summary>
     /// Verifies that protection evidence is persisted, queried, and exported without SQL or JSON injection.
     /// </summary>
@@ -62,7 +58,6 @@ public sealed class ProtectionAuditTrailTest
         Assert.AreEqual("192.0.2.10", records[0].Subject);
         Assert.AreEqual("agent\"one", document.RootElement[0].GetProperty("Details").GetString());
     }
-
     /// <summary>
     /// Verifies that invalid or unbounded evidence queries are rejected.
     /// </summary>
@@ -75,7 +70,6 @@ public sealed class ProtectionAuditTrailTest
         Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(() => trail.ReadAsync(now, now));
         Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(() => trail.ReadAsync(now.AddMinutes(-1), now, 10001));
     }
-
     /// <summary>
     /// Verifies that retention removes only evidence older than the approved period.
     /// </summary>
@@ -96,7 +90,6 @@ public sealed class ProtectionAuditTrailTest
         Assert.HasCount(1, records);
         Assert.AreEqual("Runtime.Stop", records[0].EventType);
     }
-
     /// <summary>
     /// Verifies that configuration persistence records keys but never sensitive values.
     /// </summary>
@@ -121,7 +114,6 @@ public sealed class ProtectionAuditTrailTest
     private sealed class ManualTimeProvider(DateTimeOffset utcNow) : TimeProvider
     {
         internal DateTimeOffset UtcNow { get; set; } = utcNow;
-
         /// <summary>
         /// Gets the deterministic UTC time used by the retention test.
         /// </summary>

@@ -22,7 +22,6 @@ public sealed class StartupOperationTest
         Assert.IsFalse(operation.TryRun(() => calls++, out _));
         Assert.AreEqual(1, calls);
     }
-
     /// <summary>
     /// Verifies that startup failure is captured as a terminal result instead of leaving the splash loop active.
     /// </summary>

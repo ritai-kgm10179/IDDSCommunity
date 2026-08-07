@@ -125,7 +125,6 @@ CREATE TABLE AgentStatistics(
     FailedLogins int not null default 0,
     HardLocks int not null default 0,
     SoftLocks int not null default 0)";
-
     /// <summary>
     /// 執行upgrade database作業。
     /// </summary>

@@ -24,7 +24,6 @@ public class LanguageManagerTest
         // Ensure default culture fallback returns en-US or zh-TW
         Assert.IsTrue(LanguageManager.Instance.CurrentCulture.Name == "en-US" || LanguageManager.Instance.CurrentCulture.Name == "zh-TW");
     }
-
     /// <summary>
     /// 執行 test explicit culture set 作業。
     /// </summary>
@@ -40,7 +39,6 @@ public class LanguageManagerTest
         Assert.AreEqual("en-US", LanguageManager.Instance.CurrentCulture.Name);
         Assert.AreEqual("IDDS Community", Strings.AppTitle);
     }
-
     /// <summary>
     /// 執行 test unsupported culture fallback 作業。
     /// </summary>
@@ -53,7 +51,6 @@ public class LanguageManagerTest
         Assert.AreEqual("en-US", LanguageManager.Instance.CurrentCulture.Name);
         Assert.AreEqual("IDDS Community", Strings.AppTitle);
     }
-
     /// <summary>
     /// 執行 test get string fallback 作業。
     /// </summary>
@@ -65,7 +62,6 @@ public class LanguageManagerTest
         string val = LanguageManager.Instance.GetString("NonExistentKey", "DefaultFallback");
         Assert.AreEqual("DefaultFallback", val);
     }
-
     /// <summary>
     /// Verifies that neutral and Traditional Chinese resources expose identical keys.
     /// </summary>
@@ -81,7 +77,6 @@ public class LanguageManagerTest
         HashSet<string> traditionalChinese = LoadResourceKeys(traditionalChinesePath);
         CollectionAssert.AreEquivalent(neutral.ToArray(), traditionalChinese.ToArray());
     }
-
     /// <summary>
     /// Verifies that production sources do not reintroduce hard-coded user-facing messages.
     /// </summary>
@@ -113,7 +108,6 @@ public class LanguageManagerTest
 
         Assert.IsEmpty(violations.Distinct(StringComparer.OrdinalIgnoreCase), string.Join(Environment.NewLine, violations.Distinct()));
     }
-
     /// <summary>
     /// Verifies that literal keys passed to the localization API exist in both resource cultures.
     /// </summary>
@@ -137,7 +131,6 @@ public class LanguageManagerTest
         }
         Assert.IsEmpty(missing, string.Join(Environment.NewLine, missing));
     }
-
     /// <summary>
     /// Verifies that the removed licensing feature is not exposed by application UI or command sources.
     /// </summary>
@@ -166,7 +159,6 @@ public class LanguageManagerTest
 
         Assert.IsEmpty(violations, string.Join(Environment.NewLine, violations));
     }
-
     /// <summary>
     /// Loads resource keys from a resx file.
     /// </summary>
@@ -174,7 +166,6 @@ public class LanguageManagerTest
     /// <returns>傳回 unique resource keys 的結果。</returns>
     private static HashSet<string> LoadResourceKeys(string path) => XDocument.Load(path).Root!.Elements("data")
         .Select(element => (string)element.Attribute("name")!).ToHashSet(StringComparer.Ordinal);
-
     /// <summary>
     /// Rejects duplicate resource names, including names that differ only by casing.
     /// </summary>
@@ -187,7 +178,6 @@ public class LanguageManagerTest
             .Where(static group => group.Count() > 1).Select(static group => group.Key).ToArray();
         Assert.IsEmpty(duplicates, string.Join(Environment.NewLine, duplicates));
     }
-
     /// <summary>
     /// Finds the repository root from the test output directory.
     /// </summary>

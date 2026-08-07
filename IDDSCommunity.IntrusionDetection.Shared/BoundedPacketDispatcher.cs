@@ -12,7 +12,6 @@ internal sealed class BoundedPacketDispatcher
     private long receivedCount;
     private long dispatchedCount;
     private long droppedCount;
-
     /// <summary>
     /// Initializes a bounded single-reader packet dispatcher.
     /// </summary>
@@ -40,7 +39,6 @@ internal sealed class BoundedPacketDispatcher
     internal long DroppedCount => Interlocked.Read(ref droppedCount);
 
     internal Task Completion { get; }
-
     /// <summary>
     /// Attempts to enqueue a packet without blocking the socket receive loop.
     /// </summary>
@@ -57,12 +55,10 @@ internal sealed class BoundedPacketDispatcher
         IDDSCommunityMetrics.RecordDropped();
         return false;
     }
-
     /// <summary>
     /// Completes the producer side and lets the consumer drain queued packets.
     /// </summary>
     internal void Complete() => channel.Writer.TryComplete();
-
     /// <summary>
     /// Dispatches queued packets sequentially on a worker task.
     /// </summary>

@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
-
 /// <summary>
 /// 持久化並匯出保護控制作業所需界限內且非機密的證據。
 /// </summary>
@@ -15,7 +14,6 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
 {
     private const int MaximumFieldLength = 1024;
     private const int MaximumExportRecords = 10000;
-
     /// <summary>
     /// 使用參數化儲存紀錄一個保護事件。
     /// </summary>
@@ -38,7 +36,6 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
             Limit(subject),
             Limit(details ?? string.Empty));
     }
-
     /// <summary>
     /// 依確定性時間順序讀取界限內的稽核視窗。
     /// </summary>
@@ -72,7 +69,6 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
             Details = row.Details
         }).ToList();
     }
-
     /// <summary>
     /// 將界限內的稽核視窗匯出為 UTF-8 JSON，供外部證據儲存庫或 SIEM 使用。
     /// </summary>
@@ -89,7 +85,6 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
         IReadOnlyList<ProtectionAuditEvent> records = await ReadAsync(fromUtc, toUtc, cancellationToken: cancellationToken).ConfigureAwait(false);
         await JsonSerializer.SerializeAsync(destination, records, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
-
     /// <summary>
     /// 刪除早於核可保留界限的稽核證據。
     /// </summary>

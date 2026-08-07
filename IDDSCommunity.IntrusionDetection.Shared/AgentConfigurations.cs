@@ -30,7 +30,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
             }
         }
     }
-
     /// <summary>
     /// Determines whether configured.
     /// </summary>
@@ -47,7 +46,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         }
         return false;
     }
-
     /// <summary>
     /// Determines whether agent enabled.
     /// </summary>
@@ -61,7 +59,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         if (config == null) return false;
         return config.Enabled;
     }
-
     /// <summary>
     /// Gets agent config.
     /// </summary>
@@ -70,7 +67,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <returns>傳回get agent config結果。</returns>
 
     public IAgentConfiguration GetAgentConfig(string assemblyName, string agentName) => GetAgentConfig(assemblyName, agentName, null);
-
     /// <summary>
     /// Gets agent config.
     /// </summary>
@@ -91,7 +87,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
 
         return CreateAgentConfig(assemblyName, agentName, configurationSettingsType);
     }
-
     /// <summary>
     /// Creates agent config.
     /// </summary>
@@ -112,7 +107,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         Add(newConfig);
         return newConfig;
     }
-
     /// <summary>
     /// 執行enable agent作業。
     /// </summary>
@@ -120,7 +114,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <param name="agentName">agent name參數。</param>
 
     public void EnableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, true);
-
     /// <summary>
     /// 執行disable agent作業。
     /// </summary>
@@ -128,7 +121,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     /// <param name="agentName">agent name參數。</param>
 
     public void DisableAgent(string assemblyName, string agentName) => SetEnabled(assemblyName, agentName, false);
-
     /// <summary>
     /// Sets enabled.
     /// </summary>
@@ -141,7 +133,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         IAgentConfiguration config = GetAgentConfig(assemblyName, agentName);
         config?.Enabled = enabled;
     }
-
     /// <summary>
     /// Loads plugins from directory.
     /// </summary>
@@ -198,7 +189,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
 
     public event LoadPlugInExceptionRaisedHandler? LoadPluginExceptionRaised;
     public delegate void LoadPlugInExceptionRaisedHandler(object sender, PluginExceptionArguments data);
-
     /// <summary>
     /// Processes the load plugin exception raised notification.
     /// </summary>
@@ -218,7 +208,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         };
         LoadPluginExceptionRaised?.Invoke(this, args);
     }
-
     /// <summary>
     /// Gets assembly names.
     /// </summary>
@@ -233,7 +222,6 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         }
         return result;
     }
-
     /// <summary>
     /// Gets modules.
     /// </summary>

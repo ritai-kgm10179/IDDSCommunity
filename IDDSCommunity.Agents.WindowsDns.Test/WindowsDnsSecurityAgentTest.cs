@@ -16,7 +16,6 @@ public sealed class WindowsDnsSecurityAgentTest
     /// </summary>
     [TestCleanup]
     public void Cleanup() => CultureInfo.CurrentUICulture = new CultureInfo("en-US");
-
     /// <summary>
     /// 驗證回應、更新、轉移與稽核事件的事件負載位置。
     /// </summary>
@@ -41,7 +40,6 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.AreEqual(IPAddress.Parse("192.0.2.41"), auditRecord!.SourceAddress);
         Assert.AreEqual(DnsActivityKind.DynamicUpdate, auditRecord.Kind);
     }
-
     /// <summary>
     /// 驗證不支援的事件與無效的來源位址皆會被拒絕。
     /// </summary>
@@ -51,7 +49,6 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.IsFalse(WindowsDnsEventParser.TryParse(999, [], DateTimeOffset.UtcNow, out _));
         Assert.IsFalse(WindowsDnsEventParser.TryParse(257, [false, "10.0.0.53", "not-an-ip"], DateTimeOffset.UtcNow, out _));
     }
-
     /// <summary>
     /// 驗證每個可疑的 DNS 類別於超越設定界限時均會引發一次通知。
     /// </summary>
@@ -80,7 +77,6 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.IsNull(detector.Analyze(new DnsEventRecord(263, time.UtcNow, updateSource, DnsActivityKind.DynamicUpdate, "host.example", string.Empty, string.Empty)));
         Assert.AreEqual(DnsDetectionType.DynamicUpdateRate, detector.Analyze(new DnsEventRecord(263, time.UtcNow, updateSource, DnsActivityKind.DynamicUpdate, "host.example", string.Empty, string.Empty))!.Type);
     }
-
     /// <summary>
     /// 驗證排除位址、視窗重置與用戶端追蹤容量。
     /// </summary>
@@ -102,7 +98,6 @@ public sealed class WindowsDnsSecurityAgentTest
         time.UtcNow = time.UtcNow.AddSeconds(configuration.WindowSeconds);
         Assert.IsNull(detector.Analyze(CreateQuery(source)));
     }
-
     /// <summary>
     /// 驗證 Agent 生命週期配置與偵測器訊號轉換至現有攻擊合約。
     /// </summary>
@@ -130,7 +125,6 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.AreEqual(1, source.ResumeCount);
         Assert.AreEqual(1, source.StopCount);
     }
-
     /// <summary>
     /// 驗證來源錯誤不會終止 Agent 的事件管線。
     /// </summary>
@@ -148,7 +142,6 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.AreEqual(1, source.StartCount);
         Assert.AreEqual(1, source.StopCount);
     }
-
     /// <summary>
     /// 驗證 Agent 顯示名稱與偵測訊息皆已在地化。
     /// </summary>

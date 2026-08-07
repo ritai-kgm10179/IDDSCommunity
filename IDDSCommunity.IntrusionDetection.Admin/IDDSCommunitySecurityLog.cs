@@ -54,7 +54,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
         }
     }
 
-
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySecurityLog"/> 類別的新執行個體。
     /// </summary>
@@ -98,7 +97,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
         System.Reflection.PropertyInfo? property = typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         property?.SetValue(control, true, null);
     }
-
     /// <summary>
     /// 處理 filter selection changed 事件。
     /// </summary>
@@ -106,7 +104,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <param name="e">事件資料。</param>
 
     void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
-
     /// <summary>
     /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件（附帶 250ms 防抖遲延）。
     /// </summary>
@@ -182,7 +179,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
         IntrusionLogView.RowFilter = viewFilter;
         labelEventsCount.Text = CountEvents().ToString();
     }
-
     /// <summary>
     /// 處理 selection change committed 事件。
     /// </summary>
@@ -193,7 +189,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     {
 
     }
-
     /// <summary>
     /// Adds log entry.
     /// </summary>
@@ -228,7 +223,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
         if (MaxLogId < id) MaxLogId = id;
         return row;
     }
-
     /// <summary>
     /// 執行 count events 作業。
     /// </summary>
@@ -246,7 +240,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
         }
         return result;
     }
-
     /// <summary>
     /// 執行 fill log entry 作業。
     /// </summary>
@@ -270,14 +263,12 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     public int MaxLogId { get; set; }
-
     /// <summary>
     /// Adds agent.
     /// </summary>
     /// <param name="agent">agent 的值。</param>
 
     public void AddAgent(SecurityAgent agent) => comboBoxAgentSelection.Items.Add(agent);
-
     /// <summary>
     /// Removes agent.
     /// </summary>
@@ -294,7 +285,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
             // not found
         }
     }
-
     /// <summary>
     /// 處理 resize 事件。
     /// </summary>
@@ -302,7 +292,6 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <param name="e">事件資料。</param>
 
     private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
-
     /// <summary>
     /// 執行 position labels 作業。
     /// </summary>

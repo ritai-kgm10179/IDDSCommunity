@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Provides every window and branded surface with images from the executable's canonical multi-size icon.
 /// </summary>

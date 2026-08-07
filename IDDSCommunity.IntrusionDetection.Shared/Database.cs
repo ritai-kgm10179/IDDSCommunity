@@ -29,12 +29,10 @@ public class Database
 
     private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
-
     /// <summary>
     /// 取得 absolute path of the configured SQLite database.
     /// </summary>
     public string DataSource => connBuilder.DataSource;
-
     /// <summary>
     /// Closes the active database connection and releases its file handle.
     /// </summary>
@@ -48,7 +46,6 @@ public class Database
         SqliteConnection.ClearAllPools();
         _isConfigured = false;
     }
-
     /// <summary>
     /// Configures requested operation.
     /// </summary>
@@ -87,7 +84,6 @@ public class Database
 
         OpenOrCreate();
     }
-
     /// <summary>
     /// 處理 state change 事件。
     /// </summary>
@@ -121,13 +117,11 @@ public class Database
             return _instance;
         }
     }
-
     /// <summary>
     /// 初始化 <see cref="Database"/> class的新執行個體。
     /// </summary>
 
     public Database() => _instance = this;
-
     /// <summary>
     /// Executes reader.
     /// </summary>
@@ -136,7 +130,6 @@ public class Database
     /// <returns>傳回execute reader結果。</returns>
 
     public IDataReader ExecuteReader(string sqlString, params object[] parameters) => ExecuteReader(sqlString, null, parameters);
-
     /// <summary>
     /// Executes reader.
     /// </summary>
@@ -159,7 +152,6 @@ public class Database
             return table.CreateDataReader();
         });
     }
-
     /// <summary>
     /// Executes non query.
     /// </summary>
@@ -167,7 +159,6 @@ public class Database
     /// <param name="parameters">parameters參數。</param>
 
     public void ExecuteNonQuery(string sqlString, params object[] parameters) => ExecuteNonQuery(sqlString, null, parameters);
-
     /// <summary>
     /// Executes non query.
     /// </summary>
@@ -187,7 +178,6 @@ public class Database
                 connection.Execute(sqlString, paramObj);
             });
     }
-
     /// <summary>
     /// Executes scalar.
     /// </summary>
@@ -196,7 +186,6 @@ public class Database
     /// <returns>傳回execute scalar結果。</returns>
 
     public object? ExecuteScalar(string sqlString, params object[] parameters) => ExecuteScalar(sqlString, null, parameters);
-
     /// <summary>
     /// Executes scalar.
     /// </summary>
@@ -216,7 +205,6 @@ public class Database
             return connection.ExecuteScalar(sqlString, paramObj);
         });
     }
-
     /// <summary>
     /// Asynchronously executes a command using an independently owned database connection.
     /// </summary>
@@ -231,7 +219,6 @@ public class Database
             CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
             return await connection.ExecuteAsync(command).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
-
     /// <summary>
     /// Asynchronously returns the first column of the first row produced by a query.
     /// </summary>
@@ -247,7 +234,6 @@ public class Database
             CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
             return await connection.ExecuteScalarAsync<T>(command).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
-
     /// <summary>
     /// Asynchronously executes a parameterized query and materializes its rows.
     /// </summary>
@@ -262,7 +248,6 @@ public class Database
         CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
         return await connection.QueryAsync<T>(command).ConfigureAwait(false);
     }
-
     /// <summary>
     /// Executes an asynchronous unit of work inside an independently owned SQLite transaction.
     /// </summary>
@@ -287,7 +272,6 @@ public class Database
             throw;
         }
     }
-
     /// <summary>
     /// Executes a synchronous unit of work inside an independently owned SQLite transaction.
     /// </summary>
@@ -311,7 +295,6 @@ public class Database
             }
         });
     }
-
     /// <summary>
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
@@ -333,7 +316,6 @@ public class Database
             throw;
         }
     }
-
     /// <summary>
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
@@ -356,7 +338,6 @@ public class Database
             throw;
         }
     }
-
     /// <summary>
     /// Applies connection-local integrity and contention settings.
     /// </summary>
@@ -367,21 +348,18 @@ public class Database
         command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;";
         command.ExecuteNonQuery();
     }
-
     /// <summary>
     /// Determines whether SQLite reported a transient busy or locked condition.
     /// </summary>
     /// <param name="exception">The SQLite exception.</param>
     /// <returns><see langword="true"/> when retrying may succeed.</returns>
     private static bool IsTransient(SqliteException exception) => exception.SqliteErrorCode is 5 or 6;
-
     /// <summary>
     /// Calculates the bounded exponential retry delay.
     /// </summary>
     /// <param name="attempt">The zero-based retry attempt.</param>
     /// <returns>傳回 delay before the next attempt 的結果。</returns>
     private static TimeSpan GetRetryDelay(int attempt) => TimeSpan.FromMilliseconds(50 * (1 << Math.Min(attempt, 4)));
-
     /// <summary>
     /// 執行query作業。
     /// </summary>
@@ -401,7 +379,6 @@ public class Database
             return connection.Query<T>(sqlString, param).AsList();
         });
     }
-
     /// <summary>
     /// 執行query first or default作業。
     /// </summary>
@@ -421,7 +398,6 @@ public class Database
             return connection.QueryFirstOrDefault<T>(sqlString, param);
         });
     }
-
     /// <summary>
     /// Builds dynamic parameters.
     /// </summary>
@@ -442,7 +418,6 @@ public class Database
     }
 
     public int DatabaseVersion { get; set; }
-
     /// <summary>
     /// Opens or create.
     /// </summary>

@@ -18,7 +18,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     public const string MENU_REPORT_EXPORT = "Report export";
     public event EventHandler? ConfigurationChanged;
 
-
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityApplicationSettings"/> 類別的新執行個體。
     /// </summary>
@@ -29,7 +28,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         BackColor = Color.White;
         Load += new EventHandler(CyberamsApplicationSettings_Load);
     }
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -67,7 +65,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
             return _lockoutConfiguration;
         }
     }
-
     /// <summary>
     /// 處理 lockout configuration changed 事件。
     /// </summary>
@@ -99,7 +96,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
             return _panelSafeNetworks;
         }
     }
-
     /// <summary>
     /// 處理 safe networks changed 事件。
     /// </summary>
@@ -126,7 +122,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         }
 
     }
-
     /// <summary>
     /// 處理 smtp settings changed 事件。
     /// </summary>
@@ -166,7 +161,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         configurationPanel.Controls.Add(panel);
         return panel;
     }
-
     /// <summary>
     /// Creates and attaches the language settings panel.
     /// </summary>
@@ -193,7 +187,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
             return _panelNotificationSettings;
         }
     }
-
     /// <summary>
     /// 處理 notification settings changed 事件。
     /// </summary>
@@ -201,7 +194,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     /// <param name="e">事件資料。</param>
 
     void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
-
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>
@@ -241,7 +233,6 @@ public partial class IDDSCommunityApplicationSettings : UserControl
                 break;
         }
     }
-
     /// <summary>
     /// Processes the configuration changed notification.
     /// </summary>

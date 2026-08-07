@@ -14,7 +14,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     public event EventHandler? Trace;
     public bool Tracing { get; set; }
     private readonly List<PacketSniffer> sniffers = [];
-
     /// <summary>
     /// 初始化 <see cref="FtpAgent"/> 類別的新執行個體。
     /// </summary>
@@ -25,7 +24,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
-
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
@@ -35,7 +33,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         RunWatcher();
         base.OnStartAgent();
     }
-
     /// <summary>
     /// 執行監聽器啟動作業。
     /// </summary>
@@ -54,7 +51,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
             }
         }
     }
-
     /// <summary>
     /// 執行監聽指定位址作業。
     /// </summary>
@@ -79,7 +75,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         catch (Exception exception) { PacketSniffer.LogTrace(exception); }
         sniffers.Add(s);
     }
-
     /// <summary>
     /// 處理 IP 封包傳送事件。
     /// </summary>
@@ -119,14 +114,12 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
             }
         }
     }
-
     /// <summary>
     /// 處理追蹤通知。
     /// </summary>
     /// <param name="tlsPackage">TLS 封包資料。</param>
 
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
-
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>
@@ -136,7 +129,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         OnStartAgent();
         base.OnContinueAgent();
     }
-
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
@@ -146,7 +138,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         OnStopAgent();
         base.OnPauseAgent();
     }
-
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
@@ -163,7 +154,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     }
 
     public override bool IsRunning => base.IsRunning;
-
     /// <summary>
     /// 處理登入失敗作業。
     /// </summary>
@@ -180,7 +170,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         };
         OnAttackDetected(this, args);
     }
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -189,7 +178,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         get => "FTP Security Agent";
         set { }
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
@@ -202,7 +190,6 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
     /// <summary>
     /// 取得 Agent 的全域唯一識別碼 (GUID)。
     /// </summary>

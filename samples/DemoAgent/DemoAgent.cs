@@ -3,7 +3,6 @@ using System.IO;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;         // use theIntrusion Detectionplugin API
 
 namespace DemoAgent;
-
 /// <summary>
 /// Simple security agent for demonstration of IDDSCommunity Intrusion Detection plugin functionality.
 /// To create the plugin, this Class must be inherited from AgentPlugin
@@ -14,7 +13,6 @@ public class DemoAgent : AgentPlugin
     /// A FileSystemWatcher to monitor a directory for changes (could be a log directory)
     /// </summary>
     FileSystemWatcher? watcher;
-
     /// <summary>
     /// Important: This plugin uses a custom configuration (see DemoConfiguration.cs).
     /// This is loaded in the constructor, and the TypeName of this configuration is set.
@@ -26,7 +24,6 @@ public class DemoAgent : AgentPlugin
         Configuration.ConfigurationSettingsTypeName =
             Configuration.AgentSettings.GetType().FullName ?? string.Empty;
     }
-
     /// <summary>
     /// Override the OnStartAgent function to load and initialize objects as needed
     /// This DemoAgent configures a FileSystemWatcher to monitor a directory
@@ -45,7 +42,6 @@ public class DemoAgent : AgentPlugin
         watcher.EnableRaisingEvents = true;
         watcher.Changed += new FileSystemEventHandler(Watcher_Changed);
     }
-
     /// <summary>
     /// Override the OnStopAgent function which is called when stopping theIntrusion DetectionService
     /// </summary>
@@ -54,17 +50,14 @@ public class DemoAgent : AgentPlugin
         watcher?.Dispose();
         watcher = null;
     }
-
     /// <summary>
     /// Override the OnPauseAgent function which is called when pausing theIntrusion DetectionService
     /// </summary>
     protected override void OnPauseAgent() => watcher!.EnableRaisingEvents = false;
-
     /// <summary>
     /// Override the OnContinueAgent function which is called when resuming theIntrusion DetectionService
     /// </summary>
     protected override void OnContinueAgent() => watcher!.EnableRaisingEvents = true;
-
 
 
     /// <summary>
@@ -78,7 +71,6 @@ public class DemoAgent : AgentPlugin
             if (watcher != null) return watcher.EnableRaisingEvents; else return false;
         }
     }
-
     /// <summary>
     /// The FileSystemWatcher.Changed event handler does the job for this example.
     /// Calling the base.OnAttackDetected(object, NotificationEventArgs) function

@@ -25,7 +25,6 @@ public class Pop3Client
     private readonly object sync = new();
     private Pop3Message lastMessage;
     private DateTime lastInteraction;
-
     /// <summary>
     /// 取得或設定此連線觀察到的最新 POP3 命令。
     /// </summary>
@@ -42,7 +41,6 @@ public class Pop3Client
                 lastMessage = value;
         }
     }
-
     /// <summary>
     /// 取得或設定此連線觀察到的最新封包時間戳記。
     /// </summary>

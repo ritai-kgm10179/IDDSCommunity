@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
-
 /// <summary>
 /// Reconciles durable desired locks with the IDDSCommunity Windows Firewall rule.
 /// </summary>

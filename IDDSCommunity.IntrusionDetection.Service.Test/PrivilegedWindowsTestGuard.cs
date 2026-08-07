@@ -7,7 +7,6 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 internal static class PrivilegedWindowsTestGuard
 {
     internal const string Category = "PrivilegedWindows";
-
     /// <summary>
     /// Requires explicit opt-in and an elevated Windows process before a test can mutate platform state.
     /// </summary>

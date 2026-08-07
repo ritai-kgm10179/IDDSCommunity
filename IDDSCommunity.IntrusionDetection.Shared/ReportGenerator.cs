@@ -11,7 +11,6 @@ public class ReportGenerator
 
     const string SELECT_BY_AGENT = @"SELECT a.DisplayName as AgentName, i.Action as Action, COUNT(*) as Incidents FROM IntrusionLog i INNER JOIN SecurityAgents a ON a.AgentId=i.AgentId WHERE IncidentTime>@p0 AND IncidentTime<@p1 GROUP BY a.DisplayName, i.Action ORDER BY 1";
     const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime>@p0 AND IncidentTime<@p1 AND Action=@p2 GROUP BY ClientIp ORDER BY COUNT(*)";
-
     /// <summary>
     /// 初始化 <see cref="ReportGenerator"/> class的新執行個體。
     /// </summary>
@@ -29,7 +28,6 @@ public class ReportGenerator
             return _instance;
         }
     }
-
     /// <summary>
     /// 執行daily report作業。
     /// </summary>
@@ -40,7 +38,6 @@ public class ReportGenerator
     public long TotalIntrusionAttempts { get; set; }
     public long TotalSoftLocks { get; set; }
     public long TotalHardLocks { get; set; }
-
     /// <summary>
     /// 取得每個 Agent 的事件數。
     /// </summary>
@@ -99,7 +96,6 @@ public class ReportGenerator
         rdr.Close();
         return sb.ToString();
     }
-
     /// <summary>
     /// 取得依 IP 分組的事件數。
     /// </summary>
@@ -123,21 +119,18 @@ public class ReportGenerator
         }
         return sb.ToString();
     }
-
     /// <summary>
     /// 取得依 IP 範本分組的事件數。
     /// </summary>
     /// <returns>傳回get incident by iptemplate結果。</returns>
 
     public static string GetIncidentByIPTemplate() => Resources.IntrusionAttemptsByIp;
-
     /// <summary>
     /// 取得依 Agent 範本分組的事件數。
     /// </summary>
     /// <returns>傳回get events per agent template結果。</returns>
 
     public static string GetEventsPerAgentTemplate() => Resources.EventsPerAgent;
-
     /// <summary>
     /// 設定每個 Agent 的事件數。
     /// </summary>
@@ -158,7 +151,6 @@ public class ReportGenerator
         TotalHardLocks += hardLocks;
         return result;
     }
-
     /// <summary>
     /// 取得報表內容。
     /// </summary>
@@ -186,7 +178,6 @@ public class ReportGenerator
 
         return result;
     }
-
     /// <summary>
     /// 使用選取的應用程式語言替換每個使用者介面報表標籤。
     /// </summary>

@@ -13,7 +13,6 @@ public sealed class LogSanitizerTest
     {
         Assert.AreEqual("first  second third", LogSanitizer.Sanitize("first\r\nsecond\0third"));
     }
-
     /// <summary>
     /// Verifies that common credential fields are redacted before logging.
     /// </summary>
@@ -27,7 +26,6 @@ public sealed class LogSanitizerTest
         StringAssert.Contains(result, "password=[REDACTED]");
         StringAssert.Contains(result, "token=[REDACTED]");
     }
-
     /// <summary>
     /// Verifies that attacker-controlled diagnostic messages have a fixed maximum size.
     /// </summary>

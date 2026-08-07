@@ -14,7 +14,6 @@ public class LoadAgentsTest
     private string testDirectory = null!;
 
     public TestContext TestContext { get; set; } = null!;
-
     /// <summary>
     /// 初始化 <see cref="LoadAgentsTest"/> 類別的新執行個體。
     /// </summary>
@@ -38,7 +37,6 @@ public class LoadAgentsTest
     {
         if (Directory.Exists(testDirectory)) Directory.Delete(testDirectory, recursive: true);
     }
-
     /// <summary>
     /// Loads agents from directory.
     /// </summary>
@@ -62,7 +60,6 @@ public class LoadAgentsTest
 
         Assert.HasCount(0, agents);
     }
-
     /// <summary>
     /// Merges disk agents with db.
     /// </summary>
@@ -90,7 +87,6 @@ public class LoadAgentsTest
         Assert.IsFalse(merged[1].Enabled);
         Assert.AreEqual(discoveredNew.Id, merged[1].Id);
     }
-
     /// <summary>
     /// Loads agents to memory test.
     /// </summary>

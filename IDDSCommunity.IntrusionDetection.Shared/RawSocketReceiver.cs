@@ -18,7 +18,6 @@ public sealed class RawSocketReceiver : IDisposable
 
     public event EventHandler<RawPacketEventArgs>? PacketReceived;
     public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
-
     /// <summary>
     /// 初始化包含界限分發佇列的 Raw Socket 接收器。
     /// </summary>
@@ -28,32 +27,26 @@ public sealed class RawSocketReceiver : IDisposable
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueCapacity);
         this.queueCapacity = queueCapacity;
     }
-
     /// <summary>
     /// 取得 active receive-loop task so callers can supervise its lifetime.
     /// </summary>
     public Task Completion { get; private set; } = Task.CompletedTask;
-
     /// <summary>
     /// 取得 number of packets offered to the dispatch queue during the current capture.
     /// </summary>
     public long ReceivedPacketCount => dispatcher?.ReceivedCount ?? 0;
-
     /// <summary>
     /// 取得 number of packets delivered to subscribers during the current capture.
     /// </summary>
     public long DispatchedPacketCount => dispatcher?.DispatchedCount ?? 0;
-
     /// <summary>
     /// 取得 number of newest packets dropped because the bounded queue was full.
     /// </summary>
     public long DroppedPacketCount => dispatcher?.DroppedCount ?? 0;
-
     /// <summary>
     /// 取得 number of packet subscriber callbacks that threw an exception.
     /// </summary>
     public long SubscriberFailureCount => Interlocked.Read(ref subscriberFailureCount);
-
     /// <summary>
     /// 於指定的本機位址啟動 IPv4 封包擷取。
     /// </summary>
@@ -75,7 +68,6 @@ public sealed class RawSocketReceiver : IDisposable
         Task receiveTask = ReceiveLoopAsync(socket, dispatcher, cancellation.Token);
         Completion = Task.WhenAll(receiveTask, dispatcher.Completion);
     }
-
     /// <summary>
     /// 停止封包擷取並取消未處理的接收作業。
     /// </summary>
@@ -88,7 +80,6 @@ public sealed class RawSocketReceiver : IDisposable
         cancellation?.Dispose();
         cancellation = null;
     }
-
     /// <summary>
     /// 釋放通訊埠與取消權杖資源。
     /// </summary>
@@ -120,7 +111,6 @@ public sealed class RawSocketReceiver : IDisposable
             ArrayPool<byte>.Shared.Return(buffer);
         }
     }
-
     /// <summary>
     /// 獨立通知每個封包訂閱者，避免單一故障的消費者影響封包擷取作業。
     /// </summary>
@@ -140,7 +130,6 @@ public sealed class RawSocketReceiver : IDisposable
             }
         }
     }
-
     /// <summary>
     /// 發布擷取錯誤，同時避免錯誤觀察者中斷接收迴圈。
     /// </summary>
@@ -168,7 +157,6 @@ public sealed class RawPacketEventArgs(byte[] packet) : EventArgs
     /// </summary>
     public byte[] Packet { get; } = packet;
 }
-
 /// <summary>
 /// 描述原始通訊埠封包擷取或訂閱者的失敗狀況。
 /// </summary>

@@ -24,7 +24,6 @@ public sealed class WindowsServiceStatusReaderTest
         Assert.AreEqual(ServiceControllerStatus.Running, status);
         Assert.IsNull(failure);
     }
-
     /// <summary>
     /// Verifies that a missing-service exception becomes an unavailable result instead of escaping a timer callback.
     /// </summary>
@@ -39,7 +38,6 @@ public sealed class WindowsServiceStatusReaderTest
         Assert.IsFalse(success);
         Assert.IsInstanceOfType<InvalidOperationException>(failure);
     }
-
     /// <summary>
     /// Verifies that a Windows service-control error becomes an unavailable result.
     /// </summary>

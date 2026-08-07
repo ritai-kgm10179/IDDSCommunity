@@ -9,7 +9,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
 {
     public event EventHandler? PluginsChanged;
     public event EventHandler? AgentSettingsChanged;
-
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityAgentConfiguration"/> 類別的新執行個體。
     /// </summary>
@@ -20,7 +19,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
         BackColor = Color.White;
         iddscommunitySettingsNavigation.PluginsChanged += new EventHandler(iddscommunitySettingsNavigation_PluginsChanged);
     }
-
     /// <summary>
     /// 處理 plugins changed 事件。
     /// </summary>
@@ -46,7 +44,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
             return _pluginConfigPanel;
         }
     }
-
     /// <summary>
     /// 處理 agent configuration changed 事件。
     /// </summary>
@@ -54,13 +51,11 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// <param name="e">事件資料。</param>
 
     void _pluginConfigPanel_AgentConfigurationChanged(object? sender, EventArgs e) => OnAgentSettingsChanged();
-
     /// <summary>
     /// Processes the agent settings changed notification.
     /// </summary>
 
     void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// 處理 agent changed 事件。
     /// </summary>
@@ -71,26 +66,22 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     {
         //OnAgentSettingsChanged();
     }
-
     /// <summary>
     /// Processes the plugins changed notification.
     /// </summary>
 
     private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
-
     /// <summary>
     /// Clears security agents.
     /// </summary>
 
     public void ClearSecurityAgents() => iddscommunitySettingsNavigation.Clear();
-
     /// <summary>
     /// Loads security agent.
     /// </summary>
     /// <param name="agent">agent 的值。</param>
 
     public void LoadSecurityAgent(SecurityAgent agent) => iddscommunitySettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
-
     /// <summary>
     /// 執行 show agent config 作業。
     /// </summary>
@@ -106,7 +97,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
         if (agent is not null)
             PluginConfigPanel.Agent = agent;
     }
-
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>

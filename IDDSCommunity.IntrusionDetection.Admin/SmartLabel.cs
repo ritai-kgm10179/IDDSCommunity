@@ -10,7 +10,6 @@ public partial class SmartLabel : Label
     /// </summary>
 
     public SmartLabel() => InitializeComponent();
-
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>

@@ -6,7 +6,6 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
-
 /// <summary>
 /// Persists accepted protection events so an interrupted runtime can replay unfinished work.
 /// </summary>
@@ -16,7 +15,6 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     private const int ProcessingStatus = 1;
     private const int CompletedStatus = 2;
     private const int FailedStatus = 3;
-
     /// <summary>
     /// Persists a new event before it enters the in-memory channel.
     /// </summary>
@@ -39,7 +37,6 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
             eventArgs.EventId, eventArgs.IpAddress, eventArgs.EventMessage, PendingStatus);
         return id;
     }
-
     /// <summary>
     /// Returns unfinished events in original receipt order and resets interrupted processing rows for replay.
     /// </summary>
@@ -60,19 +57,16 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
             .Select(static row => row.ToItem())
             .ToList();
     }
-
     /// <summary>
     /// Marks one event as actively processing and increments its attempt count.
     /// </summary>
     /// <param name="id">The durable event identifier.</param>
     internal void MarkProcessing(Guid id) => Update(id, ProcessingStatus, incrementAttempts: true, string.Empty);
-
     /// <summary>
     /// Marks one event as successfully processed.
     /// </summary>
     /// <param name="id">The durable event identifier.</param>
     internal void MarkCompleted(Guid id) => Update(id, CompletedStatus, incrementAttempts: false, string.Empty);
-
     /// <summary>
     /// Marks one event as failed while retaining it for a later replay.
     /// </summary>
@@ -83,7 +77,6 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
         ArgumentNullException.ThrowIfNull(exception);
         Update(id, FailedStatus, incrementAttempts: false, exception.GetType().Name);
     }
-
     /// <summary>
     /// Removes completed inbox rows older than the configured evidence retention period.
     /// </summary>
@@ -95,7 +88,6 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
         string boundary = timeProvider.GetUtcNow().Subtract(retentionPeriod).ToString("O", CultureInfo.InvariantCulture);
         database.ExecuteNonQuery("DELETE FROM ProtectionEventInbox WHERE Status=@p0 AND UpdatedUtc<@p1", CompletedStatus, boundary);
     }
-
     /// <summary>
     /// Counts durable events that have not completed successfully.
     /// </summary>
@@ -103,7 +95,6 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     internal long CountUnfinished() => Convert.ToInt64(
         database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status<>@p0", CompletedStatus),
         CultureInfo.InvariantCulture);
-
     /// <summary>
     /// Updates the processing state and diagnostic details for one durable event.
     /// </summary>

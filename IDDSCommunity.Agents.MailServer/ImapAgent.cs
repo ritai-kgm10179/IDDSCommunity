@@ -8,7 +8,6 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
-
 /// <summary>
 /// 偵測明文 IMAP 驗證失敗嘗試，並於 STARTTLS 成功後停止解析。
 /// </summary>
@@ -16,7 +15,6 @@ public sealed class ImapAgent : AgentPlugin
 {
     private readonly ConcurrentDictionary<int, ImapSessionInspector> sessions = [];
     private readonly List<PacketSniffer> sniffers = [];
-
     /// <summary>
     /// 初始化 <see cref="ImapAgent"/> 類別的新執行個體。
     /// </summary>
@@ -26,7 +24,6 @@ public sealed class ImapAgent : AgentPlugin
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
     }
-
     /// <inheritdoc />
     protected override void OnStartAgent()
     {
@@ -38,21 +35,18 @@ public sealed class ImapAgent : AgentPlugin
         }
         base.OnStartAgent();
     }
-
     /// <inheritdoc />
     protected override void OnPauseAgent()
     {
         StopWatchers();
         base.OnPauseAgent();
     }
-
     /// <inheritdoc />
     protected override void OnContinueAgent()
     {
         OnStartAgent();
         base.OnContinueAgent();
     }
-
     /// <inheritdoc />
     protected override void OnStopAgent()
     {

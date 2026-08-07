@@ -3,7 +3,6 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Xml.Serialization;
 
 namespace IDDSCommunity.IntrusionDetection.Service.Test;
-
 /// <summary>
 /// Summary description for ApiTest
 /// </summary>
@@ -22,7 +21,6 @@ public class ApiTest
     }
 
     private TestContext testContextInstance = null!;
-
     /// <summary>
     ///Gets or sets the test context which provides
     ///information about and functionality for the current test run.
@@ -53,7 +51,6 @@ public class ApiTest
     // public void MyTestCleanup() { }
     //
     #endregion
-
     /// <summary>
     /// 執行 test serialization 作業。
     /// </summary>

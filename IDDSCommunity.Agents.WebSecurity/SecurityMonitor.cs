@@ -25,7 +25,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
                     </Select>
                   </Query>
                 </QueryList>";
-
     /// <summary>
     /// 初始化 Agent。
     /// </summary>
@@ -33,7 +32,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
     {
 
     }
-
 
     /// <summary>
     /// 啟動 Agent 服務並初始化事件紀錄監聽器。
@@ -46,17 +44,14 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         watcher.EventRecordWritten += new EventHandler<EventRecordWrittenEventArgs>(Watcher_EventRecordWritten);
         watcher.Enabled = true;
     }
-
     /// <summary>
     /// 從暫停狀態復原 Agent 服務。
     /// </summary>
     protected override void OnContinueAgent() => SetWatcherEnabled(true);
-
     /// <summary>
     /// 暫停 Agent 服務。
     /// </summary>
     protected override void OnPauseAgent() => SetWatcherEnabled(false);
-
     /// <summary>
     /// 停止 Agent 服務。
     /// </summary>
@@ -70,7 +65,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         watcher = null;
         query = null;
     }
-
     /// <summary>
     /// 設定監聽器啟用狀態。
     /// </summary>
@@ -83,7 +77,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
             watcher.Enabled = enabled;
         }
     }
-
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -138,7 +131,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
             EventLog.WriteEntry("IDDSCommunity.Agents.WebSecurity.WebSecurityAgent", ex.Message);
         }
     }
-
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。
     /// </summary>
@@ -150,7 +142,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
 
         }
     }
-
     /// <summary>
     /// 取得或設定 Agent 的預設圖示。
     /// </summary>
@@ -163,7 +154,6 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
     /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
     /// </summary>
     public Image? UnselectedIcon { get; set; }
-
 
 
     /// <summary>

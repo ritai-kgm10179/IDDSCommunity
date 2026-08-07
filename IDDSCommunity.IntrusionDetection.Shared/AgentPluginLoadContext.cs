@@ -14,7 +14,6 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
         typeof(IAgentPlugin).Assembly.GetName().Name!,
         typeof(SecurityAgent).Assembly.GetName().Name!
     };
-
     /// <summary>
     /// Loads a managed dependency from the plugin deployment directory.
     /// </summary>
@@ -27,7 +26,6 @@ internal sealed class AgentPluginLoadContext(string pluginPath) : AssemblyLoadCo
         string? path = resolver.ResolveAssemblyToPath(assemblyName);
         return path is null ? null : LoadFromAssemblyPath(path);
     }
-
     /// <summary>
     /// Loads an unmanaged dependency from the plugin deployment directory.
     /// </summary>

@@ -28,7 +28,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         property?.SetValue(control, true, null);
     }
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -40,7 +39,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         var c = (Control)sender;
         c.Location = new Point(c.Location.X + 1, c.Location.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -52,7 +50,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         var c = (Control)sender;
         c.Location = new Point(c.Location.X - 1, c.Location.Y - 1);
     }
-
     /// <summary>
     /// Finds row.
     /// </summary>
@@ -70,13 +67,11 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         }
         return null;
     }
-
     /// <summary>
     /// Clears requested operation.
     /// </summary>
 
     public void Clear() => dataGridViewLocks.Rows.Clear();
-
     /// <summary>
     /// Adds requested operation.
     /// </summary>
@@ -113,14 +108,12 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         row.Cells[7].Value = id.ToString();
         row.Cells[8].Value = status;
     }
-
     /// <summary>
     /// Sets hard locks.
     /// </summary>
     /// <param name="number">number 的值。</param>
 
     public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = Strings.Format("{0} hard locks", number);
-
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>
@@ -138,14 +131,12 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         }
     }
 
-
     /// <summary>
     /// Sets soft locks.
     /// </summary>
     /// <param name="number">number 的值。</param>
 
     public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = Strings.Format("{0} soft locks", number);
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -196,7 +187,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
             }
         }
     }
-
     /// <summary>
     /// Persists manual-unlock requests without accessing WinForms controls.
     /// </summary>

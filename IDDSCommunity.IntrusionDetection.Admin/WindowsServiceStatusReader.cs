@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.ServiceProcess;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Converts expected Windows service discovery failures into an explicit unavailable result.
 /// </summary>

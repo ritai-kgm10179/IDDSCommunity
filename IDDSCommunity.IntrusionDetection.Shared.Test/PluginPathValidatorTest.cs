@@ -18,7 +18,6 @@ public sealed class PluginPathValidatorTest
 
         Assert.AreEqual(Path.GetFullPath(plugin), PluginPathValidator.Validate(tree.Root, plugin));
     }
-
     /// <summary>
     /// Verifies that an assembly outside the trusted root is rejected.
     /// </summary>
@@ -37,7 +36,6 @@ public sealed class PluginPathValidatorTest
             File.Delete(outside);
         }
     }
-
     /// <summary>
     /// Verifies that non-DLL files cannot be loaded as Agent assemblies.
     /// </summary>
@@ -59,7 +57,6 @@ public sealed class PluginPathValidatorTest
         }
 
         internal string Root { get; }
-
         /// <summary>
         /// Creates an empty test file beneath the trusted root.
         /// </summary>
@@ -71,7 +68,6 @@ public sealed class PluginPathValidatorTest
             File.WriteAllBytes(path, []);
             return path;
         }
-
         /// <summary>
         /// Removes the temporary plug-in tree.
         /// </summary>

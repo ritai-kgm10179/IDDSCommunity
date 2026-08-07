@@ -28,7 +28,6 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsFalse(FirewallPolicyManager.ContainsAddress("198.51.100.0/24", "198.51.101.42"));
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("2001:db8::/32", "2001:db8::42"));
     }
-
     /// <summary>
     /// 驗證當同一個 C 段子網超過門檻時，自動聚合為 CIDR 條目。
     /// </summary>
@@ -41,7 +40,6 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsTrue(aggregated.Contains("10.0.0.1"));
         Assert.IsFalse(aggregated.Contains("192.168.1.1"));
     }
-
     /// <summary>
     /// 驗證當 C 段子網中含有 Safe Networks 白名單 IP 時，取消 CIDR 聚合以避免誤殺。
     /// </summary>

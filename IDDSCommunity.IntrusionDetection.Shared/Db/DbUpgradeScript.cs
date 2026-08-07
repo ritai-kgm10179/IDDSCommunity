@@ -6,7 +6,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 public class DbUpgradeScript
 {
     public virtual int INTERNAL_VERSION => 0;
-
     /// <summary>
     /// 執行upgrade database作業。
     /// </summary>
@@ -16,7 +15,6 @@ public class DbUpgradeScript
     {
 
     }
-
     /// <summary>
     /// 執行run command作業。
     /// </summary>

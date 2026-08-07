@@ -11,7 +11,6 @@ internal interface IIntrusionDetectionRuntime
     /// <param name="cancellationToken">Signals cancellation of host startup.</param>
     /// <returns>表示非同步工作完成的 Task。</returns>
     Task StartAsync(CancellationToken cancellationToken);
-
     /// <summary>
     /// Stops all started intrusion-detection components.
     /// </summary>

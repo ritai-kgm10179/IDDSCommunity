@@ -2,21 +2,18 @@
 using System.Resources;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
-
 /// <summary>
 /// 提供安裝程式在地化文字資源處理。
 /// </summary>
 internal static class SetupText
 {
     private static readonly ResourceManager Resources = new("IDDSCommunity.IntrusionDetection.Setup.SetupStrings", typeof(SetupText).Assembly);
-
     /// <summary>
     /// 取得在地化的安裝程式字串。
     /// </summary>
     /// <param name="name">資源名稱。</param>
     /// <returns>傳回在地化字串數值。</returns>
     internal static string Get(string name) => Resources.GetString(name, CultureInfo.CurrentUICulture) ?? name;
-
     /// <summary>
     /// 格式化在地化的安裝程式字串。
     /// </summary>

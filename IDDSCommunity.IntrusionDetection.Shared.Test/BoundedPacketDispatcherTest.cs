@@ -35,7 +35,6 @@ public sealed class BoundedPacketDispatcherTest
         Assert.AreEqual(2L, dispatcher.DispatchedCount);
         Assert.AreEqual(1L, dispatcher.DroppedCount);
     }
-
     /// <summary>
     /// Verifies that every accepted packet is delivered in FIFO order.
     /// </summary>

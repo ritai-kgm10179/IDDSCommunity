@@ -45,7 +45,6 @@ public class LockStatusAdapter
             return _lockStatusNames;
         }
     }
-
     /// <summary>
     /// 取得鎖定狀態名稱。
     /// </summary>

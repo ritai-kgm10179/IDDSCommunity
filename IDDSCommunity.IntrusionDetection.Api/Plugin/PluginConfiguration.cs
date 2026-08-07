@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 
 namespace IDDSCommunity.IntrusionDetection.Api.Plugin;
-
 /// <summary>
 /// 擴充元件自訂設定之基底類別。
 /// </summary>

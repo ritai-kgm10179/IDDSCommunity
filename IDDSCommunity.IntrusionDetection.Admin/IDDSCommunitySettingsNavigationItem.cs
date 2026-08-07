@@ -8,7 +8,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
 {
 
     public event EventHandler? NavigationClicked;
-
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
@@ -25,7 +24,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     {
         get => smartLabelAgentName.Text; set => smartLabelAgentName.Text = value;
     }
-
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>
@@ -49,7 +47,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     }
 
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -61,7 +58,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
         pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
         smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X + 1, smartLabelAgentName.Location.Y + 1);
     }
-
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -75,7 +71,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     }
 
 
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -83,7 +78,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// <param name="e">事件資料。</param>
 
     private void IDDSCommunitySettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
-
     /// <summary>
     /// Processes the navigation clicked notification.
     /// </summary>

@@ -7,7 +7,6 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal static partial class LogSanitizer
 {
     private const int MaximumMessageLength = 4096;
-
     /// <summary>
     /// Removes log-forging characters, redacts common secrets, and bounds Event Log message size.
     /// </summary>

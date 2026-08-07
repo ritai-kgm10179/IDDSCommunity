@@ -39,7 +39,6 @@ public class DatabaseUpgradeTest
                 Directory.Delete(directory, recursive: true);
         }
     }
-
     /// <summary>
     /// Verifies that an incomplete legacy schema is rejected instead of being marked as migrated.
     /// </summary>
@@ -69,7 +68,6 @@ public class DatabaseUpgradeTest
                 Directory.Delete(directory, recursive: true);
         }
     }
-
     /// <summary>
     /// 執行 test database creation 作業。
     /// </summary>

@@ -18,7 +18,6 @@ public class TCPHeader
     private readonly byte byHeaderLength;
     private readonly ushort usMessageLength;
     private readonly byte[] byTCPData = new byte[128];
-
     /// <summary>
     /// 初始化 <see cref="TCPHeader"/> class的新執行個體。
     /// </summary>

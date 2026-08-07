@@ -20,7 +20,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     private readonly AgentPluginLoadContext loadContext;
     private bool disposed;
     private int watchdogActive;
-
     /// <summary>
     /// 初始化 <see cref="AgentProxy"/> class的新執行個體。
     /// </summary>
@@ -40,7 +39,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             ?? throw new InvalidOperationException(string.Format(Localization.Strings.Get("Unable to create agent plugin '{0}' from '{1}'."), typeName, assemblyFilename));
         _agent.AttackDetected += agent_AttackDetected;
     }
-
     /// <summary>
     /// 處理 attack detected 事件。
     /// </summary>
@@ -61,7 +59,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             }
         }
     }
-
     /// <summary>
     /// Starts requested operation.
     /// </summary>
@@ -82,7 +79,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// </summary>
 
     public void Continue() => GetAgent().Continue();
-
     /// <summary>
     /// Determines whether n pause.
     /// </summary>
@@ -109,21 +105,18 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         get => GetAgent().Configuration;
         set => GetAgent().Configuration = value;
     }
-
     /// <summary>
     /// Gets memory usage.
     /// </summary>
     /// <returns>傳回get memory usage結果。</returns>
 
     public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
-
     /// <summary>
     /// Gets cpu time.
     /// </summary>
     /// <returns>傳回get cpu time結果。</returns>
 
     public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-
     /// <summary>
     /// 執行enable monitoring作業。
     /// </summary>
@@ -139,7 +132,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     }
 
     public List<AgentPerformanceRecord> PerformanceRecords { get; set; } = [];
-
     /// <summary>
     /// 處理 elapsed 事件。
     /// </summary>
@@ -186,7 +178,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
             Interlocked.Exchange(ref watchdogActive, 0);
         }
     }
-
     /// <summary>
     /// 執行disable monitoring作業。
     /// </summary>
@@ -200,7 +191,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         _watchdog.Dispose();
         _watchdog = null;
     }
-
     /// <summary>
     /// 執行dispose作業。
     /// </summary>
@@ -217,7 +207,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         disposed = true;
         GC.SuppressFinalize(this);
     }
-
     /// <summary>
     /// 取得 active plug-in instance or rejects access after unload.
     /// </summary>

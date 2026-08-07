@@ -10,7 +10,6 @@ public partial class RemoveLockForm : Form
     /// </summary>
 
     public RemoveLockForm() => InitializeComponent();
-
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
@@ -21,7 +20,6 @@ public partial class RemoveLockForm : Form
     {
 
     }
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -29,7 +27,6 @@ public partial class RemoveLockForm : Form
     /// <param name="e">事件資料。</param>
 
     private void buttonOK_Click(object sender, EventArgs e) => DialogResult = DialogResult.OK;
-
     /// <summary>
     /// 處理 click 事件。
     /// </summary>

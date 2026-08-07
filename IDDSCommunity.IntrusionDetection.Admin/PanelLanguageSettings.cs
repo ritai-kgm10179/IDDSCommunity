@@ -5,7 +5,6 @@ using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// Allows the user to select and persist the application display language.
 /// </summary>
@@ -14,7 +13,6 @@ public sealed class PanelLanguageSettings : UserControl
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
     private readonly ComboBox languageSelector;
-
     /// <summary>
     /// Initializes the language settings panel.
     /// </summary>

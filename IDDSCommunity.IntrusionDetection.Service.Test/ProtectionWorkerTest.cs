@@ -25,7 +25,6 @@ public sealed class ProtectionWorkerTest
         Assert.AreEqual(1, runtime.StartCount);
         Assert.AreEqual(1, runtime.StopCount);
     }
-
     /// <summary>
     /// Verifies that a runtime startup failure propagates to the Generic Host.
     /// </summary>
@@ -52,7 +51,6 @@ public sealed class ProtectionWorkerTest
         internal int StopCount { get; private set; }
 
         internal Exception? StartException { get; init; }
-
         /// <summary>
         /// Records runtime startup and optionally throws the configured failure.
         /// </summary>
@@ -66,7 +64,6 @@ public sealed class ProtectionWorkerTest
                 throw StartException;
             return Task.CompletedTask;
         }
-
         /// <summary>
         /// Records runtime shutdown.
         /// </summary>

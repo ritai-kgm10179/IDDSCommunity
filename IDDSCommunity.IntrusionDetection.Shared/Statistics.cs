@@ -9,13 +9,11 @@ public class Statistics
     private readonly List<Guid> _agentIds = [];
     private readonly Lock _lock = new();
     private readonly Database database;
-
     /// <summary>
     /// 初始化 <see cref="Statistics"/> class的新執行個體。
     /// </summary>
 
     private Statistics() : this(Database.Instance) { }
-
     /// <summary>
     /// 初始化包含明確資料庫相依性的統計資料持久化服務。
     /// </summary>
@@ -28,7 +26,6 @@ public class Statistics
 
     private static Statistics? _instance;
     public static Statistics Instance => _instance ??= new();
-
     /// <summary>
     /// 執行increase failed login statistics作業。
     /// </summary>
@@ -43,7 +40,6 @@ public class Statistics
         agent.FailedLogins++;
         IncreaseStatistics(agent, "FailedLogins");
     }
-
     /// <summary>
     /// 執行increase hard lock statistics作業。
     /// </summary>
@@ -54,7 +50,6 @@ public class Statistics
         agent.HardLocks++;
         IncreaseStatistics(agent, "HardLocks");
     }
-
     /// <summary>
     /// 設定統計資料。
     /// </summary>
@@ -74,7 +69,6 @@ public class Statistics
             _agentIds.Add(agent.Id);
         }
     }
-
     /// <summary>
     /// 執行increase soft lock statistics作業。
     /// </summary>
@@ -85,7 +79,6 @@ public class Statistics
         agent.SoftLocks++;
         IncreaseStatistics(agent, "SoftLocks");
     }
-
     /// <summary>
     /// 執行increase statistics作業。
     /// </summary>

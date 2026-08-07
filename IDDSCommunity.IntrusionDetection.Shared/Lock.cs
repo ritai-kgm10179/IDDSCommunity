@@ -31,7 +31,6 @@ public class Lock
     public int Status { get; set; }
     public int NumberOfSoftLocks { get; set; }
     public long TriggerIncident { get; set; }
-
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>

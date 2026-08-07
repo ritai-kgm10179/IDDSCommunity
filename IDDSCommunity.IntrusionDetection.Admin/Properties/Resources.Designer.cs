@@ -11,7 +11,6 @@
 namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
     using System;
 
-
     /// <summary>
     ///   用於查詢當地語系化字串等的強類型資源類別。
     /// </summary>
@@ -31,7 +30,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Resources() {
         }
-
         /// <summary>
         ///   傳回這個類別使用的快取的 ResourceManager 執行個體。
         /// </summary>
@@ -45,7 +43,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return resourceMan;
             }
         }
-
         /// <summary>
         ///   覆寫目前執行緒的 CurrentUICulture 屬性，對象是所有
         ///   使用這個強類型資源類別的資源查閱。
@@ -59,7 +56,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 resourceCulture = value;
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -69,7 +65,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -79,7 +74,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -89,7 +83,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -99,7 +92,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -109,7 +101,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -119,7 +110,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -129,7 +119,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -139,7 +128,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -149,7 +137,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -159,7 +146,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -169,7 +155,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -179,7 +164,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -189,7 +173,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -199,7 +182,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -209,7 +191,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -219,7 +200,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -229,7 +209,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -239,7 +218,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -249,7 +227,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -259,7 +236,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -269,7 +245,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -279,7 +254,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -289,7 +263,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -299,7 +272,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -309,7 +281,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -319,7 +290,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -329,7 +299,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -339,7 +308,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -349,7 +317,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -359,7 +326,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -369,7 +335,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -379,7 +344,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -389,7 +353,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -399,7 +362,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -409,7 +371,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -419,7 +380,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -429,7 +389,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -439,7 +398,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -449,7 +407,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -459,7 +416,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -469,7 +425,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -479,7 +434,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -489,7 +443,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -499,7 +452,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -509,7 +461,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -519,7 +470,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -529,7 +479,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -539,7 +488,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -549,7 +497,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -559,7 +506,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -569,7 +515,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -579,7 +524,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -589,7 +533,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -599,7 +542,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -609,7 +551,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -619,7 +560,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -629,7 +569,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -639,7 +578,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -649,7 +587,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -659,7 +596,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -669,7 +605,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -679,7 +614,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -689,7 +623,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -699,7 +632,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -709,7 +641,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -719,7 +650,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -729,7 +659,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -739,7 +668,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -749,7 +677,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -759,7 +686,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -769,7 +695,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>
@@ -779,7 +704,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
         /// <summary>
         ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
         /// </summary>

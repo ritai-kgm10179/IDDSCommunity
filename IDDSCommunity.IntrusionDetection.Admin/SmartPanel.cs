@@ -5,7 +5,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 
 public class SmartPanel : Panel
 {
-
     /// <summary>
     /// 初始化 <see cref="SmartPanel"/> 類別的新執行個體。
     /// </summary>
@@ -14,7 +13,6 @@ public class SmartPanel : Panel
 
     public Color BorderColor { get; set; }
     public bool PaintBorder { get; set; }
-
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>

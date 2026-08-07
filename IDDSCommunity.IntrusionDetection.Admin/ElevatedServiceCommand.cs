@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
-
 /// <summary>
 /// 於短生命週期提權之管理應用程式執行個體中執行 Windows 服務狀態變更作業。
 /// </summary>
@@ -17,7 +16,6 @@ internal static class ElevatedServiceCommand
     private const string CommandSwitch = "--service-command";
     private const string AllowedServiceName = global::IDDSCommunity.IntrusionDetection.Shared.Globals.WINDOWS_SERVICE_NAME;
     private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
-
     /// <summary>
     /// 當傳入引數選取命令模式時，執行提升權限之服務命令。
     /// </summary>
@@ -42,7 +40,6 @@ internal static class ElevatedServiceCommand
             return true;
         }
     }
-
     /// <summary>
     /// 啟動提權處理程序並非同步等待要求的服務操作完成。
     /// </summary>

@@ -14,14 +14,12 @@ public static class Strings
             return _resourceManager;
         }
     }
-
     /// <summary>
     /// 取得 localized user-facing string from the shared string resources.
     /// </summary>
     /// <param name="key">不變資源金鑰。</param>
     /// <returns>傳回在地化數值；當資源不存在時傳回 <paramref name="key"/>。</returns>
     public static string Get(string key) => LanguageManager.Instance.GetString(key, key);
-
     /// <summary>
     /// 使用選取的應用程式文化特性格式化在地化的使用者介面字串。
     /// </summary>
