@@ -47,7 +47,7 @@ internal static class SetupOperations
                 string? verStr = fvi.ProductVersion ?? fvi.FileVersion;
                 if (!string.IsNullOrEmpty(verStr) && Version.TryParse(verStr.Split('+')[0], out Version? version))
                 {
-                    return version;
+                    return NormalizeVersion(version);
                 }
             }
             catch { }
@@ -61,7 +61,7 @@ internal static class SetupOperations
         get
         {
             Version? ver = Assembly.GetExecutingAssembly().GetName().Version;
-            return ver ?? new Version(3, 0, 0, 0);
+            return NormalizeVersion(ver ?? new Version(3, 0, 0, 0));
         }
     }
 
@@ -73,11 +73,28 @@ internal static class SetupOperations
             Version? installed = InstalledVersion;
             if (installed == null) return InstallAction.FreshInstall;
             Version current = CurrentSetupVersion;
-            int comp = current.CompareTo(installed);
+            int comp = CompareVersions(current, installed);
             if (comp > 0) return InstallAction.Upgrade;
             if (comp == 0) return InstallAction.Reinstall;
             return InstallAction.Downgrade;
         }
+    }
+
+    /// <summary>正規化比較兩個 Version，忽視 -1 與 0 在 Revision/Build 的維度差異。</summary>
+    internal static int CompareVersions(Version v1, Version v2)
+    {
+        Version n1 = NormalizeVersion(v1);
+        Version n2 = NormalizeVersion(v2);
+        return n1.CompareTo(n2);
+    }
+
+    private static Version NormalizeVersion(Version v)
+    {
+        return new Version(
+            v.Major < 0 ? 0 : v.Major,
+            v.Minor < 0 ? 0 : v.Minor,
+            v.Build < 0 ? 0 : v.Build,
+            v.Revision < 0 ? 0 : v.Revision);
     }
 
     internal static readonly string DesktopShortcutPath =
