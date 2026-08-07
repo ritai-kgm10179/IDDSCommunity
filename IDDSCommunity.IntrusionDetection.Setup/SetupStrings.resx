@@ -31,4 +31,5 @@ Target location: {1}</value></data>
   <data name="CreateDesktopShortcut" xml:space="preserve"><value>Create Desktop Shortcut</value></data>
   <data name="CreateStartMenuShortcut" xml:space="preserve"><value>Create Start Menu Shortcut</value></data>
   <data name="OpenUserGuide" xml:space="preserve"><value>User Guide</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
 </root>
