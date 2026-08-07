@@ -42,8 +42,9 @@ if ($LASTEXITCODE -ne 0) { throw '服務發佈失敗。' }
 dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot
-if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'docs')) {
-    Copy-Item -Path (Join-Path $repositoryRoot 'docs') -Destination (Join-Path $payloadRoot 'docs') -Recurse -Force
+$userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
+if (Test-Path -LiteralPath $userGuideSource) {
+    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.md') -Force
 }
 
 $pluginProjects = @(
@@ -91,7 +92,7 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packa
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE-PROVENANCE.md') -Destination $packageRoot
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $packageRoot
-if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'docs')) {
-    Copy-Item -Path (Join-Path $repositoryRoot 'docs') -Destination (Join-Path $packageRoot 'docs') -Recurse -Force
+if (Test-Path -LiteralPath $userGuideSource) {
+    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.md') -Force
 }
 Write-Host "安裝套件已建立：$packageRoot"
