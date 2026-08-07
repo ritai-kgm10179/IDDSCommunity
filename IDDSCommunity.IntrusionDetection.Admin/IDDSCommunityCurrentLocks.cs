@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -17,8 +17,15 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     public IDDSCommunityCurrentLocks()
     {
         InitializeComponent();
+        EnableDoubleBuffering(dataGridViewLocks);
         pictureBox3.Image = InterfaceIcons.CreateLock(Math.Min(pictureBox3.ClientSize.Width, pictureBox3.ClientSize.Height));
         pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(Math.Min(pictureBoxActionMenuUnlock.ClientSize.Width, pictureBoxActionMenuUnlock.ClientSize.Height), true);
+    }
+
+    private static void EnableDoubleBuffering(Control control)
+    {
+        System.Reflection.PropertyInfo? property = typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        property?.SetValue(control, true, null);
     }
 
 
