@@ -18,6 +18,7 @@ jobs:
   build-and-test:
     name: Build and test
     runs-on: windows-2025
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -26,6 +27,10 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: |
+            Directory.Build.props
+            IDDSCommunity.slnx
 
       - name: Restore
         run: dotnet restore IDDSCommunity.slnx --nologo
@@ -48,6 +53,7 @@ jobs:
   privileged-windows:
     name: Privileged Windows integration tests
     runs-on: windows-2025
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -56,6 +62,10 @@ jobs:
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.302
+          cache: true
+          cache-dependency-path: |
+            Directory.Build.props
+            IDDSCommunity.slnx
 
       - name: Restore
         run: dotnet restore IDDSCommunity.slnx --nologo
