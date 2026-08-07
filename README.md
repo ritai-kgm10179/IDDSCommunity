@@ -1,6 +1,6 @@
 # IDDS Community
 
-IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護系統，目前獨立版本為 `3.0.0`。它會由可載入的 Agent 分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
+IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護系統。它會由可載入的 Agent 分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
 
 ## AI 產製聲明
 
@@ -58,7 +58,7 @@ dotnet test IDDSCommunity.slnx
 
 推送符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 後，Release CI 會驗證標籤與專案版本、執行完整測試、建立 `win-x64` 與 `win-arm64` 自帶 Runtime 安裝包，並發布 GitHub Release。每個平台都會附上目前規格的 SPDX 3.0 SBOM、相容性較廣的 SPDX 2.2 SBOM、SHA-256 雜湊與 GitHub artifact attestation；兩種 SBOM 也會收錄於對應安裝包內。
 
-輸出位於 `artifacts\setup\idds-community-3.0.0-win-x64`。只有安裝程式與需要變更服務／防火牆的短生命週期操作要求 UAC 提權；一般 Visual Studio 偵錯及管理介面啟動不強制以系統管理員執行。
+輸出位於 `artifacts\setup\idds-community-<Version>-<RID>`。只有安裝程式與需要變更服務／防火牆的短生命週期操作要求 UAC 提權；一般 Visual Studio 偵錯及管理介面啟動不強制以系統管理員執行。
 
 ## 安裝與移除
 
