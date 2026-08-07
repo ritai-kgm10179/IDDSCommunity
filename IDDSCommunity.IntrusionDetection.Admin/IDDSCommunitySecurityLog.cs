@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Data;
+using System.Linq;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -88,9 +89,14 @@ public partial class IDDSCommunitySecurityLog : UserControl
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The event data.</param>
 
-    void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e)
+    void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
+
+    /// <summary>
+    /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件。
+    /// </summary>
+    /// <param name="searchQuery">搜尋關鍵字或 CIDR 網段（如 192.168.1.0/24）。</param>
+    public void ApplyAdvancedFilter(string? searchQuery = null)
     {
-        // @ToDo: Filter richtig setzen!
         List<string> filter = [];
         if (!checkBoxFailedLogins.Checked && !checkBoxHardLocks.Checked && !checkBoxSoftLocks.Checked && !checkBoxSystemMessages.Checked) filter.Add("0=1");
         if (checkBoxFailedLogins.Checked) filter.Add("(Action >99 and Action <200)");
@@ -103,17 +109,51 @@ public partial class IDDSCommunitySecurityLog : UserControl
 
         foreach (string f in filter)
         {
-            if (i > 0) viewFilter = viewFilter + " or ";
-            viewFilter = viewFilter + f;
+            if (i > 0) viewFilter += " or ";
+            viewFilter += f;
             i++;
         }
-        if (filter.Count > 0) viewFilter = viewFilter + ")";
+        if (filter.Count > 0) viewFilter += ")";
         if (comboBoxAgentSelection.Text != null && comboBoxAgentSelection.SelectedItem is IAgentFilter filter2 && !filter2.Id.Equals(new Guid(ALL_AGENTS)))
         {
-            viewFilter = viewFilter + (filter.Count > 0 ? " and " : "");
-            viewFilter = viewFilter + string.Format("AgentId='{0}'", ((SecurityAgent)comboBoxAgentSelection.SelectedItem!).Id);
+            viewFilter += (filter.Count > 0 ? " and " : "");
+            viewFilter += string.Format("AgentId='{0}'", filter2.Id);
         }
+
+        string query = searchQuery?.Trim() ?? string.Empty;
+        if (!string.IsNullOrEmpty(query))
+        {
+            if (query.Contains('/') && CidrMatcher.TryMatchCidr(query, "127.0.0.1"))
+            {
+                DataTable table = DataSetIntrusionLog.Tables["IntrusionLog"]!;
+                HashSet<string> matchedIps = new(StringComparer.Ordinal);
+                foreach (DataRow row in table.Rows)
+                {
+                    string ip = row["IpAddress"]?.ToString() ?? string.Empty;
+                    if (!string.IsNullOrEmpty(ip) && CidrMatcher.TryMatchCidr(query, ip))
+                    {
+                        matchedIps.Add(ip);
+                    }
+                }
+                if (matchedIps.Count > 0)
+                {
+                    string ipClause = string.Join(",", matchedIps.Select(ip => $"'{ip.Replace("'", "''")}'"));
+                    viewFilter += (string.IsNullOrEmpty(viewFilter) ? "" : " and ") + $"IpAddress IN ({ipClause})";
+                }
+                else
+                {
+                    viewFilter = "0=1";
+                }
+            }
+            else
+            {
+                string safeQuery = query.Replace("'", "''").Replace("[", "[[]").Replace("%", "[%]");
+                viewFilter += (string.IsNullOrEmpty(viewFilter) ? "" : " and ") + $"(IpAddress LIKE '%{safeQuery}%' OR Message LIKE '%{safeQuery}%' OR Agent LIKE '%{safeQuery}%')";
+            }
+        }
+
         IntrusionLogView.RowFilter = viewFilter;
+        labelEventsCount.Text = CountEvents().ToString();
     }
 
     /// <summary>
