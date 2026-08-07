@@ -50,7 +50,6 @@ public class LockStatusAdapter
     /// </summary>
     /// <param name="status">status參數。</param>
     /// <returns>傳回get lock status name結果。</returns>
-
     public static string GetLockStatusName(int status)
     {
         if (LockStatusNames.TryGetValue(status, out string? value))

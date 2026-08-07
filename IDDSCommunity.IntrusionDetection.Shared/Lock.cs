@@ -34,7 +34,6 @@ public class Lock
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
-
     public void Save()
     {
         if (Database.Instance.IsConfigured)

@@ -12,7 +12,6 @@ public class DbUpgrader
     /// 執行run upgrade scripts作業。
     /// </summary>
     /// <param name="connection">connection參數。</param>
-
     public void RunUpgradeScripts(System.Data.IDbConnection connection)
     {
         System.Data.IDbCommand cmd = connection.CreateCommand();
@@ -48,7 +47,6 @@ public class DbUpgrader
     /// </summary>
     /// <param name="connection">connection參數。</param>
     /// <param name="latestVersionNumber">latest version number參數。</param>
-
     public void UpgradeAll(System.Data.IDbConnection connection, int latestVersionNumber)
     {
         foreach (int key in upgradeScripts.Keys)
@@ -65,7 +63,6 @@ public class DbUpgrader
     /// <summary>
     /// 執行init scripts作業。
     /// </summary>
-
     private void InitScripts()
     {
         upgradeScripts = new SortedList<int, DbUpgradeScript>
@@ -76,7 +73,6 @@ public class DbUpgrader
     /// <summary>
     /// 初始化 <see cref="DbUpgrader"/> class的新執行個體。
     /// </summary>
-
     public DbUpgrader()
     {
 

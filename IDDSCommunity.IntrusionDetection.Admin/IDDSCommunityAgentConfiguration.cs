@@ -12,7 +12,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityAgentConfiguration"/> 類別的新執行個體。
     /// </summary>
-
     public IDDSCommunityAgentConfiguration()
     {
         InitializeComponent();
@@ -24,7 +23,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void iddscommunitySettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
 
     private PanelPluginConfiguration? _pluginConfigPanel;
@@ -49,19 +47,16 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _pluginConfigPanel_AgentConfigurationChanged(object? sender, EventArgs e) => OnAgentSettingsChanged();
     /// <summary>
     /// Processes the agent settings changed notification.
     /// </summary>
-
     void OnAgentSettingsChanged() => AgentSettingsChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// 處理 agent changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void _pluginConfigPanel_AgentChanged(object? sender, EventArgs e)
     {
         //OnAgentSettingsChanged();
@@ -69,24 +64,20 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// <summary>
     /// Processes the plugins changed notification.
     /// </summary>
-
     private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// Clears security agents.
     /// </summary>
-
     public void ClearSecurityAgents() => iddscommunitySettingsNavigation.Clear();
     /// <summary>
     /// Loads security agent.
     /// </summary>
     /// <param name="agent">agent 的值。</param>
-
     public void LoadSecurityAgent(SecurityAgent agent) => iddscommunitySettingsNavigation.AddNavigationItem(agent.DisplayName, agent.SelectedIcon, agent.UnselectedIcon);
     /// <summary>
     /// 執行 show agent config 作業。
     /// </summary>
     /// <param name="agent">agent 的值。</param>
-
     public void ShowAgentConfig(SecurityAgent agent)
     {
         if (agent != null)
@@ -102,7 +93,6 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void iddscommunitySettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {
         if (iddscommunitySettingsNavigation.SelectedItem != null && !string.IsNullOrEmpty(iddscommunitySettingsNavigation.SelectedItem.DisplayName))

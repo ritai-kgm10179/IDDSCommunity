@@ -12,7 +12,6 @@ public class Statistics
     /// <summary>
     /// 初始化 <see cref="Statistics"/> class的新執行個體。
     /// </summary>
-
     private Statistics() : this(Database.Instance) { }
     /// <summary>
     /// 初始化包含明確資料庫相依性的統計資料持久化服務。
@@ -30,7 +29,6 @@ public class Statistics
     /// 執行increase failed login statistics作業。
     /// </summary>
     /// <param name="agent">agent參數。</param>
-
     public void IncreaseFailedLoginStatistics(SecurityAgent agent)
     {
         lock (_lock)
@@ -44,7 +42,6 @@ public class Statistics
     /// 執行increase hard lock statistics作業。
     /// </summary>
     /// <param name="agent">agent參數。</param>
-
     public void IncreaseHardLockStatistics(SecurityAgent agent)
     {
         agent.HardLocks++;
@@ -54,7 +51,6 @@ public class Statistics
     /// 設定統計資料。
     /// </summary>
     /// <param name="agent">agent參數。</param>
-
     public void ConfigureStatistics(SecurityAgent agent)
     {
         string sqlString = "select count(*) from AgentStatistics where AgentId=@p0";
@@ -73,7 +69,6 @@ public class Statistics
     /// 執行increase soft lock statistics作業。
     /// </summary>
     /// <param name="agent">agent參數。</param>
-
     public void IncreaseSoftLockStatistics(SecurityAgent agent)
     {
         agent.SoftLocks++;
@@ -84,7 +79,6 @@ public class Statistics
     /// </summary>
     /// <param name="agent">agent參數。</param>
     /// <param name="statisticsColumn">statistics column參數。</param>
-
     public void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
     {
         string sqlString = $"Update AgentStatistics set {statisticsColumn}={statisticsColumn}+1 where AgentId=@p0";

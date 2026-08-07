@@ -23,7 +23,6 @@ public class TCPHeader
     /// </summary>
     /// <param name="byBuffer">by buffer參數。</param>
     /// <param name="nReceived">n received參數。</param>
-
     public TCPHeader(byte[] byBuffer, int nReceived)
     {
         using MemoryStream memoryStream = new(byBuffer, 0, nReceived);

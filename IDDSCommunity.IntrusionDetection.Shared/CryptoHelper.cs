@@ -21,7 +21,6 @@ internal class CryptoHelper
     /// <param name="toEncrypt">to encrypt參數。</param>
     /// <param name="useHashing">use hashing參數。</param>
     /// <returns>傳回encrypt結果。</returns>
-
     internal static string Encrypt(string toEncrypt, bool useHashing)
     {
         ArgumentNullException.ThrowIfNull(toEncrypt);
@@ -42,7 +41,6 @@ internal class CryptoHelper
     /// <param name="cipherString">cipher string參數。</param>
     /// <param name="useHashing">use hashing參數。</param>
     /// <returns>傳回decrypt結果。</returns>
-
     internal static string Decrypt(string cipherString, bool useHashing)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(cipherString);

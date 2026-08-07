@@ -15,7 +15,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 初始化 <see cref="SecurityAgents"/> class的新執行個體。
     /// </summary>
-
     private SecurityAgents() : this(Database.Instance, IddsConfig.Instance)
     {
     }
@@ -49,7 +48,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 執行initialize agents作業。
     /// </summary>
-
     public void InitializeAgents()
     {
         Clear();
@@ -86,7 +84,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// 自磁碟讀取 Agent 設定。
     /// </summary>
     /// <returns>傳回read agents from disk結果。</returns>
-
     public List<SecurityAgent> ReadAgentsFromDisk()
     {
         if (string.IsNullOrEmpty(configuration.PluginsDirectory)) throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Application is not initialized."));
@@ -128,7 +125,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     /// <param name="displayName">display name參數。</param>
     /// <returns>傳回find by display name結果。</returns>
-
     public SecurityAgent? FindByDisplayName(string displayName)
     {
         foreach (SecurityAgent agent in this)
@@ -145,7 +141,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     /// <param name="name">name參數。</param>
     /// <returns>傳回find by name結果。</returns>
-
     public SecurityAgent? FindByName(string name)
     {
         foreach (SecurityAgent agent in this)
@@ -162,7 +157,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     /// <param name="agentId">agent id參數。</param>
     /// <returns>傳回get display name結果。</returns>
-
     public string GetDisplayName(string agentId)
     {
         if (Guid.Empty.ToString().Equals(agentId))
@@ -181,14 +175,12 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 執行register security agents作業。
     /// </summary>
-
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
     public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
     /// <summary>
     /// 執行unload agents作業。
     /// </summary>
-
     public void UnloadAgents()
     {
         if (LoadedAgents == null) return;
@@ -209,7 +201,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// 執行unload agent作業。
     /// </summary>
     /// <param name="agent">agent參數。</param>
-
     public void UnloadAgent(SecurityAgent agent)
     {
 #if NETFRAMEWORK
@@ -230,12 +221,10 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void AppDomain_DomainUnload(object sender, EventArgs e) => System.Diagnostics.Debug.Print("Agent AppDomain unloaded");
     /// <summary>
     /// 載入 Agent 擴充元件。
     /// </summary>
-
     public void LoadAgents()
     {
         LoadedAgents ??= [];
@@ -294,7 +283,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 啟動所有 Agent 擴充元件。
     /// </summary>
-
     public void StartAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -305,7 +293,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 停止所有 Agent 擴充元件。
     /// </summary>
-
     public void StopAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -316,7 +303,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 執行pause agents作業。
     /// </summary>
-
     public void PauseAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -334,7 +320,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <summary>
     /// 執行continue agents作業。
     /// </summary>
-
     public void ContinueAgents()
     {
         foreach (AgentProxy agent in LoadedAgents.Values)
@@ -355,7 +340,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     /// <param name="agents">agents參數。</param>
     /// <returns>傳回merge db information結果。</returns>
-
     public List<SecurityAgent> MergeDbInformation(List<SecurityAgent> agents)
     {
         List<SecurityAgent> result = [.. agents];
@@ -421,7 +405,6 @@ public class SecurityAgents : List<SecurityAgent>
     /// <param name="list">list參數。</param>
     /// <param name="name">name參數。</param>
     /// <returns>傳回get list index結果。</returns>
-
     private static int GetListIndex(List<SecurityAgent> list, string name)
     {
         for (int i = 0; i < list.Count; i++)

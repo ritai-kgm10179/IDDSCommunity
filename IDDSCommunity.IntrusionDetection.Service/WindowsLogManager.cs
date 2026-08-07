@@ -28,7 +28,6 @@ internal sealed class WindowsLogManager : IRuntimeLog
     /// <param name="type">type 的值。</param>
     /// <param name="eventId">event id 的值。</param>
     /// <param name="category">category 的值。</param>
-
     public void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
     {
         //if (!EventLog.Exists(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME) || !EventLog.SourceExists(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE)) {

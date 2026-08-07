@@ -129,7 +129,6 @@ CREATE TABLE AgentStatistics(
     /// 執行upgrade database作業。
     /// </summary>
     /// <param name="connection">connection參數。</param>
-
     public override void UpgradeDatabase(System.Data.IDbConnection connection)
     {
         try

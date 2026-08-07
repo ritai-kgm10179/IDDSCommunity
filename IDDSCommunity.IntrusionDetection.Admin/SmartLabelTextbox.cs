@@ -9,7 +9,6 @@ public partial class SmartLabelTextbox : UserControl
     /// <summary>
     /// 初始化 <see cref="SmartLabelTextbox"/> 類別的新執行個體。
     /// </summary>
-
     public SmartLabelTextbox()
     {
         InitializeComponent();
@@ -20,7 +19,6 @@ public partial class SmartLabelTextbox : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void textBox1_KeyPress(object? sender, KeyPressEventArgs e) => TextBoxKeyPress?.Invoke(sender, e);
 
     public string LabelText

@@ -83,7 +83,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try

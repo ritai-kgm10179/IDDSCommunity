@@ -103,7 +103,6 @@ public class NotificationSettings
     /// <summary>
     /// 初始化 <see cref="NotificationSettings"/> class的新執行個體。
     /// </summary>
-
     public NotificationSettings(IddsConfig configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
@@ -114,7 +113,6 @@ public class NotificationSettings
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     private static bool StringToBool(string value)
     {
         bool.TryParse(value, out bool result);
@@ -130,11 +128,9 @@ public class NotificationSettings
     /// <summary>
     /// 執行reload作業。
     /// </summary>
-
     public void Reload() => configuration.LoadAppConfig();
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
-
     public void Save() => configuration.SaveAppConfig();
 }

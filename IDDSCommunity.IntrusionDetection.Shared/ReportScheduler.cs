@@ -24,7 +24,6 @@ public class ReportScheduler
     /// <summary>
     /// 初始化 <see cref="ReportScheduler"/> class的新執行個體。
     /// </summary>
-
     private ReportScheduler() : this(TimeProvider.System, NotificationSettings.Instance)
     {
     }
@@ -63,7 +62,6 @@ public class ReportScheduler
     /// <summary>
     /// 啟動報表排程作業。
     /// </summary>
-
     public void StartReporting()
     {
         if (cancellation is not null)
@@ -74,7 +72,6 @@ public class ReportScheduler
     /// <summary>
     /// 停止報表排程迴圈。
     /// </summary>
-
     public void StopReporting()
     {
         cancellation?.Cancel();
@@ -114,7 +111,6 @@ public class ReportScheduler
     /// </summary>
     /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
     /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
-
     public async Task CheckDailyReportAsync(CancellationToken cancellationToken = default)
     {
         notificationSettings.Reload();
@@ -135,7 +131,6 @@ public class ReportScheduler
     /// </summary>
     /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
     /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
-
     public async Task CheckWeeklyReportAsync(CancellationToken cancellationToken = default)
     {
         notificationSettings.Reload();
@@ -157,7 +152,6 @@ public class ReportScheduler
     /// </summary>
     /// <param name="cancellationToken">發送取消報表生成作業的訊號。</param>
     /// <returns>傳回待報表成功完成或無待處理報表後結束的 Task。</returns>
-
     public async Task CheckMonthlyReportAsync(CancellationToken cancellationToken = default)
     {
         notificationSettings.Reload();
@@ -225,7 +219,6 @@ public class ReportScheduler
     /// </summary>
     /// <param name="d">d參數。</param>
     /// <returns>傳回get week of year string結果。</returns>
-
     public string GetWeekOfYearString(DateTime d)
     {
         int weekOfYear = GetWeekOfYear(d);
@@ -238,7 +231,6 @@ public class ReportScheduler
     /// </summary>
     /// <param name="d">d參數。</param>
     /// <returns>傳回get week of year結果。</returns>
-
     public static int GetWeekOfYear(DateTime d)
     {
         System.Globalization.GregorianCalendar cal = new(System.Globalization.GregorianCalendarTypes.Localized);

@@ -14,7 +14,6 @@ public class LockTest
     /// <summary>
     /// 初始化 <see cref="LockTest"/> 類別的新執行個體。
     /// </summary>
-
     public LockTest()
     {
         //
@@ -98,7 +97,6 @@ public class LockTest
     /// 執行 get local ips 作業。
     /// </summary>
     /// <returns>傳回 get local ips 的結果。</returns>
-
     private List<IPAddress> getLocalIps()
     {
         if (_localAddresses == null)

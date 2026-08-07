@@ -16,7 +16,6 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// <param name="fileName">file name參數。</param>
     /// <param name="pluginRoot">The trusted plug-in directory.</param>
     /// <returns>傳回get security agents結果。</returns>
-
     public List<SecurityAgent> GetSecurityAgents(string fileName, string pluginRoot)
     {
         string pluginPath = PluginPathValidator.Validate(pluginRoot, fileName);
@@ -128,7 +127,6 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// </summary>
     /// <param name="config">config參數。</param>
     /// <returns>傳回get custom configuration objects結果。</returns>
-
     public static Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
     {
         Dictionary<string, string> result = [];

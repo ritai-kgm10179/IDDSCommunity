@@ -13,7 +13,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityCurrentLocks"/> 類別的新執行個體。
     /// </summary>
-
     public IDDSCommunityCurrentLocks()
     {
         InitializeComponent();
@@ -33,7 +32,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void actionMenu_MouseDown(object sender, MouseEventArgs e)
     {
         var c = (Control)sender;
@@ -44,7 +42,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void actionMenu_MouseUp(object sender, MouseEventArgs e)
     {
         var c = (Control)sender;
@@ -55,7 +52,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// </summary>
     /// <param name="id">id 的值。</param>
     /// <returns>搜尋到的 DataGridViewRow 傳回結果。</returns>
-
     public DataGridViewRow? FindRow(int id)
     {
         foreach (DataGridViewRow row in dataGridViewLocks.Rows)
@@ -70,7 +66,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <summary>
     /// Clears requested operation.
     /// </summary>
-
     public void Clear() => dataGridViewLocks.Rows.Clear();
     /// <summary>
     /// Adds requested operation.
@@ -83,7 +78,6 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <param name="lockDate">lock date 的值。</param>
     /// <param name="unlockDate">unlock date 的值。</param>
     /// <param name="status">status 的值。</param>
-
     public void Add(int id, Image icon, string statusName, string clientIp, string displayName, DateTime lockDate, DateTime unlockDate, int status)
     {
         DataGridViewRow? row = FindRow(id);
@@ -112,14 +106,12 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// Sets hard locks.
     /// </summary>
     /// <param name="number">number 的值。</param>
-
     public void SetHardLocks(int number) => labelCurrentLocksHardLocks.Text = Strings.Format("{0} hard locks", number);
     /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void checkBoxSelectAllLocks_CheckedChanged(object sender, EventArgs e)
     {
         foreach (DataGridViewRow r in dataGridViewLocks.Rows)
@@ -135,14 +127,12 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// Sets soft locks.
     /// </summary>
     /// <param name="number">number 的值。</param>
-
     public void SetSoftLocks(int number) => labelCurrentLocksSoftLocks.Text = Strings.Format("{0} soft locks", number);
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private async void actionMenuUnlock_Click(object sender, EventArgs e)
     {
         List<(long LockId, DataGridViewRow Row)> requests = [];

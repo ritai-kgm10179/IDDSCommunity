@@ -11,7 +11,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
-
     public IDDSCommunitySettingsNavigationItem() => InitializeComponent();
 
     public bool IsSelected { get; set; }
@@ -28,7 +27,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// 處理 on paint 事件。
     /// </summary>
     /// <param name="e">事件資料。</param>
-
     protected override void OnPaint(PaintEventArgs e)
     {
         if (IsSelected)
@@ -52,7 +50,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void IDDSCommunitySettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
     {
         pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
@@ -63,7 +60,6 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void IDDSCommunitySettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
     {
         pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X - 1, pictureBoxNavigationIcon.Location.Y - 1);
@@ -76,12 +72,10 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void IDDSCommunitySettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
     /// <summary>
     /// Processes the navigation clicked notification.
     /// </summary>
-
     private void OnNavigationClicked() => NavigationClicked?.Invoke(this, EventArgs.Empty);
 
 

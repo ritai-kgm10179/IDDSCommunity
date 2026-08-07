@@ -32,7 +32,6 @@ public class IPHeader
     /// </summary>
     /// <param name="byBuffer">by buffer參數。</param>
     /// <param name="nReceived">n received參數。</param>
-
     public IPHeader(byte[] byBuffer, int nReceived)
     {
         try

@@ -12,7 +12,6 @@ public partial class PanelNotificationSettings : UserControl
     /// <summary>
     /// 初始化 <see cref="PanelNotificationSettings"/> 類別的新執行個體。
     /// </summary>
-
     public PanelNotificationSettings()
     {
         InitializeComponent();
@@ -23,14 +22,12 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void PanelNotificationSettings_Load(object? sender, EventArgs e) => LoadData();
 
     public bool IsInEditMode { get; set; }
     /// <summary>
     /// Loads data.
     /// </summary>
-
     public void LoadData()
     {
         checkBoxSoftLock.Checked = NotificationSettings.Instance.OnSoftLock;
@@ -49,7 +46,6 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         if (IsInEditMode) LoadData();
@@ -58,7 +54,6 @@ public partial class PanelNotificationSettings : UserControl
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
-
     private void ToggleEditMode()
     {
         if (!IsInEditMode)
@@ -85,7 +80,6 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxSave_Click(object sender, EventArgs e) => ToggleEditMode();
 
     /// <summary>
@@ -93,7 +87,6 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -105,7 +98,6 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -117,7 +109,6 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonSave_Click(object sender, EventArgs e)
     {
         NotificationSettings.Instance.OnSoftLock = checkBoxSoftLock.Checked;
@@ -135,25 +126,21 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     /// <summary>
     /// Processes the notification settings changed notification.
     /// </summary>
-
     private void OnNotificationSettingsChanged() => NotificationSettingsChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
     /// <summary>
     /// Sets edit mode.
     /// </summary>
     /// <param name="hasChanges">A value indicating whether s changes.</param>
-
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
@@ -164,6 +151,5 @@ public partial class PanelNotificationSettings : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 }

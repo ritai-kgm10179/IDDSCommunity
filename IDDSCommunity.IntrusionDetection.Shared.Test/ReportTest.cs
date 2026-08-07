@@ -12,7 +12,6 @@ public class ReportTest
     /// <summary>
     /// 初始化 <see cref="ReportTest"/> 類別的新執行個體。
     /// </summary>
-
     public ReportTest()
     {
         //

@@ -14,7 +14,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// 初始化 <see cref="PanelSafeNetworks"/> 類別的新執行個體。
     /// </summary>
-
     public PanelSafeNetworks()
     {
         InitializeComponent();
@@ -28,14 +27,12 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void PanelSafeNetworks_Load(object? sender, EventArgs e) => LoadData();
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void textBoxAddNetwork_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (e.KeyChar == 13)
@@ -52,7 +49,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// Adds network.
     /// </summary>
-
     private void AddNetwork()
     {
         smartLabelInvalidNetwork.Visible = false;
@@ -80,7 +76,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// 執行 show add network panel 作業。
     /// </summary>
-
     private void ShowAddNetworkPanel()
     {
         smartPanelAdd.Visible = true;
@@ -89,7 +84,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// 執行 hide network panel 作業。
     /// </summary>
-
     private void HideNetworkPanel()
     {
         textBoxAddNetwork.Text = "";
@@ -101,7 +95,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
         ShowAddNetworkPanel();
@@ -112,7 +105,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void listBoxSafeNetworks_DoubleClick(object sender, EventArgs e)
     {
         if (listBoxSafeNetworks.SelectedItems.Count == 1)
@@ -127,7 +119,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxDelete_Click(object sender, EventArgs e)
     {
         List<IddsConfig.CSafeNetwork> selected = [];
@@ -146,21 +137,18 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void button1_Click(object sender, EventArgs e) => HideNetworkPanel();
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonAddNetwork_Click(object sender, EventArgs e) => AddNetwork();
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void listBoxSafeNetworks_KeyPress(object sender, KeyPressEventArgs e)
     {
         if (e.KeyChar == 13 && listBoxSafeNetworks.SelectedItem != null)
@@ -177,7 +165,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// Processes the safe networks changed notification.
     /// </summary>
-
     private void OnSafeNetworksChanged() => SafeNetworksChanged?.Invoke(this, EventArgs.Empty);
 
     public bool EditExisting { get; set; }
@@ -186,7 +173,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBox_MouseDown(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -198,7 +184,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBox_MouseUp(object sender, MouseEventArgs e)
     {
         if (sender is not Control control) return;
@@ -210,7 +195,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
 
@@ -218,7 +202,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// Loads data.
     /// </summary>
-
     private void LoadData()
     {
         listBoxSafeNetworks.Items.Clear();
@@ -234,7 +217,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void pictureBoxEdit_Click(object sender, EventArgs e)
     {
         if (IsInEditMode) LoadData();
@@ -245,7 +227,6 @@ public partial class PanelSafeNetworks : UserControl
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>
-
     private void ToggleEditMode()
     {
         if (!IsInEditMode)
@@ -269,14 +250,12 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void buttonSave_Click(object sender, EventArgs e)
     {
         IddsConfig.CSafeNetworks nets = [];
@@ -300,13 +279,11 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
     /// <summary>
     /// Sets edit mode.
     /// </summary>
     /// <param name="hasChanges">A value indicating whether s changes.</param>
-
     private void SetEditMode(bool hasChanges)
     {
         buttonSave.Visible = hasChanges;
@@ -317,7 +294,6 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
 
 

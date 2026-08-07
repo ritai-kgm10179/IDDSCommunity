@@ -60,7 +60,6 @@ public class IddsConfig
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>
-
     public void Save()
     {
         //throw new NotImplementedException("Save functionality not implemented yet");
@@ -87,7 +86,6 @@ public class IddsConfig
     /// <summary>
     /// Loads requested operation.
     /// </summary>
-
     public void Load()
     {
         if (!database.IsConfigured) configureDatabase();
@@ -149,14 +147,12 @@ public class IddsConfig
     /// <summary>
     /// Loads app config.
     /// </summary>
-
     public void LoadAppConfig() => _appConfig = LoadConfig("AppConfig");
     /// <summary>
     /// Gets config value.
     /// </summary>
     /// <param name="key">key參數。</param>
     /// <returns>傳回get config value結果。</returns>
-
     public string GetConfigValue(string key)
     {
         if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
@@ -167,7 +163,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="key">key參數。</param>
     /// <param name="value">要處理的value。</param>
-
     public void SetConfigValue(string key, string value)
     {
         if (AppConfig.ContainsKey(key))
@@ -183,7 +178,6 @@ public class IddsConfig
     /// <summary>
     /// Saves app config.
     /// </summary>
-
     public void SaveAppConfig()
     {
         if (!database.IsConfigured) configureDatabase();
@@ -212,7 +206,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="configTable">config table參數。</param>
     /// <returns>傳回load config結果。</returns>
-
     private Dictionary<string, string> LoadConfig(string configTable)
     {
         if (!database.IsConfigured) configureDatabase();
@@ -228,12 +221,10 @@ public class IddsConfig
     /// <summary>
     /// Loads safe networks.
     /// </summary>
-
     public void LoadSafeNetworks() => SafeNetworks = LoadNetworkList("WhiteList");
     /// <summary>
     /// Saves safe networks.
     /// </summary>
-
     public void SaveSafeNetworks()
     {
         if (!database.IsConfigured) configureDatabase();
@@ -270,7 +261,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="list">list參數。</param>
     /// <returns>傳回load network list結果。</returns>
-
     public CSafeNetworks LoadNetworkList(string list)
     {
         if (!database.IsConfigured) configureDatabase();
@@ -291,7 +281,6 @@ public class IddsConfig
     /// <summary>
     /// 執行configure database作業。
     /// </summary>
-
     internal void configureDatabase()
     {
         if (string.IsNullOrEmpty(ApplicationPath))
@@ -313,7 +302,6 @@ public class IddsConfig
     /// <summary>
     /// 初始化 <see cref="IddsConfig"/> class的新執行個體。
     /// </summary>
-
     public IddsConfig(Database database)
     {
         ArgumentNullException.ThrowIfNull(database);
@@ -363,7 +351,6 @@ public class IddsConfig
     /// Gets default configuration.
     /// </summary>
     /// <returns>傳回get default configuration結果。</returns>
-
     public static IddsConfig GetDefaultConfiguration()
     {
         IddsConfig config = new(Database.Instance)
@@ -391,7 +378,6 @@ public class IddsConfig
         /// <summary>
         /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
-
         public CSafeNetwork()
         {
         }
@@ -400,7 +386,6 @@ public class IddsConfig
         /// </summary>
         /// <param name="ipAddress">ip address參數。</param>
         /// <param name="subnetmask">subnetmask參數。</param>
-
         public CSafeNetwork(string ipAddress, string subnetmask)
         {
             IpAddress = ipAddress;
@@ -486,7 +471,6 @@ public class IddsConfig
     /// Gets smtp password.
     /// </summary>
     /// <returns>傳回get smtp password結果。</returns>
-
     public string GetSmtpPassword()
     {
         string smtpPassword = string.Empty;
@@ -505,7 +489,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="ipAddress">ip address參數。</param>
     /// <returns>若in safe network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool IsInSafeNetwork(string ipAddress)
     {
         bool result = false;
@@ -552,7 +535,6 @@ public class IddsConfig
     /// <param name="networkAddress">network address參數。</param>
     /// <param name="subnetMask">subnet mask參數。</param>
     /// <returns>若ip4 in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool IsIp4InNetwork(IPAddress address, IPAddress networkAddress, string subnetMask) => IsIpInNetwork(address, networkAddress, GetSubnetMaskBits(subnetMask), 4);
     /// <summary>
     /// Determines whether ip in network.
@@ -562,7 +544,6 @@ public class IddsConfig
     /// <param name="maskBits">mask bits參數。</param>
     /// <param name="addressLength">address length參數。</param>
     /// <returns>若ip in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
         byte[] addressBytes = address.GetAddressBytes();
@@ -592,7 +573,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="address">address參數。</param>
     /// <returns>若ip address local傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool IsIpAddressLocal(IPAddress address)
     {
         if (_localAddresses == null)
@@ -615,7 +595,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="subnetMask">subnet mask參數。</param>
     /// <returns>傳回get subnet mask bits結果。</returns>
-
     public static int GetSubnetMaskBits(string subnetMask)
     {
         if (int.TryParse(subnetMask, out int prefixLength) && prefixLength is >= 0 and <= 32) return prefixLength;
@@ -649,7 +628,6 @@ public class IddsConfig
     /// <param name="networkAddress">network address參數。</param>
     /// <param name="subnetMask">subnet mask參數。</param>
     /// <returns>若ip6 in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool IsIp6InNetwork(IPAddress address, IPAddress networkAddress, int subnetMask) => IsIpInNetwork(address, networkAddress, subnetMask, 16);
 
     /// <summary>
@@ -657,14 +635,12 @@ public class IddsConfig
     /// </summary>
     /// <param name="ipAddress">ip address參數。</param>
     /// <returns>若valid ip address傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
     /// <summary>
     /// Determines whether valid subnet mask.
     /// </summary>
     /// <param name="subnetMask">subnet mask參數。</param>
     /// <returns>若valid subnet mask傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool IsValidSubnetMask(string subnetMask)
     {
         try
@@ -682,7 +658,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="ipAddressNetwork">ip address network參數。</param>
     /// <returns>傳回convert string to ip address network結果。</returns>
-
     public static string ConvertStringToIpAddressNetwork(string ipAddressNetwork)
     {
         ipAddressNetwork = ipAddressNetwork.Trim();
@@ -743,7 +718,6 @@ public class IddsConfig
     /// Sets smtp password.
     /// </summary>
     /// <param name="password">password參數。</param>
-
     public void SetSmtpPassword(string password) => SmtpPassword = CryptoHelper.Encrypt(password, true);
 
 
@@ -784,7 +758,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="agent">agent參數。</param>
     /// <returns>傳回get soft lock minutes結果。</returns>
-
     public int GetSoftLockMinutes(SecurityAgent agent)
     {
         if (agent.OverrideConfig)
@@ -799,7 +772,6 @@ public class IddsConfig
     /// </summary>
     /// <param name="agent">agent參數。</param>
     /// <returns>傳回get hard lock hours結果。</returns>
-
     public int GetHardLockHours(SecurityAgent agent)
     {
         int hardLockHours;

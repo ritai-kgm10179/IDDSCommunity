@@ -67,7 +67,6 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     /// 設定監聽器啟用狀態。
     /// </summary>
     /// <param name="enabled">是否啟用的數值。</param>
-
     private void SetWatcherEnabled(bool enabled)
     {
         if (watcher is not null)
@@ -80,7 +79,6 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void Watcher_EventRecordWritten(object? sender, EventRecordWrittenEventArgs e)
     {
         try

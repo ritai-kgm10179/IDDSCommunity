@@ -14,7 +14,6 @@ public class Locks
     /// </summary>
     /// <param name="lastUpdate">last update參數。</param>
     /// <returns>若s updates傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool HasUpdates(DateTime lastUpdate)
     {
         if (Database.Instance.IsConfigured)
@@ -66,7 +65,6 @@ public class Locks
     /// Reads locks.
     /// </summary>
     /// <returns>傳回read locks結果。</returns>
-
     public static IDataReader ReadLocks()
     {
         if (Database.Instance.IsConfigured)
@@ -85,7 +83,6 @@ public class Locks
     /// 執行today作業。
     /// </summary>
     /// <returns>傳回today結果。</returns>
-
     public static int Today()
     {
         if (Database.Instance.IsConfigured)
@@ -110,7 +107,6 @@ public class Locks
     /// Reads current soft locks.
     /// </summary>
     /// <returns>傳回read current soft locks結果。</returns>
-
     public static int ReadCurrentSoftLocks()
     {
         object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0) ", (int)LockStatus.SoftLocked);
@@ -121,7 +117,6 @@ public class Locks
     /// Reads current hard locks.
     /// </summary>
     /// <returns>傳回read current hard locks結果。</returns>
-
     public static int ReadCurrentHardLocks()
     {
         object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where status in (@p0)", (int)LockStatus.HardLocked);
@@ -133,7 +128,6 @@ public class Locks
     /// </summary>
     /// <param name="startDate">start date參數。</param>
     /// <returns>傳回read unsuccessful login attempts結果。</returns>
-
     public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
     {
         object? result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
@@ -158,7 +152,6 @@ public class Locks
     /// Gets current locks.
     /// </summary>
     /// <returns>傳回get current locks結果。</returns>
-
     public static List<Lock> GetCurrentLocks()
     {
         if (Database.Instance.IsConfigured)
@@ -192,7 +185,6 @@ public class Locks
     /// </summary>
     /// <param name="id">id參數。</param>
     /// <returns>傳回get lock by id結果。</returns>
-
     public static Lock GetLockById(long id)
     {
         if (Database.Instance.IsConfigured)
@@ -223,7 +215,6 @@ public class Locks
     /// </summary>
     /// <param name="ipAddress">ip address參數。</param>
     /// <returns>若作業成功傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public static bool LockExists(string ipAddress)
     {
         if (Database.Instance.IsConfigured)
@@ -256,7 +247,6 @@ public class Locks
     /// <param name="port">port參數。</param>
     /// <param name="ipAddress">ip address參數。</param>
     /// <returns>傳回create lock結果。</returns>
-
     public static Lock CreateLock(DateTime lockDate, DateTime unlockDate, long triggerIncident, int status, int port, string ipAddress)
     {
         Lock l = new()
@@ -276,7 +266,6 @@ public class Locks
     /// </summary>
     /// <param name="l">l參數。</param>
     /// <returns>傳回create lock結果。</returns>
-
     public static long CreateLock(Lock l)
     {
         if (Database.Instance.IsConfigured)
@@ -296,7 +285,6 @@ public class Locks
     /// 更新鎖定記錄。
     /// </summary>
     /// <param name="l">l參數。</param>
-
     public static void UpdateLock(Lock l)
     {
         if (Database.Instance.IsConfigured)
@@ -313,7 +301,6 @@ public class Locks
     /// 取得解鎖清單。
     /// </summary>
     /// <returns>傳回get unlock list結果。</returns>
-
     public static List<Lock> GetUnlockList()
     {
         List<Lock> result = [];

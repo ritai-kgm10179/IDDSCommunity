@@ -20,7 +20,6 @@ public class Pop3Agent : AgentPlugin
     /// <summary>
     /// 初始化 <see cref="Pop3Agent"/> 類別的新執行個體。
     /// </summary>
-
     public Pop3Agent()
     {
 
@@ -38,7 +37,6 @@ public class Pop3Agent : AgentPlugin
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         => RemoveExpiredClients(DateTime.Now);
 
@@ -56,7 +54,6 @@ public class Pop3Agent : AgentPlugin
     /// <summary>
     /// 處理啟動 Agent 的通知。
     /// </summary>
-
     protected override void OnStartAgent()
     {
         RunWatcher();
@@ -65,7 +62,6 @@ public class Pop3Agent : AgentPlugin
     /// <summary>
     /// 執行監聽器啟動作業。
     /// </summary>
-
     void RunWatcher()
     {
         IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
@@ -86,7 +82,6 @@ public class Pop3Agent : AgentPlugin
     /// 執行監聽指定位址作業。
     /// </summary>
     /// <param name="ipAddress">IP 位址參數。</param>
-
     void WatchAddress(object? ipAddress)
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not Pop3Config settings) return;
@@ -120,7 +115,6 @@ public class Pop3Agent : AgentPlugin
     /// 執行接收測試作業。
     /// </summary>
     /// <param name="data">資料參數。</param>
-
     public void TestReceive(byte[] data)
     {
         IPHeader hdr = new(data, data.Length);
@@ -130,7 +124,6 @@ public class Pop3Agent : AgentPlugin
     /// 執行傳送測試作業。
     /// </summary>
     /// <param name="data">資料參數。</param>
-
     public void TestSend(byte[] data)
     {
         IPHeader hdr = new(data, data.Length);
@@ -141,7 +134,6 @@ public class Pop3Agent : AgentPlugin
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void s_IpPacketReceived(object? sender, EventArgs e)
     {
         if (sender is not IPHeader ipHeader) return;
@@ -213,7 +205,6 @@ public class Pop3Agent : AgentPlugin
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     void s_IpPacketSent(object? sender, EventArgs e)
     {
         if (sender is not IPHeader ipHeader) return;
@@ -270,12 +261,10 @@ public class Pop3Agent : AgentPlugin
     /// 處理追蹤通知。
     /// </summary>
     /// <param name="tlsPackage">TLS 封包資料。</param>
-
     private void OnTrace(IPHeader tlsPackage) => Trace?.Invoke(tlsPackage, EventArgs.Empty);
     /// <summary>
     /// 處理繼續執行 Agent 的通知。
     /// </summary>
-
     protected override void OnContinueAgent()
     {
         OnStartAgent();
@@ -284,7 +273,6 @@ public class Pop3Agent : AgentPlugin
     /// <summary>
     /// 處理暫停 Agent 的通知。
     /// </summary>
-
     protected override void OnPauseAgent()
     {
         OnStopAgent();
@@ -293,7 +281,6 @@ public class Pop3Agent : AgentPlugin
     /// <summary>
     /// 處理停止 Agent 的通知。
     /// </summary>
-
     protected override void OnStopAgent()
     {
         cleanupTimer.Stop();
@@ -311,7 +298,6 @@ public class Pop3Agent : AgentPlugin
     /// 處理登入失敗作業。
     /// </summary>
     /// <param name="ipAddress">IP 位址參數。</param>
-
     void UnsuccessfulLogin(string ipAddress)
     {
         NotificationEventArgs args = new()

@@ -26,7 +26,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <param name="pluginRoot">The trusted plug-in directory.</param>
     /// <param name="assemblyFilename">assembly filename參數。</param>
     /// <param name="typeName">type name參數。</param>
-
     public AgentProxy(string pluginRoot, string assemblyFilename, string typeName)
     {
         string pluginPath = PluginPathValidator.Validate(pluginRoot, assemblyFilename);
@@ -44,7 +43,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="data">The event data.</param>
-
     private void agent_AttackDetected(object sender, INotificationEventArgs data)
     {
         foreach (AttackDetectedHandler handler in AttackDetected?.GetInvocationList() ?? [])
@@ -62,34 +60,28 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// Starts requested operation.
     /// </summary>
-
     public void Start() => GetAgent().Start();
     /// <summary>
     /// Stops requested operation.
     /// </summary>
-
     public void Stop() => GetAgent().Stop();
     /// <summary>
     /// 執行pause作業。
     /// </summary>
-
     public void Pause() => GetAgent().Pause();
     /// <summary>
     /// 執行continue作業。
     /// </summary>
-
     public void Continue() => GetAgent().Continue();
     /// <summary>
     /// Determines whether n pause.
     /// </summary>
     /// <returns>若n pause傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool CanPause() => GetAgent().CanPause();
     /// <summary>
     /// Determines whether n continue.
     /// </summary>
     /// <returns>若n continue傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-
     public bool CanContinue() => GetAgent().CanContinue();
 
     public bool IsPaused
@@ -109,18 +101,15 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// Gets memory usage.
     /// </summary>
     /// <returns>傳回get memory usage結果。</returns>
-
     public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
     /// <summary>
     /// Gets cpu time.
     /// </summary>
     /// <returns>傳回get cpu time結果。</returns>
-
     public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
     /// <summary>
     /// 執行enable monitoring作業。
     /// </summary>
-
     public void EnableMonitoring()
     {
         _watchdog = new System.Timers.Timer { Interval = 1000 };
@@ -137,7 +126,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-
     private void watchdog_Elapsed(object? sender, ElapsedEventArgs e)
     {
         if (Interlocked.Exchange(ref watchdogActive, 1) != 0)
@@ -181,7 +169,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// 執行disable monitoring作業。
     /// </summary>
-
     public void DisableMonitoring()
     {
         if (_watchdog is null)
@@ -194,7 +181,6 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <summary>
     /// 執行dispose作業。
     /// </summary>
-
     public void Dispose()
     {
         if (disposed)

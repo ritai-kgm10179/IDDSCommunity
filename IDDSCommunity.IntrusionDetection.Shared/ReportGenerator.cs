@@ -14,7 +14,6 @@ public class ReportGenerator
     /// <summary>
     /// 初始化 <see cref="ReportGenerator"/> class的新執行個體。
     /// </summary>
-
     private ReportGenerator()
     {
     }
@@ -32,7 +31,6 @@ public class ReportGenerator
     /// 執行daily report作業。
     /// </summary>
     /// <returns>傳回daily report結果。</returns>
-
     public static string DailyReport() => string.Empty;
 
     public long TotalIntrusionAttempts { get; set; }
@@ -44,7 +42,6 @@ public class ReportGenerator
     /// <param name="start">start參數。</param>
     /// <param name="end">end參數。</param>
     /// <returns>傳回get events per agent結果。</returns>
-
     public string GetEventsPerAgent(DateTime start, DateTime end)
     {
         IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_AGENT, start, end);
@@ -103,7 +100,6 @@ public class ReportGenerator
     /// <param name="start">start參數。</param>
     /// <param name="end">end參數。</param>
     /// <returns>傳回get incidents by ip結果。</returns>
-
     public string GetIncidentsByIP(int action, DateTime start, DateTime end)
     {
         IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_IP, start, end, action);
@@ -123,13 +119,11 @@ public class ReportGenerator
     /// 取得依 IP 範本分組的事件數。
     /// </summary>
     /// <returns>傳回get incident by iptemplate結果。</returns>
-
     public static string GetIncidentByIPTemplate() => Resources.IntrusionAttemptsByIp;
     /// <summary>
     /// 取得依 Agent 範本分組的事件數。
     /// </summary>
     /// <returns>傳回get events per agent template結果。</returns>
-
     public static string GetEventsPerAgentTemplate() => Resources.EventsPerAgent;
     /// <summary>
     /// 設定每個 Agent 的事件數。
@@ -139,7 +133,6 @@ public class ReportGenerator
     /// <param name="softLocks">soft locks參數。</param>
     /// <param name="hardLocks">hard locks參數。</param>
     /// <returns>傳回set events per agent結果。</returns>
-
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
         string result = GetEventsPerAgentTemplate().Replace("[%AGENT_NAME%]", WebUtility.HtmlEncode(agentName));
@@ -160,7 +153,6 @@ public class ReportGenerator
     /// <param name="start">start參數。</param>
     /// <param name="end">end參數。</param>
     /// <returns>傳回get report結果。</returns>
-
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
         string result = LocalizeReportTemplate(Resources.ReportTemplate);

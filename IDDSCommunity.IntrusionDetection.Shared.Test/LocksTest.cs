@@ -9,7 +9,6 @@ public class LocksTest
     /// <summary>
     /// 初始化 <see cref="LocksTest"/> 類別的新執行個體。
     /// </summary>
-
     public LocksTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
     /// <summary>
     /// Creates lock test.
@@ -36,7 +35,6 @@ public class LocksTest
     /// Gets max locks id.
     /// </summary>
     /// <returns>傳回 get max locks id 的結果。</returns>
-
     private static long GetMaxLocksId()
     {
         object? result = Database.Instance.ExecuteScalar("Select max(LockId) from Locks");

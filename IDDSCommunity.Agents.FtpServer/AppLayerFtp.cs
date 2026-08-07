@@ -15,7 +15,6 @@ public class AppLayerFtp
     /// </summary>
     /// <param name="byBuffer">緩衝區位元組陣列。</param>
     /// <param name="nReceived">接收到的位元組數量。</param>
-
     public AppLayerFtp(byte[] byBuffer, int nReceived)
     {
         try

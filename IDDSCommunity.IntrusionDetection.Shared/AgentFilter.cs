@@ -7,7 +7,6 @@ public class AgentFilter : IAgentFilter
     /// <summary>
     /// 初始化 <see cref="AgentFilter"/> class的新執行個體。
     /// </summary>
-
     public AgentFilter()
     {
     }
@@ -16,7 +15,6 @@ public class AgentFilter : IAgentFilter
     /// </summary>
     /// <param name="id">id參數。</param>
     /// <param name="displayName">display name參數。</param>
-
     public AgentFilter(Guid id, string displayName)
     {
         Id = id;
