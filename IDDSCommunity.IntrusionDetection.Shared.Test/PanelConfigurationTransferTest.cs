@@ -47,4 +47,17 @@ public sealed class PanelConfigurationTransferTest
         StringAssert.Contains(message, nameof(InvalidOperationException));
         StringAssert.Contains(message, "diagnostic-detail");
     }
+
+    /// <summary>
+    /// 驗證設定驗證失敗時不會再次隱藏原始欄位診斷。
+    /// </summary>
+    [TestMethod]
+    public void GetFailureMessage_InvalidData_PreservesFieldDiagnostic()
+    {
+        string message = PanelConfigurationTransfer.GetFailureMessage(
+            new InvalidDataException("SmtpPort must be between 1 and 65535; actual value: 0."), false);
+
+        StringAssert.Contains(message, "SmtpPort");
+        StringAssert.Contains(message, "actual value: 0");
+    }
 }

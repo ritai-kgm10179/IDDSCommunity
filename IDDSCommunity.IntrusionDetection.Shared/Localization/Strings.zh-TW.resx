@@ -767,4 +767,5 @@
   <data name="The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>已儲存的 SMTP 密碼使用無效的舊格式。請重新儲存 SMTP 密碼，或取消包含機密後再匯出。</value></data>
   <data name="Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting." xml:space="preserve"><value>已儲存的設定包含不支援或無效的值，請檢查並重新儲存相關設定後再匯出。</value></data>
   <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>設定移轉失敗（{0}）：{1}</value></data>
+  <data name="Stored settings are invalid: {0}" xml:space="preserve"><value>已儲存的設定無效：{0}</value></data>
 </root>

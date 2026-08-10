@@ -67,6 +67,25 @@ public sealed class ConfigurationTransferServiceTest
         Assert.ThrowsExactly<InvalidDataException>(() => service.ReadPackage(path));
     }
 
+    /// <summary>
+    /// 驗證設定套件錯誤會指出實際欄位和值。
+    /// </summary>
+    [TestMethod]
+    public void ValidationFailureIdentifiesInvalidFieldAndValue()
+    {
+        ConfigurationTransferService service = new(database);
+        string path = Path.Combine(testDirectory, "invalid-settings.json");
+        service.ExportToFile(path);
+        ConfigurationTransferPackage package = service.ReadPackage(path);
+        package.GlobalPolicy.SmtpPort = 0;
+        File.WriteAllText(path, JsonSerializer.Serialize(package));
+
+        InvalidDataException exception = Assert.ThrowsExactly<InvalidDataException>(() => service.ReadPackage(path));
+
+        StringAssert.Contains(exception.Message, "SmtpPort");
+        StringAssert.Contains(exception.Message, "actual value: 0");
+    }
+
     [TestMethod]
     public void EncryptedSecretExportRejectsWrongPassphrase()
     {

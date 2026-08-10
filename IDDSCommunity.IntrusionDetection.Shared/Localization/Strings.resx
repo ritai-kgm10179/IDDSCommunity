@@ -767,4 +767,5 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets.</value></data>
   <data name="Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting." xml:space="preserve"><value>Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting.</value></data>
   <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>Configuration transfer failed ({0}): {1}</value></data>
+  <data name="Stored settings are invalid: {0}" xml:space="preserve"><value>Stored settings are invalid: {0}</value></data>
 </root>

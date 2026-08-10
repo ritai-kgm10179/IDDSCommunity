@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -21,6 +21,7 @@ Target location: {1}</value></data>
   <data name="ServiceExecutableMissing" xml:space="preserve"><value>The IDDS Community service executable was not found.</value></data>
   <data name="ServiceControlStartFailed" xml:space="preserve"><value>Windows Service Control Manager could not be started.</value></data>
   <data name="ServiceControlFailed" xml:space="preserve"><value>The Windows service operation failed with exit code {0}.</value></data>
+  <data name="ServiceStartVerificationFailed" xml:space="preserve"><value>The IDDS Community protection service did not reach the running state.</value></data>
   <data name="ServiceDescription" xml:space="preserve"><value>IDDS Community intrusion detection and active protection service</value></data>
   <data name="ReparsePointRejected" xml:space="preserve"><value>The setup payload cannot contain reparse points.</value></data>
   <data name="Upgrade" xml:space="preserve"><value>Upgrade</value></data>

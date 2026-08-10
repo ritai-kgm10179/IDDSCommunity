@@ -162,23 +162,47 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         ArgumentNullException.ThrowIfNull(package);
         if (package.Format != ConfigurationTransferPackage.CurrentFormat || package.SchemaVersion != ConfigurationTransferPackage.CurrentSchemaVersion) throw Invalid("Unsupported configuration package format or schema version.");
         if (package.GlobalPolicy is null || package.ApplicationSettings is null || package.SafeNetworks is null || package.Agents is null) throw Invalid("Required configuration sections are missing.");
-        if (package.GlobalPolicy.SoftLockAttempts is < 1 or > 100000 || package.GlobalPolicy.HardLockAttempts < package.GlobalPolicy.SoftLockAttempts || package.GlobalPolicy.SmtpPort is < 1 or > 65535) throw Invalid("Global policy values are invalid.");
+        if (package.GlobalPolicy.SoftLockAttempts is < 1 or > 100000)
+            throw Invalid($"SoftLockAttempts must be between 1 and 100000; actual value: {package.GlobalPolicy.SoftLockAttempts}.");
+        if (package.GlobalPolicy.HardLockAttempts < package.GlobalPolicy.SoftLockAttempts)
+            throw Invalid($"HardLockAttempts ({package.GlobalPolicy.HardLockAttempts}) must be greater than or equal to SoftLockAttempts ({package.GlobalPolicy.SoftLockAttempts}).");
+        if (package.GlobalPolicy.SmtpPort is < 1 or > 65535)
+            throw Invalid($"SmtpPort must be between 1 and 65535; actual value: {package.GlobalPolicy.SmtpPort}.");
         if (package.ApplicationSettings.Count > 10000 || package.SafeNetworks.Count > 10000 || package.Agents.Count > 1000) throw Invalid("Configuration package exceeds supported limits.");
-        if (package.ApplicationSettings.Any(item => item.Key.Length is 0 or > 250 || item.Value is null || item.Value.Length > 250)) throw Invalid("Application setting names or values exceed supported limits.");
+        foreach ((string key, string value) in package.ApplicationSettings)
+        {
+            if (key.Length is 0 or > 250)
+                throw Invalid($"Application setting name length is invalid; key: '{key}', length: {key.Length}.");
+            if (value is null || value.Length > 250)
+                throw Invalid($"Application setting value length is invalid; key: '{key}', length: {value?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
+        }
         if (package.ApplicationSettings.TryGetValue(IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, out string? firewallMode)
             && (!Enum.TryParse(firewallMode, true, out FirewallBlockMode parsedMode) || !Enum.IsDefined(parsedMode)))
-            throw Invalid("The firewall blocking mode is unsupported.");
+            throw Invalid($"The firewall blocking mode '{firewallMode}' is unsupported.");
         foreach (SafeNetworkTransfer network in package.SafeNetworks)
         {
             if (!IPAddress.TryParse(network.IpAddress, out IPAddress? address)) throw Invalid($"Invalid safe-network address: {network.IpAddress}");
             if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) { if (!int.TryParse(network.NetworkMask, out int prefix) || prefix is < 0 or > 128) throw Invalid("Invalid IPv6 prefix length."); }
             else if (!IPAddress.TryParse(network.NetworkMask, out _)) throw Invalid("Invalid IPv4 network mask.");
         }
-        if (package.Agents.Select(agent => agent.AgentId).Distinct().Count() != package.Agents.Count) throw Invalid("Agent identifiers must be unique.");
+        Guid[] duplicateAgentIds = package.Agents.GroupBy(agent => agent.AgentId).Where(group => group.Count() > 1).Select(group => group.Key).ToArray();
+        if (duplicateAgentIds.Length > 0)
+            throw Invalid($"Agent identifiers must be unique; duplicates: {string.Join(", ", duplicateAgentIds)}.");
         foreach (AgentConfigurationTransfer agent in package.Agents)
         {
-            if (agent.AgentId == Guid.Empty || agent.Settings is null || agent.Settings.Count > 1000) throw Invalid("Agent configuration is invalid.");
-            if (agent.Settings.Any(item => item.Key.Length is 0 or > 255 || item.Value is null || item.Value.Length > 4000)) throw Invalid("Agent setting names or values exceed supported limits.");
+            if (agent.AgentId == Guid.Empty)
+                throw Invalid($"Agent '{agent.Name}' has an empty identifier.");
+            if (agent.Settings is null)
+                throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) has no settings collection.");
+            if (agent.Settings.Count > 1000)
+                throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) exceeds the 1000-setting limit; actual count: {agent.Settings.Count}.");
+            foreach ((string key, string value) in agent.Settings)
+            {
+                if (key.Length is 0 or > 255)
+                    throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) has an invalid setting name length; key: '{key}', length: {key.Length}.");
+                if (value is null || value.Length > 4000)
+                    throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) setting '{key}' has an invalid value length: {value?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
+            }
         }
         if (package.Secrets is not null) ValidateSecretEncoding(package.Secrets);
     }

@@ -96,12 +96,14 @@ public sealed class PanelConfigurationTransfer : UserControl
             IOException => Strings.Get("The settings file cannot be written because it is open, locked, or unavailable. Choose another file name or location."),
             CryptographicException when exportingSecrets => Strings.Get("The stored SMTP password cannot be decrypted. Save the SMTP password again, or export without including secrets."),
             FormatException when exportingSecrets => Strings.Get("The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets."),
-            InvalidDataException => Strings.Get("Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting."),
+            InvalidDataException => Strings.Format("Stored settings are invalid: {0}", exception.Message),
             _ => Strings.Format("Configuration transfer failed ({0}): {1}", exception.GetType().Name, exception.Message)
         };
     }
     private static void LogTransferFailure(string operation, Exception exception)
     {
+        string summary = $"Configuration.{operation} failed";
+        string? diagnosticPath = RollingDiagnosticLog.Write("Admin-ConfigurationTransfer", summary, exception);
         try
         {
             System.Diagnostics.EventLog.WriteEntry(
@@ -114,6 +116,10 @@ public sealed class PanelConfigurationTransfer : UserControl
         {
             System.Diagnostics.Trace.TraceError("Configuration {0} failed: {1}{2}Event log write failed: {3}",
                 operation, exception, Environment.NewLine, logException);
+            _ = RollingDiagnosticLog.Write(
+                "Admin-ConfigurationTransfer-EventLog",
+                diagnosticPath is null ? summary : $"{summary}; primary diagnostic: {diagnosticPath}",
+                logException);
         }
     }
     private static bool IsServiceStopped() { try { using ServiceController controller = new(Globals.WINDOWS_SERVICE_NAME); controller.Refresh(); return controller.Status == ServiceControllerStatus.Stopped; } catch (InvalidOperationException) { return true; } }

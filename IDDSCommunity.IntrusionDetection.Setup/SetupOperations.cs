@@ -1,16 +1,18 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceProcess;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
 
 internal static class SetupOperations
 {
-    private const string ServiceName = "IDDSCommunityProtection";
-    private const string ServiceDisplayName = "IDDS Community Protection Service";
+    private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
+    private const string ServiceDisplayName = Globals.WINDOWS_SERVICE_DISPLAY_NAME;
+    private static readonly TimeSpan ServiceStartTimeout = TimeSpan.FromSeconds(30);
     internal static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
     internal static readonly string AdminExecutablePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Admin.exe");
     /// <summary>
@@ -379,6 +381,13 @@ internal static class SetupOperations
             RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
             ConfigureEventLog();
             RunSc("start", ServiceName);
+            using (ServiceController controller = new(ServiceName))
+            {
+                controller.WaitForStatus(ServiceControllerStatus.Running, ServiceStartTimeout);
+                controller.Refresh();
+                if (controller.Status != ServiceControllerStatus.Running)
+                    throw new InvalidOperationException(SetupText.Get("ServiceStartVerificationFailed"));
+            }
             CreateShortcuts(desktopShortcut, startMenuShortcut);
         }
         finally

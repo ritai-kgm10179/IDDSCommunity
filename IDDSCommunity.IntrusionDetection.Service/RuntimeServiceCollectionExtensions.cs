@@ -2,11 +2,26 @@
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
 
 internal static class RuntimeServiceCollectionExtensions
 {
+    /// <summary>
+    /// 使用與 Windows SCM 註冊鍵一致的名稱註冊服務存留期。
+    /// </summary>
+    /// <param name="services">主機服務集合。</param>
+    /// <returns>傳回相同的服務集合。</returns>
+    internal static IServiceCollection AddIDDSCommunityWindowsService(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        services.Configure<WindowsServiceLifetimeOptions>(options => options.ServiceName = Globals.WINDOWS_SERVICE_NAME);
+        services.AddWindowsService();
+        return services;
+    }
+
     /// <summary>
     /// Registers one isolated set of intrusion-detection runtime dependencies in a host container.
     /// </summary>
