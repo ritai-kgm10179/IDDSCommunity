@@ -35,6 +35,13 @@ public sealed class ConfigurationTransferService
     {
         EnsureConfigured();
         ConfigurationRow configuration = database.Query<ConfigurationRow>("SELECT * FROM Configuration ORDER BY ConfigVersionNumber DESC LIMIT 1").Single();
+        Dictionary<string, string> applicationSettings = database.Query<KeyValueRow>("SELECT ConfigKey, ConfigValue FROM AppConfig")
+            .ToDictionary(item => item.ConfigKey, item => item.ConfigValue ?? string.Empty, StringComparer.Ordinal);
+        if (!applicationSettings.TryGetValue(IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, out string? firewallMode)
+            || string.IsNullOrWhiteSpace(firewallMode))
+        {
+            applicationSettings[IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE] = FirewallBlockMode.Inbound.ToString();
+        }
         ConfigurationTransferPackage package = new()
         {
             GlobalPolicy = new GlobalConfigurationTransfer
@@ -54,7 +61,7 @@ public sealed class ConfigurationTransferService
                 SmtpUsername = configuration.SmtpUsername ?? string.Empty,
                 SmtpSslRequired = configuration.SmtpSslRequired
             },
-            ApplicationSettings = database.Query<KeyValueRow>("SELECT ConfigKey, ConfigValue FROM AppConfig").ToDictionary(item => item.ConfigKey, item => item.ConfigValue ?? string.Empty, StringComparer.Ordinal),
+            ApplicationSettings = applicationSettings,
             SafeNetworks = database.Query<NetworkRow>("SELECT IpAddress, NetworkMask FROM WhiteList").Select(item => new SafeNetworkTransfer(item.IpAddress, item.NetworkMask)).ToList(),
             Agents = ReadAgents()
         };

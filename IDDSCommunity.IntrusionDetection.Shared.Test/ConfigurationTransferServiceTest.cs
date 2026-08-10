@@ -54,6 +54,24 @@ public sealed class ConfigurationTransferServiceTest
         Assert.AreEqual("Bidirectional", package.ApplicationSettings[IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE]);
     }
 
+    /// <summary>
+    /// 驗證舊資料庫的空白防火牆模式會依執行階段規則正規化為輸入封鎖。
+    /// </summary>
+    [TestMethod]
+    public void ExportNormalizesBlankFirewallModeToInbound()
+    {
+        database.ExecuteNonQuery(
+            "UPDATE AppConfig SET ConfigValue=@p0 WHERE ConfigKey=@p1",
+            string.Empty,
+            IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE);
+
+        ConfigurationTransferPackage package = new ConfigurationTransferService(database).Export();
+
+        Assert.AreEqual(
+            FirewallBlockMode.Inbound.ToString(),
+            package.ApplicationSettings[IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE]);
+    }
+
     [TestMethod]
     public void ImportRejectsUnsupportedFirewallMode()
     {
