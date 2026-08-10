@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -366,16 +366,13 @@ public class SecurityAgents : List<SecurityAgent>
             SecurityAgent? a = result.Find(x => x.Id == agent.Id);
             a ??= result.Find(x => !string.IsNullOrEmpty(agent.Name) && x.Name.Equals(agent.Name, StringComparison.OrdinalIgnoreCase));
             a ??= result.Find(x => !string.IsNullOrEmpty(agent.DisplayName) && x.DisplayName.Equals(agent.DisplayName, StringComparison.OrdinalIgnoreCase));
-            a ??= result.Find(x => !string.IsNullOrEmpty(agent.AssemblyName) && x.AssemblyName.Equals(agent.AssemblyName, StringComparison.OrdinalIgnoreCase));
-
-            // 針對自舊版 Cyberarms 重構命名至 IDDSCommunity 的情況提供 ShortName/ShortAssembly 模糊比對
+            // 僅以 Agent 型別短名稱處理舊版命名遷移；同一組件可能包含多個 Agent，禁止以組件名稱配對。
             if (a == null)
             {
                 string dbShortName = GetShortName(agent.Name);
-                string dbShortAssy = GetShortName(agent.AssemblyName);
                 a = result.Find(x =>
-                    (!string.IsNullOrEmpty(dbShortName) && dbShortName.Equals(GetShortName(x.Name), StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(dbShortAssy) && dbShortAssy.Equals(GetShortName(x.AssemblyName), StringComparison.OrdinalIgnoreCase)));
+                    !string.IsNullOrEmpty(dbShortName)
+                    && dbShortName.Equals(GetShortName(x.Name), StringComparison.OrdinalIgnoreCase));
             }
 
             if (a != null)

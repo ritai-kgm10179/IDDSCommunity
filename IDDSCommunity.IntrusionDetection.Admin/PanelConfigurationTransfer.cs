@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Security.Cryptography;
 using System.ServiceProcess;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -46,7 +47,11 @@ public sealed class PanelConfigurationTransfer : UserControl
         if (includeSecrets.Checked && passphrase.Text.Length < 12) { ShowError(Strings.Get("Enter a passphrase containing at least 12 characters before exporting secrets.")); return; }
         using SaveFileDialog dialog = new() { AddExtension = true, DefaultExt = "json", Filter = Strings.Get("IDDS Community settings (*.json)|*.json"), FileName = "idds-community-settings.json", RestoreDirectory = true, Title = Strings.Get("Export IDDS Community settings") };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        await RunAsync(() => transfer.ExportToFile(dialog.FileName, includeSecrets.Checked, passphrase.Text), Strings.Format("Settings exported: {0}", dialog.FileName));
+        await RunAsync(
+            () => transfer.ExportToFile(dialog.FileName, includeSecrets.Checked, passphrase.Text),
+            Strings.Format("Settings exported: {0}", dialog.FileName),
+            "Export",
+            includeSecrets.Checked);
     }
 
     private async void Import(object? sender, EventArgs e)
@@ -62,23 +67,55 @@ public sealed class PanelConfigurationTransfer : UserControl
             string summary = Strings.Format("Import preview: {0} Agents, {1} safe networks, {2} application settings, {3} unavailable Agents.", preview.AgentCount, preview.SafeNetworkCount, preview.ApplicationSettingCount, preview.UnknownAgentIds.Count);
             if (MessageBox.Show(summary + Environment.NewLine + Strings.Get("Import these settings? A verified safety backup will be created first."), Strings.AppTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             string backupDirectory = Path.Combine(Path.GetDirectoryName(Database.Instance.DataSource) ?? AppContext.BaseDirectory, "Backups", "ConfigurationImport");
-            await RunAsync(() => transfer.ImportFromFile(dialog.FileName, backupDirectory, passphrase.Text), Strings.Get("Settings imported successfully. Restart the service to apply all Agent settings."));
+            await RunAsync(
+                () => transfer.ImportFromFile(dialog.FileName, backupDirectory, passphrase.Text),
+                Strings.Get("Settings imported successfully. Restart the service to apply all Agent settings."),
+                "Import",
+                package.Secrets is not null);
         }
-        catch (Exception exception) { System.Diagnostics.Trace.TraceError("Configuration import failed: {0}", exception); ShowError(Strings.Get("Configuration import failed. No settings were applied.")); }
+        catch (Exception exception) { LogTransferFailure("Import", exception); ShowError(GetFailureMessage(exception, false)); }
     }
 
-    private async Task RunAsync(Action operation, string success)
+    private async Task RunAsync(Action operation, string success, string operationName, bool includesSecrets)
     {
         SetEnabled(false);
         status.Text = Strings.Get("Configuration transfer is running...");
         try { await Task.Run(operation); status.Text = success; }
-        catch (Exception exception) { System.Diagnostics.Trace.TraceError("Configuration transfer failed: {0}", exception); ShowError(Strings.Get("Configuration transfer failed. Review the application log for details.")); }
+        catch (Exception exception) { LogTransferFailure(operationName, exception); ShowError(GetFailureMessage(exception, includesSecrets)); }
         finally { SetEnabled(true); }
     }
 
-    private async Task RunAsync<T>(Func<T> operation, string success) => await RunAsync(() => { _ = operation(); }, success);
     private void SetEnabled(bool enabled) { exportButton.Enabled = enabled; importButton.Enabled = enabled; includeSecrets.Enabled = enabled; passphrase.Enabled = enabled; }
     private void ShowError(string message) { status.Text = message; MessageBox.Show(message, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+    internal static string GetFailureMessage(Exception exception, bool exportingSecrets)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception switch
+        {
+            UnauthorizedAccessException => Strings.Get("The selected export location is not writable. Choose a folder owned by your user account."),
+            IOException => Strings.Get("The settings file cannot be written because it is open, locked, or unavailable. Choose another file name or location."),
+            CryptographicException when exportingSecrets => Strings.Get("The stored SMTP password cannot be decrypted. Save the SMTP password again, or export without including secrets."),
+            FormatException when exportingSecrets => Strings.Get("The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets."),
+            InvalidDataException => Strings.Get("Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting."),
+            _ => Strings.Format("Configuration transfer failed ({0}): {1}", exception.GetType().Name, exception.Message)
+        };
+    }
+    private static void LogTransferFailure(string operation, Exception exception)
+    {
+        try
+        {
+            System.Diagnostics.EventLog.WriteEntry(
+                Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE,
+                $"Configuration.{operation} failed:{Environment.NewLine}{exception}",
+                System.Diagnostics.EventLogEntryType.Error,
+                Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL);
+        }
+        catch (Exception logException)
+        {
+            System.Diagnostics.Trace.TraceError("Configuration {0} failed: {1}{2}Event log write failed: {3}",
+                operation, exception, Environment.NewLine, logException);
+        }
+    }
     private static bool IsServiceStopped() { try { using ServiceController controller = new(Globals.WINDOWS_SERVICE_NAME); controller.Refresh(); return controller.Status == ServiceControllerStatus.Stopped; } catch (InvalidOperationException) { return true; } }
     private static Label Label(string text, float size, Color color, int x, int y) => new() { AutoSize = true, Font = new Font("Segoe UI", size), ForeColor = color, Location = new Point(x, y), Text = text };
     private static Button Button(string text, int x, int y) => new() { BackColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(102, 102, 102), Location = new Point(x, y), Size = new Size(120, 28), Text = text, UseVisualStyleBackColor = false };

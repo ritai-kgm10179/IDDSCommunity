@@ -761,4 +761,10 @@
 
 This may be due to insufficient permissions. Would you like to restart as Administrator?</value></data>
   <data name="Administrator Privileges Required" xml:space="preserve"><value>Administrator Privileges Required</value></data>
+  <data name="The selected export location is not writable. Choose a folder owned by your user account." xml:space="preserve"><value>The selected export location is not writable. Choose a folder owned by your user account.</value></data>
+  <data name="The settings file cannot be written because it is open, locked, or unavailable. Choose another file name or location." xml:space="preserve"><value>The settings file cannot be written because it is open, locked, or unavailable. Choose another file name or location.</value></data>
+  <data name="The stored SMTP password cannot be decrypted. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>The stored SMTP password cannot be decrypted. Save the SMTP password again, or export without including secrets.</value></data>
+  <data name="The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets.</value></data>
+  <data name="Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting." xml:space="preserve"><value>Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting.</value></data>
+  <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>Configuration transfer failed ({0}): {1}</value></data>
 </root>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -85,6 +85,71 @@ public class LoadAgentsTest
         Assert.AreEqual(typeof(bool).FullName, stored.CustomConfigurationTypes["ReadEventLog"]);
         Assert.IsFalse(merged[1].Enabled);
         Assert.AreEqual(discoveredNew.Id, merged[1].Id);
+    }
+
+    /// <summary>
+    /// 驗證同一組件內的多個 Agent 不會僅因組件名稱相同而互相套用設定。
+    /// </summary>
+    [TestMethod]
+    public void MergeDbInformation_DoesNotMatchDifferentAgentsByAssemblyName()
+    {
+        SecurityAgents agents = new(Database.Instance, IddsConfig.Instance);
+        SecurityAgent storedSmtp = new("Legacy.SmtpAgent", Guid.NewGuid())
+        {
+            AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+            DisplayName = "舊 SMTP Agent",
+            Enabled = true
+        };
+        agents.Add(storedSmtp);
+        SecurityAgent discoveredPop3 = new("IDDSCommunity.Agents.MailServer.Pop3Agent", Guid.NewGuid())
+        {
+            AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+            DisplayName = "POP3 安全性代理程式",
+            Enabled = true
+        };
+
+        List<SecurityAgent> merged = agents.MergeDbInformation([discoveredPop3]);
+
+        Assert.HasCount(2, merged);
+        Assert.IsTrue(storedSmtp.BinaryMissing);
+        Assert.IsFalse(discoveredPop3.Enabled);
+    }
+
+    /// <summary>
+    /// 驗證已載入目前設定結構的 Agent 會忽略並清除舊版殘留欄位。
+    /// </summary>
+    [TestMethod]
+    public void CustomConfigurationSchema_FiltersAndDeletesStaleProperties()
+    {
+        string databaseDirectory = Path.Combine(testDirectory, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(databaseDirectory);
+        Database database = new();
+        database.Configure(databaseDirectory, "agent-schema.db");
+        Guid agentId = Guid.NewGuid();
+        SecurityAgent smtp = new("IDDSCommunity.Agents.MailServer.SmtpAgent", agentId)
+        {
+            DatabaseInstance = database,
+            AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+            DisplayName = "郵件伺服器 SMTP 安全性代理程式"
+        };
+        smtp.CustomConfiguration["SmtpPort"] = "25";
+        smtp.CustomConfigurationTypes["SmtpPort"] = typeof(int).FullName!;
+        smtp.Save();
+        database.ExecuteNonQuery(
+            "insert into SecurityAgentConfig(AgentId,PropertyName,PropertyValueString) values(@p0,@p1,@p2)",
+            agentId.ToString(), "Pop3Port", "110");
+
+        smtp.LoadCustomConfig();
+
+        Assert.HasCount(1, smtp.CustomConfiguration);
+        Assert.AreEqual("25", smtp.CustomConfiguration["SmtpPort"]);
+        Assert.IsFalse(smtp.CustomConfiguration.ContainsKey("Pop3Port"));
+
+        smtp.SaveCustomConfig();
+        Assert.AreEqual(0L, Convert.ToInt64(database.ExecuteScalar(
+            "select count(*) from SecurityAgentConfig where AgentId=@p0 and PropertyName=@p1",
+            agentId.ToString(), "Pop3Port")));
+        database.Close();
     }
     /// <summary>
     /// Loads agents to memory test.
@@ -285,6 +350,53 @@ public class LoadAgentsTest
             try { Directory.Delete(testDbDir, true); } catch { }
         }
     }
+
+    /// <summary>
+    /// 驗證依序開啟 SMTP、IMAP 與 POP3 後，每筆啟用狀態均以各自 GUID 儲存且重新載入後不互相覆蓋。
+    /// </summary>
+    [TestMethod]
+    public void MailServerAgents_SequentialEnableAndReload_PreservesAllThreeEnabledStates()
+    {
+        string databaseDirectory = Path.Combine(testDirectory, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(databaseDirectory);
+        Database database = new();
+        database.Configure(databaseDirectory, "mail-agents.db");
+        SecurityAgent[] mailAgents =
+        [
+            CreateMailAgent(new Guid("{EB69BF23-939C-4F89-97D0-50274306D018}"), "SmtpAgent", "郵件伺服器 SMTP 安全性代理程式", database),
+            CreateMailAgent(new Guid("{3F8B715C-4A2D-4C98-9C6E-7F89B219E022}"), "ImapAgent", "IMAP 安全性代理程式", database),
+            CreateMailAgent(new Guid("{1F917251-2661-473A-970B-B2BB62EA6E1A}"), "Pop3Agent", "POP3 安全性代理程式", database)
+        ];
+
+        foreach (SecurityAgent agent in mailAgents)
+        {
+            agent.Enabled = true;
+            agent.Save();
+        }
+
+        SecurityAgents reloaded = new(database, IddsConfig.Instance);
+        reloaded.InitializeAgents();
+
+        Assert.HasCount(3, reloaded);
+        foreach (SecurityAgent agent in mailAgents)
+        {
+            SecurityAgent? persisted = reloaded.FindByName(agent.Name);
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(agent.Id, persisted.Id);
+            Assert.IsTrue(persisted.Enabled, $"{agent.Name} 應保持啟用。 ");
+        }
+        Assert.AreEqual(3L, Convert.ToInt64(database.ExecuteScalar("select count(*) from SecurityAgents where Enabled=1")));
+        database.Close();
+    }
+
+    private static SecurityAgent CreateMailAgent(Guid id, string typeName, string displayName, Database database) => new()
+    {
+        Id = id,
+        Name = "IDDSCommunity.Agents.MailServer." + typeName,
+        AssemblyName = "IDDSCommunity.Agents.MailServer.dll",
+        DisplayName = displayName,
+        DatabaseInstance = database
+    };
 
     /// <summary>
     /// 測試 GetDisplayName 支援大小寫不敏感之 Guid 比對。

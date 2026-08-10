@@ -61,17 +61,17 @@ public class LockTest
     [TestMethod]
     public void TestIpAddressLocal()
     {
-        IddsConfig.Instance.ApplicationPath = AppDomain.CurrentDomain.BaseDirectory;
+        IddsConfig configuration = new(new Database());
         var ip = IPAddress.Parse("127.0.0.1");
-        Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(ip));
+        Assert.IsTrue(configuration.IsIpAddressLocal(ip));
         foreach (IPAddress address in getLocalIps())
         {
-            Assert.IsTrue(IddsConfig.Instance.IsIpAddressLocal(address));
+            Assert.IsTrue(configuration.IsIpAddressLocal(address));
             System.Diagnostics.Debug.Print(address.ToString());
         }
-        Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("10.1.1.1")));
-        Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("192.168.13.1")));
-        Assert.IsFalse(IddsConfig.Instance.IsIpAddressLocal(IPAddress.Parse("73.24.12.42")));
+        Assert.IsFalse(configuration.IsIpAddressLocal(IPAddress.Parse("10.1.1.1")));
+        Assert.IsFalse(configuration.IsIpAddressLocal(IPAddress.Parse("192.168.13.1")));
+        Assert.IsFalse(configuration.IsIpAddressLocal(IPAddress.Parse("73.24.12.42")));
     }
     /// <summary>
     /// 執行 test is ip address local performance test 作業。
@@ -80,14 +80,31 @@ public class LockTest
     [TestMethod]
     public void TestIsIpAddressLocalPerformanceTest()
     {
-        DateTime start = DateTime.Now;
+        IddsConfig configuration = new(new Database());
+        IPAddress[] addresses =
+        [
+            IPAddress.Loopback,
+            IPAddress.IPv6Loopback,
+            IPAddress.Parse("10.1.1.1"),
+            IPAddress.Parse("192.168.13.1"),
+            IPAddress.Parse("73.24.12.42")
+        ];
+
+        // Warm up the lazy local-address cache before measuring lookup performance.
+        _ = configuration.IsIpAddressLocal(IPAddress.Loopback);
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
         for (int i = 0; i < 2000; i++)
         {
-            TestIpAddressLocal();
+            foreach (IPAddress address in addresses)
+            {
+                _ = configuration.IsIpAddressLocal(address);
+            }
         }
-        if ((DateTime.Now - start).TotalSeconds > 1)
+
+        stopwatch.Stop();
+        if (stopwatch.Elapsed.TotalSeconds > 1)
         {
-            Assert.Fail("Time taken for 28.000 ip address comparisons: " + (DateTime.Now - start).TotalSeconds + " seconds!");
+            Assert.Fail($"Time taken for 10,000 IP address comparisons: {stopwatch.Elapsed.TotalSeconds} seconds!");
         }
     }
 

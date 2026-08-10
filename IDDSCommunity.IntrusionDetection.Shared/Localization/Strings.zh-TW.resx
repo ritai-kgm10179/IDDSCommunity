@@ -761,4 +761,10 @@
 
 這通常是由於權限不足所致。是否要以系統管理員身分重新啟動？</value></data>
   <data name="Administrator Privileges Required" xml:space="preserve"><value>需要系統管理員權限</value></data>
+  <data name="The selected export location is not writable. Choose a folder owned by your user account." xml:space="preserve"><value>無法寫入選取的匯出位置，請選擇目前使用者擁有的資料夾。</value></data>
+  <data name="The settings file cannot be written because it is open, locked, or unavailable. Choose another file name or location." xml:space="preserve"><value>設定檔正由其他程式使用、遭鎖定或位置無法使用，請改用其他檔名或位置。</value></data>
+  <data name="The stored SMTP password cannot be decrypted. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>無法解密已儲存的 SMTP 密碼。請重新儲存 SMTP 密碼，或取消包含機密後再匯出。</value></data>
+  <data name="The stored SMTP password uses an invalid legacy format. Save the SMTP password again, or export without including secrets." xml:space="preserve"><value>已儲存的 SMTP 密碼使用無效的舊格式。請重新儲存 SMTP 密碼，或取消包含機密後再匯出。</value></data>
+  <data name="Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting." xml:space="preserve"><value>已儲存的設定包含不支援或無效的值，請檢查並重新儲存相關設定後再匯出。</value></data>
+  <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>設定移轉失敗（{0}）：{1}</value></data>
 </root>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -127,10 +127,24 @@ public class SecurityAgent : IAgentFilter
     /// </summary>
     public void LoadCustomConfig()
     {
+        if (CustomConfigurationTypes.Count > 0)
+        {
+            List<string> unsupportedKeys = [];
+            foreach (string key in CustomConfiguration.Keys)
+            {
+                if (!CustomConfigurationTypes.ContainsKey(key))
+                    unsupportedKeys.Add(key);
+            }
+            foreach (string key in unsupportedKeys)
+                CustomConfiguration.Remove(key);
+        }
+
         IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
         while (rdr.Read())
         {
             string propName = Shared.Db.DbValueConverter.ToString(rdr["PropertyName"]);
+            if (CustomConfigurationTypes.Count > 0 && !CustomConfigurationTypes.ContainsKey(propName))
+                continue;
             string propVal = Shared.Db.DbValueConverter.ToString(rdr["PropertyValueString"]);
             CustomConfiguration[propName] = propVal;
         }
@@ -207,9 +221,8 @@ public class SecurityAgent : IAgentFilter
             string updateSql = @"UPDATE SecurityAgents SET
                 AssemblyName = @p1, HardLockAttempts = @p2, HardLockTimeHours = @p3,
                 LockForever = @p4, SoftLockAttempts = @p5, SoftLockTimeMinutes = @p6,
-                OverwriteConfiguration = @p7, DisplayName = @p8, Enabled = @p9, Name = @p10,
-                AgentId = @p0
-                WHERE AgentId = @p0 OR Name = @p10 OR (DisplayName = @p8 AND DisplayName <> '')";
+                OverwriteConfiguration = @p7, DisplayName = @p8, Enabled = @p9, Name = @p10
+                WHERE AgentId = @p0";
 
             DatabaseInstance.ExecuteNonQuery(updateSql, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
                 LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
@@ -265,6 +278,21 @@ public class SecurityAgent : IAgentFilter
     private void SaveCustomConfig(IDbTransaction transaction)
     {
         string agentIdStr = Id.ToString();
+        if (CustomConfigurationTypes.Count > 0)
+        {
+            IEnumerable<string> storedKeys = DatabaseInstance.Query<string>(
+                "select PropertyName from SecurityAgentConfig where AgentId = @AgentId",
+                new { AgentId = agentIdStr }, transaction);
+            foreach (string storedKey in storedKeys)
+            {
+                if (!CustomConfigurationTypes.ContainsKey(storedKey))
+                {
+                    DatabaseInstance.ExecuteNonQuery(
+                        "delete from SecurityAgentConfig where AgentId = @p0 and PropertyName = @p1",
+                        transaction, agentIdStr, storedKey);
+                }
+            }
+        }
         foreach (string key in CustomConfiguration.Keys)
         {
             object? dbResult = DatabaseInstance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", transaction, agentIdStr, key);
@@ -331,7 +359,7 @@ public class SecurityAgent : IAgentFilter
         if (!Id.Equals(Guid.Empty)) return Id;
         // if agent does not provide ID, set the ID from this agent. Otherwise read from database
         if (!DatabaseInstance.IsConfigured) DatabaseInstance.Configure(IddsConfig.GetDefaultDataDirectory());
-        object? result = DatabaseInstance.ExecuteScalar("Select AgentId from SecurityAgents where Name = @p0 or AssemblyName = @p1", Name, AssemblyName);
+        object? result = DatabaseInstance.ExecuteScalar("Select AgentId from SecurityAgents where Name = @p0", Name);
         if (result != null)
         {
             var id = Db.DbValueConverter.ToGuid(result);
@@ -343,10 +371,6 @@ public class SecurityAgent : IAgentFilter
         if (!string.IsNullOrEmpty(Name))
         {
             return new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(Name)));
-        }
-        if (!string.IsNullOrEmpty(AssemblyName))
-        {
-            return new Guid(System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(AssemblyName)));
         }
         return Guid.NewGuid();
     }
