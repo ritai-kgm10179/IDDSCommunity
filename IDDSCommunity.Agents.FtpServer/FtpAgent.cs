@@ -95,7 +95,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
                         if (tcp.Data.Length > 0)
                         {
                             AppLayerFtp ftp = new(tcp.Data, tcp.Data.Length);
-                            if (ftp.FtpReplyCode == AppLayerFtp.FTP_REPLY_CODE_LOGIN_DENIED)
+                            if (ftp.IsAuthenticationFailure)
                             {
                                 UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                             }

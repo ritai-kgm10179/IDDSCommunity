@@ -30,7 +30,8 @@ internal sealed class IisW3cAuthenticationParser
         Dictionary<string, string> row = new(StringComparer.OrdinalIgnoreCase);
         for (int index = 0; index < fields.Length; index++) row[fields[index]] = values[index];
         if (!row.TryGetValue("sc-status", out string? status) || status != "401") return null;
-        if (row.TryGetValue("sc-substatus", out string? substatus) && substatus is not ("0" or "1")) return null;
+        if (!row.TryGetValue("sc-substatus", out string? substatus) || substatus != "1") return null;
+        if (!row.TryGetValue("sc-win32-status", out string? win32Status) || win32Status != "1326") return null;
         if (!row.TryGetValue("c-ip", out string? source) || !IPAddress.TryParse(source, out IPAddress? address)) return null;
         DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
         if (row.TryGetValue("date", out string? date) && row.TryGetValue("time", out string? time) && DateTime.TryParseExact($"{date} {time}", "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTime parsed)) occurredAt = new DateTimeOffset(parsed, TimeSpan.Zero);

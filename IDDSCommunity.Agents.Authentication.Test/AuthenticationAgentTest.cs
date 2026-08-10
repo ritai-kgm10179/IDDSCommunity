@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.Agents.IisAuthentication;
+using IDDSCommunity.Agents.FtpServer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.Agents.Authentication.Test;
@@ -117,26 +118,39 @@ public sealed class AuthenticationAgentTest
     public void IisParserUsesW3cFieldDeclarationAnd401Substatus()
     {
         IisW3cAuthenticationParser parser = new();
-        Assert.IsNull(parser.Parse("#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus"));
-        AuthenticationFailureEvent? failure = parser.Parse("2026-08-05 03:04:05 192.0.2.30 user /owa 401 1");
+        Assert.IsNull(parser.Parse("#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus sc-win32-status"));
+        AuthenticationFailureEvent? failure = parser.Parse("2026-08-05 03:04:05 192.0.2.30 user /owa 401 1 1326");
         Assert.IsNotNull(failure);
         Assert.AreEqual("192.0.2.30", failure.SourceAddress.ToString());
-        Assert.IsNull(parser.Parse("2026-08-05 03:04:06 192.0.2.30 user /file 401 3"));
+        Assert.IsNull(parser.Parse("2026-08-05 03:04:06 192.0.2.30 user /file 401 3 5"));
+        Assert.IsNull(parser.Parse("2026-08-05 03:04:06 192.0.2.30 user /owa 401 1 2148074254"));
         IisW3cAuthenticationParser filtered = new("/owa");
-        _ = filtered.Parse("#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus");
-        Assert.IsNull(filtered.Parse("2026-08-05 03:04:06 192.0.2.30 user /login 401 1"));
+        _ = filtered.Parse("#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus sc-win32-status");
+        Assert.IsNull(filtered.Parse("2026-08-05 03:04:06 192.0.2.30 user /login 401 1 1326"));
     }
 
     [TestMethod]
     public void IisParserIsolatesFieldDeclarationsByLogFile()
     {
         IisW3cAuthenticationParser parser = new();
-        _ = parser.Parse("site-a.log", "#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus");
-        _ = parser.Parse("site-b.log", "#Fields: sc-status c-ip date time cs-uri-stem cs-username sc-substatus");
-        Assert.IsNotNull(parser.Parse("site-a.log", "2026-08-05 03:04:05 192.0.2.30 user /owa 401 1"));
-        Assert.IsNotNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 0"));
+        _ = parser.Parse("site-a.log", "#Fields: date time c-ip cs-username cs-uri-stem sc-status sc-substatus sc-win32-status");
+        _ = parser.Parse("site-b.log", "#Fields: sc-status c-ip date time cs-uri-stem cs-username sc-substatus sc-win32-status");
+        Assert.IsNotNull(parser.Parse("site-a.log", "2026-08-05 03:04:05 192.0.2.30 user /owa 401 1 1326"));
+        Assert.IsNotNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 1 1326"));
         parser.Reset("site-b.log");
-        Assert.IsNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 0"));
+        Assert.IsNull(parser.Parse("site-b.log", "401 198.51.100.20 2026-08-05 03:04:05 /login user 1 1326"));
+    }
+
+    [TestMethod]
+    public void FtpParser_DoesNotTreatEveryNotLoggedInReplyAsBadPassword()
+    {
+        byte[] failedPasswordBytes = System.Text.Encoding.ASCII.GetBytes("530 Login incorrect.\r\n");
+        byte[] unauthenticatedCommandBytes = System.Text.Encoding.ASCII.GetBytes("530 Please log in with USER and PASS first.\r\n");
+        AppLayerFtp failedPassword = new(failedPasswordBytes, failedPasswordBytes.Length);
+        AppLayerFtp unauthenticatedCommand = new(unauthenticatedCommandBytes, unauthenticatedCommandBytes.Length);
+
+        Assert.IsTrue(failedPassword.IsAuthenticationFailure);
+        Assert.IsFalse(unauthenticatedCommand.IsAuthenticationFailure);
     }
 
     private static AuthenticationFailureEvent Failure(string address, DateTimeOffset time) => new(time, IPAddress.Parse(address), 1, "test", string.Empty, string.Empty);

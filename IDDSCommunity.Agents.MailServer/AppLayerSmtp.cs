@@ -7,7 +7,7 @@ namespace IDDSCommunity.Agents.MailServer;
 public class AppLayerSmtp
 {
 
-    public const string SMTP_REPLY_CODE_LOGIN_DENIED = "504";
+    public const string SMTP_REPLY_CODE_LOGIN_DENIED = "535";
 
     public string SmtpReplyCode { get; set; }
     /// <summary>

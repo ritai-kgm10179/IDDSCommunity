@@ -18,7 +18,10 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
                   <Query Id=""0"" Path=""Security"">
                     <Select Path=""Security"">
                         *[System[(EventID=4625) and
-                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]]
+                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]] and
+                        *[EventData[Data[@Name='Status']='0xC000006D' or
+                        Data[@Name='SubStatus']='0xC0000064' or
+                        Data[@Name='SubStatus']='0xC000006A']]
                     </Select>
                   </Query>
                 </QueryList>";
@@ -69,12 +72,13 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
             EventLogPropertySelector props = new(xPathProperties);
             if (e.EventRecord is not EventLogRecord record)
                 return;
-            string ipAddress = record.GetPropertyValues(props)[0]?.ToString() ?? string.Empty;
+            string ipAddress = record.GetPropertyValues(props)[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
+            if (!System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? address) || System.Net.IPAddress.IsLoopback(address)) return;
             NotificationEventArgs args = new()
             {
                 CreateDate = record.TimeCreated ?? DateTime.Now,
                 EventId = record.Id,
-                IpAddress = ipAddress
+                IpAddress = address.ToString()
             };
             OnAttackDetected(this, args);
         }

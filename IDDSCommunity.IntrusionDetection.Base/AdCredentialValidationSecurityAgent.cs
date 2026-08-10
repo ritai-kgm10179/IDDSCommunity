@@ -20,7 +20,10 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
                   <Query Id=""0"" Path=""Security"">
                     <Select Path=""Security"">
                         *[System[(EventID=4776) and
-                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]]
+                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]] and
+                        *[EventData[Data[@Name='Status']='0xC0000064' or
+                        Data[@Name='Status']='0xC000006A' or
+                        Data[@Name='Status']='0xC000006D']]
                     </Select>
                   </Query>
                 </QueryList>";

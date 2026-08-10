@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Project Path="IDDSCommunity.Agents.Authentication.Common/IDDSCommunity.Agents.Authentication.Common.csproj" />
   <Project Path="IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.FileMaker/IDDSCommunity.Agents.FileMaker.csproj" />
@@ -16,6 +16,7 @@
   <Project Path="IDDSCommunity.Agents.Radius.Test/IDDSCommunity.Agents.Radius.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.SqlServer/IDDSCommunity.Agents.SqlServer.csproj" />
   <Project Path="IDDSCommunity.Agents.TerminalServer/IDDSCommunity.Agents.TerminalServer.csproj" />
+  <Project Path="IDDSCommunity.Agents.WindowsAuthentication.Test/IDDSCommunity.Agents.WindowsAuthentication.Test.csproj" />
   <Project Path="IDDSCommunity.Agents.WebSecurity/IDDSCommunity.Agents.WebSecurity.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsDns/IDDSCommunity.Agents.WindowsDns.csproj" />
   <Project Path="IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />

@@ -18,7 +18,8 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
                   <Query Id=""0"" Path=""Security"">
                     <Select Path=""Security"">
                         *[System[(EventID=4771) and
-                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]]
+                        TimeCreated[timediff(@SystemTime) &lt;= 86400000]]] and
+                        *[EventData[Data[@Name='Status']='0x18']]
                     </Select>
                   </Query>
                 </QueryList>";
@@ -69,12 +70,14 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
             EventLogPropertySelector props = new(xPathProperties);
             if (e.EventRecord is not EventLogRecord record)
                 return;
-            string ipAddress = record.GetPropertyValues(props)[0]?.ToString() ?? string.Empty;
+            string ipAddress = record.GetPropertyValues(props)[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
+            if (ipAddress.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase)) ipAddress = ipAddress[7..];
+            if (!System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? address) || System.Net.IPAddress.IsLoopback(address)) return;
             NotificationEventArgs args = new()
             {
                 CreateDate = record.TimeCreated ?? DateTime.Now,
                 EventId = record.Id,
-                IpAddress = ipAddress
+                IpAddress = address.ToString()
             };
             OnAttackDetected(this, args);
         }
