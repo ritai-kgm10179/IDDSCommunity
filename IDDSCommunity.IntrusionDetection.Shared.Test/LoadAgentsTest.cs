@@ -161,7 +161,10 @@ public class LoadAgentsTest
         string pluginDirectory = FindBuiltPluginDirectory();
         IddsConfig configuration = new(Database.Instance) { PluginsDirectory = pluginDirectory };
         SecurityAgents agents = new(Database.Instance, configuration);
-        SecurityAgent agent = agents.ReadAgentsFromDisk().First(item => item.Name != "DemoAgent.BadAgent");
+        SecurityAgent agent = agents.ReadAgentsFromDisk().First();
+        Assert.IsNotNull(agent.Icon);
+        Assert.IsNotNull(agent.SelectedIcon);
+        Assert.IsNotNull(agent.UnselectedIcon);
         agent.Id = Guid.Empty;
         agent.Enabled = true;
         agents.Add(agent);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
@@ -17,7 +16,6 @@ public sealed class IisAuthenticationSecurityAgent : AuthenticationAgentBase<Iis
         return new PollingLogFileFailureSource(configuration.EnumerateLogFiles, parser.Parse, parser.Reset);
     }
     internal IisAuthenticationSecurityAgent(IAuthenticationEventSource source) : base(source) { }
-    protected override Color AgentColor => Color.FromArgb(48, 138, 158);
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("IIS Authentication Security Agent"); set { } }
     public override Guid Id => new("{6B87C539-1585-41E5-A12F-D5073EF6D631}");
 }

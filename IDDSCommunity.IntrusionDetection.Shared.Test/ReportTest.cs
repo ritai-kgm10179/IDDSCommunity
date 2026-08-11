@@ -9,16 +9,6 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [TestClass]
 public class ReportTest
 {
-    /// <summary>
-    /// 初始化 <see cref="ReportTest"/> 類別的新執行個體。
-    /// </summary>
-    public ReportTest()
-    {
-        //
-        // TODO: Add constructor logic here
-        //
-    }
-
     private TestContext testContextInstance = null!;
     /// <summary>
     ///Gets or sets the test context which provides

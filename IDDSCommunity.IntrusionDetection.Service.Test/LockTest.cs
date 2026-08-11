@@ -11,16 +11,6 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 [TestClass]
 public class LockTest
 {
-    /// <summary>
-    /// 初始化 <see cref="LockTest"/> 類別的新執行個體。
-    /// </summary>
-    public LockTest()
-    {
-        //
-        // TODO: Add constructor logic here
-        //
-    }
-
     private TestContext testContextInstance = null!;
     /// <summary>
     ///Gets or sets the test context which provides

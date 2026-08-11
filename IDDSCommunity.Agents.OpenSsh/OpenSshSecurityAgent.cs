@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Eventing.Reader;
-using System.Drawing;
 using System.Net;
 using System.Text.RegularExpressions;
 using IDDSCommunity.Agents.Authentication.Common;
@@ -14,7 +13,6 @@ public sealed partial class OpenSshSecurityAgent : AuthenticationAgentBase<OpenS
     public OpenSshSecurityAgent() : this(new OpenSshConfiguration()) { }
     private OpenSshSecurityAgent(OpenSshConfiguration configuration) : base(CreateSource(configuration)) => Configuration.AgentSettings = configuration;
     internal OpenSshSecurityAgent(IAuthenticationEventSource source) : base(source) { }
-    protected override Color AgentColor => Color.FromArgb(38, 128, 150);
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("Windows OpenSSH Security Agent"); set { } }
     public override Guid Id => new("{FA68919B-6D0B-4508-9659-3CD1E160235C}");
 

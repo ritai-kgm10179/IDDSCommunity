@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -62,7 +62,6 @@ public class IddsConfig
     /// </summary>
     public void Save()
     {
-        //throw new NotImplementedException("Save functionality not implemented yet");
         if (!database.IsConfigured) configureDatabase();
         try
         {

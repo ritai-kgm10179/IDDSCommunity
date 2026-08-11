@@ -66,19 +66,18 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
     private void OnSourceError(Exception exception) => Trace.TraceError("{0}: {1}", DisplayName, exception.Message);
     protected TConfiguration GetConfiguration() => Configuration.AgentSettings as TConfiguration ?? throw new InvalidOperationException(IntrusionDetection.Api.Localization.Strings.Get("Agent configuration is unavailable."));
 
-    protected abstract Color AgentColor { get; }
     public abstract string DisplayName { get; set; }
     public abstract Guid Id { get; }
     /// <summary>
-    /// 取得或設定 Agent 的預設圖示。
+    /// 取得或設定 Agent 的預設圖示；回傳 <see langword="null"/> 時由主程式套用統一主題圖示。
     /// </summary>
-    public Image? Icon { get => AgentIconFactory.Create(AgentColor, false); set { } }
+    public Image? Icon { get => null; set { } }
     /// <summary>
-    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// 取得或設定 Agent 於選取狀態下顯示的圖示；回傳 <see langword="null"/> 時由主程式套用統一主題圖示。
     /// </summary>
-    public Image? SelectedIcon { get => AgentIconFactory.Create(AgentColor, true); set { } }
+    public Image? SelectedIcon { get => null; set { } }
     /// <summary>
-    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// 取得或設定 Agent 於非選取狀態下顯示的圖示；回傳 <see langword="null"/> 時由主程式套用統一主題圖示。
     /// </summary>
-    public Image? UnselectedIcon { get => AgentIconFactory.Create(AgentColor, false); set { } }
+    public Image? UnselectedIcon { get => null; set { } }
 }

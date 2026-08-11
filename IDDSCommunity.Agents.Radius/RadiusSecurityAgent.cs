@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
-using System.Drawing;
 using System.Net;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
@@ -13,7 +12,6 @@ public sealed class RadiusSecurityAgent : AuthenticationAgentBase<Authentication
 {
     public RadiusSecurityAgent() : base(new WindowsEventLogFailureSource("Security", "*[System[(EventID=6273)]]", Parse)) { }
     internal RadiusSecurityAgent(IAuthenticationEventSource source) : base(source) { }
-    protected override Color AgentColor => Color.FromArgb(45, 135, 156);
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("NPS RADIUS Security Agent"); set { } }
     public override Guid Id => new("{981D2895-B343-477B-A2BD-21832FDD1305}");
 

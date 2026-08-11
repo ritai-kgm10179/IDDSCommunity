@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -14,7 +13,6 @@ public sealed partial class PostgreSqlSecurityAgent : AuthenticationAgentBase<Po
     public PostgreSqlSecurityAgent() : this(new PostgreSqlConfiguration()) { }
     private PostgreSqlSecurityAgent(PostgreSqlConfiguration configuration) : base(new PollingLogFileFailureSource(configuration.EnumerateLogFiles, TryParseLine)) => Configuration.AgentSettings = configuration;
     internal PostgreSqlSecurityAgent(IAuthenticationEventSource source) : base(source) { }
-    protected override Color AgentColor => Color.FromArgb(42, 132, 154);
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("PostgreSQL Security Agent"); set { } }
     public override Guid Id => new("{E4D503EE-33D9-4A79-A2E3-B19597D49D58}");
 
