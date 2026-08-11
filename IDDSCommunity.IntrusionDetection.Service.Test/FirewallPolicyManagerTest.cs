@@ -25,8 +25,23 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsFalse(FirewallPolicyManager.ContainsAddress("11.2.3.40", "1.2.3.4"));
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("*", "1.2.3.4"));
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("198.51.100.0/24", "198.51.100.42"));
+        Assert.IsTrue(FirewallPolicyManager.ContainsAddress("198.51.100.42/255.255.255.255", "198.51.100.42"));
+        Assert.IsTrue(FirewallPolicyManager.ContainsAddress("198.51.100.0/255.255.255.0", "198.51.100.42"));
+        Assert.IsFalse(FirewallPolicyManager.ContainsAddress("198.51.100.0/255.0.255.0", "198.51.100.42"));
         Assert.IsFalse(FirewallPolicyManager.ContainsAddress("198.51.100.0/24", "198.51.101.42"));
         Assert.IsTrue(FirewallPolicyManager.ContainsAddress("2001:db8::/32", "2001:db8::42"));
+    }
+
+    /// <summary>
+    /// 驗證 Windows 防火牆回傳的子網路遮罩格式可正規化供狀態協調使用。
+    /// </summary>
+    [TestMethod]
+    public void NormalizeRemoteAddressEntry_ConvertsSubnetMasksAndHostMasks()
+    {
+        Assert.AreEqual("198.51.100.42", FirewallPolicyManager.NormalizeRemoteAddressEntry("198.51.100.42/255.255.255.255"));
+        Assert.AreEqual("198.51.100.0/24", FirewallPolicyManager.NormalizeRemoteAddressEntry("198.51.100.0/255.255.255.0"));
+        Assert.AreEqual("2001:db8::/32", FirewallPolicyManager.NormalizeRemoteAddressEntry("2001:db8::/32"));
+        Assert.IsNull(FirewallPolicyManager.NormalizeRemoteAddressEntry("LocalSubnet"));
     }
     /// <summary>
     /// 驗證當同一個 C 段子網超過門檻時，自動聚合為 CIDR 條目。

@@ -78,6 +78,12 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
         Update(id, FailedStatus, incrementAttempts: false, exception.GetType().Name);
     }
     /// <summary>
+    /// 移除尚未交付至記憶體佇列的待處理事件。
+    /// </summary>
+    /// <param name="id">持久化事件識別碼。</param>
+    internal void RemovePending(Guid id) =>
+        database.ExecuteNonQuery("DELETE FROM ProtectionEventInbox WHERE Id=@p0 AND Status=@p1", id.ToString("D"), PendingStatus);
+    /// <summary>
     /// Removes completed inbox rows older than the configured evidence retention period.
     /// </summary>
     /// <param name="retentionPeriod">The minimum completed-row age to retain.</param>

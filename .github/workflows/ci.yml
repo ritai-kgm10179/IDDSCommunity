@@ -43,7 +43,10 @@ jobs:
         run: dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
 
       - name: Test
-        run: dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --logger "trx;LogFilePrefix=ci" --results-directory TestResults --verbosity minimal
+        run: dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --filter "TestCategory!=Stability" --logger "trx;LogFilePrefix=ci" --results-directory TestResults --verbosity minimal
+
+      - name: Stability tests
+        run: dotnet test IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=stability.trx" --results-directory TestResults --verbosity normal
 
       - name: Upload test results
         if: ${{ !cancelled() }}

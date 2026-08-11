@@ -93,6 +93,7 @@ internal sealed class SecurityEventPipeline
         {
             Interlocked.Decrement(ref queueDepth);
             Queued.Add(-1);
+            inbox.RemovePending(id);
             Rejected.Add(1);
             return false;
         }
@@ -128,6 +129,7 @@ internal sealed class SecurityEventPipeline
         {
             Interlocked.Decrement(ref queueDepth);
             Queued.Add(-1);
+            inbox.RemovePending(id);
             Rejected.Add(1);
             return false;
         }

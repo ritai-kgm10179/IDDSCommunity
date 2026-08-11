@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using System.IO;
+using System.Linq;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -141,6 +143,75 @@ public sealed class SecurityEventPipelineTest
 
         Assert.AreEqual("192.0.2.44", processedAddress);
         Assert.AreEqual(0, inbox.CountUnfinished());
+    }
+    /// <summary>
+    /// 驗證多個並行生產者的突發事件皆會經由有界管線完成，不遺留持久化待辦。
+    /// </summary>
+    /// <returns>非同步測試工作。</returns>
+    [TestMethod]
+    [TestCategory("Stability")]
+    public async Task Publish_ParallelBurst_DrainsEveryAcceptedEventAsync()
+    {
+        const int producerCount = 8;
+        const int eventsPerProducer = 125;
+        int processed = 0;
+        SecurityEventInbox inbox = new(database, TimeProvider.System);
+        SecurityEventPipeline pipeline = new(
+            64,
+            (_, _) => Interlocked.Increment(ref processed),
+            exception => Assert.Fail(exception.ToString()),
+            inbox,
+            _ => this);
+
+        Task[] producers = Enumerable.Range(0, producerCount)
+            .Select(producer => Task.Run(() =>
+            {
+                for (int index = 0; index < eventsPerProducer; index++)
+                    Assert.IsTrue(pipeline.Publish(this, CreateEvent($"198.51.{producer}.{index + 1}")));
+            }))
+            .ToArray();
+
+        await Task.WhenAll(producers).WaitAsync(TimeSpan.FromSeconds(30));
+        pipeline.Complete();
+        await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.AreEqual(producerCount * eventsPerProducer, processed);
+        Assert.AreEqual(0, pipeline.QueueDepth);
+        Assert.AreEqual(0, inbox.CountUnfinished());
+    }
+    /// <summary>
+    /// 驗證處理失敗不會阻斷後續事件，且失敗事件會保留供重新播放。
+    /// </summary>
+    /// <returns>非同步測試工作。</returns>
+    [TestMethod]
+    [TestCategory("Stability")]
+    public async Task ConsumerFailure_SubsequentEventsContinueAndFailureRemainsRecoverableAsync()
+    {
+        int processed = 0;
+        int failures = 0;
+        SecurityEventInbox inbox = new(database, TimeProvider.System);
+        SecurityEventPipeline pipeline = new(
+            8,
+            (_, args) =>
+            {
+                if (args.IpAddress == "192.0.2.2")
+                    throw new InvalidOperationException("expected stability-test failure");
+                Interlocked.Increment(ref processed);
+            },
+            _ => Interlocked.Increment(ref failures),
+            inbox,
+            _ => this);
+
+        Assert.IsTrue(pipeline.Publish(this, CreateEvent("192.0.2.1")));
+        Assert.IsTrue(pipeline.Publish(this, CreateEvent("192.0.2.2")));
+        Assert.IsTrue(pipeline.Publish(this, CreateEvent("192.0.2.3")));
+        pipeline.Complete();
+        await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.AreEqual(2, processed);
+        Assert.AreEqual(1, failures);
+        Assert.AreEqual(1, inbox.CountUnfinished());
+        Assert.AreEqual("192.0.2.2", inbox.ReadPending(10).Single().EventArgs.IpAddress);
     }
     /// <summary>
     /// Creates one test detection event.

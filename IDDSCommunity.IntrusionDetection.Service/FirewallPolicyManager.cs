@@ -109,11 +109,34 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 continue;
             foreach (string entry in FirewallComString.Get(rule.RemoteAddresses).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
-                if (System.Net.IPAddress.TryParse(entry, out System.Net.IPAddress? address))
-                    addresses.Add(address.ToString());
+                string? normalized = NormalizeRemoteAddressEntry(entry);
+                if (normalized is not null)
+                    addresses.Add(normalized);
             }
         }
         return [.. addresses];
+    }
+    /// <summary>
+    /// 將 Windows 防火牆位址項目正規化為單一位址或 CIDR 表示法。
+    /// </summary>
+    /// <param name="entry">防火牆遠端位址項目。</param>
+    /// <returns>正規化位址；無法辨識時傳回 <see langword="null"/>。</returns>
+    internal static string? NormalizeRemoteAddressEntry(string entry)
+    {
+        string[] parts = entry.Split('/', 2, StringSplitOptions.TrimEntries);
+        if (!System.Net.IPAddress.TryParse(parts[0], out System.Net.IPAddress? address))
+            return null;
+        if (parts.Length == 1)
+            return address.ToString();
+
+        int prefixLength;
+        if (!int.TryParse(parts[1], out prefixLength)
+            && !TryConvertSubnetMaskToPrefixLength(parts[1], out prefixLength))
+            return null;
+        int maximumPrefixLength = address.GetAddressBytes().Length * 8;
+        if (prefixLength < 0 || prefixLength > maximumPrefixLength)
+            return null;
+        return prefixLength == maximumPrefixLength ? address.ToString() : $"{address}/{prefixLength}";
     }
     /// <summary>
     /// Removes ip address from block list.
@@ -202,10 +225,45 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 continue;
             if (cidr.Length == 1 && network.Equals(expected))
                 return true;
-            if (cidr.Length == 2 && int.TryParse(cidr[1], out int prefixLength) && IsInSubnet(expected, network, prefixLength))
-                return true;
+            if (cidr.Length == 2)
+            {
+                if (int.TryParse(cidr[1], out int prefixLength) && IsInSubnet(expected, network, prefixLength))
+                    return true;
+                if (TryConvertSubnetMaskToPrefixLength(cidr[1], out prefixLength)
+                    && IsInSubnet(expected, network, prefixLength))
+                    return true;
+            }
         }
         return false;
+    }
+    /// <summary>
+    /// 將 Windows 防火牆可回傳的 IPv4 點分十進位子網路遮罩轉換成前綴長度。
+    /// </summary>
+    /// <param name="maskText">IPv4 子網路遮罩。</param>
+    /// <param name="prefixLength">轉換成功時的 CIDR 前綴長度。</param>
+    /// <returns>遮罩有效且位元連續時傳回 <see langword="true"/>。</returns>
+    private static bool TryConvertSubnetMaskToPrefixLength(string maskText, out int prefixLength)
+    {
+        prefixLength = 0;
+        if (!System.Net.IPAddress.TryParse(maskText, out System.Net.IPAddress? mask)
+            || mask.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+            return false;
+
+        bool encounteredZero = false;
+        foreach (byte value in mask.GetAddressBytes())
+        {
+            for (int bit = 7; bit >= 0; bit--)
+            {
+                bool set = (value & (1 << bit)) != 0;
+                if (encounteredZero && set)
+                    return false;
+                if (set)
+                    prefixLength++;
+                else
+                    encounteredZero = true;
+            }
+        }
+        return true;
     }
     /// <summary>
     /// Determines whether an IP address belongs to a CIDR network.
