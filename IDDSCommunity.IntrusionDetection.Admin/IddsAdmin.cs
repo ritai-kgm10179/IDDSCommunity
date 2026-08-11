@@ -527,7 +527,7 @@ public partial class IddsAdmin : Form
         List<AdminLockRow> locks = [];
         int maxLogId = lastLogId;
         DateTime? newLockUpdate = null;
-        int? unsuccessfulLogins = null;
+        FailedLoginStatisticsSnapshot? failedLoginStatistics = null;
         int? softLocks = null;
         int? hardLocks = null;
         if (mode == AdminRefreshMode.SecurityLog && IntrusionLog.HasUpdates(lastLogId))
@@ -556,7 +556,8 @@ public partial class IddsAdmin : Form
         }
         if (mode == AdminRefreshMode.Dashboard)
         {
-            unsuccessfulLogins = Locks.ReadUnsuccessfulLoginAttempts(DateTime.Now.AddDays(-30));
+            DateTime endDate = DateTime.Now;
+            failedLoginStatistics = Locks.ReadFailedLoginStatistics(endDate.AddDays(-30), endDate);
             foreach (SecurityAgent agent in SecurityAgents.Instance)
                 agent.UpdateStatistics();
         }
@@ -565,7 +566,7 @@ public partial class IddsAdmin : Form
             softLocks = Locks.ReadCurrentSoftLocks();
             hardLocks = Locks.ReadCurrentHardLocks();
         }
-        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, unsuccessfulLogins, softLocks, hardLocks);
+        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, failedLoginStatistics, softLocks, hardLocks);
     }
     /// <summary>
     /// Applies a background-loaded administration snapshot on the UI thread.
@@ -583,8 +584,11 @@ public partial class IddsAdmin : Form
             foreach (AdminLockRow row in snapshot.Locks)
                 PanelCurrentLocks.Add(row.Id, Properties.Resources.logIcon_softLock, LockStatusAdapter.GetLockStatusName(row.Status), row.ClientIp, row.DisplayName, row.LockDate, row.UnlockDate, row.Status);
         }
-        if (snapshot.UnsuccessfulLogins is int unsuccessful)
-            Dashboard.SetUnsuccessfulLogins(unsuccessful);
+        if (snapshot.FailedLoginStatistics is FailedLoginStatisticsSnapshot failedLogins)
+        {
+            Dashboard.SetUnsuccessfulLogins(failedLogins.Total);
+            Dashboard.SetAgentFailedLogins(failedLogins.AttemptsByAgent);
+        }
         if (snapshot.SoftLocks is int soft && snapshot.HardLocks is int hard)
         {
             PanelCurrentLocks.SetSoftLocks(soft);
@@ -597,7 +601,7 @@ public partial class IddsAdmin : Form
     private enum AdminRefreshMode { None, SecurityLog, CurrentLocks, Dashboard }
     private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
-    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, int? UnsuccessfulLogins, int? SoftLocks, int? HardLocks);
+    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, FailedLoginStatisticsSnapshot? FailedLoginStatistics, int? SoftLocks, int? HardLocks);
 
     public int LastLogId { get; set; }
 

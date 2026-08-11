@@ -124,15 +124,40 @@ public class Locks
         return hardLocks;
     }
     /// <summary>
-    /// Reads unsuccessful login attempts.
+    /// 讀取指定半開時間區間內的登入失敗統計快照。
     /// </summary>
-    /// <param name="startDate">start date參數。</param>
-    /// <returns>傳回read unsuccessful login attempts結果。</returns>
-    public static int ReadUnsuccessfulLoginAttempts(DateTime startDate)
+    /// <param name="startDate">包含在統計內的開始時間。</param>
+    /// <param name="endDate">不包含在統計內的結束時間。</param>
+    /// <returns>包含總數及各 Agent 計數的統計快照。</returns>
+    public static FailedLoginStatisticsSnapshot ReadFailedLoginStatistics(DateTime startDate, DateTime endDate)
     {
-        object? result = Database.Instance.ExecuteScalar("select count(*) from IntrusionLog where IncidentTime>@p0 and Action in (@p1,@p2,@p3)", startDate, IntrusionLog.STATUS_INTRUSION_ATTEMPT, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
-        int.TryParse(result?.ToString(), out int intrusionAttempts);
-        return intrusionAttempts;
+        if (endDate <= startDate)
+            throw new ArgumentOutOfRangeException(nameof(endDate), "結束時間必須晚於開始時間。");
+
+        Dictionary<Guid, int> attemptsByAgent = [];
+        int total = 0;
+        using IDataReader reader = Database.Instance.ExecuteReader(
+            @"select AgentId, count(*) as Incidents
+              from IntrusionLog
+              where IncidentTime>=@p0 and IncidentTime<@p1
+                and Action in (@p2,@p3,@p4)
+              group by AgentId",
+            startDate,
+            endDate,
+            IntrusionLog.STATUS_INTRUSION_ATTEMPT,
+            IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL,
+            IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE);
+        while (reader.Read())
+        {
+            int incidents = Db.DbValueConverter.ToInt(reader["Incidents"]);
+            if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
+            {
+                attemptsByAgent[agentId] = incidents;
+                total += incidents;
+            }
+        }
+
+        return new FailedLoginStatisticsSnapshot(total, attemptsByAgent);
     }
     /// <summary>
     /// Counts recent locks created for the same Agent and source IP address.

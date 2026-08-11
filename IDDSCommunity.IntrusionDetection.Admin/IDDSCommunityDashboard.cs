@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
 
@@ -26,6 +27,19 @@ public partial class IDDSCommunityDashboard : UserControl
     /// </summary>
     /// <param name="logins">logins 的值。</param>
     public void SetUnsuccessfulLogins(int logins) => labelUnsuccessfulLogins.Text = logins.ToString();
+
+    /// <summary>
+    /// 將同一時間區間的登入失敗計數套用至所有 Agent 項目。
+    /// </summary>
+    /// <param name="attemptsByAgent">以 Agent 識別碼索引的登入失敗數量。</param>
+    public void SetAgentFailedLogins(IReadOnlyDictionary<Guid, int> attemptsByAgent)
+    {
+        foreach (Control control in flowLayoutPanelPlugins.Controls)
+        {
+            if (control is PluginItem item)
+                item.SetFailedLogins(attemptsByAgent.GetValueOrDefault(item.SecurityAgent.Id));
+        }
+    }
 
     /// <summary>
     /// Adds agent.
