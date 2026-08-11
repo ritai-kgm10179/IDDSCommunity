@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Text;
 using System.Net;
@@ -9,8 +9,9 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 public class ReportGenerator
 {
 
-    const string SELECT_BY_AGENT = @"SELECT i.AgentId AS RawAgentId, COALESCE(a.DisplayName, i.AgentId) AS AgentName, i.Action AS Action, COUNT(*) AS Incidents FROM IntrusionLog i LEFT JOIN SecurityAgents a ON (LOWER(a.AgentId) = LOWER(i.AgentId) OR LOWER(a.Name) = LOWER(i.AgentId)) WHERE i.IncidentTime > @p0 AND i.IncidentTime < @p1 GROUP BY i.AgentId, COALESCE(a.DisplayName, i.AgentId), i.Action ORDER BY 2";
-    const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime>@p0 AND IncidentTime<@p1 AND Action=@p2 GROUP BY ClientIp ORDER BY COUNT(*)";
+    const string SELECT_BY_AGENT = @"SELECT AgentId AS RawAgentId, Action, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime >= @p0 AND IncidentTime < @p1 AND Action IN (100, 110, 120, 210, 310) GROUP BY AgentId, Action ORDER BY AgentId, Action";
+    const string SELECT_BY_IP = @"SELECT ClientIP, COUNT(*) AS Incidents FROM IntrusionLog WHERE IncidentTime >= @p0 AND IncidentTime < @p1 AND Action IN (@p2, @p3, @p4) GROUP BY ClientIP ORDER BY COUNT(*), ClientIP";
+    private readonly object syncRoot = new();
     /// <summary>
     /// 初始化 <see cref="ReportGenerator"/> class的新執行個體。
     /// </summary>
@@ -33,18 +34,26 @@ public class ReportGenerator
     /// <returns>傳回daily report結果。</returns>
     public static string DailyReport() => string.Empty;
 
-    public long TotalIntrusionAttempts { get; set; }
-    public long TotalSoftLocks { get; set; }
-    public long TotalHardLocks { get; set; }
+    public long TotalIntrusionAttempts { get; private set; }
+    public long TotalSoftLocks { get; private set; }
+    public long TotalHardLocks { get; private set; }
     /// <summary>
     /// 取得每個 Agent 的事件數。
     /// </summary>
     /// <param name="start">start參數。</param>
-    /// <param name="end">end參數。</param>
+    /// <param name="end">不包含在報表內的結束時間。</param>
     /// <returns>傳回get events per agent結果。</returns>
     public string GetEventsPerAgent(DateTime start, DateTime end)
     {
-        IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_AGENT, start, end);
+        lock (syncRoot)
+        {
+            return GetEventsPerAgentCore(start, end);
+        }
+    }
+
+    private string GetEventsPerAgentCore(DateTime start, DateTime end)
+    {
+        using IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_AGENT, start, end);
         string currentAgent = string.Empty;
         bool hasValues = false;
         StringBuilder sb = new();
@@ -59,7 +68,7 @@ public class ReportGenerator
         {
             int action = Db.DbValueConverter.ToInt(rdr["Action"]);
             string rawAgentId = Db.DbValueConverter.ToString(rdr["RawAgentId"]);
-            agent = Db.DbValueConverter.ToString(rdr["AgentName"]);
+            agent = rawAgentId;
 
             string resolvedName = SecurityAgents.Instance.GetDisplayName(rawAgentId);
             if (!string.IsNullOrWhiteSpace(resolvedName) && !resolvedName.Contains("is not registered") && !resolvedName.Contains("尚未註冊"))
@@ -70,7 +79,7 @@ public class ReportGenerator
             long incidents = Db.DbValueConverter.ToInt64(rdr["Incidents"]);
             if (!agent.Equals(currentAgent) && hasValues)
             {
-                sb.AppendLine(SetEventsPerAgent(currentAgent, intrusionAttempts, softLocks, hardLocks));
+                sb.AppendLine(SetEventsPerAgentCore(currentAgent, intrusionAttempts, softLocks, hardLocks));
                 currentAgent = agent;
                 intrusionAttempts = 0;
                 softLocks = 0;
@@ -83,22 +92,23 @@ public class ReportGenerator
             switch (action)
             {
                 case IntrusionLog.STATUS_INTRUSION_ATTEMPT:
-                    intrusionAttempts = incidents;
+                case IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL:
+                case IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE:
+                    intrusionAttempts += incidents;
                     break;
                 case IntrusionLog.STATUS_SOFT_LOCKED:
-                    softLocks = incidents;
+                    softLocks += incidents;
                     break;
                 case IntrusionLog.STATUS_HARD_LOCKED:
-                    hardLocks = incidents;
+                    hardLocks += incidents;
                     break;
             }
             hasValues = true;
         }
         if (hasValues)
         {
-            sb.AppendLine(SetEventsPerAgent(agent, intrusionAttempts, softLocks, hardLocks));
+            sb.AppendLine(SetEventsPerAgentCore(currentAgent, intrusionAttempts, softLocks, hardLocks));
         }
-        rdr.Close();
         return sb.ToString();
     }
     /// <summary>
@@ -106,11 +116,21 @@ public class ReportGenerator
     /// </summary>
     /// <param name="action">action參數。</param>
     /// <param name="start">start參數。</param>
-    /// <param name="end">end參數。</param>
+    /// <param name="end">不包含在報表內的結束時間。</param>
     /// <returns>傳回get incidents by ip結果。</returns>
     public string GetIncidentsByIP(int action, DateTime start, DateTime end)
     {
-        IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_IP, start, end, action);
+        lock (syncRoot)
+        {
+            return GetIncidentsByIPCore(action, start, end);
+        }
+    }
+
+    private static string GetIncidentsByIPCore(int action, DateTime start, DateTime end)
+    {
+        int secondAction = action == IntrusionLog.STATUS_INTRUSION_ATTEMPT ? IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL : action;
+        int thirdAction = action == IntrusionLog.STATUS_INTRUSION_ATTEMPT ? IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE : action;
+        using IDataReader rdr = Database.Instance.ExecuteReader(SELECT_BY_IP, start, end, action, secondAction, thirdAction);
         StringBuilder sb = new();
         while (rdr.Read())
         {
@@ -143,6 +163,14 @@ public class ReportGenerator
     /// <returns>傳回set events per agent結果。</returns>
     public string SetEventsPerAgent(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
     {
+        lock (syncRoot)
+        {
+            return SetEventsPerAgentCore(agentName, intrusionAttempts, softLocks, hardLocks);
+        }
+    }
+
+    private string SetEventsPerAgentCore(string agentName, long intrusionAttempts, long softLocks, long hardLocks)
+    {
         string result = GetEventsPerAgentTemplate().Replace("[%AGENT_NAME%]", WebUtility.HtmlEncode(agentName));
         result = result.Replace("[%INTRUSION_ATTEMPTS%]", intrusionAttempts.ToString());
         result = result.Replace("[%SOFT_LOCKS%]", softLocks.ToString());
@@ -159,24 +187,28 @@ public class ReportGenerator
     /// <param name="subtitle">subtitle參數。</param>
     /// <param name="installationInformation">installation information參數。</param>
     /// <param name="start">start參數。</param>
-    /// <param name="end">end參數。</param>
+    /// <param name="end">不包含在報表內的結束時間。</param>
     /// <returns>傳回get report結果。</returns>
     public string GetReport(string title, string subtitle, string installationInformation, DateTime start, DateTime end)
     {
-        string result = LocalizeReportTemplate(Resources.ReportTemplate);
-        result = result.Replace("[%TITLE%]", WebUtility.HtmlEncode(title));
-        result = result.Replace("[%SUBTITLE%]", WebUtility.HtmlEncode(subtitle));
-        result = result.Replace("[%INSTALLATION_INFORMATION%]", installationInformation);
+        if (end <= start) throw new ArgumentOutOfRangeException(nameof(end), Strings.Get("The report end time must be later than the start time."));
+        lock (syncRoot)
+        {
+            string result = LocalizeReportTemplate(Resources.ReportTemplate);
+            result = result.Replace("[%TITLE%]", WebUtility.HtmlEncode(title));
+            result = result.Replace("[%SUBTITLE%]", WebUtility.HtmlEncode(subtitle));
+            result = result.Replace("[%INSTALLATION_INFORMATION%]", installationInformation);
 
-        result = result.Replace("[%EVENTS_PER_AGENT%]", GetEventsPerAgent(start, end));
-        result = result.Replace("[%INTRUSION_ATTEMPTS_BY_IP%]", GetIncidentsByIP(IntrusionLog.STATUS_INTRUSION_ATTEMPT, start, end));
-        result = result.Replace("[%SOFT_LOCKS_BY_IP%]", GetIncidentsByIP(IntrusionLog.STATUS_SOFT_LOCKED, start, end));
-        result = result.Replace("[%HARD_LOCKS_BY_IP%]", GetIncidentsByIP(IntrusionLog.STATUS_HARD_LOCKED, start, end));
-        result = result.Replace("[%TOTAL_INTRUSION_ATTEMPTS%]", TotalIntrusionAttempts.ToString());
-        result = result.Replace("[%TOTAL_SOFT_LOCKS%]", TotalSoftLocks.ToString());
-        result = result.Replace("[%TOTAL_HARD_LOCKS%]", TotalHardLocks.ToString());
+            result = result.Replace("[%EVENTS_PER_AGENT%]", GetEventsPerAgentCore(start, end));
+            result = result.Replace("[%INTRUSION_ATTEMPTS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_INTRUSION_ATTEMPT, start, end));
+            result = result.Replace("[%SOFT_LOCKS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_SOFT_LOCKED, start, end));
+            result = result.Replace("[%HARD_LOCKS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_HARD_LOCKED, start, end));
+            result = result.Replace("[%TOTAL_INTRUSION_ATTEMPTS%]", TotalIntrusionAttempts.ToString());
+            result = result.Replace("[%TOTAL_SOFT_LOCKS%]", TotalSoftLocks.ToString());
+            result = result.Replace("[%TOTAL_HARD_LOCKS%]", TotalHardLocks.ToString());
 
-        return result;
+            return result;
+        }
     }
     /// <summary>
     /// 使用選取的應用程式語言替換每個使用者介面報表標籤。

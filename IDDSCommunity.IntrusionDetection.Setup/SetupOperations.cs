@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Threading;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
@@ -13,6 +14,7 @@ internal static class SetupOperations
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
     private const string ServiceDisplayName = Globals.WINDOWS_SERVICE_DISPLAY_NAME;
     private static readonly TimeSpan ServiceStartTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(30);
     internal static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
     internal static readonly string AdminExecutablePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Admin.exe");
     /// <summary>
@@ -61,7 +63,10 @@ internal static class SetupOperations
                     return NormalizeVersion(version);
                 }
             }
-            catch { }
+            catch (Exception exception)
+            {
+                LogNonFatal("Read installed version", exception);
+            }
             return null;
         }
     }
@@ -143,12 +148,8 @@ internal static class SetupOperations
         }
         else if (File.Exists(DesktopShortcutPath))
         {
-            try
-            {
-                File.Delete(DesktopShortcutPath);
-                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
-            }
-            catch { }
+            File.Delete(DesktopShortcutPath);
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
         }
 
         if (startMenu)
@@ -158,12 +159,8 @@ internal static class SetupOperations
         }
         else if (File.Exists(StartMenuShortcutPath))
         {
-            try
-            {
-                File.Delete(StartMenuShortcutPath);
-                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
-            }
-            catch { }
+            File.Delete(StartMenuShortcutPath);
+            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
         }
     }
 
@@ -172,17 +169,9 @@ internal static class SetupOperations
     /// </summary>
     internal static void RemoveShortcuts()
     {
-        try
-        {
-            if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath);
-        }
-        catch { }
-        try
-        {
-            if (Directory.Exists(StartMenuDirectory))
-                Directory.Delete(StartMenuDirectory, true);
-        }
-        catch { }
+        if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath);
+        if (Directory.Exists(StartMenuDirectory))
+            Directory.Delete(StartMenuDirectory, true);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
     }
 
@@ -200,26 +189,25 @@ internal static class SetupOperations
 
             SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
         }
-        catch (Exception)
+        catch (Exception primaryFailure)
         {
             try
             {
                 Type? wshType = Type.GetTypeFromCLSID(new Guid("72C24DD5-5D27-11CF-A9F3-00B0C08FDFC0"));
-                if (wshType != null)
-                {
-                    dynamic? wsh = Activator.CreateInstance(wshType);
-                    if (wsh != null)
-                    {
-                        dynamic shortcut = wsh.CreateShortcut(shortcutPath);
-                        shortcut.TargetPath = targetPath;
-                        shortcut.WorkingDirectory = Path.GetDirectoryName(targetPath);
-                        shortcut.Description = description;
-                        shortcut.Save();
-                        SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
-                    }
-                }
+                if (wshType is null) throw new InvalidOperationException(SetupText.Format("ShortcutCreationFailed", shortcutPath));
+                dynamic? wsh = Activator.CreateInstance(wshType);
+                if (wsh is null) throw new InvalidOperationException(SetupText.Format("ShortcutCreationFailed", shortcutPath));
+                dynamic shortcut = wsh.CreateShortcut(shortcutPath);
+                shortcut.TargetPath = targetPath;
+                shortcut.WorkingDirectory = Path.GetDirectoryName(targetPath);
+                shortcut.Description = description;
+                shortcut.Save();
+                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
             }
-            catch { }
+            catch (Exception fallbackFailure)
+            {
+                throw new AggregateException(SetupText.Format("ShortcutCreationFailed", shortcutPath), primaryFailure, fallbackFailure);
+            }
         }
     }
 
@@ -293,7 +281,10 @@ internal static class SetupOperations
                     Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
                     return;
                 }
-                catch { }
+                catch (Exception exception)
+                {
+                    LogNonFatal("Open local user guide", exception);
+                }
             }
         }
 
@@ -301,7 +292,10 @@ internal static class SetupOperations
         {
             Process.Start(new ProcessStartInfo("https://github.com/ritai-kgm10179/IDDSCommunity#readme") { UseShellExecute = true });
         }
-        catch { }
+        catch (Exception exception)
+        {
+            LogNonFatal("Open online user guide", exception);
+        }
     }
     /// <summary>
     /// 檢查管理控制台執行檔是否可供啟動。
@@ -313,20 +307,39 @@ internal static class SetupOperations
     internal static void LaunchApp()
     {
         if (!CanLaunchApp) return;
-        Process.Start(new ProcessStartInfo(AdminExecutablePath) { UseShellExecute = true });
+        ProcessStartInfo startInfo = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"))
+        {
+            UseShellExecute = false
+        };
+        startInfo.ArgumentList.Add(AdminExecutablePath);
+        _ = Process.Start(startInfo) ?? throw new InvalidOperationException(SetupText.Get("ApplicationLaunchFailed"));
     }
     /// <summary>
     /// 部署封裝之軟體資產、註冊 Windows 服務並設定系統捷徑。
     /// </summary>
     /// <param name="desktopShortcut">是否建立桌面捷徑。</param>
     /// <param name="startMenuShortcut">是否建立開始功能表捷徑。</param>
-    internal static void Install(bool desktopShortcut = true, bool startMenuShortcut = true)
+    internal static SetupOperationResult Install(
+        bool desktopShortcut = true,
+        bool startMenuShortcut = true,
+        IProgress<SetupProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         string payloadDir = Path.Combine(AppContext.BaseDirectory, "payload");
         string tempExtractedPayload = string.Empty;
+        string parent = Directory.GetParent(InstallDirectory)?.FullName ?? throw new InvalidOperationException();
+        string stagingDirectory = Path.Combine(parent, ".idds-stage-" + Guid.NewGuid().ToString("N"));
+        string backupDirectory = Path.Combine(parent, ".idds-backup-" + Guid.NewGuid().ToString("N"));
+        bool previousInstallationMoved = false;
+        bool installationDirectoryReplaced = false;
+        bool systemStateChanged = false;
+        bool restartRequired = false;
+        bool cleanupIncomplete = false;
 
         try
         {
+            Report(progress, "ProgressPreparing", 5);
+            cancellationToken.ThrowIfCancellationRequested();
             if (!Directory.Exists(payloadDir))
             {
                 string payloadZip = Path.Combine(AppContext.BaseDirectory, "payload.zip");
@@ -362,24 +375,41 @@ internal static class SetupOperations
             }
 
             if (!Directory.Exists(payloadDir)) throw new DirectoryNotFoundException(SetupText.Get("PayloadMissing"));
-            string parent = Directory.GetParent(InstallDirectory)?.FullName ?? throw new InvalidOperationException();
             Directory.CreateDirectory(parent);
 
+            Report(progress, "ProgressValidating", 15);
+            CopyDirectoryOverwrite(payloadDir, stagingDirectory, cancellationToken);
+            string stagedService = Path.Combine(stagingDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
+            if (!File.Exists(stagedService)) throw new FileNotFoundException(SetupText.Get("ServiceExecutableMissing"), stagedService);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            Report(progress, "ProgressStoppingService", 30);
             RunSc("stop", ServiceName, acceptMissing: true);
             RunSc("delete", ServiceName, acceptMissing: true);
+            systemStateChanged = true;
             KillRunningProcesses();
-            System.Threading.Thread.Sleep(500);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            Directory.CreateDirectory(InstallDirectory);
-            CopyDirectoryOverwrite(payloadDir, InstallDirectory);
+            Report(progress, "ProgressInstallingFiles", 50);
+            if (Directory.Exists(InstallDirectory))
+            {
+                Directory.Move(InstallDirectory, backupDirectory);
+                previousInstallationMoved = true;
+            }
+            Directory.Move(stagingDirectory, InstallDirectory);
+            installationDirectoryReplaced = true;
+            cancellationToken.ThrowIfCancellationRequested();
 
             string service = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
             if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("ServiceExecutableMissing"), service);
 
+            Report(progress, "ProgressRegisteringService", 70);
             RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
             RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
             RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
             ConfigureEventLog();
+            cancellationToken.ThrowIfCancellationRequested();
+            Report(progress, "ProgressStartingService", 85);
             RunSc("start", ServiceName);
             using (ServiceController controller = new(ServiceName))
             {
@@ -389,15 +419,70 @@ internal static class SetupOperations
                     throw new InvalidOperationException(SetupText.Get("ServiceStartVerificationFailed"));
             }
             CreateShortcuts(desktopShortcut, startMenuShortcut);
+            if (previousInstallationMoved)
+            {
+                try
+                {
+                    restartRequired |= SafeDeleteDirectory(backupDirectory);
+                }
+                catch (Exception exception)
+                {
+                    LogNonFatal($"Clean previous installation backup {backupDirectory}", exception);
+                    cleanupIncomplete = true;
+                }
+            }
+            Report(progress, "ProgressCompleted", 100);
+            return new SetupOperationResult(restartRequired, cleanupIncomplete);
+        }
+        catch (Exception installationFailure)
+        {
+            try
+            {
+                if (systemStateChanged)
+                    RollBackInstallation(previousInstallationMoved, installationDirectoryReplaced, backupDirectory);
+            }
+            catch (Exception rollbackFailure)
+            {
+                throw new AggregateException(SetupText.Get("RollbackFailed"), installationFailure, rollbackFailure);
+            }
+            throw;
         }
         finally
         {
+            if (Directory.Exists(stagingDirectory))
+                TryCleanTemporaryDirectory(stagingDirectory);
             if (!string.IsNullOrEmpty(tempExtractedPayload) && Directory.Exists(tempExtractedPayload))
             {
-                try { Directory.Delete(tempExtractedPayload, true); } catch { }
+                TryCleanTemporaryDirectory(tempExtractedPayload);
             }
         }
     }
+
+    private static void RollBackInstallation(bool previousInstallationMoved, bool installationDirectoryReplaced, string backupDirectory)
+    {
+        RunSc("stop", ServiceName, acceptMissing: true);
+        RunSc("delete", ServiceName, acceptMissing: true);
+        KillRunningProcesses();
+        if (installationDirectoryReplaced && Directory.Exists(InstallDirectory))
+            _ = SafeDeleteDirectory(InstallDirectory);
+        if (previousInstallationMoved)
+        {
+            if (!Directory.Exists(backupDirectory))
+                throw new DirectoryNotFoundException(backupDirectory);
+            Directory.Move(backupDirectory, InstallDirectory);
+        }
+        if (!Directory.Exists(InstallDirectory)) return;
+        string previousService = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
+        if (!File.Exists(previousService))
+            throw new FileNotFoundException(SetupText.Get("RollbackServiceMissing"), previousService);
+        RunSc("create", ServiceName, "binPath=", previousService, "start=", "auto", "DisplayName=", ServiceDisplayName);
+        RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
+        RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+        RunSc("start", ServiceName);
+    }
+
+    private static void Report(IProgress<SetupProgress>? progress, string messageKey, int percentage) =>
+        progress?.Report(new SetupProgress(messageKey, percentage));
 
     private static void ConfigureEventLog()
     {
@@ -416,30 +501,57 @@ internal static class SetupOperations
     /// <summary>
     /// 停止並註銷 Windows 服務、終止相關程序，並移除安裝檔案、防火牆規則與捷徑。
     /// </summary>
-    internal static void Uninstall()
+    internal static SetupOperationResult Uninstall(IProgress<SetupProgress>? progress = null, CancellationToken cancellationToken = default)
     {
-        RemoveShortcuts();
-        CleanUpFirewallRules();
-        RunSc("stop", ServiceName, acceptMissing: true);
-        RunSc("delete", ServiceName, acceptMissing: true);
-        KillRunningProcesses();
-        System.Threading.Thread.Sleep(500);
-        SafeDeleteDirectory(InstallDirectory);
+        Report(progress, "ProgressStoppingService", 15);
+        cancellationToken.ThrowIfCancellationRequested();
+        bool serviceRemoved = false;
+        try
+        {
+            CleanUpFirewallRules();
+            RunSc("stop", ServiceName, acceptMissing: true);
+            RunSc("delete", ServiceName, acceptMissing: true);
+            serviceRemoved = true;
+            KillRunningProcesses();
+            cancellationToken.ThrowIfCancellationRequested();
+            Report(progress, "ProgressRemovingFiles", 60);
+            bool restartRequired = SafeDeleteDirectory(InstallDirectory);
+            RemoveShortcuts();
+            Report(progress, "ProgressCompleted", 100);
+            return new SetupOperationResult(restartRequired, CleanupIncomplete: false);
+        }
+        catch (OperationCanceledException) when (serviceRemoved && Directory.Exists(InstallDirectory))
+        {
+            RestoreServiceFromInstallDirectory();
+            throw;
+        }
+    }
+
+    private static void RestoreServiceFromInstallDirectory()
+    {
+        string service = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
+        if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("RollbackServiceMissing"), service);
+        RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
+        RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
+        RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+        RunSc("start", ServiceName);
     }
 
     private static void CleanUpFirewallRules()
     {
-        try
+        ProcessStartInfo psi = new(Path.Combine(Environment.SystemDirectory, "netsh.exe"), "advfirewall firewall delete rule name=all group=\"IDDS Community\"")
         {
-            ProcessStartInfo psi = new(Path.Combine(Environment.SystemDirectory, "netsh.exe"), "advfirewall firewall delete rule name=all group=\"IDDS Community\"")
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            using Process? process = Process.Start(psi);
-            process?.WaitForExit(2000);
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        using Process process = Process.Start(psi) ?? throw new InvalidOperationException(SetupText.Get("FirewallCleanupStartFailed"));
+        if (!process.WaitForExit((int)ProcessTimeout.TotalMilliseconds))
+        {
+            process.Kill(true);
+            throw new System.TimeoutException(SetupText.Get("FirewallCleanupTimedOut"));
         }
-        catch { }
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException(SetupText.Format("FirewallCleanupFailed", process.ExitCode));
     }
 
     private static void KillRunningProcesses()
@@ -449,31 +561,51 @@ internal static class SetupOperations
         {
             try
             {
-                foreach (Process p in Process.GetProcessesByName(name))
+                foreach (Process discoveredProcess in Process.GetProcessesByName(name))
                 {
+                    using Process p = discoveredProcess;
                     try
                     {
                         string? mainModulePath = p.MainModule?.FileName;
                         if (mainModulePath != null && mainModulePath.StartsWith(InstallDirectory, StringComparison.OrdinalIgnoreCase))
                         {
                             p.Kill(true);
-                            p.WaitForExit(2000);
+                            if (!p.WaitForExit(2000))
+                                throw new System.TimeoutException(SetupText.Format("ProcessStopTimedOut", name));
                         }
                     }
-                    catch
+                    catch (Exception exception)
                     {
-                        // Fallback if MainModule inspect fails (e.g. process exiting)
-                        try { p.Kill(true); } catch { }
+                        LogNonFatal($"Inspect process {name}", exception);
                     }
                 }
             }
-            catch { }
+            catch (Exception exception)
+            {
+                LogNonFatal($"Enumerate process {name}", exception);
+            }
         }
     }
 
-    private static void SafeDeleteDirectory(string directoryPath)
+    private static void TryCleanTemporaryDirectory(string directoryPath)
     {
-        if (!Directory.Exists(directoryPath)) return;
+        try
+        {
+            _ = SafeDeleteDirectory(directoryPath);
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal($"Clean temporary directory {directoryPath}", exception);
+        }
+    }
+
+    private static void LogNonFatal(string operation, Exception exception) =>
+        _ = RollingDiagnosticLog.Write("Setup", operation, exception);
+
+    internal static bool SafeDeleteDirectory(string directoryPath)
+    {
+        if (!Directory.Exists(directoryPath)) return false;
+        bool restartRequired = false;
 
         foreach (string file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
         {
@@ -482,14 +614,20 @@ internal static class SetupOperations
                 File.SetAttributes(file, FileAttributes.Normal);
                 File.Delete(file);
             }
-            catch (Exception)
+            catch (Exception exception)
             {
                 // Handle file locks (e.g. runtime DLLs like clrjit.dll) via Win32 delay until reboot
                 try
                 {
-                    MoveFileEx(file, null, MOVEFILE_DELAY_UNTIL_REBOOT);
+                    if (!MoveFileEx(file, null, MOVEFILE_DELAY_UNTIL_REBOOT))
+                        throw new IOException(SetupText.Format("DeleteFailed", file), exception);
+                    restartRequired = true;
                 }
-                catch { }
+                catch (IOException) { throw; }
+                catch (Exception schedulingFailure)
+                {
+                    throw new AggregateException(SetupText.Format("DeleteFailed", file), exception, schedulingFailure);
+                }
             }
         }
 
@@ -499,17 +637,20 @@ internal static class SetupOperations
             {
                 Directory.Delete(subDir, false);
             }
-            catch { }
+            catch when (restartRequired) { }
         }
 
         try
         {
             Directory.Delete(directoryPath, true);
         }
-        catch { }
+        catch when (restartRequired) { }
+        if (Directory.Exists(directoryPath) && !restartRequired)
+            throw new IOException(SetupText.Format("DeleteFailed", directoryPath));
+        return restartRequired;
     }
 
-    private static void CopyDirectoryOverwrite(string source, string destination)
+    internal static void CopyDirectoryOverwrite(string source, string destination, CancellationToken cancellationToken)
     {
         if ((File.GetAttributes(source) & FileAttributes.ReparsePoint) != 0)
             throw new IOException(SetupText.Get("ReparsePointRejected"));
@@ -518,31 +659,21 @@ internal static class SetupOperations
 
         foreach (string directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0) throw new IOException(SetupText.Get("ReparsePointRejected"));
             Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
         }
 
         foreach (string file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) throw new IOException(SetupText.Get("ReparsePointRejected"));
             string destFile = Path.Combine(destination, Path.GetRelativePath(source, file));
-            try
+            if (File.Exists(destFile))
             {
-                if (File.Exists(destFile))
-                {
-                    File.SetAttributes(destFile, FileAttributes.Normal);
-                }
-                File.Copy(file, destFile, true);
+                File.SetAttributes(destFile, FileAttributes.Normal);
             }
-            catch (Exception)
-            {
-                // Fallback via MoveFileEx for locked binaries
-                try
-                {
-                    MoveFileEx(destFile, null, MOVEFILE_DELAY_UNTIL_REBOOT);
-                }
-                catch { }
-            }
+            File.Copy(file, destFile, true);
         }
     }
 
@@ -550,13 +681,32 @@ internal static class SetupOperations
 
     private static void RunSc(string command, string serviceName, bool acceptMissing, params string[] arguments)
     {
-        ProcessStartInfo startInfo = new(Path.Combine(Environment.SystemDirectory, "sc.exe")) { UseShellExecute = false, CreateNoWindow = true };
+        ProcessStartInfo startInfo = new(Path.Combine(Environment.SystemDirectory, "sc.exe"))
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true
+        };
         startInfo.ArgumentList.Add(command);
         startInfo.ArgumentList.Add(serviceName);
         foreach (string argument in arguments) startInfo.ArgumentList.Add(argument);
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException(SetupText.Get("ServiceControlStartFailed"));
-        process.WaitForExit();
+        System.Threading.Tasks.Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        System.Threading.Tasks.Task<string> standardError = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit((int)ProcessTimeout.TotalMilliseconds))
+        {
+            process.Kill(true);
+            throw new System.TimeoutException(SetupText.Get("ServiceControlTimedOut"));
+        }
         if (process.ExitCode != 0 && !(acceptMissing && (process.ExitCode == 1060 || process.ExitCode == 1062)))
-            throw new InvalidOperationException(SetupText.Format("ServiceControlFailed", process.ExitCode));
+        {
+            string details = standardError.GetAwaiter().GetResult().Trim();
+            if (string.IsNullOrEmpty(details)) details = standardOutput.GetAwaiter().GetResult().Trim();
+            throw new InvalidOperationException(SetupText.Format("ServiceControlFailedWithDetails", process.ExitCode, details));
+        }
     }
+
+    internal readonly record struct SetupProgress(string MessageKey, int Percentage);
+    internal readonly record struct SetupOperationResult(bool RestartRequired, bool CleanupIncomplete);
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -28,6 +28,8 @@ public partial class IddsAdmin : Form
     private EventLog? eventLogIDDSCommunity;
     private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
     private int serviceRefreshActive;
+    private Bitmap? disabledStartServiceImage;
+    private Bitmap? disabledStopServiceImage;
     /// <summary>
     /// 初始化 <see cref="IddsAdmin"/> 類別的新執行個體。
     /// </summary>
@@ -51,6 +53,9 @@ public partial class IddsAdmin : Form
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         uiRefreshCancellation.Cancel();
+        disabledStartServiceImage?.Dispose();
+        disabledStopServiceImage?.Dispose();
+        serviceController?.Dispose();
         base.OnFormClosed(e);
     }
 
@@ -147,7 +152,12 @@ public partial class IddsAdmin : Form
         {
             MarkServiceUnavailable(controller, ex);
             if (!IsDisposed && IsHandleCreated)
-                await this.InvokeAsync(() => ApplyServiceStatus(null));
+                await this.InvokeAsync(() =>
+                {
+                    ApplyServiceStatus(null);
+                    MessageBox.Show(this, Strings.Get("The service change could not be completed."),
+                        Strings.Get("Service operation failed"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
         }
     }
 
@@ -269,8 +279,6 @@ public partial class IddsAdmin : Form
                 await this.InvokeAsync(() =>
                 {
                     ApplyServiceStatus(status);
-                    if (status is null)
-                        timerRefreshServiceStatus?.Stop();
                 }, uiRefreshCancellation.Token);
         }
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
@@ -302,13 +310,19 @@ public partial class IddsAdmin : Form
     {
         System.ServiceProcess.ServiceController? controller = serviceController;
         if (controller is null)
-            return null;
+        {
+            controller = new System.ServiceProcess.ServiceController(ServiceName);
+            serviceController = controller;
+        }
         if (WindowsServiceStatusReader.TryRead(() =>
         {
             controller.Refresh();
             return controller.Status;
         }, out System.ServiceProcess.ServiceControllerStatus status, out Exception? failure))
+        {
+            ServiceError = false;
             return status;
+        }
         if (failure is not null)
         {
             MarkServiceUnavailable(controller, failure);
@@ -317,6 +331,7 @@ public partial class IddsAdmin : Form
     }
     /// <summary>
     /// Applies one service-status snapshot on the UI thread.
+    /// </summary>
     private const char StatusDot = '●';
 
     private static Bitmap CreateDisabledImage(Image original)
@@ -336,6 +351,12 @@ public partial class IddsAdmin : Form
             0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
         return bitmap;
     }
+
+    private Image DisabledStartServiceImage =>
+        disabledStartServiceImage ??= CreateDisabledImage(Properties.Resources.service_controller_start);
+
+    private Image DisabledStopServiceImage =>
+        disabledStopServiceImage ??= CreateDisabledImage(Properties.Resources.service_controller_stop);
     /// <summary>
     /// Applies background-refreshed status to the header indicators and controls.
     /// </summary>
@@ -349,8 +370,8 @@ public partial class IddsAdmin : Form
             smartLabelServiceStatus.Text = StatusDot + " " + notFound;
             smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68);
             buttonManageService.Text = Strings.Get("Install service");
-            pictureBoxStartService.Image = CreateDisabledImage(Properties.Resources.service_controller_start);
-            pictureBoxStopService.Image = CreateDisabledImage(Properties.Resources.service_controller_stop);
+            pictureBoxStartService.Image = DisabledStartServiceImage;
+            pictureBoxStopService.Image = DisabledStopServiceImage;
             pictureBoxStartService.Enabled = false;
             pictureBoxStopService.Enabled = false;
             pictureBoxStartService.Cursor = Cursors.Default;
@@ -363,7 +384,7 @@ public partial class IddsAdmin : Form
             if (status == System.ServiceProcess.ServiceControllerStatus.Running)
             {
                 IsServiceRunning = true;
-                pictureBoxStartService.Image = CreateDisabledImage(Properties.Resources.service_controller_start);
+                pictureBoxStartService.Image = DisabledStartServiceImage;
                 pictureBoxStartService.Enabled = false;
                 pictureBoxStartService.Cursor = Cursors.Default;
                 pictureBoxStopService.Image = Properties.Resources.service_controller_stop;
@@ -379,7 +400,7 @@ public partial class IddsAdmin : Form
                 pictureBoxStartService.Image = Properties.Resources.service_controller_start;
                 pictureBoxStartService.Enabled = true;
                 pictureBoxStartService.Cursor = Cursors.Hand;
-                pictureBoxStopService.Image = CreateDisabledImage(Properties.Resources.service_controller_stop);
+                pictureBoxStopService.Image = DisabledStopServiceImage;
                 pictureBoxStopService.Enabled = false;
                 pictureBoxStopService.Cursor = Cursors.Default;
                 string stopped = Strings.Get("Service is stopped");
@@ -448,9 +469,10 @@ public partial class IddsAdmin : Form
             {
                 EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Admin", ex.Message, EventLogEntryType.Error);
             }
-            catch (Exception)
+            catch (Exception logException)
             {
-                // UI refresh failures must not terminate the WinForms message loop.
+                Trace.TraceError("Admin refresh failed: {0}{1}Event Log write failed: {2}", ex, Environment.NewLine, logException);
+                _ = RollingDiagnosticLog.Write("Admin-Refresh", "Admin refresh and Event Log write failed", ex);
             }
         }
         finally
@@ -861,9 +883,7 @@ public partial class IddsAdmin : Form
             Interval = 1000
         };
         timerRefreshServiceStatus.Tick += new EventHandler(serviceReader_Tick);
-        timerRefreshServiceStatus.Enabled = serviceController is not null;
-        if (timerRefreshServiceStatus.Enabled)
-            timerRefreshServiceStatus.Start();
+        timerRefreshServiceStatus.Start();
 
         eventLogIDDSCommunity = new EventLog("IDDSCommunity")
         {
@@ -1219,9 +1239,10 @@ public partial class IddsAdmin : Form
         {
             EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Admin", exception.Message, EventLogEntryType.Error);
         }
-        catch (Exception)
+        catch (Exception logException)
         {
-            // A missing Event Log source must not turn a recoverable service-state failure into a startup crash.
+            Trace.TraceError("Service state read failed: {0}{1}Event Log write failed: {2}", exception, Environment.NewLine, logException);
+            _ = RollingDiagnosticLog.Write("Admin-ServiceStatus", "Service status and Event Log write failed", exception);
         }
     }
 

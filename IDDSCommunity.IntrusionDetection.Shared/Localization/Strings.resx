@@ -746,6 +746,7 @@
   <data name="End date" xml:space="preserve"><value>End date</value></data>
   <data name="Export HTML report" xml:space="preserve"><value>Export HTML report</value></data>
   <data name="The end date must not be earlier than the start date." xml:space="preserve"><value>The end date must not be earlier than the start date.</value></data>
+  <data name="The report end time must be later than the start time." xml:space="preserve"><value>The report end time must be later than the start time.</value></data>
   <data name="HTML report (*.html)|*.html" xml:space="preserve"><value>HTML report (*.html)|*.html</value></data>
   <data name="Export security report" xml:space="preserve"><value>Export security report</value></data>
   <data name="Security report" xml:space="preserve"><value>Security report</value></data>

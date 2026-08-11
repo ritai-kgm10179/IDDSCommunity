@@ -27,6 +27,7 @@
   <Project Path="IDDSCommunity.IntrusionDetection.Base/IDDSCommunity.IntrusionDetection.Base.Plugins.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Service/IDDSCommunity.IntrusionDetection.Service.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj" />
+  <Project Path="IDDSCommunity.IntrusionDetection.Setup.Test/IDDSCommunity.IntrusionDetection.Setup.Test.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared/IDDSCommunity.IntrusionDetection.Shared.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared.Test/IDDSCommunity.IntrusionDetection.Shared.Test.csproj" />

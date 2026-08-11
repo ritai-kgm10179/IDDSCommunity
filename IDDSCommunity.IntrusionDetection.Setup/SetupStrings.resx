@@ -34,4 +34,32 @@ Target location: {1}</value></data>
   <data name="OpenUserGuide" xml:space="preserve"><value>User Guide</value></data>
   <data name="Close" xml:space="preserve"><value>Close</value></data>
   <data name="LanguageButtonText" xml:space="preserve"><value>🌐 English</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ProgressPreparing" xml:space="preserve"><value>Preparing the installation...</value></data>
+  <data name="ProgressValidating" xml:space="preserve"><value>Validating the installation payload...</value></data>
+  <data name="ProgressStoppingService" xml:space="preserve"><value>Stopping the protection service...</value></data>
+  <data name="ProgressInstallingFiles" xml:space="preserve"><value>Installing application files...</value></data>
+  <data name="ProgressRegisteringService" xml:space="preserve"><value>Registering the Windows service...</value></data>
+  <data name="ProgressStartingService" xml:space="preserve"><value>Starting and verifying the protection service...</value></data>
+  <data name="ProgressRemovingFiles" xml:space="preserve"><value>Removing application files...</value></data>
+  <data name="ProgressCompleted" xml:space="preserve"><value>Operation completed.</value></data>
+  <data name="ProgressCancelling" xml:space="preserve"><value>Cancelling safely and restoring the previous installation...</value></data>
+  <data name="CancelledAndRolledBack" xml:space="preserve"><value>The operation was cancelled. Any system changes were rolled back.</value></data>
+  <data name="RestartRequired" xml:space="preserve"><value>Some files are in use and will be removed after Windows restarts. Restart when convenient to finish cleanup.</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>The operation could not be completed and rollback was attempted.
+
+{0}</value></data>
+  <data name="DiagnosticLogPath" xml:space="preserve"><value>Diagnostic log: {0}</value></data>
+  <data name="RollbackFailed" xml:space="preserve"><value>Installation and automatic rollback both failed. Review the diagnostic log before retrying.</value></data>
+  <data name="RollbackServiceMissing" xml:space="preserve"><value>The previous service executable is missing, so the installation cannot be restored.</value></data>
+  <data name="DeleteFailed" xml:space="preserve"><value>Could not remove: {0}</value></data>
+  <data name="ShortcutCreationFailed" xml:space="preserve"><value>Could not create the shortcut: {0}</value></data>
+  <data name="FirewallCleanupStartFailed" xml:space="preserve"><value>Windows Firewall cleanup could not be started.</value></data>
+  <data name="FirewallCleanupTimedOut" xml:space="preserve"><value>Windows Firewall cleanup timed out.</value></data>
+  <data name="FirewallCleanupFailed" xml:space="preserve"><value>Windows Firewall cleanup failed with exit code {0}.</value></data>
+  <data name="ServiceControlTimedOut" xml:space="preserve"><value>The Windows service operation timed out.</value></data>
+  <data name="ServiceControlFailedWithDetails" xml:space="preserve"><value>The Windows service operation failed with exit code {0}. {1}</value></data>
+  <data name="ApplicationLaunchFailed" xml:space="preserve"><value>The management application could not be launched.</value></data>
+  <data name="ProcessStopTimedOut" xml:space="preserve"><value>The {0} process did not stop within the allowed time.</value></data>
+  <data name="CleanupIncomplete" xml:space="preserve"><value>The new version is installed and running, but the previous-version backup could not be completely removed. Review the diagnostic log before deleting it manually.</value></data>
 </root>

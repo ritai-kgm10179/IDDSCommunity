@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -127,11 +127,12 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         try
         {
-            DateTime end = DateTime.Now.AddDays(-1);
-            DateTime start = new(end.Year, end.Month, 1, 0, 0, 0);
+            DateTime end = DateTime.Today;
+            DateTime lastReportedDay = end.AddDays(-1);
+            DateTime start = new(lastReportedDay.Year, lastReportedDay.Month, 1, 0, 0, 0);
             string hostName = System.Net.Dns.GetHostName();
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Monthly report"), Strings.Format("Report for {0:Y}", start), Strings.Format("Server: {0}", hostName),
-                start, new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
+                start, end);
             await SendMailAsync(Strings.Format("Monthly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Monthly", "Succeeded", hostName);
         }
@@ -151,11 +152,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         try
         {
-            DateTime end = DateTime.Now.AddDays(-1);
-            DateTime start = end.AddDays(-6);
+            DateTime end = DateTime.Today;
+            DateTime start = end.AddDays(-7);
             string hostName = System.Net.Dns.GetHostName();
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Weekly report"), Strings.Format("Week of {0:d}", start), Strings.Format("Server: {0}", hostName),
-                new DateTime(start.Year, start.Month, start.Day, 0, 0, 0), new DateTime(end.Year, end.Month, end.Day, 23, 59, 59));
+                start, end);
             await SendMailAsync(Strings.Format("Weekly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Weekly", "Succeeded", hostName);
         }
@@ -175,10 +176,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         try
         {
-            DateTime d = DateTime.Now.AddDays(-1);
+            DateTime d = DateTime.Today.AddDays(-1);
             string hostName = System.Net.Dns.GetHostName();
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Daily report"), d.ToString("d", LanguageManager.Instance.CurrentCulture), Strings.Format("Server: {0}", hostName),
-                new DateTime(d.Year, d.Month, d.Day, 0, 0, 0), new DateTime(d.Year, d.Month, d.Day, 23, 59, 59));
+                d, d.AddDays(1));
             await SendMailAsync(Strings.Format("Daily report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Daily", "Succeeded", hostName);
         }

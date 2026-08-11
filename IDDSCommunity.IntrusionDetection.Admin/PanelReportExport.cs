@@ -50,7 +50,8 @@ public sealed class PanelReportExport : UserControl
     private async void Export(object? sender, EventArgs e)
     {
         DateTime from = start.Value.Date;
-        DateTime through = end.Value.Date.AddDays(1).AddTicks(-1);
+        DateTime through = end.Value.Date;
+        DateTime endExclusive = through.AddDays(1);
         if (through < from)
         {
             status.Text = Strings.Get("The end date must not be earlier than the start date.");
@@ -74,14 +75,19 @@ public sealed class PanelReportExport : UserControl
             string html = await Task.Run(() => ReportGenerator.Instance.GetReport(
                 Strings.Get("Security report"),
                 Strings.Format("Report period: {0:d} - {1:d}", from, through),
-                Strings.Format("Server: {0}", Dns.GetHostName()), from, through));
+                Strings.Format("Server: {0}", Dns.GetHostName()), from, endExclusive));
             await File.WriteAllTextAsync(dialog.FileName, html, new System.Text.UTF8Encoding(false));
             status.Text = Strings.Format("Report exported: {0}", dialog.FileName);
         }
         catch (Exception exception)
         {
             Trace.TraceError("Report export failed: {0}", exception);
+            string? diagnosticPath = RollingDiagnosticLog.Write("Admin-ReportExport", "Report export failed", exception);
             status.Text = Strings.Get("Report export failed. Review the application log for details.");
+            string details = string.IsNullOrWhiteSpace(diagnosticPath)
+                ? status.Text
+                : status.Text + Environment.NewLine + diagnosticPath;
+            MessageBox.Show(this, details, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally { export.Enabled = true; }
     }

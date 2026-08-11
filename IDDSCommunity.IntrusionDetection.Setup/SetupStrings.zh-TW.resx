@@ -34,4 +34,32 @@
   <data name="OpenUserGuide" xml:space="preserve"><value>使用說明文件</value></data>
   <data name="Close" xml:space="preserve"><value>關閉</value></data>
   <data name="LanguageButtonText" xml:space="preserve"><value>🌐 繁體中文</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="ProgressPreparing" xml:space="preserve"><value>正在準備安裝...</value></data>
+  <data name="ProgressValidating" xml:space="preserve"><value>正在驗證安裝套件...</value></data>
+  <data name="ProgressStoppingService" xml:space="preserve"><value>正在停止防護服務...</value></data>
+  <data name="ProgressInstallingFiles" xml:space="preserve"><value>正在安裝應用程式檔案...</value></data>
+  <data name="ProgressRegisteringService" xml:space="preserve"><value>正在註冊 Windows 服務...</value></data>
+  <data name="ProgressStartingService" xml:space="preserve"><value>正在啟動並驗證防護服務...</value></data>
+  <data name="ProgressRemovingFiles" xml:space="preserve"><value>正在移除應用程式檔案...</value></data>
+  <data name="ProgressCompleted" xml:space="preserve"><value>作業已完成。</value></data>
+  <data name="ProgressCancelling" xml:space="preserve"><value>正在安全取消並還原先前安裝...</value></data>
+  <data name="CancelledAndRolledBack" xml:space="preserve"><value>作業已取消，已回復本次造成的系統變更。</value></data>
+  <data name="RestartRequired" xml:space="preserve"><value>部分使用中的檔案將在 Windows 重新啟動後移除。請於方便時重新啟動以完成清理。</value></data>
+  <data name="OperationFailed" xml:space="preserve"><value>作業無法完成，安裝程式已嘗試自動回復。
+
+{0}</value></data>
+  <data name="DiagnosticLogPath" xml:space="preserve"><value>診斷日誌：{0}</value></data>
+  <data name="RollbackFailed" xml:space="preserve"><value>安裝及自動回復皆失敗。請先檢視診斷日誌再重試。</value></data>
+  <data name="RollbackServiceMissing" xml:space="preserve"><value>找不到先前版本的服務執行檔，因此無法還原安裝。</value></data>
+  <data name="DeleteFailed" xml:space="preserve"><value>無法移除：{0}</value></data>
+  <data name="ShortcutCreationFailed" xml:space="preserve"><value>無法建立捷徑：{0}</value></data>
+  <data name="FirewallCleanupStartFailed" xml:space="preserve"><value>無法啟動 Windows 防火牆清理程序。</value></data>
+  <data name="FirewallCleanupTimedOut" xml:space="preserve"><value>Windows 防火牆清理逾時。</value></data>
+  <data name="FirewallCleanupFailed" xml:space="preserve"><value>Windows 防火牆清理失敗，結束碼：{0}。</value></data>
+  <data name="ServiceControlTimedOut" xml:space="preserve"><value>Windows 服務操作逾時。</value></data>
+  <data name="ServiceControlFailedWithDetails" xml:space="preserve"><value>Windows 服務操作失敗，結束碼：{0}。{1}</value></data>
+  <data name="ApplicationLaunchFailed" xml:space="preserve"><value>無法啟動管理應用程式。</value></data>
+  <data name="ProcessStopTimedOut" xml:space="preserve"><value>{0} 程序未在允許時間內停止。</value></data>
+  <data name="CleanupIncomplete" xml:space="preserve"><value>新版本已安裝並執行，但無法完整移除舊版本備份。手動刪除前請先檢視診斷日誌。</value></data>
 </root>
