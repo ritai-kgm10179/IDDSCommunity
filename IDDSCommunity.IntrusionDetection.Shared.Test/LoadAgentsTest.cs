@@ -204,9 +204,9 @@ public class LoadAgentsTest
     {
         string testDbDir = Path.Combine(Path.GetTempPath(), "IDDS_Test_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(testDbDir);
+        Database testDb = new();
         try
         {
-            Database testDb = new();
             testDb.Configure(testDbDir);
             IddsConfig testConfig = new(testDb) { PluginsDirectory = testDbDir };
             SecurityAgents agents = new(testDb, testConfig);
@@ -233,7 +233,7 @@ public class LoadAgentsTest
         }
         finally
         {
-            try { Directory.Delete(testDbDir, true); } catch { }
+            CloseDatabaseAndDeleteDirectory(testDb, testDbDir);
         }
     }
 
@@ -245,9 +245,9 @@ public class LoadAgentsTest
     {
         string testDbDir = Path.Combine(Path.GetTempPath(), "IDDS_Test_Types_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(testDbDir);
+        Database testDb = new();
         try
         {
-            Database testDb = new();
             testDb.Configure(testDbDir);
             IddsConfig testConfig = new(testDb) { PluginsDirectory = testDbDir };
 
@@ -285,7 +285,7 @@ public class LoadAgentsTest
         }
         finally
         {
-            try { Directory.Delete(testDbDir, true); } catch { }
+            CloseDatabaseAndDeleteDirectory(testDb, testDbDir);
         }
     }
 
@@ -297,9 +297,9 @@ public class LoadAgentsTest
     {
         string testDbDir = Path.Combine(Path.GetTempPath(), "idds_test_mail_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(testDbDir);
+        Database testDb = new();
         try
         {
-            Database testDb = new();
             testDb.Configure(testDbDir);
 
             SecurityAgent imap = new()
@@ -350,7 +350,7 @@ public class LoadAgentsTest
         }
         finally
         {
-            try { Directory.Delete(testDbDir, true); } catch { }
+            CloseDatabaseAndDeleteDirectory(testDb, testDbDir);
         }
     }
 
@@ -409,9 +409,9 @@ public class LoadAgentsTest
     {
         string testDbDir = Path.Combine(Path.GetTempPath(), "idds_test_disp_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(testDbDir);
+        Database testDb = new();
         try
         {
-            Database testDb = new();
             testDb.Configure(testDbDir);
             SecurityAgents agents = new(testDb, IddsConfig.Instance);
 
@@ -433,7 +433,65 @@ public class LoadAgentsTest
         }
         finally
         {
-            try { Directory.Delete(testDbDir, true); } catch { }
+            CloseDatabaseAndDeleteDirectory(testDb, testDbDir);
+        }
+    }
+
+    [TestMethod]
+    public void CloseDatabaseAndDeleteDirectory_RemovesTemporaryTree()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds_cleanup_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, "temporary.txt"), "temporary");
+
+        CloseDatabaseAndDeleteDirectory(null, directory);
+
+        Assert.IsFalse(Directory.Exists(directory));
+    }
+
+    private void CloseDatabaseAndDeleteDirectory(Database? database, string directory)
+    {
+        try
+        {
+            database?.Close();
+        }
+        catch (InvalidOperationException exception)
+        {
+            TestContext.WriteLine("Closing the temporary SQLite database failed: {0}", exception);
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException exception)
+        {
+            TestContext.WriteLine("Closing the temporary SQLite database failed: {0}", exception);
+        }
+
+        const int maximumAttempts = 3;
+        for (int attempt = 1; attempt <= maximumAttempts; attempt++)
+        {
+            try
+            {
+                if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+                return;
+            }
+            catch (IOException exception) when (attempt < maximumAttempts)
+            {
+                TestContext.WriteLine("Temporary directory cleanup attempt {0} failed: {1}", attempt, exception);
+                System.Threading.Thread.Sleep(TimeSpan.FromMilliseconds(50 * attempt));
+            }
+            catch (UnauthorizedAccessException exception) when (attempt < maximumAttempts)
+            {
+                TestContext.WriteLine("Temporary directory cleanup attempt {0} failed: {1}", attempt, exception);
+                System.Threading.Thread.Sleep(TimeSpan.FromMilliseconds(50 * attempt));
+            }
+            catch (IOException exception)
+            {
+                TestContext.WriteLine("Temporary directory cleanup failed after {0} attempts: {1}", maximumAttempts, exception);
+                return;
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                TestContext.WriteLine("Temporary directory cleanup failed after {0} attempts: {1}", maximumAttempts, exception);
+                return;
+            }
         }
     }
 
