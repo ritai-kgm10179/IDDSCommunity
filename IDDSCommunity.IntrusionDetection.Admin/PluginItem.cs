@@ -48,24 +48,17 @@ public partial class PluginItem : UserControl
         set
         {
             _securityAgent = value;
-            UpdateValues(value.DisplayName, 0, 0, 0, value.Icon);
+            RefreshPresentation();
+            SetStatistics(0, 0, 0);
         }
     }
     /// <summary>
-    /// Updates values.
+    /// 依目前 Agent 狀態重新整理名稱、圖示及啟用狀態。
     /// </summary>
-    /// <param name="displayName">display name 的值。</param>
-    /// <param name="failedLogins">failed logins 的值。</param>
-    /// <param name="hardLocks">hard locks 的值。</param>
-    /// <param name="softLocks">soft locks 的值。</param>
-    /// <param name="icon">icon 的值。</param>
-    public void UpdateValues(string displayName, int failedLogins, int hardLocks, int softLocks, Image? icon)
+    public void RefreshPresentation()
     {
-        SetName(displayName);
-        SetFailedLogins(failedLogins);
-        SetHardLocks(hardLocks);
-        SetSoftLocks(softLocks);
-        SetIcon(icon);
+        SetName(SecurityAgent.DisplayName);
+        SetIcon(SecurityAgent.Icon);
         Image? previousStatusImage = pictureBoxEnabledState.Image;
         pictureBoxEnabledState.Image = InterfaceIcons.CreateAgentStatus(16, SecurityAgent.Enabled);
         previousStatusImage?.Dispose();

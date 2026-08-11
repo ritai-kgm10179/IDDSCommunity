@@ -543,10 +543,12 @@ public partial class IddsAdmin : Form
         if (mode == AdminRefreshMode.SecurityLog)
         {
             DateTime endDate = DateTime.Now;
-            if (IntrusionLog.HasUpdates(lastLogId) || endDate - lastSecurityLogRefresh >= SecurityLogRefreshInterval)
+            int currentLogId = IntrusionLog.GetLastLogId();
+            if (SecurityLogRefreshPolicy.ShouldRefresh(endDate, lastSecurityLogRefresh, lastLogId, currentLogId, SecurityLogRefreshInterval))
             {
                 replaceSecurityLog = true;
                 newSecurityLogRefresh = endDate;
+                maxLogId = Math.Max(maxLogId, currentLogId);
                 using IDataReader reader = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
                 while (reader.Read())
                 {

@@ -43,6 +43,7 @@ public partial class IDDSCommunityDashboard : UserControl
             {
                 Guid agentId = item.SecurityAgent.Id;
                 AgentLockStatistics locks = lockStatisticsByAgent.GetValueOrDefault(agentId) ?? new AgentLockStatistics(0, 0);
+                item.RefreshPresentation();
                 item.SetStatistics(attemptsByAgent.GetValueOrDefault(agentId), locks.HardLocks, locks.SoftLocks);
             }
         }

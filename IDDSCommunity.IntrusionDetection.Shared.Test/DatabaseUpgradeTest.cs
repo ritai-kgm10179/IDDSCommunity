@@ -81,7 +81,11 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 1";
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4)";
+            Assert.AreEqual(4L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
+            Assert.AreEqual(4L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_IntrusionLog_IncidentTime'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
         }
         finally
