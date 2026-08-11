@@ -21,6 +21,7 @@ public partial class PanelSafeNetworks : UserControl
         listBoxSafeNetworks.Sorted = true;
         listBoxSafeNetworks.DisplayMember = "DisplayName";
         Load += new EventHandler(PanelSafeNetworks_Load);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
     /// <summary>
     /// 處理 load 事件。
@@ -251,6 +252,13 @@ public partial class PanelSafeNetworks : UserControl
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+    private void ResetDefaults_Click(object? sender, EventArgs e)
+    {
+        HideNetworkPanel();
+        listBoxSafeNetworks.Items.Clear();
+        checkBoxConfigureSafeNetworks.Checked = false;
+        SetEditMode(true);
+    }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>

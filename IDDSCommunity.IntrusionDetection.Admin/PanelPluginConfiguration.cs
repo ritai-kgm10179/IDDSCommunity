@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +20,7 @@ public partial class PanelPluginConfiguration : UserControl
         InitializeComponent();
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
     /// <summary>
     /// 處理 agent changed 事件。
@@ -87,7 +88,7 @@ public partial class PanelPluginConfiguration : UserControl
     /// <summary>
     /// Loads custom settings.
     /// </summary>
-    private void LoadCustomSettings()
+    private void LoadCustomSettings(IReadOnlyDictionary<string, string>? values = null)
     {
         flowLayoutPanelCustomPluginSettings.Controls.Clear();
         string? protectionDetails = GetProtectionDetails(Agent.Name);
@@ -104,12 +105,13 @@ public partial class PanelPluginConfiguration : UserControl
             };
             flowLayoutPanelCustomPluginSettings.Controls.Add(details);
         }
-        foreach (string propName in Agent.CustomConfiguration.Keys)
+        IReadOnlyDictionary<string, string> settings = values ?? Agent.CustomConfiguration;
+        foreach (string propName in settings.Keys)
         {
             string propertyType = Agent.CustomConfigurationTypes.TryGetValue(propName, out string? declaredType)
                 ? declaredType
                 : typeof(string).FullName!;
-            PluginSettingEditor editor = new(propName, propertyType, Agent.CustomConfiguration[propName], Agent.Name);
+            PluginSettingEditor editor = new(propName, propertyType, settings[propName], Agent.Name);
             editor.ValueChanged += (_, _) => SetEditMode(true);
             flowLayoutPanelCustomPluginSettings.Controls.Add(editor);
         }
@@ -335,6 +337,23 @@ public partial class PanelPluginConfiguration : UserControl
     /// <param name="e">事件資料。</param>
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     /// <summary>
+    /// 將目前 Agent 的設定載入原廠預設值，等待使用者儲存或取消。
+    /// </summary>
+    private void ResetDefaults_Click(object? sender, EventArgs e)
+    {
+        ClearErrors();
+        textBoxHardLocks.Text = IddsConfig.DefaultHardLockAttempts.ToString();
+        textBoxHardLockDuration.Text = IddsConfig.DefaultHardLockHours.ToString();
+        textBoxSoftLocks.Text = IddsConfig.DefaultSoftLockAttempts.ToString();
+        textBoxSoftLockDuration.Text = IddsConfig.DefaultSoftLockMinutes.ToString();
+        checkBoxLockForever.Checked = false;
+        checkBoxOverrideConfiguration.Checked = false;
+        SetEnabledMode(false);
+        LoadCustomSettings(Agent.DefaultCustomConfiguration);
+        smartLabelCustomConfig.Visible = flowLayoutPanelCustomPluginSettings.Controls.Count > 0;
+        SetEditMode(true);
+    }
+    /// <summary>
     /// 處理 checked changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
@@ -343,7 +362,6 @@ public partial class PanelPluginConfiguration : UserControl
     {
         SetEnabledMode(checkBoxOverrideConfiguration.Checked);
         if (_isLoadingData || _agent is null) return;
-        _agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
         SetEditMode(true);
     }
 
@@ -370,8 +388,6 @@ public partial class PanelPluginConfiguration : UserControl
     private void checkBox_CheckedChanged(object sender, EventArgs e)
     {
         if (_isLoadingData || _agent is null) return;
-        _agent.Enabled = checkBoxEnableSecurityAgent.Checked;
-        _agent.LockForever = checkBoxLockForever.Checked;
         SetEditMode(true);
     }
 

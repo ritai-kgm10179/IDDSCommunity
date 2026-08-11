@@ -12,6 +12,10 @@ public class IddsConfig
     public const int DefaultSoftLockMinutes = 1;
     public const int DefaultHardLockAttempts = 20;
     public const int DefaultHardLockHours = 1;
+    /// <summary>
+    /// 取得未設定郵件伺服器時顯示的標準 SMTP 連接埠。
+    /// </summary>
+    public const int DefaultSmtpPort = 25;
     private readonly Database database;
     private readonly HashSet<string> changedAppConfigKeys = [];
 
@@ -381,6 +385,10 @@ public class IddsConfig
             LockForever = false,
             UseSafeNetworkList = false,
             SafeNetworks = [],
+            SmtpPort = DefaultSmtpPort,
+            SmtpSslRequired = false,
+            SmtpRequiresAuthentication = false,
+            SendInfoMail = false,
             SenderEmailAddress = "IDDSCommunity.IDDS@" + Dns.GetHostEntry("localhost").HostName
         };
         //config.AgentConfigurations.GetAgentConfig(PluginDirectory + "IDDSCommunity.IntrusionDetection.Base.Plugins.dll", "WindowsSecurityBase");

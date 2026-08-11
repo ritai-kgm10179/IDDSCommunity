@@ -769,4 +769,5 @@
   <data name="Stored settings contain unsupported or invalid values. Review and save the affected settings before exporting." xml:space="preserve"><value>已儲存的設定包含不支援或無效的值，請檢查並重新儲存相關設定後再匯出。</value></data>
   <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>設定移轉失敗（{0}）：{1}</value></data>
   <data name="Stored settings are invalid: {0}" xml:space="preserve"><value>已儲存的設定無效：{0}</value></data>
+  <data name="Restore defaults" xml:space="preserve"><value>恢復預設值</value></data>
 </root>

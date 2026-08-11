@@ -83,6 +83,7 @@ public class AgentLoaderProxy : MarshalByRefObject
                                 if (agentPlugin.Configuration.AgentSettings != null)
                                 {
                                     securityAgent.CustomConfiguration = GetCustomConfigurationObjects(agentPlugin.Configuration.AgentSettings);
+                                    securityAgent.DefaultCustomConfiguration = new Dictionary<string, string>(securityAgent.CustomConfiguration, StringComparer.Ordinal);
                                     securityAgent.CustomConfigurationTypes = GetCustomConfigurationTypes(agentPlugin.Configuration.AgentSettings);
                                 }
                                 result.Add(securityAgent);

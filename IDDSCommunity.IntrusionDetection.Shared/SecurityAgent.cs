@@ -426,6 +426,25 @@ public class SecurityAgent : IAgentFilter
         set => _customConfiguration = value;
     }
 
+    /// <summary>
+    /// 取得或設定 Agent 自訂設定的原廠預設值快照。
+    /// </summary>
+    public Dictionary<string, string> DefaultCustomConfiguration { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// 將此 Agent 的可調整設定恢復為原廠預設值，同時保留啟用狀態與識別資訊。
+    /// </summary>
+    public void ResetConfigurationToDefaults()
+    {
+        HardLockAttempts = IddsConfig.DefaultHardLockAttempts;
+        HardLockTimeHours = IddsConfig.DefaultHardLockHours;
+        SoftLockAttempts = IddsConfig.DefaultSoftLockAttempts;
+        SoftLockTimeMinutes = IddsConfig.DefaultSoftLockMinutes;
+        LockForever = false;
+        OverrideConfig = false;
+        CustomConfiguration = new Dictionary<string, string>(DefaultCustomConfiguration, StringComparer.Ordinal);
+    }
+
     private Dictionary<string, string>? _customConfigurationTypes;
     public Dictionary<string, string> CustomConfigurationTypes
     {

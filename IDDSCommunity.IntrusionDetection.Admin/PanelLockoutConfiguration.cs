@@ -17,6 +17,7 @@ public partial class PanelLockoutConfiguration : UserControl
         InitializeComponent();
         BackColor = Color.White;
         LoadData();
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
     /// <summary>
     /// 處理 mouse down 事件。
@@ -144,6 +145,16 @@ public partial class PanelLockoutConfiguration : UserControl
     {
         LoadData();
         SetEditMode(false);
+    }
+    private void ResetDefaults_Click(object? sender, EventArgs e)
+    {
+        textBoxHardLocks.Text = IddsConfig.DefaultHardLockAttempts.ToString();
+        textBoxHardLockDuration.Text = IddsConfig.DefaultHardLockHours.ToString();
+        textBoxSoftLocks.Text = IddsConfig.DefaultSoftLockAttempts.ToString();
+        textBoxSoftLockDuration.Text = IddsConfig.DefaultSoftLockMinutes.ToString();
+        checkBoxLockForever.Checked = false;
+        comboBoxFirewallMode.SelectedIndex = 0;
+        SetEditMode(true);
     }
     /// <summary>
     /// 處理 key press 事件。

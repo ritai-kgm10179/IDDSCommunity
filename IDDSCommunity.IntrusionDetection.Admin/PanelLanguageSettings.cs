@@ -56,6 +56,8 @@ public sealed class PanelLanguageSettings : UserControl
             UseVisualStyleBackColor = false
         };
         save.Click += SaveLanguage;
+        Button reset = SettingsResetButtonFactory.AddTo(this, (_, _) => languageSelector.SelectedIndex = 0);
+        reset.Location = new Point(123, 142);
 
         Controls.Add(pageTitle);
         Controls.Add(fieldLabel);

@@ -33,7 +33,7 @@
   <data name="CreateStartMenuShortcut" xml:space="preserve"><value>建立開始功能表捷徑</value></data>
   <data name="OpenUserGuide" xml:space="preserve"><value>使用說明文件</value></data>
   <data name="Close" xml:space="preserve"><value>關閉</value></data>
-  <data name="LanguageButtonText" xml:space="preserve"><value>🌐 繁體中文</value></data>
+  <data name="LanguageButtonText" xml:space="preserve"><value>🌐 正體中文</value></data>
   <data name="Cancel" xml:space="preserve"><value>取消</value></data>
   <data name="ProgressPreparing" xml:space="preserve"><value>正在準備安裝...</value></data>
   <data name="ProgressValidating" xml:space="preserve"><value>正在驗證安裝套件...</value></data>

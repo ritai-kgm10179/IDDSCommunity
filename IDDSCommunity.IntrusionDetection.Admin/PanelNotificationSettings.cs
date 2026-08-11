@@ -16,6 +16,7 @@ public partial class PanelNotificationSettings : UserControl
     {
         InitializeComponent();
         Load += new EventHandler(PanelNotificationSettings_Load);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
     /// <summary>
     /// 處理 load 事件。
@@ -127,6 +128,16 @@ public partial class PanelNotificationSettings : UserControl
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+    private void ResetDefaults_Click(object? sender, EventArgs e)
+    {
+        checkBoxSoftLock.Checked = false;
+        checkBoxHardLocks.Checked = false;
+        checkBoxOnUnlock.Checked = false;
+        checkBoxDailySummary.Checked = false;
+        checkBoxWeeklyReport.Checked = false;
+        checkBoxMonthlyReport.Checked = false;
+        SetEditMode(true);
+    }
     /// <summary>
     /// Processes the notification settings changed notification.
     /// </summary>

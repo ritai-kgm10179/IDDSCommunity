@@ -93,6 +93,22 @@ public sealed class SetupOperationsTest
         }
     }
 
+    [TestMethod]
+    public void SetupText_UsesTaiwanOfficialLanguageName()
+    {
+        CultureInfo original = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("zh-TW");
+
+            Assert.AreEqual("🌐 正體中文", SetupText.Get("LanguageButtonText"));
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = original;
+        }
+    }
+
     [STATestMethod]
     public void SetupForm_LocalizedControlsRemainInsideTheirContainersAtSupportedScaleFactors()
     {

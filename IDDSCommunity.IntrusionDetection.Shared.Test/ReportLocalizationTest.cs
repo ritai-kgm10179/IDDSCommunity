@@ -32,7 +32,7 @@ public sealed class ReportLocalizationTest
         Assert.IsFalse(result.Contains("[%LABEL_", StringComparison.Ordinal));
     }
     /// <summary>
-    /// Verifies Traditional Chinese labels and culture-aware report subject formatting.
+    /// 驗證正體中文標籤及依文化特性格式化的報表主旨。
     /// </summary>
     [TestMethod]
     public void LocalizeReportTemplate_TraditionalChinese_UsesLocalizedLabelsAndSubject()

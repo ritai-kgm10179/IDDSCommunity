@@ -20,6 +20,7 @@ public partial class PanelSmtpSettings : UserControl
         InitializeComponent();
         BackColor = Color.White;
         Load += new EventHandler(PanelSmtpSettings_Load);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
     /// <summary>
     /// 處理 load 事件。
@@ -209,6 +210,19 @@ public partial class PanelSmtpSettings : UserControl
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+    private void ResetDefaults_Click(object? sender, EventArgs e)
+    {
+        IddsConfig defaults = IddsConfig.GetDefaultConfiguration();
+        textBoxSender.Text = defaults.SenderEmailAddress;
+        textBoxRecipient.Clear();
+        textBoxSmtpServer.Clear();
+        textBoxSmtpPort.Text = defaults.SmtpPort.ToString();
+        checkBoxUseSSL.Checked = false;
+        checkBoxAuthentication.Checked = false;
+        textBoxUsername.Clear();
+        textBoxPassword.Clear();
+        SetEditMode(true);
+    }
     /// <summary>
     /// 處理 key press 事件。
     /// </summary>

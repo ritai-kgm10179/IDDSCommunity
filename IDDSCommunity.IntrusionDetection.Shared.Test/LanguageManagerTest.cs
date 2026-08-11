@@ -63,7 +63,7 @@ public class LanguageManagerTest
         Assert.AreEqual("DefaultFallback", val);
     }
     /// <summary>
-    /// Verifies that neutral and Traditional Chinese resources expose identical keys.
+    /// 驗證中性語系與正體中文資源提供完全相同的資源鍵。
     /// </summary>
     [TestMethod]
     public void ResourceCulturesHaveMatchingKeys()
