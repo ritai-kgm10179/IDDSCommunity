@@ -58,6 +58,10 @@ jobs:
           if (-not $tagObject.verification.signature.StartsWith('-----BEGIN PGP SIGNATURE-----', [StringComparison]::Ordinal)) { throw 'Release tags must use an OpenPGP/GPG signature.' }
           if ($tagObject.object.sha -ne (git rev-parse HEAD)) { throw 'The signed tag does not point to the checked-out commit.' }
 
+      - name: Verify asset provenance
+        shell: pwsh
+        run: ./scripts/test-asset-provenance.ps1
+
       - name: Validate project version
         shell: pwsh
         env:

@@ -53,6 +53,9 @@ public partial class PluginItem : UserControl
         {
             if (!ReferenceEquals(_securityAgent, value))
             {
+                Image? previousAgentIcon = pictureBoxAgentIcon.Image;
+                pictureBoxAgentIcon.Image = null;
+                previousAgentIcon?.Dispose();
                 renderedDisplayName = null;
                 renderedEnabled = null;
                 iconInitialized = false;
@@ -113,24 +116,6 @@ public partial class PluginItem : UserControl
         SetFailedLogins(failedLogins);
         SetHardLocks(hardLocks);
         SetSoftLocks(softLocks);
-    }
-    /// <summary>
-    /// 處理 popup 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void toolTip1_Popup(object sender, PopupEventArgs e)
-    {
-
-    }
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEnabledState_Click(object sender, EventArgs e)
-    {
-
     }
     /// <summary>
     /// 處理 double click 事件。

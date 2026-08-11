@@ -168,7 +168,7 @@ public class SecurityAgent : IAgentFilter
     /// <returns>傳回from image結果。</returns>
     private static byte[] FromImage(Image value)
     {
-        MemoryStream ms = new();
+        using MemoryStream ms = new();
         value.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
         return ms.ToArray();
     }
@@ -179,9 +179,12 @@ public class SecurityAgent : IAgentFilter
     /// <returns>傳回from byte結果。</returns>
     private static Image FromByte(byte[] value)
     {
-        if (value.Length == 0) return Resources.agent15px_default_dark;
-        MemoryStream ms = new(value);
-        return new Bitmap(ms);
+        if (value.Length == 0)
+            return new Bitmap(Resources.agent15px_default_dark);
+
+        using MemoryStream stream = new(value, writable: false);
+        using Image decoded = Image.FromStream(stream);
+        return new Bitmap(decoded);
     }
 
 

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
@@ -45,6 +45,8 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $pay
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE-PROVENANCE.md') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'ASSET-PROVENANCE.md') -Destination $payloadRoot -Force
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'assets\asset-provenance.json') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $payloadRoot -Force
 $userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
 if (Test-Path -LiteralPath $userGuideSource) {

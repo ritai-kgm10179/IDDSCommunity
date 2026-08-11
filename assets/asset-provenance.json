@@ -1,0 +1,612 @@
+{
+  "schemaVersion": 1,
+  "statement": "Tracked product image assets are original IDDS Community or AI-assisted project resources and are not inherited artwork.",
+  "assets": [
+    {
+      "path": "assets/branding/idds-community.ico",
+      "sha256": "0e2b22867af48e0c8133d221f03a73aa6a0d5a77f1032ac4460b3d3d52fde7d7",
+      "origin": "ai-assisted-project-branding",
+      "source": "IDDS Community original branding work"
+    },
+    {
+      "path": "IDDSCommunity.Agents.FileMaker/res/agent15px-filemaker-dark.png",
+      "sha256": "80750c6d565b6ddf611f804db6f265f3ed2d17346f8defdbf300cb47d258ac9b",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.FileMaker/res/agent15px-filemaker-white.png",
+      "sha256": "4903c083d4ef78e227224d8a5dd15322fb50931e4ab3180bda97083744fead15",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.FtpServer/Resources/agent15px-ftp-dark.png",
+      "sha256": "f4253a2f65c76021e0d3a1afbd2e25c2767b3975bedc2efded98d06d90278c80",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.FtpServer/Resources/agent15px-ftp-white.png",
+      "sha256": "5d05a6125f266fe75fa4e3aac30b3a2f771e0b441f1be49c374f56522b64b1b1",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.MySql/Resources/agent15px-sql-dark.png",
+      "sha256": "80750c6d565b6ddf611f804db6f265f3ed2d17346f8defdbf300cb47d258ac9b",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.MySql/Resources/agent15px-sql-white.png",
+      "sha256": "4903c083d4ef78e227224d8a5dd15322fb50931e4ab3180bda97083744fead15",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.SqlServer/Resources/agent15px-sql-dark.png",
+      "sha256": "80750c6d565b6ddf611f804db6f265f3ed2d17346f8defdbf300cb47d258ac9b",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.SqlServer/Resources/agent15px-sql-white.png",
+      "sha256": "4903c083d4ef78e227224d8a5dd15322fb50931e4ab3180bda97083744fead15",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.TerminalServer/Resources/agent15px-rdp-dark.png",
+      "sha256": "7bae7d6e436bbe67df0f4a9d3bdb33121662cf7da1428fd1e81f646c5d10c681",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.TerminalServer/Resources/agent15px-rdp-white.png",
+      "sha256": "c300c8604a91c4ecd109176ba0de1eed41e09bc6ac7e0cba6f10eedb63039748",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.WebSecurity/Resources/agent15px-web-dark.png",
+      "sha256": "7bae7d6e436bbe67df0f4a9d3bdb33121662cf7da1428fd1e81f646c5d10c681",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.WebSecurity/Resources/agent15px-web-white.png",
+      "sha256": "c300c8604a91c4ecd109176ba0de1eed41e09bc6ac7e0cba6f10eedb63039748",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.WindowsDns/Resources/agent15px-dns-dark.png",
+      "sha256": "7bae7d6e436bbe67df0f4a9d3bdb33121662cf7da1428fd1e81f646c5d10c681",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.Agents.WindowsDns/Resources/agent15px-dns-white.png",
+      "sha256": "c300c8604a91c4ecd109176ba0de1eed41e09bc6ac7e0cba6f10eedb63039748",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/agent15px-default-dark.png",
+      "sha256": "c55e36e6149b26296d73e6266eb0cea41709e16bbe0167f945869d5072fb73b0",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/agent15px-default-white.png",
+      "sha256": "b801681336e88f3494a46d2a1d50ec9f58f5c7baf35344c461c516407900481e",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/border-bottom.png",
+      "sha256": "45a569313d3a0e8761459786ffe207e8e9e991cc60ba738ce193cc6bcca5b8c6",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/border-left.png",
+      "sha256": "870de11bd4fc77b37cd14b3e57f6730dc3929735c8d90da3748aec0e41ba406a",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/border-right.png",
+      "sha256": "870de11bd4fc77b37cd14b3e57f6730dc3929735c8d90da3748aec0e41ba406a",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/border-top.png",
+      "sha256": "45a569313d3a0e8761459786ffe207e8e9e991cc60ba738ce193cc6bcca5b8c6",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button-add.png",
+      "sha256": "fc713903838851770a3a32aa2ed1db81c7c7d0f2fab1909e6b3b640877d17a59",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button-filter.png",
+      "sha256": "2ed92504d611657250072ff290838fadddf6765e6cf44c2643967f5e2e1a6340",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button-hardlock.png",
+      "sha256": "2ed92504d611657250072ff290838fadddf6765e6cf44c2643967f5e2e1a6340",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button-unlock.png",
+      "sha256": "2ed92504d611657250072ff290838fadddf6765e6cf44c2643967f5e2e1a6340",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button25px-add.png",
+      "sha256": "1a1af56e349ba04921426ba5a8fc23a272916d8aca4053759ab1af1fb630613c",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button25px-delete.png",
+      "sha256": "beb12e57bb6cc93c43c8d18c94f110b195e25575a284178bc86bf5fe14bca845",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button25px-edit.png",
+      "sha256": "5ce8bea0e772580ee59ec1b0cac5d969475a9d6aec109635416ff9438ec6384d",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button25px-save.png",
+      "sha256": "d109bd05f3b941a07920747ded57cd6bbb6b6498935606bdaf4954d3d48cf818",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-disable.png",
+      "sha256": "b803012d4cf3da1914fab64687f329f18a79ba3f485e4c300e8065167e57dd23",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-disable1.png",
+      "sha256": "b803012d4cf3da1914fab64687f329f18a79ba3f485e4c300e8065167e57dd23",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-download.png",
+      "sha256": "af86f677dfcd54610bf75892f1b15b4cf7f0b99ba293cbc4f1a98bbab8fccfc3",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-download1.png",
+      "sha256": "af86f677dfcd54610bf75892f1b15b4cf7f0b99ba293cbc4f1a98bbab8fccfc3",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-enable.png",
+      "sha256": "6bcdc17a674ac9b01e8685a0035b90a88bb0436f96ae33e79254e50bba26fd5c",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-enable1.png",
+      "sha256": "6bcdc17a674ac9b01e8685a0035b90a88bb0436f96ae33e79254e50bba26fd5c",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-new.png",
+      "sha256": "c5b02b7913cb86b881d1c889df7ab87235fc2a39ab15629be753c7a4c89a5e97",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-new1.png",
+      "sha256": "c5b02b7913cb86b881d1c889df7ab87235fc2a39ab15629be753c7a4c89a5e97",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-save.png",
+      "sha256": "af86f677dfcd54610bf75892f1b15b4cf7f0b99ba293cbc4f1a98bbab8fccfc3",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/button30px-save1.png",
+      "sha256": "af86f677dfcd54610bf75892f1b15b4cf7f0b99ba293cbc4f1a98bbab8fccfc3",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/configuration-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/corner-bottom-left.png",
+      "sha256": "7f0901c48160e5da19301d9780b11705e8739fded1363089d67865259a1f2003",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/corner-bottom-right.png",
+      "sha256": "7f0901c48160e5da19301d9780b11705e8739fded1363089d67865259a1f2003",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/corner-top-left.png",
+      "sha256": "7f0901c48160e5da19301d9780b11705e8739fded1363089d67865259a1f2003",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/corner-top-right.png",
+      "sha256": "7f0901c48160e5da19301d9780b11705e8739fded1363089d67865259a1f2003",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/delete.png",
+      "sha256": "ec457ebe47bb98b296b0511b1e071429900039510c26f43ceb2ff34cbf469c3c",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/error-48.png",
+      "sha256": "80463d09cb8f5cb7f7ad2379b173f43d499c1a2c7dddee0e78451ab91678afbe",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-close.png",
+      "sha256": "7d17ef1c8e231987a259e8006b6299ab9f70d4ffdc95fdb14e073eb7101459f8",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-grip.png",
+      "sha256": "93c759ef57de11eaa4993f621210a8c7ea74b236e6268b71c97e6e6298a71b01",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-help.png",
+      "sha256": "674d9e70961f1e610c87d35480e6e8437816ef966fde0bb42da0602c3acc9f8b",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-maximize.png",
+      "sha256": "50142811d32b64a30cf1535b4b089f1e1511215d8d57a128b465c88d65d7af67",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-minimize.png",
+      "sha256": "6b83f5849fea8922221a1c7d06d19e4e1011493e8c1a78937f68505e5174fd5e",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-refresh.png",
+      "sha256": "68888c482da049cda501abc7d01473c7f6333264e8f4603cbc9ee33b516de4d8",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-refresh1.png",
+      "sha256": "68888c482da049cda501abc7d01473c7f6333264e8f4603cbc9ee33b516de4d8",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-scale.png",
+      "sha256": "50142811d32b64a30cf1535b4b089f1e1511215d8d57a128b465c88d65d7af67",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/icon-search.png",
+      "sha256": "a7b489591a4a76d6825ad4c4b9d68b666da352a231c131c8f4547775982c47b6",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/info-16.png",
+      "sha256": "98f0351454ffe488e428af69d2cec204e3f0254a33d8c23482c198de13899dd8",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/layout-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/loading2.gif",
+      "sha256": "fe9fd5198aad91330934c623273686cd83e346a83d76bf59511d9da04d4b3a56",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/lock-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-hardLock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-hardLock1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-loginAttempt.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-loginAttempt1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-softLock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-softLock1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-systemMessage.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-systemMessage1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-unlock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-unlock1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-warning.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/logIcon-warning1.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/network-16.png",
+      "sha256": "30ac66df4d515b404810eca85bd7540de0a23714ea1b828891b89e837ace5c63",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/network-24.png",
+      "sha256": "b315171d05465bd9c0cc629701e8ebf762f712055b8861aff27fa573275bb5c2",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/protection-128.png",
+      "sha256": "84b2c527ea4c62451100f2d15e9e65dcfb690039a65a89d9af8cd2476626ee26",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/protection-256.png",
+      "sha256": "e7a727f518435aeceb354d3863b942cfe981c50b20187e3c25012cf71f36e6e8",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/protection-48.png",
+      "sha256": "80463d09cb8f5cb7f7ad2379b173f43d499c1a2c7dddee0e78451ab91678afbe",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/refresh-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/security-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/service-controller-start-deactivated.png",
+      "sha256": "a35b866633b0531ec12082580a1d86fdbc4793be04ed9d4b6fbb23e881461937",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/service-controller-start.png",
+      "sha256": "a35b866633b0531ec12082580a1d86fdbc4793be04ed9d4b6fbb23e881461937",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/service-controller-stop-deactivated.png",
+      "sha256": "f445fa59e8403a9972234b75c6d97188fff73049b350da5e521921acf98ca9f4",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/service-controller-stop.png",
+      "sha256": "f445fa59e8403a9972234b75c6d97188fff73049b350da5e521921acf98ca9f4",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/settings-16.png",
+      "sha256": "4c5f750b756043c37699ba9b329c955b1e917eed95d189dfb40cb10775e34500",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/start-16.png",
+      "sha256": "3e2035161ab5e0e9920e55d7f45797b1c5243a7117775dfd635c75aa9f601236",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/stop-16.png",
+      "sha256": "04344a68f1d03098c79d1a6e9553ce09058a53fd0ce727f7f6a5d600876a8829",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/unlock-32.png",
+      "sha256": "4316a07e7078ae23877a757268317dfbe374a9bff94707e4e6301b0fbf48e62c",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Admin/Resources/unlock-48.png",
+      "sha256": "80463d09cb8f5cb7f7ad2379b173f43d499c1a2c7dddee0e78451ab91678afbe",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Base/Resources/agent15px-rdp-dark.png",
+      "sha256": "7bae7d6e436bbe67df0f4a9d3bdb33121662cf7da1428fd1e81f646c5d10c681",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Base/Resources/agent15px-rdp-white.png",
+      "sha256": "c300c8604a91c4ecd109176ba0de1eed41e09bc6ac7e0cba6f10eedb63039748",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Base/Resources/agent15px-web-dark.png",
+      "sha256": "7bae7d6e436bbe67df0f4a9d3bdb33121662cf7da1428fd1e81f646c5d10c681",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Base/Resources/agent15px-web-white.png",
+      "sha256": "c300c8604a91c4ecd109176ba0de1eed41e09bc6ac7e0cba6f10eedb63039748",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/agent15px-custom-dark.png",
+      "sha256": "c55e36e6149b26296d73e6266eb0cea41709e16bbe0167f945869d5072fb73b0",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/agent15px-custom-white.png",
+      "sha256": "b801681336e88f3494a46d2a1d50ec9f58f5c7baf35344c461c516407900481e",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/agent15px-default-dark.png",
+      "sha256": "c55e36e6149b26296d73e6266eb0cea41709e16bbe0167f945869d5072fb73b0",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/agent15px-default-white.png",
+      "sha256": "b801681336e88f3494a46d2a1d50ec9f58f5c7baf35344c461c516407900481e",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-hardLock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-loginAttempt.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-softLock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-systemMessage.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-unlock.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    },
+    {
+      "path": "IDDSCommunity.IntrusionDetection.Shared/Resources/logIcon-warning.png",
+      "sha256": "316c2e55de79ed9eb64b6b7c9687d817da1276f50607ea1ee56025c35ccdf377",
+      "origin": "project-generated",
+      "source": "tools/Generate-OriginalAssets.ps1"
+    }
+  ]
+}

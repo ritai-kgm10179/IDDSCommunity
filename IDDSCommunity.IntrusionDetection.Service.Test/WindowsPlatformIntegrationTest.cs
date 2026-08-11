@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.ServiceProcess;
 using System.Threading.Tasks;
+using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
@@ -91,6 +93,55 @@ public sealed class WindowsPlatformIntegrationTest
         }
     }
     /// <summary>
+    /// 驗證安全事件管線可呼叫正式防火牆策略建立規則，並在測試後只移除隔離位址。
+    /// </summary>
+    /// <returns>非同步測試工作。</returns>
+    [TestMethod]
+    public async Task SecurityEventPipeline_Detection_CreatesAndRemovesFirewallBlockAsync()
+    {
+        PrivilegedWindowsTestGuard.RequireOptInAndAdministrator();
+        const string isolatedAddress = "192.0.2.254";
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunity.FirewallPipelineTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        using FirewallPolicyManager firewall = new(new TestRuntimeLog(), FirewallBlockMode.Bidirectional);
+        try
+        {
+            if (firewall.FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME).Count != 0)
+                Assert.Inconclusive("The privileged firewall pipeline test requires a host without existing IDDS Community product rules.");
+            database.Configure(directory, "pipeline-firewall.db");
+            SecurityEventPipeline pipeline = new(
+                4,
+                (_, args) => firewall.Block(args.IpAddress),
+                exception => Assert.Fail(exception.ToString()),
+                new SecurityEventInbox(database, TimeProvider.System),
+                _ => this);
+            NotificationEventArgs detection = new()
+            {
+                CreateDate = DateTime.UtcNow,
+                EventId = 1,
+                EventMessage = "privileged integration-test detection",
+                IpAddress = isolatedAddress
+            };
+
+            Assert.IsTrue(pipeline.TryPublish(this, detection));
+            pipeline.Complete();
+            await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+
+            Assert.IsTrue(firewall.IsLocked(isolatedAddress));
+            firewall.RemoveIpAddressFromBlockList(isolatedAddress);
+            Assert.IsFalse(firewall.IsLocked(isolatedAddress));
+            Assert.AreEqual(0, firewall.FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME).Count);
+        }
+        finally
+        {
+            if (firewall.GetBlockedAddresses().Contains(isolatedAddress, StringComparer.Ordinal))
+                firewall.RemoveIpAddressFromBlockList(isolatedAddress);
+            database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+    /// <summary>
     /// Verifies stop and start control against a dedicated, explicitly named integration-test service.
     /// </summary>
     [TestMethod]
@@ -148,6 +199,20 @@ public sealed class WindowsPlatformIntegrationTest
 
         controller.Stop();
         controller.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30));
+    }
+
+    private sealed class TestRuntimeLog : IRuntimeLog
+    {
+        /// <summary>
+        /// 接收測試期間的執行階段事件，不寫入主機事件記錄。
+        /// </summary>
+        /// <param name="text">事件訊息。</param>
+        /// <param name="type">事件嚴重性。</param>
+        /// <param name="eventId">事件識別碼。</param>
+        /// <param name="category">事件分類。</param>
+        public void WriteEntry(string text, EventLogEntryType type, int eventId, short category)
+        {
+        }
     }
 }
 #pragma warning restore CA1416

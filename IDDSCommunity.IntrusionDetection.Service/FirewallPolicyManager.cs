@@ -131,9 +131,14 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             if (!ContainsAddress(remoteAddresses, ipAddress))
                 continue;
             string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, ipAddress);
-            FirewallComString.Set(cleanedAddresses, value => rule.RemoteAddresses = value);
-            if (cleanedAddresses == "*" || string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
-                rule.Enabled = false;
+            if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+            {
+                RemoveRuleIfPresent(ruleName);
+            }
+            else
+            {
+                FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+            }
             removed = true;
         }
         if (!removed)

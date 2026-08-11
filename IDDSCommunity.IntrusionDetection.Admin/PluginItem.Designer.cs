@@ -12,9 +12,15 @@
         /// <param name="disposing">若要釋放受控資源則為 true；否則為 false。</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                var agentIcon = pictureBoxAgentIcon.Image;
+                pictureBoxAgentIcon.Image = null;
+                agentIcon?.Dispose();
+                var statusIcon = pictureBoxEnabledState.Image;
+                pictureBoxEnabledState.Image = null;
+                statusIcon?.Dispose();
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -140,7 +146,6 @@
             this.pictureBoxEnabledState.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxEnabledState.TabIndex = 0;
             this.pictureBoxEnabledState.TabStop = false;
-            this.pictureBoxEnabledState.Click += new System.EventHandler(this.pictureBoxEnabledState_Click);
             this.pictureBoxEnabledState.DoubleClick += new System.EventHandler(this.pictureBoxEnabledState_DoubleClick);
             //
             // pictureBoxAgentIcon
@@ -155,7 +160,6 @@
             // toolTip1
             //
             this.toolTip1.ToolTipTitle = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent status");
-            this.toolTip1.Popup += new System.Windows.Forms.PopupEventHandler(this.toolTip1_Popup);
             //
             // PluginItem
             //
