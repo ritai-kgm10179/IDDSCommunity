@@ -62,4 +62,5 @@ Target location: {1}</value></data>
   <data name="ApplicationLaunchFailed" xml:space="preserve"><value>The management application could not be launched.</value></data>
   <data name="ProcessStopTimedOut" xml:space="preserve"><value>The {0} process did not stop within the allowed time.</value></data>
   <data name="CleanupIncomplete" xml:space="preserve"><value>The new version is installed and running, but the previous-version backup could not be completely removed. Review the diagnostic log before deleting it manually.</value></data>
+  <data name="TransactionAlreadyCommitted" xml:space="preserve"><value>The setup transaction has already been committed.</value></data>
 </root>

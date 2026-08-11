@@ -27,6 +27,7 @@ public partial class IddsAdmin : Form
     System.ServiceProcess.ServiceController? serviceController;
     private EventLog? eventLogIDDSCommunity;
     private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
+    private readonly System.Threading.SemaphoreSlim serviceOperationGate = new(1, 1);
     private int serviceRefreshActive;
     private Bitmap? disabledStartServiceImage;
     private Bitmap? disabledStopServiceImage;
@@ -131,14 +132,18 @@ public partial class IddsAdmin : Form
     /// </summary>
     public async Task RestartServiceAsync()
     {
-        System.ServiceProcess.ServiceController? controller = serviceController;
-        if (controller is null)
-        {
-            ApplyServiceStatus(null);
-            return;
-        }
+        bool gateEntered = false;
         try
         {
+            await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
+            gateEntered = true;
+            System.ServiceProcess.ServiceController? controller = serviceController;
+            if (controller is null)
+            {
+                if (!IsDisposed && IsHandleCreated)
+                    await this.InvokeAsync(() => ApplyServiceStatus(null), uiRefreshCancellation.Token);
+                return;
+            }
             await ElevatedServiceCommand.RunElevatedAsync(ServiceName, "restart", uiRefreshCancellation.Token).ConfigureAwait(false);
             System.ServiceProcess.ServiceControllerStatus status = await Task.Run(() =>
             {
@@ -150,6 +155,7 @@ public partial class IddsAdmin : Form
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
         catch (Exception ex)
         {
+            System.ServiceProcess.ServiceController? controller = serviceController;
             MarkServiceUnavailable(controller, ex);
             if (!IsDisposed && IsHandleCreated)
                 await this.InvokeAsync(() =>
@@ -158,6 +164,10 @@ public partial class IddsAdmin : Form
                     MessageBox.Show(this, Strings.Get("The service change could not be completed."),
                         Strings.Get("Service operation failed"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 });
+        }
+        finally
+        {
+            if (gateEntered) serviceOperationGate.Release();
         }
     }
 
@@ -272,8 +282,11 @@ public partial class IddsAdmin : Form
     {
         if (System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 1) != 0)
             return;
+        bool gateEntered = false;
         try
         {
+            await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
+            gateEntered = true;
             System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(ReadServiceStatus, uiRefreshCancellation.Token).ConfigureAwait(false);
             if (!IsDisposed)
                 await this.InvokeAsync(() =>
@@ -289,6 +302,8 @@ public partial class IddsAdmin : Form
         }
         finally
         {
+            if (gateEntered)
+                serviceOperationGate.Release();
             System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 0);
         }
     }
@@ -300,7 +315,15 @@ public partial class IddsAdmin : Form
     /// </summary>
     public void RefreshServiceStatus()
     {
-        ApplyServiceStatus(ReadServiceStatus());
+        if (!serviceOperationGate.Wait(0)) return;
+        try
+        {
+            ApplyServiceStatus(ReadServiceStatus());
+        }
+        finally
+        {
+            serviceOperationGate.Release();
+        }
     }
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
@@ -1153,8 +1176,12 @@ public partial class IddsAdmin : Form
             return;
 
         buttonManageService.Enabled = false;
+        bool gateEntered = false;
         try
         {
+            await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
+            gateEntered = true;
+            install = serviceController is null;
             await ElevatedServiceCommand.RunElevatedAsync(ServiceName, install ? "install" : "uninstall", uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ResetServiceController(), uiRefreshCancellation.Token);
         }
@@ -1168,6 +1195,7 @@ public partial class IddsAdmin : Form
         }
         finally
         {
+            if (gateEntered) serviceOperationGate.Release();
             if (!IsDisposed && IsHandleCreated)
                 await this.InvokeAsync(() => buttonManageService.Enabled = true);
         }
@@ -1189,7 +1217,7 @@ public partial class IddsAdmin : Form
         {
             MarkServiceUnavailable(serviceController, exception);
             ApplyServiceStatus(null);
-            timerRefreshServiceStatus?.Stop();
+            timerRefreshServiceStatus?.Start();
         }
     }
     /// <summary>
@@ -1199,15 +1227,17 @@ public partial class IddsAdmin : Form
     /// <returns>表示非同步工作完成的 Task。</returns>
     private async Task ChangeServiceStateAsync(bool start)
     {
-        smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-        string pending = Strings.Get(start ? "Starting service..." : "Stopping service...");
-        smartLabelServiceStatus.Text = StatusDot + " " + pending;
-        smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11);
-        System.ServiceProcess.ServiceController? controller = serviceController;
-        if (controller is null)
-            return;
+        bool gateEntered = false;
         try
         {
+            await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token);
+            gateEntered = true;
+            smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            string pending = Strings.Get(start ? "Starting service..." : "Stopping service...");
+            smartLabelServiceStatus.Text = StatusDot + " " + pending;
+            smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11);
+            System.ServiceProcess.ServiceController? controller = serviceController;
+            if (controller is null) return;
             await ElevatedServiceCommand.RunElevatedAsync(ServiceName, start ? "start" : "stop", uiRefreshCancellation.Token).ConfigureAwait(false);
             System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(() =>
             {
@@ -1219,9 +1249,14 @@ public partial class IddsAdmin : Form
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
         catch (Exception ex)
         {
+            System.ServiceProcess.ServiceController? controller = serviceController;
             MarkServiceUnavailable(controller, ex);
             if (!IsDisposed && IsHandleCreated)
                 await this.InvokeAsync(() => ApplyServiceStatus(null));
+        }
+        finally
+        {
+            if (gateEntered) serviceOperationGate.Release();
         }
     }
     /// <summary>

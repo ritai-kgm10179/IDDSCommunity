@@ -73,7 +73,7 @@ public sealed class SetupOperationsTest
             "DiagnosticLogPath", "RollbackFailed", "RollbackServiceMissing", "DeleteFailed",
             "ShortcutCreationFailed", "FirewallCleanupStartFailed", "FirewallCleanupTimedOut",
             "FirewallCleanupFailed", "ServiceControlTimedOut", "ServiceControlFailedWithDetails",
-            "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete"
+            "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete", "TransactionAlreadyCommitted"
         ];
         CultureInfo original = CultureInfo.CurrentUICulture;
         try
@@ -92,23 +92,27 @@ public sealed class SetupOperationsTest
     }
 
     [STATestMethod]
-    public void SetupForm_LocalizedControlsRemainInsideTheirContainers()
+    public void SetupForm_LocalizedControlsRemainInsideTheirContainersAtSupportedScaleFactors()
     {
         CultureInfo original = CultureInfo.CurrentUICulture;
         try
         {
             foreach (string cultureName in new[] { "en-US", "zh-TW" })
             {
-                CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(cultureName);
-                using SetupForm form = new();
-                form.Size = form.MinimumSize;
-                form.CreateControl();
-                form.PerformLayout();
-                foreach (Control control in EnumerateControls(form))
+                foreach (float scaleFactor in new[] { 1F, 1.25F, 1.5F, 2F })
                 {
-                    if (!control.Visible || control.Parent is null) continue;
-                    Assert.IsTrue(control.Left >= 0 && control.Right <= control.Parent.ClientSize.Width,
-                        $"{cultureName}: {control.GetType().Name} is horizontally clipped.");
+                    CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(cultureName);
+                    using SetupForm form = new();
+                    form.Size = form.MinimumSize;
+                    form.CreateControl();
+                    if (scaleFactor != 1F) form.Scale(new System.Drawing.SizeF(scaleFactor, scaleFactor));
+                    form.PerformLayout();
+                    foreach (Control control in EnumerateControls(form))
+                    {
+                        if (!control.Visible || control.Parent is null) continue;
+                        Assert.IsTrue(control.Left >= 0 && control.Right <= control.Parent.ClientSize.Width,
+                            $"{cultureName} at {scaleFactor:P0}: {control.GetType().Name} is horizontally clipped.");
+                    }
                 }
             }
         }
@@ -116,6 +120,48 @@ public sealed class SetupOperationsTest
         {
             CultureInfo.CurrentUICulture = original;
         }
+    }
+
+    [TestMethod]
+    public void SetupRollbackJournal_RollsBackInReverseOrder()
+    {
+        List<int> order = [];
+        SetupRollbackJournal journal = new();
+        journal.Record(() => order.Add(1));
+        journal.Record(() => order.Add(2));
+        journal.Record(() => order.Add(3));
+
+        journal.RollBack();
+
+        CollectionAssert.AreEqual(new[] { 3, 2, 1 }, order);
+    }
+
+    [TestMethod]
+    public void SetupRollbackJournal_ContinuesAfterRollbackFailure()
+    {
+        List<int> order = [];
+        SetupRollbackJournal journal = new();
+        journal.Record(() => order.Add(1));
+        journal.Record(() => throw new IOException("Injected rollback failure."));
+        journal.Record(() => order.Add(3));
+
+        AggregateException failure = Assert.ThrowsExactly<AggregateException>(journal.RollBack);
+
+        Assert.HasCount(1, failure.InnerExceptions);
+        CollectionAssert.AreEqual(new[] { 3, 1 }, order);
+    }
+
+    [TestMethod]
+    public void SetupRollbackJournal_DoesNothingAfterCommit()
+    {
+        bool rolledBack = false;
+        SetupRollbackJournal journal = new();
+        journal.Record(() => rolledBack = true);
+        journal.Commit();
+
+        journal.RollBack();
+
+        Assert.IsFalse(rolledBack);
     }
 
     private static IEnumerable<Control> EnumerateControls(Control parent)

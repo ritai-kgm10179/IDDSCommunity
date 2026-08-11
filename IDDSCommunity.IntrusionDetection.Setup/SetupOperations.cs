@@ -333,6 +333,8 @@ internal static class SetupOperations
         bool previousInstallationMoved = false;
         bool installationDirectoryReplaced = false;
         bool systemStateChanged = false;
+        bool newServiceCreated = false;
+        ServiceStateSnapshot serviceState = default;
         bool restartRequired = false;
         bool cleanupIncomplete = false;
 
@@ -384,8 +386,8 @@ internal static class SetupOperations
             cancellationToken.ThrowIfCancellationRequested();
 
             Report(progress, "ProgressStoppingService", 30);
-            RunSc("stop", ServiceName, acceptMissing: true);
-            RunSc("delete", ServiceName, acceptMissing: true);
+            serviceState = CaptureServiceState();
+            StopService(serviceState);
             systemStateChanged = true;
             KillRunningProcesses();
             cancellationToken.ThrowIfCancellationRequested();
@@ -404,19 +406,17 @@ internal static class SetupOperations
             if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("ServiceExecutableMissing"), service);
 
             Report(progress, "ProgressRegisteringService", 70);
-            RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
-            RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
-            RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+            if (!serviceState.Exists)
+            {
+                ConfigureNewService(service);
+                newServiceCreated = true;
+            }
             ConfigureEventLog();
             cancellationToken.ThrowIfCancellationRequested();
-            Report(progress, "ProgressStartingService", 85);
-            RunSc("start", ServiceName);
-            using (ServiceController controller = new(ServiceName))
+            if (!serviceState.Exists || serviceState.WasRunning)
             {
-                controller.WaitForStatus(ServiceControllerStatus.Running, ServiceStartTimeout);
-                controller.Refresh();
-                if (controller.Status != ServiceControllerStatus.Running)
-                    throw new InvalidOperationException(SetupText.Get("ServiceStartVerificationFailed"));
+                Report(progress, "ProgressStartingService", 85);
+                StartServiceAndVerify();
             }
             CreateShortcuts(desktopShortcut, startMenuShortcut);
             if (previousInstallationMoved)
@@ -439,7 +439,7 @@ internal static class SetupOperations
             try
             {
                 if (systemStateChanged)
-                    RollBackInstallation(previousInstallationMoved, installationDirectoryReplaced, backupDirectory);
+                    RollBackInstallation(previousInstallationMoved, installationDirectoryReplaced, backupDirectory, serviceState, newServiceCreated);
             }
             catch (Exception rollbackFailure)
             {
@@ -458,10 +458,16 @@ internal static class SetupOperations
         }
     }
 
-    private static void RollBackInstallation(bool previousInstallationMoved, bool installationDirectoryReplaced, string backupDirectory)
+    private static void RollBackInstallation(
+        bool previousInstallationMoved,
+        bool installationDirectoryReplaced,
+        string backupDirectory,
+        ServiceStateSnapshot serviceState,
+        bool newServiceCreated)
     {
         RunSc("stop", ServiceName, acceptMissing: true);
-        RunSc("delete", ServiceName, acceptMissing: true);
+        if (newServiceCreated)
+            RunSc("delete", ServiceName, acceptMissing: true);
         KillRunningProcesses();
         if (installationDirectoryReplaced && Directory.Exists(InstallDirectory))
             _ = SafeDeleteDirectory(InstallDirectory);
@@ -471,14 +477,8 @@ internal static class SetupOperations
                 throw new DirectoryNotFoundException(backupDirectory);
             Directory.Move(backupDirectory, InstallDirectory);
         }
-        if (!Directory.Exists(InstallDirectory)) return;
-        string previousService = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
-        if (!File.Exists(previousService))
-            throw new FileNotFoundException(SetupText.Get("RollbackServiceMissing"), previousService);
-        RunSc("create", ServiceName, "binPath=", previousService, "start=", "auto", "DisplayName=", ServiceDisplayName);
-        RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
-        RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
-        RunSc("start", ServiceName);
+        if (serviceState.Exists && serviceState.WasRunning)
+            StartServiceAndVerify();
     }
 
     private static void Report(IProgress<SetupProgress>? progress, string messageKey, int percentage) =>
@@ -505,36 +505,125 @@ internal static class SetupOperations
     {
         Report(progress, "ProgressStoppingService", 15);
         cancellationToken.ThrowIfCancellationRequested();
-        bool serviceRemoved = false;
+        ServiceStateSnapshot serviceState = CaptureServiceState();
+        bool desktopShortcut = HasDesktopShortcut;
+        bool startMenuShortcut = HasStartMenuShortcut;
+        string parent = Directory.GetParent(InstallDirectory)?.FullName ?? throw new InvalidOperationException();
+        string quarantineDirectory = Path.Combine(parent, ".idds-remove-" + Guid.NewGuid().ToString("N"));
+        bool filesQuarantined = false;
+        SetupRollbackJournal rollback = new();
         try
         {
-            CleanUpFirewallRules();
-            RunSc("stop", ServiceName, acceptMissing: true);
-            RunSc("delete", ServiceName, acceptMissing: true);
-            serviceRemoved = true;
+            if (serviceState.Exists && serviceState.WasRunning)
+                rollback.Record(StartServiceAndVerify);
+            StopService(serviceState);
             KillRunningProcesses();
             cancellationToken.ThrowIfCancellationRequested();
             Report(progress, "ProgressRemovingFiles", 60);
-            bool restartRequired = SafeDeleteDirectory(InstallDirectory);
+            if (Directory.Exists(InstallDirectory))
+            {
+                rollback.Record(() =>
+                {
+                    if (Directory.Exists(quarantineDirectory) && !Directory.Exists(InstallDirectory))
+                        Directory.Move(quarantineDirectory, InstallDirectory);
+                });
+                Directory.Move(InstallDirectory, quarantineDirectory);
+                filesQuarantined = true;
+            }
+            rollback.Record(() => CreateShortcuts(desktopShortcut, startMenuShortcut));
             RemoveShortcuts();
-            Report(progress, "ProgressCompleted", 100);
-            return new SetupOperationResult(restartRequired, CleanupIncomplete: false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (serviceState.Exists)
+            {
+                RunSc("delete", ServiceName, acceptMissing: true);
+            }
+            rollback.Commit();
         }
-        catch (OperationCanceledException) when (serviceRemoved && Directory.Exists(InstallDirectory))
+        catch (Exception uninstallFailure)
         {
-            RestoreServiceFromInstallDirectory();
+            try
+            {
+                rollback.RollBack();
+            }
+            catch (Exception rollbackFailure)
+            {
+                throw new AggregateException(SetupText.Get("RollbackFailed"), uninstallFailure, rollbackFailure);
+            }
             throw;
+        }
+
+        bool cleanupIncomplete = false;
+        bool restartRequired = false;
+        try
+        {
+            CleanUpFirewallRules();
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Clean Windows Firewall rules after uninstall", exception);
+            cleanupIncomplete = true;
+        }
+        if (filesQuarantined && Directory.Exists(quarantineDirectory))
+        {
+            try
+            {
+                restartRequired = SafeDeleteDirectory(quarantineDirectory);
+            }
+            catch (Exception exception)
+            {
+                LogNonFatal($"Clean uninstalled files {quarantineDirectory}", exception);
+                cleanupIncomplete = true;
+            }
+        }
+        Report(progress, "ProgressCompleted", 100);
+        return new SetupOperationResult(restartRequired, cleanupIncomplete);
+    }
+
+    private static ServiceStateSnapshot CaptureServiceState()
+    {
+        ServiceController[] services = ServiceController.GetServices();
+        try
+        {
+            ServiceController? service = services.FirstOrDefault(candidate =>
+                string.Equals(candidate.ServiceName, ServiceName, StringComparison.OrdinalIgnoreCase));
+            if (service is null) return new ServiceStateSnapshot(Exists: false, WasRunning: false);
+            service.Refresh();
+            return new ServiceStateSnapshot(Exists: true, WasRunning: service.Status == ServiceControllerStatus.Running);
+        }
+        finally
+        {
+            foreach (ServiceController service in services) service.Dispose();
         }
     }
 
-    private static void RestoreServiceFromInstallDirectory()
+    private static void StopService(ServiceStateSnapshot state)
     {
-        string service = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe");
-        if (!File.Exists(service)) throw new FileNotFoundException(SetupText.Get("RollbackServiceMissing"), service);
-        RunSc("create", ServiceName, "binPath=", service, "start=", "auto", "DisplayName=", ServiceDisplayName);
+        if (!state.Exists || !state.WasRunning) return;
+        RunSc("stop", ServiceName, acceptMissing: true);
+        using ServiceController controller = new(ServiceName);
+        controller.WaitForStatus(ServiceControllerStatus.Stopped, ServiceStartTimeout);
+    }
+
+    private static void ConfigureNewService(string executablePath)
+    {
+        RunSc("create", ServiceName, "binPath=", executablePath, "start=", "auto", "DisplayName=", ServiceDisplayName);
         RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
         RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
+    }
+
+    private static void StartServiceAndVerify()
+    {
+        using (ServiceController current = new(ServiceName))
+        {
+            current.Refresh();
+            if (current.Status == ServiceControllerStatus.Running) return;
+        }
         RunSc("start", ServiceName);
+        using ServiceController controller = new(ServiceName);
+        controller.WaitForStatus(ServiceControllerStatus.Running, ServiceStartTimeout);
+        controller.Refresh();
+        if (controller.Status != ServiceControllerStatus.Running)
+            throw new InvalidOperationException(SetupText.Get("ServiceStartVerificationFailed"));
     }
 
     private static void CleanUpFirewallRules()
@@ -619,8 +708,7 @@ internal static class SetupOperations
                 // Handle file locks (e.g. runtime DLLs like clrjit.dll) via Win32 delay until reboot
                 try
                 {
-                    if (!MoveFileEx(file, null, MOVEFILE_DELAY_UNTIL_REBOOT))
-                        throw new IOException(SetupText.Format("DeleteFailed", file), exception);
+                    ScheduleDeleteAfterRestart(file, exception);
                     restartRequired = true;
                 }
                 catch (IOException) { throw; }
@@ -637,17 +725,29 @@ internal static class SetupOperations
             {
                 Directory.Delete(subDir, false);
             }
-            catch when (restartRequired) { }
+            catch (Exception exception) when (restartRequired)
+            {
+                ScheduleDeleteAfterRestart(subDir, exception);
+            }
         }
 
         try
         {
             Directory.Delete(directoryPath, true);
         }
-        catch when (restartRequired) { }
+        catch (Exception exception) when (restartRequired)
+        {
+            ScheduleDeleteAfterRestart(directoryPath, exception);
+        }
         if (Directory.Exists(directoryPath) && !restartRequired)
             throw new IOException(SetupText.Format("DeleteFailed", directoryPath));
         return restartRequired;
+    }
+
+    private static void ScheduleDeleteAfterRestart(string path, Exception originalException)
+    {
+        if (!MoveFileEx(path, null, MOVEFILE_DELAY_UNTIL_REBOOT))
+            throw new IOException(SetupText.Format("DeleteFailed", path), originalException);
     }
 
     internal static void CopyDirectoryOverwrite(string source, string destination, CancellationToken cancellationToken)
@@ -709,4 +809,5 @@ internal static class SetupOperations
 
     internal readonly record struct SetupProgress(string MessageKey, int Percentage);
     internal readonly record struct SetupOperationResult(bool RestartRequired, bool CleanupIncomplete);
+    private readonly record struct ServiceStateSnapshot(bool Exists, bool WasRunning);
 }
