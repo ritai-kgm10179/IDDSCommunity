@@ -117,7 +117,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     {
         List<string> filter = [];
         if (!checkBoxFailedLogins.Checked && !checkBoxHardLocks.Checked && !checkBoxSoftLocks.Checked && !checkBoxSystemMessages.Checked) filter.Add("0=1");
-        if (checkBoxFailedLogins.Checked) filter.Add("(Action >99 and Action <200)");
+        if (checkBoxFailedLogins.Checked)
+        {
+            filter.Add("(" + string.Join(" or ", IntrusionLog.FailedLoginActions.Select(action => $"Action = {action}")) + ")");
+        }
         if (checkBoxSoftLocks.Checked) filter.Add("(Action >199 and Action <300)");
         if (checkBoxHardLocks.Checked) filter.Add("(Action >299 and Action <400)");
         if (checkBoxSystemMessages.Checked) filter.Add("(Action >= 500)");
@@ -234,6 +237,16 @@ public partial class IDDSCommunitySecurityLog : UserControl
             }
         }
         return result;
+    }
+
+    /// <summary>
+    /// 清除目前顯示的安全性事件，以便套用完整的滾動時間視窗快照。
+    /// </summary>
+    public void ClearEntries()
+    {
+        DataSetIntrusionLog.Tables["IntrusionLog"]!.Clear();
+        MaxLogId = 0;
+        labelEventsCount.Text = "0";
     }
     /// <summary>
     /// 執行 fill log entry 作業。

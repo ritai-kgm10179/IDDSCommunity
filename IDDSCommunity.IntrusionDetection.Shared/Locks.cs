@@ -159,6 +159,27 @@ public class Locks
 
         return new FailedLoginStatisticsSnapshot(total, attemptsByAgent);
     }
+
+    /// <summary>
+    /// 讀取每個 Agent 的累計封鎖統計資料。
+    /// </summary>
+    /// <returns>以 Agent 識別碼索引的累計封鎖統計資料。</returns>
+    public static IReadOnlyDictionary<Guid, AgentLockStatistics> ReadAgentLockStatistics()
+    {
+        Dictionary<Guid, AgentLockStatistics> statistics = [];
+        using IDataReader reader = Database.Instance.ExecuteReader("select AgentId, HardLocks, SoftLocks from AgentStatistics");
+        while (reader.Read())
+        {
+            if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
+            {
+                statistics[agentId] = new AgentLockStatistics(
+                    Db.DbValueConverter.ToInt(reader["HardLocks"]),
+                    Db.DbValueConverter.ToInt(reader["SoftLocks"]));
+            }
+        }
+
+        return statistics;
+    }
     /// <summary>
     /// Counts recent locks created for the same Agent and source IP address.
     /// </summary>

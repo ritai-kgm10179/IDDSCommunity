@@ -22,6 +22,24 @@ public class IntrusionLog
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.
     public const int STATUS_PROTECTION_UNAVAILABLE = 999;
     public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
+
+    /// <summary>
+    /// 取得所有代表登入失敗的事件狀態碼。
+    /// </summary>
+    public static IReadOnlyList<int> FailedLoginActions { get; } = Array.AsReadOnly<int>(
+    [
+        STATUS_INTRUSION_ATTEMPT,
+        STATUS_INTRUSION_ATTEMPT_FROM_LOCAL,
+        STATUS_INTRUSION_ATTEMPT_FROM_SAFE
+    ]);
+
+    /// <summary>
+    /// 判斷指定狀態是否代表登入失敗事件。
+    /// </summary>
+    /// <param name="action">事件狀態碼。</param>
+    /// <returns>若為登入失敗事件則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool IsFailedLoginAction(int action) => action is
+        STATUS_INTRUSION_ATTEMPT or STATUS_INTRUSION_ATTEMPT_FROM_LOCAL or STATUS_INTRUSION_ATTEMPT_FROM_SAFE;
     /// <summary>
     /// Gets system id.
     /// </summary>
@@ -194,14 +212,27 @@ public class IntrusionLog
     /// <returns>傳回read interval grouped結果。</returns>
     public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
     {
-        if (Database.Instance.IsConfigured)
-        {
-            return Database.Instance.ExecuteReader("select MAX(Id) as MaxId, MAX(IncidentTime) as LatestEvent, Count(*) as NumberOfEvents, AgentId, ClientIP, Action from IntrusionLog where IncidentTime>@p0 group by AgentId, ClientIP, Action order by 1 desc", DateTime.Now.Subtract(timeSpan));
-        }
-        else
-        {
+        DateTime endDate = DateTime.Now;
+        return ReadIntervalGrouped(endDate.Subtract(timeSpan), endDate);
+    }
+
+    /// <summary>
+    /// 讀取指定半開時間區間內依 Agent、來源位址及狀態分組的事件。
+    /// </summary>
+    /// <param name="startDate">包含在查詢內的開始時間。</param>
+    /// <param name="endDate">不包含在查詢內的結束時間。</param>
+    /// <returns>分組事件資料讀取器。</returns>
+    public static IDataReader ReadIntervalGrouped(DateTime startDate, DateTime endDate)
+    {
+        if (!Database.Instance.IsConfigured)
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
-        }
+        if (endDate <= startDate)
+            throw new ArgumentOutOfRangeException(nameof(endDate), "結束時間必須晚於開始時間。");
+
+        return Database.Instance.ExecuteReader(
+            "select MAX(Id) as MaxId, MAX(IncidentTime) as LatestEvent, Count(*) as NumberOfEvents, AgentId, ClientIP, Action from IntrusionLog where IncidentTime>=@p0 and IncidentTime<@p1 group by AgentId, ClientIP, Action order by 1 desc",
+            startDate,
+            endDate);
     }
     /// <summary>
     /// Determines whether s updates.

@@ -13,6 +13,8 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class IddsAdmin : Form
 {
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
+    private static readonly TimeSpan SecurityLogWindow = TimeSpan.FromHours(24);
+    private static readonly TimeSpan SecurityLogRefreshInterval = TimeSpan.FromSeconds(30);
     readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
     readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
@@ -31,6 +33,7 @@ public partial class IddsAdmin : Form
     private int serviceRefreshActive;
     private Bitmap? disabledStartServiceImage;
     private Bitmap? disabledStopServiceImage;
+    private DateTime lastSecurityLogRefresh = DateTime.MinValue;
     /// <summary>
     /// 初始化 <see cref="IddsAdmin"/> 類別的新執行個體。
     /// </summary>
@@ -184,7 +187,8 @@ public partial class IddsAdmin : Form
                 panelContent.Controls.Add(_panelSecurityLog);
                 IsUpdating = true;
 
-                IDataReader rdr = IntrusionLog.ReadIntervalGrouped(new TimeSpan(24, 0, 0));
+                DateTime endDate = DateTime.Now;
+                IDataReader rdr = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
                 int maxLogId = LastLogId;
                 while (rdr.Read())
                 {
@@ -210,6 +214,7 @@ public partial class IddsAdmin : Form
                 }
                 rdr.Close();
                 if (maxLogId > LastLogId) LastLogId = maxLogId;
+                lastSecurityLogRefresh = endDate;
                 IsUpdating = false;
             }
             return _panelSecurityLog;
@@ -480,9 +485,10 @@ public partial class IddsAdmin : Form
                     : AdminRefreshMode.None;
         int lastLogId = LastLogId;
         DateTime lastLockUpdate = LastLockUpdate;
+        DateTime securityLogRefresh = lastSecurityLogRefresh;
         try
         {
-            AdminRefreshSnapshot snapshot = await Task.Run(() => LoadAdminSnapshot(mode, lastLogId, lastLockUpdate), uiRefreshCancellation.Token).ConfigureAwait(false);
+            AdminRefreshSnapshot snapshot = await Task.Run(() => LoadAdminSnapshot(mode, lastLogId, lastLockUpdate, securityLogRefresh), uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ApplyAdminSnapshot(snapshot), uiRefreshCancellation.Token);
         }
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
@@ -520,26 +526,43 @@ public partial class IddsAdmin : Form
     /// <param name="mode">The visible administration area.</param>
     /// <param name="lastLogId">The last log identifier already displayed.</param>
     /// <param name="lastLockUpdate">The last lock refresh timestamp.</param>
+    /// <param name="lastSecurityLogRefresh">上次完整載入安全性記錄時間。</param>
     /// <returns>背景載入的管理快照物件。</returns>
-    private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate)
+    private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate, DateTime lastSecurityLogRefresh)
     {
         List<AdminLogRow> logs = [];
         List<AdminLockRow> locks = [];
         int maxLogId = lastLogId;
         DateTime? newLockUpdate = null;
+        DateTime? newSecurityLogRefresh = null;
+        bool replaceSecurityLog = false;
         FailedLoginStatisticsSnapshot? failedLoginStatistics = null;
+        IReadOnlyDictionary<Guid, AgentLockStatistics>? agentLockStatistics = null;
         int? softLocks = null;
         int? hardLocks = null;
-        if (mode == AdminRefreshMode.SecurityLog && IntrusionLog.HasUpdates(lastLogId))
+        if (mode == AdminRefreshMode.SecurityLog)
         {
-            using IDataReader reader = IntrusionLog.ReadDifferential(lastLogId);
-            while (reader.Read())
+            DateTime endDate = DateTime.Now;
+            if (IntrusionLog.HasUpdates(lastLogId) || endDate - lastSecurityLogRefresh >= SecurityLogRefreshInterval)
             {
-                int id = Shared.Db.DbValueConverter.ToInt(reader["Id"]);
-                int action = Shared.Db.DbValueConverter.ToInt(reader["Action"]);
-                string agentId = Shared.Db.DbValueConverter.ToString(reader["AgentId"]);
-                logs.Add(new AdminLogRow(id, action, agentId, Shared.Db.DbValueConverter.ToDateTime(reader["IncidentTime"]), Shared.Db.DbValueConverter.ToString(reader["ClientIP"]), GetLogMessage(agentId, action)));
-                maxLogId = Math.Max(maxLogId, id);
+                replaceSecurityLog = true;
+                newSecurityLogRefresh = endDate;
+                using IDataReader reader = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
+                while (reader.Read())
+                {
+                    int id = Shared.Db.DbValueConverter.ToInt(reader["MaxId"]);
+                    int action = Shared.Db.DbValueConverter.ToInt(reader["Action"]);
+                    string agentId = Shared.Db.DbValueConverter.ToString(reader["AgentId"]);
+                    logs.Add(new AdminLogRow(
+                        id,
+                        action,
+                        agentId,
+                        Shared.Db.DbValueConverter.ToDateTime(reader["LatestEvent"]),
+                        Shared.Db.DbValueConverter.ToString(reader["ClientIP"]),
+                        GetLogMessage(agentId, action),
+                        Shared.Db.DbValueConverter.ToInt(reader["NumberOfEvents"])));
+                    maxLogId = Math.Max(maxLogId, id);
+                }
             }
         }
         if (mode == AdminRefreshMode.CurrentLocks && Locks.HasUpdates(lastLockUpdate))
@@ -558,15 +581,14 @@ public partial class IddsAdmin : Form
         {
             DateTime endDate = DateTime.Now;
             failedLoginStatistics = Locks.ReadFailedLoginStatistics(endDate.AddDays(-30), endDate);
-            foreach (SecurityAgent agent in SecurityAgents.Instance)
-                agent.UpdateStatistics();
+            agentLockStatistics = Locks.ReadAgentLockStatistics();
         }
         if (mode is AdminRefreshMode.Dashboard or AdminRefreshMode.CurrentLocks)
         {
             softLocks = Locks.ReadCurrentSoftLocks();
             hardLocks = Locks.ReadCurrentHardLocks();
         }
-        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, failedLoginStatistics, softLocks, hardLocks);
+        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, newSecurityLogRefresh, replaceSecurityLog, failedLoginStatistics, agentLockStatistics, softLocks, hardLocks);
     }
     /// <summary>
     /// Applies a background-loaded administration snapshot on the UI thread.
@@ -574,8 +596,16 @@ public partial class IddsAdmin : Form
     /// <param name="snapshot">The immutable values to display.</param>
     private void ApplyAdminSnapshot(AdminRefreshSnapshot snapshot)
     {
-        foreach (AdminLogRow row in snapshot.Logs)
-            PanelSecurityLog.AddLogEntry(row.Id, row.Action, row.AgentId, IntrusionLog.GetStatusIcon(row.Action), IntrusionLog.GetStatusClass(row.Action), row.IncidentTime, row.ClientIp, row.Message);
+        if (snapshot.ReplaceSecurityLog)
+        {
+            PanelSecurityLog.ClearEntries();
+            foreach (AdminLogRow row in snapshot.Logs)
+            {
+                PanelSecurityLog.FillLogEntry(row.Id, row.Action, row.AgentId, IntrusionLog.GetStatusIcon(row.Action), IntrusionLog.GetStatusClass(row.Action), row.IncidentTime, row.ClientIp, row.Message, row.NumberOfEvents);
+            }
+        }
+        if (snapshot.NewSecurityLogRefresh is DateTime securityLogRefresh)
+            lastSecurityLogRefresh = securityLogRefresh;
         LastLogId = Math.Max(LastLogId, snapshot.MaxLogId);
         if (snapshot.NewLockUpdate is DateTime lockUpdate)
         {
@@ -584,10 +614,11 @@ public partial class IddsAdmin : Form
             foreach (AdminLockRow row in snapshot.Locks)
                 PanelCurrentLocks.Add(row.Id, Properties.Resources.logIcon_softLock, LockStatusAdapter.GetLockStatusName(row.Status), row.ClientIp, row.DisplayName, row.LockDate, row.UnlockDate, row.Status);
         }
-        if (snapshot.FailedLoginStatistics is FailedLoginStatisticsSnapshot failedLogins)
+        if (snapshot.FailedLoginStatistics is FailedLoginStatisticsSnapshot failedLogins &&
+            snapshot.AgentLockStatistics is IReadOnlyDictionary<Guid, AgentLockStatistics> agentLocks)
         {
             Dashboard.SetUnsuccessfulLogins(failedLogins.Total);
-            Dashboard.SetAgentFailedLogins(failedLogins.AttemptsByAgent);
+            Dashboard.SetAgentStatistics(failedLogins.AttemptsByAgent, agentLocks);
         }
         if (snapshot.SoftLocks is int soft && snapshot.HardLocks is int hard)
         {
@@ -599,9 +630,9 @@ public partial class IddsAdmin : Form
     }
 
     private enum AdminRefreshMode { None, SecurityLog, CurrentLocks, Dashboard }
-    private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message);
+    private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message, int NumberOfEvents);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
-    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, FailedLoginStatisticsSnapshot? FailedLoginStatistics, int? SoftLocks, int? HardLocks);
+    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks);
 
     public int LastLogId { get; set; }
 

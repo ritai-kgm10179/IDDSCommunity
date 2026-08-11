@@ -48,8 +48,7 @@ public partial class PluginItem : UserControl
         set
         {
             _securityAgent = value;
-            UpdateValues(value);
-            _securityAgent.StatisticsUpdated += new EventHandler(_securityAgent_StatisticsUpdated);
+            UpdateValues(value.DisplayName, 0, 0, 0, value.Icon);
         }
     }
     /// <summary>
@@ -80,26 +79,17 @@ public partial class PluginItem : UserControl
         toolTip1.SetToolTip(pictureBoxEnabledState, pictureBoxEnabledState.AccessibleDescription);
     }
     /// <summary>
-    /// Updates values.
+    /// 設定 Dashboard 顯示的 Agent 統計資料。
     /// </summary>
-    /// <param name="agent">agent 的值。</param>
-    public void UpdateValues(SecurityAgent agent)
+    /// <param name="failedLogins">指定時間區間內的登入失敗數。</param>
+    /// <param name="hardLocks">強制封鎖累計數。</param>
+    /// <param name="softLocks">暫時封鎖累計數。</param>
+    public void SetStatistics(int failedLogins, int hardLocks, int softLocks)
     {
-        if (agent != null)
-        {
-            UpdateValues(agent.DisplayName, agent.FailedLogins, agent.HardLocks, agent.SoftLocks, agent.Icon);
-        }
-        else
-        {
-            UpdateValues("", 0, 0, 0, null);
-        }
+        SetFailedLogins(failedLogins);
+        SetHardLocks(hardLocks);
+        SetSoftLocks(softLocks);
     }
-    /// <summary>
-    /// 處理 statistics updated 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    void _securityAgent_StatisticsUpdated(object? sender, EventArgs e) => UpdateValues(SecurityAgent);
     /// <summary>
     /// 處理 popup 事件。
     /// </summary>

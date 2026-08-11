@@ -9,3 +9,10 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// <param name="Total">所有 Agent 的登入失敗總數。</param>
 /// <param name="AttemptsByAgent">以 Agent 識別碼索引的登入失敗數量。</param>
 public sealed record FailedLoginStatisticsSnapshot(int Total, IReadOnlyDictionary<Guid, int> AttemptsByAgent);
+
+/// <summary>
+/// 表示 Agent 的累計封鎖統計資料。
+/// </summary>
+/// <param name="HardLocks">強制封鎖累計數。</param>
+/// <param name="SoftLocks">暫時封鎖累計數。</param>
+public sealed record AgentLockStatistics(int HardLocks, int SoftLocks);

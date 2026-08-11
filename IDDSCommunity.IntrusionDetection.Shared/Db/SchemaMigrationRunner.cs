@@ -31,6 +31,7 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, CreateProtectionAuditLogIndex);
         Execute(connection, transaction, CreateProtectionEventInbox);
         Execute(connection, transaction, CreateProtectionEventInboxStatusIndex);
+        Execute(connection, transaction, CreateIntrusionLogWindowIndex);
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -139,4 +140,7 @@ internal static class SchemaMigrationRunner
 
     private const string CreateProtectionEventInboxStatusIndex =
         "CREATE INDEX IF NOT EXISTS IX_ProtectionEventInbox_Status_ReceivedUtc ON ProtectionEventInbox(Status, ReceivedUtc)";
+
+    private const string CreateIntrusionLogWindowIndex =
+        "CREATE INDEX IF NOT EXISTS IX_IntrusionLog_IncidentTime ON IntrusionLog(IncidentTime)";
 }

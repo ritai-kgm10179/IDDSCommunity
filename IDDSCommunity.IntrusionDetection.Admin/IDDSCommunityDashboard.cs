@@ -32,12 +32,19 @@ public partial class IDDSCommunityDashboard : UserControl
     /// 將同一時間區間的登入失敗計數套用至所有 Agent 項目。
     /// </summary>
     /// <param name="attemptsByAgent">以 Agent 識別碼索引的登入失敗數量。</param>
-    public void SetAgentFailedLogins(IReadOnlyDictionary<Guid, int> attemptsByAgent)
+    /// <param name="lockStatisticsByAgent">以 Agent 識別碼索引的累計封鎖統計資料。</param>
+    public void SetAgentStatistics(
+        IReadOnlyDictionary<Guid, int> attemptsByAgent,
+        IReadOnlyDictionary<Guid, AgentLockStatistics> lockStatisticsByAgent)
     {
         foreach (Control control in flowLayoutPanelPlugins.Controls)
         {
             if (control is PluginItem item)
-                item.SetFailedLogins(attemptsByAgent.GetValueOrDefault(item.SecurityAgent.Id));
+            {
+                Guid agentId = item.SecurityAgent.Id;
+                AgentLockStatistics locks = lockStatisticsByAgent.GetValueOrDefault(agentId) ?? new AgentLockStatistics(0, 0);
+                item.SetStatistics(attemptsByAgent.GetValueOrDefault(agentId), locks.HardLocks, locks.SoftLocks);
+            }
         }
     }
 
