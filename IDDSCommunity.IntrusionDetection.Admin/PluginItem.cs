@@ -8,6 +8,10 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 
 public partial class PluginItem : UserControl
 {
+    private string? renderedDisplayName;
+    private bool? renderedEnabled;
+    private bool iconInitialized;
+
     public event EventHandler? SecurityAgentConfigurationRequest;
     /// <summary>
     /// 初始化 <see cref="PluginItem"/> 類別的新執行個體。
@@ -47,6 +51,12 @@ public partial class PluginItem : UserControl
         get => _securityAgent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
+            if (!ReferenceEquals(_securityAgent, value))
+            {
+                renderedDisplayName = null;
+                renderedEnabled = null;
+                iconInitialized = false;
+            }
             _securityAgent = value;
             RefreshPresentation();
             SetStatistics(0, 0, 0);
@@ -57,16 +67,37 @@ public partial class PluginItem : UserControl
     /// </summary>
     public void RefreshPresentation()
     {
-        SetName(SecurityAgent.DisplayName);
-        SetIcon(SecurityAgent.Icon);
-        Image? previousStatusImage = pictureBoxEnabledState.Image;
-        pictureBoxEnabledState.Image = InterfaceIcons.CreateAgentStatus(16, SecurityAgent.Enabled);
-        previousStatusImage?.Dispose();
-        string localizedStatus = Strings.Get(SecurityAgent.Enabled ? "enabled" : "disabled");
+        string displayName = SecurityAgent.DisplayName;
+        bool enabled = SecurityAgent.Enabled;
+        bool presentationChanged = false;
+        if (!string.Equals(renderedDisplayName, displayName, StringComparison.Ordinal))
+        {
+            SetName(displayName);
+            renderedDisplayName = displayName;
+            presentationChanged = true;
+        }
+        if (!iconInitialized)
+        {
+            SetIcon(SecurityAgent.Icon);
+            iconInitialized = true;
+            presentationChanged = true;
+        }
+        if (renderedEnabled != enabled)
+        {
+            Image? previousStatusImage = pictureBoxEnabledState.Image;
+            pictureBoxEnabledState.Image = InterfaceIcons.CreateAgentStatus(16, enabled);
+            previousStatusImage?.Dispose();
+            renderedEnabled = enabled;
+            presentationChanged = true;
+        }
+        if (!presentationChanged)
+            return;
+
+        string localizedStatus = Strings.Get(enabled ? "enabled" : "disabled");
         pictureBoxEnabledState.AccessibleName = $"{Strings.Get("Agent status")}: {localizedStatus}";
         pictureBoxEnabledState.AccessibleDescription = Strings.Format(
             "The security agent {0} is {1}. Double-click to configure this agent.",
-            SecurityAgent.DisplayName,
+            displayName,
             localizedStatus);
         toolTip1.ToolTipTitle = Strings.Get("Agent status");
         toolTip1.SetToolTip(pictureBoxEnabledState, pictureBoxEnabledState.AccessibleDescription);

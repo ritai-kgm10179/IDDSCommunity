@@ -26,7 +26,7 @@ public static class SecurityLogRefreshPolicy
         if (refreshInterval <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(refreshInterval), "刷新間隔必須大於零。");
 
-        return currentLogId > lastObservedLogId ||
+        return currentLogId != lastObservedLogId ||
             currentTime < lastRefreshTime ||
             currentTime - lastRefreshTime >= refreshInterval;
     }

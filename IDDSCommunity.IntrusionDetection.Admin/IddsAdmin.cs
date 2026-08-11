@@ -189,7 +189,6 @@ public partial class IddsAdmin : Form
 
                 DateTime endDate = DateTime.Now;
                 IDataReader rdr = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
-                int maxLogId = LastLogId;
                 while (rdr.Read())
                 {
                     int action = Shared.Db.DbValueConverter.ToInt(rdr["Action"]);
@@ -202,18 +201,13 @@ public partial class IddsAdmin : Form
                             Shared.Db.DbValueConverter.ToString(rdr["ClientIP"]),
                             GetLogMessage(agentId, action),
                             Shared.Db.DbValueConverter.ToInt(rdr["NumberOfEvents"]));
-                    if (Convert.ToInt32(rdr["MaxId"]) > maxLogId) maxLogId = Convert.ToInt32(rdr["MaxId"]);
-                }
-                if (maxLogId == 0)
-                {
-                    LastLogId = IntrusionLog.GetLastLogId();
                 }
                 foreach (SecurityAgent agent in SecurityAgents.Instance)
                 {
                     _panelSecurityLog.AddAgent(agent);
                 }
                 rdr.Close();
-                if (maxLogId > LastLogId) LastLogId = maxLogId;
+                LastLogId = IntrusionLog.GetLastLogId();
                 lastSecurityLogRefresh = endDate;
                 IsUpdating = false;
             }
@@ -548,7 +542,7 @@ public partial class IddsAdmin : Form
             {
                 replaceSecurityLog = true;
                 newSecurityLogRefresh = endDate;
-                maxLogId = Math.Max(maxLogId, currentLogId);
+                maxLogId = currentLogId;
                 using IDataReader reader = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
                 while (reader.Read())
                 {
@@ -563,7 +557,6 @@ public partial class IddsAdmin : Form
                         Shared.Db.DbValueConverter.ToString(reader["ClientIP"]),
                         GetLogMessage(agentId, action),
                         Shared.Db.DbValueConverter.ToInt(reader["NumberOfEvents"])));
-                    maxLogId = Math.Max(maxLogId, id);
                 }
             }
         }
@@ -608,7 +601,9 @@ public partial class IddsAdmin : Form
         }
         if (snapshot.NewSecurityLogRefresh is DateTime securityLogRefresh)
             lastSecurityLogRefresh = securityLogRefresh;
-        LastLogId = Math.Max(LastLogId, snapshot.MaxLogId);
+        LastLogId = snapshot.ReplaceSecurityLog
+            ? snapshot.MaxLogId
+            : Math.Max(LastLogId, snapshot.MaxLogId);
         if (snapshot.NewLockUpdate is DateTime lockUpdate)
         {
             LastLockUpdate = lockUpdate;

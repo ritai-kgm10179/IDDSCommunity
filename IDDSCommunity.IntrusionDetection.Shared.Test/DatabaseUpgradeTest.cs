@@ -6,6 +6,7 @@ using System.IO;
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 
 [TestClass]
+[DoNotParallelize]
 public class DatabaseUpgradeTest
 {
     /// <summary>
@@ -95,5 +96,38 @@ public class DatabaseUpgradeTest
                 Directory.Delete(directory, recursive: true);
         }
 
+    }
+
+    /// <summary>
+    /// 驗證既有版本 3 資料庫可升級至版本 4，且原有資料不會遺失。
+    /// </summary>
+    [TestMethod]
+    public void ExistingVersion3Database_IsUpgradedToVersion4WithoutDataLoss()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey, ConfigValue) VALUES ('v3-upgrade-marker', 'preserved')");
+            database.ExecuteNonQuery("DROP INDEX IF EXISTS IX_IntrusionLog_IncidentTime");
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 4");
+            database.Close();
+
+            database.Configure(directory);
+            using Microsoft.Data.Sqlite.SqliteCommand command = database.Connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 4";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_IntrusionLog_IncidentTime'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'v3-upgrade-marker'";
+            Assert.AreEqual("preserved", Convert.ToString(command.ExecuteScalar()));
+        }
+        finally
+        {
+            database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
     }
 }

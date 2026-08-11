@@ -14,6 +14,10 @@ public sealed class SecurityLogRefreshPolicyTest
         Assert.IsTrue(SecurityLogRefreshPolicy.ShouldRefresh(Now, Now.AddSeconds(-1), 100, 101, Interval));
 
     [TestMethod]
+    public void ShouldRefreshReturnsTrueWhenSequenceMovesBackwardAfterRestore() =>
+        Assert.IsTrue(SecurityLogRefreshPolicy.ShouldRefresh(Now, Now.AddSeconds(-1), 1000, 500, Interval));
+
+    [TestMethod]
     public void ShouldRefreshUsesInclusiveRefreshIntervalBoundary()
     {
         Assert.IsFalse(SecurityLogRefreshPolicy.ShouldRefresh(Now, Now.AddTicks(-Interval.Ticks + 1), 100, 100, Interval));
