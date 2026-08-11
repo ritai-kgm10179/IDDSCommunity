@@ -186,7 +186,13 @@ public class SecurityAgents : List<SecurityAgent>
                 }
             }
         }
-        catch { }
+        catch (Exception exception)
+        {
+            const string component = "SecurityAgents-DisplayNameLookup";
+            const string summary = "Unable to resolve an Agent display name from the configuration database.";
+            System.Diagnostics.Trace.TraceWarning("{0}: {1}", summary, exception);
+            _ = RollingDiagnosticLog.Write(component, summary, exception);
+        }
 
         return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }

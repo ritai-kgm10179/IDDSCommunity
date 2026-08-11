@@ -31,4 +31,5 @@
   <Project Path="IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared/IDDSCommunity.IntrusionDetection.Shared.csproj" />
   <Project Path="IDDSCommunity.IntrusionDetection.Shared.Test/IDDSCommunity.IntrusionDetection.Shared.Test.csproj" />
+  <Project Path="samples/DemoAgent/DemoAgent.csproj" />
 </Solution>

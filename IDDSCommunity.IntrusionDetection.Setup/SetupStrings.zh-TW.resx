@@ -63,4 +63,7 @@
   <data name="ProcessStopTimedOut" xml:space="preserve"><value>{0} 程序未在允許時間內停止。</value></data>
   <data name="CleanupIncomplete" xml:space="preserve"><value>新版本已安裝並執行，但無法完整移除舊版本備份。手動刪除前請先檢視診斷日誌。</value></data>
   <data name="TransactionAlreadyCommitted" xml:space="preserve"><value>安裝交易已提交，不能再加入回復動作。</value></data>
+  <data name="ServiceStopVerificationFailed" xml:space="preserve"><value>Windows 服務未進入已停止狀態。</value></data>
+  <data name="ServiceStateStabilizationFailed" xml:space="preserve"><value>Windows 服務未在安裝程式繼續前進入穩定狀態。</value></data>
+  <data name="ServicePauseVerificationFailed" xml:space="preserve"><value>無法將 Windows 服務還原為已暫停狀態。</value></data>
 </root>

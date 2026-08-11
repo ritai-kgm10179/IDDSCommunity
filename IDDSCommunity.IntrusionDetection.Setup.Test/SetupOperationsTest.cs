@@ -5,6 +5,7 @@ using System.Threading;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.ServiceProcess;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Setup.Test;
@@ -73,7 +74,8 @@ public sealed class SetupOperationsTest
             "DiagnosticLogPath", "RollbackFailed", "RollbackServiceMissing", "DeleteFailed",
             "ShortcutCreationFailed", "FirewallCleanupStartFailed", "FirewallCleanupTimedOut",
             "FirewallCleanupFailed", "ServiceControlTimedOut", "ServiceControlFailedWithDetails",
-            "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete", "TransactionAlreadyCommitted"
+            "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete", "TransactionAlreadyCommitted",
+            "ServiceStopVerificationFailed", "ServiceStateStabilizationFailed", "ServicePauseVerificationFailed"
         ];
         CultureInfo original = CultureInfo.CurrentUICulture;
         try
@@ -162,6 +164,21 @@ public sealed class SetupOperationsTest
         journal.RollBack();
 
         Assert.IsFalse(rolledBack);
+    }
+
+    [TestMethod]
+    [DataRow(ServiceControllerStatus.StartPending, ServiceControllerStatus.Running)]
+    [DataRow(ServiceControllerStatus.ContinuePending, ServiceControllerStatus.Running)]
+    [DataRow(ServiceControllerStatus.StopPending, ServiceControllerStatus.Stopped)]
+    [DataRow(ServiceControllerStatus.PausePending, ServiceControllerStatus.Paused)]
+    [DataRow(ServiceControllerStatus.Running, ServiceControllerStatus.Running)]
+    [DataRow(ServiceControllerStatus.Stopped, ServiceControllerStatus.Stopped)]
+    [DataRow(ServiceControllerStatus.Paused, ServiceControllerStatus.Paused)]
+    public void GetStableServiceStatusTarget_MapsEveryWindowsServiceState(
+        ServiceControllerStatus current,
+        ServiceControllerStatus expected)
+    {
+        Assert.AreEqual(expected, SetupOperations.GetStableServiceStatusTarget(current));
     }
 
     private static IEnumerable<Control> EnumerateControls(Control parent)

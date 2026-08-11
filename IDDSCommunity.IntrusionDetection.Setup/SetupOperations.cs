@@ -413,10 +413,15 @@ internal static class SetupOperations
             }
             ConfigureEventLog();
             cancellationToken.ThrowIfCancellationRequested();
-            if (!serviceState.Exists || serviceState.WasRunning)
+            if (!serviceState.Exists)
             {
                 Report(progress, "ProgressStartingService", 85);
                 StartServiceAndVerify();
+            }
+            else if (serviceState.Status != ServiceControllerStatus.Stopped)
+            {
+                Report(progress, "ProgressStartingService", 85);
+                RestoreServiceState(serviceState);
             }
             CreateShortcuts(desktopShortcut, startMenuShortcut);
             if (previousInstallationMoved)
@@ -477,8 +482,7 @@ internal static class SetupOperations
                 throw new DirectoryNotFoundException(backupDirectory);
             Directory.Move(backupDirectory, InstallDirectory);
         }
-        if (serviceState.Exists && serviceState.WasRunning)
-            StartServiceAndVerify();
+        RestoreServiceState(serviceState);
     }
 
     private static void Report(IProgress<SetupProgress>? progress, string messageKey, int percentage) =>
@@ -514,8 +518,8 @@ internal static class SetupOperations
         SetupRollbackJournal rollback = new();
         try
         {
-            if (serviceState.Exists && serviceState.WasRunning)
-                rollback.Record(StartServiceAndVerify);
+            if (serviceState.Exists)
+                rollback.Record(() => RestoreServiceState(serviceState));
             StopService(serviceState);
             KillRunningProcesses();
             cancellationToken.ThrowIfCancellationRequested();
@@ -586,9 +590,9 @@ internal static class SetupOperations
         {
             ServiceController? service = services.FirstOrDefault(candidate =>
                 string.Equals(candidate.ServiceName, ServiceName, StringComparison.OrdinalIgnoreCase));
-            if (service is null) return new ServiceStateSnapshot(Exists: false, WasRunning: false);
-            service.Refresh();
-            return new ServiceStateSnapshot(Exists: true, WasRunning: service.Status == ServiceControllerStatus.Running);
+            if (service is null) return new ServiceStateSnapshot(Exists: false, ServiceControllerStatus.Stopped);
+            ServiceControllerStatus stableStatus = WaitForStableServiceStatus(service);
+            return new ServiceStateSnapshot(Exists: true, stableStatus);
         }
         finally
         {
@@ -598,10 +602,47 @@ internal static class SetupOperations
 
     private static void StopService(ServiceStateSnapshot state)
     {
-        if (!state.Exists || !state.WasRunning) return;
+        if (!state.Exists || state.Status == ServiceControllerStatus.Stopped) return;
         RunSc("stop", ServiceName, acceptMissing: true);
         using ServiceController controller = new(ServiceName);
         controller.WaitForStatus(ServiceControllerStatus.Stopped, ServiceStartTimeout);
+        controller.Refresh();
+        if (controller.Status != ServiceControllerStatus.Stopped)
+            throw new InvalidOperationException(SetupText.Get("ServiceStopVerificationFailed"));
+    }
+
+    private static ServiceControllerStatus WaitForStableServiceStatus(ServiceController controller)
+    {
+        controller.Refresh();
+        ServiceControllerStatus target = GetStableServiceStatusTarget(controller.Status);
+        if (controller.Status == target) return target;
+        controller.WaitForStatus(target, ServiceStartTimeout);
+        controller.Refresh();
+        if (controller.Status != target)
+            throw new InvalidOperationException(SetupText.Get("ServiceStateStabilizationFailed"));
+        return target;
+    }
+
+    internal static ServiceControllerStatus GetStableServiceStatusTarget(ServiceControllerStatus status) => status switch
+    {
+        ServiceControllerStatus.StartPending or ServiceControllerStatus.ContinuePending => ServiceControllerStatus.Running,
+        ServiceControllerStatus.StopPending => ServiceControllerStatus.Stopped,
+        ServiceControllerStatus.PausePending => ServiceControllerStatus.Paused,
+        ServiceControllerStatus.Running or ServiceControllerStatus.Stopped or ServiceControllerStatus.Paused => status,
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
+    };
+
+    private static void RestoreServiceState(ServiceStateSnapshot state)
+    {
+        if (!state.Exists || state.Status == ServiceControllerStatus.Stopped) return;
+        StartServiceAndVerify();
+        if (state.Status != ServiceControllerStatus.Paused) return;
+        using ServiceController controller = new(ServiceName);
+        controller.Pause();
+        controller.WaitForStatus(ServiceControllerStatus.Paused, ServiceStartTimeout);
+        controller.Refresh();
+        if (controller.Status != ServiceControllerStatus.Paused)
+            throw new InvalidOperationException(SetupText.Get("ServicePauseVerificationFailed"));
     }
 
     private static void ConfigureNewService(string executablePath)
@@ -809,5 +850,5 @@ internal static class SetupOperations
 
     internal readonly record struct SetupProgress(string MessageKey, int Percentage);
     internal readonly record struct SetupOperationResult(bool RestartRequired, bool CleanupIncomplete);
-    private readonly record struct ServiceStateSnapshot(bool Exists, bool WasRunning);
+    private readonly record struct ServiceStateSnapshot(bool Exists, ServiceControllerStatus Status);
 }

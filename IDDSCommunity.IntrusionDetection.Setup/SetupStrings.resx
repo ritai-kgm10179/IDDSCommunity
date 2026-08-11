@@ -63,4 +63,7 @@ Target location: {1}</value></data>
   <data name="ProcessStopTimedOut" xml:space="preserve"><value>The {0} process did not stop within the allowed time.</value></data>
   <data name="CleanupIncomplete" xml:space="preserve"><value>The new version is installed and running, but the previous-version backup could not be completely removed. Review the diagnostic log before deleting it manually.</value></data>
   <data name="TransactionAlreadyCommitted" xml:space="preserve"><value>The setup transaction has already been committed.</value></data>
+  <data name="ServiceStopVerificationFailed" xml:space="preserve"><value>The Windows service did not reach the stopped state.</value></data>
+  <data name="ServiceStateStabilizationFailed" xml:space="preserve"><value>The Windows service did not reach a stable state before setup continued.</value></data>
+  <data name="ServicePauseVerificationFailed" xml:space="preserve"><value>The Windows service could not be restored to the paused state.</value></data>
 </root>
