@@ -211,12 +211,12 @@ public class SearchBox : Control
     public class SearchTextBox : TextBox
     {
         /// <summary>
-    /// 初始化 <see cref="SearchTextBox"/> 類別的新執行個體。
-    /// </summary>
+        /// 初始化 <see cref="SearchTextBox"/> 類別的新執行個體。
+        /// </summary>
         public SearchTextBox() => TextChanged += new EventHandler(SearchTextBox_TextChanged);
         /// <summary>
-    /// 處理 text changed 事件。
-    /// </summary>
+        /// 處理 text changed 事件。
+        /// </summary>
         /// <param name="sender">事件來源物件。</param>
         /// <param name="e">事件資料。</param>
         void SearchTextBox_TextChanged(object? sender, EventArgs e)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using IDDSCommunity.Agents.TerminalServer;
 using IDDSCommunity.IntrusionDetection.Shared;

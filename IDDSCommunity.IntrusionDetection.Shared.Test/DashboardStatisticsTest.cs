@@ -48,7 +48,8 @@ public sealed class DashboardStatisticsTest
         finally
         {
             database.Close();
-            try { Directory.Delete(directory, true); } catch (IOException) { }
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         }
     }
@@ -103,7 +104,8 @@ public sealed class DashboardStatisticsTest
         finally
         {
             database.Close();
-            try { Directory.Delete(directory, true); } catch (IOException) { }
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         }
     }

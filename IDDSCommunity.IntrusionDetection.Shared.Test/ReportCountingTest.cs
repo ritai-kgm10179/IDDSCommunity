@@ -46,7 +46,8 @@ public sealed class ReportCountingTest
         finally
         {
             database.Close();
-            try { Directory.Delete(directory, true); } catch (IOException) { }
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
             catch (UnauthorizedAccessException) { }
         }
     }

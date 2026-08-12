@@ -11,6 +11,6 @@
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.10" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.11" />
   </ItemGroup>
 </Project>

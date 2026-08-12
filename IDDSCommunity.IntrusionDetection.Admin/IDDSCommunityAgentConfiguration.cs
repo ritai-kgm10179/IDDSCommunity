@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
