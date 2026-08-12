@@ -87,8 +87,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --verbosity minimal
+          dotnet test IDDSCommunity.slnx --configuration Release --no-build --no-restore --disable-build-servers -m:1 --filter "TestCategory!=Stability" --logger "trx;LogFilePrefix=release" --results-directory TestResults --verbosity minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet test IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --no-restore --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=release-stability.trx" --results-directory TestResults --verbosity normal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload validation test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-validation-test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: error
+          retention-days: 14
 
   package:
     name: Package ${{ matrix.rid }}
