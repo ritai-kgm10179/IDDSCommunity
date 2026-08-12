@@ -56,7 +56,7 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     {
         if (ipAddress is not IPAddress address) return;
         PacketSniffer s = new();
-        s.IpPacketSent += IpPacketSent;
+        s.TcpPacketSent += TcpPacketSent;
         if (Configuration.AgentSettings is not FtpConfig settings) return;
         s.TcpPort = settings.FtpPort;
         try
@@ -76,37 +76,34 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void IpPacketSent(object? sender, EventArgs e)
+    private void TcpPacketSent(object? sender, TcpPacketEventArgs e)
     {
-        if (sender is not IPHeader ipHeader) return;
-        if (ipHeader.ProtocolType == Protocol.Tcp)
+        IPHeader ipHeader = e.IpHeader;
+        TCPHeader tcp = e.TcpHeader;
+        try
         {
-            try
+            if (int.TryParse(tcp.SourcePort, out int sourcePort))
             {
-                TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                if (int.TryParse(tcp.SourcePort, out int sourcePort))
+                if (Configuration.AgentSettings is FtpConfig settings && sourcePort == settings.FtpPort)
                 {
-                    if (Configuration.AgentSettings is FtpConfig settings && sourcePort == settings.FtpPort)
+                    if (Tracing)
                     {
-                        if (Tracing)
+                        OnTrace(ipHeader);
+                    }
+                    if (tcp.Data.Length > 0)
+                    {
+                        AppLayerFtp ftp = new(tcp.Data, tcp.Data.Length);
+                        if (ftp.IsAuthenticationFailure)
                         {
-                            OnTrace(ipHeader);
-                        }
-                        if (tcp.Data.Length > 0)
-                        {
-                            AppLayerFtp ftp = new(tcp.Data, tcp.Data.Length);
-                            if (ftp.IsAuthenticationFailure)
-                            {
-                                UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                            }
+                            UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                PacketSniffer.LogTrace(ex);
-            }
+        }
+        catch (Exception ex)
+        {
+            PacketSniffer.LogTrace(ex);
         }
     }
     /// <summary>

@@ -8,11 +8,19 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// </summary>
 public sealed class PacketSniffer : IDisposable
 {
-    private readonly RawSocketReceiver receiver = new();
+    private IDisposable? subscription;
     private bool paused;
 
     public event EventHandler? IpPacketReceived;
     public event EventHandler? IpPacketSent;
+    /// <summary>
+    /// 在收到符合通訊埠條件且已完成解析的 TCP 封包時發生。
+    /// </summary>
+    public event EventHandler<TcpPacketEventArgs>? TcpPacketReceived;
+    /// <summary>
+    /// 在送出符合通訊埠條件且已完成解析的 TCP 封包時發生。
+    /// </summary>
+    public event EventHandler<TcpPacketEventArgs>? TcpPacketSent;
     public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
 
     public int? TcpPort { get; set; }
@@ -22,9 +30,9 @@ public sealed class PacketSniffer : IDisposable
     {
         ArgumentNullException.ThrowIfNull(address);
         IPAddress = address;
-        receiver.PacketReceived += OnReceive;
-        receiver.CaptureFailed += OnCaptureFailed;
-        receiver.Start(address);
+        if (subscription is not null)
+            throw new InvalidOperationException(Localization.Strings.Get("Packet capture has already started."));
+        subscription = PacketCaptureHub.Subscribe(address, TcpPort, OnPacketSent, OnPacketReceived, eventArgs => OnCaptureFailed(this, eventArgs));
     }
 
     public void Abort() => paused = true;
@@ -33,30 +41,32 @@ public sealed class PacketSniffer : IDisposable
 
     public void Dispose()
     {
-        receiver.PacketReceived -= OnReceive;
-        receiver.CaptureFailed -= OnCaptureFailed;
-        receiver.Dispose();
+        subscription?.Dispose();
+        subscription = null;
     }
 
-    private void OnReceive(object? sender, RawPacketEventArgs eventArgs)
+    private void OnPacketSent(IPHeader ipHeader, TCPHeader tcpHeader)
     {
-        if (paused) return;
-        try
-        {
-            IPHeader header = new(eventArgs.Packet, eventArgs.Packet.Length);
-            if (header.ProtocolType != Protocol.Tcp) return;
-            TCPHeader tcp = new(header.Data, header.MessageLength);
-            if (TcpPort is int port &&
-                (!int.TryParse(tcp.SourcePort, out int sourcePort) || !int.TryParse(tcp.DestinationPort, out int destinationPort) ||
-                 (sourcePort != port && destinationPort != port))) return;
+        if (paused)
+            return;
+        TcpPacketSent?.Invoke(this, new TcpPacketEventArgs(ipHeader, tcpHeader));
+        IpPacketSent?.Invoke(ipHeader, EventArgs.Empty);
+    }
 
-            if (header.SourceAddress.Equals(IPAddress)) IpPacketSent?.Invoke(header, EventArgs.Empty);
-            if (header.DestinationAddress.Equals(IPAddress)) IpPacketReceived?.Invoke(header, EventArgs.Empty);
-        }
-        catch (Exception exception)
-        {
-            OnCaptureFailed(this, new RawSocketErrorEventArgs(exception));
-        }
+    private void OnPacketReceived(IPHeader ipHeader, TCPHeader tcpHeader)
+    {
+        if (paused)
+            return;
+        TcpPacketReceived?.Invoke(this, new TcpPacketEventArgs(ipHeader, tcpHeader));
+        IpPacketReceived?.Invoke(ipHeader, EventArgs.Empty);
+    }
+
+    internal void DispatchParsedPacketForTest(IPHeader ipHeader, TCPHeader tcpHeader, bool sent)
+    {
+        if (sent)
+            OnPacketSent(ipHeader, tcpHeader);
+        else
+            OnPacketReceived(ipHeader, tcpHeader);
     }
 
     private void OnCaptureFailed(object? sender, RawSocketErrorEventArgs eventArgs)
@@ -66,4 +76,33 @@ public sealed class PacketSniffer : IDisposable
     }
 
     public static void LogTrace(Exception exception) => Trace.TraceError("Packet processing failed: {0}", exception);
+}
+
+/// <summary>
+/// 提供已完成一次解析的 IPv4 TCP 封包。
+/// </summary>
+public sealed class TcpPacketEventArgs : EventArgs
+{
+    /// <summary>
+    /// 初始化已解析 TCP 封包事件資料的新執行個體。
+    /// </summary>
+    /// <param name="ipHeader">已解析的 IPv4 標頭。</param>
+    /// <param name="tcpHeader">已解析的 TCP 標頭。</param>
+    public TcpPacketEventArgs(IPHeader ipHeader, TCPHeader tcpHeader)
+    {
+        ArgumentNullException.ThrowIfNull(ipHeader);
+        ArgumentNullException.ThrowIfNull(tcpHeader);
+        IpHeader = ipHeader;
+        TcpHeader = tcpHeader;
+    }
+
+    /// <summary>
+    /// 取得 IPv4 標頭與承載資料。
+    /// </summary>
+    public IPHeader IpHeader { get; }
+
+    /// <summary>
+    /// 取得 TCP 標頭與承載資料。
+    /// </summary>
+    public TCPHeader TcpHeader { get; }
 }

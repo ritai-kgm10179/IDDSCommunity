@@ -63,7 +63,7 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
     {
         if (ipAddress is not IPAddress address || Configuration.AgentSettings is not SmtpConfig settings) return;
         PacketSniffer s = new();
-        s.IpPacketSent += s_IpPacketSent;
+        s.TcpPacketSent += TcpPacketSent;
         s.TcpPort = settings.SmtpPort;
         try
         {
@@ -82,37 +82,34 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void s_IpPacketSent(object? sender, EventArgs e)
+    private void TcpPacketSent(object? sender, TcpPacketEventArgs e)
     {
-        if (sender is not IPHeader ipHeader) return;
-        if (ipHeader.ProtocolType == Protocol.Tcp)
+        IPHeader ipHeader = e.IpHeader;
+        TCPHeader tcp = e.TcpHeader;
+        try
         {
-            try
+            if (int.TryParse(tcp.SourcePort, out int sourcePort))
             {
-                TCPHeader tcp = new(ipHeader.Data, ipHeader.MessageLength);
-                if (int.TryParse(tcp.SourcePort, out int sourcePort))
+                if (Configuration.AgentSettings is SmtpConfig settings && sourcePort == settings.SmtpPort)
                 {
-                    if (Configuration.AgentSettings is SmtpConfig settings && sourcePort == settings.SmtpPort)
+                    if (Tracing)
                     {
-                        if (Tracing)
+                        OnTrace(ipHeader);
+                    }
+                    if (tcp.Data.Length > 0)
+                    {
+                        AppLayerSmtp smtp = new(tcp.Data, tcp.Data.Length);
+                        if (smtp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
                         {
-                            OnTrace(ipHeader);
-                        }
-                        if (tcp.Data.Length > 0)
-                        {
-                            AppLayerSmtp ftp = new(tcp.Data, tcp.Data.Length);
-                            if (ftp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
-                            {
-                                UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                            }
+                            UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                PacketSniffer.LogTrace(ex);
-            }
+        }
+        catch (Exception ex)
+        {
+            PacketSniffer.LogTrace(ex);
         }
     }
     /// <summary>

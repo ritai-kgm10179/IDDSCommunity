@@ -65,8 +65,8 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
     {
         if (Configuration.AgentSettings is not ImapConfig settings) return;
         PacketSniffer sniffer = new() { TcpPort = settings.ImapPort };
-        sniffer.IpPacketReceived += ClientPacketReceived;
-        sniffer.IpPacketSent += ServerPacketSent;
+        sniffer.TcpPacketReceived += ClientPacketReceived;
+        sniffer.TcpPacketSent += ServerPacketSent;
         try
         {
             sniffer.WatchAddress(address);
@@ -84,12 +84,12 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    private void ClientPacketReceived(object? sender, EventArgs e)
+    private void ClientPacketReceived(object? sender, TcpPacketEventArgs e)
     {
-        if (sender is not IPHeader packet || packet.ProtocolType != Protocol.Tcp) return;
+        IPHeader packet = e.IpHeader;
+        TCPHeader tcp = e.TcpHeader;
         try
         {
-            TCPHeader tcp = new(packet.Data, packet.MessageLength);
             if (!int.TryParse(tcp.SourcePort, out int clientPort) || tcp.Data.Length == 0) return;
             sessions.GetOrAdd(clientPort, static _ => new ImapSessionInspector()).ProcessClientData(tcp.Data);
         }
@@ -99,12 +99,12 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    private void ServerPacketSent(object? sender, EventArgs e)
+    private void ServerPacketSent(object? sender, TcpPacketEventArgs e)
     {
-        if (sender is not IPHeader packet || packet.ProtocolType != Protocol.Tcp) return;
+        IPHeader packet = e.IpHeader;
+        TCPHeader tcp = e.TcpHeader;
         try
         {
-            TCPHeader tcp = new(packet.Data, packet.MessageLength);
             if (!int.TryParse(tcp.DestinationPort, out int clientPort) || tcp.Data.Length == 0) return;
             if (sessions.TryGetValue(clientPort, out ImapSessionInspector? session) && session.ProcessServerData(tcp.Data))
             {
