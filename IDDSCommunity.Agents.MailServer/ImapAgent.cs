@@ -90,7 +90,8 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (!int.TryParse(tcp.SourcePort, out int clientPort) || tcp.Data.Length == 0) return;
+            int clientPort = tcp.SourcePortValue;
+            if (tcp.MessageLength == 0) return;
             sessions.GetOrAdd(clientPort, static _ => new ImapSessionInspector()).ProcessClientData(tcp.Data);
         }
         catch (Exception exception)
@@ -105,7 +106,8 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (!int.TryParse(tcp.DestinationPort, out int clientPort) || tcp.Data.Length == 0) return;
+            int clientPort = tcp.DestinationPortValue;
+            if (tcp.MessageLength == 0) return;
             if (sessions.TryGetValue(clientPort, out ImapSessionInspector? session) && session.ProcessServerData(tcp.Data))
             {
                 NotificationEventArgs notification = new()

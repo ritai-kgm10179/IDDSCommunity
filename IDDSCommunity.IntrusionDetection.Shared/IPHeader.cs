@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Buffers.Binary;
 using System.Net;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -14,83 +14,72 @@ public enum Protocol
 
 public class IPHeader
 {
-    private readonly byte byVersionAndHeaderLength;
-    private readonly byte byDifferentiatedServices;
-    private readonly ushort usTotalLength;
-    private readonly ushort usIdentification;
-    private readonly ushort usFlagsAndOffset;
-    private readonly byte byTTL;
-    private readonly byte byProtocol;
-    private readonly short sChecksum;
-    private readonly uint uiSourceIPAddress;
-    private readonly uint uiDestinationIPAddress;
+    private byte versionAndHeaderLength;
+    private byte differentiatedServices;
+    private ushort totalLength;
+    private ushort identification;
+    private ushort flagsAndOffset;
+    private byte ttl;
+    private byte protocol;
+    private short checksum;
+    private uint sourceIpAddress;
+    private uint destinationIpAddress;
+    private byte headerLength;
+    private ReadOnlyMemory<byte> payload;
+    private byte[]? materializedPayload;
 
-    private readonly byte byHeaderLength;
-    private readonly byte[] byIPData = [];
     /// <summary>
-    /// 初始化 <see cref="IPHeader"/> class的新執行個體。
+    /// 初始化 IPv4 標頭的新執行個體；格式錯誤或資料截斷時建立無效標頭而不擲回例外狀況。
     /// </summary>
-    /// <param name="byBuffer">by buffer參數。</param>
-    /// <param name="nReceived">n received參數。</param>
-    public IPHeader(byte[] byBuffer, int nReceived)
+    /// <param name="buffer">包含 IPv4 封包的緩衝區。</param>
+    /// <param name="received">緩衝區內實際收到的位元組數量。</param>
+    public IPHeader(byte[] buffer, int received) => IsValid = TryInitialize(buffer, received);
+
+    /// <summary>
+    /// 嘗試解析完整 IPv4 封包。
+    /// </summary>
+    /// <param name="buffer">包含 IPv4 封包的緩衝區。</param>
+    /// <param name="received">緩衝區內實際收到的位元組數量。</param>
+    /// <param name="header">解析成功時的 IPv4 標頭。</param>
+    /// <returns>若封包完整且格式有效則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool TryParse(byte[] buffer, int received, out IPHeader? header)
     {
-        try
-        {
-            using MemoryStream memoryStream = new(byBuffer, 0, nReceived);
-            using BinaryReader binaryReader = new(memoryStream);
-
-            byVersionAndHeaderLength = binaryReader.ReadByte();
-            byDifferentiatedServices = binaryReader.ReadByte();
-            usTotalLength = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-            usIdentification = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-            usFlagsAndOffset = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-            byTTL = binaryReader.ReadByte();
-            byProtocol = binaryReader.ReadByte();
-            sChecksum = IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-            uiSourceIPAddress = (uint)binaryReader.ReadInt32();
-            uiDestinationIPAddress = (uint)binaryReader.ReadInt32();
-
-            byHeaderLength = (byte)((byVersionAndHeaderLength & 0x0F) * 4);
-
-            int dataLength = Math.Max(0, usTotalLength - byHeaderLength);
-            byIPData = new byte[dataLength];
-
-            if (dataLength > 0 && nReceived >= byHeaderLength + dataLength)
-            {
-                Array.Copy(byBuffer, byHeaderLength, byIPData, 0, dataLength);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex);
-        }
+        ArgumentNullException.ThrowIfNull(buffer);
+        IPHeader candidate = new(buffer, received);
+        header = candidate.IsValid ? candidate : null;
+        return candidate.IsValid;
     }
 
-    public string Version => (byVersionAndHeaderLength >> 4) switch
+    /// <summary>
+    /// 取得標頭是否通過 IPv4 長度與格式驗證。
+    /// </summary>
+    public bool IsValid { get; }
+
+    public string Version => (versionAndHeaderLength >> 4) switch
     {
         4 => "IP v4",
         6 => "IP v6",
         _ => "Unknown"
     };
 
-    public string HeaderLength => byHeaderLength.ToString();
+    public string HeaderLength => headerLength.ToString();
 
-    public ushort MessageLength => (ushort)Math.Max(0, usTotalLength - byHeaderLength);
+    public ushort MessageLength => (ushort)payload.Length;
 
-    public string DifferentiatedServices => $"0x{byDifferentiatedServices:x2} ({byDifferentiatedServices})";
+    public string DifferentiatedServices => $"0x{differentiatedServices:x2} ({differentiatedServices})";
 
-    public string Flags => (usFlagsAndOffset >> 13) switch
+    public string Flags => (flagsAndOffset >> 13) switch
     {
         2 => "Don't fragment",
         1 => "More fragments to come",
-        var n => n.ToString()
+        var value => value.ToString()
     };
 
-    public string FragmentationOffset => ((usFlagsAndOffset << 3) >> 3).ToString();
+    public string FragmentationOffset => ((flagsAndOffset << 3) >> 3).ToString();
 
-    public string TTL => byTTL.ToString();
+    public string TTL => ttl.ToString();
 
-    public Protocol ProtocolType => byProtocol switch
+    public Protocol ProtocolType => protocol switch
     {
         6 => Protocol.Tcp,
         17 => Protocol.Udp,
@@ -98,15 +87,44 @@ public class IPHeader
         _ => Protocol.Unknown
     };
 
-    public string Checksum => $"0x{sChecksum:x2}";
+    public string Checksum => $"0x{checksum:x2}";
 
-    public IPAddress SourceAddress => new(uiSourceIPAddress);
+    public IPAddress SourceAddress => new(sourceIpAddress);
 
-    public IPAddress DestinationAddress => new(uiDestinationIPAddress);
+    public IPAddress DestinationAddress => new(destinationIpAddress);
 
-    public string TotalLength => usTotalLength.ToString();
+    public string TotalLength => totalLength.ToString();
 
-    public string Identification => usIdentification.ToString();
+    public string Identification => identification.ToString();
 
-    public byte[] Data => byIPData;
+    public byte[] Data => materializedPayload ??= payload.ToArray();
+
+    internal ReadOnlyMemory<byte> Payload => payload;
+
+    private bool TryInitialize(byte[] buffer, int received)
+    {
+        if (received < 20 || received > buffer.Length)
+            return false;
+        ReadOnlySpan<byte> packet = buffer.AsSpan(0, received);
+        byte candidateVersionAndLength = packet[0];
+        int version = candidateVersionAndLength >> 4;
+        int candidateHeaderLength = (candidateVersionAndLength & 0x0F) * 4;
+        ushort candidateTotalLength = BinaryPrimitives.ReadUInt16BigEndian(packet[2..]);
+        if (version != 4 || candidateHeaderLength < 20 || candidateHeaderLength > received || candidateTotalLength < candidateHeaderLength || candidateTotalLength > received)
+            return false;
+
+        versionAndHeaderLength = candidateVersionAndLength;
+        differentiatedServices = packet[1];
+        totalLength = candidateTotalLength;
+        identification = BinaryPrimitives.ReadUInt16BigEndian(packet[4..]);
+        flagsAndOffset = BinaryPrimitives.ReadUInt16BigEndian(packet[6..]);
+        ttl = packet[8];
+        protocol = packet[9];
+        checksum = BinaryPrimitives.ReadInt16BigEndian(packet[10..]);
+        sourceIpAddress = BinaryPrimitives.ReadUInt32LittleEndian(packet[12..]);
+        destinationIpAddress = BinaryPrimitives.ReadUInt32LittleEndian(packet[16..]);
+        headerLength = (byte)candidateHeaderLength;
+        payload = buffer.AsMemory(candidateHeaderLength, candidateTotalLength - candidateHeaderLength);
+        return true;
+    }
 }

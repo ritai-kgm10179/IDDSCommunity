@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Buffers.Binary;
 using System.Net;
+using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
@@ -59,6 +61,7 @@ internal static class PacketCaptureHub
     {
         private readonly RawSocketReceiver receiver = new();
         private readonly List<PacketSubscription> subscriptions = [];
+        private PacketSubscription[] subscriptionSnapshot = [];
 
         internal CaptureEntry(IPAddress address) => Address = address;
 
@@ -73,9 +76,17 @@ internal static class PacketCaptureHub
             receiver.Start(Address);
         }
 
-        internal void Add(PacketSubscription subscription) => subscriptions.Add(subscription);
+        internal void Add(PacketSubscription subscription)
+        {
+            subscriptions.Add(subscription);
+            Volatile.Write(ref subscriptionSnapshot, [.. subscriptions]);
+        }
 
-        internal void Remove(PacketSubscription subscription) => subscriptions.Remove(subscription);
+        internal void Remove(PacketSubscription subscription)
+        {
+            subscriptions.Remove(subscription);
+            Volatile.Write(ref subscriptionSnapshot, [.. subscriptions]);
+        }
 
         public void Dispose()
         {
@@ -86,34 +97,53 @@ internal static class PacketCaptureHub
 
         private void OnPacketReceived(object? sender, RawPacketEventArgs eventArgs)
         {
-            try
+            if (eventArgs.Packet.Length >= 10 && eventArgs.Packet[9] != (byte)Protocol.Tcp)
+                return;
+            if (!TryReadRoute(eventArgs.Packet, out PacketRoute route))
             {
-                IPHeader ipHeader = new(eventArgs.Packet, eventArgs.Packet.Length);
-                if (ipHeader.ProtocolType != Protocol.Tcp)
-                    return;
-                TCPHeader tcpHeader = new(ipHeader.Data, ipHeader.MessageLength);
-                if (!int.TryParse(tcpHeader.SourcePort, out int sourcePort) || !int.TryParse(tcpHeader.DestinationPort, out int destinationPort))
-                    return;
+                IDDSCommunityMetrics.RecordMalformed();
+                return;
+            }
+            PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
+            bool matched = false;
+            foreach (PacketSubscription subscription in snapshot)
+                matched |= subscription.Matches(route.SourcePort, route.DestinationPort);
+            if (!matched)
+                return;
 
-                PacketSubscription[] snapshot;
-                lock (SyncRoot)
-                    snapshot = [.. subscriptions];
-                foreach (PacketSubscription subscription in snapshot)
-                    subscription.Dispatch(ipHeader, tcpHeader, sourcePort, destinationPort, Address);
-            }
-            catch (Exception exception)
+            if (!IPHeader.TryParse(eventArgs.Packet, eventArgs.Packet.Length, out IPHeader? parsedIpHeader) || parsedIpHeader is not IPHeader ipHeader ||
+                ipHeader.ProtocolType != Protocol.Tcp || !TCPHeader.TryParse(ipHeader.Payload, out TCPHeader? parsedTcpHeader) || parsedTcpHeader is not TCPHeader tcpHeader)
             {
-                OnCaptureFailed(this, new RawSocketErrorEventArgs(exception));
+                IDDSCommunityMetrics.RecordMalformed();
+                return;
             }
+
+            foreach (PacketSubscription subscription in snapshot)
+                subscription.Dispatch(ipHeader, tcpHeader, tcpHeader.SourcePortValue, tcpHeader.DestinationPortValue, Address);
         }
 
         private void OnCaptureFailed(object? sender, RawSocketErrorEventArgs eventArgs)
         {
-            PacketSubscription[] snapshot;
-            lock (SyncRoot)
-                snapshot = [.. subscriptions];
+            PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
             foreach (PacketSubscription subscription in snapshot)
                 subscription.NotifyFailure(eventArgs);
+        }
+
+        private static bool TryReadRoute(byte[] packet, out PacketRoute route)
+        {
+            route = default;
+            if (packet.Length < 40 || packet[0] >> 4 != 4 || packet[9] != (byte)Protocol.Tcp)
+                return false;
+            int ipHeaderLength = (packet[0] & 0x0F) * 4;
+            ushort totalLength = BinaryPrimitives.ReadUInt16BigEndian(packet.AsSpan(2));
+            if (ipHeaderLength < 20 || totalLength < ipHeaderLength + 20 || totalLength > packet.Length)
+                return false;
+            ReadOnlySpan<byte> tcp = packet.AsSpan(ipHeaderLength);
+            int tcpHeaderLength = (tcp[12] >> 4) * 4;
+            if (tcpHeaderLength < 20 || ipHeaderLength + tcpHeaderLength > totalLength)
+                return false;
+            route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
+            return true;
         }
     }
 
@@ -135,15 +165,17 @@ internal static class PacketCaptureHub
             this.captureFailed = captureFailed;
         }
 
-        internal void Dispatch(IPHeader ipHeader, TCPHeader tcpHeader, int sourcePort, int destinationPort, IPAddress localAddress)
+        internal void Dispatch(IPHeader ipHeader, TCPHeader tcpHeader, ushort sourcePort, ushort destinationPort, IPAddress localAddress)
         {
-            if (disposed || (tcpPort is int port && sourcePort != port && destinationPort != port))
+            if (disposed || !Matches(sourcePort, destinationPort))
                 return;
             if (ipHeader.SourceAddress.Equals(localAddress))
                 packetSent(ipHeader, tcpHeader);
             if (ipHeader.DestinationAddress.Equals(localAddress))
                 packetReceived(ipHeader, tcpHeader);
         }
+
+        internal bool Matches(ushort sourcePort, ushort destinationPort) => tcpPort is not int port || sourcePort == port || destinationPort == port;
 
         internal void NotifyFailure(RawSocketErrorEventArgs eventArgs)
         {
@@ -159,4 +191,6 @@ internal static class PacketCaptureHub
             Unsubscribe(owner, this);
         }
     }
+
+    private readonly record struct PacketRoute(ushort SourcePort, ushort DestinationPort);
 }

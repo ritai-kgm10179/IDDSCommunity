@@ -82,21 +82,18 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (int.TryParse(tcp.SourcePort, out int sourcePort))
+            if (Configuration.AgentSettings is FtpConfig settings && tcp.SourcePortValue == settings.FtpPort)
             {
-                if (Configuration.AgentSettings is FtpConfig settings && sourcePort == settings.FtpPort)
+                if (Tracing)
                 {
-                    if (Tracing)
+                    OnTrace(ipHeader);
+                }
+                if (tcp.MessageLength > 0)
+                {
+                    AppLayerFtp ftp = new(tcp.Data, tcp.MessageLength);
+                    if (ftp.IsAuthenticationFailure)
                     {
-                        OnTrace(ipHeader);
-                    }
-                    if (tcp.Data.Length > 0)
-                    {
-                        AppLayerFtp ftp = new(tcp.Data, tcp.Data.Length);
-                        if (ftp.IsAuthenticationFailure)
-                        {
-                            UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                        }
+                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                     }
                 }
             }

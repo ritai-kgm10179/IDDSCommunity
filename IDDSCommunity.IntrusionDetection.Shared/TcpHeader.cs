@@ -1,90 +1,130 @@
 ﻿using System;
-using System.Net;
-using System.IO;
+using System.Buffers.Binary;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 public class TCPHeader
 {
-    private readonly ushort usSourcePort;
-    private readonly ushort usDestinationPort;
-    private readonly uint uiSequenceNumber = 555;
-    private readonly uint uiAcknowledgementNumber = 555;
-    private readonly ushort usDataOffsetAndFlags = 555;
-    private readonly ushort usWindow = 555;
-    private readonly short sChecksum = 555;
-    private readonly ushort usUrgentPointer;
+    private ushort sourcePort;
+    private ushort destinationPort;
+    private uint sequenceNumber;
+    private uint acknowledgementNumber;
+    private ushort dataOffsetAndFlags;
+    private ushort window;
+    private short checksum;
+    private ushort urgentPointer;
+    private byte headerLength;
+    private ReadOnlyMemory<byte> payload;
+    private byte[]? materializedPayload;
 
-    private readonly byte byHeaderLength;
-    private readonly ushort usMessageLength;
-    private readonly byte[] byTCPData = new byte[128];
     /// <summary>
-    /// 初始化 <see cref="TCPHeader"/> class的新執行個體。
+    /// 初始化 TCP 標頭的新執行個體；格式錯誤或資料截斷時建立無效標頭而不擲回例外狀況。
     /// </summary>
-    /// <param name="byBuffer">by buffer參數。</param>
-    /// <param name="nReceived">n received參數。</param>
-    public TCPHeader(byte[] byBuffer, int nReceived)
+    /// <param name="buffer">包含 TCP 區段的緩衝區。</param>
+    /// <param name="received">緩衝區內實際收到的位元組數量。</param>
+    public TCPHeader(byte[] buffer, int received) => IsValid = TryInitialize(buffer, received);
+
+    private TCPHeader(ReadOnlyMemory<byte> segment) => IsValid = TryInitialize(segment);
+
+    /// <summary>
+    /// 嘗試解析完整 TCP 區段。
+    /// </summary>
+    /// <param name="buffer">包含 TCP 區段的緩衝區。</param>
+    /// <param name="received">緩衝區內實際收到的位元組數量。</param>
+    /// <param name="header">解析成功時的 TCP 標頭。</param>
+    /// <returns>若區段完整且格式有效則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool TryParse(byte[] buffer, int received, out TCPHeader? header)
     {
-        using MemoryStream memoryStream = new(byBuffer, 0, nReceived);
-        using BinaryReader binaryReader = new(memoryStream);
-
-        usSourcePort = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        usDestinationPort = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        uiSequenceNumber = (uint)IPAddress.NetworkToHostOrder(binaryReader.ReadInt32());
-        uiAcknowledgementNumber = (uint)IPAddress.NetworkToHostOrder(binaryReader.ReadInt32());
-        usDataOffsetAndFlags = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        usWindow = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        sChecksum = IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-        usUrgentPointer = (ushort)IPAddress.NetworkToHostOrder(binaryReader.ReadInt16());
-
-        byHeaderLength = (byte)(usDataOffsetAndFlags >> 12);
-        byHeaderLength *= 4;
-
-        usMessageLength = (ushort)(nReceived - byHeaderLength);
-        Array.Copy(byBuffer, byHeaderLength, byTCPData, 0, nReceived - byHeaderLength);
+        ArgumentNullException.ThrowIfNull(buffer);
+        if (received < 0 || received > buffer.Length)
+        {
+            header = null;
+            return false;
+        }
+        return TryParse(buffer.AsMemory(0, received), out header);
     }
 
-    public string SourcePort => usSourcePort.ToString();
-    public string DestinationPort => usDestinationPort.ToString();
-    public string SequenceNumber => uiSequenceNumber.ToString();
+    internal static bool TryParse(ReadOnlyMemory<byte> segment, out TCPHeader? header)
+    {
+        TCPHeader candidate = new(segment);
+        header = candidate.IsValid ? candidate : null;
+        return candidate.IsValid;
+    }
 
-    public string AcknowledgementNumber => (usDataOffsetAndFlags & 0x10) != 0 ? uiAcknowledgementNumber.ToString() : string.Empty;
+    /// <summary>
+    /// 取得標頭是否通過 TCP 長度與格式驗證。
+    /// </summary>
+    public bool IsValid { get; }
 
-    public string HeaderLength => byHeaderLength.ToString();
-    public string WindowSize => usWindow.ToString();
+    /// <summary>
+    /// 取得來源通訊埠數值。
+    /// </summary>
+    public ushort SourcePortValue => sourcePort;
 
-    public string UrgentPointer => (usDataOffsetAndFlags & 0x20) != 0 ? usUrgentPointer.ToString() : string.Empty;
+    /// <summary>
+    /// 取得目的通訊埠數值。
+    /// </summary>
+    public ushort DestinationPortValue => destinationPort;
+
+    public string SourcePort => sourcePort.ToString();
+    public string DestinationPort => destinationPort.ToString();
+    public string SequenceNumber => sequenceNumber.ToString();
+
+    public string AcknowledgementNumber => (dataOffsetAndFlags & 0x10) != 0 ? acknowledgementNumber.ToString() : string.Empty;
+
+    public string HeaderLength => headerLength.ToString();
+    public string WindowSize => window.ToString();
+
+    public string UrgentPointer => (dataOffsetAndFlags & 0x20) != 0 ? urgentPointer.ToString() : string.Empty;
 
     public string Flags
     {
         get
         {
-            int nFlags = usDataOffsetAndFlags & 0x3F;
-            string strFlags = $"0x{nFlags:x2} (";
-
-            if ((nFlags & 0x01) != 0) strFlags += "FIN, ";
-            if ((nFlags & 0x02) != 0) strFlags += "SYN, ";
-            if ((nFlags & 0x04) != 0) strFlags += "RST, ";
-            if ((nFlags & 0x08) != 0) strFlags += "PSH, ";
-            if ((nFlags & 0x10) != 0) strFlags += "ACK, ";
-            if ((nFlags & 0x20) != 0) strFlags += "URG";
-
-            strFlags += ")";
-
-            if (strFlags.Contains("()"))
-            {
-                strFlags = strFlags[..^3];
-            }
-            else if (strFlags.Contains(", )"))
-            {
-                strFlags = strFlags.Remove(strFlags.Length - 3, 2);
-            }
-
-            return strFlags;
+            int flags = dataOffsetAndFlags & 0x3F;
+            string result = $"0x{flags:x2} (";
+            if ((flags & 0x01) != 0) result += "FIN, ";
+            if ((flags & 0x02) != 0) result += "SYN, ";
+            if ((flags & 0x04) != 0) result += "RST, ";
+            if ((flags & 0x08) != 0) result += "PSH, ";
+            if ((flags & 0x10) != 0) result += "ACK, ";
+            if ((flags & 0x20) != 0) result += "URG";
+            result += ")";
+            if (result.Contains("()")) return result[..^3];
+            return result.Contains(", )") ? result.Remove(result.Length - 3, 2) : result;
         }
     }
 
-    public string Checksum => $"0x{sChecksum:x2}";
-    public byte[] Data => byTCPData;
-    public ushort MessageLength => usMessageLength;
+    public string Checksum => $"0x{checksum:x2}";
+    public byte[] Data => materializedPayload ??= payload.ToArray();
+    public ushort MessageLength => (ushort)payload.Length;
+
+    private bool TryInitialize(byte[] buffer, int received)
+    {
+        if (received < 0 || received > buffer.Length)
+            return false;
+        return TryInitialize(buffer.AsMemory(0, received));
+    }
+
+    private bool TryInitialize(ReadOnlyMemory<byte> segment)
+    {
+        if (segment.Length < 20)
+            return false;
+        ReadOnlySpan<byte> bytes = segment.Span;
+        int candidateHeaderLength = (bytes[12] >> 4) * 4;
+        if (candidateHeaderLength < 20 || candidateHeaderLength > segment.Length)
+            return false;
+
+        sourcePort = BinaryPrimitives.ReadUInt16BigEndian(bytes);
+        destinationPort = BinaryPrimitives.ReadUInt16BigEndian(bytes[2..]);
+        sequenceNumber = BinaryPrimitives.ReadUInt32BigEndian(bytes[4..]);
+        acknowledgementNumber = BinaryPrimitives.ReadUInt32BigEndian(bytes[8..]);
+        dataOffsetAndFlags = BinaryPrimitives.ReadUInt16BigEndian(bytes[12..]);
+        window = BinaryPrimitives.ReadUInt16BigEndian(bytes[14..]);
+        checksum = BinaryPrimitives.ReadInt16BigEndian(bytes[16..]);
+        urgentPointer = BinaryPrimitives.ReadUInt16BigEndian(bytes[18..]);
+        headerLength = (byte)candidateHeaderLength;
+        payload = segment[candidateHeaderLength..];
+        return true;
+    }
 }

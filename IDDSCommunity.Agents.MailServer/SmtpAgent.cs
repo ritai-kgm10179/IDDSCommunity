@@ -88,21 +88,18 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (int.TryParse(tcp.SourcePort, out int sourcePort))
+            if (Configuration.AgentSettings is SmtpConfig settings && tcp.SourcePortValue == settings.SmtpPort)
             {
-                if (Configuration.AgentSettings is SmtpConfig settings && sourcePort == settings.SmtpPort)
+                if (Tracing)
                 {
-                    if (Tracing)
+                    OnTrace(ipHeader);
+                }
+                if (tcp.MessageLength > 0)
+                {
+                    AppLayerSmtp smtp = new(tcp.Data, tcp.MessageLength);
+                    if (smtp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
                     {
-                        OnTrace(ipHeader);
-                    }
-                    if (tcp.Data.Length > 0)
-                    {
-                        AppLayerSmtp smtp = new(tcp.Data, tcp.Data.Length);
-                        if (smtp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
-                        {
-                            UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                        }
+                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                     }
                 }
             }

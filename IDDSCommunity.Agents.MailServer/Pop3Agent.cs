@@ -146,29 +146,28 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
+            int sourcePort = tcp.SourcePortValue;
+            int destinationPort = tcp.DestinationPortValue;
+            if (Configuration.AgentSettings is Pop3Config settings && destinationPort == settings.Pop3Port)
             {
-                if (Configuration.AgentSettings is Pop3Config settings && destinationPort == settings.Pop3Port)
+                if (tcp.MessageLength > 0)
                 {
-                    if (tcp.Data.Length > 0)
+                    AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
+                    Pop3Client client = _currentClients.GetOrAdd(sourcePort, _ => new Pop3Client());
+                    client.LastInteraction = DateTime.Now;
+                    switch (pop3.Pop3Code.ToUpper())
                     {
-                        AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
-                        Pop3Client client = _currentClients.GetOrAdd(sourcePort, _ => new Pop3Client());
-                        client.LastInteraction = DateTime.Now;
-                        switch (pop3.Pop3Code.ToUpper())
-                        {
-                            case AppLayerPop3.POP3_INTERACTION_CODE_LIST: client.LastMessage = Pop3Message.LIST; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_DELE: client.LastMessage = Pop3Message.DELE; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_NOOP: client.LastMessage = Pop3Message.NOOP; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_PASS: client.LastMessage = Pop3Message.PASS; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_QUIT: _currentClients.TryRemove(sourcePort, out _); break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_RETR: client.LastMessage = Pop3Message.RETR; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_RSET: client.LastMessage = Pop3Message.RSET; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_STAT: client.LastMessage = Pop3Message.STAT; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_TOP: client.LastMessage = Pop3Message.TOP; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_UIDL: client.LastMessage = Pop3Message.UIDL; break;
-                            case AppLayerPop3.POP3_INTERACTION_CODE_USER: client.LastMessage = Pop3Message.USER; break;
-                        }
+                        case AppLayerPop3.POP3_INTERACTION_CODE_LIST: client.LastMessage = Pop3Message.LIST; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_DELE: client.LastMessage = Pop3Message.DELE; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_NOOP: client.LastMessage = Pop3Message.NOOP; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_PASS: client.LastMessage = Pop3Message.PASS; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_QUIT: _currentClients.TryRemove(sourcePort, out _); break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_RETR: client.LastMessage = Pop3Message.RETR; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_RSET: client.LastMessage = Pop3Message.RSET; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_STAT: client.LastMessage = Pop3Message.STAT; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_TOP: client.LastMessage = Pop3Message.TOP; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_UIDL: client.LastMessage = Pop3Message.UIDL; break;
+                        case AppLayerPop3.POP3_INTERACTION_CODE_USER: client.LastMessage = Pop3Message.USER; break;
                     }
                 }
             }
@@ -189,18 +188,17 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
         TCPHeader tcp = e.TcpHeader;
         try
         {
-            if (int.TryParse(tcp.SourcePort, out int sourcePort) && int.TryParse(tcp.DestinationPort, out int destinationPort))
+            int sourcePort = tcp.SourcePortValue;
+            int destinationPort = tcp.DestinationPortValue;
+            if (Configuration.AgentSettings is Pop3Config settings && sourcePort == settings.Pop3Port && tcp.MessageLength > 0)
             {
-                if (Configuration.AgentSettings is Pop3Config settings && sourcePort == settings.Pop3Port && tcp.Data.Length > 0)
+                AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
+                if (pop3.Pop3Code.Equals(AppLayerPop3.POP3_REPLY_CODE_ERROR, StringComparison.OrdinalIgnoreCase) &&
+                    CurrentClients.TryGetValue(destinationPort, out Pop3Client? value) && value.LastMessage == Pop3Message.PASS)
                 {
-                    AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
-                    if (pop3.Pop3Code.Equals(AppLayerPop3.POP3_REPLY_CODE_ERROR, StringComparison.OrdinalIgnoreCase) &&
-                        CurrentClients.TryGetValue(destinationPort, out Pop3Client? value) && value.LastMessage == Pop3Message.PASS)
-                    {
-                        if (Tracing)
-                            OnTrace(ipHeader);
-                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                    }
+                    if (Tracing)
+                        OnTrace(ipHeader);
+                    UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                 }
             }
         }

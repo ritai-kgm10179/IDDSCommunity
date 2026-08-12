@@ -41,6 +41,18 @@
 4. 後續重大版本：建立並簽署 WFP Callout Driver，使用 ALE 建立流量範圍、使用 Stream 層取得真正需要的應用層資料，並把目前的共用擷取器保留為可替換後端介面。
 5. 發行前驗證：在相同流量回放下比較 CPU、配置率、GC、接收／分派／丟棄封包數，並以長時間 soak test 驗證停止、重新啟動及 Agent 動態載入。
 
+## `master` 分支比較
+
+`master` 看似不會出現相同尖峰，不是因為使用較佳的封包處理架構，而是每個 Sniffer 只配置並接收 128 bytes。大於 128 bytes 的封包會被截斷，而 IP 解析器仍依原始 `TotalLength` 嘗試複製資料，例外狀況隨後被吞掉或寫入暫存記錄檔。這會降低後續實際解析量，但同時遺失或破壞正常的大型 TCP 封包內容，不能作為正確修正。
+
+目前實作保留完整封包，改採以下方式避免 `master` 的資料遺失與 `main` 舊實作的 CPU 尖峰：
+
+- 使用 `ReadOnlySpan<byte>` 與 `BinaryPrimitives` 驗證網路位元組序標頭，不使用例外狀況控制正常流程。
+- 先讀取固定標頭與數值通訊埠，沒有訂閱 Agent 命中時不建立 IP/TCP 物件，也不具現化 Payload 陣列。
+- 訂閱清單只在 Agent 啟停時建立不可變快照；逐封包路徑無鎖且不配置訂閱快照。
+- 只有命中的內容檢查 Agent 存取 `Data` 時才複製 Payload；大型 Payload 不再受 128-byte 固定陣列限制。
+- 無效或截斷封包直接記入 `iddscommunity.packets.malformed`，不建立 Stack Trace 或逐 Agent 廣播錯誤。
+
 ## 官方參考資料
 
 - <https://learn.microsoft.com/windows/win32/winsock/sio-rcvall>
@@ -48,3 +60,6 @@
 - <https://learn.microsoft.com/windows/win32/fwp/best-practices>
 - <https://learn.microsoft.com/windows/win32/fwp/ale-stateful-filtering>
 - <https://learn.microsoft.com/dotnet/core/extensions/channels>
+- <https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines>
+- <https://learn.microsoft.com/dotnet/api/system.buffers.binary.binaryprimitives?view=net-10.0>
+- <https://learn.microsoft.com/dotnet/core/diagnostics/debug-highcpu>
