@@ -2,6 +2,27 @@
 
 IDDS Community uses the following third-party components.
 
+## SharpPcap
+
+- Copyright: Tamir Gal, Chris Morgan and others
+- Version: 6.3.1
+- License: MIT
+- Source: https://github.com/dotpcap/sharppcap
+- Package: https://www.nuget.org/packages/SharpPcap/6.3.1
+
+SharpPcap is used only when the host already provides a compatible Npcap or WinPcap installation. IDDS Community does not redistribute or install either native capture driver. The MIT license text is reproduced below in the Dapper section and applies independently to SharpPcap.
+
+## PacketDotNet
+
+- Copyright: Chris Morgan and contributors
+- Version: 1.4.8
+- License: Mozilla Public License 2.0
+- Source: https://github.com/dotpcap/packetnet/tree/690707ce56d6e9c266daf6236c4f76ac5035334c
+- License text: https://licenses.nuget.org/MPL-2.0
+- Package: https://www.nuget.org/packages/PacketDotNet/1.4.8
+
+PacketDotNet is an unmodified transitive dependency of SharpPcap. Its source code at the exact packaged revision and the complete MPL-2.0 terms are available through the links above.
+
 ## Dapper
 
 - Copyright (c) 2019 Marc Gravell, Nick Craver, and contributors

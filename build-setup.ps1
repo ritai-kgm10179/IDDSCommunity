@@ -68,6 +68,11 @@ foreach ($projectName in $pluginProjects) {
     if ($LASTEXITCODE -ne 0) { throw "代理程式發佈失敗：$projectName" }
 }
 
+$disallowedWinDivertFiles = @(Get-ChildItem -LiteralPath $payloadRoot -Recurse -File | Where-Object { $_.Name -like 'WinDivert*' })
+if ($disallowedWinDivertFiles.Count -ne 0) {
+    throw "發行內容不得包含 WinDivert：$($disallowedWinDivertFiles.FullName -join ', ')"
+}
+
 # Compress payload directory into a zip archive and embed it into the Setup project for a 100% self-contained Single EXE
 $setupProjectDir = Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Setup'
 $setupZipPath = Join-Path $setupProjectDir 'payload.zip'

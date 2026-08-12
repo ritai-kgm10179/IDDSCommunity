@@ -7,10 +7,18 @@ using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
-public sealed class RawSocketReceiver : IDisposable
+/// <summary>
+/// 判斷原始 IP 封包是否需要複製並交付給後續處理程序。
+/// </summary>
+/// <param name="packet">仍位於共用接收緩衝區內的封包內容。</param>
+/// <returns>需要交付時傳回 <see langword="true"/>。</returns>
+public delegate bool RawPacketFilter(ReadOnlySpan<byte> packet);
+
+public sealed class RawSocketReceiver : IPacketCaptureReceiver
 {
     private const int MaximumPacketSize = 65535;
     private readonly int queueCapacity;
+    private readonly RawPacketFilter? packetFilter;
     private Socket? socket;
     private CancellationTokenSource? cancellation;
     private BoundedPacketDispatcher? dispatcher;
@@ -22,10 +30,11 @@ public sealed class RawSocketReceiver : IDisposable
     /// 初始化包含界限分發佇列的 Raw Socket 接收器。
     /// </summary>
     /// <param name="queueCapacity">等待訂閱者處理的封包最大數量。</param>
-    public RawSocketReceiver(int queueCapacity = 1024)
+    public RawSocketReceiver(int queueCapacity = 1024, RawPacketFilter? packetFilter = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueCapacity);
         this.queueCapacity = queueCapacity;
+        this.packetFilter = packetFilter;
     }
     /// <summary>
     /// 取得 active receive-loop task so callers can supervise its lifetime.
@@ -94,6 +103,8 @@ public sealed class RawSocketReceiver : IDisposable
             {
                 int length = await activeSocket.ReceiveAsync(buffer.AsMemory(), SocketFlags.None, cancellationToken).ConfigureAwait(false);
                 if (length <= 0)
+                    continue;
+                if (packetFilter is not null && !packetFilter(buffer.AsSpan(0, length)))
                     continue;
                 byte[] packet = buffer.AsSpan(0, length).ToArray();
                 packetDispatcher.TryEnqueue(packet);

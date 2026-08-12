@@ -44,11 +44,13 @@ Runtime health check 會回報 `unfinished_security_events`；未完成數超過
 
 同步與非同步的一般查詢各自使用短生命週期、具 pooling 的獨立連線，避免多執行緒共用同一 `SqliteConnection`。需要原子性的設定、Agent 與 lock 寫入則由 `ExecuteInTransaction` 明確擁有連線與 transaction，所有 transaction 內 command 都使用同一連線。測試涵蓋並行讀寫以及例外時 rollback。
 
-## Raw Socket
+## 封包擷取
 
-封包擷取使用獨立 bounded channel 與單一 reader。容量滿時 `TryWrite` 立即拒絕新封包，並由 received、dispatched、dropped 與 subscriber-failure 計數呈現負載。Agent 偵測結果再進入上層 `SecurityEventPipeline`，避免封包 consumer 執行防火牆慢速操作。
+主機已安裝且 SharpPcap 能開啟對應網卡的 Npcap／WinPcap 時優先使用 BPF Filter；不可用時使用 Raw Socket，並在配置封包陣列及進入佇列前完成相同的標頭路由判斷。本專案不散布或載入憑證已過期的 WinDivert 2.2.2 驅動程式。
 
-FTP、SMTP、POP3 與 Terminal Server 的舊式啟動 `Thread` 已移除。Sniffer 會在 Agent 生命週期內同步完成註冊，再由共用 `RawSocketReceiver` 的可取消非同步 receive loop 擷取封包，消除 Stop 與背景初始化同時修改 Sniffer 清單的競爭。
+兩個後端都使用獨立 bounded channel 與單一 reader。容量滿時 `TryWrite` 立即拒絕新封包，並由 received、dispatched、dropped 與 subscriber-failure 計數呈現負載。Agent 偵測結果再進入上層 `SecurityEventPipeline`，避免封包 consumer 執行防火牆慢速操作。
+
+FTP、SMTP、POP3 與 Terminal Server 的舊式啟動 `Thread` 已移除。Sniffer 會在 Agent 生命週期內同步完成註冊，再由共用擷取後端的接收迴圈擷取封包，消除 Stop 與背景初始化同時修改 Sniffer 清單的競爭。
 
 ## Agent 生命週期
 

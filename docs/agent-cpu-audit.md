@@ -7,6 +7,8 @@
 - Microsoft 的 `SIO_RCVALL` 文件指出，啟用後會把指定介面收到的所有 IP 封包交給 Raw Socket。因此，為每個 Agent 建立 Raw Socket 會重複接收相同流量。
 - Microsoft Windows Filtering Platform（WFP）最佳實踐建議使用 Application Layer Enforcement（ALE），並明確指出逐封包層級的過濾較慢。
 - WFP 的 ALE 狀態式過濾只需分類連線的第一個封包，可大幅降低分類次數；需要封包內容檢查時，Microsoft 建議使用 Stream／Datagram Data 層。
+- SharpPcap 6.3.1 為 MIT 授權的受控程式庫，可使用主機既有的 Npcap／WinPcap。IDDS Community 不散布或自動安裝兩者，避免改變 Npcap 的授權與安裝台數責任。
+- WinDivert 2.2.2 的官方驅動簽署憑證已過期，且官方 Issue #401 確認部分安全軟體會阻擋同一雜湊的驅動；因此不納入正式執行或發行路徑。
 - .NET bounded `Channel<T>` 適合建立有界生產者／消費者管線；容量耗盡時必須採取明確的背壓或丟棄策略，避免無界記憶體成長。
 
 ## 全部 Agent 稽核結果
@@ -35,11 +37,12 @@
 
 ## 分階段計畫
 
-1. 本次完成：將現有 Raw Socket 後端集中成每張 IPv4 介面單一執行個體，只解析一次 IP/TCP 標頭，再依通訊埠和方向分派。
+1. 本次完成：優先透過 SharpPcap 使用主機已安裝且可開啟對應網卡的 Npcap／WinPcap，套用 BPF 本機 IPv4、TCP 與 Agent 通訊埠 Filter。
 2. 本次完成：維持 bounded Channel、丟包計數與錯誤隔離，避免高流量造成無界排隊。
 3. 本次完成：讓四個內容檢查 Agent 直接使用已解析 TCP 事件，消除第二次標頭解析。
-4. 後續重大版本：建立並簽署 WFP Callout Driver，使用 ALE 建立流量範圍、使用 Stream 層取得真正需要的應用層資料，並把目前的共用擷取器保留為可替換後端介面。
-5. 發行前驗證：在相同流量回放下比較 CPU、配置率、GC、接收／分派／丟棄封包數，並以長時間 soak test 驗證停止、重新啟動及 Agent 動態載入。
+4. 本次完成：後端順序為既有 Npcap／WinPcap、共用 Raw Socket；Pcap 啟動或執行期間故障時自動切換。Raw Socket 在複製及排隊前先做無配置的 IPv4／TCP／通訊埠判斷。
+5. 本次完成：正式安裝包不散布 Npcap、WinPcap 或 WinDivert 驅動程式，只包含 MIT 授權的 SharpPcap 受控組件。
+6. 發行前環境驗證：分別在有 Npcap、WinPcap 與兩者皆無的 Windows 測試機，以相同流量回放比較 CPU、配置率、GC、接收／分派／丟棄封包數，並執行長時間 soak test。
 
 ## `master` 分支比較
 
@@ -47,6 +50,7 @@
 
 目前實作保留完整封包，改採以下方式避免 `master` 的資料遺失與 `main` 舊實作的 CPU 尖峰：
 
+- 已安裝 Npcap／WinPcap 時優先使用 BPF Filter，排除無關 IP、非 TCP 及非 Agent 通訊埠流量；Filter 會隨 Agent 訂閱增減更新。
 - 使用 `ReadOnlySpan<byte>` 與 `BinaryPrimitives` 驗證網路位元組序標頭，不使用例外狀況控制正常流程。
 - 先讀取固定標頭與數值通訊埠，沒有訂閱 Agent 命中時不建立 IP/TCP 物件，也不具現化 Payload 陣列。
 - 訂閱清單只在 Agent 啟停時建立不可變快照；逐封包路徑無鎖且不配置訂閱快照。
@@ -63,3 +67,6 @@
 - <https://learn.microsoft.com/dotnet/standard/memory-and-spans/memory-t-usage-guidelines>
 - <https://learn.microsoft.com/dotnet/api/system.buffers.binary.binaryprimitives?view=net-10.0>
 - <https://learn.microsoft.com/dotnet/core/diagnostics/debug-highcpu>
+- <https://github.com/basil00/WinDivert/issues/401>
+- <https://www.nuget.org/packages/SharpPcap/6.3.1>
+- <https://npcap.com/vs-winpcap>

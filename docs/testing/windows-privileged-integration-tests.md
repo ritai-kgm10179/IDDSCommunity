@@ -1,6 +1,6 @@
 # Windows 特權整合測試
 
-`PrivilegedWindows` 測試用來驗證一般單元測試無法涵蓋的 Windows 平台功能：Raw Socket、Application Event Log、Windows Firewall，以及專用測試服務的停止與啟動。
+`PrivilegedWindows` 測試用來驗證一般單元測試無法涵蓋的 Windows 平台功能：封包擷取、Application Event Log、Windows Firewall，以及專用測試服務的停止與啟動。裝有 Npcap／WinPcap 的發行候選環境還必須驗證服務可透過 SharpPcap 擷取，且 Pcap 不可用時能切換至 Raw Socket。
 
 ## 安全邊界
 
