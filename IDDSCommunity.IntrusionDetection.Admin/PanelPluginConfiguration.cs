@@ -16,11 +16,20 @@ public partial class PanelPluginConfiguration : UserControl
     /// 初始化 <see cref="PanelPluginConfiguration"/> 類別的新執行個體。
     /// </summary>
     public PanelPluginConfiguration()
+        : this(null)
+    {
+    }
+
+    /// <summary>
+    /// 初始化可指定恢復預設值確認提示的設定面板。
+    /// </summary>
+    /// <param name="confirmationPrompt">確認提示委派；正式執行時傳入 <see langword="null"/>。</param>
+    internal PanelPluginConfiguration(Func<IWin32Window, DialogResult>? confirmationPrompt)
     {
         InitializeComponent();
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
-        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt);
     }
     /// <summary>
     /// 處理 agent changed 事件。

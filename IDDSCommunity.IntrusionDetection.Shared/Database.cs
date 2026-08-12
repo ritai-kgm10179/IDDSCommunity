@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
@@ -29,6 +30,8 @@ public class Database
 
     private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
+    private string databasePassword = string.Empty;
+    private static int sqliteInitialized;
     /// <summary>
     /// 取得 absolute path of the configured SQLite database.
     /// </summary>
@@ -44,6 +47,8 @@ public class Database
         _connection.Dispose();
         _connection = null;
         SqliteConnection.ClearAllPools();
+        connBuilder.Password = string.Empty;
+        databasePassword = string.Empty;
         _isConfigured = false;
     }
     /// <summary>
@@ -65,15 +70,25 @@ public class Database
             _connection.Dispose();
         }
 
+        EnsureSqliteInitialized();
         connBuilder.DataSource = System.IO.Path.Combine(directory, fileName);
         connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
-        connBuilder.Cache = SqliteCacheMode.Shared;
+        connBuilder.Cache = SqliteCacheMode.Private;
         connBuilder.Pooling = true;
         connBuilder.DefaultTimeout = 5;
 
         string? dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
             System.IO.Directory.CreateDirectory(dbDir);
+
+        bool databaseExists = File.Exists(connBuilder.DataSource);
+        bool isPlaintext = databaseExists && HasPlaintextHeader(connBuilder.DataSource);
+        databasePassword = DatabaseEncryptionKeyStore.GetPassword(
+            connBuilder.DataSource,
+            allowCreate: !databaseExists || isPlaintext || File.Exists(DatabaseEncryptionKeyStore.GetKeyPath(connBuilder.DataSource)));
+        if (isPlaintext)
+            MigratePlaintextDatabase(connBuilder.DataSource, databasePassword);
+        connBuilder.Password = databasePassword;
 
         _connection = new SqliteConnection(connBuilder.ConnectionString);
         _connection.Open();
@@ -336,8 +351,117 @@ public class Database
     private static void ConfigureConnection(SqliteConnection connection)
     {
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;";
+        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA memory_security=ON;";
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// 建立使用目前資料庫密鑰且不共用連線集區的 SQLite 連線。
+    /// </summary>
+    /// <param name="path">欲開啟的 SQLite 資料庫路徑。</param>
+    /// <param name="mode">資料庫開啟模式。</param>
+    /// <returns>尚未開啟的加密 SQLite 連線。</returns>
+    internal SqliteConnection CreateEncryptedConnection(string path, SqliteOpenMode mode) => new(new SqliteConnectionStringBuilder
+    {
+        DataSource = Path.GetFullPath(path),
+        Mode = mode,
+        Pooling = false,
+        Password = databasePassword
+    }.ConnectionString);
+
+    private static void EnsureSqliteInitialized()
+    {
+        if (Interlocked.Exchange(ref sqliteInitialized, 1) == 0)
+            SQLitePCL.Batteries_V2.Init();
+    }
+
+    private static bool HasPlaintextHeader(string path)
+    {
+        ReadOnlySpan<byte> expected = "SQLite format 3\0"u8;
+        Span<byte> actual = stackalloc byte[16];
+        using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        return stream.Read(actual) == actual.Length && actual.SequenceEqual(expected);
+    }
+
+    private static void MigratePlaintextDatabase(string path, string password)
+    {
+        string directory = Path.GetDirectoryName(path) ?? throw new InvalidOperationException(Localization.Strings.Get("The database directory is unavailable."));
+        string candidate = Path.Combine(directory, $".{Path.GetFileName(path)}.encrypted-{Guid.NewGuid():N}");
+        string rollback = Path.Combine(directory, $".{Path.GetFileName(path)}.plaintext-rollback-{Guid.NewGuid():N}");
+        using FileStream migrationLock = new(path + ".migration.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        if (!HasPlaintextHeader(path))
+            return;
+
+        try
+        {
+            using (SqliteConnection source = new(new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false
+            }.ConnectionString))
+            {
+                source.Open();
+                using SqliteCommand snapshot = source.CreateCommand();
+                snapshot.CommandText = "VACUUM INTO $path";
+                snapshot.Parameters.AddWithValue("$path", candidate);
+                snapshot.ExecuteNonQuery();
+            }
+            using (SqliteConnection destination = new(new SqliteConnectionStringBuilder
+            {
+                DataSource = candidate,
+                Mode = SqliteOpenMode.ReadWrite,
+                Pooling = false
+            }.ConnectionString))
+            {
+                destination.Open();
+                using (SqliteCommand encrypt = destination.CreateCommand())
+                {
+                    encrypt.CommandText = $"PRAGMA rekey = '{password.Replace("'", "''", StringComparison.Ordinal)}'";
+                    encrypt.ExecuteNonQuery();
+                }
+                ConfigureConnection(destination);
+                using SqliteCommand check = destination.CreateCommand();
+                check.CommandText = "PRAGMA integrity_check";
+                if (!string.Equals(Convert.ToString(check.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException(Localization.Strings.Get("The encrypted database migration failed its integrity check."));
+            }
+
+            SqliteConnection.ClearAllPools();
+            File.Replace(candidate, path, rollback, true);
+            DeleteIfExists(path + "-wal");
+            DeleteIfExists(path + "-shm");
+            using SqliteConnection verification = new(new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadOnly,
+                Pooling = false,
+                Password = password
+            }.ConnectionString);
+            verification.Open();
+            using SqliteCommand verificationCommand = verification.CreateCommand();
+            verificationCommand.CommandText = "PRAGMA integrity_check";
+            if (!string.Equals(Convert.ToString(verificationCommand.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException(Localization.Strings.Get("The migrated encrypted database failed verification."));
+            DeleteIfExists(rollback);
+        }
+        catch
+        {
+            if (File.Exists(rollback))
+                File.Replace(rollback, path, null, true);
+            throw;
+        }
+        finally
+        {
+            DeleteIfExists(candidate);
+            migrationLock.Dispose();
+            DeleteIfExists(path + ".migration.lock");
+        }
+    }
+
+    private static void DeleteIfExists(string path)
+    {
+        if (File.Exists(path)) File.Delete(path);
     }
     /// <summary>
     /// Determines whether SQLite reported a transient busy or locked condition.

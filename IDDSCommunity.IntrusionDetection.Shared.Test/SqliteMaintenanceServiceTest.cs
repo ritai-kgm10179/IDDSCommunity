@@ -43,6 +43,10 @@ public sealed class SqliteMaintenanceServiceTest
         Assert.IsTrue(File.Exists(backup.FilePath));
         Assert.IsGreaterThan(0, backup.Length);
         Assert.AreEqual(64, backup.Sha256.Length);
+        byte[] header = new byte[16];
+        using (FileStream stream = File.OpenRead(backup.FilePath))
+            Assert.AreEqual(header.Length, stream.Read(header));
+        CollectionAssert.AreNotEqual("SQLite format 3\0"u8.ToArray(), header);
     }
 
     [TestMethod]

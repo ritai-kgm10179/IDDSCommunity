@@ -56,7 +56,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 The following packages from Microsoft are included in the application distribution under the MIT License:
 
-- `Microsoft.Data.Sqlite` — SQLite database driver for .NET.
+- `Microsoft.Data.Sqlite.Core` — SQLite database driver for .NET；原生 SQLite 提供者由 SQLite3 Multiple Ciphers 套件供應。
 - `Microsoft.Extensions.Diagnostics.HealthChecks` — Health check infrastructure for hosted services.
 - `Microsoft.Extensions.Hosting` and `Microsoft.Extensions.Hosting.WindowsServices` — Generic host and Windows Service integration.
 - `Microsoft.Extensions.Options.DataAnnotations` — Options validation with data annotations.
@@ -92,14 +92,15 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## SQLitePCLRaw
+## SQLite3 Multiple Ciphers 與 SQLitePCLRaw
 
-- Copyright (c) 2014-2024 Eric Sink and contributors
+- Copyright (c) 2023-2026 Ulrich Telle and contributors
+- Copyright (c) 2014-2026 Eric Sink and contributors
 - License: MIT
-- Source: https://github.com/ericsink/SQLitePCL.raw
-- Package: https://www.nuget.org/packages/SQLitePCLRaw.lib.e_sqlite3/
+- Source: https://github.com/utelle/SQLite3MultipleCiphers
+- Package: https://www.nuget.org/packages/SQLite3MC.PCLRaw.bundle/
 
-The package bundles the native SQLite library (e_sqlite3) used by Microsoft.Data.Sqlite as the underlying database engine.
+`SQLite3MC.PCLRaw.bundle` 提供 SQLite3 Multiple Ciphers 原生資料庫引擎與 SQLitePCLRaw 繫結，供 `Microsoft.Data.Sqlite.Core` 加密 SQLite 主資料庫、日誌及備份。上游套件同時包含各加密演算法來源專案的授權；完整逐檔授權以上游儲存庫的授權文件為準。
 
 MIT License
 

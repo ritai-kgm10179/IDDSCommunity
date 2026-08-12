@@ -770,4 +770,11 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>Configuration transfer failed ({0}): {1}</value></data>
   <data name="Stored settings are invalid: {0}" xml:space="preserve"><value>Stored settings are invalid: {0}</value></data>
   <data name="Restore defaults" xml:space="preserve"><value>Restore defaults</value></data>
+  <data name="Confirm restore defaults" xml:space="preserve"><value>Confirm restore defaults</value></data>
+  <data name="Restore the settings on this page to their defaults? Unsaved changes will be replaced." xml:space="preserve"><value>Restore the settings on this page to their defaults? Unsaved changes will be replaced.</value></data>
+  <data name="The encrypted database key is missing. Database access was refused to prevent data loss." xml:space="preserve"><value>The encrypted database key is missing. Database access was refused to prevent data loss.</value></data>
+  <data name="The encrypted database key has an invalid length." xml:space="preserve"><value>The encrypted database key has an invalid length.</value></data>
+  <data name="The database directory is unavailable." xml:space="preserve"><value>The database directory is unavailable.</value></data>
+  <data name="The encrypted database migration failed its integrity check." xml:space="preserve"><value>The encrypted database migration failed its integrity check.</value></data>
+  <data name="The migrated encrypted database failed verification." xml:space="preserve"><value>The migrated encrypted database failed verification.</value></data>
 </root>

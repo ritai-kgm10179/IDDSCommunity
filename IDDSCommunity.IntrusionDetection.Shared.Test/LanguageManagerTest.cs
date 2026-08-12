@@ -39,6 +39,25 @@ public class LanguageManagerTest
         Assert.AreEqual("en-US", LanguageManager.Instance.CurrentCulture.Name);
         Assert.AreEqual("IDDS Community", Strings.AppTitle);
     }
+
+    /// <summary>
+    /// 驗證恢復預設值確認提示提供完整的英文與正體中文翻譯。
+    /// </summary>
+    [TestMethod]
+    public void RestoreDefaultsConfirmation_IsLocalizedInSupportedCultures()
+    {
+        LanguageManager.Instance.Initialize("zh-TW");
+        Assert.AreEqual("確認恢復預設值", Strings.Get("Confirm restore defaults"));
+        Assert.AreEqual(
+            "要將此頁面的設定恢復為預設值嗎？尚未儲存的變更將被取代。",
+            Strings.Get("Restore the settings on this page to their defaults? Unsaved changes will be replaced."));
+
+        LanguageManager.Instance.Initialize("en-US");
+        Assert.AreEqual("Confirm restore defaults", Strings.Get("Confirm restore defaults"));
+        Assert.AreEqual(
+            "Restore the settings on this page to their defaults? Unsaved changes will be replaced.",
+            Strings.Get("Restore the settings on this page to their defaults? Unsaved changes will be replaced."));
+    }
     /// <summary>
     /// 執行 test unsupported culture fallback 作業。
     /// </summary>

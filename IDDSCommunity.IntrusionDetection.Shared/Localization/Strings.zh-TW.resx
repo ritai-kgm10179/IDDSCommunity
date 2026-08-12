@@ -770,4 +770,11 @@
   <data name="Configuration transfer failed ({0}): {1}" xml:space="preserve"><value>設定移轉失敗（{0}）：{1}</value></data>
   <data name="Stored settings are invalid: {0}" xml:space="preserve"><value>已儲存的設定無效：{0}</value></data>
   <data name="Restore defaults" xml:space="preserve"><value>恢復預設值</value></data>
+  <data name="Confirm restore defaults" xml:space="preserve"><value>確認恢復預設值</value></data>
+  <data name="Restore the settings on this page to their defaults? Unsaved changes will be replaced." xml:space="preserve"><value>要將此頁面的設定恢復為預設值嗎？尚未儲存的變更將被取代。</value></data>
+  <data name="The encrypted database key is missing. Database access was refused to prevent data loss." xml:space="preserve"><value>找不到加密資料庫金鑰。為避免資料遺失，已拒絕存取資料庫。</value></data>
+  <data name="The encrypted database key has an invalid length." xml:space="preserve"><value>加密資料庫金鑰的長度無效。</value></data>
+  <data name="The database directory is unavailable." xml:space="preserve"><value>無法使用資料庫目錄。</value></data>
+  <data name="The encrypted database migration failed its integrity check." xml:space="preserve"><value>加密資料庫移轉未通過完整性檢查。</value></data>
+  <data name="The migrated encrypted database failed verification." xml:space="preserve"><value>移轉後的加密資料庫未通過驗證。</value></data>
 </root>

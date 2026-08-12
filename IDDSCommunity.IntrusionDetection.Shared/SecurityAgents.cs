@@ -392,6 +392,7 @@ public class SecurityAgents : List<SecurityAgent>
                 agent.DisplayName = a.DisplayName;
                 agent.BinaryMissing = false;
                 agent.CustomConfiguration = a.CustomConfiguration;
+                agent.DefaultCustomConfiguration = new Dictionary<string, string>(a.DefaultCustomConfiguration, StringComparer.Ordinal);
                 agent.CustomConfigurationTypes = a.CustomConfigurationTypes;
                 agent.LoadCustomConfig();
                 result.Remove(a);

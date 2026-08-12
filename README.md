@@ -19,11 +19,13 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
 - 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各 Agent 可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。
 - 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 Argon2id（64 MiB、3 次、單一平行度）衍生金鑰，再由 AES-256-GCM 加密及驗證。匯入前會限制密碼衍生參數、驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
+- SQLite 主資料庫、WAL 與應用程式建立的維護備份採 SQLite3 Multiple Ciphers 預設的 ChaCha20-Poly1305 頁面加密。應用程式首次開啟既有明文資料庫時會先建立快照、加密並驗證後再原子替換；隨機 256 位元資料庫金鑰由 Windows DPAPI（本機範圍）保護，金鑰遺失時會拒絕建立空白資料庫，以免靜默覆蓋既有資料。
 - 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。
 
 ## 支援界線
 
 - 目標平台為 Windows，所有專案使用 .NET 10 `net10.0-windows`。
+- 加密維護備份只能由持有相同 DPAPI 金鑰檔的同一 Windows 安裝環境還原；僅複製 `.db` 備份到另一台主機並不足以復原。此機制保護離線複製的資料檔，不宣稱能抵抗已取得本機系統管理權限或可讀取執行中程序記憶體的攻擊者。
 - FTP 與明文郵件 Agent 解析設定連接埠上的協定回應，不是只要連接埠開放就能保護任意服務。TLS/SSL 或 STARTTLS 升級後的加密內容不會被封包解析器解密；應優先使用伺服器原生稽核記錄整合。
 - Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Microsoft-Windows-DNSServer/Audit`，目前不直接支援 Technitium DNS Server 或其他第三方 DNS 的事件格式。
 - Agent 是否適用取決於伺服器版本、事件記錄設定、通訊協定及部署權限；上線前必須在隔離環境驗證。

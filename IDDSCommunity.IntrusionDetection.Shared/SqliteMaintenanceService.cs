@@ -65,12 +65,7 @@ public sealed class SqliteMaintenanceService(Database database)
         string fileName = $"iddscommunity-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.db";
         string destinationPath = Path.GetFullPath(Path.Combine(backupDirectory, fileName));
 
-        using SqliteConnection destination = new(new SqliteConnectionStringBuilder
-        {
-            DataSource = destinationPath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false
-        }.ConnectionString);
+        using SqliteConnection destination = database.CreateEncryptedConnection(destinationPath, SqliteOpenMode.ReadWriteCreate);
         destination.Open();
         database.Connection.BackupDatabase(destination);
         using SqliteCommand check = destination.CreateCommand();
@@ -280,9 +275,9 @@ public sealed class SqliteMaintenanceService(Database database)
         if (policy.BatchSize is < 1 or > 10000) throw new ArgumentOutOfRangeException(nameof(policy));
     }
 
-    private static void ValidateDatabaseFile(string path)
+    private void ValidateDatabaseFile(string path)
     {
-        using SqliteConnection connection = new(new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ConnectionString);
+        using SqliteConnection connection = database.CreateEncryptedConnection(path, SqliteOpenMode.ReadOnly);
         connection.Open();
         string result = Convert.ToString(connection.ExecuteScalar("PRAGMA integrity_check"), CultureInfo.InvariantCulture) ?? string.Empty;
         if (!string.Equals(result, "ok", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException($"{MaintenanceError.IntegrityCheckFailed}:{result}");

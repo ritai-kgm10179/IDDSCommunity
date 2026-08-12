@@ -97,7 +97,7 @@ IDDS Community 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 ### 3.8 🧹 資料庫維護與極致壓縮 (Database Maintenance)
 管理 SQLite 歷史日誌與空間回收：
 - **自動日誌清理 (Retention)**：背景服務預設配置 24 小時自動維護作業，將超過保留天數的舊日誌分批清理（符合 PCI DSS v4.0 規範）。
-- **手動安全備份**：點擊「立即備份」自動建立安全 SQLite 備份檔。
+- **手動安全備份**：點擊「立即備份」自動建立 ChaCha20-Poly1305 加密的 SQLite 備份檔。備份沿用本機 DPAPI 保護的資料庫金鑰，不能只將 `.db` 複製到另一台電腦還原；跨機災難復原必須納入完整 Windows 系統復原與金鑰保存程序。
 - **實體空間壓縮 (Vacuum / Compress)**：點擊「壓縮資料庫」，執行 `PRAGMA optimize` 與 `VACUUM`，釋放已刪除資料所佔用的磁碟空間。
 
 ---

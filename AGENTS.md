@@ -81,6 +81,7 @@
 ## 8. 設定機密與發行供應鏈
 
 - **設定匯出加密**：設定套件中的機密資料必須使用 Argon2id 衍生 256 位元金鑰，再以 AES-256-GCM 加密及驗證；密碼衍生參數必須設有匯入上限，且參數、格式版本與演算法識別必須納入 AAD，禁止未經明確格式升版而降級至 PBKDF2。
+- **SQLite 靜態資料加密**：SQLite 主資料庫、WAL 與應用程式維護備份必須由 `Microsoft.Data.Sqlite.Core` 搭配單一 `SQLite3MC.PCLRaw.bundle` 提供者，以 ChaCha20-Poly1305 完整加密；禁止同時引入其他 SQLitePCLRaw 原生 bundle。資料庫使用隨機 256 位元金鑰並由 Windows DPAPI 本機範圍保護，金鑰遺失時必須拒絕建立空白資料庫。既有明文資料庫只可透過可回滾、完整性驗證後原子替換的流程遷移，不得留下明文備份或回滾副本。
 - **簽署發行標籤**：正式發行僅能由符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 觸發，CI 必須驗證 GitHub 回報的 OpenPGP 簽章與標籤所指提交。
 - **SBOM 與來源證明**：每個發行平台的安裝包必須同時產生目前規格的 SPDX 3.0 SBOM 與相容性格式 SPDX 2.2 SBOM，將兩者納入安裝包及 GitHub Release 附件，並發布 SHA-256 雜湊與 GitHub artifact attestation。
 

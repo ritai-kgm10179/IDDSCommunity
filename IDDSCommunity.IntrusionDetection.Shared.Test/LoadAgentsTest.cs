@@ -72,6 +72,7 @@ public class LoadAgentsTest
         agents.Add(stored);
         SecurityAgent discoveredExisting = new("Existing.Agent", existingId) { AssemblyFilename = "IDDSCommunity.Agents.Existing.dll", DisplayName = "Discovered display name" };
         discoveredExisting.CustomConfigurationTypes["ReadEventLog"] = typeof(bool).FullName!;
+        discoveredExisting.DefaultCustomConfiguration["ReadEventLog"] = "True";
         SecurityAgent discoveredNew = new("New.Agent", Guid.NewGuid()) { AssemblyFilename = "IDDSCommunity.Agents.New.dll", Enabled = true };
 
         List<SecurityAgent> merged = agents.MergeDbInformation([discoveredExisting, discoveredNew]);
@@ -83,6 +84,7 @@ public class LoadAgentsTest
         Assert.AreEqual(discoveredExisting.AssemblyFilename, stored.AssemblyFilename);
         Assert.AreEqual(discoveredExisting.DisplayName, stored.DisplayName);
         Assert.AreEqual(typeof(bool).FullName, stored.CustomConfigurationTypes["ReadEventLog"]);
+        Assert.AreEqual("True", stored.DefaultCustomConfiguration["ReadEventLog"]);
         Assert.IsFalse(merged[1].Enabled);
         Assert.AreEqual(discoveredNew.Id, merged[1].Id);
     }
