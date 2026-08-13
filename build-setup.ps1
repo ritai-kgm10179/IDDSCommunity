@@ -65,10 +65,11 @@ $pluginProjects = @(
     'IDDSCommunity.Agents.PostgreSql', 'IDDSCommunity.Agents.Radius', 'IDDSCommunity.Agents.SqlServer',
     'IDDSCommunity.Agents.TechnitiumDns', 'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',
     'IDDSCommunity.Agents.WindowsNetworkLogon',
-    'IDDSCommunity.IntrusionDetection.Base'
+    'IDDSCommunity.IntrusionDetection.Base.Plugins'
 )
 foreach ($projectName in $pluginProjects) {
     $project = Get-ChildItem -Path $repositoryRoot -Recurse -Filter "$projectName.csproj" | Select-Object -First 1
+    if (-not $project) { throw "找不到專案：$projectName.csproj" }
     dotnet publish $project.FullName @pluginArguments --output $pluginRoot
     if ($LASTEXITCODE -ne 0) { throw "代理程式發佈失敗：$projectName" }
 }
