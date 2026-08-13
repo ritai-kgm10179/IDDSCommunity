@@ -37,9 +37,9 @@ if ($LASTEXITCODE -ne 0) { throw '執行階段相依套件還原失敗。' }
 $commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true', '-p:EnableCompressionInSingleFile=true', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
 $pluginArguments = @('--configuration', $Configuration, '--self-contained', 'false', '--no-restore', '-p:NuGetAudit=false', '--nologo', '--disable-build-servers', '-m:1')
 
-dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj') @commonArguments --output $payloadRoot
+dotnet publish (Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.Service\IDDSCommunity.IntrusionDetection.Service.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '服務發佈失敗。' }
-dotnet publish (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
+dotnet publish (Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
@@ -60,15 +60,15 @@ if (Test-Path -LiteralPath $userGuideEnSource) {
 
 $pluginProjects = @(
     'IDDSCommunity.Agents.Authentication.Common',
-    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.IisAuthentication',
+    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FileZilla', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.IisAuthentication',
     'IDDSCommunity.Agents.MailServer', 'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.OpenSsh',
     'IDDSCommunity.Agents.PostgreSql', 'IDDSCommunity.Agents.Radius', 'IDDSCommunity.Agents.SqlServer',
-    'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',
+    'IDDSCommunity.Agents.TechnitiumDns', 'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',
     'IDDSCommunity.Agents.WindowsNetworkLogon',
     'IDDSCommunity.IntrusionDetection.Base'
 )
 foreach ($projectName in $pluginProjects) {
-    $project = Get-ChildItem -LiteralPath (Join-Path $repositoryRoot $projectName) -Filter '*.csproj' | Select-Object -First 1
+    $project = Get-ChildItem -Path $repositoryRoot -Recurse -Filter "$projectName.csproj" | Select-Object -First 1
     dotnet publish $project.FullName @pluginArguments --output $pluginRoot
     if ($LASTEXITCODE -ne 0) { throw "代理程式發佈失敗：$projectName" }
 }

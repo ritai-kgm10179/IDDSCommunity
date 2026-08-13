@@ -8,6 +8,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
+    <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
   </ItemGroup>
 </Project>

@@ -9,5 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
+    <ProjectReference Include="..\..\src\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
   </ItemGroup>
 </Project>

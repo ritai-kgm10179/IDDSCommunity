@@ -27,10 +27,10 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - 目標平台為 Windows，所有專案使用 .NET 10 `net10.0-windows`。
 - 加密維護備份只能由持有相同 DPAPI 金鑰檔的同一 Windows 安裝環境還原；僅複製 `.db` 備份到另一台主機並不足以復原。此機制保護離線複製的資料檔，不宣稱能抵抗已取得本機系統管理權限或可讀取執行中程序記憶體的攻擊者。
 - FTP 與明文郵件 Agent 解析設定連接埠上的協定回應，不是只要連接埠開放就能保護任意服務。TLS/SSL 或 STARTTLS 升級後的加密內容不會被封包解析器解密；應優先使用伺服器原生稽核記錄整合。
-- Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Microsoft-Windows-DNSServer/Audit`，目前不直接支援 Technitium DNS Server 或其他第三方 DNS 的事件格式。
+- Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Audit`；另提供 Technitium DNS Security Agent 專屬監控 Technitium DNS 日誌。
 - Agent 是否適用取決於伺服器版本、事件記錄設定、通訊協定及部署權限；上線前必須在隔離環境驗證。
 - Windows 網路登入 Agent 僅處理事件 `4625`、登入類型 `3` 與高可信度認證失敗狀態；它涵蓋 SMB 等網路登入來源，但不宣稱能僅依該事件精確辨識 SMB。
-- OpenSSH 預設讀取 `OpenSSH/Operational`，亦可設定文字記錄檔；PostgreSQL 支援一般文字與 `jsonlog`；IIS 讀取 W3C `401` 記錄，並可選擇限制受保護 URL 前綴。
+- OpenSSH 預設讀取 `OpenSSH/Operational`，亦可設定文字記錄檔；PostgreSQL 支援一般文字與 `jsonlog`；IIS 讀取 W3C `401` 記錄；FileZilla 支援監看 FileZilla Server 驗證日誌檔；Technitium DNS 支援監看 Technitium 查詢/拒絕日誌檔（兩者皆支援自訂路徑與檔名模式）。
 - MySQL／MariaDB Agent 讀取 Windows Application Event Log，只接受標準 `MySQL` 或 `MariaDB` 來源中同時具有 `Access denied for user` 與有效來源 IP 的事件；不掃描資料庫連接埠。MySQL 8 可能需要啟用 `log_sink_syseventlog`；設定 `syseventlog.tag` 產生的自訂 Provider 名稱目前不支援。
 
 ## 快速開始

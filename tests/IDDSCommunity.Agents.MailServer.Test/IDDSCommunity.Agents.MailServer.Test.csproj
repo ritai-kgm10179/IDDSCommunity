@@ -8,6 +8,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.MailServer\IDDSCommunity.Agents.MailServer.csproj" />
     <ProjectReference Include="..\..\src\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.3.3" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.3.3" />
   </ItemGroup>
 </Project>

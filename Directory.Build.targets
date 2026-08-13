@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.IisAuthentication;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.OpenSsh;IDDSCommunity.Agents.PostgreSql;IDDSCommunity.Agents.Radius;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;IDDSCommunity.Agents.WindowsNetworkLogon;</IDDSCommunityAgentPluginProjects>
+    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FileZilla;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.IisAuthentication;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.OpenSsh;IDDSCommunity.Agents.PostgreSql;IDDSCommunity.Agents.Radius;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TechnitiumDns;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;IDDSCommunity.Agents.WindowsNetworkLogon;</IDDSCommunityAgentPluginProjects>
   </PropertyGroup>
   <Target Name="EnsurePluginsFolder" AfterTargets="Build">
     <MakeDir Directories="$(OutputPath)Plugins" Condition="!Exists('$(OutputPath)Plugins')" />
@@ -14,15 +14,15 @@
   </Target>
   <Target Name="DeployIDDSCommunityAgentPlugin" AfterTargets="Build" Condition="$([System.String]::Copy('$(IDDSCommunityAgentPluginProjects)').Contains(';$(MSBuildProjectName);'))">
     <ItemGroup>
-      <IDDSCommunityPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" />
-      <IDDSCommunityPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+      <IDDSCommunityPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" />
+      <IDDSCommunityPluginDeploymentDirectory Include="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" />
     </ItemGroup>
     <MakeDir Directories="@(IDDSCommunityPluginDeploymentDirectory)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
-    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
-    <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
-    <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
+    <Copy SourceFiles="$(TargetDir)zh-TW\$(AssemblyName).resources.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins\zh-TW" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)zh-TW\$(AssemblyName).resources.dll')" />
+    <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
+    <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
   </Target>
 </Project>
