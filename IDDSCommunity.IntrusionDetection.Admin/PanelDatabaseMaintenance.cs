@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -100,7 +100,7 @@ public sealed class PanelDatabaseMaintenance : UserControl
         backupList.DisplayMember = nameof(DatabaseBackupInfo.FilePath);
         historyList.Items.Clear();
         foreach (DatabaseMaintenanceHistory item in maintenance.GetHistory())
-            historyList.Items.Add($"{item.OccurredUtc.LocalDateTime:g}  {item.EventType}  {item.Outcome}");
+            historyList.Items.Add($"{item.OccurredUtc.LocalDateTime:g}  {Strings.Get(item.EventType)}  {Strings.Get(item.Outcome)}");
     }
 
     private void ShowStatus(DatabaseMaintenanceStatus status)

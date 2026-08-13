@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -777,4 +777,21 @@
   <data name="The database directory is unavailable." xml:space="preserve"><value>無法使用資料庫目錄。</value></data>
   <data name="The encrypted database migration failed its integrity check." xml:space="preserve"><value>加密資料庫移轉未通過完整性檢查。</value></data>
   <data name="The migrated encrypted database failed verification." xml:space="preserve"><value>移轉後的加密資料庫未通過驗證。</value></data>
+  <data name="Succeeded" xml:space="preserve"><value>成功</value></data>
+  <data name="Failed" xml:space="preserve"><value>失敗</value></data>
+  <data name="Database.RetentionCleanup" xml:space="preserve"><value>資料庫保留清理</value></data>
+  <data name="Database.Compact" xml:space="preserve"><value>資料庫空間回收</value></data>
+  <data name="Database.Backup" xml:space="preserve"><value>資料庫備份</value></data>
+  <data name="Database.Optimize" xml:space="preserve"><value>資料庫最佳化</value></data>
+  <data name="Database.Restore" xml:space="preserve"><value>資料庫還原</value></data>
+  <data name="Database.BackupRetention" xml:space="preserve"><value>備份保留清理</value></data>
+  <data name="Firewall.SoftLock" xml:space="preserve"><value>套用軟封鎖</value></data>
+  <data name="Firewall.HardLock" xml:space="preserve"><value>套用硬封鎖</value></data>
+  <data name="Firewall.Unlock" xml:space="preserve"><value>解封鎖 IP 位址</value></data>
+  <data name="Report.Daily" xml:space="preserve"><value>每日報表產生</value></data>
+  <data name="Report.Weekly" xml:space="preserve"><value>每週報表產生</value></data>
+  <data name="Report.Monthly" xml:space="preserve"><value>每月報表產生</value></data>
+  <data name="Runtime.Start" xml:space="preserve"><value>服務啟動</value></data>
+  <data name="Runtime.Stop" xml:space="preserve"><value>服務停止</value></data>
 </root>
+

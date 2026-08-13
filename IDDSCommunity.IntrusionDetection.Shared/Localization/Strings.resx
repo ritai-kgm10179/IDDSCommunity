@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -777,4 +777,21 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="The database directory is unavailable." xml:space="preserve"><value>The database directory is unavailable.</value></data>
   <data name="The encrypted database migration failed its integrity check." xml:space="preserve"><value>The encrypted database migration failed its integrity check.</value></data>
   <data name="The migrated encrypted database failed verification." xml:space="preserve"><value>The migrated encrypted database failed verification.</value></data>
+  <data name="Succeeded" xml:space="preserve"><value>Succeeded</value></data>
+  <data name="Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Database.RetentionCleanup" xml:space="preserve"><value>Database Retention Cleanup</value></data>
+  <data name="Database.Compact" xml:space="preserve"><value>Database Space Reclaim</value></data>
+  <data name="Database.Backup" xml:space="preserve"><value>Database Backup</value></data>
+  <data name="Database.Optimize" xml:space="preserve"><value>Database Optimization</value></data>
+  <data name="Database.Restore" xml:space="preserve"><value>Database Restore</value></data>
+  <data name="Database.BackupRetention" xml:space="preserve"><value>Backup Retention Pruning</value></data>
+  <data name="Firewall.SoftLock" xml:space="preserve"><value>Soft Lock Applied</value></data>
+  <data name="Firewall.HardLock" xml:space="preserve"><value>Hard Lock Applied</value></data>
+  <data name="Firewall.Unlock" xml:space="preserve"><value>IP Unlocked</value></data>
+  <data name="Report.Daily" xml:space="preserve"><value>Daily Report Generation</value></data>
+  <data name="Report.Weekly" xml:space="preserve"><value>Weekly Report Generation</value></data>
+  <data name="Report.Monthly" xml:space="preserve"><value>Monthly Report Generation</value></data>
+  <data name="Runtime.Start" xml:space="preserve"><value>Service Started</value></data>
+  <data name="Runtime.Stop" xml:space="preserve"><value>Service Stopped</value></data>
 </root>
+
