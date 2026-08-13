@@ -79,7 +79,7 @@ if ($disallowedWinDivertFiles.Count -ne 0) {
 }
 
 # Compress payload directory into a zip archive and embed it into the Setup project for a 100% self-contained Single EXE
-$setupProjectDir = Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Setup'
+$setupProjectDir = Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.Setup'
 $setupZipPath = Join-Path $setupProjectDir 'payload.zip'
 $setupTempOut = Join-Path $repositoryRoot 'artifacts\setup\temp_setup_out'
 if (Test-Path -LiteralPath $setupZipPath) { Remove-Item -LiteralPath $setupZipPath -Force }

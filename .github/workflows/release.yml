@@ -67,7 +67,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          [xml] $project = Get-Content IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj
+          [xml] $project = Get-Content src/IDDSCommunity.IntrusionDetection.Setup/IDDSCommunity.IntrusionDetection.Setup.csproj
           $projectVersion = [string] $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText
           if ($projectVersion -ne $env:RELEASE_VERSION) { throw "Tag version $env:RELEASE_VERSION does not match setup version $projectVersion." }
 
@@ -89,7 +89,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet test IDDSCommunity.slnx --configuration Release --no-build --no-restore --disable-build-servers -m:1 --filter "TestCategory!=Stability" --logger "trx;LogFilePrefix=release" --results-directory TestResults --verbosity minimal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet test IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --no-restore --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=release-stability.trx" --results-directory TestResults --verbosity normal
+          dotnet test tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --no-restore --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=release-stability.trx" --results-directory TestResults --verbosity normal
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload validation test results

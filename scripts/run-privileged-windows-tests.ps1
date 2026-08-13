@@ -1,4 +1,4 @@
-﻿#Requires -Version 7.4
+#Requires -Version 7.4
 #Requires -RunAsAdministrator
 
 [CmdletBinding()]
@@ -24,13 +24,13 @@ try {
         $env:IDDSCOMMUNITY_TEST_SERVICE_NAME = $ServiceName
     }
 
-    dotnet test "$repositoryRoot\IDDSCommunity.IntrusionDetection.Service.Test\IDDSCommunity.IntrusionDetection.Service.Test.csproj" `
+    dotnet test "$repositoryRoot\tests\IDDSCommunity.IntrusionDetection.Service.Test\IDDSCommunity.IntrusionDetection.Service.Test.csproj" `
         --filter 'TestCategory=PrivilegedWindows' `
         --disable-build-servers `
         -m:1 `
         -p:UseSharedCompilation=false `
         --logger 'trx;LogFileName=privileged-windows.trx' `
-        --results-directory (Join-Path $repositoryRoot 'IDDSCommunity.IntrusionDetection.Service.Test\TestResults') `
+        --results-directory (Join-Path $repositoryRoot 'tests\IDDSCommunity.IntrusionDetection.Service.Test\TestResults') `
         --verbosity minimal
     if ($LASTEXITCODE -ne 0) {
         throw "Privileged Windows integration tests failed with exit code $LASTEXITCODE."

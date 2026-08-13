@@ -46,7 +46,7 @@ jobs:
         run: dotnet test IDDSCommunity.slnx --configuration Release --no-build --disable-build-servers -m:1 --filter "TestCategory!=Stability" --logger "trx;LogFilePrefix=ci" --results-directory TestResults --verbosity minimal
 
       - name: Stability tests
-        run: dotnet test IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=stability.trx" --results-directory TestResults --verbosity normal
+        run: dotnet test tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-build --disable-build-servers -m:1 --filter "TestCategory=Stability" --logger "trx;LogFileName=stability.trx" --results-directory TestResults --verbosity normal
 
       - name: Upload test results
         if: ${{ !cancelled() }}
@@ -78,7 +78,7 @@ jobs:
         run: dotnet restore IDDSCommunity.slnx --nologo
 
       - name: Build integration targets
-        run: dotnet build IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
+        run: dotnet build tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
 
       - name: Run privileged integration tests
         shell: pwsh
@@ -89,6 +89,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: privileged-test-results
-          path: IDDSCommunity.IntrusionDetection.Service.Test/TestResults/**/*.trx
+          path: tests/IDDSCommunity.IntrusionDetection.Service.Test/TestResults/**/*.trx
           if-no-files-found: warn
           retention-days: 14
