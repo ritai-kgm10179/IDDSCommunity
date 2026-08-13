@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -18,6 +18,8 @@ public sealed class PanelReportExport : UserControl
     private readonly DateTimePicker end = new() { Format = DateTimePickerFormat.Short, Width = 140 };
     private readonly Button export = new();
     private readonly Label status = new();
+
+    private System.Threading.CancellationTokenSource? statusCts;
 
     public PanelReportExport()
     {
@@ -45,6 +47,32 @@ public sealed class PanelReportExport : UserControl
         status.Location = new Point(15, 210);
         status.Size = new Size(620, 100);
         Controls.Add(status);
+        VisibleChanged += (_, _) => ResetStatus();
+    }
+
+    private void ResetStatus()
+    {
+        statusCts?.Cancel();
+        statusCts?.Dispose();
+        statusCts = null;
+        status.Text = string.Empty;
+    }
+
+    private void SetTransientStatus(string text, int delaySeconds = 5)
+    {
+        statusCts?.Cancel();
+        statusCts?.Dispose();
+        statusCts = new System.Threading.CancellationTokenSource();
+        System.Threading.CancellationToken token = statusCts.Token;
+        status.Text = text;
+        _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
+        {
+            if (!t.IsCanceled)
+            {
+                if (InvokeRequired) BeginInvoke(new Action(() => status.Text = string.Empty));
+                else status.Text = string.Empty;
+            }
+        }, TaskScheduler.Default);
     }
 
     private async void Export(object? sender, EventArgs e)
@@ -54,7 +82,7 @@ public sealed class PanelReportExport : UserControl
         DateTime endExclusive = through.AddDays(1);
         if (through < from)
         {
-            status.Text = Strings.Get("The end date must not be earlier than the start date.");
+            SetTransientStatus(Strings.Get("The end date must not be earlier than the start date."));
             return;
         }
 
@@ -77,16 +105,17 @@ public sealed class PanelReportExport : UserControl
                 Strings.Format("Report period: {0:d} - {1:d}", from, through),
                 Strings.Format("Server: {0}", Dns.GetHostName()), from, endExclusive));
             await File.WriteAllTextAsync(dialog.FileName, html, new System.Text.UTF8Encoding(false));
-            status.Text = Strings.Format("Report exported: {0}", dialog.FileName);
+            SetTransientStatus(Strings.Format("Report exported: {0}", dialog.FileName));
         }
         catch (Exception exception)
         {
             Trace.TraceError("Report export failed: {0}", exception);
             string? diagnosticPath = RollingDiagnosticLog.Write("Admin-ReportExport", "Report export failed", exception);
-            status.Text = Strings.Get("Report export failed. Review the application log for details.");
+            string errorText = Strings.Get("Report export failed. Review the application log for details.");
+            SetTransientStatus(errorText);
             string details = string.IsNullOrWhiteSpace(diagnosticPath)
-                ? status.Text
-                : status.Text + Environment.NewLine + diagnosticPath;
+                ? errorText
+                : errorText + Environment.NewLine + diagnosticPath;
             MessageBox.Show(this, details, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally { export.Enabled = true; }

@@ -24,6 +24,8 @@ public sealed class PanelDatabaseMaintenance : UserControl
     private readonly ListBox backupList;
     private readonly ListBox historyList;
 
+    private System.Threading.CancellationTokenSource? statusCts;
+
     public PanelDatabaseMaintenance()
     {
         BackColor = Color.White;
@@ -47,12 +49,12 @@ public sealed class PanelDatabaseMaintenance : UserControl
         backupButton.Click += async (_, _) => await RunAsync(CreateBackup, result =>
         {
             maintenance.PruneBackups(BackupDirectory);
-            statusLabel.Text = Strings.Format("Verified backup created: {0}", result.FilePath);
+            SetTransientStatus(Strings.Format("Verified backup created: {0}", result.FilePath));
             RefreshInventory();
         });
         optimizeButton.Click += async (_, _) => await RunAsync(() => { maintenance.Optimize(); return maintenance.GetStatus(); }, ShowStatus);
         purgeButton.Click += async (_, _) => await RunAsync(() => maintenance.PurgeExpired(new DatabaseRetentionPolicy()), result =>
-            statusLabel.Text = Strings.Format("Expired rows removed: {0}", string.Join(", ", result)));
+            SetTransientStatus(Strings.Format("Expired rows removed: {0}", string.Join(", ", result))));
         restoreButton.Click += RestoreBackup;
         compactButton.Click += CompactDatabase;
         verifyButton.Click += VerifySelectedBackup;
@@ -71,7 +73,25 @@ public sealed class PanelDatabaseMaintenance : UserControl
         historyList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 410), Size = new Size(620, 92) };
         Controls.Add(historyList);
         SizeChanged += (_, _) => UpdateResponsiveWidths();
+        VisibleChanged += (_, _) => { if (Visible) RefreshStatus(); };
         UpdateResponsiveWidths();
+    }
+
+    private void SetTransientStatus(string text, int delaySeconds = 5)
+    {
+        statusCts?.Cancel();
+        statusCts?.Dispose();
+        statusCts = new System.Threading.CancellationTokenSource();
+        System.Threading.CancellationToken token = statusCts.Token;
+        statusLabel.Text = text;
+        _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
+        {
+            if (!t.IsCanceled)
+            {
+                if (InvokeRequired) BeginInvoke(new Action(RefreshStatus));
+                else RefreshStatus();
+            }
+        }, TaskScheduler.Default);
     }
 
     private void UpdateResponsiveWidths()
@@ -156,14 +176,14 @@ public sealed class PanelDatabaseMaintenance : UserControl
         string backupPath = dialog.FileName;
         await RunAsync(
             () => maintenance.RestoreVerifiedBackup(backupPath, Path.Combine(databaseDirectory, "Backups", "Rollback")),
-            result => statusLabel.Text = Strings.Format("Database restored. Rollback copy: {0}", result.FilePath));
+            result => SetTransientStatus(Strings.Format("Database restored. Rollback copy: {0}", result.FilePath)));
     }
 
     private async void VerifySelectedBackup(object? sender, EventArgs e)
     {
         if (backupList.SelectedItem is not DatabaseBackupInfo backup) return;
         await RunAsync(() => maintenance.VerifyBackup(backup.FilePath), result =>
-            statusLabel.Text = Strings.Format("Backup verified. SHA-256: {0}", result.Sha256));
+            SetTransientStatus(Strings.Format("Backup verified. SHA-256: {0}", result.Sha256)));
     }
 
     private async void CompactDatabase(object? sender, EventArgs e)
@@ -176,7 +196,7 @@ public sealed class PanelDatabaseMaintenance : UserControl
         if (MessageBox.Show(Strings.Get("Reclaim database space now? A verified safety backup and rollback copy will be created first."), Strings.AppTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
         await RunAsync(() => maintenance.CompactAndReplace(BackupDirectory, true), result =>
         {
-            statusLabel.Text = Strings.Format("Database space reclaimed. Safety backup: {0}", result.FilePath);
+            SetTransientStatus(Strings.Format("Database space reclaimed. Safety backup: {0}", result.FilePath));
             RefreshInventory();
         });
     }

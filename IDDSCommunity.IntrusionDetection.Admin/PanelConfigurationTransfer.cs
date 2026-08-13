@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
@@ -19,6 +19,9 @@ public sealed class PanelConfigurationTransfer : UserControl
     private readonly Button exportButton;
     private readonly Button importButton;
 
+    private static string DefaultStatusText => Strings.Get("Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM.");
+    private System.Threading.CancellationTokenSource? statusCts;
+
     public PanelConfigurationTransfer()
     {
         BackColor = Color.White;
@@ -36,10 +39,36 @@ public sealed class PanelConfigurationTransfer : UserControl
         importButton.Click += Import;
         Controls.Add(exportButton);
         Controls.Add(importButton);
-        status = Label(Strings.Get("Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM."), 9F, Color.FromArgb(102, 102, 102), 15, 205);
+        status = Label(DefaultStatusText, 9F, Color.FromArgb(102, 102, 102), 15, 205);
         status.AutoSize = false;
         status.Size = new Size(620, 100);
         Controls.Add(status);
+        VisibleChanged += (_, _) => ResetStatus();
+    }
+
+    private void ResetStatus()
+    {
+        statusCts?.Cancel();
+        statusCts?.Dispose();
+        statusCts = null;
+        status.Text = DefaultStatusText;
+    }
+
+    private void SetTransientStatus(string text, int delaySeconds = 5)
+    {
+        statusCts?.Cancel();
+        statusCts?.Dispose();
+        statusCts = new System.Threading.CancellationTokenSource();
+        System.Threading.CancellationToken token = statusCts.Token;
+        status.Text = text;
+        _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
+        {
+            if (!t.IsCanceled)
+            {
+                if (InvokeRequired) BeginInvoke(new Action(() => status.Text = DefaultStatusText));
+                else status.Text = DefaultStatusText;
+            }
+        }, TaskScheduler.Default);
     }
 
     private async void Export(object? sender, EventArgs e)
@@ -80,7 +109,7 @@ public sealed class PanelConfigurationTransfer : UserControl
     {
         SetEnabled(false);
         status.Text = Strings.Get("Configuration transfer is running...");
-        try { await Task.Run(operation); status.Text = success; }
+        try { await Task.Run(operation); SetTransientStatus(success); }
         catch (Exception exception) { LogTransferFailure(operationName, exception); ShowError(GetFailureMessage(exception, includesSecrets)); }
         finally { SetEnabled(true); }
     }
