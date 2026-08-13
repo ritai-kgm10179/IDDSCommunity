@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -80,7 +80,20 @@ public class SecurityAgents : List<SecurityAgent>
             Add(agent);
         }
         rdr.Close();
+        SortAgents();
     }
+
+    /// <summary>
+    /// 依據代理程式分組與名稱統一排序 Security Agents 集合。
+    /// </summary>
+    public void SortAgents() => Sort((a, b) =>
+    {
+        int cmp = a.SortOrder.CompareTo(b.SortOrder);
+        if (cmp != 0) return cmp;
+        string nameA = !string.IsNullOrEmpty(a.DisplayName) ? a.DisplayName : a.Name ?? string.Empty;
+        string nameB = !string.IsNullOrEmpty(b.DisplayName) ? b.DisplayName : b.Name ?? string.Empty;
+        return string.Compare(nameA, nameB, StringComparison.CurrentCultureIgnoreCase);
+    });
     /// <summary>
     /// 自磁碟讀取 Agent 設定。
     /// </summary>
@@ -410,6 +423,7 @@ public class SecurityAgents : List<SecurityAgent>
             agent.Enabled = false;
         }
         AddRange(result);
+        SortAgents();
         return this;
     }
 

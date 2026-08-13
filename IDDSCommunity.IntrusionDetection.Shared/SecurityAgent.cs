@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -457,5 +457,54 @@ public class SecurityAgent : IAgentFilter
         set => _customConfigurationTypes = value;
     }
 
+    /// <summary>
+    /// 取得代理程式的分組排序權重。
+    /// 系統與遠端存取: 10~19
+    /// Web 與網域服務: 20~29
+    /// 資料庫服務: 30~39
+    /// 郵件與傳輸服務: 40~49
+    /// 其他未分類擴充套件: 90+
+    /// </summary>
+    public int SortOrder => GetSortOrder(Name, DisplayName);
+
+    /// <summary>
+    /// 計算指定的代理程式名稱或顯示名稱的分組排序權重。
+    /// </summary>
+    /// <param name="name">Agent 識別名稱。</param>
+    /// <param name="displayName">Agent 顯示名稱。</param>
+    /// <returns>排序權重整數。</returns>
+    public static int GetSortOrder(string? name, string? displayName)
+    {
+        string identifier = (name ?? string.Empty) + " " + (displayName ?? string.Empty);
+
+        // 1. 系統與遠端存取 (System & Remote Access)
+        if (identifier.Contains("Windows Base", StringComparison.OrdinalIgnoreCase)) return 10;
+        if (identifier.Contains("Windows Network Logon", StringComparison.OrdinalIgnoreCase) || identifier.Contains("網路登入", StringComparison.OrdinalIgnoreCase)) return 11;
+        if (identifier.Contains("TLS/SSL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Remote Desktop", StringComparison.OrdinalIgnoreCase) || identifier.Contains("遠端桌面", StringComparison.OrdinalIgnoreCase)) return 12;
+        if (identifier.Contains("OpenSSH", StringComparison.OrdinalIgnoreCase)) return 13;
+        if (identifier.Contains("AD Credential", StringComparison.OrdinalIgnoreCase) || identifier.Contains("AD 認證", StringComparison.OrdinalIgnoreCase)) return 14;
+        if (identifier.Contains("Kerberos", StringComparison.OrdinalIgnoreCase)) return 15;
+        if (identifier.Contains("RRAS", StringComparison.OrdinalIgnoreCase)) return 16;
+
+        // 2. Web 與網域服務 (Web & Domain Services)
+        if (identifier.Contains("Web Security", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Web 安全", StringComparison.OrdinalIgnoreCase)) return 20;
+        if (identifier.Contains("IIS Authentication", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IIS 驗證", StringComparison.OrdinalIgnoreCase)) return 21;
+        if (identifier.Contains("DNS", StringComparison.OrdinalIgnoreCase)) return 22;
+
+        // 3. 資料庫服務 (Database Services)
+        if (identifier.Contains("SQL Server", StringComparison.OrdinalIgnoreCase)) return 30;
+        if (identifier.Contains("MySQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("MariaDB", StringComparison.OrdinalIgnoreCase)) return 31;
+        if (identifier.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Postgres", StringComparison.OrdinalIgnoreCase)) return 32;
+        if (identifier.Contains("FileMaker", StringComparison.OrdinalIgnoreCase)) return 33;
+
+        // 4. 郵件與傳輸服務 (Mail & Network Protocols)
+        if (identifier.Contains("SmtpAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("SMTP", StringComparison.OrdinalIgnoreCase)) return 40;
+        if (identifier.Contains("Pop3Agent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("POP3", StringComparison.OrdinalIgnoreCase)) return 41;
+        if (identifier.Contains("ImapAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IMAP", StringComparison.OrdinalIgnoreCase)) return 42;
+        if (identifier.Contains("FTP", StringComparison.OrdinalIgnoreCase)) return 43;
+        if (identifier.Contains("RADIUS", StringComparison.OrdinalIgnoreCase) || identifier.Contains("NPS", StringComparison.OrdinalIgnoreCase)) return 44;
+
+        return 99;
+    }
 }
 

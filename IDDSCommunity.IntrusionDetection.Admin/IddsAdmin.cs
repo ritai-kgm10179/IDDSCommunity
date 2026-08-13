@@ -900,6 +900,7 @@ public partial class IddsAdmin : Form
     {
         Dashboard.ClearAgents();
         PanelAgentConfiguration.ClearSecurityAgents();
+        SecurityAgents.Instance.SortAgents();
         foreach (SecurityAgent agent in SecurityAgents.Instance)
         {
             Dashboard.AddAgent(agent);
