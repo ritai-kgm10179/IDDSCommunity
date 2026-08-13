@@ -1,16 +1,16 @@
-# IDDS Community 入侵偵測與主動防護系統 - 使用與安裝說明文件
+# IDDS 社群版 - 使用與安裝說明文件
 
-歡迎使用 **IDDS Community**！本文件提供系統安裝、管理控制台 (Admin Console) 介面操作、SIEM 搜尋過濾、代理程式配置與安全網路設定之完整導覽。
+歡迎使用 **IDDS 社群版**！本文件提供系統安裝、管理控制台 (Admin Console) 介面操作、SIEM 搜尋過濾、代理程式配置與安全網路設定之完整導覽。
 
 ---
 
 ## 1. 系統架構簡介
 
-IDDS Community 為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵測與主動防護系統，包含以下三個核心元件：
+IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵測與主動防護系統，包含以下三個核心元件：
 
-1. **IDDS Community Protection Service (`IDDSCommunity.IntrusionDetection.Service.exe`)**：
+1. **IDDS 社群版 Protection Service (`IDDSCommunity.IntrusionDetection.Service.exe`)**：
    - Windows 後台服務，負責事件訂閱、日誌監控、暴力破解攻擊偵測與自動 Windows 防火牆封鎖。
-2. **IDDS Community Admin Console (`IDDSCommunity.IntrusionDetection.Admin.exe`)**：
+2. **IDDS 社群版 Admin Console (`IDDSCommunity.IntrusionDetection.Admin.exe`)**：
    - 正體中文 GUI 管理控制台，提供即時儀表板監控、SIEM 級日誌搜尋、安全網路清單管理與代理程式調校。
 3. **Setup 安裝程式 (`Setup.exe`)**：
    - 獨立整合式安裝/升級/修復/移除工具，支援版本自動識別與全使用者捷徑管理。
@@ -39,7 +39,7 @@ IDDS Community 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 
 ## 3. 管理控制台 (Admin Console) 深度使用指南
 
-啟動 **IDDS Community 管理控制台 (`IDDSCommunity.IntrusionDetection.Admin.exe`)**，主畫面左側為功能導引選單，包含以下 8 大核心功能面板：
+啟動 **IDDS 社群版 管理控制台 (`IDDSCommunity.IntrusionDetection.Admin.exe`)**，主畫面左側為功能導引選單，包含以下 8 大核心功能面板：
 
 ### 3.1 📊 儀表板 (Dashboard / 總覽)
 - **服務狀態控制**：頂部顯示目前背景服務運轉狀態 (已啟動／已停止)。若未啟動，可點擊「啟動服務」按鈕控制服務。

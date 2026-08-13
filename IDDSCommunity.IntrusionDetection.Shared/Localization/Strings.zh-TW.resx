@@ -57,7 +57,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppTitle" xml:space="preserve">
-    <value>IDDS Community 入侵防禦系統</value>
+    <value>IDDS 社群版</value>
   </data>
   <data name="StatusRunning" xml:space="preserve">
     <value>運作中</value>
@@ -492,8 +492,8 @@
   <data name="Language setting was saved. Restart the application to apply it." xml:space="preserve"><value>語言設定已儲存。請重新啟動應用程式以套用。</value></data>
   <data name="Raw packet capture currently requires an IPv4 address." xml:space="preserve"><value>原始封包擷取目前需要 IPv4 位址。</value></data>
   <data name="Packet capture has already started." xml:space="preserve"><value>封包擷取已經啟動。</value></data>
-  <data name="Unable to resolve the requested agent plugin type." xml:space="preserve"><value>無法解析指定的 Agent 外掛類型。</value></data>
-  <data name="Unable to create agent plugin '{0}' from '{1}'." xml:space="preserve"><value>無法從「{1}」建立 Agent 外掛「{0}」。</value></data>
+  <data name="Unable to resolve the requested agent plugin type." xml:space="preserve"><value>無法解析指定的代理程式外掛型別。</value></data>
+  <data name="Unable to create agent plugin '{0}' from '{1}'." xml:space="preserve"><value>無法從「{1}」建立代理程式外掛「{0}」。</value></data>
   <data name="Alert for {0} was not found." xml:space="preserve"><value>找不到 {0} 的警示。</value></data>
   <data name="COM type {0} is unavailable." xml:space="preserve"><value>COM 類型 {0} 無法使用。</value></data>
   <data name="Unable to create COM object {0}." xml:space="preserve"><value>無法建立 COM 物件 {0}。</value></data>
@@ -502,11 +502,11 @@
   <data name="The existing database is missing the required table '{0}'." xml:space="preserve"><value>現有資料庫缺少必要資料表「{0}」。</value></data>
   <data name="SMTP configuration is incomplete." xml:space="preserve"><value>SMTP 設定不完整。</value></data>
   <data name="Windows Firewall integration requires Windows." xml:space="preserve"><value>Windows 防火牆整合需要 Windows。</value></data>
-  <data name="Agent plugin path must remain inside the configured plugin directory." xml:space="preserve"><value>Agent 外掛路徑必須位於設定的外掛目錄內。</value></data>
-  <data name="Agent plugin must be a DLL assembly." xml:space="preserve"><value>Agent 外掛必須是 DLL 組件。</value></data>
-  <data name="Agent plugin assembly was not found." xml:space="preserve"><value>找不到 Agent 外掛組件。</value></data>
-  <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>Agent 外掛路徑不可包含重新解析點。</value></data>
-  <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>Agent 外掛識別碼不可重複。</value></data>
+  <data name="Agent plugin path must remain inside the configured plugin directory." xml:space="preserve"><value>代理程式外掛路徑必須位於設定的外掛目錄內。</value></data>
+  <data name="Agent plugin must be a DLL assembly." xml:space="preserve"><value>代理程式外掛必須是 DLL 組件。</value></data>
+  <data name="Agent plugin assembly was not found." xml:space="preserve"><value>找不到代理程式外掛組件。</value></data>
+  <data name="Agent plugin path cannot contain a reparse point." xml:space="preserve"><value>代理程式外掛路徑不可包含重新解析點。</value></data>
+  <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>代理程式外掛識別碼不可重複。</value></data>
   <data name="The runtime database is not configured." xml:space="preserve"><value>執行期資料庫尚未設定。</value></data>
   <data name="The report scheduler is not running." xml:space="preserve"><value>報表排程器尚未執行。</value></data>
   <data name="IDDSCommunity runtime is operational." xml:space="preserve"><value>IDDSCommunity 執行期運作正常。</value></data>
@@ -517,15 +517,15 @@
   <data name="Week of {0:d}" xml:space="preserve"><value>{0:d} 當週</value></data>
   <data name="Server: {0}" xml:space="preserve"><value>伺服器：{0}</value></data>
   <data name="Installation information" xml:space="preserve"><value>安裝資訊</value></data>
-  <data name="Events per agent" xml:space="preserve"><value>各 Agent 事件</value></data>
-  <data name="Agent name" xml:space="preserve"><value>Agent 名稱</value></data>
+  <data name="Events per agent" xml:space="preserve"><value>每個代理程式的事件數</value></data>
+  <data name="Agent name" xml:space="preserve"><value>代理程式名稱</value></data>
   <data name="Intrusion attempts" xml:space="preserve"><value>入侵嘗試</value></data>
   <data name="Total" xml:space="preserve"><value>總計</value></data>
   <data name="Intrusion attempts by IP address" xml:space="preserve"><value>依 IP 位址統計入侵嘗試</value></data>
   <data name="Soft locks by IP address" xml:space="preserve"><value>依 IP 位址統計暫時封鎖</value></data>
   <data name="Hard locks by IP address" xml:space="preserve"><value>依 IP 位址統計強制封鎖</value></data>
   <data name="Client IP" xml:space="preserve"><value>用戶端 IP</value></data>
-  <data name="To configure reporting options, use the IDDS administration software on the server." xml:space="preserve"><value>若要設定報表選項，請使用伺服器上的 IDDS 管理軟體。</value></data>
+  <data name="To configure reporting options, use the IDDS administration software on the server." xml:space="preserve"><value>若要設定報表選項，請使用伺服器上的 IDDS 社群版管理軟體。</value></data>
   <data name="The audit export destination must be writable." xml:space="preserve"><value>稽核匯出目的地必須可寫入。</value></data>
   <data name="Protection audit recording failed: {0}" xml:space="preserve"><value>防護稽核記錄失敗：{0}</value></data>
   <data name="The protection audit store is unavailable." xml:space="preserve"><value>防護稽核儲存區無法使用。</value></data>
@@ -562,19 +562,19 @@
   <data name="DNS dynamic-update threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 動態更新閾值。</value></data>
   <data name="DNS zone-transfer threshold exceeded by {0}." xml:space="preserve"><value>{0} 已超過 DNS 區域轉送閾值。</value></data>
   <data name="Suspicious DNS activity was detected from {0}." xml:space="preserve"><value>偵測到來自 {0} 的可疑 DNS 活動。</value></data>
-  <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS Agent 設定無法使用。</value></data>
+  <data name="Windows DNS Agent configuration is unavailable." xml:space="preserve"><value>Windows DNS 代理程式設定無法使用。</value></data>
   <data name="Windows DNS Security Agent" xml:space="preserve"><value>Windows DNS 安全性代理程式</value></data>
   <data name="AD Credential Validation Security Agent" xml:space="preserve"><value>AD 認證驗證安全性代理程式</value></data>
   <data name="Kerberos pre-authentication Security Agent" xml:space="preserve"><value>Kerberos 預先驗證安全性代理程式</value></data>
   <data name="RRAS Security Agent - Routing and Remote Access" xml:space="preserve"><value>RRAS 安全性代理程式－路由及遠端存取</value></data>
   <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性代理程式</value></data>
-  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>Agent 已在執行，作業已取消！</value></data>
-  <data name="Agent is not running." xml:space="preserve"><value>Agent 尚未執行。</value></data>
-  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>Agent 在目前狀態下無法暫停</value></data>
-  <data name="Agent must be in paused state" xml:space="preserve"><value>Agent 必須處於暫停狀態</value></data>
+  <data name="Agent is already running. Operation cancelled!" xml:space="preserve"><value>代理程式已在執行，作業已取消！</value></data>
+  <data name="Agent is not running." xml:space="preserve"><value>代理程式尚未執行。</value></data>
+  <data name="Agent cannot be paused in this state" xml:space="preserve"><value>代理程式在目前狀態下無法暫停</value></data>
+  <data name="Agent must be in paused state" xml:space="preserve"><value>代理程式必須處於暫停狀態</value></data>
   <data name="IP address {0} cannot be unlocked. Error details: {1}" xml:space="preserve"><value>無法解除封鎖 IP 位址 {0}。錯誤詳細資料：{1}</value></data>
   <data name="Lock cleanup failed: {0}" xml:space="preserve"><value>封鎖清理失敗：{0}</value></data>
-  <data name="Agent performance monitoring failed: {0}" xml:space="preserve"><value>Agent 效能監控失敗：{0}</value></data>
+  <data name="Agent performance monitoring failed: {0}" xml:space="preserve"><value>代理程式效能監控失敗：{0}</value></data>
   <data name="Application startup failed" xml:space="preserve"><value>應用程式啟動失敗</value></data>
   <data name="Application startup failed: {0}" xml:space="preserve"><value>應用程式啟動失敗：{0}</value></data>
   <data name="The administration interface did not complete initialization." xml:space="preserve"><value>管理介面未完成初始化。</value></data>
@@ -791,7 +791,9 @@
   <data name="Report.Daily" xml:space="preserve"><value>每日報表產生</value></data>
   <data name="Report.Weekly" xml:space="preserve"><value>每週報表產生</value></data>
   <data name="Report.Monthly" xml:space="preserve"><value>每月報表產生</value></data>
-  <data name="Runtime.Start" xml:space="preserve"><value>服務啟動</value></data>
-  <data name="Runtime.Stop" xml:space="preserve"><value>服務停止</value></data>
+  <data name="Runtime.Start" xml:space="preserve"><value>服務已啟動</value></data>
+  <data name="Runtime.Stop" xml:space="preserve"><value>服務已停止</value></data>
+  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：暫時封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：強制封鎖通知 ({0})</value></data>
 </root>
-

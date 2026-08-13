@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -788,12 +788,23 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
     private void pictureBoxHelpButon_Click(object sender, EventArgs e)
     {
-        string[] candidatePaths =
-        [
-            System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
-            System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
-            System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
-        ];
+        bool isEnglish = LanguageManager.Instance.CurrentCulture.Name.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+        string[] candidatePaths = isEnglish
+            ?
+            [
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
+            ]
+            :
+            [
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.md"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
+            ];
 
         foreach (string path in candidatePaths)
         {

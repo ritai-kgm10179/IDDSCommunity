@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
@@ -49,8 +49,13 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'ASSET-PROVENANCE.md') -Destin
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'assets\asset-provenance.json') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $payloadRoot -Force
 $userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
+$userGuideEnSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.md'
 if (Test-Path -LiteralPath $userGuideSource) {
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.md') -Force
+    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.zh-TW.md') -Force
+}
+if (Test-Path -LiteralPath $userGuideEnSource) {
+    Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.en-US.md') -Force
 }
 
 $pluginProjects = @(
@@ -102,5 +107,8 @@ finally {
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packageRoot -Force
 if (Test-Path -LiteralPath $userGuideSource) {
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.md') -Force
+}
+if (Test-Path -LiteralPath $userGuideEnSource) {
+    Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $packageRoot 'USER-GUIDE.en-US.md') -Force
 }
 Write-Host "安裝套件已建立：$packageRoot"

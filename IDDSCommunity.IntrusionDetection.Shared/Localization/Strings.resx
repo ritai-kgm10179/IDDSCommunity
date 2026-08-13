@@ -793,5 +793,8 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Report.Monthly" xml:space="preserve"><value>Monthly Report Generation</value></data>
   <data name="Runtime.Start" xml:space="preserve"><value>Service Started</value></data>
   <data name="Runtime.Stop" xml:space="preserve"><value>Service Stopped</value></data>
+  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS Community: Unlock notification ({0})</value></data>
+  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS Community: Soft lock notification ({0})</value></data>
+  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS Community: Hard lock notification ({0})</value></data>
 </root>
 

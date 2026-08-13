@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -352,15 +352,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             {
                 case LockType.None:
                     if (!notificationSettings.OnUnlock) return;
-                    subject = "IDDS Community: Unlock notification (" + op.IpAddress + ")";
+                    subject = Strings.Format("IDDS Community: Unlock notification ({0})", op.IpAddress);
                     break;
                 case LockType.SoftLock:
                     if (!notificationSettings.OnSoftLock) return;
-                    subject = "IDDS Community: Soft lock notification (" + op.IpAddress + ")";
+                    subject = Strings.Format("IDDS Community: Soft lock notification ({0})", op.IpAddress);
                     break;
                 case LockType.HardLock:
                     if (!notificationSettings.OnHardLock) return;
-                    subject = "IDDS Community: Hard lock notification (" + op.IpAddress + ")";
+                    subject = Strings.Format("IDDS Community: Hard lock notification ({0})", op.IpAddress);
                     break;
             }
             _ = SendMailAsync(subject, op.Message, false);

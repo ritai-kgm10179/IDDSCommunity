@@ -1,6 +1,6 @@
-# IDDS Community
+# IDDS 社群版 (IDDS Community)
 
-IDDS Community 是 Windows Server 上的社群維護入侵偵測與主動防護系統。它會由可載入的 Agent 分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
+IDDS 社群版 是 Windows Server 上的社群維護入侵偵測與主動防護系統。它會由可載入的代理程式分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
 
 ## AI 產製聲明
 
@@ -16,8 +16,8 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - 硬封鎖、軟封鎖、安全網路允許清單與自動解除封鎖。
 - Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
-- Agent 外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
-- 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各 Agent 可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。
+- 代理程式外掛：FTP、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security 與 Windows DNS Server。
+- 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各代理程式可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。
 - 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 Argon2id（64 MiB、3 次、單一平行度）衍生金鑰，再由 AES-256-GCM 加密及驗證。匯入前會限制密碼衍生參數、驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
 - SQLite 主資料庫、WAL 與應用程式建立的維護備份採 SQLite3 Multiple Ciphers 預設的 ChaCha20-Poly1305 頁面加密。應用程式首次開啟既有明文資料庫時會先建立快照、加密並驗證後再原子替換；隨機 256 位元資料庫金鑰由 Windows DPAPI（本機範圍）保護，金鑰遺失時會拒絕建立空白資料庫，以免靜默覆蓋既有資料。
 - 正體中文與英文資源；管理介面、提示、錯誤、例外訊息與報表均使用本地化資源。

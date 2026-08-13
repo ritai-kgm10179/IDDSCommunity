@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ public class LanguageManagerTest
     {
         LanguageManager.Instance.Initialize("zh-TW");
         Assert.AreEqual("zh-TW", LanguageManager.Instance.CurrentCulture.Name);
-        Assert.AreEqual("IDDS Community 入侵防禦系統", Strings.AppTitle);
+        Assert.AreEqual("IDDS 社群版", Strings.AppTitle);
 
         LanguageManager.Instance.Initialize("en");
         Assert.AreEqual("en-US", LanguageManager.Instance.CurrentCulture.Name);

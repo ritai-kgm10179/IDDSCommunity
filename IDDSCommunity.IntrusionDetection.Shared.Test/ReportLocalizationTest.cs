@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -43,7 +43,7 @@ public sealed class ReportLocalizationTest
         string subject = Strings.Format("Daily report for {0}", "server01");
 
         StringAssert.Contains(result, "安裝資訊");
-        StringAssert.Contains(result, "各 Agent 事件");
+        StringAssert.Contains(result, "每個代理程式的事件數");
         StringAssert.Contains(result, "入侵嘗試");
         Assert.AreEqual("server01 的每日報表", subject);
         Assert.IsFalse(result.Contains("[%LABEL_", StringComparison.Ordinal));
