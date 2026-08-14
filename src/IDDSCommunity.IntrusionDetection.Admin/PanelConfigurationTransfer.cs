@@ -63,9 +63,9 @@ public sealed class PanelConfigurationTransfer : UserControl
         status.Text = text;
         _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
         {
-            if (!t.IsCanceled)
+            if (!t.IsCanceled && !IsDisposed && IsHandleCreated)
             {
-                if (InvokeRequired) BeginInvoke(new Action(() => status.Text = DefaultStatusText));
+                if (InvokeRequired) BeginInvoke(new Action(() => { if (!IsDisposed) status.Text = DefaultStatusText; }));
                 else status.Text = DefaultStatusText;
             }
         }, TaskScheduler.Default);

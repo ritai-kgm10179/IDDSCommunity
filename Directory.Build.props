@@ -7,7 +7,7 @@
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <FileVersion>3.0.0.0</FileVersion>
     <InformationalVersion>3.0.0</InformationalVersion>
-    <!-- 僅保留無法以程式碼修正的 NuGet 弱點警告與 WinForms 既知問題 -->
-    <NoWarn>$(NoWarn);NU1510;NU1902;NU1903;WFO1000;MSB3042</NoWarn>
+    <!-- 僅保留無法以程式碼修正的 NuGet 警告與 WinForms 既知問題 -->
+    <NoWarn>$(NoWarn);NU1510;WFO1000;MSB3042</NoWarn>
   </PropertyGroup>
 </Project>

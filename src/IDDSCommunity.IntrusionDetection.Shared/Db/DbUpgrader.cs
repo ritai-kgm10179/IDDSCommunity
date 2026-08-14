@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 
@@ -14,7 +14,7 @@ public class DbUpgrader
     /// <param name="connection">connection參數。</param>
     public void RunUpgradeScripts(System.Data.IDbConnection connection)
     {
-        System.Data.IDbCommand cmd = connection.CreateCommand();
+        using System.Data.IDbCommand cmd = connection.CreateCommand();
         cmd.Connection = connection;
         cmd.CommandText = "SELECT VersionNumber from DbConfig order by VersionNumber desc LIMIT 1";
         int latestVersion = 0;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -73,6 +73,7 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         if (watcher is not null)
         {
             watcher.Enabled = false;
+            watcher.EventRecordWritten -= Watcher_EventRecordWritten;
             watcher.Dispose();
         }
         watcher = null;
@@ -87,42 +88,37 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     {
         try
         {
-            // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
-            if (e.EventRecord is null)
+            using EventRecord? record = e.EventRecord;
+            if (record is null)
             {
                 return;
             }
 
-            foreach (EventProperty prop in e.EventRecord.Properties)
+            foreach (EventProperty prop in record.Properties)
             {
                 string? propertyValue = prop.Value?.ToString();
-                if (propertyValue is not null && MyRegex().IsMatch(propertyValue))
+                if (propertyValue is not null)
                 {
-                    Match ipAddress = MyRegex().Match(propertyValue);
-                    NotificationEventArgs args = new()
+                    try
                     {
-                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
-                        EventId = e.EventRecord.Id,
-                        IpAddress = ipAddress.Value
-                    };
-                    IPAddress.TryParse(args.IpAddress, out IPAddress? ip);
-                    if (ip != null && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                    {
-                        OnAttackDetected(this, args);
+                        Match ipMatch = MyRegex().Match(propertyValue);
+                        if (ipMatch.Success)
+                        {
+                            NotificationEventArgs args = new()
+                            {
+                                CreateDate = record.TimeCreated ?? DateTime.Now,
+                                EventId = record.Id,
+                                IpAddress = ipMatch.Value
+                            };
+                            if (IPAddress.TryParse(args.IpAddress, out IPAddress? ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
+                                OnAttackDetected(this, args);
+                            }
+                        }
                     }
+                    catch (RegexMatchTimeoutException) { }
                 }
-                //if (prop.Value.ToString().Contains("CLIENT:")) {
-                //    string client = prop.Value.ToString();
-                //    int start = client.IndexOf("CLIENT:") + 7;
-                //    string ipAddress = client.Substring(start, client.LastIndexOf(']') - start).Trim();
-                //    NotificationEventArgs args = new NotificationEventArgs();
-                //    args.CreateDate = e.EventRecord.TimeCreated.Value;
-                //    args.EventId = e.EventRecord.Id;
-                //    args.IpAddress = ipAddress;
-                //    OnAttackDetected(this, args);
-                //}
             }
-
         }
         catch (Exception ex)
         {
@@ -157,7 +153,6 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
     /// 取得匹配規則運算式。
     /// </summary>
     /// <returns>傳回規則運算式執行個體。</returns>
-
-    [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    [GeneratedRegex(@"(?:[0-9]{1,3}\.){3}[0-9]{1,3}", RegexOptions.None, matchTimeoutMilliseconds: 250)]
     private static partial Regex MyRegex();
 }

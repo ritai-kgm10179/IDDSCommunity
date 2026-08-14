@@ -42,7 +42,8 @@ public partial class IddsAdmin : Form
         InitializeComponent();
         Icon = BrandingIcons.CreateIcon();
         BrandingIcons.ApplyTo(pictureBox1);
-        Text = Strings.Format("IDDSCommunity Intrusion Detection - Version {0}", "3.0.0");
+        string version = typeof(IddsAdmin).Assembly.GetName().Version?.ToString(3) ?? "3.0.0";
+        Text = Strings.Format("IDDSCommunity Intrusion Detection - Version {0}", version);
         labelFormText.Text = Text;
 
         //            panelContent.Invalidated += new InvalidateEventHandler(panelContent_Invalidated);
@@ -57,6 +58,11 @@ public partial class IddsAdmin : Form
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
         uiRefreshCancellation.Cancel();
+        logReader?.Dispose();
+        timerRefreshServiceStatus?.Dispose();
+        eventLogIDDSCommunity?.Dispose();
+        uiRefreshCancellation.Dispose();
+        serviceOperationGate.Dispose();
         disabledStartServiceImage?.Dispose();
         disabledStopServiceImage?.Dispose();
         serviceController?.Dispose();
@@ -952,7 +958,7 @@ public partial class IddsAdmin : Form
         timerRefreshServiceStatus.Tick += new EventHandler(serviceReader_Tick);
         timerRefreshServiceStatus.Start();
 
-        eventLogIDDSCommunity = new EventLog("IDDSCommunity")
+        eventLogIDDSCommunity = new EventLog(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME)
         {
             Source = Globals.IDDSCOMMUNITY_WINDOWS_EVENT_SOURCE
         };

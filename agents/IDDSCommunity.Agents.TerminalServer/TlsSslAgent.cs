@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Drawing;
@@ -55,20 +55,21 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
 
     }
 
+    private static readonly System.Diagnostics.Eventing.Reader.EventLogPropertySelector RdpPropertySelector = new(
+    [
+        @"Event/EventData/Data[@Name=""LogonType""]",
+        @"Event/EventData/Data[@Name=""Status""]",
+        @"Event/EventData/Data[@Name=""SubStatus""]",
+        @"Event/EventData/Data[@Name=""IpAddress""]"
+    ]);
+
     private void OnRdpSecurityEventWritten(object? sender, System.Diagnostics.Eventing.Reader.EventRecordWrittenEventArgs e)
     {
         try
         {
-            if (e.EventRecord is not System.Diagnostics.Eventing.Reader.EventLogRecord record) return;
-            string[] xPathProperties =
-            [
-                @"Event/EventData/Data[@Name=""LogonType""]",
-                @"Event/EventData/Data[@Name=""Status""]",
-                @"Event/EventData/Data[@Name=""SubStatus""]",
-                @"Event/EventData/Data[@Name=""IpAddress""]"
-            ];
-            var props = new System.Diagnostics.Eventing.Reader.EventLogPropertySelector(xPathProperties);
-            var values = record.GetPropertyValues(props);
+            using System.Diagnostics.Eventing.Reader.EventRecord? rawRecord = e.EventRecord;
+            if (rawRecord is not System.Diagnostics.Eventing.Reader.EventLogRecord record) return;
+            var values = record.GetPropertyValues(RdpPropertySelector);
             if (values.Count < 4 || !IsCredentialFailure(values[0]?.ToString(), values[1]?.ToString(), values[2]?.ToString()))
             {
                 return;
@@ -116,6 +117,7 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         if (_securityWatcher != null)
         {
             _securityWatcher.Enabled = false;
+            _securityWatcher.EventRecordWritten -= OnRdpSecurityEventWritten;
             _securityWatcher.Dispose();
             _securityWatcher = null;
         }

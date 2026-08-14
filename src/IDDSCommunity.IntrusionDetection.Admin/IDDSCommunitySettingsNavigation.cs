@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -104,7 +104,12 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     public void Clear()
     {
         NavigationItems.Clear();
-        flowLayoutPanelNavigationItems.Controls.Clear();
+        while (flowLayoutPanelNavigationItems.Controls.Count > 0)
+        {
+            Control child = flowLayoutPanelNavigationItems.Controls[0];
+            flowLayoutPanelNavigationItems.Controls.RemoveAt(0);
+            child.Dispose();
+        }
     }
 
 

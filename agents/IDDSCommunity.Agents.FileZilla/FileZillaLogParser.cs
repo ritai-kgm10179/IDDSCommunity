@@ -7,17 +7,24 @@ using IDDSCommunity.Agents.Authentication.Common;
 namespace IDDSCommunity.Agents.FileZilla;
 
 [SupportedOSPlatform("windows7.0")]
-public static class FileZillaLogParser
+public static partial class FileZillaLogParser
 {
-    private static readonly Regex FailureRegex = new(
-        @"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?\s+(?:\[[^\]]*\]\s+)?(?<ip>[0-9a-fA-F:\.]+)\s+-\s+.*(?:authentication failed|login failed|password incorrect|530 login incorrect|530 authentication failed).*",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    [GeneratedRegex(@"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?\s+(?:\[[^\]]*\]\s+)?(?<ip>[0-9a-fA-F:\.]+)\s+-\s+.*(?:authentication failed|login failed|password incorrect|530 login incorrect|530 authentication failed)", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 250)]
+    private static partial Regex GetFailureRegex();
 
     public static AuthenticationFailureEvent? TryParseMessage(string line, DateTimeOffset occurredAt)
     {
         if (string.IsNullOrWhiteSpace(line)) return null;
 
-        Match match = FailureRegex.Match(line);
+        Match match;
+        try
+        {
+            match = GetFailureRegex().Match(line);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return null;
+        }
         if (!match.Success) return null;
 
         string ipText = match.Groups["ip"].Value.Trim();

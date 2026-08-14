@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Db;
@@ -21,16 +21,8 @@ public class DbUpgradeScript
     /// <param name="command">command參數。</param>
     internal static void RunCommand(System.Data.IDbConnection connection, string command)
     {
-        System.Data.IDbCommand cmd = connection.CreateCommand();
+        using System.Data.IDbCommand cmd = connection.CreateCommand();
         cmd.CommandText = command;
-        try
-        {
-            cmd.ExecuteNonQuery();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-
+        cmd.ExecuteNonQuery();
     }
 }

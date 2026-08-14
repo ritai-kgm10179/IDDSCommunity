@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
 /// <summary>
-/// Provides a bounded daily fallback when Windows Event Log is unavailable.
+/// 提供當 Windows 事件記錄無法使用時的每日輪替備援記錄。
 /// </summary>
 internal static class RollingFallbackLog
 {

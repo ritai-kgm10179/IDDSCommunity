@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -135,22 +135,32 @@ public class IddsConfig
         }
     }
 
+    private readonly object _configLock = new();
     private Dictionary<string, string>? _appConfig;
     public Dictionary<string, string> AppConfig
     {
         get
         {
-            if (_appConfig == null)
+            lock (_configLock)
             {
-                LoadAppConfig();
+                if (_appConfig == null)
+                {
+                    LoadAppConfig();
+                }
+                return _appConfig!;
             }
-            return _appConfig!;
         }
     }
     /// <summary>
     /// Loads app config.
     /// </summary>
-    public void LoadAppConfig() => _appConfig = LoadConfig("AppConfig");
+    public void LoadAppConfig()
+    {
+        lock (_configLock)
+        {
+            _appConfig = LoadConfig("AppConfig");
+        }
+    }
     /// <summary>
     /// Gets config value.
     /// </summary>
@@ -158,8 +168,11 @@ public class IddsConfig
     /// <returns>傳回get config value結果。</returns>
     public string GetConfigValue(string key)
     {
-        if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
-        return AppConfig[key];
+        lock (_configLock)
+        {
+            if (!AppConfig.ContainsKey(key)) AppConfig.Add(key, string.Empty);
+            return AppConfig[key];
+        }
     }
     /// <summary>
     /// Sets config value.
@@ -168,15 +181,18 @@ public class IddsConfig
     /// <param name="value">要處理的value。</param>
     public void SetConfigValue(string key, string value)
     {
-        if (AppConfig.ContainsKey(key))
+        lock (_configLock)
         {
-            AppConfig[key] = value;
+            if (AppConfig.ContainsKey(key))
+            {
+                AppConfig[key] = value;
+            }
+            else
+            {
+                AppConfig.Add(key, value);
+            }
+            changedAppConfigKeys.Add(key);
         }
-        else
-        {
-            AppConfig.Add(key, value);
-        }
-        changedAppConfigKeys.Add(key);
     }
     /// <summary>
     /// Saves app config.
@@ -184,25 +200,28 @@ public class IddsConfig
     public void SaveAppConfig()
     {
         if (!database.IsConfigured) configureDatabase();
-        database.ExecuteInTransaction((_, trans) =>
+        lock (_configLock)
         {
-            database.ExecuteNonQuery("delete from AppConfig", trans);
-            foreach (string key in AppConfig.Keys)
+            database.ExecuteInTransaction((_, trans) =>
             {
-                object? exists = database.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
-                if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
+                database.ExecuteNonQuery("delete from AppConfig", trans);
+                foreach (string key in AppConfig.Keys)
                 {
-                    database.ExecuteNonQuery("update AppConfig set @p0 = @p1", trans, key, AppConfig[key]);
+                    object? exists = database.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
+                    if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
+                    {
+                        database.ExecuteNonQuery("UPDATE AppConfig SET ConfigValue = @p1 WHERE ConfigKey = @p0", trans, key, AppConfig[key]);
+                    }
+                    else
+                    {
+                        database.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
+                    }
                 }
-                else
-                {
-                    database.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
-                }
-            }
-            foreach (string key in changedAppConfigKeys)
-                RecordConfigurationAudit(trans, key);
-        });
-        changedAppConfigKeys.Clear();
+                foreach (string key in changedAppConfigKeys)
+                    RecordConfigurationAudit(trans, key);
+            });
+            changedAppConfigKeys.Clear();
+        }
     }
     /// <summary>
     /// Loads config.
@@ -213,12 +232,11 @@ public class IddsConfig
     {
         if (!database.IsConfigured) configureDatabase();
         Dictionary<string, string> config = [];
-        IDataReader rdr = database.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
+        using IDataReader rdr = database.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
         while (rdr.Read())
         {
             config.Add(Db.DbValueConverter.ToString(rdr["ConfigKey"]), Db.DbValueConverter.ToString(rdr["ConfigValue"]));
         }
-        rdr.Close();
         return config;
     }
     /// <summary>
@@ -272,12 +290,11 @@ public class IddsConfig
             throw new ArgumentOutOfRangeException(nameof(list), "Only the configured safe-network table can be loaded.");
         }
         CSafeNetworks net = [];
-        IDataReader rdr = database.ExecuteReader("Select IpAddress, NetworkMask from WhiteList");
+        using IDataReader rdr = database.ExecuteReader("Select IpAddress, NetworkMask from WhiteList");
         while (rdr.Read())
         {
             net.Add(new CSafeNetwork(Db.DbValueConverter.ToString(rdr["IpAddress"]), Db.DbValueConverter.ToString(rdr["NetworkMask"])));
         }
-        rdr.Close();
         return net;
     }
 
@@ -291,15 +308,53 @@ public class IddsConfig
             string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             if (!string.IsNullOrEmpty(commonAppData))
             {
-                string dir = System.IO.Path.Combine(commonAppData, "IDDSCommunity");
-                if (!System.IO.Directory.Exists(dir))
-                    System.IO.Directory.CreateDirectory(dir);
-                return dir;
+                string targetDir = System.IO.Path.Combine(commonAppData, "IDDS Community");
+                string legacyDir = System.IO.Path.Combine(commonAppData, "IDDSCommunity");
+
+                if (!System.IO.Directory.Exists(targetDir))
+                {
+                    if (System.IO.Directory.Exists(legacyDir))
+                    {
+                        try
+                        {
+                            System.IO.Directory.Move(legacyDir, targetDir);
+                        }
+                        catch
+                        {
+                            System.IO.Directory.CreateDirectory(targetDir);
+                        }
+                    }
+                    else
+                    {
+                        System.IO.Directory.CreateDirectory(targetDir);
+                    }
+                }
+                else if (System.IO.Directory.Exists(legacyDir))
+                {
+                    try
+                    {
+                        foreach (string file in System.IO.Directory.EnumerateFiles(legacyDir, "*", System.IO.SearchOption.AllDirectories))
+                        {
+                            string relPath = System.IO.Path.GetRelativePath(legacyDir, file);
+                            string destFile = System.IO.Path.Combine(targetDir, relPath);
+                            string? destSubDir = System.IO.Path.GetDirectoryName(destFile);
+                            if (!string.IsNullOrEmpty(destSubDir))
+                                System.IO.Directory.CreateDirectory(destSubDir);
+                            if (!System.IO.File.Exists(destFile))
+                                System.IO.File.Move(file, destFile);
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略個別檔案移轉失敗
+                    }
+                }
+                return targetDir;
             }
         }
         catch
         {
-            // Fallback for isolated test environments
+            // 測試隔離環境備援
         }
         return AppDomain.CurrentDomain.BaseDirectory;
     }

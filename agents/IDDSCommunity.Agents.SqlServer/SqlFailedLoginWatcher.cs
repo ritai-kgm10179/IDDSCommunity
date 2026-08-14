@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
@@ -58,6 +58,7 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         if (watcher is not null)
         {
             watcher.Enabled = false;
+            watcher.EventRecordWritten -= Watcher_EventRecordWritten;
             watcher.Dispose();
         }
         watcher = null;
@@ -83,35 +84,40 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     {
         try
         {
-            // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
-            if (e.EventRecord is null)
+            using EventRecord? record = e.EventRecord;
+            if (record is null)
             {
                 return;
             }
 
-            foreach (EventProperty prop in e.EventRecord.Properties)
+            foreach (EventProperty prop in record.Properties)
             {
                 string? propertyValue = prop.Value?.ToString();
-                if (propertyValue is not null && MyRegex().IsMatch(propertyValue))
+                if (propertyValue is not null)
                 {
-                    Match ipAddress = MyRegex().Match(propertyValue);
-                    NotificationEventArgs args = new()
+                    try
                     {
-                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
-                        EventId = e.EventRecord.Id,
-                        IpAddress = ipAddress.Value
-                    };
-                    if (System.Net.IPAddress.TryParse(ipAddress.Value, out System.Net.IPAddress? probe))
-                    {
-                        if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        Match ipMatch = MyRegex().Match(propertyValue);
+                        if (ipMatch.Success)
                         {
-                            OnAttackDetected(this, args);
+                            NotificationEventArgs args = new()
+                            {
+                                CreateDate = record.TimeCreated ?? DateTime.Now,
+                                EventId = record.Id,
+                                IpAddress = ipMatch.Value
+                            };
+                            if (System.Net.IPAddress.TryParse(ipMatch.Value, out System.Net.IPAddress? probe))
+                            {
+                                if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                                {
+                                    OnAttackDetected(this, args);
+                                }
+                            }
                         }
                     }
+                    catch (RegexMatchTimeoutException) { }
                 }
-
             }
-
         }
         catch (Exception ex)
         {
@@ -151,7 +157,6 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
     /// 取得匹配規則運算式。
     /// </summary>
     /// <returns>傳回規則運算式執行個體。</returns>
-
-    [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    [GeneratedRegex(@"(?:[0-9]{1,3}\.){3}[0-9]{1,3}", RegexOptions.None, matchTimeoutMilliseconds: 250)]
     private static partial Regex MyRegex();
 }

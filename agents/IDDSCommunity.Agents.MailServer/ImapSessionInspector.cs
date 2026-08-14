@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace IDDSCommunity.Agents.MailServer;
@@ -17,11 +17,16 @@ public sealed class ImapSessionInspector
     /// </summary>
     public bool IsEncrypted { get; private set; }
     /// <summary>
+    /// 取得最後互動時間。
+    /// </summary>
+    public DateTime LastInteraction { get; private set; } = DateTime.UtcNow;
+    /// <summary>
     /// 處理 IMAP 用戶端傳送的位元組。
     /// </summary>
     /// <param name="data">TCP 應用程式負載資料。</param>
     public void ProcessClientData(ReadOnlySpan<byte> data)
     {
+        LastInteraction = DateTime.UtcNow;
         if (IsEncrypted) return;
         AppendAscii(clientBuffer, data);
         while (TryReadLine(clientBuffer, out string line))
@@ -46,6 +51,7 @@ public sealed class ImapSessionInspector
     /// <returns>當未處理的 LOGIN 或 AUTHENTICATE 命令收到標記的 NO 回應時傳回 <see langword="true"/>。</returns>
     public bool ProcessServerData(ReadOnlySpan<byte> data)
     {
+        LastInteraction = DateTime.UtcNow;
         if (IsEncrypted) return false;
         AppendAscii(serverBuffer, data);
         bool authenticationFailed = false;

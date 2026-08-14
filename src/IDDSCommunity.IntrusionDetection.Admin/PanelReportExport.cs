@@ -67,9 +67,9 @@ public sealed class PanelReportExport : UserControl
         status.Text = text;
         _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
         {
-            if (!t.IsCanceled)
+            if (!t.IsCanceled && !IsDisposed && IsHandleCreated)
             {
-                if (InvokeRequired) BeginInvoke(new Action(() => status.Text = string.Empty));
+                if (InvokeRequired) BeginInvoke(new Action(() => { if (!IsDisposed) status.Text = string.Empty; }));
                 else status.Text = string.Empty;
             }
         }, TaskScheduler.Default);

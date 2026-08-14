@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -204,7 +204,7 @@ public class Locks
         {
             List<Lock> result = [];
             string sqlString = @"select LockId, LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress from Locks where status in (@p0,@p1)";
-            IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
             while (rdr.Read())
             {
                 Lock l = new()
@@ -218,7 +218,6 @@ public class Locks
                 };
                 result.Add(l);
             }
-            rdr.Close();
             return result;
         }
         else
@@ -237,7 +236,7 @@ public class Locks
         {
             Lock result = new();
             string sqlString = @"select LockId, LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress from Locks where LockId = @p0";
-            IDataReader rdr = Database.Instance.ExecuteReader(sqlString, id);
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, id);
             if (rdr.Read())
             {
                 result.Id = Db.DbValueConverter.ToInt64(rdr["LockId"]);
@@ -248,7 +247,6 @@ public class Locks
                 result.IpAddress = Db.DbValueConverter.ToString(rdr["IpAddress"]);
                 result.TriggerIncident = Db.DbValueConverter.ToInt64(rdr["TriggerIncident"]);
             }
-            rdr.Close();
             return result;
         }
         else
@@ -353,7 +351,7 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"select * from Locks where (UnlockDate<@p0 and (status=@p1 or status=@p2)) or status=@p3";
-            IDataReader rdr = Database.Instance.ExecuteReader(sqlString, DateTime.Now, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_UNLOCK_REQUESTED);
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, DateTime.Now, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_UNLOCK_REQUESTED);
             while (rdr.Read())
             {
                 Lock l = new()
@@ -368,7 +366,6 @@ public class Locks
                 };
                 result.Add(l);
             }
-            rdr.Close();
             return result;
         }
         else

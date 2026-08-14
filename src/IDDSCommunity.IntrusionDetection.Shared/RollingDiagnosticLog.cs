@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Text.Json;
@@ -31,7 +31,7 @@ public static class RollingDiagnosticLog
             {
                 string directory = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                    "IDDSCommunity", "Logs");
+                    "IDDS Community", "Logs");
                 Directory.CreateDirectory(directory);
                 string prefix = SanitizeComponent(component);
                 string path = SelectPath(directory, prefix, DateTime.UtcNow);

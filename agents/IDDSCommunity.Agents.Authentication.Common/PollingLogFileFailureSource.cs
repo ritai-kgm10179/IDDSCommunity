@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -9,6 +9,8 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 {
     private const int AnchorBytes = 32;
+    private const int MaxLineLength = 65536;
+    private static readonly Encoding SafeUtf8 = new UTF8Encoding(false, false);
     private readonly Func<IEnumerable<string>> paths;
     private readonly Func<string, string, AuthenticationFailureEvent?> parser;
     private readonly Action<string>? resetParser;
@@ -68,6 +70,11 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
             states[path] = new LogFileState(initialOffset, creationTimeUtc, ReadAnchor(stream, initialOffset));
             return;
         }
+        if (state.Offset > stream.Length)
+        {
+            state.Offset = 0;
+            state.Anchor = [];
+        }
         bool sameFile = state.CreationTimeUtc == creationTimeUtc && state.Offset <= stream.Length && AnchorMatches(stream, state);
         long offset = sameFile ? state.Offset : 0;
         if (!sameFile)
@@ -87,7 +94,8 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
             {
                 if (readBuffer[index] != (byte)'\n')
                 {
-                    lineBuffer.WriteByte(readBuffer[index]);
+                    if (lineBuffer.Length < MaxLineLength)
+                        lineBuffer.WriteByte(readBuffer[index]);
                     continue;
                 }
                 ProcessCompleteLine(path, lineBuffer);
@@ -106,7 +114,7 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         int start = bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
         int length = bytes.Length - start;
         if (length > 0 && bytes[start + length - 1] == (byte)'\r') length--;
-        string line = new UTF8Encoding(false, true).GetString(bytes, start, length);
+        string line = SafeUtf8.GetString(bytes, start, length);
         AuthenticationFailureEvent? failure = parser(path, line);
         if (failure is not null) EventReceived?.Invoke(this, failure);
     }
@@ -114,7 +122,7 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
     private void PrimeMetadata(FileStream stream, string path)
     {
         stream.Position = 0;
-        using StreamReader reader = new(stream, new UTF8Encoding(false, true), true, 1024, true);
+        using StreamReader reader = new(stream, SafeUtf8, true, 1024, true);
         while (reader.ReadLine() is string line)
         {
             if (!line.StartsWith('#')) break;

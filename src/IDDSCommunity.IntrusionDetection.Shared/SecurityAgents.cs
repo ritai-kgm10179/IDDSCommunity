@@ -56,7 +56,7 @@ public class SecurityAgents : List<SecurityAgent>
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
 
-        IDataReader rdr = database.ExecuteReader("select * from securityAgents");
+        using IDataReader rdr = database.ExecuteReader("select * from securityAgents");
         // load all agents
         while (rdr.Read())
         {
@@ -79,7 +79,6 @@ public class SecurityAgents : List<SecurityAgent>
             agent.LoadCustomConfig();
             Add(agent);
         }
-        rdr.Close();
         SortAgents();
     }
 

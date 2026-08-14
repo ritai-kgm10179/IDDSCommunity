@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -62,6 +62,7 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
     /// </summary>
     protected override void OnStartAgent()
     {
+        cleanupTimer.Start();
         RunWatcher();
         base.OnStartAgent();
     }

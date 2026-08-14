@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.Metrics;
 using System.Diagnostics;
 using System.Threading;
@@ -119,9 +119,15 @@ internal sealed class SecurityEventPipeline
         Guid id = inbox.Add(GetAgentName(sender), snapshot);
         Interlocked.Increment(ref queueDepth);
         Queued.Add(1);
+        SecurityEventEnvelope envelope = new(id, sender, snapshot, Stopwatch.GetTimestamp());
+        if (channel.Writer.TryWrite(envelope))
+        {
+            Accepted.Add(1);
+            return true;
+        }
         try
         {
-            channel.Writer.WriteAsync(new SecurityEventEnvelope(id, sender, snapshot, Stopwatch.GetTimestamp())).AsTask().GetAwaiter().GetResult();
+            channel.Writer.WriteAsync(envelope).AsTask().GetAwaiter().GetResult();
             Accepted.Add(1);
             return true;
         }

@@ -86,9 +86,9 @@ public sealed class PanelDatabaseMaintenance : UserControl
         statusLabel.Text = text;
         _ = Task.Delay(TimeSpan.FromSeconds(delaySeconds), token).ContinueWith(t =>
         {
-            if (!t.IsCanceled)
+            if (!t.IsCanceled && !IsDisposed && IsHandleCreated)
             {
-                if (InvokeRequired) BeginInvoke(new Action(RefreshStatus));
+                if (InvokeRequired) BeginInvoke(new Action(() => { if (!IsDisposed) RefreshStatus(); }));
                 else RefreshStatus();
             }
         }, TaskScheduler.Default);

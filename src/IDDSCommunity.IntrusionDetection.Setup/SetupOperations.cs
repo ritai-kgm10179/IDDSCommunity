@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -647,7 +647,7 @@ internal static class SetupOperations
 
     private static void ConfigureNewService(string executablePath)
     {
-        RunSc("create", ServiceName, "binPath=", executablePath, "start=", "auto", "DisplayName=", ServiceDisplayName);
+        RunSc("create", ServiceName, "binPath=", $"\"{executablePath}\"", "start=", "auto", "DisplayName=", ServiceDisplayName);
         RunSc("description", ServiceName, SetupText.Get("ServiceDescription"));
         RunSc("failure", ServiceName, "reset=", "86400", "actions=", "restart/5000/restart/15000/none/0");
     }

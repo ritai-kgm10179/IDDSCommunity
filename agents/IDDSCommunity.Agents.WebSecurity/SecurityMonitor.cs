@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -60,6 +60,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
         if (watcher is not null)
         {
             watcher.Enabled = false;
+            watcher.EventRecordWritten -= Watcher_EventRecordWritten;
             watcher.Dispose();
         }
         watcher = null;
@@ -85,13 +86,13 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
     {
         try
         {
-            // (new System.Collections.Generic.Mscorlib_CollectionDebugView<System.Diagnostics.Eventing.Reader.EventProperty>(e.EventRecord.Properties)).Items[0]
-            if (e.EventRecord is null)
+            using EventRecord? record = e.EventRecord;
+            if (record is null)
             {
                 return;
             }
 
-            foreach (EventProperty prop in e.EventRecord.Properties)
+            foreach (EventProperty prop in record.Properties)
             {
                 // extract ip address from event log entry
                 // format: <clientname> [IP = 'x.x.x.x']
@@ -108,8 +109,8 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
                     string ipAddress = propertyValue[start..end];
                     NotificationEventArgs args = new()
                     {
-                        CreateDate = e.EventRecord.TimeCreated ?? DateTime.Now,
-                        EventId = e.EventRecord.Id,
+                        CreateDate = record.TimeCreated ?? DateTime.Now,
+                        EventId = record.Id,
                         IpAddress = ipAddress
                     };
                     if (System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? probe))
@@ -120,9 +121,7 @@ public class WebSecurityAgent : AgentPlugin, IExtendedInformation
                         }
                     }
                 }
-
             }
-
         }
         catch (Exception ex)
         {

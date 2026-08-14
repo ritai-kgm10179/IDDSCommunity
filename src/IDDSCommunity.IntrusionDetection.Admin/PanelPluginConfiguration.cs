@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.IO;
@@ -99,7 +99,12 @@ public partial class PanelPluginConfiguration : UserControl
     /// </summary>
     private void LoadCustomSettings(IReadOnlyDictionary<string, string>? values = null)
     {
-        flowLayoutPanelCustomPluginSettings.Controls.Clear();
+        while (flowLayoutPanelCustomPluginSettings.Controls.Count > 0)
+        {
+            Control child = flowLayoutPanelCustomPluginSettings.Controls[0];
+            flowLayoutPanelCustomPluginSettings.Controls.RemoveAt(0);
+            child.Dispose();
+        }
         string? protectionDetails = GetProtectionDetails(Agent.Name);
         if (protectionDetails is not null)
         {

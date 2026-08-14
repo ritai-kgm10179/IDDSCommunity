@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -107,7 +107,7 @@ internal static class ElevatedServiceCommand
     private static void Install(string serviceName)
     {
         string servicePath = ResolveServiceExecutablePath();
-        RunServiceControl("create", serviceName, "binPath=", servicePath, "start=", "auto", "DisplayName=", global::IDDSCommunity.IntrusionDetection.Shared.Globals.WINDOWS_SERVICE_DISPLAY_NAME);
+        RunServiceControl("create", serviceName, "binPath=", $"\"{servicePath}\"", "start=", "auto", "DisplayName=", global::IDDSCommunity.IntrusionDetection.Shared.Globals.WINDOWS_SERVICE_DISPLAY_NAME);
         using ServiceController controller = new(serviceName);
         Start(controller);
     }

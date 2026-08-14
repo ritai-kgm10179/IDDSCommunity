@@ -102,7 +102,7 @@ public class SecurityAgent : IAgentFilter
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
         if (Id.Equals(Guid.Empty)) return;
-        IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id.ToString());
+        using IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id.ToString());
         // load all agents
         if (rdr.Read())
         {
@@ -119,7 +119,6 @@ public class SecurityAgent : IAgentFilter
             Enabled = Db.DbValueConverter.ToBool(rdr["Enabled"]);
             Serial = Db.DbValueConverter.ToInt(rdr["Serial"]);
         }
-        rdr.Close();
         LoadCustomConfig();
     }
     /// <summary>
@@ -139,7 +138,7 @@ public class SecurityAgent : IAgentFilter
                 CustomConfiguration.Remove(key);
         }
 
-        IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
+        using IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
         while (rdr.Read())
         {
             string propName = Shared.Db.DbValueConverter.ToString(rdr["PropertyName"]);
@@ -148,7 +147,6 @@ public class SecurityAgent : IAgentFilter
             string propVal = Shared.Db.DbValueConverter.ToString(rdr["PropertyValueString"]);
             CustomConfiguration[propName] = propVal;
         }
-        rdr.Close();
     }
 
     public string Name { get; set; } = string.Empty;

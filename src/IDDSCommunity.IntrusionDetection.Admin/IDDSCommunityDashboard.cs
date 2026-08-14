@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -71,6 +71,14 @@ public partial class IDDSCommunityDashboard : UserControl
     /// <summary>
     /// Clears agents.
     /// </summary>
-    public void ClearAgents() => flowLayoutPanelPlugins.Controls.Clear();
+    public void ClearAgents()
+    {
+        while (flowLayoutPanelPlugins.Controls.Count > 0)
+        {
+            Control child = flowLayoutPanelPlugins.Controls[0];
+            flowLayoutPanelPlugins.Controls.RemoveAt(0);
+            child.Dispose();
+        }
+    }
 
 }

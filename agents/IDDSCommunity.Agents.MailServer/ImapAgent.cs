@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -22,6 +22,8 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
 
     private readonly ConcurrentDictionary<int, ImapSessionInspector> sessions = [];
     private readonly List<PacketSniffer> sniffers = [];
+    private readonly System.Timers.Timer cleanupTimer;
+    private const int CleanupIntervalMins = 2;
     /// <summary>
     /// 初始化 <see cref="ImapAgent"/> 類別的新執行個體。
     /// </summary>
@@ -30,10 +32,23 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         ImapConfig settings = new();
         Configuration.AgentSettings = settings;
         Configuration.ConfigurationSettingsTypeName = settings.GetType().FullName ?? string.Empty;
+        cleanupTimer = new System.Timers.Timer(5000);
+        cleanupTimer.Elapsed += (_, _) => RemoveExpiredSessions(DateTime.UtcNow);
     }
+
+    internal void RemoveExpiredSessions(DateTime utcNow)
+    {
+        foreach (int key in sessions.Keys)
+        {
+            if (sessions.TryGetValue(key, out ImapSessionInspector? session) && session.LastInteraction.AddMinutes(CleanupIntervalMins) < utcNow)
+                sessions.TryRemove(key, out _);
+        }
+    }
+
     /// <inheritdoc />
     protected override void OnStartAgent()
     {
+        cleanupTimer.Start();
         IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
         foreach (IPAddress address in hostEntry.AddressList)
         {
@@ -45,6 +60,7 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
     /// <inheritdoc />
     protected override void OnPauseAgent()
     {
+        cleanupTimer.Stop();
         StopWatchers();
         base.OnPauseAgent();
     }
@@ -57,6 +73,7 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
     /// <inheritdoc />
     protected override void OnStopAgent()
     {
+        cleanupTimer.Stop();
         StopWatchers();
         base.OnStopAgent();
     }
