@@ -219,6 +219,7 @@ public class ReportGenerator
     {
         ArgumentNullException.ThrowIfNull(template);
         return template
+            .Replace("[%LABEL_HEADER_APP_TITLE%]", WebUtility.HtmlEncode(Strings.AppTitle), StringComparison.Ordinal)
             .Replace("[%LABEL_INSTALLATION_INFORMATION%]", WebUtility.HtmlEncode(Strings.Get("Installation information")), StringComparison.Ordinal)
             .Replace("[%LABEL_EVENTS_PER_AGENT%]", WebUtility.HtmlEncode(Strings.Get("Events per agent")), StringComparison.Ordinal)
             .Replace("[%LABEL_AGENT_NAME%]", WebUtility.HtmlEncode(Strings.Get("Agent name")), StringComparison.Ordinal)

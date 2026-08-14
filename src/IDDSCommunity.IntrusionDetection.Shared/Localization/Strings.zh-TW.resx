@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -156,10 +156,10 @@
     <value>目前軟封鎖</value>
   </data>
   <data name="IDDSCommunity IDDS" xml:space="preserve">
-    <value>IDDS Community 入侵偵測防禦系統</value>
+    <value>IDDS 社群版 入侵防禦系統</value>
   </data>
   <data name="IDDSCommunity IDDS is starting..." xml:space="preserve">
-    <value>IDDS Community 正在啟動…</value>
+    <value>IDDS 社群版 正在啟動…</value>
   </data>
   <data name="Daily report" xml:space="preserve">
     <value>每日報表</value>
@@ -480,8 +480,8 @@
   <data name="Usage:" xml:space="preserve"><value>用法：</value></data>
   <data name="Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately." xml:space="preserve"><value>確定要從封鎖清單移除選取的位址嗎？這些位址將立即能夠存取您的伺服器。</value></data>
   <data name="Unlock selected IP Addresses" xml:space="preserve"><value>解除封鎖選取的 IP 位址</value></data>
-  <data name="IDDSCommunity Intrusion Detection" xml:space="preserve"><value>IDDS Community 入侵偵測防禦系統</value></data>
-  <data name="IDDSCommunity IDDS is starting up..." xml:space="preserve"><value>IDDS Community 正在啟動…</value></data>
+  <data name="IDDSCommunity Intrusion Detection" xml:space="preserve"><value>IDDS 社群版 入侵防禦系統</value></data>
+  <data name="IDDSCommunity IDDS is starting up..." xml:space="preserve"><value>IDDS 社群版 正在啟動…</value></data>
   <data name="Safe networks" xml:space="preserve"><value>安全網路</value></data>
   <data name="Notification settings" xml:space="preserve"><value>通知設定</value></data>
   <data name="SMTP configuration" xml:space="preserve"><value>SMTP 設定</value></data>
@@ -535,9 +535,9 @@
   <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected 訂閱者失敗：{0}</value></data>
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>防火牆封鎖 {0} 失敗：{1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>防火牆對帳 {0} 失敗：{1}</value></data>
-  <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS Community 入侵防禦系統 - 版本 {0}</value></data>
-  <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS Community 入侵偵測測試郵件</value></data>
-  <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS Community 管理工具的測試郵件。</value></data>
+  <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS 社群版 入侵防禦系統 - 版本 {0}</value></data>
+  <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS 社群版 入侵偵測測試郵件</value></data>
+  <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS 社群版管理工具的測試郵件。</value></data>
   <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDSCommunity 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>
   <data name="No file was selected!" xml:space="preserve"><value>尚未選取檔案！</value></data>
@@ -689,7 +689,7 @@
   <data name="Database maintenance is running..." xml:space="preserve"><value>正在執行資料庫維護...</value></data>
   <data name="Database maintenance failed. Review the application log for details." xml:space="preserve"><value>資料庫維護失敗，請查看應用程式記錄以取得詳細資訊。</value></data>
   <data name="Restore backup" xml:space="preserve"><value>還原備份</value></data>
-  <data name="Stop the IDDS Community service before restoring a database backup." xml:space="preserve"><value>還原資料庫備份前，請先停止 IDDS Community 服務。</value></data>
+  <data name="Stop the IDDS Community service before restoring a database backup." xml:space="preserve"><value>還原資料庫備份前，請先停止 IDDS 社群版服務。</value></data>
   <data name="SQLite backup files (*.db)|*.db|All files (*.*)|*.*" xml:space="preserve"><value>SQLite 備份檔案 (*.db)|*.db|所有檔案 (*.*)|*.*</value></data>
   <data name="Select a verified database backup" xml:space="preserve"><value>選擇已驗證的資料庫備份</value></data>
   <data name="Restore the selected database backup? The current database will be preserved as a rollback copy." xml:space="preserve"><value>要還原選取的資料庫備份嗎？目前的資料庫會保留為回滾副本。</value></data>
@@ -699,7 +699,7 @@
   <data name="Verified backups" xml:space="preserve"><value>已驗證備份</value></data>
   <data name="Maintenance history" xml:space="preserve"><value>維護歷程</value></data>
   <data name="Backup verified. SHA-256: {0}" xml:space="preserve"><value>備份驗證成功。SHA-256：{0}</value></data>
-  <data name="Stop the IDDS Community service before reclaiming database space." xml:space="preserve"><value>回收資料庫空間前，請先停止 IDDS Community 服務。</value></data>
+  <data name="Stop the IDDS Community service before reclaiming database space." xml:space="preserve"><value>回收資料庫空間前，請先停止 IDDS 社群版服務。</value></data>
   <data name="Reclaim database space now? A verified safety backup and rollback copy will be created first." xml:space="preserve"><value>要立即回收資料庫空間嗎？系統會先建立已驗證的安全備份與回滾副本。</value></data>
   <data name="Database space reclaimed. Safety backup: {0}" xml:space="preserve"><value>資料庫空間已回收。安全備份：{0}</value></data>
   <data name="Database maintenance failed: {0}" xml:space="preserve"><value>資料庫維護失敗：{0}</value></data>
@@ -711,11 +711,11 @@
   <data name="Import settings" xml:space="preserve"><value>匯入設定</value></data>
   <data name="Secrets are excluded unless explicitly selected and protected by a passphrase." xml:space="preserve"><value>除非明確選取並以複雜密碼保護，否則不會匯出機密資料。</value></data>
   <data name="Enter a passphrase before exporting secrets." xml:space="preserve"><value>匯出機密資料前請輸入複雜密碼。</value></data>
-  <data name="IDDS Community settings (*.json)|*.json" xml:space="preserve"><value>IDDS Community 設定 (*.json)|*.json</value></data>
-  <data name="Export IDDS Community settings" xml:space="preserve"><value>匯出 IDDS Community 設定</value></data>
+  <data name="IDDS Community settings (*.json)|*.json" xml:space="preserve"><value>IDDS 社群版設定 (*.json)|*.json</value></data>
+  <data name="Export IDDS Community settings" xml:space="preserve"><value>匯出 IDDS 社群版設定</value></data>
   <data name="Settings exported: {0}" xml:space="preserve"><value>設定已匯出：{0}</value></data>
-  <data name="Stop the IDDS Community service before importing settings." xml:space="preserve"><value>匯入設定前請先停止 IDDS Community 服務。</value></data>
-  <data name="Import IDDS Community settings" xml:space="preserve"><value>匯入 IDDS Community 設定</value></data>
+  <data name="Stop the IDDS Community service before importing settings." xml:space="preserve"><value>匯入設定前請先停止 IDDS 社群版服務。</value></data>
+  <data name="Import IDDS Community settings" xml:space="preserve"><value>匯入 IDDS 社群版設定</value></data>
   <data name="This package contains encrypted secrets. Enter its passphrase." xml:space="preserve"><value>此套件含有加密機密資料，請輸入其複雜密碼。</value></data>
   <data name="Import preview: {0} Agents, {1} safe networks, {2} application settings, {3} unavailable Agents." xml:space="preserve"><value>匯入預覽：{0} 個代理程式、{1} 個安全網路、{2} 個應用程式設定、{3} 個不可用代理程式。</value></data>
   <data name="Import these settings? A verified safety backup will be created first." xml:space="preserve"><value>要匯入這些設定嗎？系統會先建立並驗證安全備份。</value></data>

@@ -40,13 +40,13 @@ internal static class SetupOperations
         Downgrade
     }
     /// <summary>
-    /// 檢查 IDDS Community 服務執行檔是否已安裝。
+    /// 檢查 IDDS 社群版服務執行檔是否已安裝。
     /// </summary>
     internal static bool IsInstalled =>
         Directory.Exists(InstallDirectory) &&
         File.Exists(Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Service.exe"));
     /// <summary>
-    /// 取得已安裝 IDDS Community 服務之版本，若未安裝則傳回 null。
+    /// 取得已安裝 IDDS 社群版服務之版本，若未安裝則傳回 null。
     /// </summary>
     internal static Version? InstalledVersion
     {
@@ -258,7 +258,7 @@ internal static class SetupOperations
     private const int SHCNE_ASSOCCHANGED = 0x08000000;
     private const uint SHCNF_FLUSH = 0x1000;
     /// <summary>
-    /// 開啟 IDDS Community 安裝與使用說明文件。
+    /// 開啟 IDDS 社群版安裝與使用說明文件。
     /// </summary>
     internal static void OpenUserGuide()
     {
@@ -302,7 +302,7 @@ internal static class SetupOperations
     /// </summary>
     internal static bool CanLaunchApp => IsInstalled && File.Exists(AdminExecutablePath);
     /// <summary>
-    /// 啟動 IDDS Community 管理控制台 UI。
+    /// 啟動 IDDS 社群版管理控制台 UI。
     /// </summary>
     internal static void LaunchApp()
     {

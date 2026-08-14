@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +10,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [DoNotParallelize]
 public sealed class ReportLocalizationTest
 {
-    private const string Template = "[%LABEL_INSTALLATION_INFORMATION%]|[%LABEL_EVENTS_PER_AGENT%]|[%LABEL_INTRUSION_ATTEMPTS%]|[%LABEL_REPORT_CONFIGURATION_HINT%]";
+    private const string Template = "[%LABEL_HEADER_APP_TITLE%]|[%LABEL_INSTALLATION_INFORMATION%]|[%LABEL_EVENTS_PER_AGENT%]|[%LABEL_INTRUSION_ATTEMPTS%]|[%LABEL_REPORT_CONFIGURATION_HINT%]";
     /// <summary>
     /// Restores the invariant test culture after each global language-manager assertion.
     /// </summary>
@@ -26,6 +26,7 @@ public sealed class ReportLocalizationTest
 
         string result = ReportGenerator.LocalizeReportTemplate(Template);
 
+        StringAssert.Contains(result, "IDDS Community");
         StringAssert.Contains(result, "Installation information");
         StringAssert.Contains(result, "Events per agent");
         StringAssert.Contains(result, "Intrusion attempts");
@@ -42,6 +43,7 @@ public sealed class ReportLocalizationTest
         string result = ReportGenerator.LocalizeReportTemplate(Template);
         string subject = Strings.Format("Daily report for {0}", "server01");
 
+        StringAssert.Contains(result, "IDDS 社群版");
         StringAssert.Contains(result, "安裝資訊");
         StringAssert.Contains(result, "每個代理程式的事件數");
         StringAssert.Contains(result, "入侵嘗試");
