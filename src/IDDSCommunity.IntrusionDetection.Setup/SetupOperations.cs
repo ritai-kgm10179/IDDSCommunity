@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Diagnostics;
+using System.DirectoryServices.AccountManagement;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.ServiceProcess;
+using System.Security.Principal;
 using System.Threading;
 using IDDSCommunity.IntrusionDetection.Shared;
 
@@ -412,6 +414,14 @@ internal static class SetupOperations
                 newServiceCreated = true;
             }
             ConfigureEventLog();
+            try
+            {
+                EnsureOperatorsGroup();
+            }
+            catch (Exception exception)
+            {
+                LogNonFatal("Ensure operators group", exception);
+            }
             cancellationToken.ThrowIfCancellationRequested();
             if (!serviceState.Exists)
             {
@@ -499,6 +509,46 @@ internal static class SetupOperations
         log.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 0);
     }
 
+    /// <summary>
+    /// 建立（若不存在）供非提升權限管理主控台使用的本機群組，並將目前執行安裝程式的使用者加入其中，
+    /// 使其後續可讀取受 DPAPI 保護的資料庫金鑰檔案，而不需授予本機所有標準使用者存取權限。
+    /// </summary>
+    private static void EnsureOperatorsGroup()
+    {
+        string? currentUserSid = WindowsIdentity.GetCurrent().User?.Value;
+        if (currentUserSid is null) return;
+
+        using PrincipalContext context = new(ContextType.Machine);
+        using GroupPrincipal group = GroupPrincipal.FindByIdentity(context, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME)
+            ?? CreateOperatorsGroup(context);
+        using UserPrincipal? user = UserPrincipal.FindByIdentity(context, currentUserSid);
+        if (user != null && !group.Members.Contains(user))
+        {
+            group.Members.Add(user);
+            group.Save();
+        }
+    }
+
+    private static GroupPrincipal CreateOperatorsGroup(PrincipalContext context)
+    {
+        GroupPrincipal group = new(context, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME)
+        {
+            Description = SetupText.Get("OperatorsGroupDescription")
+        };
+        group.Save();
+        return group;
+    }
+
+    /// <summary>
+    /// 移除安裝程式建立之非提升權限操作人員本機群組。
+    /// </summary>
+    private static void RemoveOperatorsGroup()
+    {
+        using PrincipalContext context = new(ContextType.Machine);
+        using GroupPrincipal? group = GroupPrincipal.FindByIdentity(context, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME);
+        group?.Delete();
+    }
+
     [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
     private static extern bool MoveFileEx(string lpExistingFileName, string? lpNewFileName, int dwFlags);
     private const int MOVEFILE_DELAY_UNTIL_REBOOT = 0x00000004;
@@ -565,6 +615,15 @@ internal static class SetupOperations
         catch (Exception exception)
         {
             LogNonFatal("Clean Windows Firewall rules after uninstall", exception);
+            cleanupIncomplete = true;
+        }
+        try
+        {
+            RemoveOperatorsGroup();
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Remove operators group", exception);
             cleanupIncomplete = true;
         }
         if (filesQuarantined && Directory.Exists(quarantineDirectory))

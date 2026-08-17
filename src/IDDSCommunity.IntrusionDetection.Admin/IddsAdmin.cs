@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
@@ -191,33 +191,63 @@ public partial class IddsAdmin : Form
                     Dock = DockStyle.Fill
                 };
                 panelContent.Controls.Add(_panelSecurityLog);
-                IsUpdating = true;
-
-                DateTime endDate = DateTime.Now;
-                IDataReader rdr = IntrusionLog.ReadIntervalGrouped(endDate.Subtract(SecurityLogWindow), endDate);
-                while (rdr.Read())
-                {
-                    int action = Shared.Db.DbValueConverter.ToInt(rdr["Action"]);
-                    string agentId = Shared.Db.DbValueConverter.ToString(rdr["AgentId"]);
-                    PanelSecurityLog.FillLogEntry(Shared.Db.DbValueConverter.ToInt(rdr["MaxId"]),
-                            action,
-                            agentId,
-                            IntrusionLog.GetStatusIcon(action),
-                            IntrusionLog.GetStatusClass(action), Shared.Db.DbValueConverter.ToDateTime(rdr["LatestEvent"]),
-                            Shared.Db.DbValueConverter.ToString(rdr["ClientIP"]),
-                            GetLogMessage(agentId, action),
-                            Shared.Db.DbValueConverter.ToInt(rdr["NumberOfEvents"]));
-                }
                 foreach (SecurityAgent agent in SecurityAgents.Instance)
                 {
                     _panelSecurityLog.AddAgent(agent);
                 }
-                rdr.Close();
-                LastLogId = IntrusionLog.GetLastLogId();
-                lastSecurityLogRefresh = endDate;
-                IsUpdating = false;
+                // 控制項建立本身維持同步（WinForms 限制），但初始資料改走與 logReader_Tick 相同的
+                // 背景快照＋InvokeAsync 模式非同步載入，避免第一次存取此屬性時同步阻塞呼叫端執行緒
+                // （包含 SplashScreen 的預先載入呼叫）。
+                _ = LoadInitialSecurityLogAsync();
             }
             return _panelSecurityLog;
+        }
+    }
+    /// <summary>
+    /// 以背景快照模式非同步載入安全性記錄面板的初始資料，並透過 <see cref="Control.InvokeAsync"/>
+    /// 將結果套用回 UI 執行緒，避免 <see cref="PanelSecurityLog"/> 首次存取時同步阻塞呼叫端。
+    /// </summary>
+    /// <returns>表示非同步工作完成的 Task。</returns>
+    private async Task LoadInitialSecurityLogAsync()
+    {
+        if (!Database.Instance.IsConfigured)
+            return;
+        IsUpdating = true;
+        try
+        {
+            AdminRefreshSnapshot snapshot = await Task.Run(
+                () => LoadAdminSnapshot(AdminRefreshMode.SecurityLog, LastLogId, LastLockUpdate, lastSecurityLogRefresh),
+                uiRefreshCancellation.Token).ConfigureAwait(false);
+            await this.InvokeAsync(() => ApplyAdminSnapshot(snapshot), uiRefreshCancellation.Token);
+        }
+        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+        catch (InvalidOperationException) when (IsDisposed || !IsHandleCreated) { }
+        catch (Exception ex)
+        {
+            try
+            {
+                EventLog.WriteEntry("IDDSCommunity.IntrusionDetection.Admin", ex.Message, EventLogEntryType.Error);
+            }
+            catch (Exception logException)
+            {
+                Trace.TraceError("Initial security log load failed: {0}{1}Event Log write failed: {2}", ex, Environment.NewLine, logException);
+                _ = RollingDiagnosticLog.Write("Admin-Refresh", "Initial security log load and Event Log write failed", ex);
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (!IsDisposed && !uiRefreshCancellation.IsCancellationRequested)
+                {
+                    await this.InvokeAsync(() =>
+                    {
+                        IsUpdating = false;
+                    }, uiRefreshCancellation.Token);
+                }
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (InvalidOperationException) when (IsDisposed || !IsHandleCreated) { }
         }
     }
     /// <summary>
@@ -315,21 +345,6 @@ public partial class IddsAdmin : Form
 
 
     public bool ServiceError { get; set; }
-    /// <summary>
-    /// 執行 refresh service status 作業。
-    /// </summary>
-    public void RefreshServiceStatus()
-    {
-        if (!serviceOperationGate.Wait(0)) return;
-        try
-        {
-            ApplyServiceStatus(ReadServiceStatus());
-        }
-        finally
-        {
-            serviceOperationGate.Release();
-        }
-    }
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
     /// </summary>
@@ -542,7 +557,7 @@ public partial class IddsAdmin : Form
         int? hardLocks = null;
         if (mode == AdminRefreshMode.SecurityLog)
         {
-            DateTime endDate = DateTime.Now;
+            DateTime endDate = DateTime.UtcNow;
             int currentLogId = IntrusionLog.GetLastLogId();
             if (SecurityLogRefreshPolicy.ShouldRefresh(endDate, lastSecurityLogRefresh, lastLogId, currentLogId, SecurityLogRefreshInterval))
             {
@@ -559,7 +574,7 @@ public partial class IddsAdmin : Form
                         id,
                         action,
                         agentId,
-                        Shared.Db.DbValueConverter.ToDateTime(reader["LatestEvent"]),
+                        Shared.Db.DbValueConverter.ToDateTime(reader["LatestEvent"]).ToLocalTime(),
                         Shared.Db.DbValueConverter.ToString(reader["ClientIP"]),
                         GetLogMessage(agentId, action),
                         Shared.Db.DbValueConverter.ToInt(reader["NumberOfEvents"])));
@@ -568,19 +583,21 @@ public partial class IddsAdmin : Form
         }
         if (mode == AdminRefreshMode.CurrentLocks && Locks.HasUpdates(lastLockUpdate))
         {
-            newLockUpdate = DateTime.Now;
+            newLockUpdate = DateTime.UtcNow;
             using IDataReader reader = Locks.ReadLocks();
             while (reader.Read())
             {
-                DateTime.TryParse(reader["LockDate"].ToString(), out DateTime lockDate);
-                DateTime.TryParse(reader["UnlockDate"].ToString(), out DateTime unlockDate);
+                DateTime.TryParse(reader["LockDate"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime lockDateUtc);
+                DateTime.TryParse(reader["UnlockDate"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime unlockDateUtc);
+                DateTime lockDate = DateTime.SpecifyKind(lockDateUtc, DateTimeKind.Utc).ToLocalTime();
+                DateTime unlockDate = DateTime.SpecifyKind(unlockDateUtc, DateTimeKind.Utc).ToLocalTime();
                 int status = Shared.Db.DbValueConverter.ToInt(reader["Status"]);
                 locks.Add(new AdminLockRow(Shared.Db.DbValueConverter.ToInt(reader["LockId"]), status, Shared.Db.DbValueConverter.ToString(reader["ClientIp"]), Shared.Db.DbValueConverter.ToString(reader["DisplayName"]), lockDate, unlockDate));
             }
         }
         if (mode == AdminRefreshMode.Dashboard)
         {
-            DateTime endDate = DateTime.Now;
+            DateTime endDate = DateTime.UtcNow;
             failedLoginStatistics = Locks.ReadFailedLoginStatistics(endDate.AddDays(-30), endDate);
             agentLockStatistics = Locks.ReadAgentLockStatistics();
         }

@@ -66,4 +66,5 @@
   <data name="ServiceStopVerificationFailed" xml:space="preserve"><value>Windows 服務未進入已停止狀態。</value></data>
   <data name="ServiceStateStabilizationFailed" xml:space="preserve"><value>Windows 服務未在安裝程式繼續前進入穩定狀態。</value></data>
   <data name="ServicePauseVerificationFailed" xml:space="preserve"><value>無法將 Windows 服務還原為已暫停狀態。</value></data>
+  <data name="OperatorsGroupDescription" xml:space="preserve"><value>此群組成員可在非提升權限狀態下開啟 IDDS 社群版管理主控台並讀取受保護的資料庫金鑰。</value></data>
 </root>

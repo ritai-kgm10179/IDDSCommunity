@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using PacketDotNet;
@@ -45,7 +46,7 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
             throw new InvalidOperationException();
 
         stopping = false;
-        dispatcher = new BoundedPacketDispatcher(queueCapacity, packet => PacketReceived?.Invoke(this, packet));
+        dispatcher = new BoundedPacketDispatcher(queueCapacity, DispatchToSubscribers);
         device.OnPacketArrival += OnPacketArrival;
         device.OnCaptureStopped += OnCaptureStopped;
         try
@@ -96,6 +97,26 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
     }
 
     public void Dispose() => Stop();
+
+    /// <summary>
+    /// 獨立通知每個封包訂閱者，避免單一故障的消費者影響其餘訂閱者或中止整個擷取管線；
+    /// 與 <see cref="RawSocketReceiver"/> 的 NotifyPacketReceived 具備對等的例外隔離行為。
+    /// </summary>
+    /// <param name="packet">接收到的封包資料。</param>
+    private void DispatchToSubscribers(RawPacketEventArgs packet)
+    {
+        foreach (EventHandler<RawPacketEventArgs> handler in PacketReceived?.GetInvocationList() ?? [])
+        {
+            try
+            {
+                handler(this, packet);
+            }
+            catch (Exception exception)
+            {
+                Trace.TraceError("SharpPcap packet subscriber failed on {0}: {1}", device.Name, exception.Message);
+            }
+        }
+    }
 
     private void OnPacketArrival(object sender, PacketCapture capture)
     {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -100,10 +100,11 @@ public sealed class PanelReportExport : UserControl
         export.Enabled = false;
         try
         {
+            // IncidentTime 以 UTC 儲存；報表標題與檔名維持本機日期，僅查詢邊界轉換為 UTC。
             string html = await Task.Run(() => ReportGenerator.Instance.GetReport(
                 Strings.Get("Security report"),
                 Strings.Format("Report period: {0:d} - {1:d}", from, through),
-                Strings.Format("Server: {0}", Dns.GetHostName()), from, endExclusive));
+                Strings.Format("Server: {0}", Dns.GetHostName()), from.ToUniversalTime(), endExclusive.ToUniversalTime()));
             await File.WriteAllTextAsync(dialog.FileName, html, new System.Text.UTF8Encoding(false));
             SetTransientStatus(Strings.Format("Report exported: {0}", dialog.FileName));
         }

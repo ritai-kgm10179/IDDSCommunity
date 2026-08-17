@@ -65,7 +65,9 @@ public class DbValueConverter
         return result;
     }
     /// <summary>
-    /// 執行to date time作業。
+    /// 將資料庫欄位值轉換為 UTC 時間之 <see cref="DateTime"/>；資料庫時間欄位（<c>IncidentTime</c>、
+    /// <c>LockDate</c>、<c>UnlockDate</c>、<c>LatestEvent</c> 等）均以 UTC 儲存，呼叫端如需顯示於使用者
+    /// 介面，應自行呼叫 <see cref="DateTime.ToLocalTime"/> 轉換為當地時間。
     /// </summary>
     /// <param name="value">要處理的value。</param>
     /// <returns>傳回to date time結果。</returns>
@@ -76,6 +78,6 @@ public class DbValueConverter
         {
             throw new ArgumentException(value + " is not a valid date");
         }
-        return result;
+        return DateTime.SpecifyKind(result, DateTimeKind.Utc);
     }
 }

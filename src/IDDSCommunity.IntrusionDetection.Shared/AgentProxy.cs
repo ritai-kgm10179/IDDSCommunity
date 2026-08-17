@@ -1,25 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
-using System.Timers;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 public class AgentProxy : MarshalByRefObject, IAgentPlugin
 {
-    private const int MaximumPerformanceRecords = 3600;
     public event AttackDetectedHandler? AttackDetected;
-
-    private System.Timers.Timer? _watchdog;
-    private TimeSpan _lastCpuTime = TimeSpan.Zero;
-    private long _lastPackets;
-    private readonly System.Threading.Lock _lock = new();
 
     private IAgentPlugin? _agent;
     private readonly AgentPluginLoadContext loadContext;
     private bool disposed;
-    private int watchdogActive;
     /// <summary>
     /// 初始化 <see cref="AgentProxy"/> class的新執行個體。
     /// </summary>
@@ -98,94 +88,12 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
         set => GetAgent().Configuration = value;
     }
     /// <summary>
-    /// Gets memory usage.
-    /// </summary>
-    /// <returns>傳回get memory usage結果。</returns>
-    public static long GetMemoryUsage() => AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
-    /// <summary>
-    /// Gets cpu time.
-    /// </summary>
-    /// <returns>傳回get cpu time結果。</returns>
-    public static TimeSpan GetCpuTime() => AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-    /// <summary>
-    /// 執行enable monitoring作業。
-    /// </summary>
-    public void EnableMonitoring()
-    {
-        _watchdog = new System.Timers.Timer { Interval = 1000 };
-        _watchdog.Elapsed += watchdog_Elapsed;
-        _lastCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-        if (GetAgent() is INetworkListener netListener) _lastPackets = netListener.TotalPackets;
-        _watchdog.Start();
-        AppDomain.MonitoringIsEnabled = true;
-    }
-
-    public List<AgentPerformanceRecord> PerformanceRecords { get; set; } = [];
-    /// <summary>
-    /// 處理 elapsed 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void watchdog_Elapsed(object? sender, ElapsedEventArgs e)
-    {
-        if (Interlocked.Exchange(ref watchdogActive, 1) != 0)
-            return;
-        try
-        {
-            TimeSpan currentCpuTime = AppDomain.CurrentDomain.MonitoringTotalProcessorTime;
-            AgentPerformanceRecord rcd = new()
-            {
-                DateTime = DateTime.Now,
-                MemoryValue = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize,
-                CpuUsage = currentCpuTime.Subtract(_lastCpuTime)
-            };
-            _lastCpuTime = currentCpuTime;
-            if (GetAgent() is INetworkListener netListener)
-            {
-                long currentPackets = netListener.TotalPackets;
-                rcd.Packets = currentPackets - _lastPackets;
-                _lastPackets = currentPackets;
-            }
-            lock (_lock)
-            {
-                PerformanceRecords.Add(rcd);
-                if (PerformanceRecords.Count > MaximumPerformanceRecords)
-                    PerformanceRecords.RemoveRange(0, PerformanceRecords.Count - MaximumPerformanceRecords);
-            }
-        }
-        catch (ObjectDisposedException)
-        {
-            // A queued timer callback may race with Agent unload.
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Trace.TraceError(Localization.Strings.Format("Agent performance monitoring failed: {0}", ex.GetType().Name));
-        }
-        finally
-        {
-            Interlocked.Exchange(ref watchdogActive, 0);
-        }
-    }
-    /// <summary>
-    /// 執行disable monitoring作業。
-    /// </summary>
-    public void DisableMonitoring()
-    {
-        if (_watchdog is null)
-            return;
-        _watchdog.Stop();
-        _watchdog.Elapsed -= watchdog_Elapsed;
-        _watchdog.Dispose();
-        _watchdog = null;
-    }
-    /// <summary>
     /// 執行dispose作業。
     /// </summary>
     public void Dispose()
     {
         if (disposed)
             return;
-        DisableMonitoring();
         if (_agent is not null)
             _agent.AttackDetected -= agent_AttackDetected;
         _agent = null;

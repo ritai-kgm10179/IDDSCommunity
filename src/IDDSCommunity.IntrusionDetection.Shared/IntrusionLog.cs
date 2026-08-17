@@ -179,7 +179,7 @@ public class IntrusionLog
     {
         if (Database.Instance.IsConfigured)
         {
-            return Database.Instance.ExecuteReader("select * from IntrusionLog where IncidentTime>@p0 order by Id desc", DateTime.Now.Subtract(timeSpan));
+            return Database.Instance.ExecuteReader("select * from IntrusionLog where IncidentTime>@p0 order by Id desc", DateTime.UtcNow.Subtract(timeSpan));
         }
         else
         {
@@ -212,7 +212,7 @@ public class IntrusionLog
     /// <returns>傳回read interval grouped結果。</returns>
     public static IDataReader ReadIntervalGrouped(TimeSpan timeSpan)
     {
-        DateTime endDate = DateTime.Now;
+        DateTime endDate = DateTime.UtcNow;
         return ReadIntervalGrouped(endDate.Subtract(timeSpan), endDate);
     }
 
@@ -295,7 +295,7 @@ public class IntrusionLog
     /// <summary>
     /// Adds entry.
     /// </summary>
-    /// <param name="incidentTime">incident time參數。</param>
+    /// <param name="incidentTime">事件發生時間；必須為 UTC，與資料庫欄位儲存慣例一致。</param>
     /// <param name="agentId">agent id參數。</param>
     /// <param name="clientIp">client ip參數。</param>
     /// <param name="action">action參數。</param>
@@ -326,7 +326,7 @@ values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"select count(*) from IntrusionLog where AgentId=@p0 and IncidentTime>@p1 and ClientIP=@p2";
-            object? queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.Now.AddDays(-1), IpAddress);
+            object? queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.UtcNow.AddDays(-1), IpAddress);
             return Db.DbValueConverter.ToInt(queryResult);
         }
         else

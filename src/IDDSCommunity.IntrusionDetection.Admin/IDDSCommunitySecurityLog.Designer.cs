@@ -1,4 +1,4 @@
-namespace IDDSCommunity.IntrusionDetection.Admin {
+﻿namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class IDDSCommunitySecurityLog {
         /// <summary>
         /// Required designer variable.

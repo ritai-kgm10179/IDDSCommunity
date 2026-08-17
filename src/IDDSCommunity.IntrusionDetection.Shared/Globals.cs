@@ -34,6 +34,10 @@ public class Globals
     /// Windows event log name forIntrusion Detectionlogs.
     /// </summary>
     public const string IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME = "IDDS Community";
+    /// <summary>
+    /// 由安裝程式建立之本機群組名稱；其成員可在非提升權限狀態下讀取受 DPAPI 保護的資料庫金鑰檔案。
+    /// </summary>
+    public const string IDDSCOMMUNITY_OPERATORS_GROUP_NAME = "IDDSCommunityOperators";
 
 
     // Event Log Information

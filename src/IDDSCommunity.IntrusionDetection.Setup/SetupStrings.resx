@@ -66,4 +66,5 @@ Target location: {1}</value></data>
   <data name="ServiceStopVerificationFailed" xml:space="preserve"><value>The Windows service did not reach the stopped state.</value></data>
   <data name="ServiceStateStabilizationFailed" xml:space="preserve"><value>The Windows service did not reach a stable state before setup continued.</value></data>
   <data name="ServicePauseVerificationFailed" xml:space="preserve"><value>The Windows service could not be restored to the paused state.</value></data>
+  <data name="OperatorsGroupDescription" xml:space="preserve"><value>Members can open the IDDS Community Admin console and read the protected database key without running elevated.</value></data>
 </root>

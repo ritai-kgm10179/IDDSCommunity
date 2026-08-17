@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -131,8 +131,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             DateTime lastReportedDay = end.AddDays(-1);
             DateTime start = new(lastReportedDay.Year, lastReportedDay.Month, 1, 0, 0, 0);
             string hostName = System.Net.Dns.GetHostName();
+            // IncidentTime 以 UTC 儲存；標題與副標維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Monthly report"), Strings.Format("Report for {0:Y}", start), Strings.Format("Server: {0}", hostName),
-                start, end);
+                start.ToUniversalTime(), end.ToUniversalTime());
             await SendMailAsync(Strings.Format("Monthly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Monthly", "Succeeded", hostName);
         }
@@ -155,8 +156,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             DateTime end = DateTime.Today;
             DateTime start = end.AddDays(-7);
             string hostName = System.Net.Dns.GetHostName();
+            // IncidentTime 以 UTC 儲存；標題與副標維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Weekly report"), Strings.Format("Week of {0:d}", start), Strings.Format("Server: {0}", hostName),
-                start, end);
+                start.ToUniversalTime(), end.ToUniversalTime());
             await SendMailAsync(Strings.Format("Weekly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Weekly", "Succeeded", hostName);
         }
@@ -178,8 +180,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         {
             DateTime d = DateTime.Today.AddDays(-1);
             string hostName = System.Net.Dns.GetHostName();
+            // IncidentTime 以 UTC 儲存；標題維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Daily report"), d.ToString("d", LanguageManager.Instance.CurrentCulture), Strings.Format("Server: {0}", hostName),
-                d, d.AddDays(1));
+                d.ToUniversalTime(), d.AddDays(1).ToUniversalTime());
             await SendMailAsync(Strings.Format("Daily report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Daily", "Succeeded", hostName);
         }
@@ -219,7 +222,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         if (sender is not ClientOperationInformation op)
             return;
-        IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
+        IntrusionLog.AddEntry(DateTime.UtcNow, op.AgentId, op.IpAddress, IntrusionLog.STATUS_HARD_LOCKED, false);
         SendInfoMail(op, LockType.HardLock);
     }
     /// <summary>
@@ -233,11 +236,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             return;
         if (op.HasError)
         {
-            IntrusionLog.AddEntry(DateTime.Now, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
+            IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCK_ERROR, false);
         }
         else
         {
-            IntrusionLog.AddEntry(DateTime.Now, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCKED, false);
+            IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCKED, false);
         }
         SendInfoMail(op, LockType.None);
     }
@@ -250,7 +253,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         if (sender is not ClientOperationInformation op)
             return;
-        IntrusionLog.AddEntry(DateTime.Now, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
+        IntrusionLog.AddEntry(DateTime.UtcNow, op.AgentId, op.IpAddress, IntrusionLog.STATUS_SOFT_LOCKED, false);
         SendInfoMail(op, LockType.SoftLock);
     }
     /// <summary>
@@ -843,19 +846,22 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
             {
                 statistics.IncreaseFailedLoginStatistics(reportingAgent);
+                // Agent 提供的 CreateDate 為本機時間（例如 Windows 事件記錄的 TimeCreated）；
+                // IncidentTime/LockDate/UnlockDate 資料庫欄位一律以 UTC 儲存，於此處統一轉換。
+                DateTime incidentTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime();
                 if (System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? ipAddress) && configuration.IsIpAddressLocal(ipAddress))
                 {
-                    incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
+                    incidentId = IntrusionLog.AddEntry(incidentTimeUtc, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_LOCAL, false);
                 }
                 else if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(notificationEventArgs.IpAddress))
                 {
-                    incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
+                    incidentId = IntrusionLog.AddEntry(incidentTimeUtc, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE, false);
                 }
                 else
                 {
-                    incidentId = IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id, notificationEventArgs.IpAddress,
+                    incidentId = IntrusionLog.AddEntry(incidentTimeUtc, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT, false);
 
                     try
@@ -871,11 +877,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                     int recentLockCount = Locks.GetRecentLockCount(
                                         reportingAgent.Id,
                                         notificationEventArgs.IpAddress,
-                                        DateTime.Now.AddDays(-1));
+                                        DateTime.UtcNow.AddDays(-1));
                                     int softLockMinutes = LockoutPolicy.CalculateSoftLockMinutes(
                                         configuration.GetSoftLockMinutes(reportingAgent),
                                         recentLockCount);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddMinutes(softLockMinutes), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.UtcNow, DateTime.UtcNow.AddMinutes(softLockMinutes), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
                                     break;
                                 case LockType.SoftLock:
                                     // already locked, ignore
@@ -883,7 +889,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                                 case LockType.HardLockRequested:
                                     //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
                                     //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                                    LockDownIp(Locks.CreateLock(DateTime.Now, DateTime.Now.AddHours(configuration.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
+                                    LockDownIp(Locks.CreateLock(DateTime.UtcNow, DateTime.UtcNow.AddHours(configuration.GetHardLockHours(reportingAgent)), incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
                                     break;
                             }
                         }

@@ -81,6 +81,7 @@ public class Database
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
             System.IO.Directory.CreateDirectory(dbDir);
 
+        CleanupStrayMigrationArtifacts(connBuilder.DataSource);
         bool databaseExists = File.Exists(connBuilder.DataSource);
         bool isPlaintext = databaseExists && HasPlaintextHeader(connBuilder.DataSource);
         databasePassword = DatabaseEncryptionKeyStore.GetPassword(
@@ -388,75 +389,175 @@ public class Database
         string directory = Path.GetDirectoryName(path) ?? throw new InvalidOperationException(Localization.Strings.Get("The database directory is unavailable."));
         string candidate = Path.Combine(directory, $".{Path.GetFileName(path)}.encrypted-{Guid.NewGuid():N}");
         string rollback = Path.Combine(directory, $".{Path.GetFileName(path)}.plaintext-rollback-{Guid.NewGuid():N}");
-        using FileStream migrationLock = new(path + ".migration.lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-        if (!HasPlaintextHeader(path))
-            return;
-
+        string lockPath = path + ".migration.lock";
+        FileStream migrationLock = AcquireMigrationLock(lockPath);
         try
         {
-            using (SqliteConnection source = new(new SqliteConnectionStringBuilder
-            {
-                DataSource = path,
-                Mode = SqliteOpenMode.ReadOnly,
-                Pooling = false
-            }.ConnectionString))
-            {
-                source.Open();
-                using SqliteCommand snapshot = source.CreateCommand();
-                snapshot.CommandText = "VACUUM INTO $path";
-                snapshot.Parameters.AddWithValue("$path", candidate);
-                snapshot.ExecuteNonQuery();
-            }
-            using (SqliteConnection destination = new(new SqliteConnectionStringBuilder
-            {
-                DataSource = candidate,
-                Mode = SqliteOpenMode.ReadWrite,
-                Pooling = false
-            }.ConnectionString))
-            {
-                destination.Open();
-                using (SqliteCommand encrypt = destination.CreateCommand())
-                {
-                    encrypt.CommandText = $"PRAGMA rekey = '{password.Replace("'", "''", StringComparison.Ordinal)}'";
-                    encrypt.ExecuteNonQuery();
-                }
-                ConfigureConnection(destination);
-                using SqliteCommand check = destination.CreateCommand();
-                check.CommandText = "PRAGMA integrity_check";
-                if (!string.Equals(Convert.ToString(check.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException(Localization.Strings.Get("The encrypted database migration failed its integrity check."));
-            }
+            if (!HasPlaintextHeader(path))
+                return;
 
-            SqliteConnection.ClearAllPools();
-            File.Replace(candidate, path, rollback, true);
-            DeleteIfExists(path + "-wal");
-            DeleteIfExists(path + "-shm");
-            using SqliteConnection verification = new(new SqliteConnectionStringBuilder
+            try
             {
-                DataSource = path,
-                Mode = SqliteOpenMode.ReadOnly,
-                Pooling = false,
-                Password = password
-            }.ConnectionString);
-            verification.Open();
-            using SqliteCommand verificationCommand = verification.CreateCommand();
-            verificationCommand.CommandText = "PRAGMA integrity_check";
-            if (!string.Equals(Convert.ToString(verificationCommand.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException(Localization.Strings.Get("The migrated encrypted database failed verification."));
-            DeleteIfExists(rollback);
-        }
-        catch
-        {
-            if (File.Exists(rollback))
-                File.Replace(rollback, path, null, true);
-            throw;
+                using (SqliteConnection source = new(new SqliteConnectionStringBuilder
+                {
+                    DataSource = path,
+                    Mode = SqliteOpenMode.ReadOnly,
+                    Pooling = false
+                }.ConnectionString))
+                {
+                    source.Open();
+                    using SqliteCommand snapshot = source.CreateCommand();
+                    snapshot.CommandText = "VACUUM INTO $path";
+                    snapshot.Parameters.AddWithValue("$path", candidate);
+                    snapshot.ExecuteNonQuery();
+                }
+                using (SqliteConnection destination = new(new SqliteConnectionStringBuilder
+                {
+                    DataSource = candidate,
+                    Mode = SqliteOpenMode.ReadWrite,
+                    Pooling = false
+                }.ConnectionString))
+                {
+                    destination.Open();
+                    using (SqliteCommand encrypt = destination.CreateCommand())
+                    {
+                        encrypt.CommandText = $"PRAGMA rekey = '{password.Replace("'", "''", StringComparison.Ordinal)}'";
+                        encrypt.ExecuteNonQuery();
+                    }
+                    ConfigureConnection(destination);
+                    using SqliteCommand check = destination.CreateCommand();
+                    check.CommandText = "PRAGMA integrity_check";
+                    if (!string.Equals(Convert.ToString(check.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException(Localization.Strings.Get("The encrypted database migration failed its integrity check."));
+                }
+
+                SqliteConnection.ClearAllPools();
+                File.Replace(candidate, path, rollback, true);
+                DeleteIfExists(path + "-wal");
+                DeleteIfExists(path + "-shm");
+                using SqliteConnection verification = new(new SqliteConnectionStringBuilder
+                {
+                    DataSource = path,
+                    Mode = SqliteOpenMode.ReadOnly,
+                    Pooling = false,
+                    Password = password
+                }.ConnectionString);
+                verification.Open();
+                using SqliteCommand verificationCommand = verification.CreateCommand();
+                verificationCommand.CommandText = "PRAGMA integrity_check";
+                if (!string.Equals(Convert.ToString(verificationCommand.ExecuteScalar()), "ok", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException(Localization.Strings.Get("The migrated encrypted database failed verification."));
+                SecureDeleteIfExists(rollback);
+            }
+            catch
+            {
+                if (File.Exists(rollback))
+                    File.Replace(rollback, path, null, true);
+                throw;
+            }
+            finally
+            {
+                DeleteIfExists(candidate);
+            }
         }
         finally
         {
-            DeleteIfExists(candidate);
             migrationLock.Dispose();
-            DeleteIfExists(path + ".migration.lock");
+            DeleteIfExists(lockPath);
         }
+    }
+
+    /// <summary>
+    /// 取得遷移鎖，若目前被另一個處理程序持有（例如服務與管理主控台同時啟動並同時偵測到明文資料庫），
+    /// 會以短暫延遲重試數次，而非立即失敗，以提高並行啟動情境下的可靠性。
+    /// </summary>
+    /// <param name="lockPath">遷移鎖檔案路徑。</param>
+    /// <returns>已取得獨佔存取權的檔案串流。</returns>
+    private static FileStream AcquireMigrationLock(string lockPath)
+    {
+        const int maxAttempts = 10;
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                Thread.Sleep(200);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 清除前次明文資料庫遷移意外中斷（例如處理程序遭終止或電源中斷）後可能殘留的暫存明文回滾檔案，
+    /// 避免其違反「不得留下明文備份或回滾副本」的保證而永久留存於磁碟。
+    /// 會先嘗試取得與 <see cref="MigratePlaintextDatabase"/> 相同的遷移鎖，若鎖定失敗代表另一個
+    /// 處理程序正在進行中的遷移，此時不觸碰任何暫存檔案。
+    /// </summary>
+    /// <param name="path">SQLite 資料庫的完整路徑。</param>
+    private static void CleanupStrayMigrationArtifacts(string path)
+    {
+        string? directory = System.IO.Path.GetDirectoryName(path);
+        if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+            return;
+
+        string lockPath = path + ".migration.lock";
+        FileStream migrationLock;
+        try
+        {
+            migrationLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException)
+        {
+            // 另一個處理程序正持有遷移鎖，代表遷移正在進行中，不得干擾其暫存檔案。
+            return;
+        }
+
+        try
+        {
+            string fileName = System.IO.Path.GetFileName(path);
+            foreach (string stray in Directory.EnumerateFiles(directory, $".{fileName}.plaintext-rollback-*"))
+                SecureDeleteIfExists(stray);
+            foreach (string stray in Directory.EnumerateFiles(directory, $".{fileName}.encrypted-*"))
+                DeleteIfExists(stray);
+        }
+        finally
+        {
+            migrationLock.Dispose();
+            DeleteIfExists(lockPath);
+        }
+    }
+
+    /// <summary>
+    /// 以零位元組覆寫檔案內容後再刪除，降低殘留明文資料庫副本可被復原的風險。
+    /// </summary>
+    /// <param name="path">欲安全刪除的檔案路徑。</param>
+    private static void SecureDeleteIfExists(string path)
+    {
+        if (!File.Exists(path)) return;
+        try
+        {
+            long length = new FileInfo(path).Length;
+            if (length > 0)
+            {
+                using FileStream stream = new(path, FileMode.Open, FileAccess.Write, FileShare.None);
+                byte[] zeros = new byte[(int)Math.Min(length, 1024 * 1024)];
+                long remaining = length;
+                while (remaining > 0)
+                {
+                    int chunk = (int)Math.Min(remaining, zeros.Length);
+                    stream.Write(zeros, 0, chunk);
+                    remaining -= chunk;
+                }
+                stream.Flush(true);
+            }
+        }
+        catch (IOException)
+        {
+            // 覆寫失敗仍嘗試刪除，避免殘留檔案永久留存；覆寫僅為縱深防禦，非唯一保護機制。
+        }
+        File.Delete(path);
     }
 
     private static void DeleteIfExists(string path)

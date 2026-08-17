@@ -67,7 +67,15 @@ internal sealed class BoundedPacketDispatcher
     {
         await foreach (RawPacketEventArgs packet in channel.Reader.ReadAllAsync().ConfigureAwait(false))
         {
-            dispatch(packet);
+            try
+            {
+                dispatch(packet);
+            }
+            catch (Exception exception)
+            {
+                // 隔離消費者例外，避免單一故障的委派終止整個分派迴圈並讓後續封包被靜默丟棄。
+                System.Diagnostics.Trace.TraceError("Packet dispatch callback threw and was isolated: {0}", exception.Message);
+            }
             Interlocked.Increment(ref dispatchedCount);
             IDDSCommunityMetrics.RecordDispatched();
         }

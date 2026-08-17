@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -88,7 +88,7 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             object? queryResult = Database.Instance.ExecuteScalar(@"select count(*) from IntrusionLog where (action=@p0 or action=@p1) and IncidentTime>@p2",
-                IntrusionLog.STATUS_SOFT_LOCKED, IntrusionLog.STATUS_HARD_LOCKED, DateTime.Now.AddDays(-1));
+                IntrusionLog.STATUS_SOFT_LOCKED, IntrusionLog.STATUS_HARD_LOCKED, DateTime.UtcNow.AddDays(-1));
             if (int.TryParse(queryResult?.ToString(), out int result))
             {
                 return result;
@@ -284,8 +284,8 @@ public class Locks
     /// <summary>
     /// 建立鎖定記錄。
     /// </summary>
-    /// <param name="lockDate">lock date參數。</param>
-    /// <param name="unlockDate">unlock date參數。</param>
+    /// <param name="lockDate">鎖定建立時間；必須為 UTC。</param>
+    /// <param name="unlockDate">預定解鎖時間；必須為 UTC。</param>
     /// <param name="triggerIncident">trigger incident參數。</param>
     /// <param name="status">status參數。</param>
     /// <param name="port">port參數。</param>
@@ -316,7 +316,7 @@ public class Locks
         {
             Lock result = new();
             string sqlString = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6) RETURNING LockId";
-            object? id = Database.Instance.ExecuteScalar(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.Now);
+            object? id = Database.Instance.ExecuteScalar(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.UtcNow);
             l.Id = Db.DbValueConverter.ToInt64(id);
             return l.Id;
         }
@@ -334,7 +334,7 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"update Locks set LockDate=@p0, UnlockDate=@p1, TriggerIncident=@p2, Status=@p3, Port=@p4, IpAddress=@p5, LastUpdate=@p6 where LockId=@p7";
-            Database.Instance.ExecuteNonQuery(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.Now, l.Id);
+            Database.Instance.ExecuteNonQuery(sqlString, l.LockDate, l.UnlockDate, l.TriggerIncident, l.Status, l.Port, l.IpAddress, DateTime.UtcNow, l.Id);
         }
         else
         {
@@ -351,7 +351,7 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
             string sqlString = @"select * from Locks where (UnlockDate<@p0 and (status=@p1 or status=@p2)) or status=@p3";
-            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, DateTime.Now, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_UNLOCK_REQUESTED);
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, DateTime.UtcNow, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_UNLOCK_REQUESTED);
             while (rdr.Read())
             {
                 Lock l = new()

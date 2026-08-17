@@ -15,6 +15,8 @@
   <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL 安全性代理程式</value></data>
   <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS 安全性代理程式</value></data>
   <data name="IIS Authentication Security Agent" xml:space="preserve"><value>IIS 驗證安全性代理程式</value></data>
+  <data name="MySQL and MariaDB Security Agent" xml:space="preserve"><value>MySQL 及 MariaDB 安全性代理程式</value></data>
+  <data name="Web Security Agent" xml:space="preserve"><value>Web 安全性代理程式</value></data>
   <data name="Detection window must be between 10 and 86400 seconds." xml:space="preserve"><value>偵測時間範圍必須介於 10 至 86400 秒。</value></data>
   <data name="Failure threshold must be between 2 and 100000." xml:space="preserve"><value>失敗門檻必須介於 2 至 100000 次。</value></data>
   <data name="Tracked source capacity must be between 100 and 1000000." xml:space="preserve"><value>追蹤來源容量必須介於 100 至 1000000。</value></data>

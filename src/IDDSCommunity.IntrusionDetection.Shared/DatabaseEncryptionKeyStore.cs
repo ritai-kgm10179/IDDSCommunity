@@ -79,6 +79,14 @@ internal static class DatabaseEncryptionKeyStore
         }
     }
 
+    /// <summary>
+    /// 將金鑰檔案的存取控制限縮為 SYSTEM、本機系統管理員，以及由安裝程式建立之
+    /// <see cref="Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME"/> 本機群組成員。
+    /// 因為 DPAPI 的 <see cref="DataProtectionScope.LocalMachine"/> 範圍本身不做身分區隔，
+    /// 任何能讀到受保護位元組的本機處理程序都能解密，所以檔案 ACL 才是實際的存取邊界；
+    /// 不得再對 BUILTIN\Users 這類涵蓋所有本機標準使用者的群組授予讀取權限。
+    /// </summary>
+    /// <param name="keyPath">金鑰檔案的完整路徑。</param>
     private static void HardenAccessControl(string keyPath)
     {
         string commonApplicationData = Path.GetFullPath(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
@@ -95,10 +103,35 @@ internal static class DatabaseEncryptionKeyStore
             new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
             FileSystemRights.FullControl,
             AccessControlType.Allow));
-        security.AddAccessRule(new FileSystemAccessRule(
-            new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null),
-            FileSystemRights.Read,
-            AccessControlType.Allow));
+        if (TryResolveOperatorsGroupSid(out SecurityIdentifier? operatorsGroupSid))
+        {
+            security.AddAccessRule(new FileSystemAccessRule(
+                operatorsGroupSid!,
+                FileSystemRights.Read,
+                AccessControlType.Allow));
+        }
         FileSystemAclExtensions.SetAccessControl(new FileInfo(keyPath), security);
+    }
+
+    /// <summary>
+    /// 嘗試將 <see cref="Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME"/> 本機群組名稱解析為安全性識別碼。
+    /// </summary>
+    /// <param name="sid">解析成功時傳出對應的安全性識別碼；失敗時為 null。</param>
+    /// <returns>群組存在且成功解析時傳回 true；群組不存在（例如未透過安裝程式安裝）時傳回 false。</returns>
+    private static bool TryResolveOperatorsGroupSid(out SecurityIdentifier? sid)
+    {
+        try
+        {
+            sid = (SecurityIdentifier)new NTAccount(Environment.MachineName, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME)
+                .Translate(typeof(SecurityIdentifier));
+            return true;
+        }
+        catch (IdentityNotMappedException)
+        {
+            // 本機群組尚未由安裝程式建立（例如開發環境或非標準安裝方式）；
+            // 僅保留 SYSTEM 與系統管理員存取權限，非提升權限之管理主控台將無法讀取金鑰。
+            sid = null;
+            return false;
+        }
     }
 }

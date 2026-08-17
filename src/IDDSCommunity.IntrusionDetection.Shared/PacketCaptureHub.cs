@@ -205,21 +205,33 @@ internal static class PacketCaptureHub
         {
             if (sender is SharpPcapPacketReceiver)
             {
-                lock (SyncRoot)
+                // 改由執行緒集區派發，避免在觸發此事件的 SharpPcap 擷取執行緒本身同步呼叫
+                // StopReceiver()/Dispose()，該執行緒可能仍身處其自身的擷取回呼堆疊中，
+                // 直接於原執行緒關閉裝置有自我等待（self-join）而卡住復原流程的風險。
+                ThreadPool.QueueUserWorkItem(_ => HandleSharpPcapFailure(eventArgs));
+                return;
+            }
+            PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
+            foreach (PacketSubscription subscription in snapshot)
+                subscription.NotifyFailure(eventArgs);
+        }
+
+        private void HandleSharpPcapFailure(RawSocketErrorEventArgs eventArgs)
+        {
+            lock (SyncRoot)
+            {
+                try
                 {
-                    try
-                    {
-                        StopReceiver();
-                        receiver = new RawSocketReceiver(packetFilter: ShouldCapture);
-                        AttachReceiver(receiver);
-                        receiver.Start(Address);
-                        Trace.TraceWarning("Pcap capture failed on {0}; Raw Socket fallback is active: {1}", Address, eventArgs.Exception.Message);
-                        return;
-                    }
-                    catch (Exception fallbackException)
-                    {
-                        eventArgs = new RawSocketErrorEventArgs(new AggregateException(eventArgs.Exception, fallbackException));
-                    }
+                    StopReceiver();
+                    receiver = new RawSocketReceiver(packetFilter: ShouldCapture);
+                    AttachReceiver(receiver);
+                    receiver.Start(Address);
+                    Trace.TraceWarning("Pcap capture failed on {0}; Raw Socket fallback is active: {1}", Address, eventArgs.Exception.Message);
+                    return;
+                }
+                catch (Exception fallbackException)
+                {
+                    eventArgs = new RawSocketErrorEventArgs(new AggregateException(eventArgs.Exception, fallbackException));
                 }
             }
             PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
@@ -252,7 +264,7 @@ internal static class PacketCaptureHub
         private readonly Action<IPHeader, TCPHeader> packetSent;
         private readonly Action<IPHeader, TCPHeader> packetReceived;
         private readonly Action<RawSocketErrorEventArgs> captureFailed;
-        private bool disposed;
+        private volatile bool disposed;
 
         internal PacketSubscription(CaptureEntry owner, int? tcpPort, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed)
         {

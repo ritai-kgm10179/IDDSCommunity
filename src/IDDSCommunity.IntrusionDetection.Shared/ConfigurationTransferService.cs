@@ -175,6 +175,14 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
             throw Invalid($"HardLockAttempts ({package.GlobalPolicy.HardLockAttempts}) must be greater than or equal to SoftLockAttempts ({package.GlobalPolicy.SoftLockAttempts}).");
         if (package.GlobalPolicy.SmtpPort is < 1 or > 65535)
             throw Invalid($"SmtpPort must be between 1 and 65535; actual value: {package.GlobalPolicy.SmtpPort}.");
+        if (package.GlobalPolicy.SmtpServer is null || package.GlobalPolicy.SmtpServer.Length > 250)
+            throw Invalid($"SmtpServer length is invalid; length: {package.GlobalPolicy.SmtpServer?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
+        if (package.GlobalPolicy.SmtpUsername is null || package.GlobalPolicy.SmtpUsername.Length > 250)
+            throw Invalid($"SmtpUsername length is invalid; length: {package.GlobalPolicy.SmtpUsername?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
+        if (package.GlobalPolicy.SenderEmailAddress is null || package.GlobalPolicy.SenderEmailAddress.Length > 250)
+            throw Invalid($"SenderEmailAddress length is invalid; length: {package.GlobalPolicy.SenderEmailAddress?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
+        if (package.GlobalPolicy.NotificationEmailAddress is null || package.GlobalPolicy.NotificationEmailAddress.Length > 250)
+            throw Invalid($"NotificationEmailAddress length is invalid; length: {package.GlobalPolicy.NotificationEmailAddress?.Length.ToString(CultureInfo.InvariantCulture) ?? "null"}.");
         if (package.ApplicationSettings.Count > 10000 || package.SafeNetworks.Count > 10000 || package.Agents.Count > 1000) throw Invalid("Configuration package exceeds supported limits.");
         foreach ((string key, string value) in package.ApplicationSettings)
         {
@@ -251,7 +259,7 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         byte[] passwordBytes = Encoding.UTF8.GetBytes(passphrase);
         try
         {
-            Argon2id argon2 = new(passwordBytes)
+            using Argon2id argon2 = new(passwordBytes)
             {
                 Salt = salt,
                 MemorySize = parameters.MemoryKiB,

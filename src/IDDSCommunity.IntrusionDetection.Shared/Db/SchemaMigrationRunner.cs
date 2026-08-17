@@ -33,6 +33,9 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, CreateProtectionEventInboxStatusIndex);
         Execute(connection, transaction, CreateIntrusionLogWindowIndex);
 
+        if (!MigrationApplied(connection, transaction, 5))
+            MigrateLegacyLocalTimestampsToUtc(connection, transaction);
+
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";
@@ -50,8 +53,52 @@ internal static class SchemaMigrationRunner
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (4, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (5, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
         transaction.Commit();
     }
+
+    private static bool MigrationApplied(SqliteConnection connection, SqliteTransaction transaction, int version)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = $version";
+        command.Parameters.AddWithValue("$version", version);
+        return Convert.ToInt64(command.ExecuteScalar()) > 0;
+    }
+
+    /// <summary>
+    /// 一次性地將既有以本機時區儲存的 <c>IntrusionLog.IncidentTime</c> 與 <c>Locks</c> 資料表時間欄位
+    /// 轉換為 UTC，使其與應用程式改採 UTC 儲存/比較之新慣例一致，避免新舊資料混用時區語意。
+    /// 換算採用目前機器的 UTC 位移量；僅在版本 5 尚未套用時執行一次，且與其餘結構描述異動同屬一個交易。
+    /// </summary>
+    /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
+    /// <param name="transaction">作用中的移轉交易。</param>
+    private static void MigrateLegacyLocalTimestampsToUtc(SqliteConnection connection, SqliteTransaction transaction)
+    {
+        TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
+        if (offset == TimeSpan.Zero)
+            return;
+        string modifier = string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{-offset.TotalMinutes} minutes");
+        foreach ((string table, string column) in LegacyLocalTimestampColumns)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = $"UPDATE {table} SET {column} = datetime({column}, $modifier) WHERE {column} IS NOT NULL";
+            command.Parameters.AddWithValue("$modifier", modifier);
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private static IReadOnlyList<(string Table, string Column)> LegacyLocalTimestampColumns { get; } =
+    [
+        ("IntrusionLog", "IncidentTime"),
+        ("Locks", "LockDate"),
+        ("Locks", "UnlockDate"),
+        ("Locks", "LastUpdate")
+    ];
 
     private static bool TableExists(SqliteConnection connection, SqliteTransaction transaction, string tableName)
     {
