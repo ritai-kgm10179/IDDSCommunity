@@ -20,8 +20,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.11" />
-    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.11" />
+    <PackageReference Include="System.Diagnostics.EventLog" />
+    <PackageReference Include="System.DirectoryServices.AccountManagement" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" />
     <EmbeddedResource Include="payload.zip" Condition="Exists('payload.zip')" />
   </ItemGroup>
 </Project>

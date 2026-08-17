@@ -27,13 +27,19 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.FileMaker.Test/IDDSCommunity.Agents.FileMaker.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FileZilla.Test/IDDSCommunity.Agents.FileZilla.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.FtpServer.Test/IDDSCommunity.Agents.FtpServer.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.IisAuthentication.Test/IDDSCommunity.Agents.IisAuthentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.MySql.Test/IDDSCommunity.Agents.MySql.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.OpenSsh.Test/IDDSCommunity.Agents.OpenSsh.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.PostgreSql.Test/IDDSCommunity.Agents.PostgreSql.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.Radius.Test/IDDSCommunity.Agents.Radius.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.SqlServer.Test/IDDSCommunity.Agents.SqlServer.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.TechnitiumDns.Test/IDDSCommunity.Agents.TechnitiumDns.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.TerminalServer.Test/IDDSCommunity.Agents.TerminalServer.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.WebSecurity.Test/IDDSCommunity.Agents.WebSecurity.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.WindowsAuthentication.Test/IDDSCommunity.Agents.WindowsAuthentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.WindowsDns.Test/IDDSCommunity.Agents.WindowsDns.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.WindowsNetworkLogon.Test/IDDSCommunity.Agents.WindowsNetworkLogon.Test.csproj" />

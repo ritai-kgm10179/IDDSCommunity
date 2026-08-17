@@ -27,6 +27,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+      sha: ${{ steps.verify.outputs.sha }}
     steps:
       - name: Resolve release ref
         id: version
@@ -40,12 +41,13 @@ jobs:
           "version=$($Matches.version)" >> $env:GITHUB_OUTPUT
 
       - name: Checkout signed tag
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ steps.version.outputs.tag }}
           fetch-depth: 0
 
       - name: Verify annotated tag signature
+        id: verify
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -56,7 +58,11 @@ jobs:
           $tagObject = gh api "repos/$env:GITHUB_REPOSITORY/git/tags/$($reference.object.sha)" | ConvertFrom-Json
           if (-not $tagObject.verification.verified) { throw "Tag signature is not verified: $($tagObject.verification.reason)" }
           if (-not $tagObject.verification.signature.StartsWith('-----BEGIN PGP SIGNATURE-----', [StringComparison]::Ordinal)) { throw 'Release tags must use an OpenPGP/GPG signature.' }
-          if ($tagObject.object.sha -ne (git rev-parse HEAD)) { throw 'The signed tag does not point to the checked-out commit.' }
+          $headSha = git rev-parse HEAD
+          if ($tagObject.object.sha -ne $headSha) { throw 'The signed tag does not point to the checked-out commit.' }
+          # 傳出已完成簽章驗證的確切 commit SHA；後續 job 一律以此 SHA checkout，
+          # 避免簽章驗證後、封裝與發布前的時間差內 tag 被移動而繞過驗證（TOCTOU）。
+          "sha=$headSha" >> $env:GITHUB_OUTPUT
 
       - name: Verify asset provenance
         shell: pwsh
@@ -72,18 +78,19 @@ jobs:
           if ($projectVersion -ne $env:RELEASE_VERSION) { throw "Tag version $env:RELEASE_VERSION does not match setup version $projectVersion." }
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: 10.0.302
           cache: true
           cache-dependency-path: |
             Directory.Build.props
+            Directory.Packages.props
             IDDSCommunity.slnx
 
       - name: Restore, build, and test
         shell: pwsh
         run: |
-          dotnet restore IDDSCommunity.slnx --nologo
+          dotnet restore IDDSCommunity.slnx -m:1 --disable-parallel --nologo
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -94,7 +101,7 @@ jobs:
 
       - name: Upload validation test results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-validation-test-results
           path: TestResults/**/*.trx
@@ -111,19 +118,21 @@ jobs:
       matrix:
         rid: [win-x64, win-arm64]
     steps:
-      - name: Checkout signed tag
-        uses: actions/checkout@v7
+      - name: Checkout verified commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.validate.outputs.tag }}
+          ref: ${{ needs.validate.outputs.sha }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: 10.0.302
           cache: true
           cache-dependency-path: |
             Directory.Build.props
+            Directory.Packages.props
             IDDSCommunity.slnx
+            **/*.csproj
 
       - name: Build self-contained installer package
         shell: pwsh
@@ -176,7 +185,7 @@ jobs:
           }
 
       - name: Upload installer package
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: installer-${{ matrix.rid }}
           path: |
@@ -197,26 +206,27 @@ jobs:
       attestations: write
       artifact-metadata: write
     steps:
-      - name: Checkout signed tag
-        uses: actions/checkout@v7
+      - name: Checkout verified commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.validate.outputs.tag }}
+          ref: ${{ needs.validate.outputs.sha }}
           fetch-depth: 0
 
       - name: Download installer packages
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: installer-*
           path: release
           merge-multiple: true
 
       - name: Attest installer and SBOM provenance
-        uses: actions/attest@v4
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           subject-path: |
             release/*.zip
             release/*.spdx-*.json
+            release/*.sha256
 
       - name: Create GitHub Release
         env:

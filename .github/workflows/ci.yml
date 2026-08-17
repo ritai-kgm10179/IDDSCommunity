@@ -21,23 +21,25 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Verify asset provenance
         shell: pwsh
         run: ./scripts/test-asset-provenance.ps1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: 10.0.302
           cache: true
           cache-dependency-path: |
             Directory.Build.props
+            Directory.Packages.props
             IDDSCommunity.slnx
+            **/*.csproj
 
       - name: Restore
-        run: dotnet restore IDDSCommunity.slnx --nologo
+        run: dotnet restore IDDSCommunity.slnx -m:1 --disable-parallel --nologo
 
       - name: Build
         run: dotnet build IDDSCommunity.slnx --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
@@ -50,7 +52,7 @@ jobs:
 
       - name: Upload test results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: test-results
           path: TestResults/**/*.trx
@@ -63,19 +65,21 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: 10.0.302
           cache: true
           cache-dependency-path: |
             Directory.Build.props
+            Directory.Packages.props
             IDDSCommunity.slnx
+            **/*.csproj
 
       - name: Restore
-        run: dotnet restore IDDSCommunity.slnx --nologo
+        run: dotnet restore IDDSCommunity.slnx -m:1 --disable-parallel --nologo
 
       - name: Build integration targets
         run: dotnet build tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
@@ -86,7 +90,7 @@ jobs:
 
       - name: Upload privileged test results
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: privileged-test-results
           path: tests/IDDSCommunity.IntrusionDetection.Service.Test/TestResults/**/*.trx

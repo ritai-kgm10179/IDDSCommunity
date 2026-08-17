@@ -14,8 +14,8 @@
 
 ## 2. NuGet 與套件管理
 
-- **套件版本控制**：所有第三方與系統擴充套件均須使用最新穩定版本（例如 `System.Management.Automation`、`System.Data.SQLite.Core` 等）。
-- **全域套件管理與弱點掃描**：於 [`Directory.Build.props`](Directory.Build.props) 中統一管理跨專案相依套件版本與弱點升級（如 `Newtonsoft.Json 13.0.4+`），確保無已知高嚴重性安全性弱點。
+- **套件版本控制**：所有第三方與系統擴充套件均須使用最新穩定版本（例如 `Microsoft.Data.Sqlite.Core`、`SQLite3MC.PCLRaw.bundle`、`MailKit`、`Konscious.Security.Cryptography.Argon2` 等）。
+- **集中套件版本管理與弱點掃描**：採用 NuGet Central Package Management，於 [`Directory.Packages.props`](Directory.Packages.props) 以 `<PackageVersion>` 統一管理所有專案共用之套件版本；個別 `.csproj` 內的 `<PackageReference>` 不得再指定 `Version` 屬性。升級套件版本以修補已知安全性弱點時，僅需異動此單一檔案。
 
 ---
 
@@ -61,7 +61,7 @@
 
 ## 6. 單元測試驗證
 
-- **單元測試整合**：所有測試專案（`*.Test.csproj`）均採用 MSTest V3 / .NET 10 Test SDK，執行 `dotnet test IDDSCommunity.slnx` 必須全數綠燈通過。
+- **單元測試整合**：所有測試專案（`*.Test.csproj`）均採用 MSTest V4 / .NET 10 Test SDK，執行 `dotnet test IDDSCommunity.slnx` 必須全數綠燈通過。
 - **環境獨立性**：測試腳本需具備環境獨立性，避免硬編碼絕對路徑或特定本機名稱；需適當處理非系統管理者權限（如 Windows EventLog 寫入與 Socket 監聽之例外捕捉）。
 
 ---
@@ -81,8 +81,9 @@
 ## 8. 設定機密與發行供應鏈
 
 - **設定匯出加密**：設定套件中的機密資料必須使用 Argon2id 衍生 256 位元金鑰，再以 AES-256-GCM 加密及驗證；密碼衍生參數必須設有匯入上限，且參數、格式版本與演算法識別必須納入 AAD，禁止未經明確格式升版而降級至 PBKDF2。
-- **SQLite 靜態資料加密**：SQLite 主資料庫、WAL 與應用程式維護備份必須由 `Microsoft.Data.Sqlite.Core` 搭配單一 `SQLite3MC.PCLRaw.bundle` 提供者，以 ChaCha20-Poly1305 完整加密；禁止同時引入其他 SQLitePCLRaw 原生 bundle。資料庫使用隨機 256 位元金鑰並由 Windows DPAPI 本機範圍保護，金鑰遺失時必須拒絕建立空白資料庫。既有明文資料庫只可透過可回滾、完整性驗證後原子替換的流程遷移，不得留下明文備份或回滾副本。
-- **簽署發行標籤**：正式發行僅能由符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 觸發，CI 必須驗證 GitHub 回報的 OpenPGP 簽章與標籤所指提交。
+- **SQLite 靜態資料加密**：SQLite 主資料庫、WAL 與應用程式維護備份必須由 `Microsoft.Data.Sqlite.Core` 搭配單一 `SQLite3MC.PCLRaw.bundle` 提供者，以 ChaCha20-Poly1305 完整加密；禁止同時引入其他 SQLitePCLRaw 原生 bundle。資料庫使用隨機 256 位元金鑰並由 Windows DPAPI 本機範圍保護，金鑰遺失時必須拒絕建立空白資料庫。既有明文資料庫只可透過可回滾、完整性驗證後原子替換的流程遷移，不得留下明文備份或回滾副本；應用程式啟動時須清除前次遷移中斷後可能殘留的明文回滾暫存檔案。
+- **資料庫金鑰存取控制**：由於 DPAPI 本機範圍保護本身不做身分區隔，金鑰檔案的存取控制清單（ACL）才是實際的存取邊界，禁止對 `BUILTIN\Users` 等涵蓋所有本機標準使用者的群組授予讀取權限。安裝程式須建立專屬的 `IDDSCommunityOperators` 本機群組並僅將該群組（連同 SYSTEM 與系統管理員）納入 ACL，使管理主控台在非提升權限下仍可讀取金鑰，同時將存取範圍限縮至已明確獲得授權的操作人員。
+- **簽署發行標籤**：正式發行僅能由符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 觸發，CI 必須驗證 GitHub 回報的 OpenPGP 簽章與標籤所指提交；已驗證的確切 commit SHA 須傳遞給後續封裝與發布 job 並用於 checkout，不得重新以標籤名稱解析，以避免驗證後標籤被移動而繞過簽章檢查。
 - **SBOM 與來源證明**：每個發行平台的安裝包必須同時產生目前規格的 SPDX 3.0 SBOM 與相容性格式 SPDX 2.2 SBOM，將兩者納入安裝包及 GitHub Release 附件，並發布 SHA-256 雜湊與 GitHub artifact attestation。
 
 ---
