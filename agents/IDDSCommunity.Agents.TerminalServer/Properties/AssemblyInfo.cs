@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 [assembly: InternalsVisibleTo("IDDSCommunity.Agents.WindowsAuthentication.Test")]
+[assembly: InternalsVisibleTo("IDDSCommunity.Agents.TerminalServer.Test")]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("3a822e8b-fede-4a8f-9883-c1854a66d983")]

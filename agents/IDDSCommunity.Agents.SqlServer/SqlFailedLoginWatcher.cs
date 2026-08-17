@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
@@ -121,7 +121,8 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
         }
         catch (Exception ex)
         {
-            EventLog.WriteEntry("IDDSCommunity.Agents.SqlServer.SqlFailedLoginWatcher", ex.Message);
+            try { EventLog.WriteEntry("IDDSCommunity.Agents.SqlServer.SqlFailedLoginWatcher", ex.Message); }
+            catch (Exception logException) { System.Diagnostics.Trace.TraceError("Unable to write SQL Server security event log entry: {0}", logException.Message); }
         }
     }
     /// <summary>

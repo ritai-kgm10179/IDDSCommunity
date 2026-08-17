@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -8,8 +8,10 @@ using System.Net;
 
 namespace IDDSCommunity.Agents.FileMaker;
 
+/// <summary>
+/// 監看 Windows 應用程式事件記錄中的 FileMaker Server 驗證失敗事件（事件 661）。
+/// </summary>
 [Plugin("Intrusion Detection Base Windows Security Agent", "此 Agent 掃描並監控系統事件紀錄以偵測可能的攻擊。")]
-
 public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
 {
 
@@ -122,7 +124,8 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
         }
         catch (Exception ex)
         {
-            EventLog.WriteEntry("IDDSCommunity.Agents.FileMaker.FileMakerSecurityAgent", ex.Message);
+            try { EventLog.WriteEntry("IDDSCommunity.Agents.FileMaker.FileMakerSecurityAgent", ex.Message); }
+            catch (Exception logException) { System.Diagnostics.Trace.TraceError("Unable to write FileMaker security event log entry: {0}", logException.Message); }
         }
     }
 

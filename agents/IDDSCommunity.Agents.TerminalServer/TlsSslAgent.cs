@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
 using System.Drawing;
@@ -6,6 +6,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.Agents.TerminalServer;
 
+/// <summary>
+/// 監看 Windows 安全性事件記錄，偵測遠端桌面（RDP）TLS/SSL 連線之驗證失敗事件（事件 4625、登入類型 10）。
+/// </summary>
 public class TlsSslAgent : AgentPlugin, IExtendedInformation
 {
     private System.Diagnostics.Eventing.Reader.EventLogWatcher? _securityWatcher;
@@ -50,7 +53,8 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         }
         catch (Exception ex)
         {
-            System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.Agents.TlsSslAgent", "Failed to start Security EventLog watcher for RDP: " + ex.Message, System.Diagnostics.EventLogEntryType.Warning);
+            try { System.Diagnostics.EventLog.WriteEntry("IDDSCommunity.Agents.TlsSslAgent", "Failed to start Security EventLog watcher for RDP: " + ex.Message, System.Diagnostics.EventLogEntryType.Warning); }
+            catch (Exception logException) { System.Diagnostics.Trace.TraceError("Unable to write TLS/SSL security event log entry: {0}", logException.Message); }
         }
 
     }
@@ -124,6 +128,9 @@ public class TlsSslAgent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
+    /// <summary>
+    /// 取得 Agent 目前是否正在執行。
+    /// </summary>
     public override bool IsRunning => base.IsRunning;
     /// <summary>
     /// 處理登入失敗作業。

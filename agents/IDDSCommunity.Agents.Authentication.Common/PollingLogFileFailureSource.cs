@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -6,6 +6,10 @@ using System.Threading;
 
 namespace IDDSCommunity.Agents.Authentication.Common;
 
+/// <summary>
+/// 以定時輪詢方式監看一組文字記錄檔，並針對每一完整換行紀錄嘗試解析出驗證失敗事件；
+/// 以位元組位置與檔案錨點正確處理半行、截斷與日誌輪替情境。
+/// </summary>
 public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 {
     private const int AnchorBytes = 32;
@@ -18,11 +22,22 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
     private Timer? timer;
     private int reading;
 
+    /// <summary>
+    /// 初始化 <see cref="PollingLogFileFailureSource"/> 類別的新執行個體。
+    /// </summary>
+    /// <param name="paths">用於列舉欲監看之記錄檔路徑的委派。</param>
+    /// <param name="parser">將單行文字解析為驗證失敗事件的委派。</param>
     public PollingLogFileFailureSource(Func<IEnumerable<string>> paths, Func<string, AuthenticationFailureEvent?> parser)
         : this(paths, (_, line) => parser(line), null)
     {
     }
 
+    /// <summary>
+    /// 初始化 <see cref="PollingLogFileFailureSource"/> 類別的新執行個體。
+    /// </summary>
+    /// <param name="paths">用於列舉欲監看之記錄檔路徑的委派。</param>
+    /// <param name="parser">將檔案路徑與單行文字解析為驗證失敗事件的委派。</param>
+    /// <param name="resetParser">偵測到檔案為新檔或已輪替時呼叫之選用重設委派。</param>
     public PollingLogFileFailureSource(
         Func<IEnumerable<string>> paths,
         Func<string, string, AuthenticationFailureEvent?> parser,
@@ -33,12 +48,33 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         this.resetParser = resetParser;
     }
 
+    /// <summary>
+    /// 當解析出驗證失敗事件時引發。
+    /// </summary>
     public event EventHandler<AuthenticationFailureEvent>? EventReceived;
+    /// <summary>
+    /// 當讀取或解析記錄檔發生例外狀況時引發。
+    /// </summary>
     public event Action<Exception>? Error;
+    /// <summary>
+    /// 啟動定時輪詢計時器。
+    /// </summary>
     public void Start() => timer ??= new Timer(_ => ReadAvailable(), null, TimeSpan.Zero, TimeSpan.FromSeconds(2));
+    /// <summary>
+    /// 暫停定時輪詢。
+    /// </summary>
     public void Pause() => timer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+    /// <summary>
+    /// 從暫停狀態恢復定時輪詢。
+    /// </summary>
     public void Resume() => timer?.Change(TimeSpan.Zero, TimeSpan.FromSeconds(2));
+    /// <summary>
+    /// 停止並釋放定時輪詢計時器。
+    /// </summary>
     public void Stop() { timer?.Dispose(); timer = null; }
+    /// <summary>
+    /// 停止定時輪詢並釋放相關資源。
+    /// </summary>
     public void Dispose() => Stop();
     internal void ReadAvailableForTest() => ReadAvailable();
 

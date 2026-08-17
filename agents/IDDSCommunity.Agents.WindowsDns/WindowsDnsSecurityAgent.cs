@@ -32,6 +32,10 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
         };
     }
 
+    /// <summary>
+    /// 驗證目前設定、建立威脅偵測器，並啟動事件來源。
+    /// </summary>
+    /// <exception cref="InvalidOperationException">設定物件型別不符或設定驗證失敗。</exception>
     protected override void OnStartAgent()
     {
         WindowsDnsConfiguration configuration = GetConfiguration();
@@ -52,9 +56,18 @@ public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
         }
     }
 
+    /// <summary>
+    /// 暫停底層事件來源的事件接收。
+    /// </summary>
     protected override void OnPauseAgent() => eventSource.Pause();
+    /// <summary>
+    /// 從暫停狀態恢復底層事件來源的事件接收。
+    /// </summary>
     protected override void OnContinueAgent() => eventSource.Resume();
 
+    /// <summary>
+    /// 停止底層事件來源，同時清除威脅偵測器狀態。
+    /// </summary>
     protected override void OnStopAgent()
     {
         eventSource.EventReceived -= OnEventReceived;

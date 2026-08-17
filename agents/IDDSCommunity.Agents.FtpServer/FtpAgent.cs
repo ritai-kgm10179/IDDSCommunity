@@ -9,9 +9,18 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.FtpServer;
 
+/// <summary>
+/// 監聽明文 FTP 流量，偵測伺服器回覆碼 530 所代表的登入驗證失敗。
+/// </summary>
 public class FtpAgent : AgentPlugin, IExtendedInformation
 {
+    /// <summary>
+    /// 當偵測到 TLS 封包且已啟用追蹤時引發。
+    /// </summary>
     public event EventHandler? Trace;
+    /// <summary>
+    /// 取得或設定是否啟用 TLS 封包追蹤通知。
+    /// </summary>
     public bool Tracing { get; set; }
     private readonly List<PacketSniffer> sniffers = [];
     /// <summary>
@@ -138,6 +147,9 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
+    /// <summary>
+    /// 取得 Agent 目前是否正在執行。
+    /// </summary>
     public override bool IsRunning => base.IsRunning;
     /// <summary>
     /// 處理登入失敗作業。

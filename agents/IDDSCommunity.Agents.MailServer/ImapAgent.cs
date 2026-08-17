@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -13,11 +13,29 @@ namespace IDDSCommunity.Agents.MailServer;
 /// </summary>
 public sealed class ImapAgent : AgentPlugin, IExtendedInformation
 {
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public static Guid AgentId => new("{3F8B715C-4A2D-4C98-9C6E-7F89B219E022}");
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => AgentId;
+    /// <summary>
+    /// 取得或設定 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.ImapAgent";
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public System.Drawing.Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? UnselectedIcon { get; set; }
 
     private readonly ConcurrentDictionary<int, ImapSessionInspector> sessions = [];
@@ -45,7 +63,9 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// 啟動連線階段逾期清理計時器，並開始監聽本機所有 IPv4 位址的 IMAP 流量。
+    /// </summary>
     protected override void OnStartAgent()
     {
         cleanupTimer.Start();
@@ -57,20 +77,26 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         }
         base.OnStartAgent();
     }
-    /// <inheritdoc />
+    /// <summary>
+    /// 停止清理計時器與所有封包監聽器。
+    /// </summary>
     protected override void OnPauseAgent()
     {
         cleanupTimer.Stop();
         StopWatchers();
         base.OnPauseAgent();
     }
-    /// <inheritdoc />
+    /// <summary>
+    /// 從暫停狀態重新啟動監聽器與清理計時器。
+    /// </summary>
     protected override void OnContinueAgent()
     {
         OnStartAgent();
         base.OnContinueAgent();
     }
-    /// <inheritdoc />
+    /// <summary>
+    /// 停止清理計時器與所有封包監聽器，並清除連線階段狀態。
+    /// </summary>
     protected override void OnStopAgent()
     {
         cleanupTimer.Stop();

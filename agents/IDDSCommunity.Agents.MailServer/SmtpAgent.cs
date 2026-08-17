@@ -8,16 +8,43 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
+/// <summary>
+/// 監聽明文 SMTP 流量，偵測伺服器回覆碼 535 所代表的驗證失敗。
+/// </summary>
 public class SmtpAgent : AgentPlugin, IExtendedInformation
 {
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public static Guid AgentId => new("{EB69BF23-939C-4F89-97D0-50274306D018}");
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => AgentId;
+    /// <summary>
+    /// 取得或設定 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.SmtpAgent";
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public System.Drawing.Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? UnselectedIcon { get; set; }
 
+    /// <summary>
+    /// 當偵測到 TLS 封包且已啟用追蹤時引發。
+    /// </summary>
     public event EventHandler? Trace;
+    /// <summary>
+    /// 取得或設定是否啟用 TLS 封包追蹤通知。
+    /// </summary>
     public bool Tracing { get; set; }
 
     private readonly List<PacketSniffer> sniffers = [];
@@ -144,6 +171,9 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
+    /// <summary>
+    /// 取得 Agent 目前是否正在執行。
+    /// </summary>
     public override bool IsRunning => base.IsRunning;
     /// <summary>
     /// 處理登入失敗作業。

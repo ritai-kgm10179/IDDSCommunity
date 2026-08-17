@@ -7,4 +7,5 @@ using System.Runtime.Versioning;
 [assembly: AssemblyVersion("3.0.0.0")]
 [assembly: AssemblyFileVersion("3.0.0.0")]
 [assembly: InternalsVisibleTo("IDDSCommunity.Agents.Authentication.Test")]
+[assembly: InternalsVisibleTo("IDDSCommunity.Agents.IisAuthentication.Test")]
 [assembly: SupportedOSPlatform("windows")]

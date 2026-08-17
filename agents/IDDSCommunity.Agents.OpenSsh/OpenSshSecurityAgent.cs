@@ -7,13 +7,29 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.Agents.OpenSsh;
 
+/// <summary>
+/// 監看 Windows OpenSSH 之事件記錄或文字記錄檔，偵測重複的驗證失敗事件。
+/// </summary>
 [Plugin("Windows OpenSSH Security Agent", "Detects repeated Windows OpenSSH authentication failures.", "1.0")]
 public sealed partial class OpenSshSecurityAgent : AuthenticationAgentBase<OpenSshConfiguration>
 {
+    /// <summary>
+    /// 初始化 <see cref="OpenSshSecurityAgent"/> 類別的新執行個體。
+    /// </summary>
     public OpenSshSecurityAgent() : this(new OpenSshConfiguration()) { }
     private OpenSshSecurityAgent(OpenSshConfiguration configuration) : base(CreateSource(configuration)) => Configuration.AgentSettings = configuration;
+    /// <summary>
+    /// 以自訂事件來源初始化 <see cref="OpenSshSecurityAgent"/> 類別的新執行個體，供單元測試使用。
+    /// </summary>
+    /// <param name="source">自訂驗證失敗事件來源。</param>
     internal OpenSshSecurityAgent(IAuthenticationEventSource source) : base(source) { }
+    /// <summary>
+    /// 取得 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public override string DisplayName { get => IntrusionDetection.Api.Localization.Strings.Get("Windows OpenSSH Security Agent"); set { } }
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public override Guid Id => new("{FA68919B-6D0B-4508-9659-3CD1E160235C}");
 
     internal static AuthenticationFailureEvent? Parse(EventRecord record)

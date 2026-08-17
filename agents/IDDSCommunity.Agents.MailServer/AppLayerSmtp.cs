@@ -4,11 +4,20 @@ using System.IO;
 
 namespace IDDSCommunity.Agents.MailServer;
 
+/// <summary>
+/// 解析單一 SMTP 應用層封包，擷取回覆碼。
+/// </summary>
 public class AppLayerSmtp
 {
 
+    /// <summary>
+    /// SMTP 驗證被拒回覆碼。
+    /// </summary>
     public const string SMTP_REPLY_CODE_LOGIN_DENIED = "535";
 
+    /// <summary>
+    /// 取得或設定解析出的 SMTP 回覆碼。
+    /// </summary>
     public string SmtpReplyCode { get; set; }
     /// <summary>
     /// 初始化 <see cref="AppLayerSmtp"/> 類別的新執行個體。

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Net;
@@ -8,18 +8,51 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.Agents.MailServer;
 
+/// <summary>
+/// 監聽明文 POP3 流量，偵測伺服器回覆 <c>-ERR</c> 於 <c>PASS</c> 命令之後所代表的驗證失敗。
+/// </summary>
 public class Pop3Agent : AgentPlugin, IExtendedInformation
 {
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public static Guid AgentId => new("{1F917251-2661-473A-970B-B2BB62EA6E1A}");
+    /// <summary>
+    /// 取得 Agent 的全域唯一識別碼 (GUID)。
+    /// </summary>
     public Guid Id => AgentId;
+    /// <summary>
+    /// 取得或設定 Agent 於管理介面中顯示的區段名稱。
+    /// </summary>
     public string DisplayName { get; set; } = "IDDSCommunity.Agents.MailServer.Pop3Agent";
+    /// <summary>
+    /// 取得或設定 Agent 的預設圖示。
+    /// </summary>
     public System.Drawing.Image? Icon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? SelectedIcon { get; set; }
+    /// <summary>
+    /// 取得或設定 Agent 於非選取狀態下顯示的主題圖示。
+    /// </summary>
     public System.Drawing.Image? UnselectedIcon { get; set; }
 
+    /// <summary>
+    /// 閒置用戶端連線狀態於清理前的保留分鐘數。
+    /// </summary>
     public const int CLEANUP_INTERVAL_MINS = 2;
+    /// <summary>
+    /// 當偵測到 TLS 封包且已啟用追蹤時引發。
+    /// </summary>
     public event EventHandler? Trace;
+    /// <summary>
+    /// 取得或設定是否啟用 TLS 封包追蹤通知。
+    /// </summary>
     public bool Tracing { get; set; }
+    /// <summary>
+    /// 用於定期清除逾期用戶端連線狀態的計時器。
+    /// </summary>
     public System.Timers.Timer cleanupTimer;
 
     readonly List<PacketSniffer> sniffers = [];
@@ -211,6 +244,9 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
 
 
     private ConcurrentDictionary<int, Pop3Client> _currentClients = [];
+    /// <summary>
+    /// 取得或設定目前追蹤中的用戶端連線狀態，以來源連接埠為索引鍵。
+    /// </summary>
     public IDictionary<int, Pop3Client> CurrentClients
     {
         get
@@ -256,6 +292,9 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
         base.OnStopAgent();
     }
 
+    /// <summary>
+    /// 取得 Agent 目前是否正在執行。
+    /// </summary>
     public override bool IsRunning => base.IsRunning;
     /// <summary>
     /// 處理登入失敗作業。
