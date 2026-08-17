@@ -82,10 +82,10 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4)";
-            Assert.AreEqual(4L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5)";
+            Assert.AreEqual(5L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(4L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(5L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_IntrusionLog_IncidentTime'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
         }
@@ -122,6 +122,51 @@ public class DatabaseUpgradeTest
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'v3-upgrade-marker'";
             Assert.AreEqual("preserved", Convert.ToString(command.ExecuteScalar()));
+        }
+        finally
+        {
+            database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 驗證版本 5 移轉會將既有以本機時區儲存的 IncidentTime/LockDate/UnlockDate/LastUpdate 轉換為 UTC，
+    /// 且只會套用一次（不會在後續啟動時重複位移）。
+    /// </summary>
+    [TestMethod]
+    public void ExistingLegacyLocalTimestamps_AreMigratedToUtcExactlyOnce()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            TimeSpan offset = TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow);
+            DateTime legacyLocalIncident = new(2026, 6, 1, 10, 0, 0, DateTimeKind.Unspecified);
+            Guid agentId = Guid.NewGuid();
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,@p4)",
+                legacyLocalIncident, agentId, "192.0.2.50", 0, false);
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 5");
+            database.Close();
+
+            database.Configure(directory);
+            DateTime migratedIncident = Db.DbValueConverter.ToDateTime(
+                database.ExecuteScalar("SELECT IncidentTime FROM IntrusionLog WHERE ClientIP=@p0", "192.0.2.50"));
+            Assert.AreEqual(DateTime.SpecifyKind(legacyLocalIncident - offset, DateTimeKind.Utc), migratedIncident);
+
+            using Microsoft.Data.Sqlite.SqliteCommand command = database.Connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 5";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+
+            // 再次啟動不得重複位移；SchemaMigrations 已標記版本 5，時間戳記應維持不變。
+            database.Close();
+            database.Configure(directory);
+            DateTime unchangedIncident = Db.DbValueConverter.ToDateTime(
+                database.ExecuteScalar("SELECT IncidentTime FROM IntrusionLog WHERE ClientIP=@p0", "192.0.2.50"));
+            Assert.AreEqual(migratedIncident, unchangedIncident);
         }
         finally
         {

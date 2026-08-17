@@ -21,8 +21,8 @@ public class LocksTest
         Lock l = new()
         {
             IpAddress = "10.20.1.1",
-            LockDate = DateTime.Now,
-            UnlockDate = DateTime.Now.AddDays(1),
+            LockDate = DateTime.UtcNow,
+            UnlockDate = DateTime.UtcNow.AddDays(1),
             Port = 0,
             Status = Lock.LOCK_STATUS_HARDLOCK,
             NumberOfSoftLocks = 2,

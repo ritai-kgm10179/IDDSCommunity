@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDDSCommunity.Agents.TechnitiumDns;
 using IDDSCommunity.Agents.Authentication.Common;

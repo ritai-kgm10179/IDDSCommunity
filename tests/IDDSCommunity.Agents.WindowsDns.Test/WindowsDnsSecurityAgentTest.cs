@@ -50,6 +50,24 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.IsFalse(WindowsDnsEventParser.TryParse(257, [false, "10.0.0.53", "not-an-ip"], DateTimeOffset.UtcNow, out _));
     }
     /// <summary>
+    /// 驗證中括號 IPv6＋埠號、裸 IPv6 與 IPv4＋埠號等來源端點格式皆能正確解析出位址。
+    /// </summary>
+    [TestMethod]
+    public void TryParse_EndpointFormats_ExtractSourceAddress()
+    {
+        object?[] bracketedIpv6WithPort = [false, "10.0.0.53", "[2001:db8::1]:53", false, false, "missing.example", "ANY", 1, false, "NOERROR"];
+        object?[] bareIpv6 = [false, "10.0.0.53", "2001:db8::1", false, false, "missing.example", "ANY", 1, false, "NOERROR"];
+        object?[] ipv4WithPort = [false, "10.0.0.53", "192.0.2.10:53", false, false, "missing.example", "ANY", 1, false, "NOERROR"];
+
+        Assert.IsTrue(WindowsDnsEventParser.TryParse(257, bracketedIpv6WithPort, DateTimeOffset.UtcNow, out DnsEventRecord? bracketedRecord));
+        Assert.IsTrue(WindowsDnsEventParser.TryParse(257, bareIpv6, DateTimeOffset.UtcNow, out DnsEventRecord? bareRecord));
+        Assert.IsTrue(WindowsDnsEventParser.TryParse(257, ipv4WithPort, DateTimeOffset.UtcNow, out DnsEventRecord? ipv4Record));
+
+        Assert.AreEqual(IPAddress.Parse("2001:db8::1"), bracketedRecord!.SourceAddress);
+        Assert.AreEqual(IPAddress.Parse("2001:db8::1"), bareRecord!.SourceAddress);
+        Assert.AreEqual(IPAddress.Parse("192.0.2.10"), ipv4Record!.SourceAddress);
+    }
+    /// <summary>
     /// 驗證每個可疑的 DNS 類別於超越設定界限時均會引發一次通知。
     /// </summary>
     [TestMethod]
