@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | 建置與套件 | `dotnet build IDDSCommunity.slnx --configuration Release --disable-build-servers -m:1 -p:UseSharedCompilation=false` | 0 warnings、0 errors | 本機、CI |
 | 一般回歸 | `dotnet test IDDSCommunity.slnx --configuration Release --disable-build-servers -m:1` | 全部通過；特權案例僅可明確跳過 | 本機、CI |
-| Agent 解析 | 各 Agent 的解析器測試 | 成功登入不得計為失敗；格式變體、無效位址與輪替邊界皆有案例 | CI |
+| Agent 解析 | 各 Agent 的解析器測試；每個 `agents/*` 專案均有對應之獨立同名 `*.Test.csproj`，另有共用 `Authentication.Common` 框架測試涵蓋滑動時間窗與門檻判斷邏輯 | 成功登入不得計為失敗；格式變體、無效位址與輪替邊界皆有案例 | CI |
 | 計數與報表 | 查詢、每日郵件與管理工具匯出測試 | 同一時間區間、事件類型與 Agent 篩選產生相同總數 | CI |
 | 設定移轉 | Argon2id 與 AES-256-GCM 匯入／匯出測試 | 正確密碼往返一致；錯誤密碼、竄改與超限參數必須拒絕 | CI |
 | SQLite 維護 | 完整性、備份、還原、保留與空間回收測試 | 不損失已提交資料；失敗可回復且有診斷紀錄 | CI |

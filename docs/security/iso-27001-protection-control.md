@@ -21,7 +21,8 @@ IDDSCommunity 僅作為 Windows 主機的登入失敗監控、暴力破解偵測
 
 ## 安全設定基線
 
-- 管理程式使用 `requireAdministrator` manifest，只允許經核准的 Windows 系統管理員執行。
+- 安裝程式（`Setup.exe`）使用 `requireAdministrator` manifest，僅允許經核准的 Windows 系統管理員完成安裝、升級或移除。管理主控台（Admin）以 `asInvoker` 執行，一般啟動不強制系統管理員身分；變更服務或防火牆等確實需要系統權限的操作於執行時另行提權。
+- 受保護的資料庫金鑰檔案僅授予 SYSTEM、系統管理員，以及安裝程式建立之 `IDDSCommunityOperators` 本機群組讀取權限，將非提升權限下可讀取金鑰的範圍限縮至已獲授權的操作人員，而非本機所有標準使用者。
 - 服務帳號只授予 Raw Socket、服務控制、Event Log、資料目錄及 Windows Firewall 所需權限。
 - 外掛只能放在受 ACL 保護的 `Plugins` 目錄；禁止一般使用者寫入該目錄。
 - 只啟用資產範圍內所需的 Agent，並為每個 Agent 核准軟封鎖、強制封鎖及永久封鎖門檻。

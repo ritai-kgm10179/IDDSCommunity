@@ -11,6 +11,8 @@
 
 ## 執行方式
 
+`scripts/run-privileged-windows-tests.ps1` 是供工程師於本機或自建 Runner 手動執行的通用腳本。CI 的 `ci.yml` 改呼叫 `scripts/run-ci-windows-integration-tests.ps1`，該包裝腳本會先以 `sc.exe` 註冊一個名為 `IDDSCommunity Integration Test Runtime` 的臨時 Windows 服務並視需要建立事件記錄來源，再呼叫 `run-privileged-windows-tests.ps1 -ServiceName ...` 執行相同的測試內容，並在 `finally` 區塊中停止、刪除該服務與來源，確保 CI Runner 不留殘留狀態。
+
 以系統管理員身分開啟 PowerShell 7.4，再執行：
 
 ```powershell

@@ -79,14 +79,15 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
   - `IIS Authentication` & `Web Security` (W3C 401 & HTTP 攻擊)
   - `Microsoft SQL Server` / `MySQL` / `PostgreSQL` (資料庫連線失敗)
   - `Mail Server` (POP3 / IMAP / SMTP 驗證失敗)
-  - `NPS / RADIUS Server` & `Windows DNS Server` & `FileMaker Server`
+  - `通用 FTP` & `FileZilla Server` (FTP 驗證失敗)
+  - `NPS / RADIUS Server` & `Windows DNS Server` & `Technitium DNS Security` & `FileMaker Server`
 - **門檻調校**：
   - 可獨立設定個別 Agent 之「失敗次數上限」（例如 `5 次`）與「計算時間窗」（例如 `300 秒`）。
 
 ### 3.6 🚨 防護政策設定 (Lockout Policy)
 控制攻擊觸發後的階梯式防禦反應：
 - **軟鎖定 (Soft Lock)**：當達到初級門檻時，暫時記憶體鎖定該 IP 一定時間（如 `15 分鐘`），期間拒絕該 IP 的特定服務請求。
-- **硬鎖定 (Hard Lock)**：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱前綴為 `IDDS Community`）。
+- **硬鎖定 (Hard Lock)**：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱包含 `Blocked by IDDS Community` 前綴，並歸屬於 `IDDS Community` 防火牆規則群組）。
 
 ### 3.7 📧 SMTP 告警與通知 (SMTP Notifications)
 當系統觸發硬鎖定或嚴重事件時自動發送 Email 告警：
@@ -96,7 +97,7 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 
 ### 3.8 🧹 資料庫維護與極致壓縮 (Database Maintenance)
 管理 SQLite 歷史日誌、空間回收與完整性維護：
-- **自動日誌清理 (Retention)**：背景服務預設配置 24 小時自動維護作業，將超過保留天數的舊日誌分批清理（符合 PCI DSS v4.0 規範）。
+- **自動日誌清理 (Retention)**：背景服務預設配置 24 小時自動維護作業，將超過保留天數的舊日誌分批清理（保留天數可調整，有助於支援 PCI DSS 等法規對日誌保留之要求，惟本軟體不構成官方合規聲明，實際是否符合特定法規仍須由組織自行依適用條款審查）。
 - **手動安全備份與驗證**：點擊「建立可驗證備份」自動建立 ChaCha20-Poly1305 加密且經 SHA-256 驗證之 SQLite 備份檔；提供獨立的「驗證選取的備份」動作確保檔案完整可用。備份沿用本機 DPAPI 保護的資料庫金鑰，跨機災難復原需配合金鑰保存程序。
 - **實體空間壓縮 (Vacuum / Compact)**：點擊「回收資料庫空間」，執行 `PRAGMA optimize` 與 `VACUUM`，實體釋放已刪除資料所佔用的磁碟空間（執行前會自動建立防護回滾副本）。
 - **完整在地化維護歷程**：歷程清單支援完整的正體中文 i18n 轉譯（如 `資料庫保留清理`、`資料庫空間回收`、`成功` 等），並維持底層 Audit Log 事件碼的一致性。

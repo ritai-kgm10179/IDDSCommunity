@@ -24,11 +24,12 @@ git push origin v3.0.0
 
 Tag 推送後，`Release installer` workflow 會：
 
-1. 驗證 tag 格式、GPG 簽章、目標提交與專案版本。
+1. 驗證 tag 格式、GPG 簽章、目標提交與專案版本，並傳出已驗證的確切 commit SHA 供後續步驟 checkout（避免驗證後 tag 被移動而繞過檢查）。
 2. 重新執行 Release 建置及一般測試。
 3. 建立 `win-x64` 與 `win-arm64` 的 self-contained 安裝套件，因此使用者不必另外安裝 .NET Runtime。
-4. 產生 ZIP 與 SHA-256 校驗檔，並建立 GitHub artifact attestation。
-5. 建立 GitHub Release 並附加所有安裝套件與校驗檔。
+4. 為每個平台產生目前規格的 SPDX 3.0 SBOM 與相容性格式 SPDX 2.2 SBOM，並納入安裝套件內容。
+5. 產生 ZIP、SBOM 與 SHA-256 校驗檔，並建立 GitHub artifact attestation。
+6. 建立 GitHub Release 並附加所有安裝套件、SBOM 與校驗檔。
 
 可使用 GitHub CLI 驗證下載套件的來源證明：
 
