@@ -95,6 +95,23 @@ public sealed class ObservationIdempotencyFilter
     }
 
     /// <summary>
+    /// 從持久化狀態恢復已接受的原始冪等鍵值。
+    /// </summary>
+    /// <param name="idempotencyKey">先前持久化的確定性冪等鍵值。</param>
+    /// <param name="acceptedUtc">原事件被接受的 UTC 時間。</param>
+    /// <returns>若鍵值仍在保留期間內並成功恢復則傳回 <see langword="true"/>。</returns>
+    public bool Restore(string idempotencyKey, DateTimeOffset acceptedUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+        long expireTicks = acceptedUtc.UtcTicks + retentionPeriod.Ticks;
+        if (expireTicks <= timeProvider.GetUtcNow().UtcTicks)
+            return false;
+
+        seenKeys[idempotencyKey] = expireTicks;
+        return true;
+    }
+
+    /// <summary>
     /// 清除快取中所有已過期之冪等鍵值。
     /// </summary>
     /// <param name="currentUtcTicks">目前 UTC 時間刻度。</param>

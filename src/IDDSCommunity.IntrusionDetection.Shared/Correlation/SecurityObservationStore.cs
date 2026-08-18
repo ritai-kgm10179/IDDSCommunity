@@ -62,12 +62,14 @@ public static class SecurityObservationStore
                         (Id, IdempotencyKey, ReceivedUtc, EventTimeUtc, SourceAgentName, ProviderOrChannel,
                          ComputerName, SourceEventRecordId, SourceFileOffset, SourceEventIdentity,
                          NormalizedIpAddress, NormalizedAccount, NormalizedDomain, OriginalEventReference,
-                         Provenance, LogonType, SubStatus, CorrelationGroupId, ConfidenceScore, AlertEmitted)
+                         Provenance, LogonType, SubStatus, CorrelationGroupId, ConfidenceScore,
+                         IsCredentialFailure, ActivityId, TargetResource, ErrorCode, AlertEmitted)
                     VALUES
                         ($id, $idemp, $recv, $evtTime, $srcAgent, $provider,
                          $computer, $recId, $offset, $identity,
                          $ip, $account, $domain, $origRef,
-                         $provenance, $logonType, $subStatus, $corrId, $score, 0)
+                         $provenance, $logonType, $subStatus, $corrId, $score,
+                         $isCredentialFailure, $activityId, $targetResource, $errorCode, 0)
                     """;
                 insertCmd.Parameters.AddWithValue("$id", observation.Id.ToString("D"));
                 insertCmd.Parameters.AddWithValue("$idemp", idempotencyKey);
@@ -88,6 +90,10 @@ public static class SecurityObservationStore
                 insertCmd.Parameters.AddWithValue("$subStatus", observation.SubStatus ?? string.Empty);
                 insertCmd.Parameters.AddWithValue("$corrId", observation.CorrelationGroupId.HasValue ? (object)observation.CorrelationGroupId.Value.ToString("D") : DBNull.Value);
                 insertCmd.Parameters.AddWithValue("$score", observation.ConfidenceScore);
+                insertCmd.Parameters.AddWithValue("$isCredentialFailure", observation.IsCredentialFailure ? 1 : 0);
+                insertCmd.Parameters.AddWithValue("$activityId", (object?)observation.ActivityId ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("$targetResource", (object?)observation.TargetResource ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("$errorCode", (object?)observation.ErrorCode ?? DBNull.Value);
                 insertCmd.ExecuteNonQuery();
             }
 

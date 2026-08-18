@@ -94,12 +94,21 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
             ? string.Format(System.Globalization.CultureInfo.CurrentCulture, IntrusionDetection.Api.Localization.Strings.Get("{0}: authentication failure threshold exceeded."), failure.Category)
             : $"{failure.Category}: {failure.Reason}";
 
-        OnAttackDetected(this, new NotificationEventArgs
+        OnAttackDetected(this, new AuthenticationNotificationEventArgs
         {
             CreateDate = failure.OccurredAt.LocalDateTime,
             EventId = failure.EventId,
             IpAddress = failure.SourceAddress.ToString(),
-            EventMessage = message
+            EventMessage = message,
+            AccountName = failure.AccountName,
+            IsCredentialFailure = failure.IsCredentialFailure,
+            ProviderOrChannel = failure.ProviderOrChannel,
+            ComputerName = failure.ComputerName,
+            SourceEventRecordId = failure.SourceEventRecordId,
+            ActivityId = failure.ActivityId,
+            ConfidenceScore = failure.ConfidenceScore,
+            TargetResource = failure.TargetResource,
+            ErrorCode = failure.ErrorCode
         });
     }
 

@@ -28,7 +28,15 @@ public static class WinRmEventParser
         int eventId = record.Id;
         string channel = record.LogName ?? string.Empty;
 
-        return TryParseFields(fields, occurredAt, eventId, channel, trustedProxyCidrs);
+        AuthenticationFailureEvent? failure = TryParseFields(fields, occurredAt, eventId, channel, trustedProxyCidrs);
+        return failure is null
+            ? null
+            : failure with
+            {
+                ProviderOrChannel = channel,
+                ComputerName = record.MachineName ?? string.Empty,
+                SourceEventRecordId = record.RecordId
+            };
     }
 
     /// <summary>
@@ -136,7 +144,9 @@ public static class WinRmEventParser
             $"WinRM Failure (Code: {errorCode})",
             IsCredentialFailure: isCredentialFailure,
             ActivityId: string.IsNullOrWhiteSpace(activityId) ? null : activityId,
-            ConfidenceScore: confidence);
+            ConfidenceScore: confidence,
+            ProviderOrChannel: "Microsoft-Windows-WinRM/Operational",
+            ErrorCode: errorCode);
     }
 
     internal static IReadOnlyDictionary<string, string> ReadNamedAndPositionalFields(string xml)

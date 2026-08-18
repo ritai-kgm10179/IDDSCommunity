@@ -856,16 +856,7 @@ public bool LimitMailSent { get; set; }
             {
                 if (configuration.EnableCrossAgentCorrelation)
                 {
-                    SecurityObservationEvent observation = new()
-                    {
-                        SourceAgentName = reportingAgent.Name,
-                        NormalizedIpAddress = notificationEventArgs.IpAddress,
-                        NormalizedAccount = ParseAccountFromEvent(notificationEventArgs.EventMessage),
-                        EventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime(),
-                        ReceivedTimeUtc = DateTimeOffset.UtcNow,
-                        OriginalEventReference = notificationEventArgs.EventId.ToString(),
-                        Provenance = $"Agent={reportingAgent.Name};EventId={notificationEventArgs.EventId}"
-                    };
+                    SecurityObservationEvent observation = CreateSecurityObservation(reportingAgent.Name, notificationEventArgs);
 
                     (bool isDuplicate, bool alreadyAlerted) = SecurityObservationStore.PersistObservationAndWatermark(observation, database);
                     if (isDuplicate && alreadyAlerted)
@@ -906,6 +897,11 @@ public bool LimitMailSent { get; set; }
                             SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
                         }
                     }
+                }
+
+                if (!ShouldProcessLegacyDetection(notificationEventArgs))
+                {
+                    return;
                 }
 
                 statistics.IncreaseFailedLoginStatistics(reportingAgent);
@@ -1064,5 +1060,51 @@ public bool LimitMailSent { get; set; }
         }
 
         return string.Empty;
+    }
+
+    /// <summary>
+    /// 將擴充元件通知轉換為中央關聯引擎使用的標準化安全性觀察事件。
+    /// </summary>
+    /// <param name="sourceAgentName">來源 Agent 名稱。</param>
+    /// <param name="notificationEventArgs">擴充元件通知事件。</param>
+    /// <returns>完整保留驗證語意的安全性觀察事件。</returns>
+    internal static SecurityObservationEvent CreateSecurityObservation(
+        string sourceAgentName,
+        INotificationEventArgs notificationEventArgs)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceAgentName);
+        ArgumentNullException.ThrowIfNull(notificationEventArgs);
+
+        AuthenticationNotificationEventArgs? authentication = notificationEventArgs as AuthenticationNotificationEventArgs;
+        return new SecurityObservationEvent
+        {
+            SourceAgentName = sourceAgentName,
+            ProviderOrChannel = authentication?.ProviderOrChannel ?? string.Empty,
+            ComputerName = authentication?.ComputerName ?? string.Empty,
+            SourceEventRecordId = authentication?.SourceEventRecordId,
+            NormalizedIpAddress = notificationEventArgs.IpAddress,
+            NormalizedAccount = authentication?.AccountName ?? ParseAccountFromEvent(notificationEventArgs.EventMessage),
+            EventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime(),
+            ReceivedTimeUtc = DateTimeOffset.UtcNow,
+            OriginalEventReference = authentication?.SourceEventRecordId?.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ?? notificationEventArgs.EventId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            Provenance = $"Agent={sourceAgentName};Provider={authentication?.ProviderOrChannel};EventId={notificationEventArgs.EventId}",
+            IsCredentialFailure = authentication?.IsCredentialFailure ?? true,
+            ActivityId = authentication?.ActivityId,
+            ConfidenceScore = authentication?.ConfidenceScore ?? 1.0,
+            TargetResource = authentication?.TargetResource,
+            ErrorCode = authentication?.ErrorCode
+        };
+    }
+
+    /// <summary>
+    /// 判斷通知是否可進入既有失敗統計、入侵記錄與封鎖流程。
+    /// </summary>
+    /// <param name="notificationEventArgs">擴充元件通知事件。</param>
+    /// <returns>若為密碼或帳號憑證失敗，或為不具新契約的舊版通知則傳回 <see langword="true"/>。</returns>
+    internal static bool ShouldProcessLegacyDetection(INotificationEventArgs notificationEventArgs)
+    {
+        ArgumentNullException.ThrowIfNull(notificationEventArgs);
+        return notificationEventArgs is not AuthenticationNotificationEventArgs authentication || authentication.IsCredentialFailure;
     }
 }

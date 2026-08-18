@@ -17,6 +17,44 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class CrossAgentCorrelationTest
 {
     /// <summary>
+    /// 驗證不同來源但具有相同 ActivityID 的事件會取得相同的穩定關聯群組。
+    /// </summary>
+    [TestMethod]
+    public void Ingest_SameActivityIdAcrossAgents_AssignsSameCorrelationGroup()
+    {
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        IddsConfig config = CreateTestConfig(enableCorrelation: true);
+        SecurityObservationEvent winRm = new()
+        {
+            SourceAgentName = "WinRmSecurityAgent",
+            ProviderOrChannel = "Microsoft-Windows-WinRM/Operational",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 101,
+            NormalizedIpAddress = "192.0.2.88",
+            NormalizedAccount = "alice",
+            EventTimeUtc = DateTimeOffset.UtcNow,
+            ActivityId = "{11111111-2222-3333-4444-555555555555}"
+        };
+        SecurityObservationEvent gateway = new()
+        {
+            SourceAgentName = "RdGatewaySecurityAgent",
+            ProviderOrChannel = "Microsoft-Windows-TerminalServices-Gateway/Operational",
+            ComputerName = "RDGW01",
+            SourceEventRecordId = 202,
+            NormalizedIpAddress = "192.0.2.88",
+            NormalizedAccount = "alice",
+            EventTimeUtc = winRm.EventTimeUtc.AddMilliseconds(10),
+            ActivityId = winRm.ActivityId
+        };
+
+        CorrelationEvaluationResult first = engine.Ingest(winRm, config);
+        CorrelationEvaluationResult second = engine.Ingest(gateway, config);
+
+        Assert.IsNotNull(first.CorrelationGroupId);
+        Assert.AreEqual(first.CorrelationGroupId, second.CorrelationGroupId);
+    }
+
+    /// <summary>
     /// 驗證相同來源記錄識別 (EventRecordID) 之重複重播事件能被冪等篩選器正確阻絕，且不產生任何防護動作。
     /// </summary>
     [TestMethod]

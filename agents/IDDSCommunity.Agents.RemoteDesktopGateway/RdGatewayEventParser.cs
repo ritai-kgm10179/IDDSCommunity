@@ -28,7 +28,15 @@ public static class RdGatewayEventParser
         int eventId = record.Id;
         string channel = record.LogName ?? string.Empty;
 
-        return TryParseFields(fields, occurredAt, eventId, channel, trustedProxyCidrs);
+        AuthenticationFailureEvent? failure = TryParseFields(fields, occurredAt, eventId, channel, trustedProxyCidrs);
+        return failure is null
+            ? null
+            : failure with
+            {
+                ProviderOrChannel = channel,
+                ComputerName = record.MachineName ?? string.Empty,
+                SourceEventRecordId = record.RecordId
+            };
     }
 
     /// <summary>
@@ -132,7 +140,10 @@ public static class RdGatewayEventParser
             account,
             reason,
             IsCredentialFailure: false,
-            ConfidenceScore: 0.5);
+            ConfidenceScore: 0.5,
+            ProviderOrChannel: "Microsoft-Windows-TerminalServices-Gateway/Operational",
+            TargetResource: string.IsNullOrWhiteSpace(resource) ? null : resource,
+            ErrorCode: string.IsNullOrWhiteSpace(errorCode) ? null : errorCode);
     }
 
     /// <summary>
@@ -256,7 +267,9 @@ public static class RdGatewayEventParser
             account,
             $"NPS Denied (ReasonCode: {reasonCode})",
             IsCredentialFailure: isCredentialFailure,
-            ConfidenceScore: confidence);
+            ConfidenceScore: confidence,
+            ProviderOrChannel: "Security",
+            ErrorCode: reasonCode);
     }
 
     internal static IReadOnlyDictionary<string, string> ReadNamedAndPositionalFields(string xml)

@@ -46,6 +46,14 @@ internal static class SchemaMigrationRunner
                 Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN IdempotencyKey TEXT NOT NULL DEFAULT ''");
             if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "AlertEmitted"))
                 Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN AlertEmitted INTEGER NOT NULL DEFAULT 0");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "IsCredentialFailure"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN IsCredentialFailure INTEGER NOT NULL DEFAULT 1");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "ActivityId"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN ActivityId TEXT NULL");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "TargetResource"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN TargetResource TEXT NULL");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "ErrorCode"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN ErrorCode TEXT NULL");
         }
         Execute(connection, transaction, CreateSecurityObservationEventsIdempotencyIndex);
         Execute(connection, transaction, CreateSecurityObservationEventsTimeIpIndex);
@@ -79,6 +87,10 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (6, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (7, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -270,6 +282,10 @@ internal static class SchemaMigrationRunner
             SubStatus TEXT NULL,
             CorrelationGroupId TEXT NULL,
             ConfidenceScore REAL NOT NULL,
+            IsCredentialFailure INTEGER NOT NULL DEFAULT 1,
+            ActivityId TEXT NULL,
+            TargetResource TEXT NULL,
+            ErrorCode TEXT NULL,
             AlertEmitted INTEGER NOT NULL DEFAULT 0
         )
         """;

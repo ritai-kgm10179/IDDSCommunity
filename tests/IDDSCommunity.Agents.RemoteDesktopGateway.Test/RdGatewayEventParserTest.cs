@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.Agents.RemoteDesktopGateway;
+using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -288,16 +289,32 @@ public class RdGatewayEventParserTest
         try
         {
             int emittedCount = 0;
+            AuthenticationNotificationEventArgs? captured = null;
             agent.AttackDetected += (sender, args) =>
             {
                 emittedCount++;
+                captured = args as AuthenticationNotificationEventArgs;
             };
 
             agent.Start();
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            source.Emit(new AuthenticationFailureEvent(now, IPAddress.Parse("192.0.2.80"), 201, "RDGateway", "userA", "CAP Denied"));
+            source.Emit(new AuthenticationFailureEvent(
+                now,
+                IPAddress.Parse("192.0.2.80"),
+                201,
+                "RDGateway",
+                "userA",
+                "CAP Denied",
+                IsCredentialFailure: false,
+                ProviderOrChannel: "Microsoft-Windows-TerminalServices-Gateway/Operational",
+                ComputerName: "RDGW01",
+                SourceEventRecordId: 7001));
             Assert.AreEqual(1, emittedCount, "每筆事件應直接輸出，不被本機門檻 drop");
+            Assert.IsNotNull(captured);
+            Assert.IsFalse(captured.IsCredentialFailure);
+            Assert.AreEqual("userA", captured.AccountName);
+            Assert.AreEqual(7001L, captured.SourceEventRecordId);
 
             source.Emit(new AuthenticationFailureEvent(now.AddSeconds(1), IPAddress.Parse("192.0.2.80"), 201, "RDGateway", "userA", "CAP Denied"));
             Assert.AreEqual(2, emittedCount, "每筆事件均精確輸出一次至管線");

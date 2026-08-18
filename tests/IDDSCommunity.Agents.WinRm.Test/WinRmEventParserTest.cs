@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using IDDSCommunity.Agents.Authentication.Common;
 using IDDSCommunity.Agents.WinRm;
+using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Shared.Network;
@@ -217,16 +218,33 @@ public class WinRmEventParserTest
         try
         {
             int emittedCount = 0;
+            AuthenticationNotificationEventArgs? captured = null;
             agent.AttackDetected += (sender, args) =>
             {
                 emittedCount++;
+                captured = args as AuthenticationNotificationEventArgs;
             };
 
             agent.Start();
 
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            source.Emit(new AuthenticationFailureEvent(now, IPAddress.Parse("198.51.100.50"), 161, "WinRM", "user1", "Failed"));
+            source.Emit(new AuthenticationFailureEvent(
+                now,
+                IPAddress.Parse("198.51.100.50"),
+                161,
+                "WinRM",
+                "user1",
+                "Failed",
+                ActivityId: "activity-1",
+                ProviderOrChannel: "Microsoft-Windows-WinRM/Operational",
+                ComputerName: "SERVER01",
+                SourceEventRecordId: 9001));
             Assert.AreEqual(1, emittedCount, "每筆事件應直接輸出至中央管線");
+            Assert.IsNotNull(captured);
+            Assert.AreEqual("user1", captured.AccountName);
+            Assert.AreEqual("activity-1", captured.ActivityId);
+            Assert.AreEqual(9001L, captured.SourceEventRecordId);
+            Assert.AreEqual("SERVER01", captured.ComputerName);
 
             source.Emit(new AuthenticationFailureEvent(now.AddSeconds(2), IPAddress.Parse("198.51.100.50"), 161, "WinRM", "user1", "Failed"));
             Assert.AreEqual(2, emittedCount, "每筆事件只計算一次，無本機重複計數");

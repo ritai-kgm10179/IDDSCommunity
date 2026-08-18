@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,6 +17,43 @@ public sealed class SecurityEventPipelineTest
 {
     private string testDirectory = null!;
     private Database database = null!;
+
+    /// <summary>
+    /// 驗證具型別驗證通知完整保留中央關聯與封鎖判斷所需的安全語意。
+    /// </summary>
+    [TestMethod]
+    public void AuthenticationNotification_ToObservation_PreservesSecuritySemantics()
+    {
+        AuthenticationNotificationEventArgs notification = new()
+        {
+            IpAddress = "198.51.100.61",
+            CreateDate = DateTime.Now,
+            EventId = 201,
+            EventMessage = "CAP denied",
+            AccountName = @"CORP\alice",
+            IsCredentialFailure = false,
+            ProviderOrChannel = "Microsoft-Windows-TerminalServices-Gateway/Operational",
+            ComputerName = "RDGW01",
+            SourceEventRecordId = 321,
+            ActivityId = "activity-321",
+            ConfidenceScore = 0.25,
+            TargetResource = "APP01",
+            ErrorCode = "23003"
+        };
+
+        SecurityObservationEvent observation = Service.CreateSecurityObservation("RdGatewaySecurityAgent", notification);
+
+        Assert.AreEqual(@"CORP\alice", observation.NormalizedAccount);
+        Assert.IsFalse(observation.IsCredentialFailure);
+        Assert.AreEqual(notification.ProviderOrChannel, observation.ProviderOrChannel);
+        Assert.AreEqual("RDGW01", observation.ComputerName);
+        Assert.AreEqual(321L, observation.SourceEventRecordId);
+        Assert.AreEqual("activity-321", observation.ActivityId);
+        Assert.AreEqual(0.25, observation.ConfidenceScore);
+        Assert.AreEqual("APP01", observation.TargetResource);
+        Assert.AreEqual("23003", observation.ErrorCode);
+        Assert.IsFalse(Service.ShouldProcessLegacyDetection(notification));
+    }
     /// <summary>
     /// 為每個管線測試建立隔離的持久化收件匣。
     /// </summary>
@@ -393,6 +431,66 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual(1002L, watermarks["AuthAgent|Security"].LastEventRecordId);
 
         database2.Close();
+    }
+
+    /// <summary>
+    /// 驗證重啟會恢復原始冪等鍵，且不會把非密碼遙測事件重建至密碼噴灑時間窗。
+    /// </summary>
+    [TestMethod]
+    public void RebuildFromDatabase_RestoresExactKeyAndExcludesTelemetryFromSprayWindow()
+    {
+        IddsConfig config = new(database)
+        {
+            EnableCrossAgentCorrelation = true,
+            CrossAgentSprayAccountThreshold = 2
+        };
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        SecurityObservationEvent telemetry = new()
+        {
+            SourceAgentName = "RdGatewaySecurityAgent",
+            ProviderOrChannel = "Microsoft-Windows-TerminalServices-Gateway/Operational",
+            ComputerName = "RDGW01",
+            SourceEventRecordId = 4101,
+            NormalizedIpAddress = "192.0.2.41",
+            NormalizedAccount = "TelemetryUser",
+            EventTimeUtc = now.AddMinutes(-15),
+            ReceivedTimeUtc = now,
+            OriginalEventReference = "4101",
+            Provenance = "RebuildTelemetryTest",
+            IsCredentialFailure = false
+        };
+        SecurityObservationStore.PersistObservationAndWatermark(telemetry, database);
+
+        CrossAgentCorrelationEngine rebuilt = new(TimeSpan.FromMinutes(5));
+        rebuilt.RebuildFromDatabase(database, TimeSpan.FromMinutes(20), now.AddSeconds(1));
+
+        SecurityObservationEvent replay = new()
+        {
+            SourceAgentName = telemetry.SourceAgentName,
+            ProviderOrChannel = telemetry.ProviderOrChannel,
+            ComputerName = telemetry.ComputerName,
+            SourceEventRecordId = telemetry.SourceEventRecordId,
+            NormalizedIpAddress = telemetry.NormalizedIpAddress,
+            NormalizedAccount = telemetry.NormalizedAccount,
+            EventTimeUtc = telemetry.EventTimeUtc,
+            IsCredentialFailure = false
+        };
+        CorrelationEvaluationResult replayResult = rebuilt.Ingest(replay, config);
+        Assert.IsTrue(replayResult.IsDuplicateReplay, "即使來源事件延遲送達，重啟後仍須依接收時間恢復原始持久化冪等鍵");
+
+        SecurityObservationEvent credential = new()
+        {
+            SourceAgentName = "WinRmSecurityAgent",
+            ProviderOrChannel = "Microsoft-Windows-WinRM/Operational",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 5101,
+            NormalizedIpAddress = telemetry.NormalizedIpAddress,
+            NormalizedAccount = "CredentialUser",
+            EventTimeUtc = now.AddSeconds(2),
+            IsCredentialFailure = true
+        };
+        CorrelationEvaluationResult credentialResult = rebuilt.Ingest(credential, config);
+        Assert.AreEqual(CorrelationAction.None, credentialResult.Action, "非密碼遙測不得成為達成噴灑門檻的歷史事件");
     }
 
     /// <summary>

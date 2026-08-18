@@ -5,6 +5,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 
 /// <summary>
@@ -204,7 +206,9 @@ public sealed class CrossAgentCorrelationEngine
         // 5. 第二層語意：跨來源關聯群組指派（不刪除或合併原始事件）
         if (observation.CorrelationGroupId == null)
         {
-            observation.CorrelationGroupId = Guid.NewGuid();
+            observation.CorrelationGroupId = string.IsNullOrWhiteSpace(observation.ActivityId)
+                ? Guid.NewGuid()
+                : ComputeCorrelationGroupId(observation.ActivityId);
         }
         result.CorrelationGroupId = observation.CorrelationGroupId;
 
@@ -315,6 +319,12 @@ public sealed class CrossAgentCorrelationEngine
             });
     }
 
+    private static Guid ComputeCorrelationGroupId(string activityId)
+    {
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(activityId.Trim().ToUpperInvariant()));
+        return new Guid(hash.AsSpan(0, 16));
+    }
+
     /// <summary>
     /// 從持久化資料庫載入時間窗內的觀察事件與來源水位點，安全重建記憶體滑動窗與冪等去重狀態。
     /// </summary>
@@ -337,7 +347,7 @@ public sealed class CrossAgentCorrelationEngine
 
         // 2. 重建時間窗內之觀察事件
         IEnumerable<SecurityObservationEventRebuildRow> rows = database.Query<SecurityObservationEventRebuildRow>(
-            "SELECT IdempotencyKey, EventTimeUtc, NormalizedIpAddress, NormalizedAccount FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
+            "SELECT IdempotencyKey, ReceivedUtc, EventTimeUtc, NormalizedIpAddress, NormalizedAccount, IsCredentialFailure FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
             new { WindowStart = windowStart });
 
         foreach (SecurityObservationEventRebuildRow row in rows)
@@ -347,17 +357,16 @@ public sealed class CrossAgentCorrelationEngine
                 // 標記冪等性已看過
                 if (!string.IsNullOrWhiteSpace(row.IdempotencyKey))
                 {
-                    idempotencyFilter.TryAccept(new SecurityObservationEvent
-                    {
-                        SourceAgentName = row.IdempotencyKey,
-                        EventTimeUtc = evtTime
-                    }, out _);
+                    DateTimeOffset acceptedUtc = DateTimeOffset.TryParse(row.ReceivedUtc, out DateTimeOffset parsedReceivedUtc)
+                        ? parsedReceivedUtc.ToUniversalTime()
+                        : evtTime;
+                    idempotencyFilter.Restore(row.IdempotencyKey, acceptedUtc);
                 }
 
                 // 填入滑動窗
                 string ip = row.NormalizedIpAddress?.Trim() ?? string.Empty;
                 string account = row.NormalizedAccount?.Trim() ?? string.Empty;
-                if (!string.IsNullOrEmpty(ip) && !string.IsNullOrEmpty(account))
+                if (row.IsCredentialFailure && !string.IsNullOrEmpty(ip) && !string.IsNullOrEmpty(account))
                 {
                     ipToAccountsBucket.Add(ip, account, evtTime);
                     accountToIpsBucket.Add(account, ip, evtTime);
@@ -373,6 +382,10 @@ public sealed class CrossAgentCorrelationEngine
         /// </summary>
 public string IdempotencyKey { get; set; } = string.Empty;
                 /// <summary>
+        /// 取得或設定事件被服務接收的 UTC 時間。
+        /// </summary>
+public string ReceivedUtc { get; set; } = string.Empty;
+                /// <summary>
         /// 取得或設定 EventTimeUtc。
         /// </summary>
 public string EventTimeUtc { get; set; } = string.Empty;
@@ -384,5 +397,9 @@ public string NormalizedIpAddress { get; set; } = string.Empty;
         /// 取得或設定 NormalizedAccount。
         /// </summary>
 public string NormalizedAccount { get; set; } = string.Empty;
+                /// <summary>
+        /// 取得或設定事件是否為密碼或帳號憑證驗證失敗。
+        /// </summary>
+public bool IsCredentialFailure { get; set; }
     }
 }
