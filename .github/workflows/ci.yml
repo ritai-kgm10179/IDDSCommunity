@@ -82,7 +82,7 @@ jobs:
         run: dotnet restore IDDSCommunity.slnx -m:1 --disable-parallel --nologo
 
       - name: Build integration targets
-        run: dotnet build tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
+        run: dotnet build tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj --configuration Release --runtime win-x64 --no-restore --disable-build-servers -m:1 -p:UseSharedCompilation=false --nologo
 
       - name: Run privileged integration tests
         shell: pwsh

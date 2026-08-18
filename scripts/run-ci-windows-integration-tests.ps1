@@ -2,12 +2,16 @@
 #Requires -RunAsAdministrator
 
 [CmdletBinding()]
-param()
+param(
+    [Parameter()]
+    [ValidateSet('win-x64', 'win-arm64')]
+    [string]$RuntimeIdentifier = 'win-x64'
+)
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $serviceName = 'IDDSCommunity Integration Test Runtime'
-$serviceExecutable = Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.Service\bin\Release\net10.0-windows\IDDSCommunity.IntrusionDetection.Service.exe'
+$serviceExecutable = Join-Path $repositoryRoot "src\IDDSCommunity.IntrusionDetection.Service\bin\Release\net10.0-windows\$RuntimeIdentifier\IDDSCommunity.IntrusionDetection.Service.exe"
 $eventSource = 'IDDS Community'
 $eventLogName = 'Application'
 $createdEventSource = $false
@@ -31,7 +35,7 @@ try {
         $createdEventSource = $true
     }
     Invoke-ServiceControl -Arguments @('create', $serviceName, 'binPath=', "`"$serviceExecutable`"", 'start=', 'demand', 'DisplayName=', $serviceName)
-    & (Join-Path $PSScriptRoot 'run-privileged-windows-tests.ps1') -ServiceName $serviceName
+    & (Join-Path $PSScriptRoot 'run-privileged-windows-tests.ps1') -ServiceName $serviceName -RuntimeIdentifier $RuntimeIdentifier
     if ($LASTEXITCODE -ne 0) { throw "Privileged integration tests failed with exit code $LASTEXITCODE." }
 }
 finally {
