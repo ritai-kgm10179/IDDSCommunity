@@ -31,8 +31,15 @@ public const int DefaultHardLockHours = 1;
     /// 取得未設定郵件伺服器時顯示的標準 SMTP 連接埠。
     /// </summary>
     public const int DefaultSmtpPort = 25;
+    private const long LocalAddressCacheLifetimeMilliseconds = 30000;
+    private static readonly System.Threading.Lock LocalAddressLock = new();
+    private static HashSet<IPAddress> localAddresses = [];
+    private static long localAddressesRefreshedAt;
     private readonly Database database;
     private readonly HashSet<string> changedAppConfigKeys = [];
+
+    static IddsConfig() =>
+        System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged += static (_, _) => InvalidateLocalAddressCache();
 
         /// <summary>
     /// 定義 ENABLED_FEATURES_FREE 之數值。
@@ -900,8 +907,6 @@ public string Language
         return (addressBytes[fullBytes] & mask) == (networkBytes[fullBytes] & mask);
     }
 
-    private List<IPAddress>? _localAddresses;
-
     /// <summary>
     /// Determines whether ip address local.
     /// </summary>
@@ -909,19 +914,44 @@ public string Language
     /// <returns>若ip address local傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public bool IsIpAddressLocal(IPAddress address)
     {
-        if (_localAddresses == null)
+        ArgumentNullException.ThrowIfNull(address);
+        IPAddress normalized = address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
+        if (IPAddress.IsLoopback(normalized))
         {
-            _localAddresses = [];
-            foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
-            {
-                System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
-                foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses)
-                {
-                    _localAddresses.Add(info.Address);
-                }
-            }
+            return true;
         }
-        return _localAddresses.Contains(address);
+
+        lock (LocalAddressLock)
+        {
+            long now = Environment.TickCount64;
+            if (localAddresses.Count == 0 || now - localAddressesRefreshedAt >= LocalAddressCacheLifetimeMilliseconds)
+            {
+                HashSet<IPAddress> refreshed = [];
+                foreach (System.Net.NetworkInformation.NetworkInterface iface in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
+                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses)
+                    {
+                        IPAddress candidate = info.Address.IsIPv4MappedToIPv6 ? info.Address.MapToIPv4() : info.Address;
+                        refreshed.Add(candidate);
+                    }
+                }
+
+                localAddresses = refreshed;
+                localAddressesRefreshedAt = now;
+            }
+
+            return localAddresses.Contains(normalized);
+        }
+    }
+
+    private static void InvalidateLocalAddressCache()
+    {
+        lock (LocalAddressLock)
+        {
+            localAddresses = [];
+            localAddressesRefreshedAt = 0;
+        }
     }
 
     /// <summary>

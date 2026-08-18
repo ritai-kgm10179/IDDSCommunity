@@ -616,6 +616,7 @@
   <data name="The elevated service command could not be started." xml:space="preserve"><value>無法啟動已提升權限的服務命令。</value></data>
   <data name="The elevated service command failed with exit code {0}." xml:space="preserve"><value>已提升權限的服務命令執行失敗，結束代碼為 {0}。</value></data>
   <data name="Unsupported service command." xml:space="preserve"><value>不支援的服務命令。</value></data>
+  <data name="Unsupported statistics column." xml:space="preserve"><value>不支援的統計資料欄位。</value></data>
   <data name="FTP Security Agent" xml:space="preserve"><value>FTP 安全性代理程式</value></data>
   <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP 安全性代理程式</value></data>
   <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server 安全性代理程式</value></data>

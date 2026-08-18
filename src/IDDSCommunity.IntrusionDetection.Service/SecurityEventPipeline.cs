@@ -12,6 +12,8 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 /// </summary>
 internal sealed class SecurityEventPipeline
 {
+    private const int MaximumEventMessageLength = 16384;
+    private const int MaximumMetadataLength = 1024;
     internal const string MeterName = "IDDSCommunity.SecurityEvents";
     private static readonly Meter Meter = new(MeterName);
     private static readonly Counter<long> Accepted = Meter.CreateCounter<long>("iddscommunity.security_events.accepted");
@@ -82,7 +84,7 @@ internal sealed class SecurityEventPipeline
     {
         ArgumentNullException.ThrowIfNull(sender);
         ArgumentNullException.ThrowIfNull(eventArgs);
-        NotificationEventArgs snapshot = CreateSnapshot(eventArgs);
+        INotificationEventArgs snapshot = CreateSnapshot(eventArgs);
         if (Volatile.Read(ref accepting) == 0)
         {
             Rejected.Add(1);
@@ -117,7 +119,7 @@ internal sealed class SecurityEventPipeline
             Rejected.Add(1);
             return false;
         }
-        NotificationEventArgs snapshot = CreateSnapshot(eventArgs);
+        INotificationEventArgs snapshot = CreateSnapshot(eventArgs);
         Guid id = inbox.Add(GetAgentName(sender), snapshot);
         Interlocked.Increment(ref queueDepth);
         Queued.Add(1);
@@ -245,13 +247,41 @@ internal sealed class SecurityEventPipeline
     /// </summary>
     /// <param name="eventArgs">The plug-in supplied event arguments.</param>
     /// <returns>獨立擁有之事件快照物件。</returns>
-    private static NotificationEventArgs CreateSnapshot(INotificationEventArgs eventArgs) => new()
+    private static INotificationEventArgs CreateSnapshot(INotificationEventArgs eventArgs)
     {
-        IpAddress = eventArgs.IpAddress,
-        CreateDate = eventArgs.CreateDate,
-        EventId = eventArgs.EventId,
-        EventMessage = eventArgs.EventMessage
-    };
+        NotificationEventArgs snapshot = eventArgs is AuthenticationNotificationEventArgs authentication
+            ? new AuthenticationNotificationEventArgs
+            {
+                AccountName = Limit(authentication.AccountName, MaximumMetadataLength),
+                AccountDomain = Limit(authentication.AccountDomain, MaximumMetadataLength),
+                AccountSid = LimitNullable(authentication.AccountSid, MaximumMetadataLength),
+                IsCredentialFailure = authentication.IsCredentialFailure,
+                ProviderOrChannel = Limit(authentication.ProviderOrChannel, MaximumMetadataLength),
+                ComputerName = Limit(authentication.ComputerName, MaximumMetadataLength),
+                SourceEventRecordId = authentication.SourceEventRecordId,
+                ActivityId = LimitNullable(authentication.ActivityId, MaximumMetadataLength),
+                ConfidenceScore = double.IsFinite(authentication.ConfidenceScore)
+                    ? Math.Clamp(authentication.ConfidenceScore, 0.0, 1.0)
+                    : 0.0,
+                TargetResource = LimitNullable(authentication.TargetResource, MaximumMetadataLength),
+                ErrorCode = LimitNullable(authentication.ErrorCode, MaximumMetadataLength)
+            }
+            : new NotificationEventArgs();
+        snapshot.IpAddress = Limit(eventArgs.IpAddress, MaximumMetadataLength);
+        snapshot.CreateDate = eventArgs.CreateDate;
+        snapshot.EventId = eventArgs.EventId;
+        snapshot.EventMessage = Limit(eventArgs.EventMessage, MaximumEventMessageLength);
+        return snapshot;
+    }
+
+    private static string Limit(string? value, int maximumLength)
+    {
+        string result = value ?? string.Empty;
+        return result.Length <= maximumLength ? result : result[..maximumLength];
+    }
+
+    private static string? LimitNullable(string? value, int maximumLength) =>
+        value is null ? null : Limit(value, maximumLength);
     /// <summary>
     /// Obtains the stable Agent identity required to resolve a durable event after restart.
     /// </summary>

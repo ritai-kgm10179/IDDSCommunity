@@ -356,6 +356,91 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual("192.0.2.44", processedAddress);
         Assert.AreEqual(0, inbox.CountUnfinished());
     }
+
+    /// <summary>
+    /// 驗證型別化驗證事件跨越非同步管線時完整保留帳號、SID、來源與關聯語意。
+    /// </summary>
+    /// <returns>表示非同步工作完成的 Task。</returns>
+    [TestMethod]
+    public async Task Publish_AuthenticationEvent_PreservesTypedSemanticsAsync()
+    {
+        AuthenticationNotificationEventArgs source = CreateAuthenticationEvent();
+        AuthenticationNotificationEventArgs? received = null;
+        SecurityEventPipeline pipeline = CreatePipeline(4, (_, args) => received = args as AuthenticationNotificationEventArgs, _ => Assert.Fail("Unexpected failure."));
+
+        Assert.IsTrue(pipeline.Publish(this, source));
+        pipeline.Complete();
+        await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.IsNotNull(received);
+        Assert.AreNotSame(source, received);
+        Assert.AreEqual(source.AccountName, received.AccountName);
+        Assert.AreEqual(source.AccountDomain, received.AccountDomain);
+        Assert.AreEqual(source.AccountSid, received.AccountSid);
+        Assert.AreEqual(source.ProviderOrChannel, received.ProviderOrChannel);
+        Assert.AreEqual(source.ComputerName, received.ComputerName);
+        Assert.AreEqual(source.SourceEventRecordId, received.SourceEventRecordId);
+        Assert.AreEqual(source.ActivityId, received.ActivityId);
+        Assert.AreEqual(source.ConfidenceScore, received.ConfidenceScore);
+        Assert.AreEqual(source.TargetResource, received.TargetResource);
+        Assert.AreEqual(source.ErrorCode, received.ErrorCode);
+    }
+
+    /// <summary>
+    /// 驗證服務重啟後從持久化 Inbox 還原的驗證事件仍保有完整型別安全語意。
+    /// </summary>
+    /// <returns>表示非同步工作完成的 Task。</returns>
+    [TestMethod]
+    public async Task RecoverPending_AuthenticationEvent_RestoresTypedSemanticsAsync()
+    {
+        SecurityEventInbox inbox = new(database, TimeProvider.System);
+        AuthenticationNotificationEventArgs source = CreateAuthenticationEvent();
+        inbox.Add("RecoveredAuthenticationAgent", source);
+        AuthenticationNotificationEventArgs? recovered = null;
+        SecurityEventPipeline pipeline = new(
+            4,
+            (_, args) => recovered = args as AuthenticationNotificationEventArgs,
+            _ => Assert.Fail("Unexpected failure."),
+            inbox,
+            agentName => agentName == "RecoveredAuthenticationAgent" ? this : null);
+
+        pipeline.RecoverPending(10);
+        pipeline.Complete();
+        await pipeline.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.IsNotNull(recovered);
+        Assert.AreEqual(source.AccountName, recovered.AccountName);
+        Assert.AreEqual(source.AccountDomain, recovered.AccountDomain);
+        Assert.AreEqual(source.AccountSid, recovered.AccountSid);
+        Assert.AreEqual(source.ProviderOrChannel, recovered.ProviderOrChannel);
+        Assert.AreEqual(source.ComputerName, recovered.ComputerName);
+        Assert.AreEqual(source.SourceEventRecordId, recovered.SourceEventRecordId);
+        Assert.AreEqual(source.ActivityId, recovered.ActivityId);
+        Assert.AreEqual(source.ConfidenceScore, recovered.ConfidenceScore);
+        Assert.AreEqual(source.TargetResource, recovered.TargetResource);
+        Assert.AreEqual(source.ErrorCode, recovered.ErrorCode);
+        Assert.AreEqual(0, inbox.CountUnfinished());
+    }
+
+    /// <summary>
+    /// 驗證毒性事件達到重試上限後會進入隔離狀態，不再於每次啟動時無限重播。
+    /// </summary>
+    [TestMethod]
+    public void MarkFailed_AfterMaximumAttempts_DeadLettersEvent()
+    {
+        SecurityEventInbox inbox = new(database, TimeProvider.System);
+        Guid id = inbox.Add("PoisonAgent", CreateEvent("192.0.2.250"));
+
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            inbox.MarkProcessing(id);
+            inbox.MarkFailed(id, new InvalidOperationException("poison"));
+        }
+
+        Assert.AreEqual(0, inbox.ReadPending(10).Count);
+        Assert.AreEqual(1, inbox.CountDeadLettered());
+        Assert.AreEqual(1, inbox.CountUnfinished());
+    }
     /// <summary>
     /// 驗證多個並行生產者的突發事件皆會經由有界管線完成，不遺留持久化待辦。
     /// </summary>
@@ -1130,6 +1215,25 @@ public sealed class SecurityEventPipelineTest
         EventId = 1,
         EventMessage = "test",
         IpAddress = address
+    };
+
+    private static AuthenticationNotificationEventArgs CreateAuthenticationEvent() => new()
+    {
+        CreateDate = DateTime.UtcNow,
+        EventId = 4625,
+        EventMessage = "An account failed to log on.",
+        IpAddress = "198.51.100.88",
+        AccountName = "alice",
+        AccountDomain = "CONTOSO",
+        AccountSid = "S-1-5-21-1-2-3-1001",
+        IsCredentialFailure = true,
+        ProviderOrChannel = "Microsoft-Windows-Security-Auditing",
+        ComputerName = "SERVER01",
+        SourceEventRecordId = 987654,
+        ActivityId = "activity-987654",
+        ConfidenceScore = 0.95,
+        TargetResource = "SERVER01",
+        ErrorCode = "0xC000006A"
     };
 
     private SecurityEventPipeline CreatePipeline(int capacity, Action<object, INotificationEventArgs> process, Action<Exception> reportFailure) =>

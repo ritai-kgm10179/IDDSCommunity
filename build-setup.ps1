@@ -143,12 +143,16 @@ $sboms = @(
 foreach ($definition in $sboms) {
     $staging = Join-Path $sbomStaging $definition.Directory
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
-    & $sbomTool generate -b $packageRoot -bc $repositoryRoot -m $staging -pn "IDDS Community $RuntimeIdentifier" -pv $Version -ps 'Organization: IDDS Community' -nsb "$namespace/$($definition.Directory)" -mi $definition.Info
+    & $sbomTool generate -b $packageRoot -bc $repositoryRoot -cd '--DirectoryExclusionList **/artifacts/**' -m $staging -pn "IDDS Community $RuntimeIdentifier" -pv $Version -ps 'Organization: IDDS Community' -nsb "$namespace/$($definition.Directory)" -mi $definition.Info
     if ($LASTEXITCODE -ne 0) { throw "$($definition.Info) SBOM 產生失敗。" }
 
     $generatedSbom = Join-Path $staging "_manifest\$($definition.Directory)\manifest.spdx.json"
     if (-not (Test-Path -LiteralPath $generatedSbom)) { throw "$($definition.Info) SBOM 檔案未生成。" }
 
+}
+
+foreach ($definition in $sboms) {
+    $generatedSbom = Join-Path (Join-Path $sbomStaging $definition.Directory) "_manifest\$($definition.Directory)\manifest.spdx.json"
     # 內嵌至安裝套件目錄
     $packageSbomDirectory = Join-Path $packageRoot "_manifest\$($definition.Directory)"
     New-Item -ItemType Directory -Path $packageSbomDirectory -Force | Out-Null

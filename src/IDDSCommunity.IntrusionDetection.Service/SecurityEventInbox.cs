@@ -15,6 +15,8 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     private const int ProcessingStatus = 1;
     private const int CompletedStatus = 2;
     private const int FailedStatus = 3;
+    private const int DeadLetterStatus = 4;
+    private const int MaximumProcessingAttempts = 5;
     /// <summary>
     /// Persists a new event before it enters the in-memory channel.
     /// </summary>
@@ -30,11 +32,28 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
         database.ExecuteNonQuery(
             """
             INSERT INTO ProtectionEventInbox
-                (Id, ReceivedUtc, AgentName, CreateDate, EventId, IpAddress, EventMessage, Status, Attempts, LastError, UpdatedUtc)
-            VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, 0, '', @p1)
+                (Id, ReceivedUtc, AgentName, CreateDate, EventId, IpAddress, EventMessage, Status, Attempts, LastError, UpdatedUtc,
+                 IsAuthenticationEvent, AccountName, AccountDomain, AccountSid, IsCredentialFailure, ProviderOrChannel,
+                 ComputerName, SourceEventRecordId, ActivityId, ConfidenceScore, TargetResource, ErrorCode)
+            VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, 0, '', @p1,
+                    @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19)
             """,
             id.ToString("D"), now, agentName, eventArgs.CreateDate.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
-            eventArgs.EventId, eventArgs.IpAddress, eventArgs.EventMessage, PendingStatus);
+            eventArgs.EventId, eventArgs.IpAddress, eventArgs.EventMessage, PendingStatus,
+            eventArgs is AuthenticationNotificationEventArgs ? 1 : 0,
+            eventArgs is AuthenticationNotificationEventArgs authentication ? authentication.AccountName : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationDomain ? authenticationDomain.AccountDomain : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationSid ? authenticationSid.AccountSid ?? string.Empty : string.Empty,
+            eventArgs is not AuthenticationNotificationEventArgs authenticationFailure || authenticationFailure.IsCredentialFailure ? 1 : 0,
+            eventArgs is AuthenticationNotificationEventArgs authenticationProvider ? authenticationProvider.ProviderOrChannel : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationComputer ? authenticationComputer.ComputerName : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationRecord && authenticationRecord.SourceEventRecordId.HasValue
+                ? authenticationRecord.SourceEventRecordId.Value
+                : DBNull.Value,
+            eventArgs is AuthenticationNotificationEventArgs authenticationActivity ? authenticationActivity.ActivityId ?? string.Empty : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationConfidence ? authenticationConfidence.ConfidenceScore : 1.0,
+            eventArgs is AuthenticationNotificationEventArgs authenticationTarget ? authenticationTarget.TargetResource ?? string.Empty : string.Empty,
+            eventArgs is AuthenticationNotificationEventArgs authenticationError ? authenticationError.ErrorCode ?? string.Empty : string.Empty);
         return id;
     }
     /// <summary>
@@ -47,7 +66,10 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumCount);
         return database.Query<SecurityEventInboxRow>(
             """
-            SELECT Id, ReceivedUtc, AgentName, CreateDate, EventId, IpAddress, EventMessage
+            SELECT Id, ReceivedUtc, AgentName, CreateDate, EventId, IpAddress, EventMessage,
+                   IsAuthenticationEvent, AccountName, AccountDomain, AccountSid, IsCredentialFailure,
+                   ProviderOrChannel, ComputerName, SourceEventRecordId, ActivityId, ConfidenceScore,
+                   TargetResource, ErrorCode
             FROM ProtectionEventInbox
             WHERE Status IN (@Pending, @Processing, @Failed)
             ORDER BY ReceivedUtc, Id
@@ -75,7 +97,14 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     internal void MarkFailed(Guid id, Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        Update(id, FailedStatus, incrementAttempts: false, exception.GetType().Name);
+        database.ExecuteNonQuery(
+            "UPDATE ProtectionEventInbox SET Status=CASE WHEN Attempts>=@p0 THEN @p1 ELSE @p2 END, LastError=@p3, UpdatedUtc=@p4 WHERE Id=@p5",
+            MaximumProcessingAttempts,
+            DeadLetterStatus,
+            FailedStatus,
+            exception.GetType().Name,
+            timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture),
+            id.ToString("D"));
     }
     /// <summary>
     /// 移除尚未交付至記憶體佇列的待處理事件。
@@ -100,6 +129,14 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
     /// <returns>傳回 unfinished event count 的結果。</returns>
     internal long CountUnfinished() => Convert.ToInt64(
         database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status<>@p0", CompletedStatus),
+        CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// 計算已超過處理重試上限並隔離的毒性事件數量。
+    /// </summary>
+    /// <returns>已進入無法自動重試狀態的事件數量。</returns>
+    internal long CountDeadLettered() => Convert.ToInt64(
+        database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionEventInbox WHERE Status=@p0", DeadLetterStatus),
         CultureInfo.InvariantCulture);
     /// <summary>
     /// Updates the processing state and diagnostic details for one durable event.
@@ -146,18 +183,47 @@ public string IpAddress { get; init; } = string.Empty;
         /// 取得或設定 EventMessage。
         /// </summary>
 public string EventMessage { get; init; } = string.Empty;
+        public bool IsAuthenticationEvent { get; init; }
+        public string AccountName { get; init; } = string.Empty;
+        public string AccountDomain { get; init; } = string.Empty;
+        public string AccountSid { get; init; } = string.Empty;
+        public bool IsCredentialFailure { get; init; }
+        public string ProviderOrChannel { get; init; } = string.Empty;
+        public string ComputerName { get; init; } = string.Empty;
+        public long? SourceEventRecordId { get; init; }
+        public string ActivityId { get; init; } = string.Empty;
+        public double ConfidenceScore { get; init; } = 1.0;
+        public string TargetResource { get; init; } = string.Empty;
+        public string ErrorCode { get; init; } = string.Empty;
 
-        internal SecurityEventInboxItem ToItem() => new(
-            Guid.Parse(Id),
-            DateTimeOffset.Parse(ReceivedUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-            AgentName,
-            new NotificationEventArgs
-            {
-                CreateDate = DateTime.Parse(CreateDate, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
-                EventId = EventId,
-                IpAddress = IpAddress,
-                EventMessage = EventMessage
-            });
+        internal SecurityEventInboxItem ToItem()
+        {
+            NotificationEventArgs eventArgs = IsAuthenticationEvent
+                ? new AuthenticationNotificationEventArgs
+                {
+                    AccountName = AccountName,
+                    AccountDomain = AccountDomain,
+                    AccountSid = string.IsNullOrEmpty(AccountSid) ? null : AccountSid,
+                    IsCredentialFailure = IsCredentialFailure,
+                    ProviderOrChannel = ProviderOrChannel,
+                    ComputerName = ComputerName,
+                    SourceEventRecordId = SourceEventRecordId,
+                    ActivityId = string.IsNullOrEmpty(ActivityId) ? null : ActivityId,
+                    ConfidenceScore = ConfidenceScore,
+                    TargetResource = string.IsNullOrEmpty(TargetResource) ? null : TargetResource,
+                    ErrorCode = string.IsNullOrEmpty(ErrorCode) ? null : ErrorCode
+                }
+                : new NotificationEventArgs();
+            eventArgs.CreateDate = DateTime.Parse(CreateDate, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            eventArgs.EventId = EventId;
+            eventArgs.IpAddress = IpAddress;
+            eventArgs.EventMessage = EventMessage;
+            return new SecurityEventInboxItem(
+                Guid.Parse(Id),
+                DateTimeOffset.Parse(ReceivedUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind),
+                AgentName,
+                eventArgs);
+        }
     }
 }
 

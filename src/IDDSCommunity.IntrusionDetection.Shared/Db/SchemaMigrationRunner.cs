@@ -36,6 +36,33 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, CreateProtectionAuditLogIndex);
         Execute(connection, transaction, CreateProtectionAuditLogAlertIdIndex);
         Execute(connection, transaction, CreateProtectionEventInbox);
+        if (TableExists(connection, transaction, "ProtectionEventInbox"))
+        {
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "IsAuthenticationEvent"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN IsAuthenticationEvent INTEGER NOT NULL DEFAULT 0");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "AccountName"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN AccountName TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "AccountDomain"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN AccountDomain TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "AccountSid"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN AccountSid TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "IsCredentialFailure"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN IsCredentialFailure INTEGER NOT NULL DEFAULT 1");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "ProviderOrChannel"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN ProviderOrChannel TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "ComputerName"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN ComputerName TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "SourceEventRecordId"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN SourceEventRecordId INTEGER NULL");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "ActivityId"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN ActivityId TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "ConfidenceScore"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN ConfidenceScore REAL NOT NULL DEFAULT 1.0");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "TargetResource"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN TargetResource TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "ProtectionEventInbox", "ErrorCode"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionEventInbox ADD COLUMN ErrorCode TEXT NOT NULL DEFAULT ''");
+        }
         Execute(connection, transaction, CreateProtectionEventInboxStatusIndex);
         Execute(connection, transaction, CreateIntrusionLogWindowIndex);
         Execute(connection, transaction, CreateObservationWatermarks);
@@ -108,6 +135,10 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (9, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (10, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -257,7 +288,19 @@ internal static class SchemaMigrationRunner
             Status INTEGER NOT NULL,
             Attempts INTEGER NOT NULL,
             LastError TEXT NOT NULL,
-            UpdatedUtc TEXT NOT NULL
+            UpdatedUtc TEXT NOT NULL,
+            IsAuthenticationEvent INTEGER NOT NULL DEFAULT 0,
+            AccountName TEXT NOT NULL DEFAULT '',
+            AccountDomain TEXT NOT NULL DEFAULT '',
+            AccountSid TEXT NOT NULL DEFAULT '',
+            IsCredentialFailure INTEGER NOT NULL DEFAULT 1,
+            ProviderOrChannel TEXT NOT NULL DEFAULT '',
+            ComputerName TEXT NOT NULL DEFAULT '',
+            SourceEventRecordId INTEGER NULL,
+            ActivityId TEXT NOT NULL DEFAULT '',
+            ConfidenceScore REAL NOT NULL DEFAULT 1.0,
+            TargetResource TEXT NOT NULL DEFAULT '',
+            ErrorCode TEXT NOT NULL DEFAULT ''
         )
         """;
 

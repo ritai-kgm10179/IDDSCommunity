@@ -130,6 +130,36 @@ public sealed class ConfigurationTransferServiceTest
     }
 
     /// <summary>
+    /// 驗證匯入設定會拒絕位元不連續的 IPv4 網路遮罩。
+    /// </summary>
+    [TestMethod]
+    public void ImportRejectsNonContiguousIpv4NetworkMask()
+    {
+        ConfigurationTransferService service = new(database);
+        string path = Path.Combine(testDirectory, "settings.json");
+        service.ExportToFile(path);
+        ConfigurationTransferPackage package = service.ReadPackage(path);
+        package.SafeNetworks[0] = new SafeNetworkTransfer("192.0.2.0", "255.0.255.0");
+        File.WriteAllText(path, JsonSerializer.Serialize(package));
+
+        Assert.ThrowsExactly<InvalidDataException>(() => service.ReadPackage(path));
+    }
+
+    /// <summary>
+    /// 驗證含機密資料的匯入作業同樣拒絕過短密碼短語，不得僅依賴管理介面驗證。
+    /// </summary>
+    [TestMethod]
+    public void EncryptedSecretImportRejectsShortPassphrase()
+    {
+        ConfigurationTransferService service = new(database);
+        string path = Path.Combine(testDirectory, "settings.json");
+        service.ExportToFile(path, true, "correct horse battery staple");
+
+        Assert.ThrowsExactly<ArgumentException>(() =>
+            service.ImportFromFile(path, Path.Combine(testDirectory, "backups"), "too-short"));
+    }
+
+    /// <summary>
     /// 驗證每次匯出加密機密時均產生長度為 12 位元組之獨立唯一 Nonce，避免 Nonce 重用。
     /// </summary>
     [TestMethod]

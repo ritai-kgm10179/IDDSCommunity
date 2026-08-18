@@ -242,14 +242,17 @@ public string SelectedName
         if (openFile.ShowDialog() == DialogResult.OK)
         {
             string pluginDirectory = Shared.IddsConfig.Instance.PluginsDirectory;
-            string chosenDirectory = openFile.FileNames[0][..openFile.FileNames[0].LastIndexOf('\\')];
             if (openFile.FileNames.Length <= 0)
             {
                 GenericErrorDialog error = new(Strings.Get("No file was selected!"), Strings.Get("Please choose at least one assembly to load."), false);
                 error.ShowDialog();
                 return;
             }
-            if (chosenDirectory == pluginDirectory)
+            string chosenDirectory = Path.GetDirectoryName(openFile.FileNames[0]) ?? string.Empty;
+            if (string.Equals(
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(chosenDirectory)),
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(pluginDirectory)),
+                StringComparison.OrdinalIgnoreCase))
             {
                 GenericErrorDialog error = new(Strings.Get("Invalid directory"), Strings.Get("Please choose a directory other than the plugin directory. These assemblies are already loaded."), false);
                 error.ShowDialog();
@@ -270,13 +273,14 @@ public string SelectedName
             }
             foreach (string fileName in openFile.FileNames)
             {
-                string assemblyName = fileName[(fileName.LastIndexOf('\\') + 1)..];
-                if (!File.Exists(pluginDirectory + assemblyName) ||
+                string assemblyName = Path.GetFileName(fileName);
+                string destination = Path.Combine(pluginDirectory, assemblyName);
+                if (!File.Exists(destination) ||
                     MessageBox.Show(Strings.Get("This assembly already exists. Do you want to overwrite the existing?"), Strings.Get("Overwrite existing?"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
                 {
                     try
                     {
-                        File.Copy(fileName, pluginDirectory + assemblyName, true);
+                        File.Copy(fileName, destination, true);
                     }
                     catch (Exception ex)
                     {

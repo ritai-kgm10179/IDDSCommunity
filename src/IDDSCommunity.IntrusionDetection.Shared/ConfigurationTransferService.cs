@@ -151,7 +151,9 @@ public sealed class ConfigurationTransferService
     {
         ConfigurationTransferPackage package = ReadPackage(path);
         ConfigurationImportPreview preview = Preview(package);
-        string? smtpPassword = package.Secrets is null ? null : DecryptSecret(package.Secrets, passphrase ?? throw Argument("The package contains secrets and requires a passphrase.", nameof(passphrase)));
+        if (package.Secrets is not null && (string.IsNullOrWhiteSpace(passphrase) || passphrase.Length < MinimumPassphraseCharacters))
+            throw Argument("The configuration package passphrase must contain at least 12 characters.", nameof(passphrase));
+        string? smtpPassword = package.Secrets is null ? null : DecryptSecret(package.Secrets, passphrase!);
         DatabaseBackupResult backup = new SqliteMaintenanceService(database).CreateVerifiedBackup(backupDirectory);
         database.ExecuteInTransaction((connection, transaction) => Apply(connection, transaction, package, smtpPassword));
         return new ConfigurationImportResult(backup, preview);
@@ -235,7 +237,17 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         {
             if (!IPAddress.TryParse(network.IpAddress, out IPAddress? address)) throw Invalid($"Invalid safe-network address: {network.IpAddress}");
             if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) { if (!int.TryParse(network.NetworkMask, out int prefix) || prefix is < 0 or > 128) throw Invalid("Invalid IPv6 prefix length."); }
-            else if (!IPAddress.TryParse(network.NetworkMask, out _)) throw Invalid("Invalid IPv4 network mask.");
+            else
+            {
+                try
+                {
+                    _ = IddsConfig.GetSubnetMaskBits(network.NetworkMask);
+                }
+                catch (ArgumentException exception)
+                {
+                    throw Invalid($"Invalid IPv4 network mask: {network.NetworkMask}", exception);
+                }
+            }
         }
         Guid[] duplicateAgentIds = package.Agents.GroupBy(agent => agent.AgentId).Where(group => group.Count() > 1).Select(group => group.Key).ToArray();
         if (duplicateAgentIds.Length > 0)

@@ -80,7 +80,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
-          dotnet-version: 10.0.302
+          dotnet-version: 10.0.400
           cache: true
           cache-dependency-path: |
             Directory.Build.props
@@ -126,7 +126,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
-          dotnet-version: 10.0.302
+          dotnet-version: 10.0.400
           cache: true
           cache-dependency-path: |
             Directory.Build.props
@@ -161,7 +161,7 @@ jobs:
           foreach ($definition in $sboms) {
             $staging = Join-Path $sbomStaging $definition.Directory
             New-Item -ItemType Directory -Path $staging -Force | Out-Null
-            & $sbomTool generate -b $package -bc $env:GITHUB_WORKSPACE -m $staging -pn "IDDS Community $env:RELEASE_RID" -pv $env:RELEASE_VERSION -ps 'Organization: IDDS Community' -nsb "$namespace/$($definition.Directory)" -mi $definition.Info
+            & $sbomTool generate -b $package -bc $env:GITHUB_WORKSPACE -cd '--DirectoryExclusionList **/artifacts/**' -m $staging -pn "IDDS Community $env:RELEASE_RID" -pv $env:RELEASE_VERSION -ps 'Organization: IDDS Community' -nsb "$namespace/$($definition.Directory)" -mi $definition.Info
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $generatedSbom = Join-Path $staging "_manifest/$($definition.Directory)/manifest.spdx.json"
             if (-not (Test-Path $generatedSbom)) { throw "$($definition.Info) SBOM was not generated." }

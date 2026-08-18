@@ -87,7 +87,15 @@ public static Statistics Instance => _instance ??= new();
     /// <param name="statisticsColumn">statistics column參數。</param>
     public void IncreaseStatistics(SecurityAgent agent, string statisticsColumn)
     {
-        string sqlString = $"Update AgentStatistics set {statisticsColumn}={statisticsColumn}+1 where AgentId=@p0";
+        ArgumentNullException.ThrowIfNull(agent);
+        string validatedColumn = statisticsColumn switch
+        {
+            "FailedLogins" => "FailedLogins",
+            "HardLocks" => "HardLocks",
+            "SoftLocks" => "SoftLocks",
+            _ => throw new ArgumentException(Localization.Strings.Get("Unsupported statistics column."), nameof(statisticsColumn))
+        };
+        string sqlString = $"Update AgentStatistics set {validatedColumn}={validatedColumn}+1 where AgentId=@p0";
         database.ExecuteNonQuery(sqlString, agent.Id);
     }
 }

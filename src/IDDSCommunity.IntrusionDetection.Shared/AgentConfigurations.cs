@@ -134,15 +134,15 @@ public class AgentConfigurations : List<AgentConfigurationBase>
     public void LoadPluginsFromDirectory(string pluginDirectory)
     {
         if (!System.IO.Directory.Exists(pluginDirectory)) return;
-        string trustedDirectory = System.IO.Path.GetFullPath(pluginDirectory);
+        string trustedDirectory = System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(pluginDirectory));
         foreach (string candidate in System.IO.Directory.EnumerateFiles(trustedDirectory, "*.dll", System.IO.SearchOption.TopDirectoryOnly))
         {
-            string assemblyName = System.IO.Path.GetFullPath(candidate);
-            if (!assemblyName.StartsWith(trustedDirectory + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) continue;
+            string assemblyName = candidate;
             System.Reflection.Assembly? assembly = null;
             try
             {
-                assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(System.IO.Path.GetFullPath(assemblyName));
+                assemblyName = PluginPathValidator.Validate(trustedDirectory, candidate);
+                assembly = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromAssemblyPath(assemblyName);
             }
             catch (Exception ex)
             {

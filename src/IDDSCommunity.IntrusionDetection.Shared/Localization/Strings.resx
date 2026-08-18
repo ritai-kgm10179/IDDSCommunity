@@ -616,6 +616,7 @@
   <data name="The elevated service command could not be started." xml:space="preserve"><value>The elevated service command could not be started.</value></data>
   <data name="The elevated service command failed with exit code {0}." xml:space="preserve"><value>The elevated service command failed with exit code {0}.</value></data>
   <data name="Unsupported service command." xml:space="preserve"><value>Unsupported service command.</value></data>
+  <data name="Unsupported statistics column." xml:space="preserve"><value>Unsupported statistics column.</value></data>
   <data name="FTP Security Agent" xml:space="preserve"><value>FTP Security Agent</value></data>
   <data name="SMTP Security Agent" xml:space="preserve"><value>SMTP Security Agent</value></data>
   <data name="SQL Server Security Agent" xml:space="preserve"><value>SQL Server Security Agent</value></data>
