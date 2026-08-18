@@ -86,7 +86,7 @@ jobs:
 
       - name: Run privileged integration tests
         shell: pwsh
-        run: ./scripts/run-ci-windows-integration-tests.ps1
+        run: ./scripts/run-ci-windows-integration-tests.ps1 -RuntimeIdentifier win-x64 -Configuration Release
 
       - name: Upload privileged test results
         if: ${{ !cancelled() }}

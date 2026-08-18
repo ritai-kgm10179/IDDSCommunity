@@ -7,7 +7,10 @@ param(
     [string]$ServiceName,
     [Parameter()]
     [ValidateSet('win-x64', 'win-arm64')]
-    [string]$RuntimeIdentifier = 'win-x64'
+    [string]$RuntimeIdentifier = 'win-x64',
+    [Parameter()]
+    [ValidateSet('Debug', 'Release')]
+    [string]$Configuration = 'Release'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,6 +32,7 @@ try {
 
     dotnet test "$repositoryRoot\tests\IDDSCommunity.IntrusionDetection.Service.Test\IDDSCommunity.IntrusionDetection.Service.Test.csproj" `
         --filter 'TestCategory=PrivilegedWindows' `
+        --configuration $Configuration `
         --runtime $RuntimeIdentifier `
         --no-build `
         --no-restore `
