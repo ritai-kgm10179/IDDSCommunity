@@ -506,6 +506,38 @@ public class CrossAgentCorrelationTest
     }
 
     /// <summary>
+    /// 驗證快照與過期清理和既有鍵寫入同時執行時，內部非執行緒安全清單仍受相同貯列鎖完整保護。
+    /// </summary>
+    [TestMethod]
+    public async Task ConcurrentSlidingBucket_SnapshotAndPruneDuringWrites_RemainsConsistent()
+    {
+        ConcurrentSlidingBucket<string, int> bucket = new(maxKeyCapacity: 16, maxItemsPerBucket: 10000, windowDuration: TimeSpan.FromHours(1));
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        Task[] writers = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
+        {
+            for (int index = 0; index < 1000; index++)
+            {
+                bucket.Add($"key-{index % 8}", (worker * 1000) + index, now.AddTicks(index));
+            }
+        })).ToArray();
+        Task[] observers = Enumerable.Range(0, 4).Select(observer => Task.Run(() =>
+        {
+            for (int index = 0; index < 500; index++)
+            {
+                _ = bucket.SnapshotCounts();
+                bucket.PruneExpiredKeys(now.AddHours(-1));
+            }
+        })).ToArray();
+
+        await Task.WhenAll(writers.Concat(observers)).ConfigureAwait(false);
+
+        long activeItems = bucket.SnapshotCounts().Values.Sum(static count => (long)count);
+        Assert.AreEqual(bucket.TotalItemsAdded, activeItems + bucket.TotalEvictions);
+        Assert.AreEqual(8, bucket.ActiveKeyCount);
+    }
+
+    /// <summary>
     /// 驗證水位點復原機制可正確恢復各 Agent 與通道之處理狀態。
     /// </summary>
     [TestMethod]

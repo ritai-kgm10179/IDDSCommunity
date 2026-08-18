@@ -860,13 +860,13 @@ public bool LimitMailSent { get; set; }
                     SecurityObservationEvent observation = CreateSecurityObservation(reportingAgent.Name, notificationEventArgs);
                     crossAgentCorrelationEngine.PrepareObservation(observation);
 
-                    (bool isDuplicate, bool alreadyAlerted) = SecurityObservationStore.PersistObservationAndWatermark(observation, database);
-                    if (isDuplicate && alreadyAlerted)
+                    (bool isDuplicate, _) = SecurityObservationStore.PersistObservationAndWatermark(observation, database);
+                    if (isDuplicate)
                     {
                         return;
                     }
 
-                    CorrelationEvaluationResult correlationResult = CompleteCorrelationObservation(observation, alreadyAlerted);
+                    CorrelationEvaluationResult correlationResult = CompleteCorrelationObservation(observation);
                     if (correlationResult.IsDuplicateReplay)
                     {
                         return;
@@ -1092,12 +1092,12 @@ public bool LimitMailSent { get; set; }
         return notificationEventArgs is not AuthenticationNotificationEventArgs authentication || authentication.IsCredentialFailure;
     }
 
-    private CorrelationEvaluationResult CompleteCorrelationObservation(SecurityObservationEvent observation, bool alreadyAlerted)
+    private CorrelationEvaluationResult CompleteCorrelationObservation(SecurityObservationEvent observation)
     {
         CorrelationEvaluationResult result = crossAgentCorrelationEngine.Ingest(observation, configuration);
-        SecurityObservationStore.UpdateCorrelationMetadata(observation, database);
-        if (result.Action != CorrelationAction.AlertAndScoreOnly || alreadyAlerted)
+        if (result.Action != CorrelationAction.AlertAndScoreOnly)
         {
+            SecurityObservationStore.UpdateCorrelationMetadata(observation, database);
             return result;
         }
 
@@ -1105,14 +1105,13 @@ public bool LimitMailSent { get; set; }
             ? observation.NormalizedAccount
             : observation.NormalizedIpAddress;
         string alertId = SecurityObservationStore.ComputeAlertId(result.SprayType, targetSubject, result.ContributingIdempotencyKeys);
-        bool enqueued = SecurityObservationStore.EnqueueAlertOutbox(
+        bool enqueued = SecurityObservationStore.CompleteCorrelationAndEnqueueAlert(
+            observation,
             alertId,
-            observation.Id,
-            observation.EventTimeUtc,
             "CrossAgentSprayDetected",
             "AlertOnly",
             observation.SourceAgentName,
-            observation.NormalizedIpAddress,
+            targetSubject,
             result.Message,
             database);
         if (enqueued)
@@ -1127,7 +1126,7 @@ public bool LimitMailSent { get; set; }
     {
         foreach (SecurityObservationEvent observation in SecurityObservationStore.LoadPendingCorrelationObservations(database))
         {
-            CompleteCorrelationObservation(observation, alreadyAlerted: false);
+            CompleteCorrelationObservation(observation);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -145,12 +146,91 @@ public static class SecurityObservationStore
     {
         ArgumentNullException.ThrowIfNull(observation);
         ArgumentNullException.ThrowIfNull(database);
-        database.ExecuteNonQuery(
-            "UPDATE SecurityObservationEvents SET CorrelationGroupId = @p0, IsCrossSourceDuplicate = @p1, DuplicateOfObservationId = @p2, CorrelationProcessed = 1 WHERE Id = @p3",
-            observation.CorrelationGroupId?.ToString("D") ?? (object)DBNull.Value,
-            observation.IsCrossSourceDuplicate ? 1 : 0,
-            observation.DuplicateOfObservationId?.ToString("D") ?? (object)DBNull.Value,
-            observation.Id.ToString("D"));
+        using SqliteCommand command = CreateCorrelationCompletionCommand(observation, database.Connection, transaction: null);
+        if (command.ExecuteNonQuery() != 1)
+        {
+            throw new InvalidDataException($"找不到待完成的安全性觀察事件：{observation.Id:D}");
+        }
+    }
+
+    /// <summary>
+    /// 以單一 SQLite 交易原子完成觀察事件關聯狀態並將告警寫入持久化 Outbox。
+    /// </summary>
+    /// <param name="observation">已完成關聯評估的安全性觀察事件。</param>
+    /// <param name="alertId">確定性告警識別碼。</param>
+    /// <param name="eventType">事件型別。</param>
+    /// <param name="outcome">結果代碼。</param>
+    /// <param name="actor">發起動作者。</param>
+    /// <param name="subject">主體目標。</param>
+    /// <param name="details">診斷詳細訊息。</param>
+    /// <param name="database">應用程式資料庫執行個體。</param>
+    /// <returns>若成功加入新告警則傳回 <see langword="true"/>；若相同告警已存在則傳回 <see langword="false"/>。</returns>
+    /// <exception cref="InvalidDataException">找不到對應的持久化觀察事件時擲回。</exception>
+    public static bool CompleteCorrelationAndEnqueueAlert(
+        SecurityObservationEvent observation,
+        string alertId,
+        string eventType,
+        string outcome,
+        string actor,
+        string subject,
+        string details,
+        Database database)
+    {
+        ArgumentNullException.ThrowIfNull(observation);
+        ArgumentException.ThrowIfNullOrWhiteSpace(alertId);
+        ArgumentNullException.ThrowIfNull(database);
+
+        SqliteConnection connection = database.Connection;
+        using SqliteTransaction transaction = connection.BeginTransaction();
+        try
+        {
+            using (SqliteCommand completionCommand = CreateCorrelationCompletionCommand(observation, connection, transaction))
+            {
+                if (completionCommand.ExecuteNonQuery() != 1)
+                {
+                    throw new InvalidDataException($"找不到待完成的安全性觀察事件：{observation.Id:D}");
+                }
+            }
+
+            int inserted;
+            using (SqliteCommand insertCommand = connection.CreateCommand())
+            {
+                insertCommand.Transaction = transaction;
+                insertCommand.CommandText = """
+                    INSERT INTO ObservationAlertOutbox
+                        (AlertId, ObservationId, OccurredUtc, EventType, Outcome, Actor, Subject, Details, Status, DispatchedUtc, CreatedUtc)
+                    VALUES
+                        ($alertId, $observationId, $occurredUtc, $eventType, $outcome, $actor, $subject, $details, 0, NULL, $createdUtc)
+                    ON CONFLICT(AlertId) DO NOTHING
+                    """;
+                insertCommand.Parameters.AddWithValue("$alertId", alertId);
+                insertCommand.Parameters.AddWithValue("$observationId", observation.Id.ToString("D"));
+                insertCommand.Parameters.AddWithValue("$occurredUtc", observation.EventTimeUtc.ToString("O", CultureInfo.InvariantCulture));
+                insertCommand.Parameters.AddWithValue("$eventType", eventType);
+                insertCommand.Parameters.AddWithValue("$outcome", outcome);
+                insertCommand.Parameters.AddWithValue("$actor", actor);
+                insertCommand.Parameters.AddWithValue("$subject", subject);
+                insertCommand.Parameters.AddWithValue("$details", details);
+                insertCommand.Parameters.AddWithValue("$createdUtc", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
+                inserted = insertCommand.ExecuteNonQuery();
+            }
+
+            using (SqliteCommand alertStateCommand = connection.CreateCommand())
+            {
+                alertStateCommand.Transaction = transaction;
+                alertStateCommand.CommandText = "UPDATE SecurityObservationEvents SET AlertEmitted = 1 WHERE Id = $observationId";
+                alertStateCommand.Parameters.AddWithValue("$observationId", observation.Id.ToString("D"));
+                alertStateCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return inserted == 1;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     /// <summary>
@@ -175,15 +255,15 @@ public static class SecurityObservationStore
             """)
             .Select(static row => new SecurityObservationEvent
             {
-                Id = Guid.TryParse(row.Id, out Guid id) ? id : Guid.NewGuid(),
+                Id = ParseRequiredGuid(row.Id, nameof(PendingCorrelationRow.Id)),
                 SourceAgentName = row.SourceAgentName,
                 ProviderOrChannel = row.ProviderOrChannel,
                 ComputerName = row.ComputerName,
                 SourceEventRecordId = row.SourceEventRecordId,
                 SourceFileOffset = row.SourceFileOffset,
                 SourceEventIdentity = row.SourceEventIdentity,
-                EventTimeUtc = DateTimeOffset.TryParse(row.EventTimeUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset eventTime) ? eventTime : DateTimeOffset.UtcNow,
-                ReceivedTimeUtc = DateTimeOffset.TryParse(row.ReceivedTimeUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset receivedTime) ? receivedTime : DateTimeOffset.UtcNow,
+                EventTimeUtc = ParseRequiredTimestamp(row.EventTimeUtc, nameof(PendingCorrelationRow.EventTimeUtc)),
+                ReceivedTimeUtc = ParseRequiredTimestamp(row.ReceivedTimeUtc, nameof(PendingCorrelationRow.ReceivedTimeUtc)),
                 NormalizedIpAddress = row.NormalizedIpAddress,
                 NormalizedAccount = row.NormalizedAccount,
                 NormalizedDomain = row.NormalizedDomain,
@@ -192,16 +272,61 @@ public static class SecurityObservationStore
                 Provenance = row.Provenance,
                 LogonType = row.LogonType,
                 SubStatus = row.SubStatus,
-                CorrelationGroupId = Guid.TryParse(row.CorrelationGroupId, out Guid groupId) ? groupId : null,
+                CorrelationGroupId = ParseOptionalGuid(row.CorrelationGroupId, nameof(PendingCorrelationRow.CorrelationGroupId)),
                 ConfidenceScore = row.ConfidenceScore,
                 IsCredentialFailure = row.IsCredentialFailure,
                 ActivityId = row.ActivityId,
                 TargetResource = row.TargetResource,
                 ErrorCode = row.ErrorCode,
                 IsCrossSourceDuplicate = row.IsCrossSourceDuplicate,
-                DuplicateOfObservationId = Guid.TryParse(row.DuplicateOfObservationId, out Guid duplicateId) ? duplicateId : null
+                DuplicateOfObservationId = ParseOptionalGuid(row.DuplicateOfObservationId, nameof(PendingCorrelationRow.DuplicateOfObservationId))
             })
             .ToList();
+    }
+
+    private static SqliteCommand CreateCorrelationCompletionCommand(
+        SecurityObservationEvent observation,
+        SqliteConnection connection,
+        SqliteTransaction? transaction)
+    {
+        SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "UPDATE SecurityObservationEvents SET CorrelationGroupId = $correlationGroupId, IsCrossSourceDuplicate = $isDuplicate, DuplicateOfObservationId = $duplicateOfId, CorrelationProcessed = 1 WHERE Id = $id";
+        command.Parameters.AddWithValue("$correlationGroupId", observation.CorrelationGroupId?.ToString("D") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$isDuplicate", observation.IsCrossSourceDuplicate ? 1 : 0);
+        command.Parameters.AddWithValue("$duplicateOfId", observation.DuplicateOfObservationId?.ToString("D") ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("$id", observation.Id.ToString("D"));
+        return command;
+    }
+
+    private static Guid ParseRequiredGuid(string value, string fieldName)
+    {
+        if (Guid.TryParse(value, out Guid result))
+        {
+            return result;
+        }
+
+        throw new InvalidDataException($"待處理安全性觀察事件的 {fieldName} 欄位不是有效 GUID。");
+    }
+
+    private static Guid? ParseOptionalGuid(string? value, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return ParseRequiredGuid(value, fieldName);
+    }
+
+    private static DateTimeOffset ParseRequiredTimestamp(string value, string fieldName)
+    {
+        if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset result))
+        {
+            return result;
+        }
+
+        throw new InvalidDataException($"待處理安全性觀察事件的 {fieldName} 欄位不是有效時間戳記。");
     }
 
     private sealed class PendingCorrelationRow

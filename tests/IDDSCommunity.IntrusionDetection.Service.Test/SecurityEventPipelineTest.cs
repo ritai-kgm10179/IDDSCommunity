@@ -144,6 +144,77 @@ public sealed class SecurityEventPipelineTest
         SecurityObservationStore.UpdateCorrelationMetadata(pending, database);
         Assert.AreEqual(0, SecurityObservationStore.LoadPendingCorrelationObservations(database).Count);
     }
+
+    /// <summary>
+    /// 驗證 Outbox 寫入失敗時，關聯完成旗標會與告警寫入一併回復，不得留下永久遺失告警的完成狀態。
+    /// </summary>
+    [TestMethod]
+    public void CompleteCorrelationAndEnqueueAlert_WhenOutboxInsertFails_RollsBackCompletion()
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        SecurityObservationEvent observation = new()
+        {
+            SourceAgentName = "WindowsNetworkLogon",
+            ProviderOrChannel = "Security",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 4625999,
+            NormalizedIpAddress = "192.0.2.99",
+            NormalizedAccount = "ALICE",
+            EventTimeUtc = now,
+            ReceivedTimeUtc = now
+        };
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        engine.PrepareObservation(observation);
+        SecurityObservationStore.PersistObservationAndWatermark(observation, database);
+        database.ExecuteNonQuery(
+            "CREATE TRIGGER RejectTestAlert BEFORE INSERT ON ObservationAlertOutbox BEGIN SELECT RAISE(ABORT, 'injected outbox failure'); END");
+
+        Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() =>
+            SecurityObservationStore.CompleteCorrelationAndEnqueueAlert(
+                observation,
+                "TEST-ROLLBACK-ALERT",
+                "CrossAgentSprayDetected",
+                "AlertOnly",
+                observation.SourceAgentName,
+                observation.NormalizedIpAddress,
+                "測試交易回復",
+                database));
+
+        Assert.AreEqual(
+            0L,
+            Convert.ToInt64(database.ExecuteScalar("SELECT CorrelationProcessed FROM SecurityObservationEvents WHERE Id = @p0", observation.Id.ToString("D"))));
+        Assert.AreEqual(0L, Convert.ToInt64(database.ExecuteScalar("SELECT COUNT(*) FROM ObservationAlertOutbox")));
+    }
+
+    /// <summary>
+    /// 驗證待處理事件的必要識別碼損壞時會明確拒絕載入，不得以隨機識別碼掩蓋資料完整性問題。
+    /// </summary>
+    [TestMethod]
+    public void LoadPendingCorrelationObservations_WhenIdentifierIsCorrupt_ThrowsInvalidDataException()
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        SecurityObservationEvent observation = new()
+        {
+            SourceAgentName = "KerberosSecurityAgent",
+            ProviderOrChannel = "Security",
+            ComputerName = "DC01",
+            SourceEventRecordId = 4771999,
+            NormalizedIpAddress = "192.0.2.100",
+            NormalizedAccount = "ALICE",
+            EventTimeUtc = now,
+            ReceivedTimeUtc = now
+        };
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        engine.PrepareObservation(observation);
+        SecurityObservationStore.PersistObservationAndWatermark(observation, database);
+        database.ExecuteNonQuery(
+            "UPDATE SecurityObservationEvents SET Id = @p0 WHERE Id = @p1",
+            "not-a-guid",
+            observation.Id.ToString("D"));
+
+        Assert.ThrowsExactly<InvalidDataException>(() => SecurityObservationStore.LoadPendingCorrelationObservations(database));
+    }
+
     /// <summary>
     /// 為每個管線測試建立隔離的持久化收件匣。
     /// </summary>

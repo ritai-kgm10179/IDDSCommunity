@@ -184,11 +184,19 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         {
             foreach (KeyValuePair<TKey, BucketState> pair in buckets)
             {
-                PruneExpiredItems(pair.Value, cutoff);
-
-                if (pair.Value.Items.Count > 0)
+                lock (pair.Value.SyncRoot)
                 {
-                    result[pair.Key] = pair.Value.Items.Count;
+                    if (!buckets.TryGetValue(pair.Key, out BucketState? current) || !ReferenceEquals(pair.Value, current))
+                    {
+                        continue;
+                    }
+
+                    PruneExpiredItems(pair.Value, cutoff);
+
+                    if (pair.Value.Items.Count > 0)
+                    {
+                        result[pair.Key] = pair.Value.Items.Count;
+                    }
                 }
             }
         }
@@ -207,11 +215,19 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         {
             foreach (KeyValuePair<TKey, BucketState> pair in buckets.ToArray())
             {
-                PruneExpiredItems(pair.Value, effectiveCutoff);
-
-                if (pair.Value.Items.Count == 0 && pair.Value.LastActivityUtc < effectiveCutoff)
+                lock (pair.Value.SyncRoot)
                 {
-                    buckets.TryRemove(pair);
+                    if (!buckets.TryGetValue(pair.Key, out BucketState? current) || !ReferenceEquals(pair.Value, current))
+                    {
+                        continue;
+                    }
+
+                    PruneExpiredItems(pair.Value, effectiveCutoff);
+
+                    if (pair.Value.Items.Count == 0 && pair.Value.LastActivityUtc < effectiveCutoff)
+                    {
+                        buckets.TryRemove(pair);
+                    }
                 }
             }
         }
@@ -232,10 +248,22 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
 
     private void EvictLeastRecentlyUsedKey()
     {
-        KeyValuePair<TKey, BucketState>? victim = buckets
-            .OrderBy(static pair => pair.Value.LastActivityUtc)
-            .Cast<KeyValuePair<TKey, BucketState>?>()
-            .FirstOrDefault();
+        KeyValuePair<TKey, BucketState>? victim = null;
+        DateTimeOffset oldestActivity = DateTimeOffset.MaxValue;
+        foreach (KeyValuePair<TKey, BucketState> pair in buckets)
+        {
+            lock (pair.Value.SyncRoot)
+            {
+                if (buckets.TryGetValue(pair.Key, out BucketState? current)
+                    && ReferenceEquals(pair.Value, current)
+                    && pair.Value.LastActivityUtc < oldestActivity)
+                {
+                    victim = pair;
+                    oldestActivity = pair.Value.LastActivityUtc;
+                }
+            }
+        }
+
         if (!victim.HasValue)
         {
             return;
