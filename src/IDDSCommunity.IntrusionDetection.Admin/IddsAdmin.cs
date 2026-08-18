@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// IDDS 社群版主管理主控台視窗。
+/// </summary>
 public partial class IddsAdmin : Form
 {
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
@@ -70,7 +73,10 @@ public partial class IddsAdmin : Form
     }
 
     private static IddsAdmin? _instance;
-    public static IddsAdmin Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static IddsAdmin Instance
     {
         get
         {
@@ -83,7 +89,10 @@ public partial class IddsAdmin : Form
     }
 
 
-    public IDDSCommunityApplicationSettings PanelApplicationSettings
+        /// <summary>
+    /// 取得或設定 PanelApplicationSettings。
+    /// </summary>
+public IDDSCommunityApplicationSettings PanelApplicationSettings
     {
         get
         {
@@ -107,7 +116,10 @@ public partial class IddsAdmin : Form
     /// <param name="e">事件資料。</param>
     async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
-    public IDDSCommunityAgentConfiguration PanelAgentConfiguration
+        /// <summary>
+    /// 取得或設定 PanelAgentConfiguration。
+    /// </summary>
+public IDDSCommunityAgentConfiguration PanelAgentConfiguration
     {
         get
         {
@@ -180,7 +192,10 @@ public partial class IddsAdmin : Form
         }
     }
 
-    public IDDSCommunitySecurityLog PanelSecurityLog
+        /// <summary>
+    /// 取得或設定 PanelSecurityLog。
+    /// </summary>
+public IDDSCommunitySecurityLog PanelSecurityLog
     {
         get
         {
@@ -204,7 +219,7 @@ public partial class IddsAdmin : Form
         }
     }
     /// <summary>
-    /// 以背景快照模式非同步載入安全性記錄面板的初始資料，並透過 <see cref="Control.InvokeAsync"/>
+    /// 以背景快照模式非同步載入安全性記錄面板的初始資料，並透過 <c>Control.InvokeAsync</c>
     /// 將結果套用回 UI 執行緒，避免 <see cref="PanelSecurityLog"/> 首次存取時同步阻塞呼叫端。
     /// </summary>
     /// <returns>表示非同步工作完成的 Task。</returns>
@@ -258,7 +273,10 @@ public partial class IddsAdmin : Form
     {
     }
 
-    public IDDSCommunityCurrentLocks PanelCurrentLocks
+        /// <summary>
+    /// 取得或設定 PanelCurrentLocks。
+    /// </summary>
+public IDDSCommunityCurrentLocks PanelCurrentLocks
     {
         get
         {
@@ -274,7 +292,10 @@ public partial class IddsAdmin : Form
         }
     }
 
-    public IDDSCommunityDashboard Dashboard
+        /// <summary>
+    /// 取得或設定 Dashboard。
+    /// </summary>
+public IDDSCommunityDashboard Dashboard
     {
         get
         {
@@ -307,7 +328,10 @@ public partial class IddsAdmin : Form
         }
     }
 
-    public bool IsServiceRunning { get; set; }
+        /// <summary>
+    /// 取得或設定 IsServiceRunning。
+    /// </summary>
+public bool IsServiceRunning { get; set; }
     /// <summary>
     /// 處理 tick 事件。
     /// </summary>
@@ -344,7 +368,10 @@ public partial class IddsAdmin : Form
     }
 
 
-    public bool ServiceError { get; set; }
+        /// <summary>
+    /// 取得或設定 ServiceError。
+    /// </summary>
+public bool ServiceError { get; set; }
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
     /// </summary>
@@ -464,7 +491,10 @@ public partial class IddsAdmin : Form
         }
     }
 
-    public bool IsUpdating { get; set; }
+        /// <summary>
+    /// 取得或設定 IsUpdating。
+    /// </summary>
+public bool IsUpdating { get; set; }
     /// <summary>
     /// Gets log message.
     /// </summary>
@@ -649,14 +679,32 @@ public partial class IddsAdmin : Form
         }
     }
 
-    private enum AdminRefreshMode { None, SecurityLog, CurrentLocks, Dashboard }
+    private enum AdminRefreshMode { /// <summary>
+/// 定義 None 列舉值。
+/// </summary>
+None, /// <summary>
+/// 定義 SecurityLog 列舉值。
+/// </summary>
+SecurityLog, /// <summary>
+/// 定義 CurrentLocks 列舉值。
+/// </summary>
+CurrentLocks, /// <summary>
+/// 定義 Dashboard 列舉值。
+/// </summary>
+Dashboard }
     private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message, int NumberOfEvents);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
     private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks);
 
-    public int LastLogId { get; set; }
+        /// <summary>
+    /// 取得或設定 LastLogId。
+    /// </summary>
+public int LastLogId { get; set; }
 
-    public DateTime LastLockUpdate { get; set; }
+        /// <summary>
+    /// 取得或設定 LastLockUpdate。
+    /// </summary>
+public DateTime LastLockUpdate { get; set; }
     /// <summary>
     /// 處理 invalidated 事件。
     /// </summary>
@@ -692,8 +740,14 @@ public partial class IddsAdmin : Form
         MoveStartPoint = new Point(e.X, e.Y);
     }
 
-    public bool IsMoving { get; set; }
-    public Point MoveStartPoint { get; set; }
+        /// <summary>
+    /// 取得或設定 視窗是否正在拖曳移動中。
+    /// </summary>
+public bool IsMoving { get; set; }
+        /// <summary>
+    /// 取得或設定 視窗拖曳起始座標點。
+    /// </summary>
+public Point MoveStartPoint { get; set; }
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -754,7 +808,10 @@ public partial class IddsAdmin : Form
 
     }
 
-    public SmartLabel? CurrentMenu { get; set; }
+        /// <summary>
+    /// 取得或設定 CurrentMenu。
+    /// </summary>
+public SmartLabel? CurrentMenu { get; set; }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -986,7 +1043,10 @@ public partial class IddsAdmin : Form
 
     }
 
-    public bool IsInitialized { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInitialized。
+    /// </summary>
+public bool IsInitialized { get; set; }
 
     /// <summary>
     /// Writes entry.
@@ -1031,11 +1091,26 @@ public partial class IddsAdmin : Form
 
     enum ResizeDirection
     {
-        None = 0,
-        Top = 1,
-        Right = 2,
-        Bottom = 4,
-        Left = 8
+                /// <summary>
+        /// 定義 None 列舉值。
+        /// </summary>
+None = 0,
+                /// <summary>
+        /// 定義 Top 列舉值。
+        /// </summary>
+Top = 1,
+                /// <summary>
+        /// 定義 Right 列舉值。
+        /// </summary>
+Right = 2,
+                /// <summary>
+        /// 定義 Bottom 列舉值。
+        /// </summary>
+Bottom = 4,
+                /// <summary>
+        /// 定義 Left 列舉值。
+        /// </summary>
+Left = 8
     }
 
 

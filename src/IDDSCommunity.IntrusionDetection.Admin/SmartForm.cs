@@ -4,6 +4,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供具備現代化無邊框設計、拖曳移動與陰影效果之自訂基礎表單。
+/// </summary>
 public partial class SmartForm : Form
 {
 
@@ -40,8 +43,14 @@ public partial class SmartForm : Form
         MoveStartPoint = new Point(e.X, e.Y);
     }
 
-    public bool IsMoving { get; set; }
-    public Point MoveStartPoint { get; set; }
+        /// <summary>
+    /// 取得或設定 視窗是否正在拖曳移動中。
+    /// </summary>
+public bool IsMoving { get; set; }
+        /// <summary>
+    /// 取得或設定 視窗拖曳起始座標點。
+    /// </summary>
+public Point MoveStartPoint { get; set; }
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -75,7 +84,10 @@ public partial class SmartForm : Form
     /// <param name="e">事件資料。</param>
     private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(pictureBox1.Location));
 
-    public event EventHandler? HelpClicked;
+        /// <summary>
+    /// 當 說明按鈕點擊事件 時引發之事件。
+    /// </summary>
+public event EventHandler? HelpClicked;
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -113,20 +125,45 @@ public partial class SmartForm : Form
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     private struct POINT
     {
-        public int x;
-        public int y;
+                /// <summary>
+        /// 定義 x 之數值。
+        /// </summary>
+public int x;
+                /// <summary>
+        /// 定義 y 之數值。
+        /// </summary>
+public int y;
     }
 
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     private struct MINMAXINFO
     {
-        public POINT ptReserved;
-        public POINT ptMaxSize;
-        public POINT ptMaxPosition;
-        public POINT ptMinTrackSize;
-        public POINT ptMaxTrackSize;
+                /// <summary>
+        /// 定義 ptReserved 之數值。
+        /// </summary>
+public POINT ptReserved;
+                /// <summary>
+        /// 定義 ptMaxSize 之數值。
+        /// </summary>
+public POINT ptMaxSize;
+                /// <summary>
+        /// 定義 ptMaxPosition 之數值。
+        /// </summary>
+public POINT ptMaxPosition;
+                /// <summary>
+        /// 定義 ptMinTrackSize 之數值。
+        /// </summary>
+public POINT ptMinTrackSize;
+                /// <summary>
+        /// 定義 ptMaxTrackSize 之數值。
+        /// </summary>
+public POINT ptMaxTrackSize;
     }
 
+    /// <summary>
+    /// 處理視窗訊息以支援自訂最大化範圍與無邊框拖曳。
+    /// </summary>
+        /// <param name="m">Windows 視窗訊息。</param>
     protected override void WndProc(ref Message m)
     {
         if (m.Msg == WM_GETMINMAXINFO && m.LParam != IntPtr.Zero)
@@ -199,11 +236,26 @@ public partial class SmartForm : Form
 
     enum ResizeDirection
     {
-        None,
-        Top,
-        Right,
-        Bottom,
-        Left
+                /// <summary>
+        /// 定義 None 列舉值。
+        /// </summary>
+None,
+                /// <summary>
+        /// 定義 Top 列舉值。
+        /// </summary>
+Top,
+                /// <summary>
+        /// 定義 Right 列舉值。
+        /// </summary>
+Right,
+                /// <summary>
+        /// 定義 Bottom 列舉值。
+        /// </summary>
+Bottom,
+                /// <summary>
+        /// 定義 Left 列舉值。
+        /// </summary>
+Left
     }
     /// <summary>
     /// 處理 mouse down 事件。

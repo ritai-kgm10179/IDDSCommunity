@@ -6,13 +6,19 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 顯示個別安全性代理程式基本資訊與狀態之單元控制項。
+/// </summary>
 public partial class PluginItem : UserControl
 {
     private string? renderedDisplayName;
     private bool? renderedEnabled;
     private bool iconInitialized;
 
-    public event EventHandler? SecurityAgentConfigurationRequest;
+        /// <summary>
+    /// 當 SecurityAgentConfigurationRequest 時引發之事件。
+    /// </summary>
+public event EventHandler? SecurityAgentConfigurationRequest;
     /// <summary>
     /// 初始化 <see cref="PluginItem"/> 類別的新執行個體。
     /// </summary>
@@ -46,7 +52,10 @@ public partial class PluginItem : UserControl
     public void SetFailedLogins(int failedLogins) => labelFailedLoginsValue.Text = failedLogins.ToString();
 
     private SecurityAgent? _securityAgent;
-    public SecurityAgent SecurityAgent
+        /// <summary>
+    /// 取得或設定 SecurityAgent。
+    /// </summary>
+public SecurityAgent SecurityAgent
     {
         get => _securityAgent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set

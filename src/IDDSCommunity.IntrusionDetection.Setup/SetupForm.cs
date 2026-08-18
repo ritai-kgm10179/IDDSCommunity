@@ -95,6 +95,10 @@ internal sealed class SetupForm : Form
         RefreshLocalizedText();
     }
 
+    /// <summary>
+    /// 處理表單關閉事件，若有進行中的安裝作業則請求取消。
+    /// </summary>
+    /// <param name="e">表單關閉事件引數。</param>
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         if (operationActive)

@@ -6,6 +6,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 應用程式啟動畫面表單，顯示版本與載入進度。
+/// </summary>
 public partial class SplashScreen : Form
 {
 

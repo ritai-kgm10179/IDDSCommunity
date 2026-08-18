@@ -32,11 +32,13 @@ internal sealed class SecurityEventPipeline
     private long queueDepth;
     private int accepting = 1;
     /// <summary>
-    /// Initializes and starts one bounded security-event consumer.
+    /// 初始化並啟動具備界限的安全性事件處理管線。
     /// </summary>
-    /// <param name="capacity">The maximum number of queued security events.</param>
-    /// <param name="process">The synchronous protection operation executed by the dedicated consumer.</param>
-    /// <param name="reportFailure">The isolated failure observer.</param>
+    /// <param name="capacity">佇列最大容量上限。</param>
+    /// <param name="process">由專屬取用端執行之保護作業委派。</param>
+    /// <param name="reportFailure">錯誤回報觀察委派。</param>
+    /// <param name="inbox">安全性事件持久化收件匣。</param>
+    /// <param name="resolveAgent">代理程式執行個體解析函式。</param>
     internal SecurityEventPipeline(
         int capacity,
         Action<object, INotificationEventArgs> process,

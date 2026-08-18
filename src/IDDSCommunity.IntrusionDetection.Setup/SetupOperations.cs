@@ -321,6 +321,9 @@ internal static class SetupOperations
     /// </summary>
     /// <param name="desktopShortcut">是否建立桌面捷徑。</param>
     /// <param name="startMenuShortcut">是否建立開始功能表捷徑。</param>
+    /// <param name="progress">安裝進度回報介面。</param>
+    /// <param name="cancellationToken">取消語彙基元。</param>
+    /// <returns>傳回安裝作業結果。</returns>
     internal static SetupOperationResult Install(
         bool desktopShortcut = true,
         bool startMenuShortcut = true,

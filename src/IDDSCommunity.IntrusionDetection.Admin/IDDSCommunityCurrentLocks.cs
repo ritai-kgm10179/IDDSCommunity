@@ -8,6 +8,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供目前已封鎖 IP 清單檢視與手動解除封鎖功能之使用者控制項。
+/// </summary>
 public partial class IDDSCommunityCurrentLocks : UserControl
 {
     /// <summary>

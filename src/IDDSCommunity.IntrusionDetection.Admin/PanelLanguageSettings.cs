@@ -89,6 +89,10 @@ public sealed class PanelLanguageSettings : UserControl
 
     private sealed record LanguageOption(string Value, string DisplayName)
     {
+        /// <summary>
+        /// 傳回語言選項之本地化顯示名稱。
+        /// </summary>
+            /// <returns>語言顯示名稱字串。</returns>
         public override string ToString() => DisplayName;
     }
 }

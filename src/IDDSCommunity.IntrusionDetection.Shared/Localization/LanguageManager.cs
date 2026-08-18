@@ -6,24 +6,48 @@ using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Localization;
 
+/// <summary>
+/// 定義系統支援之使用者介面語言文化特性列舉。
+/// </summary>
 public enum SupportedLanguage
 {
-    Auto,
-    English,
-    TraditionalChinese
+        /// <summary>
+    /// 定義 Auto 列舉值。
+    /// </summary>
+Auto,
+        /// <summary>
+    /// 定義 English 列舉值。
+    /// </summary>
+English,
+        /// <summary>
+    /// 定義 TraditionalChinese 列舉值。
+    /// </summary>
+TraditionalChinese
 }
 
+/// <summary>
+/// 提供多國語系文化切換、資源字串載入與預設回退管理服務。
+/// </summary>
 public sealed class LanguageManager
 {
-    public const string DEFAULT_CULTURE = "en-US";
-    public const string TRADITIONAL_CHINESE_CULTURE = "zh-TW";
+        /// <summary>
+    /// 定義 DEFAULT_CULTURE 之數值。
+    /// </summary>
+public const string DEFAULT_CULTURE = "en-US";
+        /// <summary>
+    /// 定義 TRADITIONAL_CHINESE_CULTURE 之數值。
+    /// </summary>
+public const string TRADITIONAL_CHINESE_CULTURE = "zh-TW";
 
     private readonly ConcurrentDictionary<string, ResourceManager> _resourceManagers = new();
     private CultureInfo _currentCulture = new(DEFAULT_CULTURE);
     private readonly Lock _lock = new();
 
     private static readonly Lazy<LanguageManager> LazyInstance = new(() => new LanguageManager(), true);
-    public static LanguageManager Instance => LazyInstance.Value;
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static LanguageManager Instance => LazyInstance.Value;
     /// <summary>
     /// 初始化 <see cref="LanguageManager"/> class的新執行個體。
     /// </summary>
@@ -33,7 +57,10 @@ public sealed class LanguageManager
         Initialize("auto");
     }
 
-    public CultureInfo CurrentCulture => _currentCulture;
+        /// <summary>
+    /// 取得或設定 CurrentCulture。
+    /// </summary>
+public CultureInfo CurrentCulture => _currentCulture;
     /// <summary>
     /// 執行register resource manager作業。
     /// </summary>

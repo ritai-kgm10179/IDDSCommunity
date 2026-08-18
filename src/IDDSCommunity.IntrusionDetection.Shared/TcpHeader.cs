@@ -3,6 +3,9 @@ using System.Buffers.Binary;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供未經解密之原始 TCP 封包標頭解析與序列號、旗標提取。
+/// </summary>
 public class TCPHeader
 {
     private ushort sourcePort;
@@ -66,18 +69,42 @@ public class TCPHeader
     /// </summary>
     public ushort DestinationPortValue => destinationPort;
 
-    public string SourcePort => sourcePort.ToString();
-    public string DestinationPort => destinationPort.ToString();
-    public string SequenceNumber => sequenceNumber.ToString();
+        /// <summary>
+    /// 取得或設定 來源連接埠號。
+    /// </summary>
+public string SourcePort => sourcePort.ToString();
+        /// <summary>
+    /// 取得或設定 目的連接埠號。
+    /// </summary>
+public string DestinationPort => destinationPort.ToString();
+        /// <summary>
+    /// 取得或設定 TCP 封包序號。
+    /// </summary>
+public string SequenceNumber => sequenceNumber.ToString();
 
-    public string AcknowledgementNumber => (dataOffsetAndFlags & 0x10) != 0 ? acknowledgementNumber.ToString() : string.Empty;
+        /// <summary>
+    /// 取得或設定 TCP 確認序號。
+    /// </summary>
+public string AcknowledgementNumber => (dataOffsetAndFlags & 0x10) != 0 ? acknowledgementNumber.ToString() : string.Empty;
 
-    public string HeaderLength => headerLength.ToString();
-    public string WindowSize => window.ToString();
+        /// <summary>
+    /// 取得或設定 標頭長度。
+    /// </summary>
+public string HeaderLength => headerLength.ToString();
+        /// <summary>
+    /// 取得或設定 視窗大小。
+    /// </summary>
+public string WindowSize => window.ToString();
 
-    public string UrgentPointer => (dataOffsetAndFlags & 0x20) != 0 ? urgentPointer.ToString() : string.Empty;
+        /// <summary>
+    /// 取得或設定 緊急指標。
+    /// </summary>
+public string UrgentPointer => (dataOffsetAndFlags & 0x20) != 0 ? urgentPointer.ToString() : string.Empty;
 
-    public string Flags
+        /// <summary>
+    /// 取得或設定 TCP 控制旗標。
+    /// </summary>
+public string Flags
     {
         get
         {
@@ -95,9 +122,18 @@ public class TCPHeader
         }
     }
 
-    public string Checksum => $"0x{checksum:x2}";
-    public byte[] Data => materializedPayload ??= payload.ToArray();
-    public ushort MessageLength => (ushort)payload.Length;
+        /// <summary>
+    /// 取得或設定 同位檢查碼。
+    /// </summary>
+public string Checksum => $"0x{checksum:x2}";
+        /// <summary>
+    /// 取得或設定 承載資料位元組陣列。
+    /// </summary>
+public byte[] Data => materializedPayload ??= payload.ToArray();
+        /// <summary>
+    /// 取得或設定 訊息資料長度。
+    /// </summary>
+public ushort MessageLength => (ushort)payload.Length;
 
     private bool TryInitialize(byte[] buffer, int received)
     {

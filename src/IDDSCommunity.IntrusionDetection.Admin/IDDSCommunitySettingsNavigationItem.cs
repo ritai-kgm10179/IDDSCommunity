@@ -4,22 +4,40 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 代表設定功能導覽項目之單元控制項。
+/// </summary>
 public partial class IDDSCommunitySettingsNavigationItem : UserControl
 {
 
-    public event EventHandler? NavigationClicked;
+        /// <summary>
+    /// 當 NavigationClicked 時引發之事件。
+    /// </summary>
+public event EventHandler? NavigationClicked;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
     public IDDSCommunitySettingsNavigationItem() => InitializeComponent();
 
-    public bool IsSelected { get; set; }
+        /// <summary>
+    /// 取得或設定 IsSelected。
+    /// </summary>
+public bool IsSelected { get; set; }
 
-    public Image? SelectedIcon { get; set; }
+        /// <summary>
+    /// 取得或設定 SelectedIcon。
+    /// </summary>
+public Image? SelectedIcon { get; set; }
 
-    public Image? UnselectedIcon { get; set; }
+        /// <summary>
+    /// 取得或設定 UnselectedIcon。
+    /// </summary>
+public Image? UnselectedIcon { get; set; }
 
-    public string DisplayName
+        /// <summary>
+    /// 取得或設定 本地化顯示名稱。
+    /// </summary>
+public string DisplayName
     {
         get => smartLabelAgentName.Text; set => smartLabelAgentName.Text = value;
     }

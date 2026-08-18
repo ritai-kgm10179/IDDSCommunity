@@ -5,6 +5,9 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.Agents.WindowsDns;
 
+/// <summary>
+/// 監控 Windows DNS Server 分析與稽核事件以偵測異常客戶端查詢之安全代理程式。
+/// </summary>
 [Plugin("Windows DNS Security Agent", "Detects abusive Windows DNS Server clients from official analytical and audit events.", "1.0")]
 public sealed class WindowsDnsSecurityAgent : AgentPlugin, IExtendedInformation
 {

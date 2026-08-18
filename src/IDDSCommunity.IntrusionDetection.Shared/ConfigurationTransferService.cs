@@ -13,6 +13,9 @@ using Microsoft.Data.Sqlite;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供系統設定套件匯出、匯入、加密驗證與預覽服務。
+/// </summary>
 public sealed class ConfigurationTransferService
 {
     private const int MaximumPackageBytes = 4 * 1024 * 1024;
@@ -29,8 +32,18 @@ public sealed class ConfigurationTransferService
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = false };
     private readonly Database database;
 
+    /// <summary>
+    /// 初始化 <see cref="ConfigurationTransferService"/> 類別之新執行個體。
+    /// </summary>
+    /// <param name="database">資料庫服務執行個體。</param>
     public ConfigurationTransferService(Database database) => this.database = database ?? throw new ArgumentNullException(nameof(database));
 
+    /// <summary>
+    /// 匯出目前系統設定為資料傳輸套件物件。
+    /// </summary>
+        /// <param name="includeSecrets">是否包含加密保護之機密資料。</param>
+        /// <param name="passphrase">用於衍生加密金鑰之密碼短語。</param>
+        /// <returns>匯出之設定傳輸套件執行個體。</returns>
     public ConfigurationTransferPackage Export(bool includeSecrets = false, string? passphrase = null)
     {
         EnsureConfigured();
@@ -76,6 +89,12 @@ public sealed class ConfigurationTransferService
         return package;
     }
 
+    /// <summary>
+    /// 將目前系統設定匯出並寫入指定的 JSON 檔案路徑。
+    /// </summary>
+        /// <param name="path">目標檔案路徑。</param>
+        /// <param name="includeSecrets">是否包含加密保護之機密資料。</param>
+        /// <param name="passphrase">用於衍生加密金鑰之密碼短語。</param>
     public void ExportToFile(string path, bool includeSecrets = false, string? passphrase = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -90,6 +109,12 @@ public sealed class ConfigurationTransferService
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
     }
 
+    /// <summary>
+    /// 從指定檔案讀取並驗證結構完整性之設定傳輸套件。
+    /// </summary>
+        /// <param name="path">來源檔案路徑。</param>
+        /// <returns>解析後的設定傳輸套件。</returns>
+        /// <exception cref="InvalidDataException">當檔案格式或內容不合法時拋出。</exception>
     public ConfigurationTransferPackage ReadPackage(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -101,6 +126,11 @@ public sealed class ConfigurationTransferService
         return package;
     }
 
+    /// <summary>
+    /// 預覽設定傳輸套件內容以供使用者確認。
+    /// </summary>
+        /// <param name="package">欲預覽之設定傳輸套件。</param>
+        /// <returns>匯入預覽資訊。</returns>
     public ConfigurationImportPreview Preview(ConfigurationTransferPackage package)
     {
         EnsureConfigured();
@@ -110,6 +140,13 @@ public sealed class ConfigurationTransferService
         return new ConfigurationImportPreview(package.Agents.Count, package.SafeNetworks.Count, package.ApplicationSettings.Count, package.Secrets is not null, unknown);
     }
 
+    /// <summary>
+    /// 從指定的設定檔案匯入組態，自動建立安全備份並於交易中套用。
+    /// </summary>
+        /// <param name="path">來源檔案路徑。</param>
+        /// <param name="backupDirectory">安全備份目錄。</param>
+        /// <param name="passphrase">用於解密機密資料之密碼短語。</param>
+        /// <returns>匯入執行結果。</returns>
     public ConfigurationImportResult ImportFromFile(string path, string backupDirectory, string? passphrase = null)
     {
         ConfigurationTransferPackage package = ReadPackage(path);
@@ -298,8 +335,98 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
     private static FileNotFoundException MissingFile(string path) => new("Configuration package was not found.", path);
     private static InvalidDataException Invalid(string message, Exception? inner = null) => new(message, inner);
     private static InvalidOperationException InvalidOperation(string message) => new(message);
-    private sealed class ConfigurationRow { public int HardLockAttempts { get; init; } public int HardLockTimeHours { get; init; } public bool LockForever { get; init; } public int SoftLockAttempts { get; init; } public int SoftLockTimeMinutes { get; init; } public bool UseSafeNetworkList { get; init; } public bool SendInfoMail { get; init; } public int SmtpPort { get; init; } public string? SenderEmailAddress { get; init; } public bool SmtpRequiresAuthentication { get; init; } public string? NotificationEmailAddress { get; init; } public string? SmtpServer { get; init; } public string? SmtpUsername { get; init; } public string? SmtpPassword { get; init; } public bool SmtpSslRequired { get; init; } }
-    private sealed class KeyValueRow { public string ConfigKey { get; init; } = string.Empty; public string? ConfigValue { get; init; } }
-    private sealed class NetworkRow { public string IpAddress { get; init; } = string.Empty; public string NetworkMask { get; init; } = string.Empty; }
-    private sealed class AgentRow { public string AgentId { get; init; } = string.Empty; public string Name { get; init; } = string.Empty; public string? AssemblyName { get; init; } public int HardLockAttempts { get; init; } public int HardLockTimeHours { get; init; } public bool LockForever { get; init; } public int SoftLockAttempts { get; init; } public int SoftLockTimeMinutes { get; init; } public bool OverwriteConfiguration { get; init; } public string DisplayName { get; init; } = string.Empty; public bool Enabled { get; init; } }
+    private sealed class ConfigurationRow { /// <summary>
+/// 取得或設定 硬封鎖失敗次數門檻。
+/// </summary>
+public int HardLockAttempts { get; init; } /// <summary>
+/// 取得或設定 硬封鎖持續時數。
+/// </summary>
+public int HardLockTimeHours { get; init; } /// <summary>
+/// 取得或設定 是否永久封鎖。
+/// </summary>
+public bool LockForever { get; init; } /// <summary>
+/// 取得或設定 軟封鎖失敗次數門檻。
+/// </summary>
+public int SoftLockAttempts { get; init; } /// <summary>
+/// 取得或設定 軟封鎖持續分鐘數。
+/// </summary>
+public int SoftLockTimeMinutes { get; init; } /// <summary>
+/// 取得或設定 是否使用安全網路清單。
+/// </summary>
+public bool UseSafeNetworkList { get; init; } /// <summary>
+/// 取得或設定 SendInfoMail。
+/// </summary>
+public bool SendInfoMail { get; init; } /// <summary>
+/// 取得或設定 SMTP 連接埠。
+/// </summary>
+public int SmtpPort { get; init; } /// <summary>
+/// 取得或設定 寄件者電子郵件地址。
+/// </summary>
+public string? SenderEmailAddress { get; init; } /// <summary>
+/// 取得或設定 SmtpRequiresAuthentication。
+/// </summary>
+public bool SmtpRequiresAuthentication { get; init; } /// <summary>
+/// 取得或設定 通知收件者電子郵件地址。
+/// </summary>
+public string? NotificationEmailAddress { get; init; } /// <summary>
+/// 取得或設定 SMTP 伺服器位址。
+/// </summary>
+public string? SmtpServer { get; init; } /// <summary>
+/// 取得或設定 SMTP 帳號名稱。
+/// </summary>
+public string? SmtpUsername { get; init; } /// <summary>
+/// 取得或設定 SMTP 密碼。
+/// </summary>
+public string? SmtpPassword { get; init; } /// <summary>
+/// 取得或設定 SMTP 是否要求 SSL。
+/// </summary>
+public bool SmtpSslRequired { get; init; } }
+    private sealed class KeyValueRow { /// <summary>
+/// 取得或設定 ConfigKey。
+/// </summary>
+public string ConfigKey { get; init; } = string.Empty; /// <summary>
+/// 取得或設定 ConfigValue。
+/// </summary>
+public string? ConfigValue { get; init; } }
+    private sealed class NetworkRow { /// <summary>
+/// 取得或設定 IpAddress。
+/// </summary>
+public string IpAddress { get; init; } = string.Empty; /// <summary>
+/// 取得或設定 NetworkMask。
+/// </summary>
+public string NetworkMask { get; init; } = string.Empty; }
+    private sealed class AgentRow { /// <summary>
+/// 取得或設定 AgentId。
+/// </summary>
+public string AgentId { get; init; } = string.Empty; /// <summary>
+/// 取得或設定 Name。
+/// </summary>
+public string Name { get; init; } = string.Empty; /// <summary>
+/// 取得或設定 AssemblyName。
+/// </summary>
+public string? AssemblyName { get; init; } /// <summary>
+/// 取得或設定 硬封鎖失敗次數門檻。
+/// </summary>
+public int HardLockAttempts { get; init; } /// <summary>
+/// 取得或設定 硬封鎖持續時數。
+/// </summary>
+public int HardLockTimeHours { get; init; } /// <summary>
+/// 取得或設定 是否永久封鎖。
+/// </summary>
+public bool LockForever { get; init; } /// <summary>
+/// 取得或設定 軟封鎖失敗次數門檻。
+/// </summary>
+public int SoftLockAttempts { get; init; } /// <summary>
+/// 取得或設定 軟封鎖持續分鐘數。
+/// </summary>
+public int SoftLockTimeMinutes { get; init; } /// <summary>
+/// 取得或設定 OverwriteConfiguration。
+/// </summary>
+public bool OverwriteConfiguration { get; init; } /// <summary>
+/// 取得或設定 本地化顯示名稱。
+/// </summary>
+public string DisplayName { get; init; } = string.Empty; /// <summary>
+/// 取得或設定 是否已啟用。
+/// </summary>
+public bool Enabled { get; init; } }
 }

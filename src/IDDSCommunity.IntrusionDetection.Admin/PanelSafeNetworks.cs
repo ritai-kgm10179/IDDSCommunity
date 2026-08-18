@@ -7,10 +7,16 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供安全網路全域允許清單 (IP/CIDR) 維護之面板控制項。
+/// </summary>
 public partial class PanelSafeNetworks : UserControl
 {
 
-    public event EventHandler? SafeNetworksChanged;
+        /// <summary>
+    /// 當 SafeNetworksChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? SafeNetworksChanged;
     /// <summary>
     /// 初始化 <see cref="PanelSafeNetworks"/> 類別的新執行個體。
     /// </summary>
@@ -168,7 +174,10 @@ public partial class PanelSafeNetworks : UserControl
     /// </summary>
     private void OnSafeNetworksChanged() => SafeNetworksChanged?.Invoke(this, EventArgs.Empty);
 
-    public bool EditExisting { get; set; }
+        /// <summary>
+    /// 取得或設定 EditExisting。
+    /// </summary>
+public bool EditExisting { get; set; }
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
@@ -224,7 +233,10 @@ public partial class PanelSafeNetworks : UserControl
         ToggleEditMode();
     }
 
-    public bool IsInEditMode { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInEditMode。
+    /// </summary>
+public bool IsInEditMode { get; set; }
     /// <summary>
     /// 執行 toggle edit mode 作業。
     /// </summary>

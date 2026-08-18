@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Xml.Serialization;
 
@@ -53,9 +54,11 @@ public class ApiTest
             Prop2 = "Test2"
         };
         XmlSerializer xs = new(typeof(TestPluginConfig));
-        string outputPath = System.IO.Path.Combine(TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? System.AppDomain.CurrentDomain.BaseDirectory, "pluginsettings.xml");
+        string outputPath = System.IO.Path.Combine(TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? System.AppDomain.CurrentDomain.BaseDirectory, Guid.NewGuid().ToString("N") + "-pluginsettings.xml");
         using System.IO.StreamWriter sw = new(outputPath);
         xs.Serialize(sw, config);
+        sw.Close();
+        if (System.IO.File.Exists(outputPath)) System.IO.File.Delete(outputPath);
     }
 
 

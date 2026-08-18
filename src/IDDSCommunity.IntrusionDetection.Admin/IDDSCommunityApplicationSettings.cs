@@ -5,18 +5,48 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供應用程式全域設定（如語言、日誌與維護）之使用者控制項。
+/// </summary>
 public partial class IDDSCommunityApplicationSettings : UserControl
 {
 
-    public const string MENU_LOCK_OUT_CONFIGURATION = "Lock out configuration";
-    public const string MENU_SAFE_NETWORKS = "Safe networks";
-    public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
-    public const string MENU_SMTP_SETTINGS = "SMTP configuration";
-    public const string MENU_LANGUAGE_SETTINGS = "Language settings";
-    public const string MENU_DATABASE_MAINTENANCE = "Database maintenance";
-    public const string MENU_CONFIGURATION_TRANSFER = "Configuration import and export";
-    public const string MENU_REPORT_EXPORT = "Report export";
-    public event EventHandler? ConfigurationChanged;
+        /// <summary>
+    /// 定義 MENU_LOCK_OUT_CONFIGURATION 之數值。
+    /// </summary>
+public const string MENU_LOCK_OUT_CONFIGURATION = "Lock out configuration";
+        /// <summary>
+    /// 定義 MENU_SAFE_NETWORKS 之數值。
+    /// </summary>
+public const string MENU_SAFE_NETWORKS = "Safe networks";
+        /// <summary>
+    /// 定義 MENU_NOTIFICATION_SETTINGS 之數值。
+    /// </summary>
+public const string MENU_NOTIFICATION_SETTINGS = "Notification settings";
+        /// <summary>
+    /// 定義 MENU_SMTP_SETTINGS 之數值。
+    /// </summary>
+public const string MENU_SMTP_SETTINGS = "SMTP configuration";
+        /// <summary>
+    /// 定義 MENU_LANGUAGE_SETTINGS 之數值。
+    /// </summary>
+public const string MENU_LANGUAGE_SETTINGS = "Language settings";
+        /// <summary>
+    /// 定義 MENU_DATABASE_MAINTENANCE 之數值。
+    /// </summary>
+public const string MENU_DATABASE_MAINTENANCE = "Database maintenance";
+        /// <summary>
+    /// 定義 MENU_CONFIGURATION_TRANSFER 之數值。
+    /// </summary>
+public const string MENU_CONFIGURATION_TRANSFER = "Configuration import and export";
+        /// <summary>
+    /// 定義 MENU_REPORT_EXPORT 之數值。
+    /// </summary>
+public const string MENU_REPORT_EXPORT = "Report export";
+        /// <summary>
+    /// 當 ConfigurationChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? ConfigurationChanged;
 
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityApplicationSettings"/> 類別的新執行個體。
@@ -47,7 +77,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
 
     private PanelLockoutConfiguration? _lockoutConfiguration;
 
-    public PanelLockoutConfiguration LockoutConfiguration
+        /// <summary>
+    /// 取得或設定 LockoutConfiguration。
+    /// </summary>
+public PanelLockoutConfiguration LockoutConfiguration
     {
         get
         {
@@ -77,7 +110,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
 
 
     private PanelSafeNetworks? _panelSafeNetworks;
-    public PanelSafeNetworks PanelSafeNetworks
+        /// <summary>
+    /// 取得或設定 PanelSafeNetworks。
+    /// </summary>
+public PanelSafeNetworks PanelSafeNetworks
     {
         get
         {
@@ -101,7 +137,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     void _panelSafeNetworks_SafeNetworksChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelSmtpSettings? _panelSmtpSettings;
-    public PanelSmtpSettings PanelSmtpSettings
+        /// <summary>
+    /// 取得或設定 PanelSmtpSettings。
+    /// </summary>
+public PanelSmtpSettings PanelSmtpSettings
     {
         get
         {
@@ -131,10 +170,22 @@ public partial class IDDSCommunityApplicationSettings : UserControl
     private PanelConfigurationTransfer? _panelConfigurationTransfer;
     private PanelReportExport? _panelReportExport;
 
-    public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
-    public PanelDatabaseMaintenance PanelDatabaseMaintenance => _panelDatabaseMaintenance ??= CreateDatabaseMaintenancePanel();
-    public PanelConfigurationTransfer PanelConfigurationTransfer => _panelConfigurationTransfer ??= CreateConfigurationTransferPanel();
-    public PanelReportExport PanelReportExport => _panelReportExport ??= CreateReportExportPanel();
+        /// <summary>
+    /// 取得或設定 PanelLanguageSettings。
+    /// </summary>
+public PanelLanguageSettings PanelLanguageSettings => _panelLanguageSettings ??= CreateLanguageSettingsPanel();
+        /// <summary>
+    /// 取得或設定 PanelDatabaseMaintenance。
+    /// </summary>
+public PanelDatabaseMaintenance PanelDatabaseMaintenance => _panelDatabaseMaintenance ??= CreateDatabaseMaintenancePanel();
+        /// <summary>
+    /// 取得或設定 PanelConfigurationTransfer。
+    /// </summary>
+public PanelConfigurationTransfer PanelConfigurationTransfer => _panelConfigurationTransfer ??= CreateConfigurationTransferPanel();
+        /// <summary>
+    /// 取得或設定 PanelReportExport。
+    /// </summary>
+public PanelReportExport PanelReportExport => _panelReportExport ??= CreateReportExportPanel();
 
     private PanelReportExport CreateReportExportPanel()
     {
@@ -166,7 +217,10 @@ public partial class IDDSCommunityApplicationSettings : UserControl
         configurationPanel.Controls.Add(panel);
         return panel;
     }
-    public PanelNotificationSettings PanelNotificationSettings
+        /// <summary>
+    /// 取得或設定 PanelNotificationSettings。
+    /// </summary>
+public PanelNotificationSettings PanelNotificationSettings
     {
         get
         {

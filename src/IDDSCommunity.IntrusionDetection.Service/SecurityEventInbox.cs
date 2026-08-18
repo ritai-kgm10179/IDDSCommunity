@@ -118,13 +118,34 @@ internal sealed class SecurityEventInbox(Database database, TimeProvider timePro
 
     private sealed class SecurityEventInboxRow
     {
-        public string Id { get; init; } = string.Empty;
-        public string ReceivedUtc { get; init; } = string.Empty;
-        public string AgentName { get; init; } = string.Empty;
-        public string CreateDate { get; init; } = string.Empty;
-        public int EventId { get; init; }
-        public string IpAddress { get; init; } = string.Empty;
-        public string EventMessage { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Id。
+        /// </summary>
+public string Id { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 ReceivedUtc。
+        /// </summary>
+public string ReceivedUtc { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 AgentName。
+        /// </summary>
+public string AgentName { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 CreateDate。
+        /// </summary>
+public string CreateDate { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 EventId。
+        /// </summary>
+public int EventId { get; init; }
+                /// <summary>
+        /// 取得或設定 IpAddress。
+        /// </summary>
+public string IpAddress { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 EventMessage。
+        /// </summary>
+public string EventMessage { get; init; } = string.Empty;
 
         internal SecurityEventInboxItem ToItem() => new(
             Guid.Parse(Id),

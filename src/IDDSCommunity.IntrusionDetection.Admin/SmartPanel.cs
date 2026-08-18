@@ -3,6 +3,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供雙重緩衝繪圖以避免閃爍之自訂面板控制項。
+/// </summary>
 public class SmartPanel : Panel
 {
     /// <summary>
@@ -10,8 +13,14 @@ public class SmartPanel : Panel
     /// </summary>
     public SmartPanel() => BorderColor = ForeColor;
 
-    public Color BorderColor { get; set; }
-    public bool PaintBorder { get; set; }
+        /// <summary>
+    /// 取得或設定 外框繪製色彩。
+    /// </summary>
+public Color BorderColor { get; set; }
+        /// <summary>
+    /// 取得或設定 是否繪製自訂外框。
+    /// </summary>
+public bool PaintBorder { get; set; }
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>

@@ -6,11 +6,17 @@ using System.IO;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表安全性代理程式在資料庫中持久化之組態設定與中繼資料實體。
+/// </summary>
 [Serializable]
 public class SecurityAgent : IAgentFilter
 {
 
-    public event EventHandler? StatisticsUpdated;
+        /// <summary>
+    /// 當 StatisticsUpdated 時引發之事件。
+    /// </summary>
+public event EventHandler? StatisticsUpdated;
     /// <summary>
     /// 初始化 <see cref="SecurityAgent"/> class的新執行個體。
     /// </summary>
@@ -149,13 +155,28 @@ public class SecurityAgent : IAgentFilter
         }
     }
 
-    public string Name { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 Name。
+    /// </summary>
+public string Name { get; set; } = string.Empty;
 
-    public int FailedLogins { get; set; }
-    public int HardLocks { get; set; }
-    public int SoftLocks { get; set; }
+        /// <summary>
+    /// 取得或設定 FailedLogins。
+    /// </summary>
+public int FailedLogins { get; set; }
+        /// <summary>
+    /// 取得或設定 HardLocks。
+    /// </summary>
+public int HardLocks { get; set; }
+        /// <summary>
+    /// 取得或設定 SoftLocks。
+    /// </summary>
+public int SoftLocks { get; set; }
     private byte[] _selectedIcon = [];
-    public Image SelectedIcon
+        /// <summary>
+    /// 取得或設定 SelectedIcon。
+    /// </summary>
+public Image SelectedIcon
     {
         get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
     }
@@ -187,13 +208,19 @@ public class SecurityAgent : IAgentFilter
 
 
     private byte[] _unselectedIcon = [];
-    public Image UnselectedIcon
+        /// <summary>
+    /// 取得或設定 UnselectedIcon。
+    /// </summary>
+public Image UnselectedIcon
     {
         get => FromByte(_unselectedIcon); set => _unselectedIcon = FromImage(value);
     }
 
     private byte[] _icon = [];
-    public Image Icon
+        /// <summary>
+    /// 取得或設定 Icon。
+    /// </summary>
+public Image Icon
     {
         get => FromByte(_icon); set => _icon = FromImage(value);
     }
@@ -376,20 +403,62 @@ public class SecurityAgent : IAgentFilter
         return Guid.NewGuid();
     }
 
-    public Guid Id { get; set; }
-    public int HardLockAttempts { get; set; }
-    public int SoftLockAttempts { get; set; }
-    public int SoftLockTimeMinutes { get; set; }
-    public int HardLockTimeHours { get; set; }
-    public bool OverrideConfig { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
-    public bool LockForever { get; set; }
-    public bool Enabled { get; set; }
-    public int Serial { get; set; }
-    public string AssemblyName { get; set; } = string.Empty;
-    public string AssemblyFilename { get; set; } = string.Empty;
-    public bool BinaryMissing { get; set; }
-    public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
+        /// <summary>
+    /// 取得或設定 Id。
+    /// </summary>
+public Guid Id { get; set; }
+        /// <summary>
+    /// 取得或設定 硬封鎖失敗次數門檻。
+    /// </summary>
+public int HardLockAttempts { get; set; }
+        /// <summary>
+    /// 取得或設定 軟封鎖失敗次數門檻。
+    /// </summary>
+public int SoftLockAttempts { get; set; }
+        /// <summary>
+    /// 取得或設定 軟封鎖持續分鐘數。
+    /// </summary>
+public int SoftLockTimeMinutes { get; set; }
+        /// <summary>
+    /// 取得或設定 硬封鎖持續時數。
+    /// </summary>
+public int HardLockTimeHours { get; set; }
+        /// <summary>
+    /// 取得或設定 OverrideConfig。
+    /// </summary>
+public bool OverrideConfig { get; set; }
+        /// <summary>
+    /// 取得或設定 本地化顯示名稱。
+    /// </summary>
+public string DisplayName { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 是否永久封鎖。
+    /// </summary>
+public bool LockForever { get; set; }
+        /// <summary>
+    /// 取得或設定 是否已啟用。
+    /// </summary>
+public bool Enabled { get; set; }
+        /// <summary>
+    /// 取得或設定 Serial。
+    /// </summary>
+public int Serial { get; set; }
+        /// <summary>
+    /// 取得或設定 AssemblyName。
+    /// </summary>
+public string AssemblyName { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 AssemblyFilename。
+    /// </summary>
+public string AssemblyFilename { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 BinaryMissing。
+    /// </summary>
+public bool BinaryMissing { get; set; }
+        /// <summary>
+    /// 取得或設定 AppDomain。
+    /// </summary>
+public AppDomain AppDomain { get; set; } = AppDomain.CurrentDomain;
     /// <summary>
     /// 取得目前鎖定型別。
     /// </summary>
@@ -413,7 +482,10 @@ public class SecurityAgent : IAgentFilter
     }
 
     private Dictionary<string, string>? _customConfiguration;
-    public Dictionary<string, string> CustomConfiguration
+        /// <summary>
+    /// 取得或設定 CustomConfiguration。
+    /// </summary>
+public Dictionary<string, string> CustomConfiguration
     {
         get
         {
@@ -444,7 +516,10 @@ public class SecurityAgent : IAgentFilter
     }
 
     private Dictionary<string, string>? _customConfigurationTypes;
-    public Dictionary<string, string> CustomConfigurationTypes
+        /// <summary>
+    /// 取得或設定 CustomConfigurationTypes。
+    /// </summary>
+public Dictionary<string, string> CustomConfigurationTypes
     {
         get
         {

@@ -4,6 +4,9 @@ using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供安全性事件統計彙整與儀表板圖表數據計算之核心類別。
+/// </summary>
 public class Statistics
 {
     private readonly List<Guid> _agentIds = [];
@@ -24,7 +27,10 @@ public class Statistics
     }
 
     private static Statistics? _instance;
-    public static Statistics Instance => _instance ??= new();
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static Statistics Instance => _instance ??= new();
     /// <summary>
     /// 執行increase failed login statistics作業。
     /// </summary>

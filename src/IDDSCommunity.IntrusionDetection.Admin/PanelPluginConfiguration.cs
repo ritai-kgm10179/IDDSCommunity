@@ -8,10 +8,19 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供擴充元件目錄與外掛模組清單設定之面板控制項。
+/// </summary>
 public partial class PanelPluginConfiguration : UserControl
 {
-    public event EventHandler? AgentChanged;
-    public event EventHandler? AgentConfigurationChanged;
+        /// <summary>
+    /// 當 AgentChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? AgentChanged;
+        /// <summary>
+    /// 當 AgentConfigurationChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? AgentConfigurationChanged;
     /// <summary>
     /// 初始化 <see cref="PanelPluginConfiguration"/> 類別的新執行個體。
     /// </summary>
@@ -63,7 +72,10 @@ public partial class PanelPluginConfiguration : UserControl
             pictureBox.Location = new Point(pictureBox.Location.X - 1, pictureBox.Location.Y - 1);
     }
 
-    public bool IsInEditMode { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInEditMode。
+    /// </summary>
+public bool IsInEditMode { get; set; }
     /// <summary>
     /// Loads data.
     /// </summary>
@@ -323,7 +335,10 @@ public partial class PanelPluginConfiguration : UserControl
     private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
     private SecurityAgent? _agent;
-    public SecurityAgent Agent
+        /// <summary>
+    /// 取得或設定 Agent。
+    /// </summary>
+public SecurityAgent Agent
     {
         get => _agent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set

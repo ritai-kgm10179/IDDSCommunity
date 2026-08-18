@@ -1,6 +1,6 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
-    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FileZilla;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.IisAuthentication;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.OpenSsh;IDDSCommunity.Agents.PostgreSql;IDDSCommunity.Agents.Radius;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TechnitiumDns;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;IDDSCommunity.Agents.WindowsNetworkLogon;</IDDSCommunityAgentPluginProjects>
+    <IDDSCommunityAgentPluginProjects>;IDDSCommunity.Agents.FileMaker;IDDSCommunity.Agents.FileZilla;IDDSCommunity.Agents.FtpServer;IDDSCommunity.Agents.IisAuthentication;IDDSCommunity.Agents.MailServer;IDDSCommunity.Agents.MySql;IDDSCommunity.Agents.OpenSsh;IDDSCommunity.Agents.PostgreSql;IDDSCommunity.Agents.Radius;IDDSCommunity.Agents.RemoteDesktopGateway;IDDSCommunity.Agents.SqlServer;IDDSCommunity.Agents.TechnitiumDns;IDDSCommunity.Agents.TerminalServer;IDDSCommunity.Agents.WebSecurity;IDDSCommunity.Agents.WindowsDns;IDDSCommunity.Agents.WindowsNetworkLogon;IDDSCommunity.Agents.WinRm;</IDDSCommunityAgentPluginProjects>
   </PropertyGroup>
   <Target Name="EnsurePluginsFolder" AfterTargets="Build">
     <MakeDir Directories="$(OutputPath)Plugins" Condition="!Exists('$(OutputPath)Plugins')" />

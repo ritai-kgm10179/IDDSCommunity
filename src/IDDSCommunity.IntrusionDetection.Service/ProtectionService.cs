@@ -6,12 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
 
+/// <summary>
+/// 提供入侵偵測、封包監聽、事件處理、防火牆封鎖與報表排程之核心 Windows 服務執行個體。
+/// </summary>
 public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 {
     private readonly IFirewallPolicy firewallPolicy;
@@ -28,6 +32,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly Statistics statistics;
     private readonly ProtectionAuditTrail protectionAuditTrail;
     private readonly IRuntimeLog logManager;
+    private readonly CrossAgentCorrelationEngine crossAgentCorrelationEngine = new();
     private SecurityEventPipeline? securityEventPipeline;
 
     internal event EventHandler ClientIpAddressSoftLocked;
@@ -207,6 +212,12 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         reportScheduler.CheckInterval = TimeSpan.FromMinutes(reportOptions.CheckIntervalMinutes);
         securityAgents.InitializeAgents();
         securityAgents.RegisterSecurityAgents();
+
+        if (configuration.EnableCrossAgentCorrelation)
+        {
+            crossAgentCorrelationEngine.RebuildFromDatabase(database);
+            SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
+        }
     }
 
     //void Instance_ConfigurationChanged(object sender, EventArgs e) {
@@ -528,7 +539,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     }
 
 
-    public bool LimitMailSent { get; set; }
+        /// <summary>
+    /// 取得或設定 是否已達郵件寄送上限。
+    /// </summary>
+public bool LimitMailSent { get; set; }
     /// <summary>
     /// 執行 lock down ip 作業。
     /// </summary>
@@ -736,11 +750,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             throw new AggregateException(failures);
     }
     /// <summary>
-    /// Executes one shutdown action while preserving failures so later cleanup still runs.
-    /// </summary>
-    /// <param name="action">The shutdown action.</param>
-    /// <param name="failures">The collection receiving any failure.</param>
-    /// <summary>
     /// Writes operational evidence without allowing an audit-store outage to disable protection.
     /// </summary>
     /// <param name="eventType">The stable protection event type.</param>
@@ -845,6 +854,60 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             long incidentId;
             if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
             {
+                if (configuration.EnableCrossAgentCorrelation)
+                {
+                    SecurityObservationEvent observation = new()
+                    {
+                        SourceAgentName = reportingAgent.Name,
+                        NormalizedIpAddress = notificationEventArgs.IpAddress,
+                        NormalizedAccount = ParseAccountFromEvent(notificationEventArgs.EventMessage),
+                        EventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime(),
+                        ReceivedTimeUtc = DateTimeOffset.UtcNow,
+                        OriginalEventReference = notificationEventArgs.EventId.ToString(),
+                        Provenance = $"Agent={reportingAgent.Name};EventId={notificationEventArgs.EventId}"
+                    };
+
+                    (bool isDuplicate, bool alreadyAlerted) = SecurityObservationStore.PersistObservationAndWatermark(observation, database);
+                    if (isDuplicate && alreadyAlerted)
+                    {
+                        return;
+                    }
+
+                    CorrelationEvaluationResult correlationResult = crossAgentCorrelationEngine.Ingest(observation, configuration);
+                    if (correlationResult.IsDuplicateReplay)
+                    {
+                        return;
+                    }
+
+                    if (correlationResult.Action == CorrelationAction.AlertAndScoreOnly && !alreadyAlerted)
+                    {
+                        string targetSubject = correlationResult.SprayType == SprayAttackType.MultipleIpsToOneAccount
+                            ? observation.NormalizedAccount
+                            : observation.NormalizedIpAddress;
+
+                        string alertId = SecurityObservationStore.ComputeAlertId(
+                            correlationResult.SprayType,
+                            targetSubject,
+                            correlationResult.ContributingIdempotencyKeys);
+
+                        bool enqueued = SecurityObservationStore.EnqueueAlertOutbox(
+                            alertId,
+                            observation.Id,
+                            observation.EventTimeUtc,
+                            "CrossAgentSprayDetected",
+                            "AlertOnly",
+                            reportingAgent.Name,
+                            notificationEventArgs.IpAddress,
+                            correlationResult.Message,
+                            database);
+
+                        if (enqueued)
+                        {
+                            SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
+                        }
+                    }
+                }
+
                 statistics.IncreaseFailedLoginStatistics(reportingAgent);
                 // Agent 提供的 CreateDate 為本機時間（例如 Windows 事件記錄的 TimeCreated）；
                 // IncidentTime/LockDate/UnlockDate 資料庫欄位一律以 UTC 儲存，於此處統一轉換。
@@ -979,4 +1042,27 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     private void UnloadAgents() => securityAgents.UnloadAgents();
 
+    private static string ParseAccountFromEvent(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return string.Empty;
+
+        int userIndex = message.IndexOf("User:", StringComparison.OrdinalIgnoreCase);
+        if (userIndex >= 0)
+        {
+            string remainder = message[(userIndex + 5)..].Trim();
+            int end = remainder.IndexOfAny([' ', '\r', '\n', ';', ',']);
+            return end > 0 ? remainder[..end].Trim() : remainder;
+        }
+
+        int accountIndex = message.IndexOf("Account:", StringComparison.OrdinalIgnoreCase);
+        if (accountIndex >= 0)
+        {
+            string remainder = message[(accountIndex + 8)..].Trim();
+            int end = remainder.IndexOfAny([' ', '\r', '\n', ';', ',']);
+            return end > 0 ? remainder[..end].Trim() : remainder;
+        }
+
+        return string.Empty;
+    }
 }

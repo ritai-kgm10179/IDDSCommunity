@@ -6,12 +6,27 @@ using System.Data;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表 IDDS 系統核心組態設定，提供設定值持久化、安全網路比對與預設值管理。
+/// </summary>
 public class IddsConfig
 {
-    public const int DefaultSoftLockAttempts = 10;
-    public const int DefaultSoftLockMinutes = 1;
-    public const int DefaultHardLockAttempts = 20;
-    public const int DefaultHardLockHours = 1;
+        /// <summary>
+    /// 定義 DefaultSoftLockAttempts 之數值。
+    /// </summary>
+public const int DefaultSoftLockAttempts = 10;
+        /// <summary>
+    /// 定義 DefaultSoftLockMinutes 之數值。
+    /// </summary>
+public const int DefaultSoftLockMinutes = 1;
+        /// <summary>
+    /// 定義 DefaultHardLockAttempts 之數值。
+    /// </summary>
+public const int DefaultHardLockAttempts = 20;
+        /// <summary>
+    /// 定義 DefaultHardLockHours 之數值。
+    /// </summary>
+public const int DefaultHardLockHours = 1;
     /// <summary>
     /// 取得未設定郵件伺服器時顯示的標準 SMTP 連接埠。
     /// </summary>
@@ -19,21 +34,70 @@ public class IddsConfig
     private readonly Database database;
     private readonly HashSet<string> changedAppConfigKeys = [];
 
-    public const int ENABLED_FEATURES_FREE = 1;
-    public const int ENABLED_FEATURES_PRO = 2;
-    public const int CONFIG_DB_VERSION_NUMBER = 1;
-    public const string LICENSE_FILE = "idds.vl";
+        /// <summary>
+    /// 定義 ENABLED_FEATURES_FREE 之數值。
+    /// </summary>
+public const int ENABLED_FEATURES_FREE = 1;
+        /// <summary>
+    /// 定義 ENABLED_FEATURES_PRO 之數值。
+    /// </summary>
+public const int ENABLED_FEATURES_PRO = 2;
+        /// <summary>
+    /// 定義 CONFIG_DB_VERSION_NUMBER 之數值。
+    /// </summary>
+public const int CONFIG_DB_VERSION_NUMBER = 1;
+        /// <summary>
+    /// 定義 LICENSE_FILE 之數值。
+    /// </summary>
+public const string LICENSE_FILE = "idds.vl";
 
-    public const string CONFIG_VALUE_IS_DEBUG = "Configuration.IsDebug";
-    public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
+        /// <summary>
+    /// 定義 CONFIG_VALUE_IS_DEBUG 之數值。
+    /// </summary>
+public const string CONFIG_VALUE_IS_DEBUG = "Configuration.IsDebug";
+        /// <summary>
+    /// 定義 CONFIG_VALUE_LANGUAGE 之數值。
+    /// </summary>
+public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
+        /// <summary>
+    /// 定義 CONFIG_VALUE_FIREWALL_BLOCK_MODE 之數值。
+    /// </summary>
     public const string CONFIG_VALUE_FIREWALL_BLOCK_MODE = "Configuration.FirewallBlockMode";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION = "Configuration.EnableCrossAgentCorrelation";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD = "Configuration.CrossAgentSprayAccountThreshold";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD = "Configuration.CrossAgentSprayIpThreshold";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES = "Configuration.CrossAgentSlidingWindowMinutes";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_TRUSTED_PROXY_CIDRS 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_TRUSTED_PROXY_CIDRS = "Configuration.TrustedProxyCidrs";
 
 
     private const int IDDS_PRODUCT_ID = 0x66;
     // production server
 
     private static IddsConfig? _instance;
-    public static IddsConfig Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static IddsConfig Instance
     {
         get
         {
@@ -47,7 +111,10 @@ public class IddsConfig
     }
 
     private string? _pluginsDirectory;
-    public string PluginsDirectory
+        /// <summary>
+    /// 取得或設定 PluginsDirectory。
+    /// </summary>
+public string PluginsDirectory
     {
         get => _pluginsDirectory ?? string.Empty;
         set
@@ -137,7 +204,10 @@ public class IddsConfig
 
     private readonly object _configLock = new();
     private Dictionary<string, string>? _appConfig;
-    public Dictionary<string, string> AppConfig
+        /// <summary>
+    /// 取得或設定 AppConfig。
+    /// </summary>
+public Dictionary<string, string> AppConfig
     {
         get
         {
@@ -371,11 +441,23 @@ public class IddsConfig
         database.Configure(ApplicationPath);
     }
 
-    public string ApplicationPath { get; set; } = GetDefaultDataDirectory();
+        /// <summary>
+    /// 取得或設定 應用程式主目錄路徑。
+    /// </summary>
+public string ApplicationPath { get; set; } = GetDefaultDataDirectory();
 
-    public int ConfigVersionNumber { get; set; }
-    public DateTime? Expires { get; set; }
-    public string Edition { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 ConfigVersionNumber。
+    /// </summary>
+public int ConfigVersionNumber { get; set; }
+        /// <summary>
+    /// 取得或設定 Expires。
+    /// </summary>
+public DateTime? Expires { get; set; }
+        /// <summary>
+    /// 取得或設定 Edition。
+    /// </summary>
+public string Edition { get; set; } = string.Empty;
 
     /// <summary>
     /// 初始化 <see cref="IddsConfig"/> class的新執行個體。
@@ -394,13 +476,34 @@ public class IddsConfig
      *
      */
 
-    public int HardLockAttempts { get; set; }
-    public int HardLockTimeHours { get; set; }
-    public bool LockForever { get; set; }
-    public int SoftLockAttempts { get; set; }
-    public int SoftLockTimeMinutes { get; set; }
-    public bool UseSafeNetworkList { get; set; }
-    public static string PluginDirectory { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 硬封鎖失敗次數門檻。
+    /// </summary>
+public int HardLockAttempts { get; set; }
+        /// <summary>
+    /// 取得或設定 硬封鎖持續時數。
+    /// </summary>
+public int HardLockTimeHours { get; set; }
+        /// <summary>
+    /// 取得或設定 是否永久封鎖。
+    /// </summary>
+public bool LockForever { get; set; }
+        /// <summary>
+    /// 取得或設定 軟封鎖失敗次數門檻。
+    /// </summary>
+public int SoftLockAttempts { get; set; }
+        /// <summary>
+    /// 取得或設定 軟封鎖持續分鐘數。
+    /// </summary>
+public int SoftLockTimeMinutes { get; set; }
+        /// <summary>
+    /// 取得或設定 是否使用安全網路清單。
+    /// </summary>
+public bool UseSafeNetworkList { get; set; }
+        /// <summary>
+    /// 取得或設定 PluginDirectory。
+    /// </summary>
+public static string PluginDirectory { get; set; } = string.Empty;
 
     /* private string _hardwareId;
     private string GetHardwareId() {
@@ -412,10 +515,16 @@ public class IddsConfig
     } */
 
 
-    public bool CyberSheriffContributor { get; set; }
+        /// <summary>
+    /// 取得或設定 CyberSheriffContributor。
+    /// </summary>
+public bool CyberSheriffContributor { get; set; }
 
     private CSafeNetworks? _safeNetworks;
-    public CSafeNetworks SafeNetworks
+        /// <summary>
+    /// 取得或設定 SafeNetworks。
+    /// </summary>
+public CSafeNetworks SafeNetworks
     {
         get
         {
@@ -451,12 +560,28 @@ public class IddsConfig
         return config;
     }
 
+    /// <summary>
+    /// 代表安全網路規則項目之集合清單。
+    /// </summary>
     public class CSafeNetworks : List<CSafeNetwork> { }
+
+    /// <summary>
+    /// 代表單一安全網路 IP 或 CIDR 子網路規則項目。
+    /// </summary>
     public class CSafeNetwork
     {
-        public string IpAddress { get; set; } = string.Empty;
-        public string SubnetMask { get; set; } = string.Empty;
-        public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
+                /// <summary>
+        /// 取得或設定 IpAddress。
+        /// </summary>
+public string IpAddress { get; set; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 SubnetMask。
+        /// </summary>
+public string SubnetMask { get; set; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 本地化顯示名稱。
+        /// </summary>
+public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
         /// <summary>
         /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
@@ -475,33 +600,66 @@ public class IddsConfig
         }
     }
 
-    public bool SendInfoMail { get; set; }
+        /// <summary>
+    /// 取得或設定 SendInfoMail。
+    /// </summary>
+public bool SendInfoMail { get; set; }
 
-    public string NotificationEmailAddress { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 通知收件者電子郵件地址。
+    /// </summary>
+public string NotificationEmailAddress { get; set; } = string.Empty;
 
-    public string SmtpServer { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 SMTP 伺服器位址。
+    /// </summary>
+public string SmtpServer { get; set; } = string.Empty;
 
-    public int SmtpPort { get; set; }
+        /// <summary>
+    /// 取得或設定 SMTP 連接埠。
+    /// </summary>
+public int SmtpPort { get; set; }
 
-    public string SmtpUsername { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 SMTP 帳號名稱。
+    /// </summary>
+public string SmtpUsername { get; set; } = string.Empty;
 
-    public bool SmtpSslRequired { get; set; }
+        /// <summary>
+    /// 取得或設定 SMTP 是否要求 SSL。
+    /// </summary>
+public bool SmtpSslRequired { get; set; }
 
     private string _smtpPassword = string.Empty;
 
-    public string SmtpPassword
+        /// <summary>
+    /// 取得或設定 SMTP 密碼。
+    /// </summary>
+public string SmtpPassword
     {
         get => _smtpPassword; set => _smtpPassword = value;
     }
 
-    public string SenderEmailAddress { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 寄件者電子郵件地址。
+    /// </summary>
+public string SenderEmailAddress { get; set; } = string.Empty;
 
-    public bool SmtpRequiresAuthentication { get; set; }
+        /// <summary>
+    /// 取得或設定 SmtpRequiresAuthentication。
+    /// </summary>
+public bool SmtpRequiresAuthentication { get; set; }
 
-    public bool WebBasedMonitoring { get; set; }
+        /// <summary>
+    /// 取得或設定 WebBasedMonitoring。
+    /// </summary>
+public bool WebBasedMonitoring { get; set; }
 
     private bool? _isDebug;
-    public bool IsDebug
+        /// <summary>
+    /// 取得或設定 IsDebug。
+    /// </summary>
+public bool IsDebug
     {
         get
         {
@@ -525,7 +683,10 @@ public class IddsConfig
         }
     }
 
-    public string Language
+        /// <summary>
+    /// 取得或設定 Language。
+    /// </summary>
+public string Language
     {
         get => GetConfigValue(CONFIG_VALUE_LANGUAGE);
         set
@@ -547,6 +708,77 @@ public class IddsConfig
                 throw new ArgumentOutOfRangeException(nameof(value));
             SetConfigValue(CONFIG_VALUE_FIREWALL_BLOCK_MODE, value.ToString());
         }
+    }
+
+    /// <summary>
+    /// 取得或設定是否啟用跨 Agent 攻擊關聯與密碼噴灑偵測功能（預設為 false）。
+    /// </summary>
+    public bool EnableCrossAgentCorrelation
+    {
+        get => bool.TryParse(GetConfigValue(CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION), out bool enabled) && enabled;
+        set => SetConfigValue(CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定跨 Agent 單一 IP 嘗試相異帳號之密碼噴灑門檻值（預設為 5）。
+    /// </summary>
+    public int CrossAgentSprayAccountThreshold
+    {
+        get => int.TryParse(GetConfigValue(CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD), out int threshold) && threshold > 0 ? threshold : 5;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetConfigValue(CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD, value.ToString());
+        }
+    }
+
+    /// <summary>
+    /// 取得或設定跨 Agent 多個分散 IP 嘗試單一帳號之分散式密碼噴灑門檻值（預設為 5）。
+    /// </summary>
+    public int CrossAgentSprayIpThreshold
+    {
+        get => int.TryParse(GetConfigValue(CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD), out int threshold) && threshold > 0 ? threshold : 5;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetConfigValue(CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD, value.ToString());
+        }
+    }
+
+    /// <summary>
+    /// 取得或設定跨 Agent 關聯與密碼噴灑之滑動時間窗分鐘數（預設為 10 分鐘）。
+    /// </summary>
+    public int CrossAgentSlidingWindowMinutes
+    {
+        get => int.TryParse(GetConfigValue(CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES), out int minutes) && minutes > 0 ? minutes : 10;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetConfigValue(CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES, value.ToString());
+        }
+    }
+
+    /// <summary>
+    /// 取得或設定受信任反向代理 CIDR 清單字串（以逗號或分號分隔）。
+    /// </summary>
+    public string TrustedProxyCidrs
+    {
+        get => GetConfigValue(CONFIG_VALUE_TRUSTED_PROXY_CIDRS) ?? string.Empty;
+        set => SetConfigValue(CONFIG_VALUE_TRUSTED_PROXY_CIDRS, value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得解析後的受信任反向代理 IP 與 CIDR 區段清單。
+    /// </summary>
+    /// <returns>受信任反向代理字串集合。</returns>
+    public IEnumerable<string> GetTrustedProxyList()
+    {
+        string raw = TrustedProxyCidrs;
+        if (string.IsNullOrWhiteSpace(raw)) return [];
+        return raw.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     /// <summary>
@@ -789,9 +1021,18 @@ public class IddsConfig
 
     private enum NetworkInputError
     {
-        InvalidIpAddress,
-        InvalidIpv6PrefixLength,
-        InvalidSubnetMask
+                /// <summary>
+        /// 定義 InvalidIpAddress 列舉值。
+        /// </summary>
+InvalidIpAddress,
+                /// <summary>
+        /// 定義 InvalidIpv6PrefixLength 列舉值。
+        /// </summary>
+InvalidIpv6PrefixLength,
+                /// <summary>
+        /// 定義 InvalidSubnetMask 列舉值。
+        /// </summary>
+InvalidSubnetMask
     }
 
 

@@ -75,20 +75,31 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
     }
 
     /// <summary>
-    /// 處理事件來源回報的驗證失敗事件；僅於門檻偵測器判定已達攻擊門檻時引發攻擊偵測通知。
+    /// 取得一個值，指出此 Agent 是否使用內部本機門檻計數器。
+    /// 預設為 <see langword="true"/>；若由 Phase 0 跨來源引擎統一計算門檻，衍生類別可覆寫為 <see langword="false"/> 以避免重複計數。
+    /// </summary>
+    protected virtual bool UseLocalThresholdDetector => true;
+
+    /// <summary>
+    /// 處理事件來源回報的驗證失敗事件；僅於門檻偵測器判定已達攻擊門檻（或已委由中央引擎處理）時引發攻擊偵測通知。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="failure">已解析之驗證失敗事件。</param>
     private void OnEventReceived(object? sender, AuthenticationFailureEvent failure)
     {
-        if (detector?.Analyze(failure) != true)
+        if (UseLocalThresholdDetector && detector?.Analyze(failure) != true)
             return;
+
+        string message = UseLocalThresholdDetector
+            ? string.Format(System.Globalization.CultureInfo.CurrentCulture, IntrusionDetection.Api.Localization.Strings.Get("{0}: authentication failure threshold exceeded."), failure.Category)
+            : $"{failure.Category}: {failure.Reason}";
+
         OnAttackDetected(this, new NotificationEventArgs
         {
             CreateDate = failure.OccurredAt.LocalDateTime,
             EventId = failure.EventId,
             IpAddress = failure.SourceAddress.ToString(),
-            EventMessage = string.Format(System.Globalization.CultureInfo.CurrentCulture, IntrusionDetection.Api.Localization.Strings.Get("{0}: authentication failure threshold exceeded."), failure.Category)
+            EventMessage = message
         });
     }
 

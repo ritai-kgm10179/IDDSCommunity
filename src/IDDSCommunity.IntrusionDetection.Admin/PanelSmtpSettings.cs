@@ -8,10 +8,16 @@ using MailKit.Security;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供 SMTP 郵件伺服器連線與認證設定之面板控制項。
+/// </summary>
 public partial class PanelSmtpSettings : UserControl
 {
 
-    public event EventHandler? SmtpSettingsChanged;
+        /// <summary>
+    /// 當 SmtpSettingsChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? SmtpSettingsChanged;
     /// <summary>
     /// 初始化 <see cref="PanelSmtpSettings"/> 類別的新執行個體。
     /// </summary>
@@ -29,7 +35,10 @@ public partial class PanelSmtpSettings : UserControl
     /// <param name="e">事件資料。</param>
     void PanelSmtpSettings_Load(object? sender, EventArgs e) => LoadData();
 
-    public bool IsInEditMode { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInEditMode。
+    /// </summary>
+public bool IsInEditMode { get; set; }
 
     /// <summary>
     /// 處理 click 事件。

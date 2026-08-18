@@ -8,13 +8,34 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// </summary>
 public enum AgentThemeCategory
 {
-    Database,      // MySQL, SQL Server, PostgreSQL, FileMaker
-    Mail,          // POP3, IMAP, SMTP
-    Web,           // Web Security, IIS Authentication
-    Terminal,      // OpenSSH, TerminalServer (RDP)
-    FileTransfer,  // FTP Server
-    Dns,           // Windows DNS
-    AuthAndShield  // Windows Network Logon, RADIUS, AD, Kerberos, RRAS
+        /// <summary>
+    /// 資料庫類別代理程式。
+    /// </summary>
+Database,      // MySQL, SQL Server, PostgreSQL, FileMaker
+        /// <summary>
+    /// 郵件伺服器類別代理程式。
+    /// </summary>
+Mail,          // POP3, IMAP, SMTP
+        /// <summary>
+    /// Web 與 IIS 類別代理程式。
+    /// </summary>
+Web,           // Web Security, IIS Authentication
+        /// <summary>
+    /// 遠端桌面類別代理程式。
+    /// </summary>
+Terminal,      // OpenSSH, TerminalServer (RDP)
+        /// <summary>
+    /// 檔案傳輸 (FTP/FileZilla) 類別代理程式。
+    /// </summary>
+FileTransfer,  // FTP Server
+        /// <summary>
+    /// 網域名稱系統 (DNS) 類別代理程式。
+    /// </summary>
+Dns,           // Windows DNS
+        /// <summary>
+    /// 驗證與系統安全類別代理程式。
+    /// </summary>
+AuthAndShield  // Windows Network Logon, RADIUS, AD, Kerberos, RRAS
 }
 /// <summary>
 /// Factory for generating high-quality 15x15 vector theme icons for security agents.

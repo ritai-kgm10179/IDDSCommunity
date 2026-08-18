@@ -22,13 +22,19 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
     /// <param name="actor">發起動作的服務或使用者識別碼。</param>
     /// <param name="subject">受動作影響的受保護資源或位址。</param>
     /// <param name="details">選擇性的非機密診斷詳細資訊。</param>
-    public void Record(string eventType, string outcome, string actor, string subject, string? details = null)
+    /// <param name="alertId">選擇性的確定性告警識別碼。</param>
+    public void Record(string eventType, string outcome, string actor, string subject, string? details = null, string? alertId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
         ArgumentException.ThrowIfNullOrWhiteSpace(outcome);
         ArgumentException.ThrowIfNullOrWhiteSpace(actor);
         database.ExecuteNonQuery(
-            "INSERT INTO ProtectionAuditLog(OccurredUtc, EventType, Outcome, Actor, Subject, Details) VALUES (@p0, @p1, @p2, @p3, @p4, @p5)",
+            """
+            INSERT INTO ProtectionAuditLog(AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+            VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)
+            ON CONFLICT(AlertId) DO NOTHING
+            """,
+            string.IsNullOrWhiteSpace(alertId) ? DBNull.Value : Limit(alertId),
             timeProvider.GetUtcNow().ToString("O"),
             Limit(eventType),
             Limit(outcome),
@@ -106,12 +112,33 @@ public sealed class ProtectionAuditTrail(Database database, TimeProvider timePro
 
     private sealed class ProtectionAuditRow
     {
-        public long Id { get; init; }
-        public string OccurredUtc { get; init; } = string.Empty;
-        public string EventType { get; init; } = string.Empty;
-        public string Outcome { get; init; } = string.Empty;
-        public string Actor { get; init; } = string.Empty;
-        public string Subject { get; init; } = string.Empty;
-        public string Details { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Id。
+        /// </summary>
+public long Id { get; init; }
+                /// <summary>
+        /// 取得或設定 OccurredUtc。
+        /// </summary>
+public string OccurredUtc { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 EventType。
+        /// </summary>
+public string EventType { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Outcome。
+        /// </summary>
+public string Outcome { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Actor。
+        /// </summary>
+public string Actor { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Subject。
+        /// </summary>
+public string Subject { get; init; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 Details。
+        /// </summary>
+public string Details { get; init; } = string.Empty;
     }
 }

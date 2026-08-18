@@ -21,7 +21,10 @@ public sealed class PanelReportExport : UserControl
 
     private System.Threading.CancellationTokenSource? statusCts;
 
-    public PanelReportExport()
+        /// <summary>
+    /// 初始化 <see cref="PanelReportExport"/> 類別之新執行個體。
+    /// </summary>
+public PanelReportExport()
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;

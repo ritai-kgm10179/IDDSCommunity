@@ -3,6 +3,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供標準化全域未處理例外狀況與錯誤訊息顯示對話方塊。
+/// </summary>
 public partial class GenericErrorDialog : Form
 {
     /// <summary>

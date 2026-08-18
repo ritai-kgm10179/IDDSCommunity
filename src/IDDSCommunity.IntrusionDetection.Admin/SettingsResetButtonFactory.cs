@@ -16,6 +16,8 @@ internal static class SettingsResetButtonFactory
     /// </summary>
     /// <param name="owner">擁有按鈕的設定頁。</param>
     /// <param name="click">按鈕點擊處理常式。</param>
+    /// <param name="fixedLocation">固定按鈕位置座標；若為 null 則自動靠右上排列。</param>
+    /// <param name="confirmationPrompt">自訂確認提示回呼函式。</param>
     /// <returns>建立完成的按鈕。</returns>
     internal static Button AddTo(
         Control owner,

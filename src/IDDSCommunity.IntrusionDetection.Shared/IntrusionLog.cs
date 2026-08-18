@@ -5,23 +5,68 @@ using System.Drawing;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供安全性事件日誌資料庫寫入、查詢、差量讀取與統計之管理類別。
+/// </summary>
 public class IntrusionLog
 {
-    public const int STATUS_INTRUSION_ATTEMPT = 100;
-    public const int STATUS_INTRUSION_ATTEMPT_FROM_LOCAL = 110;
-    public const int STATUS_INTRUSION_ATTEMPT_FROM_SAFE = 120;
-    public const int STATUS_SOFT_LOCK_REQUESTED = 200;
-    public const int STATUS_SOFT_LOCKED = 210;
-    public const int STATUS_SOFT_LOCK_ERROR = 290;
-    public const int STATUS_HARD_LOCK_REQUESTED = 300;
-    public const int STATUS_HARD_LOCKED = 310;
-    public const int STATUS_HARD_LOCK_ERROR = 390;
-    public const int STATUS_UNLOCK_REQUESTED = 500;
-    public const int STATUS_UNLOCKED = 510;
-    public const int STATUS_UNLOCK_ERROR = 590;
+        /// <summary>
+    /// 定義 STATUS_INTRUSION_ATTEMPT 之數值。
+    /// </summary>
+public const int STATUS_INTRUSION_ATTEMPT = 100;
+        /// <summary>
+    /// 定義 STATUS_INTRUSION_ATTEMPT_FROM_LOCAL 之數值。
+    /// </summary>
+public const int STATUS_INTRUSION_ATTEMPT_FROM_LOCAL = 110;
+        /// <summary>
+    /// 定義 STATUS_INTRUSION_ATTEMPT_FROM_SAFE 之數值。
+    /// </summary>
+public const int STATUS_INTRUSION_ATTEMPT_FROM_SAFE = 120;
+        /// <summary>
+    /// 定義 STATUS_SOFT_LOCK_REQUESTED 之數值。
+    /// </summary>
+public const int STATUS_SOFT_LOCK_REQUESTED = 200;
+        /// <summary>
+    /// 定義 STATUS_SOFT_LOCKED 之數值。
+    /// </summary>
+public const int STATUS_SOFT_LOCKED = 210;
+        /// <summary>
+    /// 定義 STATUS_SOFT_LOCK_ERROR 之數值。
+    /// </summary>
+public const int STATUS_SOFT_LOCK_ERROR = 290;
+        /// <summary>
+    /// 定義 STATUS_HARD_LOCK_REQUESTED 之數值。
+    /// </summary>
+public const int STATUS_HARD_LOCK_REQUESTED = 300;
+        /// <summary>
+    /// 定義 STATUS_HARD_LOCKED 之數值。
+    /// </summary>
+public const int STATUS_HARD_LOCKED = 310;
+        /// <summary>
+    /// 定義 STATUS_HARD_LOCK_ERROR 之數值。
+    /// </summary>
+public const int STATUS_HARD_LOCK_ERROR = 390;
+        /// <summary>
+    /// 定義 STATUS_UNLOCK_REQUESTED 之數值。
+    /// </summary>
+public const int STATUS_UNLOCK_REQUESTED = 500;
+        /// <summary>
+    /// 定義 STATUS_UNLOCKED 之數值。
+    /// </summary>
+public const int STATUS_UNLOCKED = 510;
+        /// <summary>
+    /// 定義 STATUS_UNLOCK_ERROR 之數值。
+    /// </summary>
+public const int STATUS_UNLOCK_ERROR = 590;
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.
-    public const int STATUS_PROTECTION_UNAVAILABLE = 999;
-    public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
+        /// <summary>
+    /// 定義 STATUS_PROTECTION_UNAVAILABLE 之數值。
+    /// </summary>
+public const int STATUS_PROTECTION_UNAVAILABLE = 999;
+        /// <summary>
+    /// 定義 SYSTEM_ID 之數值。
+    /// </summary>
+public const string SYSTEM_ID = "{DF7D1183-5033-4C94-AACB-CEFE9009B60F}";
 
     /// <summary>
     /// 取得所有代表登入失敗的事件狀態碼。
@@ -48,7 +93,10 @@ public class IntrusionLog
 
     private static Dictionary<int, string>? _statusNames;
 
-    public static Dictionary<int, string> StatusNames
+        /// <summary>
+    /// 取得或設定 StatusNames。
+    /// </summary>
+public static Dictionary<int, string> StatusNames
     {
         get
         {
@@ -74,7 +122,10 @@ public class IntrusionLog
 
     private static Dictionary<int, string>? _statusClasses;
 
-    public static Dictionary<int, string> StatusClasses
+        /// <summary>
+    /// 取得或設定 StatusClasses。
+    /// </summary>
+public static Dictionary<int, string> StatusClasses
     {
         get
         {
@@ -99,7 +150,10 @@ public class IntrusionLog
     }
 
     private static Dictionary<int, Image>? _statusIcons;
-    public static Dictionary<int, Image> StatusIcons
+        /// <summary>
+    /// 取得或設定 StatusIcons。
+    /// </summary>
+public static Dictionary<int, Image> StatusIcons
     {
         get
         {

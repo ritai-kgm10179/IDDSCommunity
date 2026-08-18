@@ -9,6 +9,9 @@ using Microsoft.Data.Sqlite;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表 SQLite 資料庫健康狀態、頁面配置、加密設定與完整性檢查結果。
+/// </summary>
 public sealed record DatabaseMaintenanceStatus(
     string DataSource,
     long DatabaseBytes,
@@ -20,13 +23,26 @@ public sealed record DatabaseMaintenanceStatus(
     string JournalMode,
     string IntegrityResult);
 
+/// <summary>
+/// 代表資料庫備份成功後之檔案路徑、大小與 SHA-256 雜湊資訊。
+/// </summary>
 public sealed record DatabaseBackupResult(string FilePath, long Length, string Sha256, DateTimeOffset CreatedUtc);
 
+/// <summary>
+/// 代表現存資料庫備份檔案之清單資訊。
+/// </summary>
 public sealed record DatabaseBackupInfo(string FilePath, long Length, DateTimeOffset CreatedUtc);
 
+/// <summary>
+/// 代表資料庫維護事件執行歷史紀錄項目。
+/// </summary>
 public sealed record DatabaseMaintenanceHistory(DateTimeOffset OccurredUtc, string EventType, string Outcome, string Subject, string Details);
 
+/// <summary>
+/// 代表日誌與已解鎖紀錄之歷史資料保留天數與批次清理策略。
+/// </summary>
 public sealed record DatabaseRetentionPolicy(int IntrusionLogDays = 180, int UnlockedLockDays = 180, int AuditDays = 365, int CompletedInboxDays = 30, int BatchSize = 1000);
+
 /// <summary>
 /// 提供界限內且可稽核的 SQLite 維護作業。
 /// </summary>
@@ -34,6 +50,11 @@ public sealed class SqliteMaintenanceService(Database database)
 {
     private readonly Database database = database ?? throw new ArgumentNullException(nameof(database));
 
+    /// <summary>
+    /// 取得目前資料庫大小、WAL 大小、加密狀態與選用之完整性檢查結果。
+    /// </summary>
+    /// <param name="fullIntegrityCheck">是否執行完整 integrity_check。</param>
+    /// <returns>資料庫維護狀態物件。</returns>
     public DatabaseMaintenanceStatus GetStatus(bool fullIntegrityCheck = false)
     {
         EnsureConfigured();
@@ -50,6 +71,11 @@ public sealed class SqliteMaintenanceService(Database database)
             RunIntegrityCheck(fullIntegrityCheck));
     }
 
+    /// <summary>
+    /// 執行 SQLite 完整性或快速檢查 PRAGMA。
+    /// </summary>
+        /// <param name="full">是否執行完整檢查。</param>
+        /// <returns>檢查結果訊息（例如 'ok'）。</returns>
     public string RunIntegrityCheck(bool full = false)
     {
         EnsureConfigured();
@@ -57,6 +83,11 @@ public sealed class SqliteMaintenanceService(Database database)
         return Convert.ToString(database.ExecuteScalar(command), CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
+    /// <summary>
+    /// 建立經完整性驗證與 SHA-256 計算之安全資料庫備份。
+    /// </summary>
+        /// <param name="backupDirectory">備份目標目錄。</param>
+        /// <returns>備份結果物件。</returns>
     public DatabaseBackupResult CreateVerifiedBackup(string backupDirectory)
     {
         EnsureConfigured();
@@ -85,6 +116,11 @@ public sealed class SqliteMaintenanceService(Database database)
         return backupResult;
     }
 
+    /// <summary>
+    /// 驗證現存備份檔案之頁面完整性並重新計算 SHA-256 雜湊。
+    /// </summary>
+        /// <param name="backupPath">備份檔案路徑。</param>
+        /// <returns>備份驗證結果物件。</returns>
     public DatabaseBackupResult VerifyBackup(string backupPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(backupPath);
@@ -94,6 +130,11 @@ public sealed class SqliteMaintenanceService(Database database)
         return new DatabaseBackupResult(file.FullName, file.Length, ComputeSha256(file.FullName), file.CreationTimeUtc);
     }
 
+    /// <summary>
+    /// 列出指定備份目錄下所有已建立之資料庫備份檔案。
+    /// </summary>
+        /// <param name="backupDirectory">備份目錄路徑。</param>
+        /// <returns>備份清單集合。</returns>
     public IReadOnlyList<DatabaseBackupInfo> ListBackups(string backupDirectory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(backupDirectory);
@@ -105,6 +146,14 @@ public sealed class SqliteMaintenanceService(Database database)
             .ToArray();
     }
 
+    /// <summary>
+    /// 依保留天數與最大數量上限清理過期之舊備份檔案。
+    /// </summary>
+        /// <param name="backupDirectory">備份目錄路徑。</param>
+        /// <param name="retentionDays">保留天數。</param>
+        /// <param name="maximumCount">保留數量上限。</param>
+        /// <param name="now">目前時間戳記基準。</param>
+        /// <returns>已刪除之過期備份檔案數量。</returns>
     public int PruneBackups(string backupDirectory, int retentionDays = 30, int maximumCount = 10, DateTimeOffset? now = null)
     {
         if (retentionDays < 1) throw new ArgumentOutOfRangeException(nameof(retentionDays));
@@ -122,6 +171,11 @@ public sealed class SqliteMaintenanceService(Database database)
         return deleted;
     }
 
+    /// <summary>
+    /// 取得最近執行的資料庫維護事件歷史紀錄。
+    /// </summary>
+        /// <param name="maximumRows">最多回傳筆數。</param>
+        /// <returns>維護歷史紀錄清單。</returns>
     public IReadOnlyList<DatabaseMaintenanceHistory> GetHistory(int maximumRows = 50)
     {
         EnsureConfigured();
@@ -135,6 +189,9 @@ public sealed class SqliteMaintenanceService(Database database)
             .ToArray();
     }
 
+    /// <summary>
+    /// 執行 SQLite PRAGMA optimize 以更新查詢計畫統計資訊。
+    /// </summary>
     public void Optimize()
     {
         EnsureConfigured();
@@ -143,7 +200,10 @@ public sealed class SqliteMaintenanceService(Database database)
         RecordAudit("Database.Optimize", database.DataSource, string.Empty);
     }
 
-    public IReadOnlyDictionary<string, int> PurgeExpired(DatabaseRetentionPolicy policy, DateTimeOffset? now = null)
+        /// <summary>
+    /// 執行 PurgeExpired 作業。
+    /// </summary>
+public IReadOnlyDictionary<string, int> PurgeExpired(DatabaseRetentionPolicy policy, DateTimeOffset? now = null)
     {
         ArgumentNullException.ThrowIfNull(policy);
         ValidatePolicy(policy);
@@ -168,6 +228,12 @@ public sealed class SqliteMaintenanceService(Database database)
         return results;
     }
 
+    /// <summary>
+    /// 還原指定的驗證備份檔案，並於還原前自動建立當前狀態之回滾副本。
+    /// </summary>
+        /// <param name="backupPath">欲還原之備份檔案路徑。</param>
+        /// <param name="rollbackDirectory">回滾副本儲存目錄。</param>
+        /// <returns>還原執行結果。</returns>
     public DatabaseBackupResult RestoreVerifiedBackup(string backupPath, string rollbackDirectory)
     {
         EnsureConfigured();
@@ -215,6 +281,12 @@ public sealed class SqliteMaintenanceService(Database database)
         }
     }
 
+    /// <summary>
+    /// 建立資料庫排他存取壓縮副本並原子替換主資料庫檔以釋放未使用的頁面空間。
+    /// </summary>
+        /// <param name="backupDirectory">壓縮暫存目錄。</param>
+        /// <param name="exclusiveAccessConfirmed">已確認具備獨佔存取權限。</param>
+        /// <returns>壓縮替換結果。</returns>
     public DatabaseBackupResult CompactAndReplace(string backupDirectory, bool exclusiveAccessConfirmed)
     {
         EnsureConfigured();
@@ -308,14 +380,41 @@ public sealed class SqliteMaintenanceService(Database database)
 
     private enum MaintenanceError
     {
-        BackupIntegrityCheckFailed,
-        BackupFileNotFound,
-        DatabaseDirectoryUnavailable,
-        RestoredDatabaseIntegrityCheckFailed,
-        IntegrityCheckFailed,
-        DatabaseNotConfigured,
-        ExclusiveAccessRequired,
-        CompactedDatabaseIntegrityCheckFailed,
-        InsufficientDiskSpace
+                /// <summary>
+        /// 定義 BackupIntegrityCheckFailed 列舉值。
+        /// </summary>
+BackupIntegrityCheckFailed,
+                /// <summary>
+        /// 定義 BackupFileNotFound 列舉值。
+        /// </summary>
+BackupFileNotFound,
+                /// <summary>
+        /// 定義 DatabaseDirectoryUnavailable 列舉值。
+        /// </summary>
+DatabaseDirectoryUnavailable,
+                /// <summary>
+        /// 定義 RestoredDatabaseIntegrityCheckFailed 列舉值。
+        /// </summary>
+RestoredDatabaseIntegrityCheckFailed,
+                /// <summary>
+        /// 定義 IntegrityCheckFailed 列舉值。
+        /// </summary>
+IntegrityCheckFailed,
+                /// <summary>
+        /// 定義 DatabaseNotConfigured 列舉值。
+        /// </summary>
+DatabaseNotConfigured,
+                /// <summary>
+        /// 定義 ExclusiveAccessRequired 列舉值。
+        /// </summary>
+ExclusiveAccessRequired,
+                /// <summary>
+        /// 定義 CompactedDatabaseIntegrityCheckFailed 列舉值。
+        /// </summary>
+CompactedDatabaseIntegrityCheckFailed,
+                /// <summary>
+        /// 定義 InsufficientDiskSpace 列舉值。
+        /// </summary>
+InsufficientDiskSpace
     }
 }

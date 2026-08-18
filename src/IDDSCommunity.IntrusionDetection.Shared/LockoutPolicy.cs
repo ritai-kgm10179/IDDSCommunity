@@ -6,7 +6,10 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// </summary>
 public static class LockoutPolicy
 {
-    public const int MaximumSoftLockMinutes = 60;
+        /// <summary>
+    /// 定義 MaximumSoftLockMinutes 之數值。
+    /// </summary>
+public const int MaximumSoftLockMinutes = 60;
     /// <summary>
     /// Doubles the base delay for each recent lock and caps the result to prevent overflow and excessive denial of service.
     /// </summary>

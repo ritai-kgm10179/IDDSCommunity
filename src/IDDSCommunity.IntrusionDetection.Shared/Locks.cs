@@ -5,6 +5,9 @@ using System.Data;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供 Windows 防火牆封鎖規則同步、自動過期清理與解除封鎖之管理類別。
+/// </summary>
 public class Locks
 {
 

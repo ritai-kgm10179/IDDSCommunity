@@ -8,7 +8,10 @@ internal sealed class DatabaseOptions
 {
     internal const string SectionName = "Database";
 
-    [Required]
+        /// <summary>
+    /// 取得或設定 FileName。
+    /// </summary>
+[Required]
     public string FileName { get; init; } = "iddscommunity.dbf";
 }
 
@@ -16,7 +19,10 @@ internal sealed class ReportOptions
 {
     internal const string SectionName = "Reports";
 
-    [Range(1, 1440)]
+        /// <summary>
+    /// 取得或設定 CheckIntervalMinutes。
+    /// </summary>
+[Range(1, 1440)]
     public int CheckIntervalMinutes { get; init; } = 10;
 }
 
@@ -24,7 +30,10 @@ internal sealed class PluginOptions
 {
     internal const string SectionName = "Plugins";
 
-    [Required]
+        /// <summary>
+    /// 取得或設定 DirectoryName。
+    /// </summary>
+[Required]
     public string DirectoryName { get; init; } = "Plugins";
 }
 
@@ -32,39 +41,75 @@ internal sealed class ProtectionOptions
 {
     internal const string SectionName = "Protection";
 
-    [Range(30, 3650)]
+        /// <summary>
+    /// 取得或設定 AuditRetentionDays。
+    /// </summary>
+[Range(30, 3650)]
     public int AuditRetentionDays { get; init; } = 365;
 
-    [Range(30, 3650)]
+        /// <summary>
+    /// 取得或設定 IntrusionLogRetentionDays。
+    /// </summary>
+[Range(30, 3650)]
     public int IntrusionLogRetentionDays { get; init; } = 180;
 
-    [Range(30, 3650)]
+        /// <summary>
+    /// 取得或設定 LockHistoryRetentionDays。
+    /// </summary>
+[Range(30, 3650)]
     public int LockHistoryRetentionDays { get; init; } = 180;
 
-    [Range(1, 3650)]
+        /// <summary>
+    /// 取得或設定 CompletedEventRetentionDays。
+    /// </summary>
+[Range(1, 3650)]
     public int CompletedEventRetentionDays { get; init; } = 30;
 
-    [Range(1, 10000)]
+        /// <summary>
+    /// 取得或設定 MaintenanceBatchSize。
+    /// </summary>
+[Range(1, 10000)]
     public int MaintenanceBatchSize { get; init; } = 1000;
 
-    [Range(1, 168)]
+        /// <summary>
+    /// 取得或設定 MaintenanceIntervalHours。
+    /// </summary>
+[Range(1, 168)]
     public int MaintenanceIntervalHours { get; init; } = 24;
 
-    [Range(1, 3650)]
+        /// <summary>
+    /// 取得或設定 BackupRetentionDays。
+    /// </summary>
+[Range(1, 3650)]
     public int BackupRetentionDays { get; init; } = 30;
 
-    [Range(1, 1000)]
+        /// <summary>
+    /// 取得或設定 MaximumBackupCount。
+    /// </summary>
+[Range(1, 1000)]
     public int MaximumBackupCount { get; init; } = 10;
 
-    public bool AutomaticBackupEnabled { get; init; } = true;
+        /// <summary>
+    /// 取得或設定 AutomaticBackupEnabled。
+    /// </summary>
+public bool AutomaticBackupEnabled { get; init; } = true;
 
-    [Range(16, 1048576)]
+        /// <summary>
+    /// 取得或設定 SecurityEventQueueCapacity。
+    /// </summary>
+[Range(16, 1048576)]
     public int SecurityEventQueueCapacity { get; init; } = 4096;
 
-    [Range(1, 300)]
+        /// <summary>
+    /// 取得或設定 SecurityEventDrainTimeoutSeconds。
+    /// </summary>
+[Range(1, 300)]
     public int SecurityEventDrainTimeoutSeconds { get; init; } = 30;
 
-    [Range(1, 1000000)]
+        /// <summary>
+    /// 取得或設定 SecurityEventRecoveryBatchSize。
+    /// </summary>
+[Range(1, 1000000)]
     public int SecurityEventRecoveryBatchSize { get; init; } = 10000;
 }
 

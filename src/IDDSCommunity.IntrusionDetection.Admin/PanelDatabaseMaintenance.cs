@@ -9,6 +9,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供 SQLite 主資料庫完整性檢查、備份、最佳化與壓縮作業之維護面板。
+/// </summary>
 public sealed class PanelDatabaseMaintenance : UserControl
 {
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
@@ -26,7 +29,10 @@ public sealed class PanelDatabaseMaintenance : UserControl
 
     private System.Threading.CancellationTokenSource? statusCts;
 
-    public PanelDatabaseMaintenance()
+        /// <summary>
+    /// 初始化 <see cref="PanelDatabaseMaintenance"/> 類別之新執行個體。
+    /// </summary>
+public PanelDatabaseMaintenance()
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
@@ -102,6 +108,9 @@ public sealed class PanelDatabaseMaintenance : UserControl
         historyList.Width = contentWidth;
     }
 
+    /// <summary>
+    /// 非同步重新整理目前資料庫完整性狀態與備份清單。
+    /// </summary>
     public void RefreshStatus() => _ = RunAsync(() => maintenance.GetStatus(), status => { ShowStatus(status); RefreshInventory(); });
 
     private DatabaseBackupResult CreateBackup()

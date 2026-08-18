@@ -134,6 +134,9 @@ internal static class PacketCaptureHub
             Volatile.Write(ref subscriptionSnapshot, [.. subscriptions]);
         }
 
+        /// <summary>
+        /// 釋放封包擷取中心及其內部接收器所佔用之資源。
+        /// </summary>
         public void Dispose()
         {
             StopReceiver();
@@ -295,6 +298,9 @@ internal static class PacketCaptureHub
                 captureFailed(eventArgs);
         }
 
+        /// <summary>
+        /// 釋放封包擷取中心及其內部接收器所佔用之資源。
+        /// </summary>
         public void Dispose()
         {
             if (disposed)

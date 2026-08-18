@@ -5,10 +5,16 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供全域軟封鎖與硬封鎖門檻參數設定之面板控制項。
+/// </summary>
 public partial class PanelLockoutConfiguration : UserControl
 {
 
-    public event EventHandler? LockoutConfigurationChanged;
+        /// <summary>
+    /// 當 LockoutConfigurationChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? LockoutConfigurationChanged;
     /// <summary>
     /// 初始化 <see cref="PanelLockoutConfiguration"/> 類別的新執行個體。
     /// </summary>
@@ -32,7 +38,10 @@ public partial class PanelLockoutConfiguration : UserControl
     /// <param name="e">事件資料。</param>
     private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
 
-    public bool IsInEditMode { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInEditMode。
+    /// </summary>
+public bool IsInEditMode { get; set; }
     /// <summary>
     /// Loads data.
     /// </summary>

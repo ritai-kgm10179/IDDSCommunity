@@ -14,6 +14,9 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// <returns>需要交付時傳回 <see langword="true"/>。</returns>
 public delegate bool RawPacketFilter(ReadOnlySpan<byte> packet);
 
+/// <summary>
+/// 使用 Windows 原生 Raw Socket API 進行未解密封包擷取之接收器。
+/// </summary>
 public sealed class RawSocketReceiver : IPacketCaptureReceiver
 {
     private const int MaximumPacketSize = 65535;
@@ -24,12 +27,19 @@ public sealed class RawSocketReceiver : IPacketCaptureReceiver
     private BoundedPacketDispatcher? dispatcher;
     private long subscriberFailureCount;
 
-    public event EventHandler<RawPacketEventArgs>? PacketReceived;
-    public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
+        /// <summary>
+    /// 當 PacketReceived 時引發之事件。
+    /// </summary>
+public event EventHandler<RawPacketEventArgs>? PacketReceived;
+        /// <summary>
+    /// 當 CaptureFailed 時引發之事件。
+    /// </summary>
+public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
     /// <summary>
     /// 初始化包含界限分發佇列的 Raw Socket 接收器。
     /// </summary>
     /// <param name="queueCapacity">等待訂閱者處理的封包最大數量。</param>
+    /// <param name="packetFilter">用於篩選接收封包之委派，若為 null 則接收所有封包。</param>
     public RawSocketReceiver(int queueCapacity = 1024, RawPacketFilter? packetFilter = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(queueCapacity);
@@ -161,6 +171,10 @@ public sealed class RawSocketReceiver : IPacketCaptureReceiver
     }
 }
 
+/// <summary>
+/// 代表接收到原始網路封包時觸發之事件引數。
+/// </summary>
+/// <param name="packet">未解密的原始封包位元組陣列。</param>
 public sealed class RawPacketEventArgs(byte[] packet) : EventArgs
 {
     /// <summary>

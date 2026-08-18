@@ -12,10 +12,16 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 /// <param name="Category">事件所屬類別（例如通訊協定或服務名稱）。</param>
 /// <param name="AccountName">失敗事件關聯之帳戶名稱；無法取得時為空字串。</param>
 /// <param name="Reason">失敗原因描述。</param>
+/// <param name="IsCredentialFailure">指出此事件是否為明確之認證憑證失敗（密碼錯誤/帳號不存在）。</param>
+/// <param name="ActivityId">關聯之 Windows 活動識別碼 (ActivityId/CorrelationId)。</param>
+/// <param name="ConfidenceScore">事件置信度分數 (0.0 至 1.0)。</param>
 public sealed record AuthenticationFailureEvent(
     DateTimeOffset OccurredAt,
     IPAddress SourceAddress,
     int EventId,
     string Category,
     string AccountName,
-    string Reason);
+    string Reason,
+    bool IsCredentialFailure = true,
+    string? ActivityId = null,
+    double ConfidenceScore = 1.0);

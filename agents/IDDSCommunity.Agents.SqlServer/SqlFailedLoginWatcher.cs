@@ -7,7 +7,9 @@ using System.Drawing;
 
 namespace IDDSCommunity.Agents.SqlServer;
 
-//  [PluginAttribute("Intrusion Detection Base Windows Security Agent", "此 Agent 掃描並監控系統事件紀錄以偵測可能的攻擊。")]
+/// <summary>
+/// 監控 Windows 應用程式事件記錄中 Microsoft SQL Server 登入失敗 (Event ID 18456) 之安全代理程式。
+/// </summary>
 public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
 {
 

@@ -11,8 +11,14 @@ public sealed class PacketSniffer : IDisposable
     private IDisposable? subscription;
     private bool paused;
 
-    public event EventHandler? IpPacketReceived;
-    public event EventHandler? IpPacketSent;
+        /// <summary>
+    /// 當 IpPacketReceived 時引發之事件。
+    /// </summary>
+public event EventHandler? IpPacketReceived;
+        /// <summary>
+    /// 當 IpPacketSent 時引發之事件。
+    /// </summary>
+public event EventHandler? IpPacketSent;
     /// <summary>
     /// 在收到符合通訊埠條件且已完成解析的 TCP 封包時發生。
     /// </summary>
@@ -21,11 +27,24 @@ public sealed class PacketSniffer : IDisposable
     /// 在送出符合通訊埠條件且已完成解析的 TCP 封包時發生。
     /// </summary>
     public event EventHandler<TcpPacketEventArgs>? TcpPacketSent;
-    public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
+        /// <summary>
+    /// 當 CaptureFailed 時引發之事件。
+    /// </summary>
+public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
 
-    public int? TcpPort { get; set; }
-    public IPAddress IPAddress { get; private set; } = IPAddress.Loopback;
+        /// <summary>
+    /// 取得或設定 TcpPort。
+    /// </summary>
+public int? TcpPort { get; set; }
+        /// <summary>
+    /// 取得或設定 IPAddress。
+    /// </summary>
+public IPAddress IPAddress { get; private set; } = IPAddress.Loopback;
 
+    /// <summary>
+    /// 開始在指定的本機網路介面 IP 位址上進行封包監聽。
+    /// </summary>
+        /// <param name="address">欲監聽之本機 IP 位址。</param>
     public void WatchAddress(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
@@ -35,10 +54,24 @@ public sealed class PacketSniffer : IDisposable
         subscription = PacketCaptureHub.Subscribe(address, TcpPort, OnPacketSent, OnPacketReceived, eventArgs => OnCaptureFailed(this, eventArgs));
     }
 
+    /// <summary>
+    /// 暫停封包監聽處理流程。
+    /// </summary>
     public void Abort() => paused = true;
+
+    /// <summary>
+    /// 繼續已暫停之封包監聽處理流程。
+    /// </summary>
     public void Continue() => paused = false;
+
+    /// <summary>
+    /// 關閉原始通訊端並釋放連線資源。
+    /// </summary>
     public void CloseSocket() => Dispose();
 
+    /// <summary>
+    /// 釋放封包監聽器所持有之 Socket 與非託管資源。
+    /// </summary>
     public void Dispose()
     {
         subscription?.Dispose();
@@ -75,6 +108,10 @@ public sealed class PacketSniffer : IDisposable
         CaptureFailed?.Invoke(this, eventArgs);
     }
 
+    /// <summary>
+    /// 將封包處理過程中的例外狀況寫入系統追蹤診斷日誌。
+    /// </summary>
+        /// <param name="exception">發生的例外狀況執行個體。</param>
     public static void LogTrace(Exception exception) => Trace.TraceError("Packet processing failed: {0}", exception);
 }
 

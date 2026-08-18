@@ -4,6 +4,9 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表安全性代理程式組態設定物件之集合清單。
+/// </summary>
 public class AgentConfigurations : List<AgentConfigurationBase>
 {
     /// <summary>
@@ -177,7 +180,16 @@ public class AgentConfigurations : List<AgentConfigurationBase>
         }
     }
 
+    /// <summary>
+    /// 當載入擴充元件發生例外狀況時引發之事件。
+    /// </summary>
     public event LoadPlugInExceptionRaisedHandler? LoadPluginExceptionRaised;
+
+    /// <summary>
+    /// 代表載入擴充元件發生例外狀況時之事件處理常式委派。
+    /// </summary>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="data">包含擴充元件例外狀況詳細資訊之引數。</param>
     public delegate void LoadPlugInExceptionRaisedHandler(object sender, PluginExceptionArguments data);
     /// <summary>
     /// Processes the load plugin exception raised notification.

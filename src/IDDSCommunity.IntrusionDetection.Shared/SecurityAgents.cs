@@ -7,6 +7,9 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表安全性代理程式實體之集合清單，提供排序與尋找方法。
+/// </summary>
 [Serializable]
 public class SecurityAgents : List<SecurityAgent>
 {
@@ -33,7 +36,10 @@ public class SecurityAgents : List<SecurityAgent>
 
 
     private static SecurityAgents? _instance;
-    public static SecurityAgents Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static SecurityAgents Instance
     {
         get
         {
@@ -132,7 +138,10 @@ public class SecurityAgents : List<SecurityAgent>
         return result;
     }
 
-    public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
+        /// <summary>
+    /// 取得或設定 CurrentDomain。
+    /// </summary>
+public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
     /// <summary>
     /// 依顯示名稱尋找 Agent。
     /// </summary>
@@ -213,7 +222,10 @@ public class SecurityAgents : List<SecurityAgent>
     /// </summary>
     public void RegisterSecurityAgents() => MergeDbInformation(ReadAgentsFromDisk());
 
-    public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
+        /// <summary>
+    /// 取得或設定 LoadedAgents。
+    /// </summary>
+public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
     /// <summary>
     /// 執行unload agents作業。
     /// </summary>

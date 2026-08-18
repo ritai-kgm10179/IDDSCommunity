@@ -9,6 +9,9 @@ using System.Diagnostics;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection {
+    /// <summary>
+    /// 提供舊版 .NET Framework 環境下之服務安裝程式。
+    /// </summary>
     [RunInstaller(true)]
     public partial class ProjectInstaller : System.Configuration.Install.Installer {
 

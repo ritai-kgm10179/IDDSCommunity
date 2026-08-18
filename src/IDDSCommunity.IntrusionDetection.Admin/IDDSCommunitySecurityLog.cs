@@ -9,14 +9,23 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供即時與歷史安全性事件記錄查詢與篩選之使用者控制項。
+/// </summary>
 public partial class IDDSCommunitySecurityLog : UserControl
 {
 
-    public const string ALL_AGENTS = "{46DD5CAD-3F50-4D69-8917-11505DB10553}";
+        /// <summary>
+    /// 定義 ALL_AGENTS 之數值。
+    /// </summary>
+public const string ALL_AGENTS = "{46DD5CAD-3F50-4D69-8917-11505DB10553}";
 
 
     private DataSet? _intrusionLog;
-    public DataSet DataSetIntrusionLog
+        /// <summary>
+    /// 取得或設定 DataSetIntrusionLog。
+    /// </summary>
+public DataSet DataSetIntrusionLog
     {
         get
         {
@@ -42,7 +51,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     }
 
     private DataView? _intrusionLogView;
-    public DataView IntrusionLogView
+        /// <summary>
+    /// 取得或設定 IntrusionLogView。
+    /// </summary>
+public DataView IntrusionLogView
     {
         get
         {
@@ -60,7 +72,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
     private readonly System.Windows.Forms.Timer searchDebounceTimer = new() { Interval = 250 };
     private string? pendingSearchQuery;
 
-    public IDDSCommunitySecurityLog()
+        /// <summary>
+    /// 初始化 <see cref="IDDSCommunitySecurityLog"/> 類別之新執行個體。
+    /// </summary>
+public IDDSCommunitySecurityLog()
     {
         InitializeComponent();
         pictureBox2.Image = InterfaceIcons.CreateSecurityLog(Math.Min(pictureBox2.ClientSize.Width, pictureBox2.ClientSize.Height));
@@ -269,7 +284,10 @@ public partial class IDDSCommunitySecurityLog : UserControl
         return row;
     }
 
-    public int MaxLogId { get; set; }
+        /// <summary>
+    /// 取得或設定 MaxLogId。
+    /// </summary>
+public int MaxLogId { get; set; }
     /// <summary>
     /// Adds agent.
     /// </summary>

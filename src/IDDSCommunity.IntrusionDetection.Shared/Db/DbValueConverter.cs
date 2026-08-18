@@ -2,6 +2,9 @@
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 
+/// <summary>
+/// 提供資料庫欄位值與 .NET 強型別物件之間互相轉換之工具類別。
+/// </summary>
 public class DbValueConverter
 {
     /// <summary>

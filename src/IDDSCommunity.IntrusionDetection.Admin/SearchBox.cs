@@ -5,6 +5,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供包含清除按鈕與提示文字之自訂搜尋輸入控制項。
+/// </summary>
 public class SearchBox : Control
 {
 
@@ -130,8 +133,14 @@ public class SearchBox : Control
 
     }
 
-    public Image? SearchImage { get; set; }
-    public Image? ClearImage { get; set; }
+        /// <summary>
+    /// 取得或設定 SearchImage。
+    /// </summary>
+public Image? SearchImage { get; set; }
+        /// <summary>
+    /// 取得或設定 ClearImage。
+    /// </summary>
+public Image? ClearImage { get; set; }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -182,32 +191,53 @@ public class SearchBox : Control
         if (ClearImage is not null) g.DrawImageUnscaled(ClearImage, clearSearchButtonPosition);
     }
 
-    [AllowNull]
+        /// <summary>
+    /// 取得或設定 Text。
+    /// </summary>
+[AllowNull]
     public override string Text
     {
         get => textBoxSearch.Text; set => textBoxSearch.Text = value ?? string.Empty;
     }
 
 
-    public event EventHandler? Search;
+        /// <summary>
+    /// 當 Search 時引發之事件。
+    /// </summary>
+public event EventHandler? Search;
 
-    public event EventHandler? ClearSearch;
+        /// <summary>
+    /// 當 ClearSearch 時引發之事件。
+    /// </summary>
+public event EventHandler? ClearSearch;
 
-    public string EmptyText
+        /// <summary>
+    /// 取得或設定 EmptyText。
+    /// </summary>
+public string EmptyText
     {
         get => textBoxSearch.EmptyText; set => textBoxSearch.EmptyText = value;
     }
-    public Color EmptyTextColor
+        /// <summary>
+    /// 取得或設定 EmptyTextColor。
+    /// </summary>
+public Color EmptyTextColor
     {
         get => textBoxSearch.EmptyTextColor; set => textBoxSearch.EmptyTextColor = value;
     }
 
-    public Font EmptyFont
+        /// <summary>
+    /// 取得或設定 EmptyFont。
+    /// </summary>
+public Font EmptyFont
     {
         get => textBoxSearch.EmptyFont; set => textBoxSearch.EmptyFont = value;
     }
 
 
+    /// <summary>
+    /// 內部文字輸入框，支援 Windows 提示文字 API 與透明背景。
+    /// </summary>
     public class SearchTextBox : TextBox
     {
         /// <summary>
@@ -227,9 +257,18 @@ public class SearchBox : Control
             }
         }
 
-        public Color EmptyTextColor { get; set; }
-        public string EmptyText { get; set; } = string.Empty;
-        public Font EmptyFont { get; set; } = SystemFonts.DefaultFont;
+                /// <summary>
+        /// 取得或設定 EmptyTextColor。
+        /// </summary>
+public Color EmptyTextColor { get; set; }
+                /// <summary>
+        /// 取得或設定 EmptyText。
+        /// </summary>
+public string EmptyText { get; set; } = string.Empty;
+                /// <summary>
+        /// 取得或設定 EmptyFont。
+        /// </summary>
+public Font EmptyFont { get; set; } = SystemFonts.DefaultFont;
 
 
     }

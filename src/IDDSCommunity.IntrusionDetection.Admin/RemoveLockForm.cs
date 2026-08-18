@@ -3,6 +3,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供管理員確認手動解除 IP 封鎖之對話方塊。
+/// </summary>
 public partial class RemoveLockForm : Form
 {
     /// <summary>

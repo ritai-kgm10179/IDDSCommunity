@@ -1,5 +1,8 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供全域共用常數、應用程式識別與預設路徑定義。
+/// </summary>
 public class Globals
 {
     /// <summary>
@@ -46,20 +49,35 @@ public class Globals
     /// </summary>
     public const short IDDSCOMMUNITY_LOG_CATEGORY_CONFIGURATION = 1000;
 
-    public const short IDDSCOMMUNITY_LOG_CATEGORY_SECURITY = 1001;
+        /// <summary>
+    /// 定義 IDDSCOMMUNITY_LOG_CATEGORY_SECURITY 之數值。
+    /// </summary>
+public const short IDDSCOMMUNITY_LOG_CATEGORY_SECURITY = 1001;
 
-    public const short IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN = 1200;
+        /// <summary>
+    /// 定義 IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN 之數值。
+    /// </summary>
+public const short IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN = 1200;
 
-    public const short IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME = 1400;
+        /// <summary>
+    /// 定義 IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME 之數值。
+    /// </summary>
+public const short IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME = 1400;
 
 
-    public const int IDDSCOMMUNITY_EVENT_ID_INFORMATION = 1000;
+        /// <summary>
+    /// 定義 IDDSCOMMUNITY_EVENT_ID_INFORMATION 之數值。
+    /// </summary>
+public const int IDDSCOMMUNITY_EVENT_ID_INFORMATION = 1000;
     /// <summary>
     /// Windows event log
     /// </summary>
     public const int IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED = 4001;
 
-    public const int IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED = 4002;
+        /// <summary>
+    /// 定義 IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED 之數值。
+    /// </summary>
+public const int IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED = 4002;
     /// <summary>
     /// A file cannot be saved to disk
     /// </summary>

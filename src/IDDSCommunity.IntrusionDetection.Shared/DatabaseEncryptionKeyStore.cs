@@ -93,6 +93,16 @@ internal static class DatabaseEncryptionKeyStore
         if (!Path.GetFullPath(keyPath).StartsWith(commonApplicationData + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             return;
 
+        FileSecurity security = CreateHardenedFileSecurity();
+        FileSystemAclExtensions.SetAccessControl(new FileInfo(keyPath), security);
+    }
+
+    /// <summary>
+    /// 建立已阻絕繼承並僅授權 SYSTEM、Administrators 與 Operators 群組之金鑰安全描述元。
+    /// </summary>
+    /// <returns>已設定存取控制規則之 <see cref="FileSecurity"/> 執行個體。</returns>
+    internal static FileSecurity CreateHardenedFileSecurity()
+    {
         FileSecurity security = new();
         security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
         security.AddAccessRule(new FileSystemAccessRule(
@@ -110,7 +120,7 @@ internal static class DatabaseEncryptionKeyStore
                 FileSystemRights.Read,
                 AccessControlType.Allow));
         }
-        FileSystemAclExtensions.SetAccessControl(new FileInfo(keyPath), security);
+        return security;
     }
 
     /// <summary>

@@ -82,10 +82,14 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5)";
-            Assert.AreEqual(5L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6)";
+            Assert.AreEqual(6L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(5L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(6L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ObservationWatermarks'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='SecurityObservationEvents'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_IntrusionLog_IncidentTime'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
         }
@@ -171,6 +175,160 @@ public class DatabaseUpgradeTest
         finally
         {
             database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 驗證資料庫結構描述移轉在執行途中發生例外時，整套 SQLite DDL 交易會原子回滾，不得殘留半套結構或記錄版本號。
+    /// </summary>
+    [TestMethod]
+    public void Migrate_WhenFailureInjected_RollsBackEntireTransactionWithoutPartialSchema()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string databasePath = Path.Combine(directory, "rollback_test.db");
+
+        try
+        {
+            using (Microsoft.Data.Sqlite.SqliteConnection connection = new($"Data Source={databasePath}"))
+            {
+                connection.Open();
+
+                // 模擬移轉交易在執行到一半時發生注入錯誤
+                Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() =>
+                {
+                    using Microsoft.Data.Sqlite.SqliteTransaction transaction = connection.BeginTransaction();
+                    using Microsoft.Data.Sqlite.SqliteCommand cmd1 = connection.CreateCommand();
+                    cmd1.Transaction = transaction;
+                    cmd1.CommandText = "CREATE TABLE InjectedTable1 (Id INTEGER PRIMARY KEY);";
+                    cmd1.ExecuteNonQuery();
+
+                    // 故意注入語法錯誤指令以中斷交易
+                    using Microsoft.Data.Sqlite.SqliteCommand cmdFail = connection.CreateCommand();
+                    cmdFail.Transaction = transaction;
+                    cmdFail.CommandText = "CREATE TABLE InjectedTable2 (INVALID SYNTAX ERROR ???);";
+                    cmdFail.ExecuteNonQuery();
+
+                    transaction.Commit();
+                });
+
+                // 驗證交易已回滾，InjectedTable1 絕不存在
+                using Microsoft.Data.Sqlite.SqliteCommand verifyCmd = connection.CreateCommand();
+                verifyCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='InjectedTable1'";
+                long count = Convert.ToInt64(verifyCmd.ExecuteScalar());
+                Assert.AreEqual(0L, count);
+            }
+        }
+        finally
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 驗證既有版本 5 資料庫（含舊版無 AlertId 之 ProtectionAuditLog 資料）可平順升級至版本 6：
+    /// 舊列完整保留、AlertId 為 NULL、既有多筆 NULL 不違反 UNIQUE、新 Outbox 告警可寫入、唯一索引生效且重跑具備冪等性。
+    /// </summary>
+    [TestMethod]
+    public void ExistingV5DatabaseWithProtectionAuditLog_IsUpgradedToVersion6WithAlertIdAndUniqueIndex()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string databasePath = Path.Combine(directory, "v5_upgrade_test.db");
+
+        try
+        {
+            // 1. 建立真實 v5 結構描述（含舊版無 AlertId 之 ProtectionAuditLog）並寫入舊資料
+            using (Microsoft.Data.Sqlite.SqliteConnection connection = new($"Data Source={databasePath}"))
+            {
+                connection.Open();
+                using Microsoft.Data.Sqlite.SqliteTransaction tx = connection.BeginTransaction();
+                using Microsoft.Data.Sqlite.SqliteCommand setupCmd = connection.CreateCommand();
+                setupCmd.Transaction = tx;
+                setupCmd.CommandText = """
+                    CREATE TABLE SchemaMigrations (Version INTEGER PRIMARY KEY NOT NULL, AppliedUtc TEXT NOT NULL);
+                    INSERT INTO SchemaMigrations VALUES (1, '2026-01-01T00:00:00Z');
+                    INSERT INTO SchemaMigrations VALUES (2, '2026-01-01T00:00:00Z');
+                    INSERT INTO SchemaMigrations VALUES (3, '2026-01-01T00:00:00Z');
+                    INSERT INTO SchemaMigrations VALUES (4, '2026-01-01T00:00:00Z');
+                    INSERT INTO SchemaMigrations VALUES (5, '2026-01-01T00:00:00Z');
+                    CREATE TABLE DbConfig (Version INTEGER NOT NULL);
+                    CREATE TABLE Configuration (ConfigurationKey TEXT PRIMARY KEY, ConfigurationValue TEXT);
+                    CREATE TABLE IntrusionLog (Id INTEGER PRIMARY KEY AUTOINCREMENT, IncidentTime TEXT, AgentId TEXT, ClientIP TEXT, Action INTEGER, ActionTriggeredByUser INTEGER);
+                    CREATE TABLE Locks (Id INTEGER PRIMARY KEY AUTOINCREMENT, LockType INTEGER, LockDate TEXT, UnlockDate TEXT, LastUpdate TEXT, Reason INTEGER, ClientIP TEXT, Description TEXT);
+                    CREATE TABLE SecurityAgentConfig (AgentId TEXT PRIMARY KEY, AgentConfig TEXT);
+                    CREATE TABLE SecurityAgents (AgentId TEXT PRIMARY KEY, AgentName TEXT, AgentDescription TEXT, AgentAssembly TEXT, AgentType TEXT, AgentEnabled INTEGER);
+                    CREATE TABLE AppConfig (ConfigKey TEXT PRIMARY KEY, ConfigValue TEXT);
+                    CREATE TABLE Whitelist (ClientIP TEXT PRIMARY KEY);
+                    CREATE TABLE AgentStatistics (AgentId TEXT PRIMARY KEY, AttacksBlocked INTEGER, AttacksDetected INTEGER);
+                    CREATE TABLE ProtectionAuditLog (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        OccurredUtc TEXT NOT NULL,
+                        EventType TEXT NOT NULL,
+                        Outcome TEXT NOT NULL,
+                        Actor TEXT NOT NULL,
+                        Subject TEXT NOT NULL,
+                        Details TEXT NOT NULL
+                    );
+                    INSERT INTO ProtectionAuditLog (OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ('2026-01-01T10:00:00Z', 'LegacyEvent1', 'Success', 'SYSTEM', '192.0.2.1', 'Detail1');
+                    INSERT INTO ProtectionAuditLog (OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ('2026-01-01T11:00:00Z', 'LegacyEvent2', 'Success', 'SYSTEM', '192.0.2.2', 'Detail2');
+                    INSERT INTO ProtectionAuditLog (OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ('2026-01-01T12:00:00Z', 'LegacyEvent3', 'Success', 'SYSTEM', '192.0.2.3', 'Detail3');
+                    """;
+                setupCmd.ExecuteNonQuery();
+                tx.Commit();
+            }
+
+            // 2. 執行版本 6 移轉
+            using (Microsoft.Data.Sqlite.SqliteConnection connection = new($"Data Source={databasePath}"))
+            {
+                connection.Open();
+                Db.SchemaMigrationRunner.Migrate(connection);
+
+                // 驗證 SchemaMigrations 記錄版本 6
+                using Microsoft.Data.Sqlite.SqliteCommand checkVerCmd = connection.CreateCommand();
+                checkVerCmd.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 6";
+                Assert.AreEqual(1L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));
+
+                // 驗證舊列完整保留且 AlertId 欄位為 NULL
+                using Microsoft.Data.Sqlite.SqliteCommand checkOldCmd = connection.CreateCommand();
+                checkOldCmd.CommandText = "SELECT COUNT(*) FROM ProtectionAuditLog WHERE AlertId IS NULL";
+                Assert.AreEqual(3L, Convert.ToInt64(checkOldCmd.ExecuteScalar()));
+
+                // 驗證唯一索引存在且生效
+                using Microsoft.Data.Sqlite.SqliteCommand checkIdxCmd = connection.CreateCommand();
+                checkIdxCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_ProtectionAuditLog_AlertId'";
+                Assert.AreEqual(1L, Convert.ToInt64(checkIdxCmd.ExecuteScalar()));
+
+                // 驗證新 AlertId 可正常寫入
+                using Microsoft.Data.Sqlite.SqliteCommand insertNewCmd = connection.CreateCommand();
+                insertNewCmd.CommandText = """
+                    INSERT INTO ProtectionAuditLog (AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ('ALERT-001', '2026-01-01T13:00:00Z', 'SprayDetected', 'AlertOnly', 'AuthAgent', '192.0.2.88', 'Detail');
+                    """;
+                insertNewCmd.ExecuteNonQuery();
+
+                // 驗證重複 AlertId 會觸發 UNIQUE 約束違規 (當直接 INSERT 時)
+                using Microsoft.Data.Sqlite.SqliteCommand insertDupCmd = connection.CreateCommand();
+                insertDupCmd.CommandText = """
+                    INSERT INTO ProtectionAuditLog (AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ('ALERT-001', '2026-01-01T14:00:00Z', 'SprayDetected', 'AlertOnly', 'AuthAgent', '192.0.2.88', 'DupDetail');
+                    """;
+                Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => insertDupCmd.ExecuteNonQuery());
+
+                // 3. 驗證重複執行 Migrate 具備冪等性
+                Db.SchemaMigrationRunner.Migrate(connection);
+            }
+        }
+        finally
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
             if (Directory.Exists(directory))
                 Directory.Delete(directory, recursive: true);
         }

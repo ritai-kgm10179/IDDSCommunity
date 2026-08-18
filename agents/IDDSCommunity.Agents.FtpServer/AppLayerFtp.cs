@@ -4,9 +4,14 @@ using System.IO;
 
 namespace IDDSCommunity.Agents.FtpServer;
 
+/// <summary>
+/// 代表解析後的 FTP 應用層通訊協定回應資料。
+/// </summary>
 public class AppLayerFtp
 {
-
+    /// <summary>
+    /// 定義 FTP 登入遭拒之標準回應代碼 (530)。
+    /// </summary>
     public const string FTP_REPLY_CODE_LOGIN_DENIED = "530";
 
     /// <summary>

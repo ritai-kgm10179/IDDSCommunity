@@ -28,10 +28,30 @@ internal static class SchemaMigrationRunner
         }
 
         Execute(connection, transaction, CreateProtectionAuditLog);
+        if (TableExists(connection, transaction, "ProtectionAuditLog"))
+        {
+            if (!ColumnExists(connection, transaction, "ProtectionAuditLog", "AlertId"))
+                Execute(connection, transaction, "ALTER TABLE ProtectionAuditLog ADD COLUMN AlertId TEXT NULL");
+        }
         Execute(connection, transaction, CreateProtectionAuditLogIndex);
+        Execute(connection, transaction, CreateProtectionAuditLogAlertIdIndex);
         Execute(connection, transaction, CreateProtectionEventInbox);
         Execute(connection, transaction, CreateProtectionEventInboxStatusIndex);
         Execute(connection, transaction, CreateIntrusionLogWindowIndex);
+        Execute(connection, transaction, CreateObservationWatermarks);
+        Execute(connection, transaction, CreateSecurityObservationEvents);
+        if (TableExists(connection, transaction, "SecurityObservationEvents"))
+        {
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "IdempotencyKey"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN IdempotencyKey TEXT NOT NULL DEFAULT ''");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "AlertEmitted"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN AlertEmitted INTEGER NOT NULL DEFAULT 0");
+        }
+        Execute(connection, transaction, CreateSecurityObservationEventsIdempotencyIndex);
+        Execute(connection, transaction, CreateSecurityObservationEventsTimeIpIndex);
+        Execute(connection, transaction, CreateSecurityObservationEventsCorrelationIndex);
+        Execute(connection, transaction, CreateObservationAlertOutbox);
+        Execute(connection, transaction, CreateObservationAlertOutboxStatusIndex);
 
         if (!MigrationApplied(connection, transaction, 5))
             MigrateLegacyLocalTimestampsToUtc(connection, transaction);
@@ -55,6 +75,10 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (5, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (6, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -109,6 +133,21 @@ internal static class SchemaMigrationRunner
         return Convert.ToInt64(command.ExecuteScalar()) > 0;
     }
 
+    private static bool ColumnExists(SqliteConnection connection, SqliteTransaction transaction, string tableName, string columnName)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"PRAGMA table_info({tableName})";
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            string name = reader.GetString(1);
+            if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
     private static void Execute(SqliteConnection connection, SqliteTransaction transaction, string sql)
     {
         using SqliteCommand command = connection.CreateCommand();
@@ -161,6 +200,7 @@ internal static class SchemaMigrationRunner
     private const string CreateProtectionAuditLog = """
         CREATE TABLE IF NOT EXISTS ProtectionAuditLog (
             Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            AlertId TEXT NULL,
             OccurredUtc TEXT NOT NULL,
             EventType TEXT NOT NULL,
             Outcome TEXT NOT NULL,
@@ -172,6 +212,9 @@ internal static class SchemaMigrationRunner
 
     private const string CreateProtectionAuditLogIndex =
         "CREATE INDEX IF NOT EXISTS IX_ProtectionAuditLog_OccurredUtc ON ProtectionAuditLog(OccurredUtc)";
+
+    private const string CreateProtectionAuditLogAlertIdIndex =
+        "CREATE UNIQUE INDEX IF NOT EXISTS IX_ProtectionAuditLog_AlertId ON ProtectionAuditLog(AlertId)";
 
     private const string CreateProtectionEventInbox = """
         CREATE TABLE IF NOT EXISTS ProtectionEventInbox (
@@ -194,4 +237,68 @@ internal static class SchemaMigrationRunner
 
     private const string CreateIntrusionLogWindowIndex =
         "CREATE INDEX IF NOT EXISTS IX_IntrusionLog_IncidentTime ON IntrusionLog(IncidentTime)";
+
+    private const string CreateObservationWatermarks = """
+        CREATE TABLE IF NOT EXISTS ObservationWatermarks (
+            SourceAgentName TEXT NOT NULL,
+            ProviderOrChannel TEXT NOT NULL,
+            LastEventRecordId INTEGER NULL,
+            LastTimestampUtc TEXT NOT NULL,
+            UpdatedUtc TEXT NOT NULL,
+            PRIMARY KEY (SourceAgentName, ProviderOrChannel)
+        )
+        """;
+
+    private const string CreateSecurityObservationEvents = """
+        CREATE TABLE IF NOT EXISTS SecurityObservationEvents (
+            Id TEXT PRIMARY KEY NOT NULL,
+            IdempotencyKey TEXT NOT NULL,
+            ReceivedUtc TEXT NOT NULL,
+            EventTimeUtc TEXT NOT NULL,
+            SourceAgentName TEXT NOT NULL,
+            ProviderOrChannel TEXT NOT NULL,
+            ComputerName TEXT NOT NULL,
+            SourceEventRecordId INTEGER NULL,
+            SourceFileOffset INTEGER NULL,
+            SourceEventIdentity TEXT NULL,
+            NormalizedIpAddress TEXT NOT NULL,
+            NormalizedAccount TEXT NOT NULL,
+            NormalizedDomain TEXT NOT NULL,
+            OriginalEventReference TEXT NOT NULL,
+            Provenance TEXT NOT NULL,
+            LogonType INTEGER NULL,
+            SubStatus TEXT NULL,
+            CorrelationGroupId TEXT NULL,
+            ConfidenceScore REAL NOT NULL,
+            AlertEmitted INTEGER NOT NULL DEFAULT 0
+        )
+        """;
+
+    private const string CreateSecurityObservationEventsIdempotencyIndex =
+        "CREATE UNIQUE INDEX IF NOT EXISTS IX_SecurityObservationEvents_IdempotencyKey ON SecurityObservationEvents(IdempotencyKey)";
+
+    private const string CreateSecurityObservationEventsTimeIpIndex =
+        "CREATE INDEX IF NOT EXISTS IX_SecurityObservationEvents_Time_Ip ON SecurityObservationEvents(EventTimeUtc, NormalizedIpAddress)";
+
+    private const string CreateSecurityObservationEventsCorrelationIndex =
+        "CREATE INDEX IF NOT EXISTS IX_SecurityObservationEvents_CorrelationGroupId ON SecurityObservationEvents(CorrelationGroupId)";
+
+    private const string CreateObservationAlertOutbox = """
+        CREATE TABLE IF NOT EXISTS ObservationAlertOutbox (
+            AlertId TEXT PRIMARY KEY NOT NULL,
+            ObservationId TEXT NOT NULL,
+            OccurredUtc TEXT NOT NULL,
+            EventType TEXT NOT NULL,
+            Outcome TEXT NOT NULL,
+            Actor TEXT NOT NULL,
+            Subject TEXT NOT NULL,
+            Details TEXT NOT NULL,
+            Status INTEGER NOT NULL,
+            DispatchedUtc TEXT NULL,
+            CreatedUtc TEXT NOT NULL
+        )
+        """;
+
+    private const string CreateObservationAlertOutboxStatusIndex =
+        "CREATE INDEX IF NOT EXISTS IX_ObservationAlertOutbox_Status ON ObservationAlertOutbox(Status)";
 }

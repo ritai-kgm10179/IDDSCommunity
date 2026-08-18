@@ -12,6 +12,9 @@ using Polly.Retry;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供 SQLite 頁面加密資料庫連線管理、結構升級、交易執行與查詢封裝之主要資料存取類別。
+/// </summary>
 public class Database
 {
     private const int MaximumRetryCount = 5;
@@ -26,7 +29,10 @@ public class Database
         })
         .Build();
     private bool _isConfigured = false;
-    public bool IsConfigured => _isConfigured;
+        /// <summary>
+    /// 取得或設定 IsConfigured。
+    /// </summary>
+public bool IsConfigured => _isConfigured;
 
     private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
@@ -106,7 +112,10 @@ public class Database
     /// <param name="e">事件資料。</param>
     private void _connection_StateChange(object sender, StateChangeEventArgs e) => System.Diagnostics.Debug.Print("Db state {0} --> {1}", e.OriginalState, e.CurrentState);
 
-    public SqliteConnection Connection
+        /// <summary>
+    /// 取得或設定 Connection。
+    /// </summary>
+public SqliteConnection Connection
     {
         get
         {
@@ -123,7 +132,10 @@ public class Database
     }
 
     private static Database? _instance;
-    public static Database Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static Database Instance
     {
         get
         {
@@ -630,7 +642,10 @@ public class Database
         return dynParams;
     }
 
-    public int DatabaseVersion { get; set; }
+        /// <summary>
+    /// 取得或設定 DatabaseVersion。
+    /// </summary>
+public int DatabaseVersion { get; set; }
     /// <summary>
     /// Opens or create.
     /// </summary>

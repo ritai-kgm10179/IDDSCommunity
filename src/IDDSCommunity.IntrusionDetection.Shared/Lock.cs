@@ -2,35 +2,107 @@
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表單一已封鎖來源 IP 規則之實體資料模型。
+/// </summary>
 public class Lock
 {
-    public const int LOCK_STATUS_NONE = 100;
-    public const int LOCK_STATUS_SOFTLOCK_REQUESTED = 200;
-    public const int LOCK_STATUS_SOFTLOCK = 210;
-    public const int LOCK_STATUS_SOFTLOCK_EXPIRED = 220;
-    public const int LOCK_STATUS_HARDLOCK_REQUESTED = 300;
-    public const int LOCK_STATUS_HARDLOCK = 310;
-    public const int LOCK_STATUS_HARDLOCK_EXPIRED = 320;
-    public const int LOCK_STATUS_MANUAL = 400;
-    public const int LOCK_STATUS_ACTIVE = 510;
-    public const int LOCK_STATUS_UNLOCK_REQUESTED = 500;
-    public const int LOCK_STATUS_UNLOCKED = 510;
-    public const int LOCK_STATUS_HISTORY = 800;
-    public const int LOCK_STATUS_LOCK_ERROR = 900;
-    public const int LOCK_STATUS_UNLOCK_ERROR = 901;
+        /// <summary>
+    /// 定義 LOCK_STATUS_NONE 之數值。
+    /// </summary>
+public const int LOCK_STATUS_NONE = 100;
+        /// <summary>
+    /// 定義 LOCK_STATUS_SOFTLOCK_REQUESTED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_SOFTLOCK_REQUESTED = 200;
+        /// <summary>
+    /// 定義 LOCK_STATUS_SOFTLOCK 之數值。
+    /// </summary>
+public const int LOCK_STATUS_SOFTLOCK = 210;
+        /// <summary>
+    /// 定義 LOCK_STATUS_SOFTLOCK_EXPIRED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_SOFTLOCK_EXPIRED = 220;
+        /// <summary>
+    /// 定義 LOCK_STATUS_HARDLOCK_REQUESTED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_HARDLOCK_REQUESTED = 300;
+        /// <summary>
+    /// 定義 LOCK_STATUS_HARDLOCK 之數值。
+    /// </summary>
+public const int LOCK_STATUS_HARDLOCK = 310;
+        /// <summary>
+    /// 定義 LOCK_STATUS_HARDLOCK_EXPIRED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_HARDLOCK_EXPIRED = 320;
+        /// <summary>
+    /// 定義 LOCK_STATUS_MANUAL 之數值。
+    /// </summary>
+public const int LOCK_STATUS_MANUAL = 400;
+        /// <summary>
+    /// 定義 LOCK_STATUS_ACTIVE 之數值。
+    /// </summary>
+public const int LOCK_STATUS_ACTIVE = 510;
+        /// <summary>
+    /// 定義 LOCK_STATUS_UNLOCK_REQUESTED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_UNLOCK_REQUESTED = 500;
+        /// <summary>
+    /// 定義 LOCK_STATUS_UNLOCKED 之數值。
+    /// </summary>
+public const int LOCK_STATUS_UNLOCKED = 510;
+        /// <summary>
+    /// 定義 LOCK_STATUS_HISTORY 之數值。
+    /// </summary>
+public const int LOCK_STATUS_HISTORY = 800;
+        /// <summary>
+    /// 定義 LOCK_STATUS_LOCK_ERROR 之數值。
+    /// </summary>
+public const int LOCK_STATUS_LOCK_ERROR = 900;
+        /// <summary>
+    /// 定義 LOCK_STATUS_UNLOCK_ERROR 之數值。
+    /// </summary>
+public const int LOCK_STATUS_UNLOCK_ERROR = 901;
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.
-    public const int LOCK_STATUS_PROTECTION_UNAVAILABLE = 999;
+        /// <summary>
+    /// 定義 LOCK_STATUS_PROTECTION_UNAVAILABLE 之數值。
+    /// </summary>
+public const int LOCK_STATUS_PROTECTION_UNAVAILABLE = 999;
 
 
 
-    public long Id { get; set; }
-    public string IpAddress { get; set; } = string.Empty;
-    public DateTime LockDate { get; set; }
-    public DateTime UnlockDate { get; set; }
-    public int Port { get; set; }
-    public int Status { get; set; }
-    public int NumberOfSoftLocks { get; set; }
-    public long TriggerIncident { get; set; }
+        /// <summary>
+    /// 取得或設定 Id。
+    /// </summary>
+public long Id { get; set; }
+        /// <summary>
+    /// 取得或設定 IpAddress。
+    /// </summary>
+public string IpAddress { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 LockDate。
+    /// </summary>
+public DateTime LockDate { get; set; }
+        /// <summary>
+    /// 取得或設定 UnlockDate。
+    /// </summary>
+public DateTime UnlockDate { get; set; }
+        /// <summary>
+    /// 取得或設定 Port。
+    /// </summary>
+public int Port { get; set; }
+        /// <summary>
+    /// 取得或設定 Status。
+    /// </summary>
+public int Status { get; set; }
+        /// <summary>
+    /// 取得或設定 NumberOfSoftLocks。
+    /// </summary>
+public int NumberOfSoftLocks { get; set; }
+        /// <summary>
+    /// 取得或設定 TriggerIncident。
+    /// </summary>
+public long TriggerIncident { get; set; }
     /// <summary>
     /// 儲存設定變更作業。
     /// </summary>

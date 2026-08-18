@@ -7,22 +7,40 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供設定功能導覽樹狀選單之使用者控制項。
+/// </summary>
 public partial class IDDSCommunitySettingsNavigation : UserControl
 {
 
-    public event EventHandler? PluginsChanged;
+        /// <summary>
+    /// 當 PluginsChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? PluginsChanged;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigation"/> 類別的新執行個體。
     /// </summary>
     public IDDSCommunitySettingsNavigation() => InitializeComponent();
 
-    public event EventHandler? NavigationChanged;
+        /// <summary>
+    /// 當 NavigationChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? NavigationChanged;
 
-    public Color SeparatorColor { get; set; }
+        /// <summary>
+    /// 取得或設定 SeparatorColor。
+    /// </summary>
+public Color SeparatorColor { get; set; }
 
-    public bool ShowSeparator { get; set; }
+        /// <summary>
+    /// 取得或設定 ShowSeparator。
+    /// </summary>
+public bool ShowSeparator { get; set; }
 
-    public bool ShowTopMenu { get; set; }
+        /// <summary>
+    /// 取得或設定 ShowTopMenu。
+    /// </summary>
+public bool ShowTopMenu { get; set; }
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>
@@ -113,7 +131,10 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     }
 
 
-    public IDDSCommunitySettingsNavigationItem? SelectedItem
+        /// <summary>
+    /// 取得或設定 SelectedItem。
+    /// </summary>
+public IDDSCommunitySettingsNavigationItem? SelectedItem
     {
         get
         {
@@ -147,7 +168,10 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <param name="sender">事件來源物件。</param>
     private void OnNavigationChanged(object sender) => NavigationChanged?.Invoke(sender, EventArgs.Empty);
 
-    public string SelectedName
+        /// <summary>
+    /// 取得或設定 SelectedName。
+    /// </summary>
+public string SelectedName
     {
         get
         {

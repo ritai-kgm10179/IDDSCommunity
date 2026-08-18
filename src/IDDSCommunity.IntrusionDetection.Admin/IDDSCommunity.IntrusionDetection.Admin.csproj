@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -9,6 +9,11 @@
     <ApplicationManifest>ProtectionConfig.exe.manifest</ApplicationManifest>
     <ApplicationIcon>..\..\assets\branding\idds-community.ico</ApplicationIcon>
     <DebugType>embedded</DebugType>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\assets\branding\idds-community.ico" LogicalName="IDDSCommunity.Branding.idds-community.ico" />
@@ -23,12 +28,14 @@
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.OpenSsh\IDDSCommunity.Agents.OpenSsh.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.PostgreSql\IDDSCommunity.Agents.PostgreSql.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.Radius\IDDSCommunity.Agents.Radius.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.RemoteDesktopGateway\IDDSCommunity.Agents.RemoteDesktopGateway.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.SqlServer\IDDSCommunity.Agents.SqlServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.TechnitiumDns\IDDSCommunity.Agents.TechnitiumDns.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.TerminalServer\IDDSCommunity.Agents.TerminalServer.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.WebSecurity\IDDSCommunity.Agents.WebSecurity.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.WindowsDns\IDDSCommunity.Agents.WindowsDns.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.WindowsNetworkLogon\IDDSCommunity.Agents.WindowsNetworkLogon.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.WinRm\IDDSCommunity.Agents.WinRm.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Api\IDDSCommunity.IntrusionDetection.Api.csproj" />
     <ProjectReference Include="..\IDDSCommunity.IntrusionDetection.Shared\IDDSCommunity.IntrusionDetection.Shared.csproj" />
   </ItemGroup>

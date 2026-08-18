@@ -12,6 +12,8 @@
   <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows Base Security Agent</value></data>
   <data name="Windows OpenSSH Security Agent" xml:space="preserve"><value>Windows OpenSSH Security Agent</value></data>
   <data name="Windows Network Logon Security Agent" xml:space="preserve"><value>Windows Network Logon Security Agent</value></data>
+  <data name="Windows Remote Management (WinRM / WAC) Security Agent" xml:space="preserve"><value>Windows Remote Management (WinRM / WAC) Security Agent</value></data>
+  <data name="Remote Desktop Gateway Security Agent" xml:space="preserve"><value>Remote Desktop Gateway Security Agent</value></data>
   <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL Security Agent</value></data>
   <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS Security Agent</value></data>
   <data name="IIS Authentication Security Agent" xml:space="preserve"><value>IIS Authentication Security Agent</value></data>

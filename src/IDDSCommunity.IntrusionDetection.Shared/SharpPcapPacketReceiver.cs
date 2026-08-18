@@ -16,8 +16,14 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
     private BoundedPacketDispatcher? dispatcher;
     private bool stopping;
 
-    public event EventHandler<RawPacketEventArgs>? PacketReceived;
-    public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
+        /// <summary>
+    /// 當 PacketReceived 時引發之事件。
+    /// </summary>
+public event EventHandler<RawPacketEventArgs>? PacketReceived;
+        /// <summary>
+    /// 當 CaptureFailed 時引發之事件。
+    /// </summary>
+public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
 
     internal static bool TryCreate(IPAddress address, string filter, out SharpPcapPacketReceiver? receiver)
     {
@@ -39,6 +45,10 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
         }
     }
 
+    /// <summary>
+    /// 透過 Npcap/WinPcap 介面在指定 IP 位址上啟動封包擷取。
+    /// </summary>
+        /// <param name="address">欲監聽之本機網路介面 IP 位址。</param>
     public void Start(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
@@ -69,6 +79,9 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
         }
     }
 
+    /// <summary>
+    /// 停止封包擷取裝置並關閉工作階段。
+    /// </summary>
     public void Stop()
     {
         if (stopping)
@@ -96,6 +109,9 @@ internal sealed class SharpPcapPacketReceiver(LibPcapLiveDevice device, string f
         dispatcher = null;
     }
 
+    /// <summary>
+    /// 釋放 SharpPcap 接收器與相關驅動程式連線資源。
+    /// </summary>
     public void Dispose() => Stop();
 
     /// <summary>

@@ -3,9 +3,15 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表安全性代理程式擴充元件之遠端呼叫代理包裝類別。
+/// </summary>
 public class AgentProxy : MarshalByRefObject, IAgentPlugin
 {
-    public event AttackDetectedHandler? AttackDetected;
+        /// <summary>
+    /// 當 AttackDetected 時引發之事件。
+    /// </summary>
+public event AttackDetectedHandler? AttackDetected;
 
     private IAgentPlugin? _agent;
     private readonly AgentPluginLoadContext loadContext;
@@ -74,15 +80,24 @@ public class AgentProxy : MarshalByRefObject, IAgentPlugin
     /// <returns>若n continue傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public bool CanContinue() => GetAgent().CanContinue();
 
-    public bool IsPaused
+        /// <summary>
+    /// 取得或設定 IsPaused。
+    /// </summary>
+public bool IsPaused
     {
         get => GetAgent().IsPaused;
         set => GetAgent().IsPaused = value;
     }
 
-    public bool IsRunning => GetAgent().IsRunning;
+        /// <summary>
+    /// 取得或設定 IsRunning。
+    /// </summary>
+public bool IsRunning => GetAgent().IsRunning;
 
-    public IAgentConfiguration Configuration
+        /// <summary>
+    /// 取得或設定 Configuration。
+    /// </summary>
+public IAgentConfiguration Configuration
     {
         get => GetAgent().Configuration;
         set => GetAgent().Configuration = value;

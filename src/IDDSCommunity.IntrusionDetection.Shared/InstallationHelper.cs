@@ -6,10 +6,21 @@ using System.Configuration.Install;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 代表安裝階段狀態字典資料集合。
+/// </summary>
 public class InstallState : Dictionary<string, string> { }
+
+/// <summary>
+/// 提供舊版 .NET Framework 下之安裝協助程式類別。
+/// </summary>
 [RunInstaller(true)]
 public partial class InstallationHelper : Installer
 {
+    /// <summary>
+    /// 執行安裝作業並儲存狀態字典。
+    /// </summary>
+    /// <param name="stateSaver">狀態儲存字典。</param>
     public override void Install(IDictionary stateSaver)
     {
         base.Install(stateSaver);

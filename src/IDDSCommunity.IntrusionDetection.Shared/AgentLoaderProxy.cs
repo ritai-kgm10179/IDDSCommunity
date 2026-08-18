@@ -7,6 +7,9 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供跨 AppDomain/進程載入與分析擴充元件組件資訊之遠端代理類別。
+/// </summary>
 [Serializable]
 public class AgentLoaderProxy : MarshalByRefObject
 {
@@ -138,7 +141,10 @@ public class AgentLoaderProxy : MarshalByRefObject
         return result;
     }
 
-    public static Dictionary<string, string> GetCustomConfigurationTypes(PluginConfiguration config)
+        /// <summary>
+    /// 執行 GetCustomConfigurationTypes 作業。
+    /// </summary>
+public static Dictionary<string, string> GetCustomConfigurationTypes(PluginConfiguration config)
     {
         Dictionary<string, string> result = [];
         foreach (PropertyInfo property in config.GetType().GetProperties())

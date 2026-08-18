@@ -10,6 +10,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供系統設定匯出與匯入（含機密加密）作業之面板控制項。
+/// </summary>
 public sealed class PanelConfigurationTransfer : UserControl
 {
     private readonly ConfigurationTransferService transfer = new(Database.Instance);
@@ -22,7 +25,10 @@ public sealed class PanelConfigurationTransfer : UserControl
     private static string DefaultStatusText => Strings.Get("Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM.");
     private System.Threading.CancellationTokenSource? statusCts;
 
-    public PanelConfigurationTransfer()
+        /// <summary>
+    /// 初始化 <see cref="PanelConfigurationTransfer"/> 類別之新執行個體。
+    /// </summary>
+public PanelConfigurationTransfer()
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;

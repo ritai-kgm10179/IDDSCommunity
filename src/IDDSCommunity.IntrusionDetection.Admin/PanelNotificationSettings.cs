@@ -6,9 +6,15 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供事件通知收件者與報表寄送排程設定之面板控制項。
+/// </summary>
 public partial class PanelNotificationSettings : UserControl
 {
-    public event EventHandler? NotificationSettingsChanged;
+        /// <summary>
+    /// 當 NotificationSettingsChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? NotificationSettingsChanged;
     /// <summary>
     /// 初始化 <see cref="PanelNotificationSettings"/> 類別的新執行個體。
     /// </summary>
@@ -25,7 +31,10 @@ public partial class PanelNotificationSettings : UserControl
     /// <param name="e">事件資料。</param>
     void PanelNotificationSettings_Load(object? sender, EventArgs e) => LoadData();
 
-    public bool IsInEditMode { get; set; }
+        /// <summary>
+    /// 取得或設定 IsInEditMode。
+    /// </summary>
+public bool IsInEditMode { get; set; }
     /// <summary>
     /// Loads data.
     /// </summary>

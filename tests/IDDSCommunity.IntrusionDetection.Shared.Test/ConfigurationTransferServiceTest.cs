@@ -129,6 +129,24 @@ public sealed class ConfigurationTransferServiceTest
         Assert.ThrowsExactly<ArgumentException>(() => service.Export(true, "too-short"));
     }
 
+    /// <summary>
+    /// 驗證每次匯出加密機密時均產生長度為 12 位元組之獨立唯一 Nonce，避免 Nonce 重用。
+    /// </summary>
+    [TestMethod]
+    public void EncryptedSecretExportGeneratesUniqueNonceForEachExport()
+    {
+        ConfigurationTransferService service = new(database);
+        System.Collections.Generic.HashSet<string> seenNonces = new(StringComparer.Ordinal);
+        for (int i = 0; i < 20; i++)
+        {
+            ConfigurationTransferPackage package = service.Export(true, "correct horse battery staple");
+            Assert.IsNotNull(package.Secrets);
+            byte[] nonce = Convert.FromBase64String(package.Secrets.Nonce);
+            Assert.AreEqual(12, nonce.Length);
+            Assert.IsTrue(seenNonces.Add(package.Secrets.Nonce), "Nonce collision detected across export invocations.");
+        }
+    }
+
     [TestMethod]
     public void EncryptedSecretParametersAreAuthenticatedAndBounded()
     {

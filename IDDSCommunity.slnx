@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/src/">
     <Project Path="src/IDDSCommunity.IntrusionDetection.Admin/IDDSCommunity.IntrusionDetection.Admin.csproj" />
     <Project Path="src/IDDSCommunity.IntrusionDetection.Api/IDDSCommunity.IntrusionDetection.Api.csproj" />
@@ -18,12 +18,14 @@
     <Project Path="agents/IDDSCommunity.Agents.OpenSsh/IDDSCommunity.Agents.OpenSsh.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.PostgreSql/IDDSCommunity.Agents.PostgreSql.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.Radius/IDDSCommunity.Agents.Radius.csproj" />
+    <Project Path="agents/IDDSCommunity.Agents.RemoteDesktopGateway/IDDSCommunity.Agents.RemoteDesktopGateway.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.SqlServer/IDDSCommunity.Agents.SqlServer.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.TechnitiumDns/IDDSCommunity.Agents.TechnitiumDns.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.TerminalServer/IDDSCommunity.Agents.TerminalServer.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WebSecurity/IDDSCommunity.Agents.WebSecurity.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WindowsDns/IDDSCommunity.Agents.WindowsDns.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />
+    <Project Path="agents/IDDSCommunity.Agents.WinRm/IDDSCommunity.Agents.WinRm.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
@@ -36,6 +38,7 @@
     <Project Path="tests/IDDSCommunity.Agents.OpenSsh.Test/IDDSCommunity.Agents.OpenSsh.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.PostgreSql.Test/IDDSCommunity.Agents.PostgreSql.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.Radius.Test/IDDSCommunity.Agents.Radius.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.RemoteDesktopGateway.Test/IDDSCommunity.Agents.RemoteDesktopGateway.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.SqlServer.Test/IDDSCommunity.Agents.SqlServer.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.TechnitiumDns.Test/IDDSCommunity.Agents.TechnitiumDns.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.TerminalServer.Test/IDDSCommunity.Agents.TerminalServer.Test.csproj" />
@@ -43,6 +46,7 @@
     <Project Path="tests/IDDSCommunity.Agents.WindowsAuthentication.Test/IDDSCommunity.Agents.WindowsAuthentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.WindowsDns.Test/IDDSCommunity.Agents.WindowsDns.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.WindowsNetworkLogon.Test/IDDSCommunity.Agents.WindowsNetworkLogon.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.WinRm.Test/IDDSCommunity.Agents.WinRm.Test.csproj" />
     <Project Path="tests/IDDSCommunity.IntrusionDetection.Service.Test/IDDSCommunity.IntrusionDetection.Service.Test.csproj" />
     <Project Path="tests/IDDSCommunity.IntrusionDetection.Setup.Test/IDDSCommunity.IntrusionDetection.Setup.Test.csproj" />
     <Project Path="tests/IDDSCommunity.IntrusionDetection.Shared.Test/IDDSCommunity.IntrusionDetection.Shared.Test.csproj" />

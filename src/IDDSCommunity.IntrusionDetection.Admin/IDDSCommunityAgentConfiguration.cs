@@ -5,10 +5,19 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供安全性代理程式組態設定與啟用狀態管理之使用者控制項。
+/// </summary>
 public partial class IDDSCommunityAgentConfiguration : UserControl
 {
-    public event EventHandler? PluginsChanged;
-    public event EventHandler? AgentSettingsChanged;
+        /// <summary>
+    /// 當 PluginsChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? PluginsChanged;
+        /// <summary>
+    /// 當 AgentSettingsChanged 時引發之事件。
+    /// </summary>
+public event EventHandler? AgentSettingsChanged;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityAgentConfiguration"/> 類別的新執行個體。
     /// </summary>
@@ -27,7 +36,10 @@ public partial class IDDSCommunityAgentConfiguration : UserControl
 
     private PanelPluginConfiguration? _pluginConfigPanel;
 
-    public PanelPluginConfiguration PluginConfigPanel
+        /// <summary>
+    /// 取得或設定 PluginConfigPanel。
+    /// </summary>
+public PanelPluginConfiguration PluginConfigPanel
     {
         get
         {

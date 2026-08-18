@@ -2,6 +2,9 @@
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 提供安全性代理程式事件篩選與門檻判斷之基礎實作。
+/// </summary>
 public class AgentFilter : IAgentFilter
 {
     /// <summary>
@@ -20,6 +23,12 @@ public class AgentFilter : IAgentFilter
         Id = id;
         DisplayName = displayName;
     }
-    public Guid Id { get; set; }
-    public string DisplayName { get; set; } = string.Empty;
+        /// <summary>
+    /// 取得或設定 Id。
+    /// </summary>
+public Guid Id { get; set; }
+        /// <summary>
+    /// 取得或設定 本地化顯示名稱。
+    /// </summary>
+public string DisplayName { get; set; } = string.Empty;
 }

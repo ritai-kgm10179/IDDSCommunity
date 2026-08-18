@@ -6,6 +6,9 @@ using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 負責彙整入侵統計數據並產生本地化 HTML 報表內容之產生器類別。
+/// </summary>
 public class ReportGenerator
 {
 
@@ -20,7 +23,10 @@ public class ReportGenerator
     }
 
     private static ReportGenerator? _instance;
-    public static ReportGenerator Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static ReportGenerator Instance
     {
         get
         {
@@ -34,9 +40,18 @@ public class ReportGenerator
     /// <returns>傳回daily report結果。</returns>
     public static string DailyReport() => string.Empty;
 
-    public long TotalIntrusionAttempts { get; private set; }
-    public long TotalSoftLocks { get; private set; }
-    public long TotalHardLocks { get; private set; }
+        /// <summary>
+    /// 取得或設定 TotalIntrusionAttempts。
+    /// </summary>
+public long TotalIntrusionAttempts { get; private set; }
+        /// <summary>
+    /// 取得或設定 TotalSoftLocks。
+    /// </summary>
+public long TotalSoftLocks { get; private set; }
+        /// <summary>
+    /// 取得或設定 TotalHardLocks。
+    /// </summary>
+public long TotalHardLocks { get; private set; }
     /// <summary>
     /// 取得每個 Agent 的事件數。
     /// </summary>

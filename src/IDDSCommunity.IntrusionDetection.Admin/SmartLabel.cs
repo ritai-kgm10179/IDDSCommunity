@@ -3,6 +3,9 @@ using System.Windows.Forms;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供平滑抗鋸齒文字呈現之自訂標籤控制項。
+/// </summary>
 public partial class SmartLabel : Label
 {
     /// <summary>
@@ -27,7 +30,10 @@ public partial class SmartLabel : Label
     }
 
     bool _selected;
-    public bool Selected
+        /// <summary>
+    /// 取得或設定 是否為已選取狀態。
+    /// </summary>
+public bool Selected
     {
         get => _selected;
         set
@@ -39,7 +45,10 @@ public partial class SmartLabel : Label
             }
         }
     }
-    public Color SelectedColor { get; set; }
+        /// <summary>
+    /// 取得或設定 選取狀態之醒目提示色彩。
+    /// </summary>
+public Color SelectedColor { get; set; }
 
 
 

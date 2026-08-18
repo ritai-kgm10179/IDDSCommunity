@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
+/// <summary>
+/// 負責定期檢查、觸發每日／每週／每月報表產生並透過 SMTP 寄送之排程器。
+/// </summary>
 public class ReportScheduler
 {
     private readonly TimeProvider timeProvider;
@@ -18,9 +21,18 @@ public class ReportScheduler
     /// </summary>
     public bool IsRunning => cancellation is not null;
 
-    public event Func<CancellationToken, Task>? RunDailyReportAsync;
-    public event Func<CancellationToken, Task>? RunWeeklyReportAsync;
-    public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
+        /// <summary>
+    /// 當 RunDailyReportAsync 時引發之事件。
+    /// </summary>
+public event Func<CancellationToken, Task>? RunDailyReportAsync;
+        /// <summary>
+    /// 當 RunWeeklyReportAsync 時引發之事件。
+    /// </summary>
+public event Func<CancellationToken, Task>? RunWeeklyReportAsync;
+        /// <summary>
+    /// 當 RunMonthlyReportAsync 時引發之事件。
+    /// </summary>
+public event Func<CancellationToken, Task>? RunMonthlyReportAsync;
     /// <summary>
     /// 初始化 <see cref="ReportScheduler"/> class的新執行個體。
     /// </summary>
@@ -48,7 +60,10 @@ public class ReportScheduler
     }
 
     private static ReportScheduler? _instance;
-    public static ReportScheduler Instance
+        /// <summary>
+    /// 取得或設定 全域共用單例執行個體。
+    /// </summary>
+public static ReportScheduler Instance
     {
         get
         {

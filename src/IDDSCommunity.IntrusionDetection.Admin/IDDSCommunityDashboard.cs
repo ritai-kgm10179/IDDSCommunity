@@ -5,9 +5,15 @@ using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+/// <summary>
+/// 提供系統整體防護狀態、失敗統計與圖表儀表板之使用者控制項。
+/// </summary>
 public partial class IDDSCommunityDashboard : UserControl
 {
-    public event EventHandler? SecurityAgentConfigurationRequest;
+        /// <summary>
+    /// 當 SecurityAgentConfigurationRequest 時引發之事件。
+    /// </summary>
+public event EventHandler? SecurityAgentConfigurationRequest;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityDashboard"/> 類別的新執行個體。
     /// </summary>
