@@ -17,6 +17,44 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class CrossAgentCorrelationTest
 {
     /// <summary>
+    /// 驗證不同 Agent 對同一次驗證失敗的回報只會有第一筆進入計數時間窗。
+    /// </summary>
+    [TestMethod]
+    public void Ingest_SameAuthenticationFromDifferentSources_MarksCrossSourceDuplicate()
+    {
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        IddsConfig config = CreateTestConfig(enableCorrelation: true);
+        DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
+        SecurityObservationEvent first = new()
+        {
+            SourceAgentName = "WindowsNetworkLogon",
+            ProviderOrChannel = "Security",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 4625001,
+            NormalizedIpAddress = "::ffff:192.0.2.70",
+            NormalizedAccount = "Alice",
+            EventTimeUtc = occurredAt
+        };
+        SecurityObservationEvent second = new()
+        {
+            SourceAgentName = "NpsRadius",
+            ProviderOrChannel = "Security",
+            ComputerName = "NPS01",
+            SourceEventRecordId = 6273001,
+            NormalizedIpAddress = "192.0.2.70",
+            NormalizedAccount = "alice",
+            EventTimeUtc = occurredAt.AddMilliseconds(500)
+        };
+
+        CorrelationEvaluationResult firstResult = engine.Ingest(first, config);
+        CorrelationEvaluationResult secondResult = engine.Ingest(second, config);
+
+        Assert.IsFalse(firstResult.IsCrossSourceDuplicate);
+        Assert.IsTrue(secondResult.IsCrossSourceDuplicate);
+        Assert.AreEqual(CorrelationAction.None, secondResult.Action);
+    }
+
+    /// <summary>
     /// 驗證不同來源但具有相同 ActivityID 的事件會取得相同的穩定關聯群組。
     /// </summary>
     [TestMethod]
@@ -43,7 +81,7 @@ public class CrossAgentCorrelationTest
             SourceEventRecordId = 202,
             NormalizedIpAddress = "192.0.2.88",
             NormalizedAccount = "alice",
-            EventTimeUtc = winRm.EventTimeUtc.AddMilliseconds(10),
+            EventTimeUtc = winRm.EventTimeUtc.AddSeconds(30),
             ActivityId = winRm.ActivityId
         };
 
@@ -52,6 +90,7 @@ public class CrossAgentCorrelationTest
 
         Assert.IsNotNull(first.CorrelationGroupId);
         Assert.AreEqual(first.CorrelationGroupId, second.CorrelationGroupId);
+        Assert.IsTrue(second.IsCrossSourceDuplicate, "明確 Activity ID 應在完整關聯時間窗內去重，不受五秒推論視窗限制");
     }
 
     /// <summary>
@@ -355,6 +394,39 @@ public class CrossAgentCorrelationTest
         IReadOnlyList<string> activeItems = bucket.GetActiveItems("test_key");
         Assert.AreEqual(1, activeItems.Count);
         Assert.AreEqual("new_item", activeItems[0]);
+    }
+
+    /// <summary>
+    /// 驗證延遲抵達的舊事件即使排在新事件之後，仍會被滑動時間窗正確移除。
+    /// </summary>
+    [TestMethod]
+    public void ConcurrentSlidingBucket_OutOfOrderArrival_PrunesExpiredItemAnywhere()
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        ConcurrentSlidingBucket<string, string> bucket = new(windowDuration: TimeSpan.FromMinutes(5));
+
+        bucket.Add("account", "new", now);
+        bucket.Add("account", "late-old", now.AddMinutes(-10));
+
+        CollectionAssert.AreEqual(new[] { "new" }, bucket.GetActiveItems("account").ToArray());
+    }
+
+    /// <summary>
+    /// 驗證來源鍵洪水超過上限時會驅逐最久未使用的鍵，不得突破容量硬上限。
+    /// </summary>
+    [TestMethod]
+    public void ConcurrentSlidingBucket_KeyFlood_EnforcesHardCapacity()
+    {
+        ConcurrentSlidingBucket<string, int> bucket = new(maxKeyCapacity: 3, windowDuration: TimeSpan.FromMinutes(5));
+
+        for (int index = 0; index < 20; index++)
+        {
+            bucket.Add($"key-{index}", index);
+            Assert.IsTrue(bucket.ActiveKeyCount <= 3, "活動聚合鍵數不得在任何時點突破硬上限");
+        }
+
+        Assert.AreEqual(3, bucket.ActiveKeyCount);
+        Assert.IsTrue(bucket.TotalEvictions >= 17);
     }
 
     /// <summary>

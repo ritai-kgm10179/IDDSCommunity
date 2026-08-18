@@ -870,6 +870,11 @@ public bool LimitMailSent { get; set; }
                         return;
                     }
 
+                    if (correlationResult.IsCrossSourceDuplicate)
+                    {
+                        return;
+                    }
+
                     if (correlationResult.Action == CorrelationAction.AlertAndScoreOnly && !alreadyAlerted)
                     {
                         string targetSubject = correlationResult.SprayType == SprayAttackType.MultipleIpsToOneAccount

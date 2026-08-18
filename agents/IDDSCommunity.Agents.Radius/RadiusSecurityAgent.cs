@@ -34,7 +34,15 @@ public sealed class RadiusSecurityAgent : AuthenticationAgentBase<Authentication
     internal static AuthenticationFailureEvent? Parse(EventRecord record)
     {
         IReadOnlyDictionary<string, string> fields = EventRecordFields.Read(record);
-        return TryParseFields(fields, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
+        AuthenticationFailureEvent? failure = TryParseFields(fields, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
+        return failure is null
+            ? null
+            : failure with
+            {
+                ProviderOrChannel = record.LogName ?? "Security",
+                ComputerName = record.MachineName ?? string.Empty,
+                SourceEventRecordId = record.RecordId
+            };
     }
 
     internal static AuthenticationFailureEvent? TryParseFields(IReadOnlyDictionary<string, string> fields, DateTimeOffset occurredAt, int eventId = 6273)
@@ -42,6 +50,14 @@ public sealed class RadiusSecurityAgent : AuthenticationAgentBase<Authentication
         if (!string.Equals(EventRecordFields.Get(fields, "ReasonCode"), "16", StringComparison.Ordinal)) return null;
         string source = EventRecordFields.Get(fields, "ClientIPAddress", "NASIPv4Address", "CallingStationID");
         if (!IPAddress.TryParse(source.Trim('[', ']'), out IPAddress? address)) return null;
-        return new AuthenticationFailureEvent(occurredAt, address, eventId, "NPS/RADIUS", EventRecordFields.Get(fields, "UserName", "AccountName"), "Credential mismatch");
+        return new AuthenticationFailureEvent(
+            occurredAt,
+            address,
+            eventId,
+            "NPS/RADIUS",
+            EventRecordFields.Get(fields, "UserName", "AccountName"),
+            "Credential mismatch",
+            ProviderOrChannel: "Security",
+            ErrorCode: "16");
     }
 }

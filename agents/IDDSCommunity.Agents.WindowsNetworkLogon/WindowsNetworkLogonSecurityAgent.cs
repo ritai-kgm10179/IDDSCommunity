@@ -34,7 +34,15 @@ public sealed class WindowsNetworkLogonSecurityAgent : AuthenticationAgentBase<A
     internal static AuthenticationFailureEvent? Parse(EventRecord record)
     {
         IReadOnlyDictionary<string, string> fields = EventRecordFields.Read(record);
-        return TryParseFields(fields, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
+        AuthenticationFailureEvent? failure = TryParseFields(fields, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
+        return failure is null
+            ? null
+            : failure with
+            {
+                ProviderOrChannel = record.LogName ?? "Security",
+                ComputerName = record.MachineName ?? string.Empty,
+                SourceEventRecordId = record.RecordId
+            };
     }
 
     internal static AuthenticationFailureEvent? TryParseFields(IReadOnlyDictionary<string, string> fields, DateTimeOffset occurredAt, int eventId = 4625)
@@ -44,6 +52,14 @@ public sealed class WindowsNetworkLogonSecurityAgent : AuthenticationAgentBase<A
         string subStatus = EventRecordFields.Get(fields, "SubStatus");
         if (status is not ("0xC000006D" or "0xc000006d") && subStatus is not ("0xC0000064" or "0xC000006A" or "0xc0000064" or "0xc000006a")) return null;
         if (!IPAddress.TryParse(EventRecordFields.Get(fields, "IpAddress", "SourceNetworkAddress").Trim('[', ']'), out IPAddress? address) || IPAddress.IsLoopback(address)) return null;
-        return new AuthenticationFailureEvent(occurredAt, address, eventId, "WindowsNetworkLogon", EventRecordFields.Get(fields, "TargetUserName"), $"{status}/{subStatus}");
+        return new AuthenticationFailureEvent(
+            occurredAt,
+            address,
+            eventId,
+            "WindowsNetworkLogon",
+            EventRecordFields.Get(fields, "TargetUserName"),
+            $"{status}/{subStatus}",
+            ProviderOrChannel: "Security",
+            ErrorCode: string.IsNullOrWhiteSpace(subStatus) ? status : subStatus);
     }
 }

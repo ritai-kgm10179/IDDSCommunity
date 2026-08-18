@@ -89,6 +89,11 @@ public sealed class CorrelationEvaluationResult
     public bool IsDuplicateReplay { get; set; }
 
     /// <summary>
+    /// 取得或設定事件是否為其他 Agent 已回報之同一次驗證失敗。
+    /// </summary>
+    public bool IsCrossSourceDuplicate { get; set; }
+
+    /// <summary>
     /// 取得或設定來源 IP 是否位於安全網路全域允許清單中。
     /// </summary>
     public bool IsSafeNetworkExempted { get; set; }
@@ -122,6 +127,8 @@ public sealed class CrossAgentCorrelationEngine
     private readonly ObservationIdempotencyFilter idempotencyFilter;
     private readonly ConcurrentSlidingBucket<string, string> ipToAccountsBucket;
     private readonly ConcurrentSlidingBucket<string, string> accountToIpsBucket;
+    private readonly ConcurrentSlidingBucket<string, string> semanticSourcesBucket;
+    private readonly ConcurrentSlidingBucket<string, string> activitySourcesBucket;
     private readonly ConcurrentDictionary<string, ObservationWatermark> watermarks;
     private readonly TimeProvider timeProvider;
 
@@ -140,6 +147,16 @@ public sealed class CrossAgentCorrelationEngine
         idempotencyFilter = new ObservationIdempotencyFilter(retentionPeriod: window * 2, timeProvider: this.timeProvider);
         ipToAccountsBucket = new ConcurrentSlidingBucket<string, string>(windowDuration: window, timeProvider: this.timeProvider);
         accountToIpsBucket = new ConcurrentSlidingBucket<string, string>(windowDuration: window, timeProvider: this.timeProvider);
+        semanticSourcesBucket = new ConcurrentSlidingBucket<string, string>(
+            maxKeyCapacity: 20000,
+            maxItemsPerBucket: 32,
+            windowDuration: TimeSpan.FromSeconds(5),
+            timeProvider: this.timeProvider);
+        activitySourcesBucket = new ConcurrentSlidingBucket<string, string>(
+            maxKeyCapacity: 20000,
+            maxItemsPerBucket: 32,
+            windowDuration: window,
+            timeProvider: this.timeProvider);
         watermarks = new ConcurrentDictionary<string, ObservationWatermark>(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -220,6 +237,21 @@ public sealed class CrossAgentCorrelationEngine
             return result;
         }
 
+        string semanticKey = ComputeSemanticKey(observation);
+        string sourceIdentity = ComputeSourceIdentity(observation);
+        ConcurrentSlidingBucket<string, string> deduplicationBucket = string.IsNullOrWhiteSpace(observation.ActivityId)
+            ? semanticSourcesBucket
+            : activitySourcesBucket;
+        IReadOnlyList<string> priorSources = deduplicationBucket.GetActiveItems(semanticKey);
+        deduplicationBucket.Add(semanticKey, sourceIdentity, observation.EventTimeUtc);
+        if (priorSources.Any(source => !string.Equals(source, sourceIdentity, StringComparison.OrdinalIgnoreCase)))
+        {
+            result.IsCrossSourceDuplicate = true;
+            result.Action = CorrelationAction.None;
+            result.Message = "Cross-source duplicate authentication failure excluded from counters and spray windows.";
+            return result;
+        }
+
         string ip = observation.NormalizedIpAddress.Trim();
         string account = observation.NormalizedAccount.Trim();
 
@@ -284,6 +316,8 @@ public sealed class CrossAgentCorrelationEngine
         idempotencyFilter.Reset();
         ipToAccountsBucket.Reset();
         accountToIpsBucket.Reset();
+        semanticSourcesBucket.Reset();
+        activitySourcesBucket.Reset();
         watermarks.Clear();
     }
 
@@ -325,6 +359,27 @@ public sealed class CrossAgentCorrelationEngine
         return new Guid(hash.AsSpan(0, 16));
     }
 
+    private static string ComputeSemanticKey(SecurityObservationEvent observation)
+    {
+        if (!string.IsNullOrWhiteSpace(observation.ActivityId))
+        {
+            return $"ACT:{observation.ActivityId.Trim().ToUpperInvariant()}";
+        }
+
+        string address = observation.NormalizedIpAddress.Trim();
+        if (IPAddress.TryParse(address, out IPAddress? parsedAddress))
+        {
+            address = parsedAddress.IsIPv4MappedToIPv6
+                ? parsedAddress.MapToIPv4().ToString()
+                : parsedAddress.ToString();
+        }
+
+        return $"AUTH:{address.ToUpperInvariant()}|{observation.NormalizedDomain.Trim().ToUpperInvariant()}|{observation.NormalizedAccount.Trim().ToUpperInvariant()}";
+    }
+
+    private static string ComputeSourceIdentity(SecurityObservationEvent observation) =>
+        $"{observation.SourceAgentName.Trim()}|{observation.ProviderOrChannel.Trim()}";
+
     /// <summary>
     /// 從持久化資料庫載入時間窗內的觀察事件與來源水位點，安全重建記憶體滑動窗與冪等去重狀態。
     /// </summary>
@@ -347,7 +402,7 @@ public sealed class CrossAgentCorrelationEngine
 
         // 2. 重建時間窗內之觀察事件
         IEnumerable<SecurityObservationEventRebuildRow> rows = database.Query<SecurityObservationEventRebuildRow>(
-            "SELECT IdempotencyKey, ReceivedUtc, EventTimeUtc, NormalizedIpAddress, NormalizedAccount, IsCredentialFailure FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
+            "SELECT IdempotencyKey, ReceivedUtc, EventTimeUtc, SourceAgentName, ProviderOrChannel, NormalizedIpAddress, NormalizedAccount, NormalizedDomain, IsCredentialFailure, ActivityId FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
             new { WindowStart = windowStart });
 
         foreach (SecurityObservationEventRebuildRow row in rows)
@@ -368,6 +423,22 @@ public sealed class CrossAgentCorrelationEngine
                 string account = row.NormalizedAccount?.Trim() ?? string.Empty;
                 if (row.IsCredentialFailure && !string.IsNullOrEmpty(ip) && !string.IsNullOrEmpty(account))
                 {
+                    SecurityObservationEvent rebuiltObservation = new()
+                        {
+                            SourceAgentName = row.SourceAgentName,
+                            ProviderOrChannel = row.ProviderOrChannel,
+                            NormalizedIpAddress = ip,
+                            NormalizedAccount = account,
+                            NormalizedDomain = row.NormalizedDomain,
+                            ActivityId = row.ActivityId
+                        };
+                    ConcurrentSlidingBucket<string, string> deduplicationBucket = string.IsNullOrWhiteSpace(row.ActivityId)
+                        ? semanticSourcesBucket
+                        : activitySourcesBucket;
+                    deduplicationBucket.Add(
+                        ComputeSemanticKey(rebuiltObservation),
+                        $"{row.SourceAgentName.Trim()}|{row.ProviderOrChannel.Trim()}",
+                        evtTime);
                     ipToAccountsBucket.Add(ip, account, evtTime);
                     accountToIpsBucket.Add(account, ip, evtTime);
                 }
@@ -386,6 +457,14 @@ public string IdempotencyKey { get; set; } = string.Empty;
         /// </summary>
 public string ReceivedUtc { get; set; } = string.Empty;
                 /// <summary>
+        /// 取得或設定來源 Agent 名稱。
+        /// </summary>
+public string SourceAgentName { get; set; } = string.Empty;
+                /// <summary>
+        /// 取得或設定來源提供者或通道。
+        /// </summary>
+public string ProviderOrChannel { get; set; } = string.Empty;
+                /// <summary>
         /// 取得或設定 EventTimeUtc。
         /// </summary>
 public string EventTimeUtc { get; set; } = string.Empty;
@@ -398,8 +477,16 @@ public string NormalizedIpAddress { get; set; } = string.Empty;
         /// </summary>
 public string NormalizedAccount { get; set; } = string.Empty;
                 /// <summary>
+        /// 取得或設定正規化網域。
+        /// </summary>
+public string NormalizedDomain { get; set; } = string.Empty;
+                /// <summary>
         /// 取得或設定事件是否為密碼或帳號憑證驗證失敗。
         /// </summary>
 public bool IsCredentialFailure { get; set; }
+                /// <summary>
+        /// 取得或設定活動關聯識別碼。
+        /// </summary>
+public string? ActivityId { get; set; }
     }
 }

@@ -19,6 +19,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     private readonly TimeSpan windowDuration;
     private readonly TimeProvider timeProvider;
     private readonly ConcurrentDictionary<TKey, BucketState> buckets;
+    private readonly object capacitySync = new();
     private long totalItemsAdded;
     private long totalEvictions;
 
@@ -72,31 +73,39 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         DateTimeOffset now = timestampUtc ?? timeProvider.GetUtcNow();
         DateTimeOffset cutoff = now - windowDuration;
 
-        // 若聚合鍵總數超過上限，觸發全域過期清理
-        if (buckets.Count >= maxKeyCapacity)
+        if (!buckets.TryGetValue(key, out BucketState? state))
         {
-            PruneExpiredKeys(cutoff);
+            lock (capacitySync)
+            {
+                if (!buckets.TryGetValue(key, out state))
+                {
+                    PruneExpiredKeys(cutoff);
+                    while (buckets.Count >= maxKeyCapacity)
+                    {
+                        EvictLeastRecentlyUsedKey();
+                    }
+
+                    state = buckets.GetOrAdd(key, _ => new BucketState());
+                }
+            }
         }
 
-        BucketState state = buckets.GetOrAdd(key, _ => new BucketState());
         lock (state.SyncRoot)
         {
-            // 清理單一貯列中過期之項目
-            while (state.Items.Count > 0 && state.Items.Peek().TimestampUtc < cutoff)
-            {
-                state.Items.Dequeue();
-                Interlocked.Increment(ref totalEvictions);
-            }
+            PruneExpiredItems(state, cutoff);
 
-            // 檢查單一貯列容量上限
             if (state.Items.Count >= maxItemsPerBucket)
             {
-                state.Items.Dequeue();
+                int oldestIndex = FindOldestItemIndex(state.Items);
+                state.Items.RemoveAt(oldestIndex);
                 Interlocked.Increment(ref totalEvictions);
             }
 
-            state.Items.Enqueue(new TimedItem(item, now));
-            state.LastActivityUtc = now;
+            state.Items.Add(new TimedItem(item, now));
+            if (now > state.LastActivityUtc)
+            {
+                state.LastActivityUtc = now;
+            }
             Interlocked.Increment(ref totalItemsAdded);
             return state.Items.Count;
         }
@@ -118,12 +127,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
         lock (state.SyncRoot)
         {
-            // 清理過期
-            while (state.Items.Count > 0 && state.Items.Peek().TimestampUtc < cutoff)
-            {
-                state.Items.Dequeue();
-                Interlocked.Increment(ref totalEvictions);
-            }
+            PruneExpiredItems(state, cutoff);
 
             return state.Items.Select(static x => x.Item).ToList();
         }
@@ -145,11 +149,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
         lock (state.SyncRoot)
         {
-            while (state.Items.Count > 0 && state.Items.Peek().TimestampUtc < cutoff)
-            {
-                state.Items.Dequeue();
-                Interlocked.Increment(ref totalEvictions);
-            }
+            PruneExpiredItems(state, cutoff);
 
             return state.Items.Count;
         }
@@ -168,11 +168,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         {
             lock (pair.Value.SyncRoot)
             {
-                while (pair.Value.Items.Count > 0 && pair.Value.Items.Peek().TimestampUtc < cutoff)
-                {
-                    pair.Value.Items.Dequeue();
-                    Interlocked.Increment(ref totalEvictions);
-                }
+                PruneExpiredItems(pair.Value, cutoff);
 
                 if (pair.Value.Items.Count > 0)
                 {
@@ -196,11 +192,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         {
             lock (pair.Value.SyncRoot)
             {
-                while (pair.Value.Items.Count > 0 && pair.Value.Items.Peek().TimestampUtc < effectiveCutoff)
-                {
-                    pair.Value.Items.Dequeue();
-                    Interlocked.Increment(ref totalEvictions);
-                }
+                PruneExpiredItems(pair.Value, effectiveCutoff);
 
                 if (pair.Value.Items.Count == 0 && pair.Value.LastActivityUtc < effectiveCutoff)
                 {
@@ -220,6 +212,41 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         Interlocked.Exchange(ref totalEvictions, 0);
     }
 
+    private void EvictLeastRecentlyUsedKey()
+    {
+        KeyValuePair<TKey, BucketState>? victim = buckets
+            .OrderBy(static pair => pair.Value.LastActivityUtc)
+            .Cast<KeyValuePair<TKey, BucketState>?>()
+            .FirstOrDefault();
+        if (victim.HasValue && buckets.TryRemove(victim.Value.Key, out BucketState? removed))
+        {
+            Interlocked.Add(ref totalEvictions, removed.Items.Count);
+        }
+    }
+
+    private void PruneExpiredItems(BucketState state, DateTimeOffset cutoff)
+    {
+        int removed = state.Items.RemoveAll(entry => entry.TimestampUtc < cutoff);
+        if (removed > 0)
+        {
+            Interlocked.Add(ref totalEvictions, removed);
+        }
+    }
+
+    private static int FindOldestItemIndex(List<TimedItem> items)
+    {
+        int oldestIndex = 0;
+        for (int index = 1; index < items.Count; index++)
+        {
+            if (items[index].TimestampUtc < items[oldestIndex].TimestampUtc)
+            {
+                oldestIndex = index;
+            }
+        }
+
+        return oldestIndex;
+    }
+
     private sealed class BucketState
     {
                 /// <summary>
@@ -229,7 +256,7 @@ public object SyncRoot { get; } = new();
                 /// <summary>
         /// 取得或設定 Items。
         /// </summary>
-public Queue<TimedItem> Items { get; } = new();
+public List<TimedItem> Items { get; } = new();
                 /// <summary>
         /// 取得或設定 LastActivityUtc。
         /// </summary>
