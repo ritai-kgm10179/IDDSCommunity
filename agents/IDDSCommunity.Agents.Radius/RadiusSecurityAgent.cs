@@ -58,6 +58,8 @@ public sealed class RadiusSecurityAgent : AuthenticationAgentBase<Authentication
             EventRecordFields.Get(fields, "UserName", "AccountName"),
             "Credential mismatch",
             ProviderOrChannel: "Security",
-            ErrorCode: "16");
+            ErrorCode: "16",
+            AccountDomain: EventRecordFields.Get(fields, "DomainName"),
+            AccountSid: EventRecordFields.Get(fields, "UserSid"));
     }
 }

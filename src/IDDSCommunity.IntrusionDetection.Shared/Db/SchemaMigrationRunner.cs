@@ -54,10 +54,19 @@ internal static class SchemaMigrationRunner
                 Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN TargetResource TEXT NULL");
             if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "ErrorCode"))
                 Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN ErrorCode TEXT NULL");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "AccountSid"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN AccountSid TEXT NULL");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "IsCrossSourceDuplicate"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN IsCrossSourceDuplicate INTEGER NOT NULL DEFAULT 0");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "DuplicateOfObservationId"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN DuplicateOfObservationId TEXT NULL");
+            if (!ColumnExists(connection, transaction, "SecurityObservationEvents", "CorrelationProcessed"))
+                Execute(connection, transaction, "ALTER TABLE SecurityObservationEvents ADD COLUMN CorrelationProcessed INTEGER NOT NULL DEFAULT 1");
         }
         Execute(connection, transaction, CreateSecurityObservationEventsIdempotencyIndex);
         Execute(connection, transaction, CreateSecurityObservationEventsTimeIpIndex);
         Execute(connection, transaction, CreateSecurityObservationEventsCorrelationIndex);
+        Execute(connection, transaction, CreateSecurityObservationEventsDuplicateIndex);
         Execute(connection, transaction, CreateObservationAlertOutbox);
         Execute(connection, transaction, CreateObservationAlertOutboxStatusIndex);
 
@@ -91,6 +100,14 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (7, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (8, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (9, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();
@@ -286,6 +303,10 @@ internal static class SchemaMigrationRunner
             ActivityId TEXT NULL,
             TargetResource TEXT NULL,
             ErrorCode TEXT NULL,
+            AccountSid TEXT NULL,
+            IsCrossSourceDuplicate INTEGER NOT NULL DEFAULT 0,
+            DuplicateOfObservationId TEXT NULL,
+            CorrelationProcessed INTEGER NOT NULL DEFAULT 1,
             AlertEmitted INTEGER NOT NULL DEFAULT 0
         )
         """;
@@ -298,6 +319,9 @@ internal static class SchemaMigrationRunner
 
     private const string CreateSecurityObservationEventsCorrelationIndex =
         "CREATE INDEX IF NOT EXISTS IX_SecurityObservationEvents_CorrelationGroupId ON SecurityObservationEvents(CorrelationGroupId)";
+
+    private const string CreateSecurityObservationEventsDuplicateIndex =
+        "CREATE INDEX IF NOT EXISTS IX_SecurityObservationEvents_DuplicateOfObservationId ON SecurityObservationEvents(DuplicateOfObservationId)";
 
     private const string CreateObservationAlertOutbox = """
         CREATE TABLE IF NOT EXISTS ObservationAlertOutbox (

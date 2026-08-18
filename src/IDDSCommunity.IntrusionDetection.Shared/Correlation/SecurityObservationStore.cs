@@ -63,13 +63,15 @@ public static class SecurityObservationStore
                          ComputerName, SourceEventRecordId, SourceFileOffset, SourceEventIdentity,
                          NormalizedIpAddress, NormalizedAccount, NormalizedDomain, OriginalEventReference,
                          Provenance, LogonType, SubStatus, CorrelationGroupId, ConfidenceScore,
-                         IsCredentialFailure, ActivityId, TargetResource, ErrorCode, AlertEmitted)
+                         IsCredentialFailure, ActivityId, TargetResource, ErrorCode, AccountSid,
+                         IsCrossSourceDuplicate, DuplicateOfObservationId, CorrelationProcessed, AlertEmitted)
                     VALUES
                         ($id, $idemp, $recv, $evtTime, $srcAgent, $provider,
                          $computer, $recId, $offset, $identity,
                          $ip, $account, $domain, $origRef,
                          $provenance, $logonType, $subStatus, $corrId, $score,
-                         $isCredentialFailure, $activityId, $targetResource, $errorCode, 0)
+                         $isCredentialFailure, $activityId, $targetResource, $errorCode, $accountSid,
+                         $isCrossSourceDuplicate, $duplicateOfObservationId, 0, 0)
                     """;
                 insertCmd.Parameters.AddWithValue("$id", observation.Id.ToString("D"));
                 insertCmd.Parameters.AddWithValue("$idemp", idempotencyKey);
@@ -94,6 +96,11 @@ public static class SecurityObservationStore
                 insertCmd.Parameters.AddWithValue("$activityId", (object?)observation.ActivityId ?? DBNull.Value);
                 insertCmd.Parameters.AddWithValue("$targetResource", (object?)observation.TargetResource ?? DBNull.Value);
                 insertCmd.Parameters.AddWithValue("$errorCode", (object?)observation.ErrorCode ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("$accountSid", string.IsNullOrWhiteSpace(observation.AccountSid) ? DBNull.Value : observation.AccountSid);
+                insertCmd.Parameters.AddWithValue("$isCrossSourceDuplicate", observation.IsCrossSourceDuplicate ? 1 : 0);
+                insertCmd.Parameters.AddWithValue("$duplicateOfObservationId", observation.DuplicateOfObservationId.HasValue
+                    ? observation.DuplicateOfObservationId.Value.ToString("D")
+                    : DBNull.Value);
                 insertCmd.ExecuteNonQuery();
             }
 
@@ -127,6 +134,103 @@ public static class SecurityObservationStore
             tx.Rollback();
             throw;
         }
+    }
+
+    /// <summary>
+    /// 更新已持久化觀察事件的關聯群組與跨來源去重稽核資訊。
+    /// </summary>
+    /// <param name="observation">已完成關聯評估的安全性觀察事件。</param>
+    /// <param name="database">資料庫存取執行個體。</param>
+    public static void UpdateCorrelationMetadata(SecurityObservationEvent observation, Database database)
+    {
+        ArgumentNullException.ThrowIfNull(observation);
+        ArgumentNullException.ThrowIfNull(database);
+        database.ExecuteNonQuery(
+            "UPDATE SecurityObservationEvents SET CorrelationGroupId = @p0, IsCrossSourceDuplicate = @p1, DuplicateOfObservationId = @p2, CorrelationProcessed = 1 WHERE Id = @p3",
+            observation.CorrelationGroupId?.ToString("D") ?? (object)DBNull.Value,
+            observation.IsCrossSourceDuplicate ? 1 : 0,
+            observation.DuplicateOfObservationId?.ToString("D") ?? (object)DBNull.Value,
+            observation.Id.ToString("D"));
+    }
+
+    /// <summary>
+    /// 載入已持久化但尚未完成關聯評估的觀察事件。
+    /// </summary>
+    /// <param name="database">資料庫存取執行個體。</param>
+    /// <returns>依接收順序排列的待恢復觀察事件。</returns>
+    public static IReadOnlyList<SecurityObservationEvent> LoadPendingCorrelationObservations(Database database)
+    {
+        ArgumentNullException.ThrowIfNull(database);
+        return database.Query<PendingCorrelationRow>(
+            """
+            SELECT Id, SourceAgentName, ProviderOrChannel, ComputerName, SourceEventRecordId,
+                   SourceFileOffset, SourceEventIdentity, EventTimeUtc, ReceivedUtc AS ReceivedTimeUtc,
+                   NormalizedIpAddress, NormalizedAccount, NormalizedDomain, AccountSid,
+                   OriginalEventReference, Provenance, LogonType, SubStatus, CorrelationGroupId,
+                   ConfidenceScore, IsCredentialFailure, ActivityId, TargetResource, ErrorCode,
+                   IsCrossSourceDuplicate, DuplicateOfObservationId
+            FROM SecurityObservationEvents
+            WHERE CorrelationProcessed = 0
+            ORDER BY ReceivedUtc, Id
+            """)
+            .Select(static row => new SecurityObservationEvent
+            {
+                Id = Guid.TryParse(row.Id, out Guid id) ? id : Guid.NewGuid(),
+                SourceAgentName = row.SourceAgentName,
+                ProviderOrChannel = row.ProviderOrChannel,
+                ComputerName = row.ComputerName,
+                SourceEventRecordId = row.SourceEventRecordId,
+                SourceFileOffset = row.SourceFileOffset,
+                SourceEventIdentity = row.SourceEventIdentity,
+                EventTimeUtc = DateTimeOffset.TryParse(row.EventTimeUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset eventTime) ? eventTime : DateTimeOffset.UtcNow,
+                ReceivedTimeUtc = DateTimeOffset.TryParse(row.ReceivedTimeUtc, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTimeOffset receivedTime) ? receivedTime : DateTimeOffset.UtcNow,
+                NormalizedIpAddress = row.NormalizedIpAddress,
+                NormalizedAccount = row.NormalizedAccount,
+                NormalizedDomain = row.NormalizedDomain,
+                AccountSid = row.AccountSid,
+                OriginalEventReference = row.OriginalEventReference,
+                Provenance = row.Provenance,
+                LogonType = row.LogonType,
+                SubStatus = row.SubStatus,
+                CorrelationGroupId = Guid.TryParse(row.CorrelationGroupId, out Guid groupId) ? groupId : null,
+                ConfidenceScore = row.ConfidenceScore,
+                IsCredentialFailure = row.IsCredentialFailure,
+                ActivityId = row.ActivityId,
+                TargetResource = row.TargetResource,
+                ErrorCode = row.ErrorCode,
+                IsCrossSourceDuplicate = row.IsCrossSourceDuplicate,
+                DuplicateOfObservationId = Guid.TryParse(row.DuplicateOfObservationId, out Guid duplicateId) ? duplicateId : null
+            })
+            .ToList();
+    }
+
+    private sealed class PendingCorrelationRow
+    {
+        public string Id { get; set; } = string.Empty;
+        public string SourceAgentName { get; set; } = string.Empty;
+        public string ProviderOrChannel { get; set; } = string.Empty;
+        public string ComputerName { get; set; } = string.Empty;
+        public long? SourceEventRecordId { get; set; }
+        public long? SourceFileOffset { get; set; }
+        public string? SourceEventIdentity { get; set; }
+        public string EventTimeUtc { get; set; } = string.Empty;
+        public string ReceivedTimeUtc { get; set; } = string.Empty;
+        public string NormalizedIpAddress { get; set; } = string.Empty;
+        public string NormalizedAccount { get; set; } = string.Empty;
+        public string NormalizedDomain { get; set; } = string.Empty;
+        public string AccountSid { get; set; } = string.Empty;
+        public string OriginalEventReference { get; set; } = string.Empty;
+        public string Provenance { get; set; } = string.Empty;
+        public int? LogonType { get; set; }
+        public string? SubStatus { get; set; }
+        public string? CorrelationGroupId { get; set; }
+        public double ConfidenceScore { get; set; }
+        public bool IsCredentialFailure { get; set; }
+        public string? ActivityId { get; set; }
+        public string? TargetResource { get; set; }
+        public string? ErrorCode { get; set; }
+        public bool IsCrossSourceDuplicate { get; set; }
+        public string? DuplicateOfObservationId { get; set; }
     }
 
     /// <summary>

@@ -60,6 +60,8 @@ public sealed class WindowsNetworkLogonSecurityAgent : AuthenticationAgentBase<A
             EventRecordFields.Get(fields, "TargetUserName"),
             $"{status}/{subStatus}",
             ProviderOrChannel: "Security",
-            ErrorCode: string.IsNullOrWhiteSpace(subStatus) ? status : subStatus);
+            ErrorCode: string.IsNullOrWhiteSpace(subStatus) ? status : subStatus,
+            AccountDomain: EventRecordFields.Get(fields, "TargetDomainName"),
+            AccountSid: EventRecordFields.Get(fields, "TargetUserSid"));
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -68,17 +69,34 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     {
         try
         {
-            string[] xPathProperties = [@"Event/EventData/Data[@Name=""IpAddress""]"];
+            string[] xPathProperties =
+            [
+                @"Event/EventData/Data[@Name=""IpAddress""]",
+                @"Event/EventData/Data[@Name=""TargetUserName""]",
+                @"Event/EventData/Data[@Name=""TargetDomainName""]",
+                @"Event/EventData/Data[@Name=""TargetUserSid""]",
+                @"Event/EventData/Data[@Name=""SubStatus""]"
+            ];
             EventLogPropertySelector props = new(xPathProperties);
             if (e.EventRecord is not EventLogRecord record)
                 return;
-            string ipAddress = record.GetPropertyValues(props)[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
+            IList<object> values = record.GetPropertyValues(props);
+            string ipAddress = values[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
             if (!System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? address) || System.Net.IPAddress.IsLoopback(address)) return;
-            NotificationEventArgs args = new()
+            AuthenticationNotificationEventArgs args = new()
             {
                 CreateDate = record.TimeCreated ?? DateTime.Now,
                 EventId = record.Id,
-                IpAddress = address.ToString()
+                IpAddress = address.ToString(),
+                AccountName = values[1]?.ToString() ?? string.Empty,
+                AccountDomain = values[2]?.ToString() ?? string.Empty,
+                AccountSid = values[3]?.ToString(),
+                IsCredentialFailure = true,
+                ProviderOrChannel = record.LogName ?? "Security",
+                ComputerName = record.MachineName ?? string.Empty,
+                SourceEventRecordId = record.RecordId,
+                ActivityId = record.ActivityId?.ToString("D"),
+                ErrorCode = values[4]?.ToString()
             };
             OnAttackDetected(this, args);
         }

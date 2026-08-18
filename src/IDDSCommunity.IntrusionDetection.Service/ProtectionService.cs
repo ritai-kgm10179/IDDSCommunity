@@ -216,6 +216,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (configuration.EnableCrossAgentCorrelation)
         {
             crossAgentCorrelationEngine.RebuildFromDatabase(database);
+            RecoverPendingCorrelationObservations();
             SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
         }
     }
@@ -857,6 +858,7 @@ public bool LimitMailSent { get; set; }
                 if (configuration.EnableCrossAgentCorrelation)
                 {
                     SecurityObservationEvent observation = CreateSecurityObservation(reportingAgent.Name, notificationEventArgs);
+                    crossAgentCorrelationEngine.PrepareObservation(observation);
 
                     (bool isDuplicate, bool alreadyAlerted) = SecurityObservationStore.PersistObservationAndWatermark(observation, database);
                     if (isDuplicate && alreadyAlerted)
@@ -864,7 +866,7 @@ public bool LimitMailSent { get; set; }
                         return;
                     }
 
-                    CorrelationEvaluationResult correlationResult = crossAgentCorrelationEngine.Ingest(observation, configuration);
+                    CorrelationEvaluationResult correlationResult = CompleteCorrelationObservation(observation, alreadyAlerted);
                     if (correlationResult.IsDuplicateReplay)
                     {
                         return;
@@ -875,33 +877,6 @@ public bool LimitMailSent { get; set; }
                         return;
                     }
 
-                    if (correlationResult.Action == CorrelationAction.AlertAndScoreOnly && !alreadyAlerted)
-                    {
-                        string targetSubject = correlationResult.SprayType == SprayAttackType.MultipleIpsToOneAccount
-                            ? observation.NormalizedAccount
-                            : observation.NormalizedIpAddress;
-
-                        string alertId = SecurityObservationStore.ComputeAlertId(
-                            correlationResult.SprayType,
-                            targetSubject,
-                            correlationResult.ContributingIdempotencyKeys);
-
-                        bool enqueued = SecurityObservationStore.EnqueueAlertOutbox(
-                            alertId,
-                            observation.Id,
-                            observation.EventTimeUtc,
-                            "CrossAgentSprayDetected",
-                            "AlertOnly",
-                            reportingAgent.Name,
-                            notificationEventArgs.IpAddress,
-                            correlationResult.Message,
-                            database);
-
-                        if (enqueued)
-                        {
-                            SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
-                        }
-                    }
                 }
 
                 if (!ShouldProcessLegacyDetection(notificationEventArgs))
@@ -1081,7 +1056,7 @@ public bool LimitMailSent { get; set; }
         ArgumentNullException.ThrowIfNull(notificationEventArgs);
 
         AuthenticationNotificationEventArgs? authentication = notificationEventArgs as AuthenticationNotificationEventArgs;
-        return new SecurityObservationEvent
+        SecurityObservationEvent observation = new()
         {
             SourceAgentName = sourceAgentName,
             ProviderOrChannel = authentication?.ProviderOrChannel ?? string.Empty,
@@ -1089,6 +1064,8 @@ public bool LimitMailSent { get; set; }
             SourceEventRecordId = authentication?.SourceEventRecordId,
             NormalizedIpAddress = notificationEventArgs.IpAddress,
             NormalizedAccount = authentication?.AccountName ?? ParseAccountFromEvent(notificationEventArgs.EventMessage),
+            NormalizedDomain = authentication?.AccountDomain ?? string.Empty,
+            AccountSid = authentication?.AccountSid ?? string.Empty,
             EventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime(),
             ReceivedTimeUtc = DateTimeOffset.UtcNow,
             OriginalEventReference = authentication?.SourceEventRecordId?.ToString(System.Globalization.CultureInfo.InvariantCulture)
@@ -1100,6 +1077,8 @@ public bool LimitMailSent { get; set; }
             TargetResource = authentication?.TargetResource,
             ErrorCode = authentication?.ErrorCode
         };
+        AccountIdentityNormalizer.Normalize(observation);
+        return observation;
     }
 
     /// <summary>
@@ -1111,5 +1090,44 @@ public bool LimitMailSent { get; set; }
     {
         ArgumentNullException.ThrowIfNull(notificationEventArgs);
         return notificationEventArgs is not AuthenticationNotificationEventArgs authentication || authentication.IsCredentialFailure;
+    }
+
+    private CorrelationEvaluationResult CompleteCorrelationObservation(SecurityObservationEvent observation, bool alreadyAlerted)
+    {
+        CorrelationEvaluationResult result = crossAgentCorrelationEngine.Ingest(observation, configuration);
+        SecurityObservationStore.UpdateCorrelationMetadata(observation, database);
+        if (result.Action != CorrelationAction.AlertAndScoreOnly || alreadyAlerted)
+        {
+            return result;
+        }
+
+        string targetSubject = result.SprayType == SprayAttackType.MultipleIpsToOneAccount
+            ? observation.NormalizedAccount
+            : observation.NormalizedIpAddress;
+        string alertId = SecurityObservationStore.ComputeAlertId(result.SprayType, targetSubject, result.ContributingIdempotencyKeys);
+        bool enqueued = SecurityObservationStore.EnqueueAlertOutbox(
+            alertId,
+            observation.Id,
+            observation.EventTimeUtc,
+            "CrossAgentSprayDetected",
+            "AlertOnly",
+            observation.SourceAgentName,
+            observation.NormalizedIpAddress,
+            result.Message,
+            database);
+        if (enqueued)
+        {
+            SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
+        }
+
+        return result;
+    }
+
+    private void RecoverPendingCorrelationObservations()
+    {
+        foreach (SecurityObservationEvent observation in SecurityObservationStore.LoadPendingCorrelationObservations(database))
+        {
+            CompleteCorrelationObservation(observation, alreadyAlerted: false);
+        }
     }
 }

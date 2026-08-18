@@ -70,19 +70,32 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     {
         try
         {
-            string[] xPathProperties = [@"Event/EventData/Data[@Name=""Workstation""]"];
+            string[] xPathProperties =
+            [
+                @"Event/EventData/Data[@Name=""Workstation""]",
+                @"Event/EventData/Data[@Name=""TargetUserName""]",
+                @"Event/EventData/Data[@Name=""Status""]"
+            ];
             EventLogPropertySelector props = new(xPathProperties);
             if (e.EventRecord is not EventLogRecord record)
                 return;
-            string hostName = record.GetPropertyValues(props)[0]?.ToString() ?? string.Empty;
+            IList<object> values = record.GetPropertyValues(props);
+            string hostName = values[0]?.ToString() ?? string.Empty;
             string[] ipAddresses = ResolveIp(hostName);
             foreach (string ipAddress in ipAddresses)
             {
-                NotificationEventArgs args = new()
+                AuthenticationNotificationEventArgs args = new()
                 {
                     CreateDate = record.TimeCreated ?? DateTime.Now,
                     EventId = record.Id,
-                    IpAddress = ipAddress
+                    IpAddress = ipAddress,
+                    AccountName = values[1]?.ToString() ?? string.Empty,
+                    IsCredentialFailure = true,
+                    ProviderOrChannel = record.LogName ?? "Security",
+                    ComputerName = record.MachineName ?? string.Empty,
+                    SourceEventRecordId = record.RecordId,
+                    ActivityId = record.ActivityId?.ToString("D"),
+                    ErrorCode = values[2]?.ToString()
                 };
                 OnAttackDetected(this, args);
             }

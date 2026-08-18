@@ -11,6 +11,16 @@ public sealed class AuthenticationNotificationEventArgs : NotificationEventArgs
     public string AccountName { get; set; } = string.Empty;
 
     /// <summary>
+    /// 取得或設定帳號所屬網域或本機電腦名稱。
+    /// </summary>
+    public string AccountDomain { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 取得或設定 Windows 安全性識別碼。
+    /// </summary>
+    public string? AccountSid { get; set; }
+
+    /// <summary>
     /// 取得或設定事件是否為明確的密碼或帳號憑證驗證失敗。
     /// </summary>
     public bool IsCredentialFailure { get; set; } = true;

@@ -816,4 +816,7 @@
   <data name="Technitium DNS log directory path must be specified." xml:space="preserve">
     <value>必須指定 Technitium DNS 日誌目錄路徑。</value>
   </data>
+  <data name="Cross-agent duplicate tolerance (seconds)" xml:space="preserve">
+    <value>跨 Agent 重複事件容許時間（秒）</value>
+  </data>
 </root>

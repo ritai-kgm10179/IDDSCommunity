@@ -101,6 +101,8 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
             IpAddress = failure.SourceAddress.ToString(),
             EventMessage = message,
             AccountName = failure.AccountName,
+            AccountDomain = failure.AccountDomain,
+            AccountSid = failure.AccountSid,
             IsCredentialFailure = failure.IsCredentialFailure,
             ProviderOrChannel = failure.ProviderOrChannel,
             ComputerName = failure.ComputerName,

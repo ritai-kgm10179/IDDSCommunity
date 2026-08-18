@@ -31,6 +31,7 @@ public sealed class SecurityEventPipelineTest
             EventId = 201,
             EventMessage = "CAP denied",
             AccountName = @"CORP\alice",
+            AccountSid = "S-1-5-21-1-2-3-1001",
             IsCredentialFailure = false,
             ProviderOrChannel = "Microsoft-Windows-TerminalServices-Gateway/Operational",
             ComputerName = "RDGW01",
@@ -43,7 +44,9 @@ public sealed class SecurityEventPipelineTest
 
         SecurityObservationEvent observation = Service.CreateSecurityObservation("RdGatewaySecurityAgent", notification);
 
-        Assert.AreEqual(@"CORP\alice", observation.NormalizedAccount);
+        Assert.AreEqual("ALICE", observation.NormalizedAccount);
+        Assert.AreEqual("CORP", observation.NormalizedDomain);
+        Assert.AreEqual("S-1-5-21-1-2-3-1001", observation.AccountSid);
         Assert.IsFalse(observation.IsCredentialFailure);
         Assert.AreEqual(notification.ProviderOrChannel, observation.ProviderOrChannel);
         Assert.AreEqual("RDGW01", observation.ComputerName);
@@ -53,6 +56,93 @@ public sealed class SecurityEventPipelineTest
         Assert.AreEqual("APP01", observation.TargetResource);
         Assert.AreEqual("23003", observation.ErrorCode);
         Assert.IsFalse(Service.ShouldProcessLegacyDetection(notification));
+    }
+
+    /// <summary>
+    /// 驗證關聯群組與跨來源重複事件的主要事件參照可持久化並供事後稽核。
+    /// </summary>
+    [TestMethod]
+    public void CorrelationMetadata_IsPersistedBeforeAndAfterEvaluation()
+    {
+        IddsConfig config = new(database) { EnableCrossAgentCorrelation = true };
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
+        SecurityObservationEvent primary = new()
+        {
+            SourceAgentName = "WindowsNetworkLogon",
+            ProviderOrChannel = "Security",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 9001,
+            NormalizedIpAddress = "192.0.2.90",
+            NormalizedAccount = "CONTOSO\\alice",
+            EventTimeUtc = occurredAt,
+            ReceivedTimeUtc = occurredAt,
+            ActivityId = "audit-activity-9001"
+        };
+        engine.PrepareObservation(primary);
+        SecurityObservationStore.PersistObservationAndWatermark(primary, database);
+        engine.Ingest(primary, config);
+        SecurityObservationStore.UpdateCorrelationMetadata(primary, database);
+
+        SecurityObservationEvent duplicate = new()
+        {
+            SourceAgentName = "NpsRadius",
+            ProviderOrChannel = "Security",
+            ComputerName = "NPS01",
+            SourceEventRecordId = 9002,
+            NormalizedIpAddress = "192.0.2.90",
+            NormalizedAccount = "alice@contoso",
+            EventTimeUtc = occurredAt.AddSeconds(30),
+            ReceivedTimeUtc = occurredAt.AddSeconds(30),
+            ActivityId = primary.ActivityId
+        };
+        engine.PrepareObservation(duplicate);
+        SecurityObservationStore.PersistObservationAndWatermark(duplicate, database);
+        CorrelationEvaluationResult result = engine.Ingest(duplicate, config);
+        SecurityObservationStore.UpdateCorrelationMetadata(duplicate, database);
+
+        Assert.IsTrue(result.IsCrossSourceDuplicate);
+        Assert.AreEqual(primary.Id, result.DuplicateOfObservationId);
+        Assert.AreEqual(
+            primary.CorrelationGroupId?.ToString("D"),
+            database.QueryFirstOrDefault<string>("SELECT CorrelationGroupId FROM SecurityObservationEvents WHERE Id = @Id", new { Id = duplicate.Id.ToString("D") }));
+        Assert.AreEqual(
+            primary.Id.ToString("D"),
+            database.QueryFirstOrDefault<string>("SELECT DuplicateOfObservationId FROM SecurityObservationEvents WHERE Id = @Id", new { Id = duplicate.Id.ToString("D") }));
+    }
+
+    /// <summary>
+    /// 驗證崩潰前已持久化但未評估的事件會保持待處理，且重建時不會先被誤標為重播。
+    /// </summary>
+    [TestMethod]
+    public void PendingCorrelationObservation_RebuildLeavesEventRecoverable()
+    {
+        IddsConfig config = new(database) { EnableCrossAgentCorrelation = true };
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        SecurityObservationEvent pending = new()
+        {
+            SourceAgentName = "KerberosSecurityAgent",
+            ProviderOrChannel = "Security",
+            ComputerName = "DC01",
+            SourceEventRecordId = 4771001,
+            NormalizedIpAddress = "192.0.2.91",
+            NormalizedAccount = "alice",
+            NormalizedDomain = "CONTOSO",
+            EventTimeUtc = now,
+            ReceivedTimeUtc = now
+        };
+        CrossAgentCorrelationEngine beforeCrash = new(TimeSpan.FromMinutes(10));
+        beforeCrash.PrepareObservation(pending);
+        SecurityObservationStore.PersistObservationAndWatermark(pending, database);
+
+        Assert.AreEqual(1, SecurityObservationStore.LoadPendingCorrelationObservations(database).Count);
+        CrossAgentCorrelationEngine afterRestart = new(TimeSpan.FromMinutes(10));
+        afterRestart.RebuildFromDatabase(database, TimeSpan.FromMinutes(10), now.AddSeconds(1));
+        CorrelationEvaluationResult recovered = afterRestart.Ingest(pending, config);
+
+        Assert.IsFalse(recovered.IsDuplicateReplay, "尚未完成關聯評估的持久化事件不得在重建時先加入冪等快取");
+        SecurityObservationStore.UpdateCorrelationMetadata(pending, database);
+        Assert.AreEqual(0, SecurityObservationStore.LoadPendingCorrelationObservations(database).Count);
     }
     /// <summary>
     /// 為每個管線測試建立隔離的持久化收件匣。
@@ -394,6 +484,11 @@ public sealed class SecurityEventPipelineTest
 
         // 自資料庫重建時間窗與水位點
         engine2.RebuildFromDatabase(database2);
+        foreach (SecurityObservationEvent pending in SecurityObservationStore.LoadPendingCorrelationObservations(database2))
+        {
+            engine2.Ingest(pending, config2);
+            SecurityObservationStore.UpdateCorrelationMetadata(pending, database2);
+        }
 
         // 傳入第 2 筆相異帳號事件 (達到門檻 2)
         IDDSCommunity.IntrusionDetection.Shared.Correlation.SecurityObservationEvent obs2 = new()
@@ -459,7 +554,11 @@ public sealed class SecurityEventPipelineTest
             Provenance = "RebuildTelemetryTest",
             IsCredentialFailure = false
         };
+        CrossAgentCorrelationEngine original = new(TimeSpan.FromMinutes(5));
+        original.PrepareObservation(telemetry);
         SecurityObservationStore.PersistObservationAndWatermark(telemetry, database);
+        original.Ingest(telemetry, config);
+        SecurityObservationStore.UpdateCorrelationMetadata(telemetry, database);
 
         CrossAgentCorrelationEngine rebuilt = new(TimeSpan.FromMinutes(5));
         rebuilt.RebuildFromDatabase(database, TimeSpan.FromMinutes(20), now.AddSeconds(1));

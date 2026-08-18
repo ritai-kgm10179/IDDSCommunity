@@ -22,6 +22,7 @@ public class SecurityObservationEvent
         NormalizedIpAddress = string.Empty;
         NormalizedAccount = string.Empty;
         NormalizedDomain = string.Empty;
+        AccountSid = string.Empty;
         SourceAgentName = string.Empty;
         ProviderOrChannel = string.Empty;
         ComputerName = string.Empty;
@@ -96,6 +97,21 @@ public class SecurityObservationEvent
     /// 取得或設定經正規化之網域名稱或機器名稱。
     /// </summary>
     public string NormalizedDomain { get; set; }
+
+    /// <summary>
+    /// 取得或設定 Windows 安全性識別碼；若來源未提供則為空字串。
+    /// </summary>
+    public string AccountSid { get; set; }
+
+    /// <summary>
+    /// 取得或設定此事件是否被判定為跨來源重複事件。
+    /// </summary>
+    public bool IsCrossSourceDuplicate { get; set; }
+
+    /// <summary>
+    /// 取得或設定此事件所對應之主要觀察事件識別碼。
+    /// </summary>
+    public Guid? DuplicateOfObservationId { get; set; }
 
     /// <summary>
     /// 取得或設定原始事件之非敏感摘要引用識別（例如日誌流水號，不包含機密憑證或密碼）。

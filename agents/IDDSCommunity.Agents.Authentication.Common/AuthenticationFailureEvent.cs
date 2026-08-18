@@ -20,6 +20,8 @@ namespace IDDSCommunity.Agents.Authentication.Common;
 /// <param name="SourceEventRecordId">Windows 事件記錄識別碼。</param>
 /// <param name="TargetResource">事件所涉及的目標資源。</param>
 /// <param name="ErrorCode">原始錯誤碼。</param>
+/// <param name="AccountDomain">帳號所屬網域或本機電腦名稱。</param>
+/// <param name="AccountSid">Windows 安全性識別碼；來源未提供時為空值。</param>
 public sealed record AuthenticationFailureEvent(
     DateTimeOffset OccurredAt,
     IPAddress SourceAddress,
@@ -34,4 +36,6 @@ public sealed record AuthenticationFailureEvent(
     string ComputerName = "",
     long? SourceEventRecordId = null,
     string? TargetResource = null,
-    string? ErrorCode = null);
+    string? ErrorCode = null,
+    string AccountDomain = "",
+    string? AccountSid = null);

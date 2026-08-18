@@ -85,6 +85,11 @@ public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
     public const string CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES = "Configuration.CrossAgentSlidingWindowMinutes";
 
     /// <summary>
+    /// 定義跨來源語意去重容許秒數之設定鍵值。
+    /// </summary>
+    public const string CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS = "Configuration.CrossAgentSemanticDeduplicationSeconds";
+
+    /// <summary>
     /// 定義 CONFIG_VALUE_TRUSTED_PROXY_CIDRS 之數值。
     /// </summary>
     public const string CONFIG_VALUE_TRUSTED_PROXY_CIDRS = "Configuration.TrustedProxyCidrs";
@@ -758,6 +763,21 @@ public string Language
             if (value <= 0)
                 throw new ArgumentOutOfRangeException(nameof(value));
             SetConfigValue(CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES, value.ToString());
+        }
+    }
+
+    /// <summary>
+    /// 取得或設定缺少明確活動識別碼時，跨來源驗證事件允許的發生時間差秒數（預設為 15 秒）。
+    /// </summary>
+    public int CrossAgentSemanticDeduplicationSeconds
+    {
+        get => int.TryParse(GetConfigValue(CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS), out int seconds)
+            && seconds is >= 1 and <= 300 ? seconds : 15;
+        set
+        {
+            if (value is < 1 or > 300)
+                throw new ArgumentOutOfRangeException(nameof(value));
+            SetConfigValue(CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS, value.ToString());
         }
     }
 

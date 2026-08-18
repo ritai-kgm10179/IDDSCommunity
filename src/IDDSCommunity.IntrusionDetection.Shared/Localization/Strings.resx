@@ -816,5 +816,8 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Technitium DNS log directory path must be specified." xml:space="preserve">
     <value>Technitium DNS log directory path must be specified.</value>
   </data>
+  <data name="Cross-agent duplicate tolerance (seconds)" xml:space="preserve">
+    <value>Cross-agent duplicate tolerance (seconds)</value>
+  </data>
 </root>
 

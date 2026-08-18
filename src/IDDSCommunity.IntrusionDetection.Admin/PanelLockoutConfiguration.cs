@@ -10,6 +10,8 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class PanelLockoutConfiguration : UserControl
 {
+    private readonly NumericUpDown numericSemanticDeduplicationSeconds = new();
+    private readonly SmartLabel labelSemanticDeduplicationSeconds = new();
 
         /// <summary>
     /// 當 LockoutConfigurationChanged 時引發之事件。
@@ -21,6 +23,7 @@ public event EventHandler? LockoutConfigurationChanged;
     public PanelLockoutConfiguration()
     {
         InitializeComponent();
+        InitializeCorrelationControls();
         BackColor = Color.White;
         LoadData();
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
@@ -53,6 +56,7 @@ public bool IsInEditMode { get; set; }
         textBoxSoftLocks.Text = IddsConfig.Instance.SoftLockAttempts.ToString();
         checkBoxLockForever.Checked = IddsConfig.Instance.LockForever;
         comboBoxFirewallMode.SelectedIndex = IddsConfig.Instance.FirewallBlockMode == FirewallBlockMode.Bidirectional ? 1 : 0;
+        numericSemanticDeduplicationSeconds.Value = IddsConfig.Instance.CrossAgentSemanticDeduplicationSeconds;
         SetEditMode(false);
     }
     /// <summary>
@@ -135,6 +139,7 @@ public bool IsInEditMode { get; set; }
             IddsConfig.Instance.FirewallBlockMode = comboBoxFirewallMode.SelectedIndex == 1
                 ? FirewallBlockMode.Bidirectional
                 : FirewallBlockMode.Inbound;
+            IddsConfig.Instance.CrossAgentSemanticDeduplicationSeconds = decimal.ToInt32(numericSemanticDeduplicationSeconds.Value);
             IddsConfig.Instance.SaveAppConfig();
             ToggleEditMode();
             OnLockoutConfigurationChanged();
@@ -163,6 +168,7 @@ public bool IsInEditMode { get; set; }
         textBoxSoftLockDuration.Text = IddsConfig.DefaultSoftLockMinutes.ToString();
         checkBoxLockForever.Checked = false;
         comboBoxFirewallMode.SelectedIndex = 0;
+        numericSemanticDeduplicationSeconds.Value = 15;
         SetEditMode(true);
     }
     /// <summary>
@@ -171,6 +177,25 @@ public bool IsInEditMode { get; set; }
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void textBoxSoftLocks_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    private void InitializeCorrelationControls()
+    {
+        labelSemanticDeduplicationSeconds.AutoSize = true;
+        labelSemanticDeduplicationSeconds.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+        labelSemanticDeduplicationSeconds.ForeColor = Color.FromArgb(102, 102, 102);
+        labelSemanticDeduplicationSeconds.Location = new Point(24, 222);
+        labelSemanticDeduplicationSeconds.Text = IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Cross-agent duplicate tolerance (seconds)");
+
+        numericSemanticDeduplicationSeconds.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+        numericSemanticDeduplicationSeconds.Location = new Point(257, 218);
+        numericSemanticDeduplicationSeconds.Minimum = 1;
+        numericSemanticDeduplicationSeconds.Maximum = 300;
+        numericSemanticDeduplicationSeconds.Size = new Size(65, 23);
+        numericSemanticDeduplicationSeconds.ValueChanged += (_, _) => SetEditMode(true);
+
+        Controls.Add(labelSemanticDeduplicationSeconds);
+        Controls.Add(numericSemanticDeduplicationSeconds);
+    }
     /// <summary>
     /// Sets edit mode.
     /// </summary>

@@ -72,42 +72,49 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         ArgumentNullException.ThrowIfNull(key);
         DateTimeOffset now = timestampUtc ?? timeProvider.GetUtcNow();
         DateTimeOffset cutoff = now - windowDuration;
-
-        if (!buckets.TryGetValue(key, out BucketState? state))
+        while (true)
         {
-            lock (capacitySync)
+            if (!buckets.TryGetValue(key, out BucketState? state))
             {
-                if (!buckets.TryGetValue(key, out state))
+                lock (capacitySync)
                 {
-                    PruneExpiredKeys(cutoff);
-                    while (buckets.Count >= maxKeyCapacity)
+                    if (!buckets.TryGetValue(key, out state))
                     {
-                        EvictLeastRecentlyUsedKey();
-                    }
+                        PruneExpiredKeys(cutoff);
+                        while (buckets.Count >= maxKeyCapacity)
+                        {
+                            EvictLeastRecentlyUsedKey();
+                        }
 
-                    state = buckets.GetOrAdd(key, _ => new BucketState());
+                        state = buckets.GetOrAdd(key, new BucketState());
+                    }
                 }
             }
-        }
 
-        lock (state.SyncRoot)
-        {
-            PruneExpiredItems(state, cutoff);
-
-            if (state.Items.Count >= maxItemsPerBucket)
+            lock (state.SyncRoot)
             {
-                int oldestIndex = FindOldestItemIndex(state.Items);
-                state.Items.RemoveAt(oldestIndex);
-                Interlocked.Increment(ref totalEvictions);
-            }
+                if (!buckets.TryGetValue(key, out BucketState? current) || !ReferenceEquals(state, current))
+                {
+                    continue;
+                }
 
-            state.Items.Add(new TimedItem(item, now));
-            if (now > state.LastActivityUtc)
-            {
-                state.LastActivityUtc = now;
+                PruneExpiredItems(state, cutoff);
+
+                if (state.Items.Count >= maxItemsPerBucket)
+                {
+                    int oldestIndex = FindOldestItemIndex(state.Items);
+                    state.Items.RemoveAt(oldestIndex);
+                    Interlocked.Increment(ref totalEvictions);
+                }
+
+                state.Items.Add(new TimedItem(item, now));
+                if (now > state.LastActivityUtc)
+                {
+                    state.LastActivityUtc = now;
+                }
+                Interlocked.Increment(ref totalItemsAdded);
+                return state.Items.Count;
             }
-            Interlocked.Increment(ref totalItemsAdded);
-            return state.Items.Count;
         }
     }
 
@@ -119,18 +126,23 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     public IReadOnlyList<TItem> GetActiveItems(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        if (!buckets.TryGetValue(key, out BucketState? state))
+        while (buckets.TryGetValue(key, out BucketState? state))
         {
-            return Array.Empty<TItem>();
+            lock (state.SyncRoot)
+            {
+                if (!buckets.TryGetValue(key, out BucketState? current) || !ReferenceEquals(state, current))
+                {
+                    continue;
+                }
+
+                DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
+                PruneExpiredItems(state, cutoff);
+
+                return state.Items.Select(static x => x.Item).ToList();
+            }
         }
 
-        DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
-        lock (state.SyncRoot)
-        {
-            PruneExpiredItems(state, cutoff);
-
-            return state.Items.Select(static x => x.Item).ToList();
-        }
+        return Array.Empty<TItem>();
     }
 
     /// <summary>
@@ -141,18 +153,23 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     public int GetCount(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        if (!buckets.TryGetValue(key, out BucketState? state))
+        while (buckets.TryGetValue(key, out BucketState? state))
         {
-            return 0;
+            lock (state.SyncRoot)
+            {
+                if (!buckets.TryGetValue(key, out BucketState? current) || !ReferenceEquals(state, current))
+                {
+                    continue;
+                }
+
+                DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
+                PruneExpiredItems(state, cutoff);
+
+                return state.Items.Count;
+            }
         }
 
-        DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
-        lock (state.SyncRoot)
-        {
-            PruneExpiredItems(state, cutoff);
-
-            return state.Items.Count;
-        }
+        return 0;
     }
 
     /// <summary>
@@ -163,10 +180,9 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     {
         DateTimeOffset cutoff = timeProvider.GetUtcNow() - windowDuration;
         Dictionary<TKey, int> result = new();
-
-        foreach (KeyValuePair<TKey, BucketState> pair in buckets)
+        lock (capacitySync)
         {
-            lock (pair.Value.SyncRoot)
+            foreach (KeyValuePair<TKey, BucketState> pair in buckets)
             {
                 PruneExpiredItems(pair.Value, cutoff);
 
@@ -187,16 +203,15 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     public void PruneExpiredKeys(DateTimeOffset? cutoff = null)
     {
         DateTimeOffset effectiveCutoff = cutoff ?? (timeProvider.GetUtcNow() - windowDuration);
-
-        foreach (KeyValuePair<TKey, BucketState> pair in buckets)
+        lock (capacitySync)
         {
-            lock (pair.Value.SyncRoot)
+            foreach (KeyValuePair<TKey, BucketState> pair in buckets.ToArray())
             {
                 PruneExpiredItems(pair.Value, effectiveCutoff);
 
                 if (pair.Value.Items.Count == 0 && pair.Value.LastActivityUtc < effectiveCutoff)
                 {
-                    buckets.TryRemove(pair.Key, out _);
+                    buckets.TryRemove(pair);
                 }
             }
         }
@@ -207,9 +222,12 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     /// </summary>
     public void Reset()
     {
-        buckets.Clear();
-        Interlocked.Exchange(ref totalItemsAdded, 0);
-        Interlocked.Exchange(ref totalEvictions, 0);
+        lock (capacitySync)
+        {
+            buckets.Clear();
+            Interlocked.Exchange(ref totalItemsAdded, 0);
+            Interlocked.Exchange(ref totalEvictions, 0);
+        }
     }
 
     private void EvictLeastRecentlyUsedKey()
@@ -218,9 +236,17 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
             .OrderBy(static pair => pair.Value.LastActivityUtc)
             .Cast<KeyValuePair<TKey, BucketState>?>()
             .FirstOrDefault();
-        if (victim.HasValue && buckets.TryRemove(victim.Value.Key, out BucketState? removed))
+        if (!victim.HasValue)
         {
-            Interlocked.Add(ref totalEvictions, removed.Items.Count);
+            return;
+        }
+
+        lock (victim.Value.Value.SyncRoot)
+        {
+            if (buckets.TryRemove(victim.Value))
+            {
+                Interlocked.Add(ref totalEvictions, victim.Value.Value.Items.Count);
+            }
         }
     }
 
@@ -250,7 +276,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     private sealed class BucketState
     {
                 /// <summary>
-        /// 取得或設定 SyncRoot。
+        /// 取得此貯列狀態的同步根物件。
         /// </summary>
 public object SyncRoot { get; } = new();
                 /// <summary>

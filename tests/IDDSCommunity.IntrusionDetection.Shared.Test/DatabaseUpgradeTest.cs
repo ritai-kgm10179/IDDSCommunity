@@ -82,16 +82,16 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7)";
-            Assert.AreEqual(7L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9)";
+            Assert.AreEqual(9L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(7L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(9L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ObservationWatermarks'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='SecurityObservationEvents'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
-            command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SecurityObservationEvents') WHERE name IN ('IsCredentialFailure','ActivityId','TargetResource','ErrorCode')";
-            Assert.AreEqual(4L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SecurityObservationEvents') WHERE name IN ('IsCredentialFailure','ActivityId','TargetResource','ErrorCode','AccountSid','IsCrossSourceDuplicate','DuplicateOfObservationId','CorrelationProcessed')";
+            Assert.AreEqual(8L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_IntrusionLog_IncidentTime'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
         }
@@ -315,12 +315,12 @@ public class DatabaseUpgradeTest
                 connection.Open();
                 Db.SchemaMigrationRunner.Migrate(connection);
 
-                // 驗證 SchemaMigrations 記錄目前版本 7
+                // 驗證 SchemaMigrations 記錄目前版本 9
                 using Microsoft.Data.Sqlite.SqliteCommand checkVerCmd = connection.CreateCommand();
-                checkVerCmd.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 7";
+                checkVerCmd.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 9";
                 Assert.AreEqual(1L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));
-                checkVerCmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SecurityObservationEvents') WHERE name IN ('IsCredentialFailure','ActivityId','TargetResource','ErrorCode')";
-                Assert.AreEqual(4L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));
+                checkVerCmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SecurityObservationEvents') WHERE name IN ('IsCredentialFailure','ActivityId','TargetResource','ErrorCode','AccountSid','IsCrossSourceDuplicate','DuplicateOfObservationId','CorrelationProcessed')";
+                Assert.AreEqual(8L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));
 
                 // 驗證舊列完整保留且 AlertId 欄位為 NULL
                 using Microsoft.Data.Sqlite.SqliteCommand checkOldCmd = connection.CreateCommand();

@@ -94,6 +94,11 @@ public sealed class CorrelationEvaluationResult
     public bool IsCrossSourceDuplicate { get; set; }
 
     /// <summary>
+    /// 取得或設定跨來源重複事件所對應的主要觀察事件識別碼。
+    /// </summary>
+    public Guid? DuplicateOfObservationId { get; set; }
+
+    /// <summary>
     /// 取得或設定來源 IP 是否位於安全網路全域允許清單中。
     /// </summary>
     public bool IsSafeNetworkExempted { get; set; }
@@ -127,8 +132,8 @@ public sealed class CrossAgentCorrelationEngine
     private readonly ObservationIdempotencyFilter idempotencyFilter;
     private readonly ConcurrentSlidingBucket<string, string> ipToAccountsBucket;
     private readonly ConcurrentSlidingBucket<string, string> accountToIpsBucket;
-    private readonly ConcurrentSlidingBucket<string, string> semanticSourcesBucket;
-    private readonly ConcurrentSlidingBucket<string, string> activitySourcesBucket;
+    private readonly ConcurrentSlidingBucket<string, SemanticSourceEntry> semanticSourcesBucket;
+    private readonly ConcurrentSlidingBucket<string, SemanticSourceEntry> activitySourcesBucket;
     private readonly ConcurrentDictionary<string, ObservationWatermark> watermarks;
     private readonly TimeProvider timeProvider;
 
@@ -147,12 +152,12 @@ public sealed class CrossAgentCorrelationEngine
         idempotencyFilter = new ObservationIdempotencyFilter(retentionPeriod: window * 2, timeProvider: this.timeProvider);
         ipToAccountsBucket = new ConcurrentSlidingBucket<string, string>(windowDuration: window, timeProvider: this.timeProvider);
         accountToIpsBucket = new ConcurrentSlidingBucket<string, string>(windowDuration: window, timeProvider: this.timeProvider);
-        semanticSourcesBucket = new ConcurrentSlidingBucket<string, string>(
+        semanticSourcesBucket = new ConcurrentSlidingBucket<string, SemanticSourceEntry>(
             maxKeyCapacity: 20000,
             maxItemsPerBucket: 32,
-            windowDuration: TimeSpan.FromSeconds(5),
+            windowDuration: TimeSpan.FromMinutes(5),
             timeProvider: this.timeProvider);
-        activitySourcesBucket = new ConcurrentSlidingBucket<string, string>(
+        activitySourcesBucket = new ConcurrentSlidingBucket<string, SemanticSourceEntry>(
             maxKeyCapacity: 20000,
             maxItemsPerBucket: 32,
             windowDuration: window,
@@ -164,6 +169,19 @@ public sealed class CrossAgentCorrelationEngine
     /// 取得目前持有的來源水位點字典快照。
     /// </summary>
     public IReadOnlyDictionary<string, ObservationWatermark> Watermarks => watermarks;
+
+    /// <summary>
+    /// 在持久化前正規化觀察事件並指派穩定的關聯群組識別碼。
+    /// </summary>
+    /// <param name="observation">欲準備的安全性觀察事件。</param>
+    public void PrepareObservation(SecurityObservationEvent observation)
+    {
+        ArgumentNullException.ThrowIfNull(observation);
+        AccountIdentityNormalizer.Normalize(observation);
+        observation.CorrelationGroupId ??= string.IsNullOrWhiteSpace(observation.ActivityId)
+            ? Guid.NewGuid()
+            : ComputeCorrelationGroupId(observation.ActivityId);
+    }
 
     /// <summary>
     /// 評估傳入之安全性觀察事件，執行冪等性驗證、安全網路判定、跨來源關聯與噴灑偵測。
@@ -182,6 +200,7 @@ public sealed class CrossAgentCorrelationEngine
     public CorrelationEvaluationResult Ingest(SecurityObservationEvent observation, IddsConfig? config)
     {
         ArgumentNullException.ThrowIfNull(observation);
+        PrepareObservation(observation);
 
         CorrelationEvaluationResult result = new()
         {
@@ -221,12 +240,6 @@ public sealed class CrossAgentCorrelationEngine
         }
 
         // 5. 第二層語意：跨來源關聯群組指派（不刪除或合併原始事件）
-        if (observation.CorrelationGroupId == null)
-        {
-            observation.CorrelationGroupId = string.IsNullOrWhiteSpace(observation.ActivityId)
-                ? Guid.NewGuid()
-                : ComputeCorrelationGroupId(observation.ActivityId);
-        }
         result.CorrelationGroupId = observation.CorrelationGroupId;
 
         // 6. 滑動時間窗噴灑偵測（僅針對明確之認證憑證失敗事件，授權拒絕與原則錯誤不計入）
@@ -239,18 +252,36 @@ public sealed class CrossAgentCorrelationEngine
 
         string semanticKey = ComputeSemanticKey(observation);
         string sourceIdentity = ComputeSourceIdentity(observation);
-        ConcurrentSlidingBucket<string, string> deduplicationBucket = string.IsNullOrWhiteSpace(observation.ActivityId)
+        ConcurrentSlidingBucket<string, SemanticSourceEntry> deduplicationBucket = string.IsNullOrWhiteSpace(observation.ActivityId)
             ? semanticSourcesBucket
             : activitySourcesBucket;
-        IReadOnlyList<string> priorSources = deduplicationBucket.GetActiveItems(semanticKey);
-        deduplicationBucket.Add(semanticKey, sourceIdentity, observation.EventTimeUtc);
-        if (priorSources.Any(source => !string.Equals(source, sourceIdentity, StringComparison.OrdinalIgnoreCase)))
+        IReadOnlyList<SemanticSourceEntry> priorSources = deduplicationBucket.GetActiveItems(semanticKey);
+        TimeSpan semanticTolerance = TimeSpan.FromSeconds(config?.CrossAgentSemanticDeduplicationSeconds ?? 15);
+        SemanticSourceEntry? duplicateOf = priorSources.FirstOrDefault(source =>
+            !string.Equals(source.SourceIdentity, sourceIdentity, StringComparison.OrdinalIgnoreCase)
+            && (!string.IsNullOrWhiteSpace(observation.ActivityId)
+                || (source.EventTimeUtc - observation.EventTimeUtc).Duration() <= semanticTolerance));
+        if (duplicateOf != null)
         {
             result.IsCrossSourceDuplicate = true;
+            result.DuplicateOfObservationId = duplicateOf.ObservationId;
+            result.CorrelationGroupId = duplicateOf.CorrelationGroupId;
+            observation.IsCrossSourceDuplicate = true;
+            observation.DuplicateOfObservationId = duplicateOf.ObservationId;
+            observation.CorrelationGroupId = duplicateOf.CorrelationGroupId;
+            deduplicationBucket.Add(
+                semanticKey,
+                new SemanticSourceEntry(sourceIdentity, duplicateOf.ObservationId, observation.EventTimeUtc, duplicateOf.CorrelationGroupId),
+                observation.EventTimeUtc);
             result.Action = CorrelationAction.None;
             result.Message = "Cross-source duplicate authentication failure excluded from counters and spray windows.";
             return result;
         }
+
+        deduplicationBucket.Add(
+            semanticKey,
+            new SemanticSourceEntry(sourceIdentity, observation.Id, observation.EventTimeUtc, observation.CorrelationGroupId),
+            observation.EventTimeUtc);
 
         string ip = observation.NormalizedIpAddress.Trim();
         string account = observation.NormalizedAccount.Trim();
@@ -374,11 +405,21 @@ public sealed class CrossAgentCorrelationEngine
                 : parsedAddress.ToString();
         }
 
-        return $"AUTH:{address.ToUpperInvariant()}|{observation.NormalizedDomain.Trim().ToUpperInvariant()}|{observation.NormalizedAccount.Trim().ToUpperInvariant()}";
+        string identityKey = AccountIdentityNormalizer.BuildKey(
+            observation.NormalizedAccount,
+            observation.NormalizedDomain,
+            observation.AccountSid);
+        return $"AUTH:{address.ToUpperInvariant()}|{identityKey}";
     }
 
     private static string ComputeSourceIdentity(SecurityObservationEvent observation) =>
         $"{observation.SourceAgentName.Trim()}|{observation.ProviderOrChannel.Trim()}";
+
+    private sealed record SemanticSourceEntry(
+        string SourceIdentity,
+        Guid ObservationId,
+        DateTimeOffset EventTimeUtc,
+        Guid? CorrelationGroupId);
 
     /// <summary>
     /// 從持久化資料庫載入時間窗內的觀察事件與來源水位點，安全重建記憶體滑動窗與冪等去重狀態。
@@ -402,13 +443,18 @@ public sealed class CrossAgentCorrelationEngine
 
         // 2. 重建時間窗內之觀察事件
         IEnumerable<SecurityObservationEventRebuildRow> rows = database.Query<SecurityObservationEventRebuildRow>(
-            "SELECT IdempotencyKey, ReceivedUtc, EventTimeUtc, SourceAgentName, ProviderOrChannel, NormalizedIpAddress, NormalizedAccount, NormalizedDomain, IsCredentialFailure, ActivityId FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
+            "SELECT Id, IdempotencyKey, ReceivedUtc, EventTimeUtc, SourceAgentName, ProviderOrChannel, NormalizedIpAddress, NormalizedAccount, NormalizedDomain, AccountSid, IsCredentialFailure, IsCrossSourceDuplicate, DuplicateOfObservationId, ActivityId, CorrelationGroupId, CorrelationProcessed FROM SecurityObservationEvents WHERE EventTimeUtc >= @WindowStart ORDER BY EventTimeUtc, Id",
             new { WindowStart = windowStart });
 
         foreach (SecurityObservationEventRebuildRow row in rows)
         {
             if (DateTimeOffset.TryParse(row.EventTimeUtc, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out DateTimeOffset evtTime))
             {
+                if (!row.CorrelationProcessed)
+                {
+                    continue;
+                }
+
                 // 標記冪等性已看過
                 if (!string.IsNullOrWhiteSpace(row.IdempotencyKey))
                 {
@@ -430,17 +476,28 @@ public sealed class CrossAgentCorrelationEngine
                             NormalizedIpAddress = ip,
                             NormalizedAccount = account,
                             NormalizedDomain = row.NormalizedDomain,
+                            AccountSid = row.AccountSid,
                             ActivityId = row.ActivityId
                         };
-                    ConcurrentSlidingBucket<string, string> deduplicationBucket = string.IsNullOrWhiteSpace(row.ActivityId)
+                    AccountIdentityNormalizer.Normalize(rebuiltObservation);
+                    ConcurrentSlidingBucket<string, SemanticSourceEntry> deduplicationBucket = string.IsNullOrWhiteSpace(row.ActivityId)
                         ? semanticSourcesBucket
                         : activitySourcesBucket;
                     deduplicationBucket.Add(
                         ComputeSemanticKey(rebuiltObservation),
-                        $"{row.SourceAgentName.Trim()}|{row.ProviderOrChannel.Trim()}",
+                        new SemanticSourceEntry(
+                            $"{row.SourceAgentName.Trim()}|{row.ProviderOrChannel.Trim()}",
+                            Guid.TryParse(row.DuplicateOfObservationId, out Guid canonicalObservationId)
+                                ? canonicalObservationId
+                                : Guid.TryParse(row.Id, out Guid observationId) ? observationId : Guid.Empty,
+                            evtTime,
+                            Guid.TryParse(row.CorrelationGroupId, out Guid correlationGroupId) ? correlationGroupId : null),
                         evtTime);
-                    ipToAccountsBucket.Add(ip, account, evtTime);
-                    accountToIpsBucket.Add(account, ip, evtTime);
+                    if (!row.IsCrossSourceDuplicate)
+                    {
+                        ipToAccountsBucket.Add(ip, rebuiltObservation.NormalizedAccount, evtTime);
+                        accountToIpsBucket.Add(rebuiltObservation.NormalizedAccount, ip, evtTime);
+                    }
                 }
             }
         }
@@ -448,6 +505,10 @@ public sealed class CrossAgentCorrelationEngine
 
     private sealed class SecurityObservationEventRebuildRow
     {
+                /// <summary>
+        /// 取得或設定觀察事件識別碼。
+        /// </summary>
+public string Id { get; set; } = string.Empty;
                 /// <summary>
         /// 取得或設定 IdempotencyKey。
         /// </summary>
@@ -481,12 +542,32 @@ public string NormalizedAccount { get; set; } = string.Empty;
         /// </summary>
 public string NormalizedDomain { get; set; } = string.Empty;
                 /// <summary>
+        /// 取得或設定 Windows 安全性識別碼。
+        /// </summary>
+public string AccountSid { get; set; } = string.Empty;
+                /// <summary>
         /// 取得或設定事件是否為密碼或帳號憑證驗證失敗。
         /// </summary>
 public bool IsCredentialFailure { get; set; }
                 /// <summary>
+        /// 取得或設定事件是否為跨來源重複事件。
+        /// </summary>
+public bool IsCrossSourceDuplicate { get; set; }
+                /// <summary>
+        /// 取得或設定主要觀察事件識別碼。
+        /// </summary>
+public string? DuplicateOfObservationId { get; set; }
+                /// <summary>
         /// 取得或設定活動關聯識別碼。
         /// </summary>
 public string? ActivityId { get; set; }
+                /// <summary>
+        /// 取得或設定關聯群組識別碼。
+        /// </summary>
+public string? CorrelationGroupId { get; set; }
+                /// <summary>
+        /// 取得或設定事件是否已完成關聯評估。
+        /// </summary>
+public bool CorrelationProcessed { get; set; }
     }
 }

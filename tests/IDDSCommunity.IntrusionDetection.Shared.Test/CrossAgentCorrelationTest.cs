@@ -17,6 +17,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class CrossAgentCorrelationTest
 {
     /// <summary>
+    /// 驗證網域反斜線、UPN 與明確網域欄位可產生一致的帳號身分鍵值。
+    /// </summary>
+    [TestMethod]
+    public void AccountIdentityNormalizer_CommonWindowsFormats_ProduceStableIdentity()
+    {
+        string downLevel = AccountIdentityNormalizer.BuildKey("CONTOSO\\Alice", null, null);
+        string upn = AccountIdentityNormalizer.BuildKey("alice@contoso", null, null);
+        string separated = AccountIdentityNormalizer.BuildKey("alice", "CONTOSO", null);
+
+        Assert.AreEqual(downLevel, upn);
+        Assert.AreEqual(downLevel, separated);
+        Assert.AreEqual(
+            AccountIdentityNormalizer.BuildKey("renamed-user", "OTHER", "S-1-5-21-1-2-3-1001"),
+            AccountIdentityNormalizer.BuildKey("alice", "CONTOSO", "s-1-5-21-1-2-3-1001"));
+    }
+
+    /// <summary>
     /// 驗證不同 Agent 對同一次驗證失敗的回報只會有第一筆進入計數時間窗。
     /// </summary>
     [TestMethod]
@@ -52,6 +69,43 @@ public class CrossAgentCorrelationTest
         Assert.IsFalse(firstResult.IsCrossSourceDuplicate);
         Assert.IsTrue(secondResult.IsCrossSourceDuplicate);
         Assert.AreEqual(CorrelationAction.None, secondResult.Action);
+    }
+
+    /// <summary>
+    /// 驗證語意去重時間差可由設定控制，超出容許範圍的獨立事件不得被合併。
+    /// </summary>
+    [TestMethod]
+    public void Ingest_EventsOutsideConfiguredSemanticTolerance_RemainIndependent()
+    {
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        IddsConfig config = CreateTestConfig(enableCorrelation: true);
+        config.CrossAgentSemanticDeduplicationSeconds = 1;
+        DateTimeOffset occurredAt = DateTimeOffset.UtcNow;
+        SecurityObservationEvent first = new()
+        {
+            SourceAgentName = "WindowsNetworkLogon",
+            ProviderOrChannel = "Security",
+            ComputerName = "SERVER01",
+            SourceEventRecordId = 7001,
+            NormalizedIpAddress = "192.0.2.71",
+            NormalizedAccount = "CONTOSO\\alice",
+            EventTimeUtc = occurredAt
+        };
+        SecurityObservationEvent second = new()
+        {
+            SourceAgentName = "NpsRadius",
+            ProviderOrChannel = "Security",
+            ComputerName = "NPS01",
+            SourceEventRecordId = 7002,
+            NormalizedIpAddress = "192.0.2.71",
+            NormalizedAccount = "alice@contoso",
+            EventTimeUtc = occurredAt.AddSeconds(2)
+        };
+
+        engine.Ingest(first, config);
+        CorrelationEvaluationResult result = engine.Ingest(second, config);
+
+        Assert.IsFalse(result.IsCrossSourceDuplicate);
     }
 
     /// <summary>
@@ -427,6 +481,28 @@ public class CrossAgentCorrelationTest
 
         Assert.AreEqual(3, bucket.ActiveKeyCount);
         Assert.IsTrue(bucket.TotalEvictions >= 17);
+    }
+
+    /// <summary>
+    /// 驗證高併發寫入與 LRU 驅逐共存時，每筆加入事件皆可由活動項目或驅逐計數完整對帳。
+    /// </summary>
+    [TestMethod]
+    public async Task ConcurrentSlidingBucket_ConcurrentFlood_DoesNotLoseOrphanedWrites()
+    {
+        ConcurrentSlidingBucket<string, int> bucket = new(maxKeyCapacity: 8, maxItemsPerBucket: 2000, windowDuration: TimeSpan.FromHours(1));
+
+        Task[] tasks = Enumerable.Range(0, 8).Select(worker => Task.Run(() =>
+        {
+            for (int index = 0; index < 250; index++)
+            {
+                bucket.Add($"key-{(worker * 250 + index) % 32}", index);
+            }
+        })).ToArray();
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        long activeItems = bucket.SnapshotCounts().Values.Sum(static count => (long)count);
+        Assert.AreEqual(bucket.TotalItemsAdded, activeItems + bucket.TotalEvictions);
+        Assert.IsTrue(bucket.ActiveKeyCount <= 8);
     }
 
     /// <summary>
