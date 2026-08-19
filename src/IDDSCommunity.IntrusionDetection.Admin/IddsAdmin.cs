@@ -589,6 +589,7 @@ public partial class IddsAdmin : Form
         IReadOnlyDictionary<Guid, AgentLockStatistics>? agentLockStatistics = null;
         int? softLocks = null;
         int? hardLocks = null;
+        int? crossAgentAlerts = null;
         if (mode == AdminRefreshMode.SecurityLog)
         {
             DateTime endDate = DateTime.UtcNow;
@@ -634,13 +635,14 @@ public partial class IddsAdmin : Form
             DateTime endDate = DateTime.UtcNow;
             failedLoginStatistics = Locks.ReadFailedLoginStatistics(endDate.AddDays(-30), endDate);
             agentLockStatistics = Locks.ReadAgentLockStatistics();
+            crossAgentAlerts = Locks.ReadCrossAgentAlertCount(endDate.AddDays(-30), endDate);
         }
         if (mode is AdminRefreshMode.Dashboard or AdminRefreshMode.CurrentLocks)
         {
             softLocks = Locks.ReadCurrentSoftLocks();
             hardLocks = Locks.ReadCurrentHardLocks();
         }
-        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, newSecurityLogRefresh, replaceSecurityLog, failedLoginStatistics, agentLockStatistics, softLocks, hardLocks);
+        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, newSecurityLogRefresh, replaceSecurityLog, failedLoginStatistics, agentLockStatistics, softLocks, hardLocks, crossAgentAlerts);
     }
     /// <summary>
     /// Applies a background-loaded administration snapshot on the UI thread.
@@ -681,6 +683,8 @@ public partial class IddsAdmin : Form
             Dashboard.SetSoftLocks(soft);
             Dashboard.SetHardLocks(hard);
         }
+        if (snapshot.CrossAgentAlerts is int alerts)
+            Dashboard.SetCrossAgentAlerts(alerts);
     }
 
     private enum AdminRefreshMode
@@ -700,7 +704,7 @@ public partial class IddsAdmin : Form
     }
     private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message, int NumberOfEvents);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
-    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks);
+    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks, int? CrossAgentAlerts);
 
     /// <summary>
     /// 取得或設定 LastLogId。

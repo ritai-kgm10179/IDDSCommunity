@@ -82,10 +82,10 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10)";
-            Assert.AreEqual(10L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11)";
+            Assert.AreEqual(11L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(10L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(11L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ObservationWatermarks'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='SecurityObservationEvents'";
@@ -317,9 +317,9 @@ public class DatabaseUpgradeTest
                 connection.Open();
                 Db.SchemaMigrationRunner.Migrate(connection);
 
-                // 驗證 SchemaMigrations 記錄目前版本 10
+                // 驗證 SchemaMigrations 記錄目前版本 11
                 using Microsoft.Data.Sqlite.SqliteCommand checkVerCmd = connection.CreateCommand();
-                checkVerCmd.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 10";
+                checkVerCmd.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 11";
                 Assert.AreEqual(1L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));
                 checkVerCmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SecurityObservationEvents') WHERE name IN ('IsCredentialFailure','ActivityId','TargetResource','ErrorCode','AccountSid','IsCrossSourceDuplicate','DuplicateOfObservationId','CorrelationProcessed')";
                 Assert.AreEqual(8L, Convert.ToInt64(checkVerCmd.ExecuteScalar()));

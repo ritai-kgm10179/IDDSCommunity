@@ -30,6 +30,12 @@ public sealed class ConfigurationTransferServiceTest
         SaveConfiguration(configuration);
         database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", "Configuration.Language", "zh-TW");
         database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, FirewallBlockMode.Bidirectional.ToString());
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION, bool.TrueString);
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD, "7");
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD, "8");
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES, "20");
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS, "30");
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", IddsConfig.CONFIG_VALUE_TRUSTED_PROXY_CIDRS, "192.0.2.0/24;2001:db8::/32");
         database.ExecuteNonQuery("INSERT INTO WhiteList(IpAddress,NetworkMask) VALUES(@p0,@p1)", "192.0.2.0", "255.255.255.0");
         database.ExecuteNonQuery("INSERT INTO SecurityAgents(AgentId,Name,AssemblyName,HardLockAttempts,HardLockTimeHours,LockForever,SoftLockAttempts,SoftLockTimeMinutes,OverwriteConfiguration,DisplayName,Enabled,Serial) VALUES(@p0,@p1,@p2,20,1,0,10,1,0,@p3,1,0)", Guid.Parse("fa68919b-6d0b-4508-9659-3cd1e160235c"), "OpenSshSecurityAgent", "IDDSCommunity.Agents.OpenSsh.dll", "OpenSSH");
     }
@@ -52,6 +58,9 @@ public sealed class ConfigurationTransferServiceTest
         Assert.HasCount(1, package.SafeNetworks);
         Assert.HasCount(1, package.Agents);
         Assert.AreEqual("Bidirectional", package.ApplicationSettings[IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE]);
+        Assert.AreEqual(bool.TrueString, package.ApplicationSettings[IddsConfig.CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION]);
+        Assert.AreEqual("20", package.ApplicationSettings[IddsConfig.CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES]);
+        Assert.AreEqual("192.0.2.0/24;2001:db8::/32", package.ApplicationSettings[IddsConfig.CONFIG_VALUE_TRUSTED_PROXY_CIDRS]);
     }
 
     /// <summary>

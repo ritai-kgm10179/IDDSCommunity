@@ -58,6 +58,10 @@ public const int STATUS_UNLOCKED = 510;
     /// 定義 STATUS_UNLOCK_ERROR 之數值。
     /// </summary>
 public const int STATUS_UNLOCK_ERROR = 590;
+        /// <summary>
+    /// 定義跨 Agent 密碼噴灑告警之狀態碼。
+    /// </summary>
+public const int STATUS_CROSS_AGENT_SPRAY_ALERT = 600;
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.
         /// <summary>
     /// 定義 STATUS_PROTECTION_UNAVAILABLE 之數值。
@@ -114,6 +118,7 @@ public static Dictionary<int, string> StatusNames
                     { STATUS_UNLOCK_REQUESTED, "Lock has expired. Unlock requested." },
                     { STATUS_UNLOCKED, "This client was unlocked." },
                     { STATUS_UNLOCK_ERROR, "There was an unlock error. Please see event viewer for details." },
+                    { STATUS_CROSS_AGENT_SPRAY_ALERT, "Cross-agent password-spray attack detected." },
                     { STATUS_PROTECTION_UNAVAILABLE, "Protection is unavailable." }
                 };
             return _statusNames;
@@ -143,6 +148,7 @@ public static Dictionary<int, string> StatusClasses
                     { STATUS_UNLOCK_REQUESTED, "Unlock" },
                     { STATUS_UNLOCKED, "Unlock" },
                     { STATUS_UNLOCK_ERROR, "Error" },
+                    { STATUS_CROSS_AGENT_SPRAY_ALERT, "System" },
                     { STATUS_PROTECTION_UNAVAILABLE, "Error" }
                 };
             return _statusClasses;
@@ -171,6 +177,7 @@ public static Dictionary<int, Image> StatusIcons
                     { STATUS_UNLOCK_REQUESTED, Resources.logIcon_unlock },
                     { STATUS_UNLOCKED, Resources.logIcon_unlock },
                     { STATUS_UNLOCK_ERROR, Resources.logIcon_warning },
+                    { STATUS_CROSS_AGENT_SPRAY_ALERT, Resources.logIcon_warning },
                     { STATUS_PROTECTION_UNAVAILABLE, Resources.logIcon_warning }
                 };
             return _statusIcons;
@@ -359,6 +366,7 @@ public static Dictionary<int, Image> StatusIcons
     {
         if (Database.Instance.IsConfigured)
         {
+            clientIp = IpAddressCanonicalizer.Canonicalize(clientIp);
             string sqlString = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser)
 values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
             object? result = Database.Instance.ExecuteScalar(sqlString, incidentTime, agentId, clientIp, action, actionTriggeredByUser);
@@ -379,6 +387,7 @@ values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
     {
         if (Database.Instance.IsConfigured)
         {
+            IpAddress = IpAddressCanonicalizer.Canonicalize(IpAddress);
             string sqlString = @"select count(*) from IntrusionLog where AgentId=@p0 and IncidentTime>@p1 and ClientIP=@p2";
             object? queryResult = Database.Instance.ExecuteScalar(sqlString, agentId, DateTime.UtcNow.AddDays(-1), IpAddress);
             return Db.DbValueConverter.ToInt(queryResult);

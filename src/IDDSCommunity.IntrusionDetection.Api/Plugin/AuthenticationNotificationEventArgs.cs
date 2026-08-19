@@ -6,6 +6,12 @@
 public sealed class AuthenticationNotificationEventArgs : NotificationEventArgs
 {
     /// <summary>
+    /// 取得或設定事件是否已達擴充元件的本機攻擊門檻。
+    /// 舊版擴充元件未提供此欄位時，預設視為已達門檻以維持相容性。
+    /// </summary>
+    public bool IsLocalThresholdExceeded { get; set; } = true;
+
+    /// <summary>
     /// 取得或設定正規化前的目標帳號名稱。
     /// </summary>
     public string AccountName { get; set; } = string.Empty;

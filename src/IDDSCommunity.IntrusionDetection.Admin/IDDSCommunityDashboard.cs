@@ -10,6 +10,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class IDDSCommunityDashboard : UserControl
 {
+    private readonly SmartLabel labelCrossAgentAlerts = new();
     /// <summary>
     /// 當 SecurityAgentConfigurationRequest 時引發之事件。
     /// </summary>
@@ -17,7 +18,17 @@ public partial class IDDSCommunityDashboard : UserControl
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityDashboard"/> 類別的新執行個體。
     /// </summary>
-    public IDDSCommunityDashboard() => InitializeComponent();
+    public IDDSCommunityDashboard()
+    {
+        InitializeComponent();
+        labelCrossAgentAlerts.Font = new System.Drawing.Font("Segoe UI", 8F);
+        labelCrossAgentAlerts.ForeColor = System.Drawing.Color.White;
+        labelCrossAgentAlerts.Location = new System.Drawing.Point(150, 8);
+        labelCrossAgentAlerts.Size = new System.Drawing.Size(92, 32);
+        labelCrossAgentAlerts.TextAlign = System.Drawing.ContentAlignment.TopRight;
+        panelUnsuccessfulLogins.Controls.Add(labelCrossAgentAlerts);
+        SetCrossAgentAlerts(0);
+    }
     /// <summary>
     /// Sets soft locks.
     /// </summary>
@@ -33,6 +44,12 @@ public partial class IDDSCommunityDashboard : UserControl
     /// </summary>
     /// <param name="logins">logins 的值。</param>
     public void SetUnsuccessfulLogins(int logins) => labelUnsuccessfulLogins.Text = logins.ToString();
+
+    /// <summary>
+    /// 設定最近 30 天跨 Agent 密碼噴灑告警數量。
+    /// </summary>
+    /// <param name="alerts">告警數量。</param>
+    public void SetCrossAgentAlerts(int alerts) => labelCrossAgentAlerts.Text = Shared.Localization.Strings.Format("Spray alerts: {0}", alerts);
 
     /// <summary>
     /// 將同一時間區間的登入失敗計數套用至所有 Agent 項目。

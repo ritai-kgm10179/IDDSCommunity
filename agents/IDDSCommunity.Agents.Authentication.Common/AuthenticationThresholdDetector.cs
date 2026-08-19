@@ -55,6 +55,7 @@ public sealed class AuthenticationThresholdDetector
     {
         IPAddress source = Normalize(failure.SourceAddress);
         DateTimeOffset observedAt = timeProvider.GetUtcNow();
+        DateTimeOffset occurredAt = failure.OccurredAt > observedAt.AddMinutes(5) ? observedAt : failure.OccurredAt;
         RemoveExpiredSources(observedAt);
         if (!sources.TryGetValue(source, out SourceState? state))
         {
@@ -70,14 +71,14 @@ public sealed class AuthenticationThresholdDetector
             recency.Remove(state.RecencyNode);
             recency.AddLast(state.RecencyNode);
         }
-        DateTimeOffset cutoff = failure.OccurredAt.AddSeconds(-configuration.WindowSeconds);
+        DateTimeOffset cutoff = occurredAt.AddSeconds(-configuration.WindowSeconds);
         // 以完整篩選（而非只檢查佇列前端）移除逾期時間戳記，因為跨多個輪詢檔案來源時
         // 事件抵達順序不保證單調遞增，僅檢查前端可能永久遺漏埋在佇列中段的逾期項目。
         state.Timestamps.RemoveAll(timestamp => timestamp < cutoff);
         state.Identities.RemoveWhere(item => item.OccurredAt < cutoff);
-        FailureIdentity identity = new(failure.OccurredAt, failure.EventId, failure.Category, failure.AccountName);
+        FailureIdentity identity = new(occurredAt, failure.EventId, failure.Category, failure.AccountName);
         if (!state.Identities.Add(identity)) return false;
-        state.Timestamps.Add(failure.OccurredAt);
+        state.Timestamps.Add(occurredAt);
         if (state.Timestamps.Count < configuration.FailureThreshold)
             return false;
         state.Timestamps.Clear();

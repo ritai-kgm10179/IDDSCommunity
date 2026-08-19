@@ -63,6 +63,93 @@ public sealed class DashboardStatisticsTest
     }
 
     [TestMethod]
+    public void DashboardStatisticsIncludesLegacyAgentNames()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-dashboard-legacy-agent-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            DateTime start = new(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime end = start.AddDays(30);
+            Guid agentId = Guid.NewGuid();
+            const string legacyName = "Legacy.Mail.SmtpAgent";
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents
+                  (AgentId,Name,AssemblyName,OverwriteConfiguration,DisplayName,Enabled,Serial)
+                  VALUES(@p0,@p1,@p2,0,@p3,1,0)",
+                agentId,
+                legacyName,
+                "Legacy.Mail",
+                "郵件伺服器 SMTP 安全性代理程式");
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                start.AddDays(1),
+                legacyName,
+                "192.0.2.10",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+            database.ExecuteNonQuery(
+                "INSERT INTO AgentStatistics(AgentId,FailedLogins,SoftLocks,HardLocks) VALUES(@p0,1,4,2)",
+                legacyName);
+
+            FailedLoginStatisticsSnapshot snapshot = Locks.ReadFailedLoginStatistics(start, end);
+            IReadOnlyDictionary<Guid, AgentLockStatistics> lockStatistics = Locks.ReadAgentLockStatistics();
+
+            Assert.AreEqual(1, snapshot.Total);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[agentId]);
+            Assert.AreEqual(2, lockStatistics[agentId].HardLocks);
+            Assert.AreEqual(4, lockStatistics[agentId].SoftLocks);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void DashboardCountsCrossAgentAlertsInTheSameThirtyDayWindow()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-dashboard-cross-agent-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            DateTime start = new(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime end = start.AddDays(30);
+            database.ExecuteNonQuery(
+                "INSERT INTO ProtectionAuditLog(OccurredUtc,EventType,Outcome,Actor,Subject,Details) VALUES(@p0,@p1,@p2,@p3,@p4,@p5)",
+                new DateTimeOffset(start.AddDays(1)).ToString("O"),
+                "CrossAgentSprayDetected",
+                "AlertOnly",
+                "Agent",
+                "192.0.2.20",
+                "test");
+            database.ExecuteNonQuery(
+                "INSERT INTO ProtectionAuditLog(OccurredUtc,EventType,Outcome,Actor,Subject,Details) VALUES(@p0,@p1,@p2,@p3,@p4,@p5)",
+                new DateTimeOffset(end).ToString("O"),
+                "CrossAgentSprayDetected",
+                "AlertOnly",
+                "Agent",
+                "192.0.2.21",
+                "outside-window");
+
+            Assert.AreEqual(1, Locks.ReadCrossAgentAlertCount(start, end));
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
     public void GroupedSecurityLogUsesHalfOpenWindowAndExactFailureStatuses()
     {
         string directory = Path.Combine(Path.GetTempPath(), "idds-security-log-window-" + Guid.NewGuid().ToString("N"));

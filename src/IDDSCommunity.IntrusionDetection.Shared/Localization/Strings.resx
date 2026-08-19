@@ -820,5 +820,20 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Cross-agent duplicate tolerance (seconds)" xml:space="preserve">
     <value>Cross-agent duplicate tolerance (seconds)</value>
   </data>
+  <data name="Enable cross-agent password-spray detection" xml:space="preserve"><value>Enable cross-agent password-spray detection</value></data>
+  <data name="Accounts per source IP threshold" xml:space="preserve"><value>Accounts per source IP threshold</value></data>
+  <data name="Source IPs per account threshold" xml:space="preserve"><value>Source IPs per account threshold</value></data>
+  <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>Cross-agent sliding window (minutes)</value></data>
+  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>Trusted proxy IP/CIDR list</value></data>
+  <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>Trusted proxy list must not exceed 250 characters.</value></data>
+  <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>Trusted proxy entries must be IP addresses or CIDR ranges.</value></data>
+  <data name="Trusted proxy CIDR prefix is invalid." xml:space="preserve"><value>Trusted proxy CIDR prefix is invalid.</value></data>
+  <data name="Spray alerts: {0}" xml:space="preserve"><value>Spray alerts: {0}</value></data>
+  <data name="Cross-agent password-spray alerts" xml:space="preserve"><value>Cross-agent password-spray alerts</value></data>
+  <data name="Cross-agent password-spray attack detected." xml:space="preserve"><value>Cross-agent password-spray attack detected.</value></data>
+  <data name="Invalid IP address." xml:space="preserve"><value>Invalid IP address.</value></data>
+  <data name="Occurred" xml:space="preserve"><value>Occurred</value></data>
+  <data name="Subject" xml:space="preserve"><value>Subject</value></data>
+  <data name="Details" xml:space="preserve"><value>Details</value></data>
 </root>
 

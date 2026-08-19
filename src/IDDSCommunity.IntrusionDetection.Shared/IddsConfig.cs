@@ -835,20 +835,21 @@ public string Language
         bool result = false;
         try
         {
-            var address = IPAddress.Parse(ipAddress);
+            IPAddress address = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(ipAddress));
             foreach (CSafeNetwork net in SafeNetworks)
             {
                 try
                 {
-                    if (IPAddress.Parse(net.IpAddress).AddressFamily.Equals(address.AddressFamily))
+                    IPAddress networkAddress = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(net.IpAddress));
+                    if (networkAddress.AddressFamily.Equals(address.AddressFamily))
                     {
                         switch (address.AddressFamily)
                         {
                             case System.Net.Sockets.AddressFamily.InterNetwork:
-                                result = IsIp4InNetwork(address, IPAddress.Parse(net.IpAddress), net.SubnetMask);
+                                result = IsIp4InNetwork(address, networkAddress, net.SubnetMask);
                                 break;
                             case System.Net.Sockets.AddressFamily.InterNetworkV6:
-                                result = IsIp6InNetwork(address, IPAddress.Parse(net.IpAddress), int.Parse(net.SubnetMask));
+                                result = IsIp6InNetwork(address, networkAddress, int.Parse(net.SubnetMask));
                                 break;
                         }
                     }
@@ -915,7 +916,7 @@ public string Language
     public bool IsIpAddressLocal(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
-        IPAddress normalized = address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
+        IPAddress normalized = IpAddressCanonicalizer.Canonicalize(address);
         if (IPAddress.IsLoopback(normalized))
         {
             return true;
@@ -932,7 +933,7 @@ public string Language
                     System.Net.NetworkInformation.IPInterfaceProperties iprop = iface.GetIPProperties();
                     foreach (System.Net.NetworkInformation.UnicastIPAddressInformation info in iprop.UnicastAddresses)
                     {
-                        IPAddress candidate = info.Address.IsIPv4MappedToIPv6 ? info.Address.MapToIPv4() : info.Address;
+                        IPAddress candidate = IpAddressCanonicalizer.Canonicalize(info.Address);
                         refreshed.Add(candidate);
                     }
                 }
@@ -1028,6 +1029,7 @@ public string Language
         string[] parts = ipAddressNetwork.Split('/');
         if (parts.Length is < 1 or > 2 || !IPAddress.TryParse(parts[0], out IPAddress? address))
             throw new ArgumentException(nameof(NetworkInputError.InvalidIpAddress), nameof(ipAddressNetwork));
+        address = IpAddressCanonicalizer.Canonicalize(address);
 
         if (parts.Length == 1)
         {

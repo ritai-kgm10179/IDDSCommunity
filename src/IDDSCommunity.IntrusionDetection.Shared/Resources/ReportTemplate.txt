@@ -29,6 +29,8 @@
           <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;background:#f7fafb"><tr style="border-bottom:2px solid #f2a93b"><th align="left">[%LABEL_CLIENT_IP%]</th><th align="right">[%LABEL_SOFT_LOCKS%]</th></tr>[%SOFT_LOCKS_BY_IP%]<tr style="font-weight:600"><td>[%LABEL_TOTAL%]</td><td align="right">[%TOTAL_SOFT_LOCKS%]</td></tr></table>
           <h2 style="font-size:18px;color:#11253d">[%LABEL_HARD_LOCKS_BY_IP%]</h2>
           <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;background:#f7fafb"><tr style="border-bottom:2px solid #f2a93b"><th align="left">[%LABEL_CLIENT_IP%]</th><th align="right">[%LABEL_HARD_LOCKS%]</th></tr>[%HARD_LOCKS_BY_IP%]<tr style="font-weight:600"><td>[%LABEL_TOTAL%]</td><td align="right">[%TOTAL_HARD_LOCKS%]</td></tr></table>
+          <h2 style="font-size:18px;color:#11253d">[%LABEL_CROSS_AGENT_ALERTS%]</h2>
+          <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;background:#f7fafb"><tr style="border-bottom:2px solid #d9534f"><th align="left">[%LABEL_OCCURRED%]</th><th align="left">[%LABEL_SUBJECT%]</th><th align="left">[%LABEL_DETAILS%]</th></tr>[%CROSS_AGENT_ALERTS%]</table>
           <p style="margin-top:28px;padding-top:16px;border-top:1px solid #d8e1e8;font-size:12px;color:#64788b">[%LABEL_REPORT_CONFIGURATION_HINT%]</p>
         </td></tr>
       </table>

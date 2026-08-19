@@ -87,10 +87,11 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
     /// <param name="failure">已解析之驗證失敗事件。</param>
     private void OnEventReceived(object? sender, AuthenticationFailureEvent failure)
     {
-        if (UseLocalThresholdDetector && detector?.Analyze(failure) != true)
+        bool localThresholdExceeded = UseLocalThresholdDetector && detector?.Analyze(failure) == true;
+        if (UseLocalThresholdDetector && !AuthenticationEventProcessingOptions.EnableRawEvents && !localThresholdExceeded)
             return;
 
-        string message = UseLocalThresholdDetector
+        string message = localThresholdExceeded
             ? string.Format(System.Globalization.CultureInfo.CurrentCulture, IntrusionDetection.Api.Localization.Strings.Get("{0}: authentication failure threshold exceeded."), failure.Category)
             : $"{failure.Category}: {failure.Reason}";
 
@@ -110,7 +111,8 @@ public abstract class AuthenticationAgentBase<TConfiguration> : AgentPlugin, IEx
             ActivityId = failure.ActivityId,
             ConfidenceScore = failure.ConfidenceScore,
             TargetResource = failure.TargetResource,
-            ErrorCode = failure.ErrorCode
+            ErrorCode = failure.ErrorCode,
+            IsLocalThresholdExceeded = localThresholdExceeded
         });
     }
 

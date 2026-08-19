@@ -233,6 +233,13 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         if (package.ApplicationSettings.TryGetValue(IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE, out string? firewallMode)
             && (!Enum.TryParse(firewallMode, true, out FirewallBlockMode parsedMode) || !Enum.IsDefined(parsedMode)))
             throw Invalid($"The firewall blocking mode '{firewallMode}' is unsupported.");
+        ValidateBooleanSetting(package.ApplicationSettings, IddsConfig.CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION);
+        ValidateIntegerSetting(package.ApplicationSettings, IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD, 2, 100000);
+        ValidateIntegerSetting(package.ApplicationSettings, IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD, 2, 100000);
+        ValidateIntegerSetting(package.ApplicationSettings, IddsConfig.CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES, 1, 1440);
+        ValidateIntegerSetting(package.ApplicationSettings, IddsConfig.CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS, 1, 300);
+        if (package.ApplicationSettings.TryGetValue(IddsConfig.CONFIG_VALUE_TRUSTED_PROXY_CIDRS, out string? trustedProxyCidrs))
+            ValidateTrustedProxyEntries(trustedProxyCidrs);
         foreach (SafeNetworkTransfer network in package.SafeNetworks)
         {
             if (!IPAddress.TryParse(network.IpAddress, out IPAddress? address)) throw Invalid($"Invalid safe-network address: {network.IpAddress}");
@@ -269,6 +276,32 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
             }
         }
         if (package.Secrets is not null) ValidateSecretEncoding(package.Secrets);
+    }
+
+    private static void ValidateBooleanSetting(IReadOnlyDictionary<string, string> settings, string key)
+    {
+        if (settings.TryGetValue(key, out string? value) && !bool.TryParse(value, out _))
+            throw Invalid($"Application setting '{key}' must be a Boolean value.");
+    }
+
+    private static void ValidateIntegerSetting(IReadOnlyDictionary<string, string> settings, string key, int minimum, int maximum)
+    {
+        if (settings.TryGetValue(key, out string? value)
+            && (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) || parsed < minimum || parsed > maximum))
+            throw Invalid($"Application setting '{key}' must be between {minimum} and {maximum}.");
+    }
+
+    private static void ValidateTrustedProxyEntries(string value)
+    {
+        foreach (string entry in value.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string[] parts = entry.Split('/');
+            if (parts.Length is < 1 or > 2 || !IPAddress.TryParse(parts[0], out IPAddress? address))
+                throw Invalid($"Invalid trusted-proxy address or CIDR: {entry}");
+            if (parts.Length == 2 && (!int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int prefix)
+                || prefix < 0 || prefix > address.GetAddressBytes().Length * 8))
+                throw Invalid($"Invalid trusted-proxy CIDR prefix: {entry}");
+        }
     }
 
     private static EncryptedSecretTransfer EncryptSecret(string secret, string passphrase)

@@ -99,6 +99,8 @@ internal static class SchemaMigrationRunner
 
         if (!MigrationApplied(connection, transaction, 5))
             MigrateLegacyLocalTimestampsToUtc(connection, transaction);
+        if (!MigrationApplied(connection, transaction, 11))
+            CanonicalizePersistedIpAddresses(connection, transaction);
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -141,7 +143,51 @@ internal static class SchemaMigrationRunner
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (10, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (11, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
         transaction.Commit();
+    }
+
+    private static void CanonicalizePersistedIpAddresses(SqliteConnection connection, SqliteTransaction transaction)
+    {
+        CanonicalizeColumn(connection, transaction, "IntrusionLog", "Id", "ClientIP");
+        CanonicalizeColumn(connection, transaction, "Locks", "LockId", "IpAddress");
+        CanonicalizeColumn(connection, transaction, "Locks", "Id", "IpAddress");
+        CanonicalizeColumn(connection, transaction, "SecurityObservationEvents", "Id", "NormalizedIpAddress");
+        CanonicalizeColumn(connection, transaction, "ProtectionEventInbox", "Id", "IpAddress");
+    }
+
+    private static void CanonicalizeColumn(SqliteConnection connection, SqliteTransaction transaction, string table, string keyColumn, string addressColumn)
+    {
+        if (!TableExists(connection, transaction, table)
+            || !ColumnExists(connection, transaction, table, keyColumn)
+            || !ColumnExists(connection, transaction, table, addressColumn))
+            return;
+
+        List<(object Key, string Address)> updates = [];
+        using (SqliteCommand select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText = $"SELECT {keyColumn}, {addressColumn} FROM {table} WHERE {addressColumn} IS NOT NULL";
+            using SqliteDataReader reader = select.ExecuteReader();
+            while (reader.Read())
+            {
+                string original = reader.GetValue(1)?.ToString() ?? string.Empty;
+                if (IpAddressCanonicalizer.TryCanonicalize(original, out string canonical) && !string.Equals(original, canonical, StringComparison.Ordinal))
+                    updates.Add((reader.GetValue(0), canonical));
+            }
+        }
+        foreach ((object key, string address) in updates)
+        {
+            using SqliteCommand update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = $"UPDATE {table} SET {addressColumn}=$address WHERE {keyColumn}=$key";
+            update.Parameters.AddWithValue("$address", address);
+            update.Parameters.AddWithValue("$key", key);
+            update.ExecuteNonQuery();
+        }
     }
 
     private static bool MigrationApplied(SqliteConnection connection, SqliteTransaction transaction, int version)

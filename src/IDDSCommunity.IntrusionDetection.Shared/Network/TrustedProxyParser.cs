@@ -31,6 +31,7 @@ public static partial class TrustedProxyParser
         int maxHops = DefaultMaxHops)
     {
         ArgumentNullException.ThrowIfNull(directPeer);
+        directPeer = IpAddressCanonicalizer.Canonicalize(directPeer);
 
         // 若無設定任何受信任代理，或直接連線之端點不在受信任清單中，嚴禁採用任何轉發標頭
         if (trustedProxyCidrs is null || !IsTrustedProxy(directPeer, trustedProxyCidrs))
@@ -83,6 +84,7 @@ public static partial class TrustedProxyParser
     {
         ArgumentNullException.ThrowIfNull(address);
         if (trustedProxyCidrs is null) return false;
+        address = IpAddressCanonicalizer.Canonicalize(address);
 
         foreach (string entry in trustedProxyCidrs)
         {
@@ -92,6 +94,7 @@ public static partial class TrustedProxyParser
             // 單一 IP 比對
             if (IPAddress.TryParse(trimmed, out IPAddress? singleIp))
             {
+                singleIp = IpAddressCanonicalizer.Canonicalize(singleIp);
                 if (singleIp.Equals(address)) return true;
                 continue;
             }
@@ -100,6 +103,7 @@ public static partial class TrustedProxyParser
             string[] parts = trimmed.Split('/');
             if (parts.Length == 2 && IPAddress.TryParse(parts[0], out IPAddress? networkIp) && int.TryParse(parts[1], out int prefixLength))
             {
+                networkIp = IpAddressCanonicalizer.Canonicalize(networkIp);
                 if (networkIp.AddressFamily == address.AddressFamily && IsIpInCidr(address, networkIp, prefixLength))
                 {
                     return true;

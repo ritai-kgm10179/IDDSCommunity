@@ -32,7 +32,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly Statistics statistics;
     private readonly ProtectionAuditTrail protectionAuditTrail;
     private readonly IRuntimeLog logManager;
-    private readonly CrossAgentCorrelationEngine crossAgentCorrelationEngine = new();
+    private CrossAgentCorrelationEngine crossAgentCorrelationEngine = new();
     private SecurityEventPipeline? securityEventPipeline;
 
     internal event EventHandler ClientIpAddressSoftLocked;
@@ -215,10 +215,13 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
         if (configuration.EnableCrossAgentCorrelation)
         {
-            crossAgentCorrelationEngine.RebuildFromDatabase(database);
+            TimeSpan correlationWindow = TimeSpan.FromMinutes(configuration.CrossAgentSlidingWindowMinutes);
+            crossAgentCorrelationEngine = new CrossAgentCorrelationEngine(correlationWindow);
+            crossAgentCorrelationEngine.RebuildFromDatabase(database, correlationWindow);
             RecoverPendingCorrelationObservations();
             SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
         }
+        AuthenticationEventProcessingOptions.EnableRawEvents = configuration.EnableCrossAgentCorrelation;
     }
 
     //void Instance_ConfigurationChanged(object sender, EventArgs e) {
@@ -853,8 +856,9 @@ public bool LimitMailSent { get; set; }
             if (reportingAgent is null)
                 return;
             long incidentId;
-            if (IddsConfig.IsValidIpAddress(notificationEventArgs.IpAddress))
+            if (IpAddressCanonicalizer.TryCanonicalize(notificationEventArgs.IpAddress, out string canonicalIpAddress))
             {
+                notificationEventArgs.IpAddress = canonicalIpAddress;
                 if (configuration.EnableCrossAgentCorrelation)
                 {
                     SecurityObservationEvent observation = CreateSecurityObservation(reportingAgent.Name, notificationEventArgs);
@@ -1056,18 +1060,22 @@ public bool LimitMailSent { get; set; }
         ArgumentNullException.ThrowIfNull(notificationEventArgs);
 
         AuthenticationNotificationEventArgs? authentication = notificationEventArgs as AuthenticationNotificationEventArgs;
+        DateTimeOffset receivedTimeUtc = DateTimeOffset.UtcNow;
+        DateTimeOffset eventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime();
+        if (eventTimeUtc > receivedTimeUtc.AddMinutes(5))
+            eventTimeUtc = receivedTimeUtc;
         SecurityObservationEvent observation = new()
         {
             SourceAgentName = sourceAgentName,
             ProviderOrChannel = authentication?.ProviderOrChannel ?? string.Empty,
             ComputerName = authentication?.ComputerName ?? string.Empty,
             SourceEventRecordId = authentication?.SourceEventRecordId,
-            NormalizedIpAddress = notificationEventArgs.IpAddress,
+            NormalizedIpAddress = IpAddressCanonicalizer.Canonicalize(notificationEventArgs.IpAddress),
             NormalizedAccount = authentication?.AccountName ?? ParseAccountFromEvent(notificationEventArgs.EventMessage),
             NormalizedDomain = authentication?.AccountDomain ?? string.Empty,
             AccountSid = authentication?.AccountSid ?? string.Empty,
-            EventTimeUtc = notificationEventArgs.CreateDate.ToUniversalTime(),
-            ReceivedTimeUtc = DateTimeOffset.UtcNow,
+            EventTimeUtc = eventTimeUtc,
+            ReceivedTimeUtc = receivedTimeUtc,
             OriginalEventReference = authentication?.SourceEventRecordId?.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 ?? notificationEventArgs.EventId.ToString(System.Globalization.CultureInfo.InvariantCulture),
             Provenance = $"Agent={sourceAgentName};Provider={authentication?.ProviderOrChannel};EventId={notificationEventArgs.EventId}",
@@ -1089,7 +1097,8 @@ public bool LimitMailSent { get; set; }
     internal static bool ShouldProcessLegacyDetection(INotificationEventArgs notificationEventArgs)
     {
         ArgumentNullException.ThrowIfNull(notificationEventArgs);
-        return notificationEventArgs is not AuthenticationNotificationEventArgs authentication || authentication.IsCredentialFailure;
+        return notificationEventArgs is not AuthenticationNotificationEventArgs authentication ||
+            (authentication.IsCredentialFailure && authentication.IsLocalThresholdExceeded);
     }
 
     private CorrelationEvaluationResult CompleteCorrelationObservation(SecurityObservationEvent observation)
@@ -1116,6 +1125,16 @@ public bool LimitMailSent { get; set; }
             database);
         if (enqueued)
         {
+            SecurityAgent? reportingAgent = securityAgents.FindByName(observation.SourceAgentName);
+            if (reportingAgent is not null && IpAddressCanonicalizer.TryCanonicalize(observation.NormalizedIpAddress, out string alertIpAddress))
+            {
+                IntrusionLog.AddEntry(
+                    observation.EventTimeUtc.UtcDateTime,
+                    reportingAgent.Id,
+                    alertIpAddress,
+                    IntrusionLog.STATUS_CROSS_AGENT_SPRAY_ALERT,
+                    false);
+            }
             SecurityObservationStore.DispatchPendingAlerts(database, protectionAuditTrail);
         }
 

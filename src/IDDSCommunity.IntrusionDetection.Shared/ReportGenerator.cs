@@ -158,6 +158,31 @@ public long TotalHardLocks { get; private set; }
         }
         return sb.ToString();
     }
+
+    private static string GetCrossAgentAlertsCore(DateTime start, DateTime end)
+    {
+        using IDataReader reader = Database.Instance.ExecuteReader(
+            @"SELECT OccurredUtc, Subject, Details
+              FROM ProtectionAuditLog
+              WHERE OccurredUtc>=@p0 AND OccurredUtc<@p1 AND EventType=@p2
+              ORDER BY OccurredUtc",
+            new DateTimeOffset(start.ToUniversalTime()).ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            new DateTimeOffset(end.ToUniversalTime()).ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            "CrossAgentSprayDetected");
+        StringBuilder result = new();
+        while (reader.Read())
+        {
+            DateTime occurredUtc = Db.DbValueConverter.ToDateTime(reader["OccurredUtc"]);
+            result.Append("<tr><td>")
+                .Append(WebUtility.HtmlEncode(occurredUtc.ToLocalTime().ToString("g", Localization.LanguageManager.Instance.CurrentCulture)))
+                .Append("</td><td>")
+                .Append(WebUtility.HtmlEncode(Db.DbValueConverter.ToString(reader["Subject"])))
+                .Append("</td><td>")
+                .Append(WebUtility.HtmlEncode(Db.DbValueConverter.ToString(reader["Details"])))
+                .AppendLine("</td></tr>");
+        }
+        return result.ToString();
+    }
     /// <summary>
     /// 取得依 IP 範本分組的事件數。
     /// </summary>
@@ -218,6 +243,7 @@ public long TotalHardLocks { get; private set; }
             result = result.Replace("[%INTRUSION_ATTEMPTS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_INTRUSION_ATTEMPT, start, end));
             result = result.Replace("[%SOFT_LOCKS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_SOFT_LOCKED, start, end));
             result = result.Replace("[%HARD_LOCKS_BY_IP%]", GetIncidentsByIPCore(IntrusionLog.STATUS_HARD_LOCKED, start, end));
+            result = result.Replace("[%CROSS_AGENT_ALERTS%]", GetCrossAgentAlertsCore(start, end));
             result = result.Replace("[%TOTAL_INTRUSION_ATTEMPTS%]", TotalIntrusionAttempts.ToString());
             result = result.Replace("[%TOTAL_SOFT_LOCKS%]", TotalSoftLocks.ToString());
             result = result.Replace("[%TOTAL_HARD_LOCKS%]", TotalHardLocks.ToString());
@@ -245,6 +271,10 @@ public long TotalHardLocks { get; private set; }
             .Replace("[%LABEL_INTRUSION_ATTEMPTS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Intrusion attempts by IP address")), StringComparison.Ordinal)
             .Replace("[%LABEL_SOFT_LOCKS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Soft locks by IP address")), StringComparison.Ordinal)
             .Replace("[%LABEL_HARD_LOCKS_BY_IP%]", WebUtility.HtmlEncode(Strings.Get("Hard locks by IP address")), StringComparison.Ordinal)
+            .Replace("[%LABEL_CROSS_AGENT_ALERTS%]", WebUtility.HtmlEncode(Strings.Get("Cross-agent password-spray alerts")), StringComparison.Ordinal)
+            .Replace("[%LABEL_OCCURRED%]", WebUtility.HtmlEncode(Strings.Get("Occurred")), StringComparison.Ordinal)
+            .Replace("[%LABEL_SUBJECT%]", WebUtility.HtmlEncode(Strings.Get("Subject")), StringComparison.Ordinal)
+            .Replace("[%LABEL_DETAILS%]", WebUtility.HtmlEncode(Strings.Get("Details")), StringComparison.Ordinal)
             .Replace("[%LABEL_CLIENT_IP%]", WebUtility.HtmlEncode(Strings.Get("Client IP")), StringComparison.Ordinal)
             .Replace("[%LABEL_REPORT_CONFIGURATION_HINT%]", WebUtility.HtmlEncode(Strings.Get("To configure reporting options, use the IDDS administration software on the server.")), StringComparison.Ordinal);
     }

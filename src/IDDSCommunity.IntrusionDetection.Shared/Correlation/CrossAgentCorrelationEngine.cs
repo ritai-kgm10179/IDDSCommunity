@@ -177,6 +177,8 @@ public sealed class CrossAgentCorrelationEngine
     public void PrepareObservation(SecurityObservationEvent observation)
     {
         ArgumentNullException.ThrowIfNull(observation);
+        if (IpAddressCanonicalizer.TryCanonicalize(observation.NormalizedIpAddress, out string canonicalIpAddress))
+            observation.NormalizedIpAddress = canonicalIpAddress;
         AccountIdentityNormalizer.Normalize(observation);
         observation.CorrelationGroupId ??= string.IsNullOrWhiteSpace(observation.ActivityId)
             ? Guid.NewGuid()

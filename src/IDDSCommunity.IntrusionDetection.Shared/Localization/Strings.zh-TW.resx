@@ -820,4 +820,19 @@
   <data name="Cross-agent duplicate tolerance (seconds)" xml:space="preserve">
     <value>跨 Agent 重複事件容許時間（秒）</value>
   </data>
+  <data name="Enable cross-agent password-spray detection" xml:space="preserve"><value>啟用跨代理程式密碼噴灑攻擊偵測</value></data>
+  <data name="Accounts per source IP threshold" xml:space="preserve"><value>每個來源 IP 的帳號數門檻</value></data>
+  <data name="Source IPs per account threshold" xml:space="preserve"><value>每個帳號的來源 IP 數門檻</value></data>
+  <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>跨代理程式滑動時間窗（分鐘）</value></data>
+  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>受信任的 Proxy IP／CIDR 清單</value></data>
+  <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>受信任的 Proxy 清單不得超過 250 個字元。</value></data>
+  <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>受信任的 Proxy 項目必須是 IP 位址或 CIDR 範圍。</value></data>
+  <data name="Trusted proxy CIDR prefix is invalid." xml:space="preserve"><value>受信任的 Proxy CIDR 前置長度無效。</value></data>
+  <data name="Spray alerts: {0}" xml:space="preserve"><value>噴灑攻擊告警：{0}</value></data>
+  <data name="Cross-agent password-spray alerts" xml:space="preserve"><value>跨代理程式密碼噴灑攻擊告警</value></data>
+  <data name="Cross-agent password-spray attack detected." xml:space="preserve"><value>偵測到跨代理程式密碼噴灑攻擊。</value></data>
+  <data name="Invalid IP address." xml:space="preserve"><value>IP 位址無效。</value></data>
+  <data name="Occurred" xml:space="preserve"><value>發生時間</value></data>
+  <data name="Subject" xml:space="preserve"><value>目標</value></data>
+  <data name="Details" xml:space="preserve"><value>詳細資訊</value></data>
 </root>

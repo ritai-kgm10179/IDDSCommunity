@@ -374,6 +374,39 @@ public class CrossAgentCorrelationTest
         Assert.AreEqual(3, lastResult.AssociatedAccounts.Count);
     }
 
+    [TestMethod]
+    public void Ingest_EquivalentIpv4RepresentationsShareOneSprayBucket()
+    {
+        CrossAgentCorrelationEngine engine = new(TimeSpan.FromMinutes(10));
+        IddsConfig config = CreateTestConfig(enableCorrelation: true);
+        config.CrossAgentSprayAccountThreshold = 2;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        CorrelationEvaluationResult first = engine.Ingest(new SecurityObservationEvent
+        {
+            SourceAgentName = "AgentA",
+            ProviderOrChannel = "Security",
+            SourceEventRecordId = 1,
+            NormalizedIpAddress = "::ffff:192.0.2.40",
+            NormalizedAccount = "account-a",
+            EventTimeUtc = now
+        }, config);
+        CorrelationEvaluationResult second = engine.Ingest(new SecurityObservationEvent
+        {
+            SourceAgentName = "AgentA",
+            ProviderOrChannel = "Security",
+            SourceEventRecordId = 2,
+            NormalizedIpAddress = "192.0.2.40",
+            NormalizedAccount = "account-b",
+            EventTimeUtc = now.AddSeconds(1)
+        }, config);
+
+        Assert.AreEqual(CorrelationAction.None, first.Action);
+        Assert.AreEqual(CorrelationAction.AlertAndScoreOnly, second.Action);
+        Assert.AreEqual(SprayAttackType.OneIpToMultipleAccounts, second.SprayType);
+        CollectionAssert.AreEquivalent(new[] { "ACCOUNT-A", "ACCOUNT-B" }, second.AssociatedAccounts.ToArray());
+    }
+
     /// <summary>
     /// 驗證多個分散來源 IP 針對單一目標帳號之分散式密碼噴灑 (N-to-1) 達到門檻時發出警示，且絕不自動封鎖所有涉及的 IP。
     /// </summary>

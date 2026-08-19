@@ -12,6 +12,11 @@ public partial class PanelLockoutConfiguration : UserControl
 {
     private readonly NumericUpDown numericSemanticDeduplicationSeconds = new();
     private readonly SmartLabel labelSemanticDeduplicationSeconds = new();
+    private readonly CheckBox checkBoxEnableCrossAgentCorrelation = new();
+    private readonly NumericUpDown numericSprayAccountThreshold = new();
+    private readonly NumericUpDown numericSprayIpThreshold = new();
+    private readonly NumericUpDown numericSlidingWindowMinutes = new();
+    private readonly TextBox textBoxTrustedProxyCidrs = new();
     private readonly TableLayoutPanel advancedSettingsLayout = new();
 
         /// <summary>
@@ -58,6 +63,11 @@ public bool IsInEditMode { get; set; }
         checkBoxLockForever.Checked = IddsConfig.Instance.LockForever;
         comboBoxFirewallMode.SelectedIndex = IddsConfig.Instance.FirewallBlockMode == FirewallBlockMode.Bidirectional ? 1 : 0;
         numericSemanticDeduplicationSeconds.Value = IddsConfig.Instance.CrossAgentSemanticDeduplicationSeconds;
+        checkBoxEnableCrossAgentCorrelation.Checked = IddsConfig.Instance.EnableCrossAgentCorrelation;
+        numericSprayAccountThreshold.Value = IddsConfig.Instance.CrossAgentSprayAccountThreshold;
+        numericSprayIpThreshold.Value = IddsConfig.Instance.CrossAgentSprayIpThreshold;
+        numericSlidingWindowMinutes.Value = IddsConfig.Instance.CrossAgentSlidingWindowMinutes;
+        textBoxTrustedProxyCidrs.Text = IddsConfig.Instance.TrustedProxyCidrs;
         SetEditMode(false);
     }
     /// <summary>
@@ -131,6 +141,16 @@ public bool IsInEditMode { get; set; }
         }
         if (!hasError)
         {
+            string normalizedTrustedProxies;
+            try
+            {
+                normalizedTrustedProxies = NormalizeTrustedProxyEntries(textBoxTrustedProxyCidrs.Text);
+            }
+            catch (FormatException exception)
+            {
+                MessageBox.Show(this, exception.Message, Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             IddsConfig.Instance.LockForever = checkBoxLockForever.Checked;
             IddsConfig.Instance.HardLockAttempts = hardLocks;
             IddsConfig.Instance.HardLockTimeHours = hardLockDuration;
@@ -141,6 +161,11 @@ public bool IsInEditMode { get; set; }
                 ? FirewallBlockMode.Bidirectional
                 : FirewallBlockMode.Inbound;
             IddsConfig.Instance.CrossAgentSemanticDeduplicationSeconds = decimal.ToInt32(numericSemanticDeduplicationSeconds.Value);
+            IddsConfig.Instance.EnableCrossAgentCorrelation = checkBoxEnableCrossAgentCorrelation.Checked;
+            IddsConfig.Instance.CrossAgentSprayAccountThreshold = decimal.ToInt32(numericSprayAccountThreshold.Value);
+            IddsConfig.Instance.CrossAgentSprayIpThreshold = decimal.ToInt32(numericSprayIpThreshold.Value);
+            IddsConfig.Instance.CrossAgentSlidingWindowMinutes = decimal.ToInt32(numericSlidingWindowMinutes.Value);
+            IddsConfig.Instance.TrustedProxyCidrs = normalizedTrustedProxies;
             IddsConfig.Instance.SaveAppConfig();
             ToggleEditMode();
             OnLockoutConfigurationChanged();
@@ -170,6 +195,11 @@ public bool IsInEditMode { get; set; }
         checkBoxLockForever.Checked = false;
         comboBoxFirewallMode.SelectedIndex = 0;
         numericSemanticDeduplicationSeconds.Value = 15;
+        checkBoxEnableCrossAgentCorrelation.Checked = false;
+        numericSprayAccountThreshold.Value = 5;
+        numericSprayIpThreshold.Value = 5;
+        numericSlidingWindowMinutes.Value = 10;
+        textBoxTrustedProxyCidrs.Clear();
         SetEditMode(true);
     }
     /// <summary>
@@ -188,12 +218,11 @@ public bool IsInEditMode { get; set; }
         advancedSettingsLayout.Location = new Point(24, 187);
         advancedSettingsLayout.Margin = Padding.Empty;
         advancedSettingsLayout.Name = "advancedSettingsLayout";
-        advancedSettingsLayout.RowCount = 4;
-        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+        advancedSettingsLayout.RowCount = 9;
+        for (int row = 0; row < 8; row++)
+            advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
         advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-        advancedSettingsLayout.Size = new Size(414, 142);
+        advancedSettingsLayout.Size = new Size(414, 312);
 
         checkBoxLockForever.Anchor = AnchorStyles.Left;
         checkBoxLockForever.Margin = Padding.Empty;
@@ -215,6 +244,15 @@ public bool IsInEditMode { get; set; }
         numericSemanticDeduplicationSeconds.Size = new Size(65, 23);
         numericSemanticDeduplicationSeconds.ValueChanged += (_, _) => SetEditMode(true);
 
+        ConfigureCheckBox(checkBoxEnableCrossAgentCorrelation, "Enable cross-agent password-spray detection");
+        checkBoxEnableCrossAgentCorrelation.CheckedChanged += (_, _) => SetEditMode(true);
+        ConfigureNumeric(numericSprayAccountThreshold, 2, 100000);
+        ConfigureNumeric(numericSprayIpThreshold, 2, 100000);
+        ConfigureNumeric(numericSlidingWindowMinutes, 1, 1440);
+        textBoxTrustedProxyCidrs.Dock = DockStyle.Fill;
+        textBoxTrustedProxyCidrs.Margin = new Padding(0, 5, 0, 5);
+        textBoxTrustedProxyCidrs.TextChanged += (_, _) => SetEditMode(true);
+
         labelFirewallMode.AutoEllipsis = true;
         labelFirewallMode.AutoSize = false;
         labelFirewallMode.Dock = DockStyle.Fill;
@@ -233,17 +271,76 @@ public bool IsInEditMode { get; set; }
         Controls.Remove(labelFirewallModeDescription);
         advancedSettingsLayout.Controls.Add(checkBoxLockForever, 0, 0);
         advancedSettingsLayout.SetColumnSpan(checkBoxLockForever, 2);
-        advancedSettingsLayout.Controls.Add(labelSemanticDeduplicationSeconds, 0, 1);
-        advancedSettingsLayout.Controls.Add(numericSemanticDeduplicationSeconds, 1, 1);
-        advancedSettingsLayout.Controls.Add(labelFirewallMode, 0, 2);
-        advancedSettingsLayout.Controls.Add(comboBoxFirewallMode, 1, 2);
-        advancedSettingsLayout.Controls.Add(labelFirewallModeDescription, 0, 3);
+        advancedSettingsLayout.Controls.Add(checkBoxEnableCrossAgentCorrelation, 0, 1);
+        advancedSettingsLayout.SetColumnSpan(checkBoxEnableCrossAgentCorrelation, 2);
+        AddSettingRow(advancedSettingsLayout, 2, "Accounts per source IP threshold", numericSprayAccountThreshold);
+        AddSettingRow(advancedSettingsLayout, 3, "Source IPs per account threshold", numericSprayIpThreshold);
+        AddSettingRow(advancedSettingsLayout, 4, "Cross-agent sliding window (minutes)", numericSlidingWindowMinutes);
+        advancedSettingsLayout.Controls.Add(labelSemanticDeduplicationSeconds, 0, 5);
+        advancedSettingsLayout.Controls.Add(numericSemanticDeduplicationSeconds, 1, 5);
+        AddSettingRow(advancedSettingsLayout, 6, "Trusted proxy IP/CIDR list", textBoxTrustedProxyCidrs);
+        advancedSettingsLayout.Controls.Add(labelFirewallMode, 0, 7);
+        advancedSettingsLayout.Controls.Add(comboBoxFirewallMode, 1, 7);
+        advancedSettingsLayout.Controls.Add(labelFirewallModeDescription, 0, 8);
         advancedSettingsLayout.SetColumnSpan(labelFirewallModeDescription, 2);
         Controls.Add(advancedSettingsLayout);
 
-        buttonSave.Location = new Point(112, 352);
-        buttonDiscard.Location = new Point(220, 352);
-        Size = new Size(462, 392);
+        buttonSave.Location = new Point(112, 522);
+        buttonDiscard.Location = new Point(220, 522);
+        AutoScroll = true;
+        Size = new Size(462, 562);
+    }
+
+    private static void ConfigureCheckBox(CheckBox checkBox, string text)
+    {
+        checkBox.Anchor = AnchorStyles.Left;
+        checkBox.AutoSize = true;
+        checkBox.Font = new Font("Segoe UI", 9F);
+        checkBox.Margin = Padding.Empty;
+        checkBox.Text = Shared.Localization.Strings.Get(text);
+    }
+
+    private void ConfigureNumeric(NumericUpDown numeric, int minimum, int maximum)
+    {
+        numeric.Anchor = AnchorStyles.Left;
+        numeric.Font = new Font("Segoe UI", 9F);
+        numeric.Minimum = minimum;
+        numeric.Maximum = maximum;
+        numeric.Size = new Size(80, 23);
+        numeric.ValueChanged += (_, _) => SetEditMode(true);
+    }
+
+    private static void AddSettingRow(TableLayoutPanel layout, int row, string labelText, Control editor)
+    {
+        SmartLabel label = new()
+        {
+            AutoEllipsis = true,
+            AutoSize = false,
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI", 9F),
+            ForeColor = Color.FromArgb(102, 102, 102),
+            Margin = new Padding(0, 0, 8, 0),
+            Text = Shared.Localization.Strings.Get(labelText),
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+        layout.Controls.Add(label, 0, row);
+        layout.Controls.Add(editor, 1, row);
+    }
+
+    private static string NormalizeTrustedProxyEntries(string value)
+    {
+        if (value.Length > 250)
+            throw new FormatException(Shared.Localization.Strings.Get("Trusted proxy list must not exceed 250 characters."));
+        string[] entries = value.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (string entry in entries)
+        {
+            string[] parts = entry.Split('/');
+            if (parts.Length is < 1 or > 2 || !System.Net.IPAddress.TryParse(parts[0], out System.Net.IPAddress? address))
+                throw new FormatException(Shared.Localization.Strings.Get("Trusted proxy entries must be IP addresses or CIDR ranges."));
+            if (parts.Length == 2 && (!int.TryParse(parts[1], out int prefix) || prefix < 0 || prefix > address.GetAddressBytes().Length * 8))
+                throw new FormatException(Shared.Localization.Strings.Get("Trusted proxy CIDR prefix is invalid."));
+        }
+        return string.Join(';', entries);
     }
     /// <summary>
     /// Sets edit mode.

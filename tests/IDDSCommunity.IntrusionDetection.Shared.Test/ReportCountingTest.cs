@@ -30,6 +30,14 @@ public sealed class ReportCountingTest
             InsertIncident(database, start.AddHours(3), agentId, "192.0.2.10", IntrusionLog.STATUS_SOFT_LOCKED);
             InsertIncident(database, start.AddHours(4), agentId, "192.0.2.10", IntrusionLog.STATUS_HARD_LOCKED);
             InsertIncident(database, end, agentId, "192.0.2.10", IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+            database.ExecuteNonQuery(
+                "INSERT INTO ProtectionAuditLog(OccurredUtc,EventType,Outcome,Actor,Subject,Details) VALUES(@p0,@p1,@p2,@p3,@p4,@p5)",
+                new DateTimeOffset(start.AddHours(5).ToUniversalTime()).ToString("O"),
+                "CrossAgentSprayDetected",
+                "AlertOnly",
+                "Test.Agent",
+                "192.0.2.10",
+                "1-to-N password spray detected");
 
             string eventsPerAgent = ReportGenerator.Instance.GetEventsPerAgent(start, end);
             StringAssert.Contains(eventsPerAgent, ">3</span>");
@@ -42,6 +50,7 @@ public sealed class ReportCountingTest
             Assert.AreEqual(1L, ReportGenerator.Instance.TotalSoftLocks);
             Assert.AreEqual(1L, ReportGenerator.Instance.TotalHardLocks);
             StringAssert.Contains(report, "192.0.2.10");
+            StringAssert.Contains(report, "1-to-N password spray detected");
         }
         finally
         {

@@ -181,6 +181,18 @@ public class IddsConfigTest
         Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("2001:db8:1::20"));
         Assert.IsFalse(IddsConfig.Instance.IsInSafeNetwork("2001:db9::20"));
     }
+
+    [TestMethod]
+    public void IpAddressCanonicalizationUnifiesMappedIpv4AcrossPolicies()
+    {
+        Assert.AreEqual("192.0.2.25", IpAddressCanonicalizer.Canonicalize("::ffff:192.0.2.25"));
+        Assert.AreEqual("2001:db8::25", IpAddressCanonicalizer.Canonicalize("2001:0db8:0:0:0:0:0:25"));
+
+        IddsConfig.Instance.SafeNetworks.Clear();
+        IddsConfig.Instance.SafeNetworks.Add(new IddsConfig.CSafeNetwork("192.0.2.0", "255.255.255.0"));
+        Assert.IsTrue(IddsConfig.Instance.IsInSafeNetwork("::ffff:192.0.2.25"));
+        Assert.AreEqual("192.0.2.25/255.255.255.255", IddsConfig.ConvertStringToIpAddressNetwork("::ffff:192.0.2.25"));
+    }
     /// <summary>
     /// Verifies that validation exceptions remain diagnostic and culture-independent.
     /// </summary>

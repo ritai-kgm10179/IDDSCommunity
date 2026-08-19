@@ -153,10 +153,11 @@ public class Locks
         while (reader.Read())
         {
             int incidents = Db.DbValueConverter.ToInt(reader["Incidents"]);
-            if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
+            total += incidents;
+            if (TryResolveAgentId(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
             {
-                attemptsByAgent[agentId] = incidents;
-                total += incidents;
+                attemptsByAgent.TryGetValue(agentId, out int existingIncidents);
+                attemptsByAgent[agentId] = existingIncidents + incidents;
             }
         }
 
@@ -173,15 +174,47 @@ public class Locks
         using IDataReader reader = Database.Instance.ExecuteReader("select AgentId, HardLocks, SoftLocks from AgentStatistics");
         while (reader.Read())
         {
-            if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
+            if (TryResolveAgentId(Db.DbValueConverter.ToString(reader["AgentId"]), out Guid agentId))
             {
+                statistics.TryGetValue(agentId, out AgentLockStatistics? existing);
                 statistics[agentId] = new AgentLockStatistics(
-                    Db.DbValueConverter.ToInt(reader["HardLocks"]),
-                    Db.DbValueConverter.ToInt(reader["SoftLocks"]));
+                    (existing?.HardLocks ?? 0) + Db.DbValueConverter.ToInt(reader["HardLocks"]),
+                    (existing?.SoftLocks ?? 0) + Db.DbValueConverter.ToInt(reader["SoftLocks"]));
             }
         }
 
         return statistics;
+    }
+
+    /// <summary>
+    /// 讀取指定時間區間內的跨 Agent 密碼噴灑告警數量。
+    /// </summary>
+    /// <param name="startDate">包含在統計內的 UTC 開始時間。</param>
+    /// <param name="endDate">不包含在統計內的 UTC 結束時間。</param>
+    /// <returns>跨 Agent 密碼噴灑告警數量。</returns>
+    public static int ReadCrossAgentAlertCount(DateTime startDate, DateTime endDate)
+    {
+        object? result = Database.Instance.ExecuteScalar(
+            @"select count(*) from ProtectionAuditLog
+              where OccurredUtc>=@p0 and OccurredUtc<@p1 and EventType=@p2",
+            new DateTimeOffset(startDate.ToUniversalTime()).ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            new DateTimeOffset(endDate.ToUniversalTime()).ToString("O", System.Globalization.CultureInfo.InvariantCulture),
+            "CrossAgentSprayDetected");
+        return Db.DbValueConverter.ToInt(result);
+    }
+
+    private static bool TryResolveAgentId(string persistedAgentId, out Guid agentId)
+    {
+        if (Guid.TryParse(persistedAgentId, out agentId))
+            return true;
+
+        object? configuredAgentId = Database.Instance.ExecuteScalar(
+            @"select AgentId
+              from SecurityAgents
+              where Name=@p0 or DisplayName=@p0
+              limit 1",
+            persistedAgentId);
+        return Guid.TryParse(Db.DbValueConverter.ToString(configuredAgentId), out agentId);
     }
     /// <summary>
     /// Counts recent locks created for the same Agent and source IP address.
@@ -267,6 +300,8 @@ public class Locks
         if (Database.Instance.IsConfigured)
         {
 
+            ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
+
             string sqlString = @"Select count(*) from Locks where IpAddress=@p0 and status in (@p1,@p2,@p3,@p4)";
 
             object? count = Database.Instance.ExecuteScalar(sqlString, ipAddress, Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
@@ -296,6 +331,7 @@ public class Locks
     /// <returns>傳回create lock結果。</returns>
     public static Lock CreateLock(DateTime lockDate, DateTime unlockDate, long triggerIncident, int status, int port, string ipAddress)
     {
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
         Lock l = new()
         {
             IpAddress = ipAddress,
