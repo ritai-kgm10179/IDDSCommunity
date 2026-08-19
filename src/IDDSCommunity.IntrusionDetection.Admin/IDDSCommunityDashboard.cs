@@ -10,10 +10,10 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class IDDSCommunityDashboard : UserControl
 {
-        /// <summary>
+    /// <summary>
     /// 當 SecurityAgentConfigurationRequest 時引發之事件。
     /// </summary>
-public event EventHandler? SecurityAgentConfigurationRequest;
+    public event EventHandler? SecurityAgentConfigurationRequest;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunityDashboard"/> 類別的新執行個體。
     /// </summary>
@@ -43,15 +43,27 @@ public event EventHandler? SecurityAgentConfigurationRequest;
         IReadOnlyDictionary<Guid, int> attemptsByAgent,
         IReadOnlyDictionary<Guid, AgentLockStatistics> lockStatisticsByAgent)
     {
+        RefreshAgentPresentations();
         foreach (Control control in flowLayoutPanelPlugins.Controls)
         {
             if (control is PluginItem item)
             {
                 Guid agentId = item.SecurityAgent.Id;
                 AgentLockStatistics locks = lockStatisticsByAgent.GetValueOrDefault(agentId) ?? new AgentLockStatistics(0, 0);
-                item.RefreshPresentation();
                 item.SetStatistics(attemptsByAgent.GetValueOrDefault(agentId), locks.HardLocks, locks.SoftLocks);
             }
+        }
+    }
+
+    /// <summary>
+    /// 立即依目前 Agent 設定重新整理所有狀態呈現。
+    /// </summary>
+    public void RefreshAgentPresentations()
+    {
+        foreach (Control control in flowLayoutPanelPlugins.Controls)
+        {
+            if (control is PluginItem item)
+                item.RefreshPresentation();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Admin;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -72,6 +73,33 @@ public sealed class SettingsResetUiTest
         Button save = Assert.IsInstanceOfType<Button>(panel.Controls.Find("buttonSave", true)[0]);
         Assert.AreEqual("99", hardLocks.Text);
         Assert.IsFalse(save.Visible);
+    }
+
+    /// <summary>
+    /// 驗證 Agent 啟用狀態變更後，Dashboard 可立即替換狀態圖示而不必等待定時更新。
+    /// </summary>
+    [STATestMethod]
+    public void DashboardRefreshAgentPresentations_ImmediatelyUpdatesEnabledStateIcon()
+    {
+        SecurityAgent agent = new()
+        {
+            DisplayName = "Test Agent",
+            Enabled = false
+        };
+        using IDDSCommunityDashboard dashboard = new();
+        dashboard.AddAgent(agent);
+        PictureBox status = Assert.IsInstanceOfType<PictureBox>(dashboard.Controls.Find("pictureBoxEnabledState", true)[0]);
+        Assert.IsNotNull(status.Image);
+        Image disabledImage = status.Image;
+        string disabledAccessibleName = status.AccessibleName ?? string.Empty;
+
+        agent.Enabled = true;
+        dashboard.RefreshAgentPresentations();
+
+        Assert.IsNotNull(status.Image);
+        Image enabledImage = status.Image;
+        Assert.AreNotSame(disabledImage, enabledImage);
+        Assert.AreNotEqual(disabledAccessibleName, status.AccessibleName);
     }
 
     /// <summary>

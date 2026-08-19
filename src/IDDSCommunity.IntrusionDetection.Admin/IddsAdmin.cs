@@ -73,10 +73,10 @@ public partial class IddsAdmin : Form
     }
 
     private static IddsAdmin? _instance;
-        /// <summary>
+    /// <summary>
     /// 取得或設定 全域共用單例執行個體。
     /// </summary>
-public static IddsAdmin Instance
+    public static IddsAdmin Instance
     {
         get
         {
@@ -89,10 +89,10 @@ public static IddsAdmin Instance
     }
 
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 PanelApplicationSettings。
     /// </summary>
-public IDDSCommunityApplicationSettings PanelApplicationSettings
+    public IDDSCommunityApplicationSettings PanelApplicationSettings
     {
         get
         {
@@ -116,10 +116,10 @@ public IDDSCommunityApplicationSettings PanelApplicationSettings
     /// <param name="e">事件資料。</param>
     async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => await RestartServiceAsync();
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 PanelAgentConfiguration。
     /// </summary>
-public IDDSCommunityAgentConfiguration PanelAgentConfiguration
+    public IDDSCommunityAgentConfiguration PanelAgentConfiguration
     {
         get
         {
@@ -141,7 +141,11 @@ public IDDSCommunityAgentConfiguration PanelAgentConfiguration
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e) => await RestartServiceAsync();
+    async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e)
+    {
+        Dashboard.RefreshAgentPresentations();
+        await RestartServiceAsync();
+    }
     /// <summary>
     /// 處理 plugins changed 事件。
     /// </summary>
@@ -192,10 +196,10 @@ public IDDSCommunityAgentConfiguration PanelAgentConfiguration
         }
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 PanelSecurityLog。
     /// </summary>
-public IDDSCommunitySecurityLog PanelSecurityLog
+    public IDDSCommunitySecurityLog PanelSecurityLog
     {
         get
         {
@@ -273,10 +277,10 @@ public IDDSCommunitySecurityLog PanelSecurityLog
     {
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 PanelCurrentLocks。
     /// </summary>
-public IDDSCommunityCurrentLocks PanelCurrentLocks
+    public IDDSCommunityCurrentLocks PanelCurrentLocks
     {
         get
         {
@@ -292,10 +296,10 @@ public IDDSCommunityCurrentLocks PanelCurrentLocks
         }
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 Dashboard。
     /// </summary>
-public IDDSCommunityDashboard Dashboard
+    public IDDSCommunityDashboard Dashboard
     {
         get
         {
@@ -328,10 +332,10 @@ public IDDSCommunityDashboard Dashboard
         }
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 IsServiceRunning。
     /// </summary>
-public bool IsServiceRunning { get; set; }
+    public bool IsServiceRunning { get; set; }
     /// <summary>
     /// 處理 tick 事件。
     /// </summary>
@@ -368,10 +372,10 @@ public bool IsServiceRunning { get; set; }
     }
 
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 ServiceError。
     /// </summary>
-public bool ServiceError { get; set; }
+    public bool ServiceError { get; set; }
     /// <summary>
     /// Reads the current Windows service status without accessing UI controls.
     /// </summary>
@@ -491,10 +495,10 @@ public bool ServiceError { get; set; }
         }
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 IsUpdating。
     /// </summary>
-public bool IsUpdating { get; set; }
+    public bool IsUpdating { get; set; }
     /// <summary>
     /// Gets log message.
     /// </summary>
@@ -679,32 +683,34 @@ public bool IsUpdating { get; set; }
         }
     }
 
-    private enum AdminRefreshMode { /// <summary>
-/// 定義 None 列舉值。
-/// </summary>
-None, /// <summary>
-/// 定義 SecurityLog 列舉值。
-/// </summary>
-SecurityLog, /// <summary>
-/// 定義 CurrentLocks 列舉值。
-/// </summary>
-CurrentLocks, /// <summary>
-/// 定義 Dashboard 列舉值。
-/// </summary>
-Dashboard }
+    private enum AdminRefreshMode
+    { /// <summary>
+      /// 定義 None 列舉值。
+      /// </summary>
+        None, /// <summary>
+              /// 定義 SecurityLog 列舉值。
+              /// </summary>
+        SecurityLog, /// <summary>
+                     /// 定義 CurrentLocks 列舉值。
+                     /// </summary>
+        CurrentLocks, /// <summary>
+                      /// 定義 Dashboard 列舉值。
+                      /// </summary>
+        Dashboard
+    }
     private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message, int NumberOfEvents);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
     private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks);
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 LastLogId。
     /// </summary>
-public int LastLogId { get; set; }
+    public int LastLogId { get; set; }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 LastLockUpdate。
     /// </summary>
-public DateTime LastLockUpdate { get; set; }
+    public DateTime LastLockUpdate { get; set; }
     /// <summary>
     /// 處理 invalidated 事件。
     /// </summary>
@@ -740,14 +746,14 @@ public DateTime LastLockUpdate { get; set; }
         MoveStartPoint = new Point(e.X, e.Y);
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 視窗是否正在拖曳移動中。
     /// </summary>
-public bool IsMoving { get; set; }
-        /// <summary>
+    public bool IsMoving { get; set; }
+    /// <summary>
     /// 取得或設定 視窗拖曳起始座標點。
     /// </summary>
-public Point MoveStartPoint { get; set; }
+    public Point MoveStartPoint { get; set; }
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
@@ -808,10 +814,10 @@ public Point MoveStartPoint { get; set; }
 
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 CurrentMenu。
     /// </summary>
-public SmartLabel? CurrentMenu { get; set; }
+    public SmartLabel? CurrentMenu { get; set; }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
@@ -1043,10 +1049,10 @@ public SmartLabel? CurrentMenu { get; set; }
 
     }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 IsInitialized。
     /// </summary>
-public bool IsInitialized { get; set; }
+    public bool IsInitialized { get; set; }
 
     /// <summary>
     /// Writes entry.
@@ -1091,26 +1097,26 @@ public bool IsInitialized { get; set; }
 
     enum ResizeDirection
     {
-                /// <summary>
+        /// <summary>
         /// 定義 None 列舉值。
         /// </summary>
-None = 0,
-                /// <summary>
+        None = 0,
+        /// <summary>
         /// 定義 Top 列舉值。
         /// </summary>
-Top = 1,
-                /// <summary>
+        Top = 1,
+        /// <summary>
         /// 定義 Right 列舉值。
         /// </summary>
-Right = 2,
-                /// <summary>
+        Right = 2,
+        /// <summary>
         /// 定義 Bottom 列舉值。
         /// </summary>
-Bottom = 4,
-                /// <summary>
+        Bottom = 4,
+        /// <summary>
         /// 定義 Left 列舉值。
         /// </summary>
-Left = 8
+        Left = 8
     }
 
 
