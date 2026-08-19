@@ -25,4 +25,15 @@
     <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Admin\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
     <Copy SourceFiles="$(TargetDir)IDDSCommunity.Authentication.Common.dll" DestinationFolder="$(MSBuildThisFileDirectory)src\IDDSCommunity.IntrusionDetection.Service\bin\$(Configuration)\$(TargetFramework)\Plugins" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)IDDSCommunity.Authentication.Common.dll')" />
   </Target>
+  <Target Name="DeployIDDSCommunityAgentPluginsToHostOutput" AfterTargets="Build" Condition="'$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Admin' Or '$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Service'">
+    <ItemGroup>
+      <IDDSCommunityHostAgentPlugin Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.*\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Agents.*.dll" />
+      <IDDSCommunityHostAgentDependency Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.Authentication.Common\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Authentication.Common.dll" />
+      <IDDSCommunityHostAgentResource Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.*\bin\$(Configuration)\$(TargetFramework)\zh-TW\IDDSCommunity.Agents.*.resources.dll" />
+    </ItemGroup>
+    <MakeDir Directories="$(TargetDir)Plugins;$(TargetDir)Plugins\zh-TW" />
+    <Copy SourceFiles="@(IDDSCommunityHostAgentPlugin)" DestinationFolder="$(TargetDir)Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(IDDSCommunityHostAgentDependency)" DestinationFolder="$(TargetDir)Plugins" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(IDDSCommunityHostAgentResource)" DestinationFolder="$(TargetDir)Plugins\zh-TW" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

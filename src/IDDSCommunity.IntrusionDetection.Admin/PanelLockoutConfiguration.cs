@@ -12,6 +12,7 @@ public partial class PanelLockoutConfiguration : UserControl
 {
     private readonly NumericUpDown numericSemanticDeduplicationSeconds = new();
     private readonly SmartLabel labelSemanticDeduplicationSeconds = new();
+    private readonly TableLayoutPanel advancedSettingsLayout = new();
 
         /// <summary>
     /// 當 LockoutConfigurationChanged 時引發之事件。
@@ -180,21 +181,69 @@ public bool IsInEditMode { get; set; }
 
     private void InitializeCorrelationControls()
     {
-        labelSemanticDeduplicationSeconds.AutoSize = true;
+        advancedSettingsLayout.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        advancedSettingsLayout.ColumnCount = 2;
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 59F));
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 41F));
+        advancedSettingsLayout.Location = new Point(24, 187);
+        advancedSettingsLayout.Margin = Padding.Empty;
+        advancedSettingsLayout.Name = "advancedSettingsLayout";
+        advancedSettingsLayout.RowCount = 4;
+        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
+        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+        advancedSettingsLayout.Size = new Size(414, 142);
+
+        checkBoxLockForever.Anchor = AnchorStyles.Left;
+        checkBoxLockForever.Margin = Padding.Empty;
+
+        labelSemanticDeduplicationSeconds.AutoEllipsis = true;
+        labelSemanticDeduplicationSeconds.AutoSize = false;
+        labelSemanticDeduplicationSeconds.Dock = DockStyle.Fill;
         labelSemanticDeduplicationSeconds.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
         labelSemanticDeduplicationSeconds.ForeColor = Color.FromArgb(102, 102, 102);
-        labelSemanticDeduplicationSeconds.Location = new Point(24, 222);
+        labelSemanticDeduplicationSeconds.Margin = new Padding(0, 0, 8, 0);
+        labelSemanticDeduplicationSeconds.TextAlign = ContentAlignment.MiddleLeft;
         labelSemanticDeduplicationSeconds.Text = IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Cross-agent duplicate tolerance (seconds)");
 
+        numericSemanticDeduplicationSeconds.Anchor = AnchorStyles.Left;
         numericSemanticDeduplicationSeconds.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
-        numericSemanticDeduplicationSeconds.Location = new Point(257, 218);
+        numericSemanticDeduplicationSeconds.Margin = Padding.Empty;
         numericSemanticDeduplicationSeconds.Minimum = 1;
         numericSemanticDeduplicationSeconds.Maximum = 300;
         numericSemanticDeduplicationSeconds.Size = new Size(65, 23);
         numericSemanticDeduplicationSeconds.ValueChanged += (_, _) => SetEditMode(true);
 
-        Controls.Add(labelSemanticDeduplicationSeconds);
-        Controls.Add(numericSemanticDeduplicationSeconds);
+        labelFirewallMode.AutoEllipsis = true;
+        labelFirewallMode.AutoSize = false;
+        labelFirewallMode.Dock = DockStyle.Fill;
+        labelFirewallMode.Margin = new Padding(0, 0, 8, 0);
+        labelFirewallMode.TextAlign = ContentAlignment.MiddleLeft;
+        comboBoxFirewallMode.Dock = DockStyle.Fill;
+        comboBoxFirewallMode.Margin = new Padding(0, 3, 0, 3);
+        labelFirewallModeDescription.AutoEllipsis = true;
+        labelFirewallModeDescription.Dock = DockStyle.Fill;
+        labelFirewallModeDescription.Margin = Padding.Empty;
+        labelFirewallModeDescription.TextAlign = ContentAlignment.TopLeft;
+
+        Controls.Remove(checkBoxLockForever);
+        Controls.Remove(labelFirewallMode);
+        Controls.Remove(comboBoxFirewallMode);
+        Controls.Remove(labelFirewallModeDescription);
+        advancedSettingsLayout.Controls.Add(checkBoxLockForever, 0, 0);
+        advancedSettingsLayout.SetColumnSpan(checkBoxLockForever, 2);
+        advancedSettingsLayout.Controls.Add(labelSemanticDeduplicationSeconds, 0, 1);
+        advancedSettingsLayout.Controls.Add(numericSemanticDeduplicationSeconds, 1, 1);
+        advancedSettingsLayout.Controls.Add(labelFirewallMode, 0, 2);
+        advancedSettingsLayout.Controls.Add(comboBoxFirewallMode, 1, 2);
+        advancedSettingsLayout.Controls.Add(labelFirewallModeDescription, 0, 3);
+        advancedSettingsLayout.SetColumnSpan(labelFirewallModeDescription, 2);
+        Controls.Add(advancedSettingsLayout);
+
+        buttonSave.Location = new Point(112, 352);
+        buttonDiscard.Location = new Point(220, 352);
+        Size = new Size(462, 392);
     }
     /// <summary>
     /// Sets edit mode.
