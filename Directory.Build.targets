@@ -28,7 +28,7 @@
   <Target Name="DeployIDDSCommunityAgentPluginsToHostOutput" AfterTargets="Build" Condition="'$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Admin' Or '$(MSBuildProjectName)' == 'IDDSCommunity.IntrusionDetection.Service'">
     <ItemGroup>
       <IDDSCommunityHostAgentPlugin Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.*\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Agents.*.dll" />
-      <IDDSCommunityHostAgentDependency Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.Authentication.Common\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Authentication.Common.dll" />
+      <IDDSCommunityHostAgentDependency Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.Authentication.Common\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Authentication.Common.dll" Condition="Exists('$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.Authentication.Common\bin\$(Configuration)\$(TargetFramework)\IDDSCommunity.Authentication.Common.dll')" />
       <IDDSCommunityHostAgentResource Include="$(MSBuildThisFileDirectory)agents\IDDSCommunity.Agents.*\bin\$(Configuration)\$(TargetFramework)\zh-TW\IDDSCommunity.Agents.*.resources.dll" />
     </ItemGroup>
     <MakeDir Directories="$(TargetDir)Plugins;$(TargetDir)Plugins\zh-TW" />
