@@ -191,9 +191,7 @@
   <data name="Failed logins" xml:space="preserve">
     <value>登入失敗</value>
   </data>
-  <data name="failed logins:" xml:space="preserve">
-    <value>登入失敗：</value>
-  </data>
+  <data name="detected events:" xml:space="preserve"><value>偵測事件：</value></data>
   <data name="Hard lock duration (hours)" xml:space="preserve">
     <value>硬封鎖期間（小時）</value>
   </data>
@@ -818,16 +816,17 @@
     <value>必須指定 Technitium DNS 日誌目錄路徑。</value>
   </data>
   <data name="Cross-agent duplicate tolerance (seconds)" xml:space="preserve">
-    <value>跨 Agent 重複事件容許時間（秒）</value>
+    <value>跨代理程式重複事件容許時間（秒）</value>
   </data>
   <data name="Enable cross-agent password-spray detection" xml:space="preserve"><value>啟用跨代理程式密碼噴灑攻擊偵測</value></data>
   <data name="Accounts per source IP threshold" xml:space="preserve"><value>每個來源 IP 的帳號數門檻</value></data>
   <data name="Source IPs per account threshold" xml:space="preserve"><value>每個帳號的來源 IP 數門檻</value></data>
   <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>跨代理程式滑動時間窗（分鐘）</value></data>
-  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>受信任的 Proxy IP／CIDR 清單</value></data>
-  <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>受信任的 Proxy 清單不得超過 250 個字元。</value></data>
-  <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>受信任的 Proxy 項目必須是 IP 位址或 CIDR 範圍。</value></data>
-  <data name="Trusted proxy CIDR prefix is invalid." xml:space="preserve"><value>受信任的 Proxy CIDR 前置長度無效。</value></data>
+  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>受信任的反向代理伺服器 IP／CIDR</value></data>
+  <data name="Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist." xml:space="preserve"><value>僅用於驗證 Forwarded／X-Forwarded-For 並解析真實用戶端 IP；不會將位址加入安全網路允許清單。</value></data>
+  <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>受信任的反向代理伺服器清單不得超過 250 個字元。</value></data>
+  <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>受信任的反向代理伺服器項目必須是 IP 位址或 CIDR 範圍。</value></data>
+  <data name="Trusted proxy CIDR prefix is invalid." xml:space="preserve"><value>受信任的反向代理伺服器 CIDR 前置長度無效。</value></data>
   <data name="Spray alerts: {0}" xml:space="preserve"><value>噴灑攻擊告警：{0}</value></data>
   <data name="Cross-agent password-spray alerts" xml:space="preserve"><value>跨代理程式密碼噴灑攻擊告警</value></data>
   <data name="Cross-agent password-spray attack detected." xml:space="preserve"><value>偵測到跨代理程式密碼噴灑攻擊。</value></data>

@@ -46,7 +46,7 @@ public partial class IDDSCommunityDashboard : UserControl
     public void SetUnsuccessfulLogins(int logins) => labelUnsuccessfulLogins.Text = logins.ToString();
 
     /// <summary>
-    /// 設定最近 30 天跨 Agent 密碼噴灑告警數量。
+    /// 設定最近 30 天跨代理程式密碼噴灑告警數量。
     /// </summary>
     /// <param name="alerts">告警數量。</param>
     public void SetCrossAgentAlerts(int alerts) => labelCrossAgentAlerts.Text = Shared.Localization.Strings.Format("Spray alerts: {0}", alerts);

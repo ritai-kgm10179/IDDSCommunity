@@ -59,7 +59,7 @@ public const int STATUS_UNLOCKED = 510;
     /// </summary>
 public const int STATUS_UNLOCK_ERROR = 590;
         /// <summary>
-    /// 定義跨 Agent 密碼噴灑告警之狀態碼。
+    /// 定義跨代理程式密碼噴灑告警之狀態碼。
     /// </summary>
 public const int STATUS_CROSS_AGENT_SPRAY_ALERT = 600;
     // Retains persisted legacy status value 999 without exposing the removed licensing feature.

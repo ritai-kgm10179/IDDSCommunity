@@ -10,7 +10,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// 驗證 Phase 0 跨 Agent 安全性觀察事件正規化、確定性冪等去重、滑動時間窗、密碼噴灑偵測與安全網路排除邏輯之單元測試類別。
+/// 驗證 Phase 0 跨代理程式安全性觀察事件正規化、確定性冪等去重、滑動時間窗、密碼噴灑偵測與安全網路排除邏輯之單元測試類別。
 /// </summary>
 [TestClass]
 [DoNotParallelize]

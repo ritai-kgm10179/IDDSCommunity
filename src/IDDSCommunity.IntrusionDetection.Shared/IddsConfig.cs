@@ -723,7 +723,7 @@ public string Language
     }
 
     /// <summary>
-    /// 取得或設定是否啟用跨 Agent 攻擊關聯與密碼噴灑偵測功能（預設為 false）。
+    /// 取得或設定是否啟用跨代理程式攻擊關聯與密碼噴灑偵測功能（預設為 false）。
     /// </summary>
     public bool EnableCrossAgentCorrelation
     {
@@ -732,7 +732,7 @@ public string Language
     }
 
     /// <summary>
-    /// 取得或設定跨 Agent 單一 IP 嘗試相異帳號之密碼噴灑門檻值（預設為 5）。
+    /// 取得或設定跨代理程式單一 IP 嘗試相異帳號之密碼噴灑門檻值（預設為 5）。
     /// </summary>
     public int CrossAgentSprayAccountThreshold
     {
@@ -746,7 +746,7 @@ public string Language
     }
 
     /// <summary>
-    /// 取得或設定跨 Agent 多個分散 IP 嘗試單一帳號之分散式密碼噴灑門檻值（預設為 5）。
+    /// 取得或設定跨代理程式多個分散 IP 嘗試單一帳號之分散式密碼噴灑門檻值（預設為 5）。
     /// </summary>
     public int CrossAgentSprayIpThreshold
     {
@@ -760,7 +760,7 @@ public string Language
     }
 
     /// <summary>
-    /// 取得或設定跨 Agent 關聯與密碼噴灑之滑動時間窗分鐘數（預設為 10 分鐘）。
+    /// 取得或設定跨代理程式關聯與密碼噴灑之滑動時間窗分鐘數（預設為 10 分鐘）。
     /// </summary>
     public int CrossAgentSlidingWindowMinutes
     {

@@ -71,7 +71,7 @@
             this.labelFailedLogins.SelectedColor = System.Drawing.Color.Empty;
             this.labelFailedLogins.Size = new System.Drawing.Size(59, 12);
             this.labelFailedLogins.TabIndex = 1;
-            this.labelFailedLogins.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("failed logins:");
+            this.labelFailedLogins.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("detected events:");
             //
             // labelSoftLocks
             //

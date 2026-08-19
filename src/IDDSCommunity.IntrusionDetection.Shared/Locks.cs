@@ -187,11 +187,11 @@ public class Locks
     }
 
     /// <summary>
-    /// 讀取指定時間區間內的跨 Agent 密碼噴灑告警數量。
+    /// 讀取指定時間區間內的跨代理程式密碼噴灑告警數量。
     /// </summary>
     /// <param name="startDate">包含在統計內的 UTC 開始時間。</param>
     /// <param name="endDate">不包含在統計內的 UTC 結束時間。</param>
-    /// <returns>跨 Agent 密碼噴灑告警數量。</returns>
+    /// <returns>跨代理程式密碼噴灑告警數量。</returns>
     public static int ReadCrossAgentAlertCount(DateTime startDate, DateTime endDate)
     {
         object? result = Database.Instance.ExecuteScalar(

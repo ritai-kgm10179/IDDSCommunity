@@ -512,7 +512,7 @@ public sealed class SecurityEventPipelineTest
     }
 
     /// <summary>
-    /// 驗證跨 Agent 關聯與持久化收件匣端對端整合：當功能開啟時執行完整分析與告警；當模擬崩潰重啟時未完成事件能安全重播且不重複告警。
+    /// 驗證跨代理程式關聯與持久化收件匣端對端整合：當功能開啟時執行完整分析與告警；當模擬崩潰重啟時未完成事件能安全重播且不重複告警。
     /// </summary>
     /// <returns>非同步測試工作。</returns>
     [TestMethod]

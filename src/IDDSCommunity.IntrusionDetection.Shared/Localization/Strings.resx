@@ -191,9 +191,7 @@
   <data name="Failed logins" xml:space="preserve">
     <value>Failed logins</value>
   </data>
-  <data name="failed logins:" xml:space="preserve">
-    <value>failed logins:</value>
-  </data>
+  <data name="detected events:" xml:space="preserve"><value>detected events:</value></data>
   <data name="Hard lock duration (hours)" xml:space="preserve">
     <value>Hard lock duration (hours)</value>
   </data>
@@ -824,7 +822,8 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Accounts per source IP threshold" xml:space="preserve"><value>Accounts per source IP threshold</value></data>
   <data name="Source IPs per account threshold" xml:space="preserve"><value>Source IPs per account threshold</value></data>
   <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>Cross-agent sliding window (minutes)</value></data>
-  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>Trusted proxy IP/CIDR list</value></data>
+  <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>Trusted reverse proxy server IP/CIDR</value></data>
+  <data name="Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist." xml:space="preserve"><value>Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist.</value></data>
   <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>Trusted proxy list must not exceed 250 characters.</value></data>
   <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>Trusted proxy entries must be IP addresses or CIDR ranges.</value></data>
   <data name="Trusted proxy CIDR prefix is invalid." xml:space="preserve"><value>Trusted proxy CIDR prefix is invalid.</value></data>

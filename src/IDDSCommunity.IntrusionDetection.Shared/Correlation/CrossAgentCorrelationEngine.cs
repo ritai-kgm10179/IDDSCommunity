@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 
 /// <summary>
-/// 代表跨 Agent 關聯與密碼噴灑偵測動作之列舉型別。
+/// 代表跨代理程式關聯與密碼噴灑偵測動作之列舉型別。
 /// </summary>
 public enum CorrelationAction
 {
@@ -47,7 +47,7 @@ public enum SprayAttackType
 }
 
 /// <summary>
-/// 代表跨 Agent 關聯與分析評估結果之封裝類別。
+/// 代表跨代理程式關聯與分析評估結果之封裝類別。
 /// </summary>
 public sealed class CorrelationEvaluationResult
 {
@@ -125,7 +125,7 @@ public sealed class CorrelationEvaluationResult
 }
 
 /// <summary>
-/// 提供跨 Agent 安全性觀察事件正規化、冪等去重、多來源關聯群組與密碼噴灑偵測之核心引擎。
+/// 提供跨代理程式安全性觀察事件正規化、冪等去重、多來源關聯群組與密碼噴灑偵測之核心引擎。
 /// </summary>
 public sealed class CrossAgentCorrelationEngine
 {

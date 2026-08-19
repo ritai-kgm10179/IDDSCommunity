@@ -17,6 +17,7 @@ public partial class PanelLockoutConfiguration : UserControl
     private readonly NumericUpDown numericSprayIpThreshold = new();
     private readonly NumericUpDown numericSlidingWindowMinutes = new();
     private readonly TextBox textBoxTrustedProxyCidrs = new();
+    private readonly ToolTip trustedProxyToolTip = new();
     private readonly TableLayoutPanel advancedSettingsLayout = new();
 
         /// <summary>
@@ -252,6 +253,9 @@ public bool IsInEditMode { get; set; }
         textBoxTrustedProxyCidrs.Dock = DockStyle.Fill;
         textBoxTrustedProxyCidrs.Margin = new Padding(0, 5, 0, 5);
         textBoxTrustedProxyCidrs.TextChanged += (_, _) => SetEditMode(true);
+        trustedProxyToolTip.SetToolTip(
+            textBoxTrustedProxyCidrs,
+            Shared.Localization.Strings.Get("Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist."));
 
         labelFirewallMode.AutoEllipsis = true;
         labelFirewallMode.AutoSize = false;

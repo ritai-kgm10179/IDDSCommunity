@@ -91,14 +91,19 @@ public static SecurityAgents Instance
     /// <summary>
     /// 依據代理程式分組與名稱統一排序 Security Agents 集合。
     /// </summary>
-    public void SortAgents() => Sort((a, b) =>
+    public void SortAgents() => Sort(CompareAgents);
+
+    internal static int CompareAgents(SecurityAgent a, SecurityAgent b)
     {
         int cmp = a.SortOrder.CompareTo(b.SortOrder);
         if (cmp != 0) return cmp;
         string nameA = !string.IsNullOrEmpty(a.DisplayName) ? a.DisplayName : a.Name ?? string.Empty;
         string nameB = !string.IsNullOrEmpty(b.DisplayName) ? b.DisplayName : b.Name ?? string.Empty;
-        return string.Compare(nameA, nameB, StringComparison.CurrentCultureIgnoreCase);
-    });
+        cmp = string.Compare(nameA, nameB, StringComparison.CurrentCultureIgnoreCase);
+        if (cmp != 0) return cmp;
+        cmp = string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+        return cmp != 0 ? cmp : a.Id.CompareTo(b.Id);
+    }
     /// <summary>
     /// 自磁碟讀取 Agent 設定。
     /// </summary>

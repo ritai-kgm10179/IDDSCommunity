@@ -117,7 +117,7 @@ public SecurityAgent SecurityAgent
     /// <summary>
     /// 設定 Dashboard 顯示的 Agent 統計資料。
     /// </summary>
-    /// <param name="failedLogins">指定時間區間內的登入失敗數。</param>
+    /// <param name="failedLogins">指定時間區間內的偵測事件數。</param>
     /// <param name="hardLocks">強制封鎖累計數。</param>
     /// <param name="softLocks">暫時封鎖累計數。</param>
     public void SetStatistics(int failedLogins, int hardLocks, int softLocks)
