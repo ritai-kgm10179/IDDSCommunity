@@ -404,10 +404,14 @@ internal static class SetupOperations
             Report(progress, "ProgressInstallingFiles", 50);
             if (Directory.Exists(InstallDirectory))
             {
-                MoveDirectoryWithRetry(InstallDirectory, backupDirectory, cancellationToken);
+                MoveDirectoryContentsTransactional(InstallDirectory, backupDirectory, cancellationToken);
                 previousInstallationMoved = true;
             }
-            MoveDirectoryWithRetry(stagingDirectory, InstallDirectory, cancellationToken);
+            else
+            {
+                Directory.CreateDirectory(InstallDirectory);
+            }
+            MoveDirectoryContentsTransactional(stagingDirectory, InstallDirectory, cancellationToken);
             installationDirectoryReplaced = true;
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -486,12 +490,13 @@ internal static class SetupOperations
             RunSc("delete", ServiceName, acceptMissing: true);
         KillRunningProcesses();
         if (installationDirectoryReplaced && Directory.Exists(InstallDirectory))
-            _ = SafeDeleteDirectory(InstallDirectory);
+            ClearDirectoryContents(InstallDirectory);
         if (previousInstallationMoved)
         {
             if (!Directory.Exists(backupDirectory))
                 throw new DirectoryNotFoundException(backupDirectory);
-            MoveDirectoryWithRetry(backupDirectory, InstallDirectory, CancellationToken.None);
+            Directory.CreateDirectory(InstallDirectory);
+            MoveDirectoryContentsTransactional(backupDirectory, InstallDirectory, CancellationToken.None);
         }
         RestoreServiceState(serviceState);
     }
@@ -1022,6 +1027,84 @@ internal static class SetupOperations
         }
 
         throw new IOException(SetupText.Format("DirectoryMoveFailed", source, destination, DirectoryMoveAttempts), lastFailure);
+    }
+
+    internal static void MoveDirectoryContentsTransactional(
+        string source,
+        string destination,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destination);
+        Directory.CreateDirectory(destination);
+        List<(string Source, string Destination, bool IsDirectory)> movedEntries = [];
+        try
+        {
+            foreach (string entry in Directory.EnumerateFileSystemEntries(source).ToArray())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string destinationEntry = Path.Combine(destination, Path.GetFileName(entry));
+                bool isDirectory = Directory.Exists(entry);
+                MoveFileSystemEntryWithRetry(entry, destinationEntry, isDirectory, cancellationToken);
+                movedEntries.Add((entry, destinationEntry, isDirectory));
+            }
+        }
+        catch (Exception moveFailure)
+        {
+            try
+            {
+                foreach ((string original, string moved, bool isDirectory) in movedEntries.AsEnumerable().Reverse())
+                    MoveFileSystemEntryWithRetry(moved, original, isDirectory, CancellationToken.None);
+            }
+            catch (Exception rollbackFailure)
+            {
+                throw new AggregateException(SetupText.Get("RollbackFailed"), moveFailure, rollbackFailure);
+            }
+            throw;
+        }
+    }
+
+    private static void MoveFileSystemEntryWithRetry(
+        string source,
+        string destination,
+        bool isDirectory,
+        CancellationToken cancellationToken)
+    {
+        if (isDirectory)
+        {
+            MoveDirectoryWithRetry(source, destination, cancellationToken);
+            return;
+        }
+
+        Exception? lastFailure = null;
+        for (int attempt = 1; attempt <= DirectoryMoveAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                File.Move(source, destination);
+                return;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                lastFailure = exception;
+                if (!File.Exists(source) && File.Exists(destination)) return;
+                if (attempt == DirectoryMoveAttempts) break;
+                cancellationToken.WaitHandle.WaitOne(DirectoryMoveRetryDelay);
+            }
+        }
+        throw new IOException(SetupText.Format("DirectoryMoveFailed", source, destination, DirectoryMoveAttempts), lastFailure);
+    }
+
+    private static void ClearDirectoryContents(string directory)
+    {
+        foreach (string file in Directory.EnumerateFiles(directory))
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+            File.Delete(file);
+        }
+        foreach (string childDirectory in Directory.EnumerateDirectories(directory))
+            Directory.Delete(childDirectory, true);
     }
 
     private static void RunSc(string command, string serviceName, params string[] arguments) => RunSc(command, serviceName, false, arguments);

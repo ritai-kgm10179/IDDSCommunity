@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Globalization;
@@ -80,6 +81,43 @@ public sealed class SetupOperationsTest
             SetupOperations.MoveDirectoryWithRetry(source, destination, cancellation.Token));
         Assert.IsTrue(Directory.Exists(source));
         Assert.IsFalse(Directory.Exists(destination));
+    }
+
+    [TestMethod]
+    public void MoveDirectoryContentsTransactional_PreservesRootAndMovesCompleteTree()
+    {
+        using TemporaryDirectory parent = new();
+        string source = Path.Combine(parent.Path, "source");
+        string destination = Path.Combine(parent.Path, "destination");
+        Directory.CreateDirectory(Path.Combine(source, "plugins"));
+        Directory.CreateDirectory(destination);
+        File.WriteAllText(Path.Combine(source, "service.exe"), "service");
+        File.WriteAllText(Path.Combine(source, "plugins", "agent.dll"), "agent");
+
+        SetupOperations.MoveDirectoryContentsTransactional(source, destination, CancellationToken.None);
+
+        Assert.IsTrue(Directory.Exists(source));
+        Assert.IsFalse(Directory.EnumerateFileSystemEntries(source).Any());
+        Assert.AreEqual("service", File.ReadAllText(Path.Combine(destination, "service.exe")));
+        Assert.AreEqual("agent", File.ReadAllText(Path.Combine(destination, "plugins", "agent.dll")));
+    }
+
+    [TestMethod]
+    public void MoveDirectoryContentsTransactional_HonorsCancellationWithoutMovingEntries()
+    {
+        using TemporaryDirectory parent = new();
+        string source = Path.Combine(parent.Path, "source");
+        string destination = Path.Combine(parent.Path, "destination");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "service.exe"), "service");
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+
+        Assert.ThrowsExactly<OperationCanceledException>(() =>
+            SetupOperations.MoveDirectoryContentsTransactional(source, destination, cancellation.Token));
+
+        Assert.IsTrue(File.Exists(Path.Combine(source, "service.exe")));
+        Assert.IsFalse(Directory.EnumerateFileSystemEntries(destination).Any());
     }
 
     [TestMethod]
