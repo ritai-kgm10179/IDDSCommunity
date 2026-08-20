@@ -632,10 +632,11 @@ public partial class IddsAdmin : Form
         }
         if (mode == AdminRefreshMode.Dashboard)
         {
-            DateTime endDate = DateTime.UtcNow;
-            failedLoginStatistics = Locks.ReadFailedLoginStatistics(endDate.AddDays(-30), endDate);
+            DateTime endDate = DateTime.UtcNow.AddDays(1);
+            DateTime startDate = DateTime.UtcNow.AddDays(-30);
+            failedLoginStatistics = Locks.ReadFailedLoginStatistics(startDate, endDate);
             agentLockStatistics = Locks.ReadAgentLockStatistics();
-            crossAgentAlerts = Locks.ReadCrossAgentAlertCount(endDate.AddDays(-30), endDate);
+            crossAgentAlerts = Locks.ReadCrossAgentAlertCount(startDate, endDate);
         }
         if (mode is AdminRefreshMode.Dashboard or AdminRefreshMode.CurrentLocks)
         {

@@ -412,7 +412,8 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
 
             if (a != null)
             {
-                if (agent.Id == Guid.Empty) agent.Id = a.Id;
+                Guid oldId = agent.Id;
+                agent.Id = a.Id;
                 agent.Name = a.Name;
                 agent.AssemblyFilename = a.AssemblyFilename;
                 agent.Icon = a.Icon;
@@ -424,6 +425,19 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
                 agent.DefaultCustomConfiguration = new Dictionary<string, string>(a.DefaultCustomConfiguration, StringComparer.Ordinal);
                 agent.CustomConfigurationTypes = a.CustomConfigurationTypes;
                 agent.LoadCustomConfig();
+                if (oldId != a.Id && oldId != Guid.Empty && database != null && database.IsConfigured)
+                {
+                    try
+                    {
+                        database.ExecuteNonQuery("UPDATE SecurityAgents SET AgentId=@p0 WHERE AgentId=@p1", a.Id.ToString(), oldId.ToString());
+                        database.ExecuteNonQuery("UPDATE SecurityAgentConfig SET AgentId=@p0 WHERE AgentId=@p1", a.Id.ToString(), oldId.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Trace.TraceWarning("Failed to update legacy agent ID in database: {0}", ex.Message);
+                    }
+                }
+                agent.Save();
                 result.Remove(a);
             }
             else
@@ -437,6 +451,7 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
         foreach (SecurityAgent agent in result)
         {
             agent.Enabled = false;
+            agent.Save();
         }
         AddRange(result);
         SortAgents();

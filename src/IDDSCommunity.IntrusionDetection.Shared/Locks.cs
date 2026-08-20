@@ -205,25 +205,52 @@ public class Locks
 
     private static bool TryResolveAgentId(string persistedAgentId, out Guid agentId)
     {
-        if (Guid.TryParse(persistedAgentId, out agentId))
-            return true;
-
         if (string.IsNullOrWhiteSpace(persistedAgentId))
         {
             agentId = Guid.Empty;
             return false;
         }
 
-        object? configuredAgentId = Database.Instance.ExecuteScalar(
-            @"select AgentId
-              from SecurityAgents
-              where Name=@p0 or DisplayName=@p0 or AssemblyName=@p0
-              limit 1",
-            persistedAgentId);
-        if (Guid.TryParse(Db.DbValueConverter.ToString(configuredAgentId), out agentId))
+        // 1. 若可直接解析為 WellKnown Invariant GUID
+        if (WellKnownAgentIds.TryResolveCanonicalGuid(persistedAgentId, out agentId))
             return true;
 
-        if (WellKnownAgentIds.TryResolveCanonicalGuid(persistedAgentId, out agentId))
+        // 2. 若為資料庫中舊記錄之 AgentId，透過 SecurityAgents 資料表查詢其 Name / DisplayName / AssemblyName 並映射至 Canonical GUID
+        try
+        {
+            if (Database.Instance != null && Database.Instance.IsConfigured)
+            {
+                using IDataReader reader = Database.Instance.ExecuteReader(
+                    @"select Name, DisplayName, AssemblyName, AgentId
+                      from SecurityAgents
+                      where AgentId=@p0 or Name=@p0 or DisplayName=@p0 or AssemblyName=@p0
+                      limit 1",
+                    persistedAgentId);
+                if (reader.Read())
+                {
+                    string name = Db.DbValueConverter.ToString(reader["Name"]);
+                    string displayName = Db.DbValueConverter.ToString(reader["DisplayName"]);
+                    string assemblyName = Db.DbValueConverter.ToString(reader["AssemblyName"]);
+                    if (WellKnownAgentIds.TryResolveCanonicalGuid(name, out agentId) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out agentId) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out agentId))
+                    {
+                        return true;
+                    }
+                    if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out agentId))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fallback to raw parsing
+        }
+
+        // 3. 回退至原始 GUID
+        if (Guid.TryParse(persistedAgentId, out agentId))
             return true;
 
         return false;

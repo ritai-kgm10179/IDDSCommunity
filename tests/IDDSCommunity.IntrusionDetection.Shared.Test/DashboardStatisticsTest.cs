@@ -97,9 +97,9 @@ public sealed class DashboardStatisticsTest
             IReadOnlyDictionary<Guid, AgentLockStatistics> lockStatistics = Locks.ReadAgentLockStatistics();
 
             Assert.AreEqual(1, snapshot.Total);
-            Assert.AreEqual(1, snapshot.AttemptsByAgent[agentId]);
-            Assert.AreEqual(2, lockStatistics[agentId].HardLocks);
-            Assert.AreEqual(4, lockStatistics[agentId].SoftLocks);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[WellKnownAgentIds.Smtp]);
+            Assert.AreEqual(2, lockStatistics[WellKnownAgentIds.Smtp].HardLocks);
+            Assert.AreEqual(4, lockStatistics[WellKnownAgentIds.Smtp].SoftLocks);
         }
         finally
         {
@@ -339,6 +339,116 @@ public sealed class DashboardStatisticsTest
             Assert.AreEqual(8, Convert.ToInt32(reader["FailedLogins"])); // 5 + 3
             Assert.AreEqual(3, Convert.ToInt32(reader["HardLocks"]));    // 2 + 1
             Assert.AreEqual(3, Convert.ToInt32(reader["SoftLocks"]));    // 1 + 2
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void Migration12_MigratesLegacyRandomGuidsToInvariantGuids()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-migration12-guid-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+
+            Guid legacyRandomGuid = Guid.NewGuid();
+
+            // 模擬舊版 SecurityAgents 存有舊隨機 GUID
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents (AgentId, Name, DisplayName, AssemblyName, Enabled, Serial, OverwriteConfiguration)
+                  VALUES (@p0, 'TlsSslAgent', '遠端桌面安全性代理程式', 'IDDSCommunity.Agents.TerminalServer.dll', 1, 0, 0)",
+                legacyRandomGuid.ToString());
+
+            // 模擬 IntrusionLog 與 AgentStatistics 使用此舊隨機 GUID
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                DateTime.UtcNow,
+                legacyRandomGuid.ToString(),
+                "192.0.2.60",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            database.ExecuteNonQuery(
+                "INSERT INTO AgentStatistics(AgentId,FailedLogins,HardLocks,SoftLocks) VALUES(@p0,10,2,3)",
+                legacyRandomGuid.ToString());
+
+            // 執行 Migration 12
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 12");
+            Db.SchemaMigrationRunner.Migrate(database.Connection);
+
+            // 驗證 SecurityAgents 已正規化為 WellKnownAgentIds.TerminalServer
+            object? agentIdInDb = database.ExecuteScalar("SELECT AgentId FROM SecurityAgents WHERE Name='TlsSslAgent'");
+            Assert.AreEqual(WellKnownAgentIds.TerminalServer.ToString(), agentIdInDb?.ToString());
+
+            // 驗證 IntrusionLog 已正規化為 WellKnownAgentIds.TerminalServer
+            object? logAgentId = database.ExecuteScalar("SELECT AgentId FROM IntrusionLog WHERE ClientIP='192.0.2.60'");
+            Assert.AreEqual(WellKnownAgentIds.TerminalServer.ToString(), logAgentId?.ToString());
+
+            // 驗證 AgentStatistics 已正規化
+            using var reader = database.ExecuteReader("SELECT FailedLogins, HardLocks, SoftLocks FROM AgentStatistics WHERE AgentId=@p0", WellKnownAgentIds.TerminalServer.ToString());
+            Assert.IsTrue(reader.Read());
+            Assert.AreEqual(10, Convert.ToInt32(reader["FailedLogins"]));
+            Assert.AreEqual(2, Convert.ToInt32(reader["HardLocks"]));
+            Assert.AreEqual(3, Convert.ToInt32(reader["SoftLocks"]));
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void MergeDbInformation_ForcesInvariantGuidAndSavesToDb()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-mergedb-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            IddsConfig config = new(database);
+
+            Guid legacyRandomGuid = Guid.NewGuid();
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents (AgentId, Name, DisplayName, AssemblyName, Enabled, Serial, OverwriteConfiguration)
+                  VALUES (@p0, 'TlsSslAgent', '遠端桌面安全性代理程式', 'IDDSCommunity.Agents.TerminalServer.dll', 1, 0, 0)",
+                legacyRandomGuid.ToString());
+
+            SecurityAgents securityAgents = new(database, config);
+            securityAgents.InitializeAgents();
+
+            Assert.AreEqual(1, securityAgents.Count);
+            Assert.AreEqual(legacyRandomGuid, securityAgents[0].Id);
+
+            // 模擬磁碟載入之元件（具有確定性 Invariant GUID）
+            List<SecurityAgent> diskAgents =
+            [
+                new SecurityAgent("TlsSslAgent", WellKnownAgentIds.TerminalServer)
+                {
+                    DisplayName = "遠端桌面安全性代理程式",
+                    AssemblyName = "IDDSCommunity.Agents.TerminalServer.dll",
+                    AssemblyFilename = "IDDSCommunity.Agents.TerminalServer.dll"
+                }
+            ];
+
+            securityAgents.MergeDbInformation(diskAgents);
+
+            // 驗證記憶體中之 AgentId 已同步為 Invariant GUID
+            Assert.AreEqual(WellKnownAgentIds.TerminalServer, securityAgents[0].Id);
+
+            // 驗證資料庫中之 AgentId 亦已持久化為 Invariant GUID
+            object? dbAgentId = database.ExecuteScalar("SELECT AgentId FROM SecurityAgents WHERE Name='TlsSslAgent'");
+            Assert.AreEqual(WellKnownAgentIds.TerminalServer.ToString(), dbAgentId?.ToString());
         }
         finally
         {

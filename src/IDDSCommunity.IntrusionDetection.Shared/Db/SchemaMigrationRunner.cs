@@ -158,7 +158,45 @@ internal static class SchemaMigrationRunner
 
     private static void CanonicalizeAgentIdentities(SqliteConnection connection, SqliteTransaction transaction)
     {
-        // 1. IntrusionLog 資料表 AgentId 正規化
+        Dictionary<string, string> idMap = new(StringComparer.OrdinalIgnoreCase);
+
+        // 1. 先從 SecurityAgents 資料表建立舊 AgentId 與名稱/顯示名稱到 Canonical GUID 的對照
+        if (TableExists(connection, transaction, "SecurityAgents") && ColumnExists(connection, transaction, "SecurityAgents", "AgentId"))
+        {
+            bool hasName = ColumnExists(connection, transaction, "SecurityAgents", "Name");
+            bool hasDisplayName = ColumnExists(connection, transaction, "SecurityAgents", "DisplayName");
+            bool hasAssemblyName = ColumnExists(connection, transaction, "SecurityAgents", "AssemblyName");
+
+            using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT AgentId" +
+                    (hasName ? ", Name" : ", '' AS Name") +
+                    (hasDisplayName ? ", DisplayName" : ", '' AS DisplayName") +
+                    (hasAssemblyName ? ", AssemblyName" : ", '' AS AssemblyName") +
+                    " FROM SecurityAgents";
+                using SqliteDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
+                    string name = reader.GetValue(1)?.ToString() ?? string.Empty;
+                    string displayName = reader.GetValue(2)?.ToString() ?? string.Empty;
+                    string assemblyName = reader.GetValue(3)?.ToString() ?? string.Empty;
+
+                    if (WellKnownAgentIds.TryResolveCanonicalGuid(name, out Guid canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out canonical))
+                    {
+                        if (!string.IsNullOrWhiteSpace(oldId)) idMap[oldId] = canonical.ToString();
+                        if (!string.IsNullOrWhiteSpace(name)) idMap[name] = canonical.ToString();
+                        if (!string.IsNullOrWhiteSpace(displayName)) idMap[displayName] = canonical.ToString();
+                    }
+                }
+            }
+        }
+
+        // 2. IntrusionLog 資料表 AgentId 正規化
         if (TableExists(connection, transaction, "IntrusionLog") && ColumnExists(connection, transaction, "IntrusionLog", "AgentId"))
         {
             List<(string OldId, string CanonicalId)> updates = [];
@@ -170,8 +208,18 @@ internal static class SchemaMigrationRunner
                 while (reader.Read())
                 {
                     string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
-                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
-                        updates.Add((oldId, canonical.ToString()));
+                    if (string.IsNullOrWhiteSpace(oldId)) continue;
+
+                    string? canonicalId = null;
+                    if (idMap.TryGetValue(oldId, out string? mapped))
+                        canonicalId = mapped;
+                    else if (WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid resolved))
+                        canonicalId = resolved.ToString();
+
+                    if (!string.IsNullOrEmpty(canonicalId) && !string.Equals(oldId, canonicalId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        updates.Add((oldId, canonicalId));
+                    }
                 }
             }
             foreach ((string oldId, string canonicalId) in updates)
@@ -185,7 +233,7 @@ internal static class SchemaMigrationRunner
             }
         }
 
-        // 2. AgentStatistics 資料表 AgentId 正規化與合併
+        // 3. AgentStatistics 資料表 AgentId 正規化與合併
         if (TableExists(connection, transaction, "AgentStatistics") &&
             ColumnExists(connection, transaction, "AgentStatistics", "AgentId") &&
             ColumnExists(connection, transaction, "AgentStatistics", "FailedLogins") &&
@@ -201,12 +249,20 @@ internal static class SchemaMigrationRunner
                 while (reader.Read())
                 {
                     string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
-                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
+                    if (string.IsNullOrWhiteSpace(oldId)) continue;
+
+                    string? canonicalId = null;
+                    if (idMap.TryGetValue(oldId, out string? mapped))
+                        canonicalId = mapped;
+                    else if (WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid resolved))
+                        canonicalId = resolved.ToString();
+
+                    if (!string.IsNullOrEmpty(canonicalId) && !string.Equals(oldId, canonicalId, StringComparison.OrdinalIgnoreCase))
                     {
                         int failed = Convert.ToInt32(reader["FailedLogins"]);
                         int hard = Convert.ToInt32(reader["HardLocks"]);
                         int soft = Convert.ToInt32(reader["SoftLocks"]);
-                        pendingMerges.Add((oldId, canonical.ToString(), failed, hard, soft));
+                        pendingMerges.Add((oldId, canonicalId, failed, hard, soft));
                     }
                 }
             }
@@ -255,7 +311,7 @@ internal static class SchemaMigrationRunner
             }
         }
 
-        // 3. SecurityAgentConfig 資料表 AgentId 正規化
+        // 4. SecurityAgentConfig 資料表 AgentId 正規化
         if (TableExists(connection, transaction, "SecurityAgentConfig") &&
             ColumnExists(connection, transaction, "SecurityAgentConfig", "AgentId") &&
             ColumnExists(connection, transaction, "SecurityAgentConfig", "PropertyName"))
@@ -269,11 +325,19 @@ internal static class SchemaMigrationRunner
                 while (reader.Read())
                 {
                     string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
-                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
+                    if (string.IsNullOrWhiteSpace(oldId)) continue;
+
+                    string? canonicalId = null;
+                    if (idMap.TryGetValue(oldId, out string? mapped))
+                        canonicalId = mapped;
+                    else if (WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid resolved))
+                        canonicalId = resolved.ToString();
+
+                    if (!string.IsNullOrEmpty(canonicalId) && !string.Equals(oldId, canonicalId, StringComparison.OrdinalIgnoreCase))
                     {
                         string prop = reader.GetValue(1)?.ToString() ?? string.Empty;
                         string? val = reader.GetValue(2)?.ToString();
-                        configs.Add((oldId, canonical.ToString(), prop, val));
+                        configs.Add((oldId, canonicalId, prop, val));
                     }
                 }
             }
@@ -298,7 +362,7 @@ internal static class SchemaMigrationRunner
             }
         }
 
-        // 4. SecurityAgents 資料表 AgentId 正規化
+        // 5. SecurityAgents 資料表 AgentId 正規化
         if (TableExists(connection, transaction, "SecurityAgents") && ColumnExists(connection, transaction, "SecurityAgents", "AgentId"))
         {
             bool hasName = ColumnExists(connection, transaction, "SecurityAgents", "Name");
@@ -318,15 +382,16 @@ internal static class SchemaMigrationRunner
                 while (reader.Read())
                 {
                     string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
-                    if (!Guid.TryParse(oldId, out _))
+                    string name = reader.GetValue(1)?.ToString() ?? string.Empty;
+                    string displayName = reader.GetValue(2)?.ToString() ?? string.Empty;
+                    string assemblyName = reader.GetValue(3)?.ToString() ?? string.Empty;
+
+                    if (WellKnownAgentIds.TryResolveCanonicalGuid(name, out Guid canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out canonical) ||
+                        WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out canonical))
                     {
-                        string name = reader.GetValue(1)?.ToString() ?? string.Empty;
-                        string displayName = reader.GetValue(2)?.ToString() ?? string.Empty;
-                        string assemblyName = reader.GetValue(3)?.ToString() ?? string.Empty;
-                        if (WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical) ||
-                            WellKnownAgentIds.TryResolveCanonicalGuid(name, out canonical) ||
-                            WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out canonical) ||
-                            WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out canonical))
+                        if (!string.Equals(oldId, canonical.ToString(), StringComparison.OrdinalIgnoreCase))
                         {
                             agentRows.Add((oldId, canonical.ToString()));
                         }
