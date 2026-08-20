@@ -16,7 +16,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class IddsAdmin : Form
 {
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
-    private static readonly TimeSpan SecurityLogWindow = TimeSpan.FromHours(24);
+    private static readonly TimeSpan SecurityLogWindow = TimeSpan.FromDays(30);
     private static readonly TimeSpan SecurityLogRefreshInterval = TimeSpan.FromSeconds(30);
     readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
@@ -632,8 +632,8 @@ public partial class IddsAdmin : Form
         }
         if (mode == AdminRefreshMode.Dashboard)
         {
-            DateTime endDate = DateTime.UtcNow.AddDays(1);
-            DateTime startDate = DateTime.UtcNow.AddDays(-30);
+            DateTime endDate = DateTime.UtcNow;
+            DateTime startDate = endDate.AddDays(-30);
             failedLoginStatistics = Locks.ReadFailedLoginStatistics(startDate, endDate);
             agentLockStatistics = Locks.ReadAgentLockStatistics();
             crossAgentAlerts = Locks.ReadCrossAgentAlertCount(startDate, endDate);

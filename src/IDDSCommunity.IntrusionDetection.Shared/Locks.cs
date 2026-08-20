@@ -211,8 +211,9 @@ public class Locks
             return false;
         }
 
-        // 1. 若可直接解析為 WellKnown Invariant GUID
-        if (WellKnownAgentIds.TryResolveCanonicalGuid(persistedAgentId, out agentId))
+        // 1. 已知的固定 GUID 可直接使用；歷史隨機 GUID 必須先透過 SecurityAgents 的穩定名稱映射。
+        if (WellKnownAgentIds.TryResolveCanonicalGuid(persistedAgentId, out agentId) &&
+            WellKnownAgentIds.IsWellKnown(agentId))
             return true;
 
         // 2. 若為資料庫中舊記錄之 AgentId，透過 SecurityAgents 資料表查詢其 Name / DisplayName / AssemblyName 並映射至 Canonical GUID

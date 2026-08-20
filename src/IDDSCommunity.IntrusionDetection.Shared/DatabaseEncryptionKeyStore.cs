@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.AccessControl;
@@ -32,6 +32,31 @@ internal static class DatabaseEncryptionKeyStore
         }
 
         HardenAccessControl(keyPath);
+        byte[] protectedKey = File.ReadAllBytes(keyPath);
+        byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
+        try
+        {
+            if (key.Length != KeySize)
+                throw new InvalidDataException(Localization.Strings.Get("The encrypted database key has an invalid length."));
+            return Convert.ToBase64String(key);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+        }
+    }
+
+    /// <summary>
+    /// 唯讀取得既有資料庫金鑰，不建立金鑰亦不修改金鑰檔案存取控制清單。
+    /// </summary>
+    /// <param name="databasePath">SQLite 資料庫的完整路徑。</param>
+    /// <returns>可供 SQLite3MultipleCiphers 使用的 Base64 密碼。</returns>
+    internal static string ReadExistingPassword(string databasePath)
+    {
+        string keyPath = GetKeyPath(databasePath);
+        if (!File.Exists(keyPath))
+            throw new InvalidDataException(Localization.Strings.Get("The encrypted database key is missing. Database access was refused to prevent data loss."));
+
         byte[] protectedKey = File.ReadAllBytes(keyPath);
         byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
         try

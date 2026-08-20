@@ -4,7 +4,8 @@ param(
     [string] $RuntimeIdentifier = 'win-x64',
     [string] $Configuration = 'Release',
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string] $Version = '3.0.0'
+    [string] $Version = '3.0.0',
+    [switch] $Offline
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,6 +14,7 @@ $repositoryRoot = $PSScriptRoot
 $packageRoot = Join-Path $repositoryRoot "artifacts\setup\idds-community-$Version-$RuntimeIdentifier"
 $payloadRoot = Join-Path $repositoryRoot 'artifacts\setup\temp_payload'
 $pluginRoot = Join-Path $payloadRoot 'Plugins'
+$diagnosticsRoot = Join-Path $payloadRoot 'Tools\DatabaseDiagnostics'
 
 if (Test-Path -LiteralPath $packageRoot) {
     try {
@@ -26,12 +28,21 @@ if (Test-Path -LiteralPath $packageRoot) {
 if (Test-Path -LiteralPath $payloadRoot) {
     Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
-New-Item -ItemType Directory -Path $packageRoot, $payloadRoot, $pluginRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $packageRoot, $payloadRoot, $pluginRoot, $diagnosticsRoot -Force | Out-Null
 
 # 一般方案還原不會建立執行階段專屬資產；以單一節點鎖定還原並停用節點重用，
 # 避免 Windows SDK 在大量專案還原時留下不必要的 MSBuild 子程序。
 $env:MSBUILDDISABLENODEREUSE = '1'
-dotnet restore (Join-Path $repositoryRoot 'IDDSCommunity.slnx') --locked-mode --disable-parallel -m:1 --nologo
+$restoreArguments = @('--locked-mode', '--disable-parallel', '-m:1', '--nologo')
+if ($Offline) {
+    $offlinePackages = if ([string]::IsNullOrWhiteSpace($env:NUGET_PACKAGES)) {
+        Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)) '.nuget\packages'
+    } else {
+        $env:NUGET_PACKAGES
+    }
+    $restoreArguments += @('-p:NuGetAudit=false', '--source', $offlinePackages, '--source', (Join-Path $env:ProgramFiles 'dotnet\library-packs'))
+}
+dotnet restore (Join-Path $repositoryRoot 'IDDSCommunity.slnx') @restoreArguments
 if ($LASTEXITCODE -ne 0) { throw '執行階段相依套件還原失敗。' }
 
 $commonArguments = @('--configuration', $Configuration, '--runtime', $RuntimeIdentifier, '--self-contained', 'true', '-p:PublishSingleFile=true', '-p:IncludeNativeLibrariesForSelfExtract=true', '-p:EnableCompressionInSingleFile=true', '--no-restore', '--nologo', '--disable-build-servers', '-m:1')
@@ -41,6 +52,8 @@ dotnet publish (Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.
 if ($LASTEXITCODE -ne 0) { throw '服務發佈失敗。' }
 dotnet publish (Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.Admin\IDDSCommunity.IntrusionDetection.Admin.csproj') @commonArguments --output $payloadRoot
 if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
+dotnet publish (Join-Path $repositoryRoot 'tools\IDDSCommunity.DatabaseDiagnostics\IDDSCommunity.DatabaseDiagnostics.csproj') @commonArguments --output $diagnosticsRoot
+if ($LASTEXITCODE -ne 0) { throw '資料庫診斷工具發佈失敗。' }
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $payloadRoot -Force
@@ -128,6 +141,7 @@ if (Test-Path -LiteralPath $userGuideEnSource) {
 # --- SBOM 生成 (SPDX 3.0 與相容性 SPDX 2.2) ---
 $sbomToolDir = Join-Path $repositoryRoot 'artifacts\tools\sbom-tool'
 if (-not (Test-Path (Join-Path $sbomToolDir 'sbom-tool.exe'))) {
+    if ($Offline) { throw '離線封裝需要預先安裝 Microsoft.Sbom.DotNetTool。' }
     dotnet tool install --tool-path $sbomToolDir Microsoft.Sbom.DotNetTool --version 4.1.5 | Out-Null
 }
 $sbomTool = Join-Path $sbomToolDir 'sbom-tool.exe'

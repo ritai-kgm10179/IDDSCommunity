@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -10,6 +11,97 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [DoNotParallelize]
 public sealed class DashboardStatisticsTest
 {
+    [TestMethod]
+    public void ResolveDefaultDataDirectory_MovesCompleteLegacyDirectoryWhenTargetIsEmpty()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "idds-data-directory-" + Guid.NewGuid().ToString("N"));
+        string legacy = Path.Combine(root, "IDDSCommunity");
+        string target = Path.Combine(root, "IDDS Community");
+        Directory.CreateDirectory(legacy);
+        Directory.CreateDirectory(target);
+        File.WriteAllText(Path.Combine(legacy, "iddscommunity.dbf"), "database");
+        File.WriteAllText(Path.Combine(legacy, "iddscommunity.dbf.key"), "key");
+        try
+        {
+            Assert.AreEqual(target, IddsConfig.ResolveDefaultDataDirectory(root));
+            Assert.IsFalse(Directory.Exists(legacy));
+            Assert.IsTrue(File.Exists(Path.Combine(target, "iddscommunity.dbf")));
+            Assert.IsTrue(File.Exists(Path.Combine(target, "iddscommunity.dbf.key")));
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void ResolveDefaultDataDirectory_RejectsTwoPopulatedDirectories()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "idds-data-conflict-" + Guid.NewGuid().ToString("N"));
+        string legacy = Path.Combine(root, "IDDSCommunity");
+        string target = Path.Combine(root, "IDDS Community");
+        Directory.CreateDirectory(legacy);
+        Directory.CreateDirectory(target);
+        File.WriteAllText(Path.Combine(legacy, "iddscommunity.dbf"), "legacy");
+        File.WriteAllText(Path.Combine(target, "iddscommunity.dbf"), "current");
+        try
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() => IddsConfig.ResolveDefaultDataDirectory(root));
+            Assert.IsTrue(File.Exists(Path.Combine(legacy, "iddscommunity.dbf")));
+            Assert.IsTrue(File.Exists(Path.Combine(target, "iddscommunity.dbf")));
+        }
+        finally
+        {
+            try { Directory.Delete(root, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void DatabaseDiagnosticExporter_ExportsCountsWithoutSensitiveEventFields()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-diagnostic-export-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        string outputPath = Path.Combine(directory, "diagnostics.json");
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                DateTime.UtcNow,
+                WellKnownAgentIds.TerminalServer,
+                "203.0.113.199",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+            database.Close();
+
+            DatabaseDiagnosticExporter.Export(Path.Combine(directory, "iddscommunity.dbf"), outputPath);
+
+            string json = File.ReadAllText(outputPath);
+            Assert.DoesNotContain("203.0.113.199", json);
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonElement root = document.RootElement;
+            Assert.AreEqual(1L, root.GetProperty("tableCounts").GetProperty("IntrusionLog").GetInt64());
+            JsonElement group = root.GetProperty("intrusionSummary").GetProperty("byAgentAndAction")[0];
+            Assert.AreEqual(
+                WellKnownAgentIds.TerminalServer.ToString(),
+                group.GetProperty("agentId").GetString(),
+                ignoreCase: true,
+                culture: System.Globalization.CultureInfo.InvariantCulture);
+            Assert.AreEqual((long)IntrusionLog.STATUS_INTRUSION_ATTEMPT, group.GetProperty("action").GetInt64());
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     [TestMethod]
     public void FailedLoginStatisticsUsesOneHalfOpenWindowForTotalAndAgents()
     {
@@ -293,6 +385,46 @@ public sealed class DashboardStatisticsTest
 
         Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("遠端桌面安全性代理程式", out Guid rdp));
         Assert.AreEqual(WellKnownAgentIds.TerminalServer, rdp);
+
+        Assert.IsFalse(WellKnownAgentIds.IsWellKnown(Guid.NewGuid()));
+        Assert.IsTrue(WellKnownAgentIds.IsWellKnown(WellKnownAgentIds.TerminalServer));
+    }
+
+    [TestMethod]
+    public void DashboardStatisticsMapsLegacyRandomGuidThroughConfiguredAgentIdentity()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-dashboard-random-guid-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            DateTime start = new(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime end = start.AddDays(30);
+            Guid legacyRandomGuid = Guid.NewGuid();
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents
+                  (AgentId,Name,AssemblyName,OverwriteConfiguration,DisplayName,Enabled,Serial)
+                  VALUES(@p0,@p1,@p2,0,@p3,1,0)",
+                legacyRandomGuid,
+                "TlsSslAgent",
+                "IDDSCommunity.Agents.TerminalServer.dll",
+                "遠端桌面安全性代理程式");
+            InsertIncident(database, start.AddDays(1), legacyRandomGuid, IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            FailedLoginStatisticsSnapshot snapshot = Locks.ReadFailedLoginStatistics(start, end);
+
+            Assert.AreEqual(1, snapshot.Total);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[WellKnownAgentIds.TerminalServer]);
+            Assert.IsFalse(snapshot.AttemptsByAgent.ContainsKey(legacyRandomGuid));
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
 
     [TestMethod]

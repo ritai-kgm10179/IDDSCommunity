@@ -834,5 +834,14 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Occurred" xml:space="preserve"><value>Occurred</value></data>
   <data name="Subject" xml:space="preserve"><value>Subject</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="The specified encrypted database was not found." xml:space="preserve"><value>The specified encrypted database was not found.</value></data>
+  <data name="The diagnostic output path must not overwrite the database." xml:space="preserve"><value>The diagnostic output path must not overwrite the database.</value></data>
+  <data name="Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'." xml:space="preserve"><value>Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'.</value></data>
+  <data name="Unknown or incomplete argument: {0}" xml:space="preserve"><value>Unknown or incomplete argument: {0}</value></data>
+  <data name="The diagnostic summary was exported:" xml:space="preserve"><value>The diagnostic summary was exported:</value></data>
+  <data name="The summary does not contain IP addresses, accounts, event details, or the database key." xml:space="preserve"><value>The summary does not contain IP addresses, accounts, event details, or the database key.</value></data>
+  <data name="Diagnostic export failed: {0}" xml:space="preserve"><value>Diagnostic export failed: {0}</value></data>
+  <data name="IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]" xml:space="preserve"><value>IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]</value></data>
+  <data name="By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory." xml:space="preserve"><value>By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory.</value></data>
 </root>
 

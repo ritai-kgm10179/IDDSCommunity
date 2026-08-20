@@ -834,4 +834,13 @@
   <data name="Occurred" xml:space="preserve"><value>發生時間</value></data>
   <data name="Subject" xml:space="preserve"><value>目標</value></data>
   <data name="Details" xml:space="preserve"><value>詳細資訊</value></data>
+  <data name="The specified encrypted database was not found." xml:space="preserve"><value>找不到指定的加密資料庫。</value></data>
+  <data name="The diagnostic output path must not overwrite the database." xml:space="preserve"><value>診斷輸出路徑不得覆寫資料庫。</value></data>
+  <data name="Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'." xml:space="preserve"><value>偵測到兩個非空白資料目錄。為避免資料庫與加密金鑰分離，已拒絕自動合併：'{0}'、'{1}'。</value></data>
+  <data name="Unknown or incomplete argument: {0}" xml:space="preserve"><value>未知或不完整的引數：{0}</value></data>
+  <data name="The diagnostic summary was exported:" xml:space="preserve"><value>診斷摘要已匯出：</value></data>
+  <data name="The summary does not contain IP addresses, accounts, event details, or the database key." xml:space="preserve"><value>摘要不包含 IP、帳號、事件內容或資料庫金鑰。</value></data>
+  <data name="Diagnostic export failed: {0}" xml:space="preserve"><value>診斷匯出失敗：{0}</value></data>
+  <data name="IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]" xml:space="preserve"><value>IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf 路徑&gt;] [--output &lt;json 路徑&gt;]</value></data>
+  <data name="By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory." xml:space="preserve"><value>未指定時讀取 %ProgramData%\IDDS Community\iddscommunity.dbf，並輸出至目前目錄。</value></data>
 </root>

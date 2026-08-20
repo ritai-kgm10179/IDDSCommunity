@@ -417,15 +417,8 @@ internal static class SetupOperations
                 newServiceCreated = true;
             }
             ConfigureEventLog();
-            try
-            {
-                EnsureOperatorsGroup();
-                ConfigureDataDirectoryPermissions();
-            }
-            catch (Exception exception)
-            {
-                LogNonFatal("Ensure operators group and data permissions", exception);
-            }
+            EnsureOperatorsGroup();
+            ConfigureDataDirectoryPermissions();
             cancellationToken.ThrowIfCancellationRequested();
             if (!serviceState.Exists)
             {
@@ -518,24 +511,17 @@ internal static class SetupOperations
     /// </summary>
     private static void ConfigureDataDirectoryPermissions()
     {
-        string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "IDDS Community");
+        string dataDir = IddsConfig.GetDefaultDataDirectory();
         Directory.CreateDirectory(dataDir);
-        try
-        {
-            SecurityIdentifier? operatorsSid = null;
-            using PrincipalContext ctx = new(ContextType.Machine);
-            using GroupPrincipal? operatorsGroup = GroupPrincipal.FindByIdentity(ctx, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME);
-            if (operatorsGroup?.Sid is not null)
-                operatorsSid = operatorsGroup.Sid;
+        using PrincipalContext ctx = new(ContextType.Machine);
+        using GroupPrincipal operatorsGroup = GroupPrincipal.FindByIdentity(ctx, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME)
+            ?? throw new InvalidOperationException(SetupText.Format("OperatorsGroupNotFound", Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME));
+        SecurityIdentifier operatorsSid = operatorsGroup.Sid
+            ?? throw new InvalidOperationException(SetupText.Format("OperatorsGroupSidUnavailable", Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME));
 
-            DirectoryInfo dirInfo = new(dataDir);
-            System.Security.AccessControl.DirectorySecurity security = CreateDataDirectorySecurity(operatorsSid);
-            dirInfo.SetAccessControl(security);
-        }
-        catch (Exception exception)
-        {
-            LogNonFatal("Configure data directory permissions", exception);
-        }
+        DirectoryInfo dirInfo = new(dataDir);
+        System.Security.AccessControl.DirectorySecurity security = CreateDataDirectorySecurity(operatorsSid);
+        dirInfo.SetAccessControl(security);
     }
 
     /// <summary>
@@ -599,13 +585,16 @@ internal static class SetupOperations
     private static void EnsureOperatorsGroup()
     {
         string? currentUserSid = WindowsIdentity.GetCurrent().User?.Value;
-        if (currentUserSid is null) return;
+        if (currentUserSid is null)
+            throw new InvalidOperationException(SetupText.Get("CurrentUserSidUnavailable"));
 
         using PrincipalContext context = new(ContextType.Machine);
         using GroupPrincipal group = GroupPrincipal.FindByIdentity(context, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME)
             ?? CreateOperatorsGroup(context);
         using UserPrincipal? user = UserPrincipal.FindByIdentity(context, currentUserSid);
-        if (user != null && !group.Members.Contains(user))
+        if (user is null)
+            throw new InvalidOperationException(SetupText.Get("CurrentUserAccountUnavailable"));
+        if (!group.Members.Contains(user))
         {
             group.Members.Add(user);
             group.Save();

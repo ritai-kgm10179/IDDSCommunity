@@ -19,6 +19,7 @@ public partial class PanelLockoutConfiguration : UserControl
     private readonly TextBox textBoxTrustedProxyCidrs = new();
     private readonly ToolTip trustedProxyToolTip = new();
     private readonly TableLayoutPanel advancedSettingsLayout = new();
+    private readonly FlowLayoutPanel actionButtonsLayout = new();
 
         /// <summary>
     /// 當 LockoutConfigurationChanged 時引發之事件。
@@ -288,8 +289,23 @@ public bool IsInEditMode { get; set; }
         advancedSettingsLayout.Controls.Add(labelFirewallModeDescription, 0, 8);
         advancedSettingsLayout.SetColumnSpan(labelFirewallModeDescription, 2);
         Controls.Add(advancedSettingsLayout);
-        buttonSave.Location = new Point(112, 516);
-        buttonDiscard.Location = new Point(224, 516);
+
+        Controls.Remove(buttonSave);
+        Controls.Remove(buttonDiscard);
+        actionButtonsLayout.AutoSize = false;
+        actionButtonsLayout.FlowDirection = FlowDirection.LeftToRight;
+        actionButtonsLayout.Location = new Point(112, 516);
+        actionButtonsLayout.Margin = Padding.Empty;
+        actionButtonsLayout.Name = "actionButtonsLayout";
+        actionButtonsLayout.Size = new Size(220, 26);
+        actionButtonsLayout.WrapContents = false;
+        buttonSave.Location = Point.Empty;
+        buttonSave.Margin = Padding.Empty;
+        buttonDiscard.Location = Point.Empty;
+        buttonDiscard.Margin = new Padding(12, 0, 0, 0);
+        actionButtonsLayout.Controls.Add(buttonSave);
+        actionButtonsLayout.Controls.Add(buttonDiscard);
+        Controls.Add(actionButtonsLayout);
         AutoScroll = true;
         AutoScrollMargin = new Size(0, 32);
         Size = new Size(440, 580);

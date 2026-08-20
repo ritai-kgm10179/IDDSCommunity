@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 using System.Data;
@@ -385,60 +386,47 @@ public Dictionary<string, string> AppConfig
     /// </summary>
     public static string GetDefaultDataDirectory()
     {
-        try
-        {
-            string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            if (!string.IsNullOrEmpty(commonAppData))
-            {
-                string targetDir = System.IO.Path.Combine(commonAppData, "IDDS Community");
-                string legacyDir = System.IO.Path.Combine(commonAppData, "IDDSCommunity");
+        string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        return string.IsNullOrEmpty(commonAppData)
+            ? AppDomain.CurrentDomain.BaseDirectory
+            : ResolveDefaultDataDirectory(commonAppData);
+    }
 
-                if (!System.IO.Directory.Exists(targetDir))
+    internal static string ResolveDefaultDataDirectory(string commonAppData)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(commonAppData);
+        string targetDir = System.IO.Path.Combine(commonAppData, "IDDS Community");
+        string legacyDir = System.IO.Path.Combine(commonAppData, "IDDSCommunity");
+
+        if (System.IO.Directory.Exists(legacyDir))
+        {
+            if (!System.IO.Directory.Exists(targetDir))
+            {
+                System.IO.Directory.Move(legacyDir, targetDir);
+            }
+            else
+            {
+                bool targetHasEntries = System.IO.Directory.EnumerateFileSystemEntries(targetDir).Any();
+                bool legacyHasEntries = System.IO.Directory.EnumerateFileSystemEntries(legacyDir).Any();
+                if (!legacyHasEntries)
                 {
-                    if (System.IO.Directory.Exists(legacyDir))
-                    {
-                        try
-                        {
-                            System.IO.Directory.Move(legacyDir, targetDir);
-                        }
-                        catch
-                        {
-                            System.IO.Directory.CreateDirectory(targetDir);
-                        }
-                    }
-                    else
-                    {
-                        System.IO.Directory.CreateDirectory(targetDir);
-                    }
+                    System.IO.Directory.Delete(legacyDir);
                 }
-                else if (System.IO.Directory.Exists(legacyDir))
+                else if (!targetHasEntries)
                 {
-                    try
-                    {
-                        foreach (string file in System.IO.Directory.EnumerateFiles(legacyDir, "*", System.IO.SearchOption.AllDirectories))
-                        {
-                            string relPath = System.IO.Path.GetRelativePath(legacyDir, file);
-                            string destFile = System.IO.Path.Combine(targetDir, relPath);
-                            string? destSubDir = System.IO.Path.GetDirectoryName(destFile);
-                            if (!string.IsNullOrEmpty(destSubDir))
-                                System.IO.Directory.CreateDirectory(destSubDir);
-                            if (!System.IO.File.Exists(destFile))
-                                System.IO.File.Move(file, destFile);
-                        }
-                    }
-                    catch
-                    {
-                        // 忽略個別檔案移轉失敗
-                    }
+                    System.IO.Directory.Delete(targetDir);
+                    System.IO.Directory.Move(legacyDir, targetDir);
                 }
-                return targetDir;
+                else
+                {
+                    throw new InvalidOperationException(
+                        Localization.Strings.Format("Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'.", targetDir, legacyDir));
+                }
             }
         }
-        catch
-        {
-            // 測試隔離環境備援
-        }
-        return AppDomain.CurrentDomain.BaseDirectory;
+
+        System.IO.Directory.CreateDirectory(targetDir);
+        return targetDir;
     }
 
     /// <summary>

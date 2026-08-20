@@ -252,6 +252,21 @@ public static class WellKnownAgentIds
         return false;
     }
 
+    /// <summary>
+    /// 判斷指定 GUID 是否為內建安全性代理程式的確定性識別碼。
+    /// </summary>
+    /// <param name="agentId">欲檢查的代理程式識別碼。</param>
+    /// <returns>若識別碼屬於內建代理程式則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool IsWellKnown(Guid agentId)
+    {
+        foreach (AgentDescriptor descriptor in KnownAgents)
+        {
+            if (descriptor.Id == agentId)
+                return true;
+        }
+        return false;
+    }
+
     private static string GetShortName(string fullName)
     {
         if (string.IsNullOrEmpty(fullName)) return string.Empty;
