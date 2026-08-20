@@ -108,7 +108,8 @@ public sealed class SetupOperationsTest
             "ShortcutCreationFailed", "FirewallCleanupStartFailed", "FirewallCleanupTimedOut",
             "FirewallCleanupFailed", "ServiceControlTimedOut", "ServiceControlFailedWithDetails",
             "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete", "TransactionAlreadyCommitted",
-            "ServiceStopVerificationFailed", "ServiceStateStabilizationFailed", "ServicePauseVerificationFailed"
+            "ServiceStopVerificationFailed", "ServiceStateStabilizationFailed", "ServicePauseVerificationFailed",
+            "RestartManagerFailed", "InstallResourcesStillInUse", "UnknownApplication"
         ];
         CultureInfo original = CultureInfo.CurrentUICulture;
         try
@@ -124,6 +125,21 @@ public sealed class SetupOperationsTest
         {
             CultureInfo.CurrentUICulture = original;
         }
+    }
+
+    [TestMethod]
+    public void FormatAffectedApplications_IncludesNamesAndProcessIdentifiers()
+    {
+        RestartManagerSession.AffectedApplication[] applications =
+        [
+            new("IDDS 管理主控台", 42, string.Empty, true),
+            new(string.Empty, 84, "IDDSCommunityService", false)
+        ];
+
+        string result = RestartManagerSession.FormatAffectedApplications(applications);
+
+        StringAssert.Contains(result, "IDDS 管理主控台 (PID 42)");
+        StringAssert.Contains(result, "IDDSCommunityService (PID 84)");
     }
 
     [TestMethod]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
 using System.IO;
@@ -396,6 +397,7 @@ internal static class SetupOperations
             serviceState = CaptureServiceState();
             StopService(serviceState);
             systemStateChanged = true;
+            ReleaseInstallDirectoryLocks();
             KillRunningProcesses();
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -870,6 +872,22 @@ internal static class SetupOperations
             {
                 LogNonFatal($"Enumerate process {name}", exception);
             }
+        }
+    }
+
+    private static void ReleaseInstallDirectoryLocks()
+    {
+        if (!Directory.Exists(InstallDirectory)) return;
+        using RestartManagerSession session = RestartManagerSession.CreateForDirectory(InstallDirectory, ServiceName);
+        IReadOnlyList<RestartManagerSession.AffectedApplication> affected = session.GetAffectedApplications();
+        if (affected.Count == 0) return;
+
+        session.ShutdownApplications();
+        IReadOnlyList<RestartManagerSession.AffectedApplication> remaining = session.GetAffectedApplications();
+        if (remaining.Count != 0)
+        {
+            string details = RestartManagerSession.FormatAffectedApplications(remaining);
+            throw new IOException(SetupText.Format("InstallResourcesStillInUse", details));
         }
     }
 

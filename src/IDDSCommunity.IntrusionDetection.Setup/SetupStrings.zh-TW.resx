@@ -72,4 +72,7 @@
   <data name="OperatorsGroupSidUnavailable" xml:space="preserve"><value>無法取得本機群組 {0} 的 SID。</value></data>
   <data name="CurrentUserSidUnavailable" xml:space="preserve"><value>無法取得執行安裝程式之使用者 SID。</value></data>
   <data name="CurrentUserAccountUnavailable" xml:space="preserve"><value>無法解析執行安裝程式之本機使用者帳戶。</value></data>
+  <data name="RestartManagerFailed" xml:space="preserve"><value>Windows 重新啟動管理員操作 {0} 失敗，錯誤碼：{1}。</value></data>
+  <data name="InstallResourcesStillInUse" xml:space="preserve"><value>下列應用程式或服務仍在使用安裝檔案：{0}。請關閉後再重試安裝。</value></data>
+  <data name="UnknownApplication" xml:space="preserve"><value>未知的應用程式</value></data>
 </root>
