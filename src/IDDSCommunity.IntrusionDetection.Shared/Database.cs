@@ -87,6 +87,9 @@ public bool IsConfigured => _isConfigured;
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
             System.IO.Directory.CreateDirectory(dbDir);
 
+        if (!string.IsNullOrEmpty(dbDir))
+            EnsureDirectoryPermissions(dbDir);
+
         CleanupStrayMigrationArtifacts(connBuilder.DataSource);
         bool databaseExists = File.Exists(connBuilder.DataSource);
         bool isPlaintext = databaseExists && HasPlaintextHeader(connBuilder.DataSource);
@@ -97,13 +100,49 @@ public bool IsConfigured => _isConfigured;
             MigratePlaintextDatabase(connBuilder.DataSource, databasePassword);
         connBuilder.Password = databasePassword;
 
-        _connection = new SqliteConnection(connBuilder.ConnectionString);
-        _connection.Open();
-        ConfigureConnection(_connection);
-        _connection.StateChange += _connection_StateChange;
-        _isConfigured = true;
+        try
+        {
+            _connection = new SqliteConnection(connBuilder.ConnectionString);
+            _connection.Open();
+            ConfigureConnection(_connection);
+            _connection.StateChange += _connection_StateChange;
+            _isConfigured = true;
 
-        OpenOrCreate();
+            OpenOrCreate();
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 8) // SQLITE_READONLY
+        {
+            _connection?.Dispose();
+            connBuilder.Mode = SqliteOpenMode.ReadOnly;
+            _connection = new SqliteConnection(connBuilder.ConnectionString);
+            _connection.Open();
+            ConfigureConnection(_connection);
+            _connection.StateChange += _connection_StateChange;
+            _isConfigured = true;
+        }
+    }
+
+    private static void EnsureDirectoryPermissions(string directory)
+    {
+        try
+        {
+            if (!System.IO.Directory.Exists(directory))
+                System.IO.Directory.CreateDirectory(directory);
+
+            System.IO.DirectoryInfo dirInfo = new(directory);
+            var security = dirInfo.GetAccessControl();
+            security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+                new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WellKnownSidType.AuthenticatedUserSid, null),
+                System.Security.AccessControl.FileSystemRights.Modify,
+                System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit,
+                System.Security.AccessControl.PropagationFlags.None,
+                System.Security.AccessControl.AccessControlType.Allow));
+            dirInfo.SetAccessControl(security);
+        }
+        catch
+        {
+            // 非提升權限環境忽略目錄 ACL 變更例外
+        }
     }
     /// <summary>
     /// 處理 state change 事件。
@@ -329,6 +368,18 @@ public static Database Instance
             ConfigureConnection(connection);
             return connection;
         }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 8) // SQLITE_READONLY
+        {
+            connection.Dispose();
+            SqliteConnectionStringBuilder roBuilder = new(connBuilder.ConnectionString)
+            {
+                Mode = SqliteOpenMode.ReadOnly
+            };
+            SqliteConnection roConn = new(roBuilder.ConnectionString);
+            roConn.Open();
+            ConfigureConnection(roConn);
+            return roConn;
+        }
         catch
         {
             connection.Dispose();
@@ -350,6 +401,18 @@ public static Database Instance
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
             ConfigureConnection(connection);
             return connection;
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 8) // SQLITE_READONLY
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            SqliteConnectionStringBuilder roBuilder = new(connBuilder.ConnectionString)
+            {
+                Mode = SqliteOpenMode.ReadOnly
+            };
+            SqliteConnection roConn = new(roBuilder.ConnectionString);
+            await roConn.OpenAsync(cancellationToken).ConfigureAwait(false);
+            ConfigureConnection(roConn);
+            return roConn;
         }
         catch
         {

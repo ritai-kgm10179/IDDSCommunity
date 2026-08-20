@@ -518,6 +518,45 @@ public sealed class DashboardStatisticsTest
         }
     }
 
+    [TestMethod]
+    public void Configure_WhenDatabaseIsReadOnly_FallsBackToReadOnlyAndAllowsQuerying()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds_ro_test_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = Database.Instance;
+
+        try
+        {
+            database.Configure(directory);
+            DateTime now = DateTime.UtcNow;
+            InsertIncident(database, now, WellKnownAgentIds.TerminalServer, IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+            database.Close();
+
+            // 模擬唯讀環境：將檔案設定為唯讀屬性
+            string dbPath = Path.Combine(directory, "iddscommunity.dbf");
+            File.SetAttributes(dbPath, FileAttributes.ReadOnly);
+
+            // 測試：Configure 應自動捕捉 SQLITE_READONLY 並回退至 ReadOnly 模式
+            database.Configure(directory);
+
+            FailedLoginStatisticsSnapshot snapshot = Locks.ReadFailedLoginStatistics(now.AddDays(-30), now.AddDays(1));
+            Assert.AreEqual(1, snapshot.Total);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[WellKnownAgentIds.TerminalServer]);
+        }
+        finally
+        {
+            database.Close();
+            string dbPath = Path.Combine(directory, "iddscommunity.dbf");
+            if (File.Exists(dbPath))
+            {
+                File.SetAttributes(dbPath, FileAttributes.Normal);
+            }
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     private static void InsertIncident(Database database, DateTime time, Guid agentId, int action) =>
         database.ExecuteNonQuery(
             "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",

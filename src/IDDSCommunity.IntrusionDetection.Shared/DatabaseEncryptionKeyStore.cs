@@ -131,14 +131,6 @@ internal static class DatabaseEncryptionKeyStore
                 FileSystemRights.Read,
                 AccessControlType.Allow));
         }
-        else
-        {
-            // 若本機群組尚未由安裝程式建立，暫時授予已驗證使用者讀取權限，避免主控台無法載入資料庫
-            security.AddAccessRule(new FileSystemAccessRule(
-                new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
-                FileSystemRights.Read,
-                AccessControlType.Allow));
-        }
         return security;
     }
 

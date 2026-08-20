@@ -420,10 +420,11 @@ internal static class SetupOperations
             try
             {
                 EnsureOperatorsGroup();
+                ConfigureDataDirectoryPermissions();
             }
             catch (Exception exception)
             {
-                LogNonFatal("Ensure operators group", exception);
+                LogNonFatal("Ensure operators group and data permissions", exception);
             }
             cancellationToken.ThrowIfCancellationRequested();
             if (!serviceState.Exists)
@@ -510,6 +511,31 @@ internal static class SetupOperations
         using EventLog log = new(Globals.IDDSCOMMUNITY_WINDOWS_EVENT_LOG_NAME);
         log.MaximumKilobytes = 20 * 1024;
         log.ModifyOverflowPolicy(OverflowAction.OverwriteAsNeeded, 0);
+    }
+
+    /// <summary>
+    /// 設定全系統共用之資料庫目錄存取權限，使非提升權限管理介面能正常存取 SQLite WAL 與 SHM 檔案。
+    /// </summary>
+    private static void ConfigureDataDirectoryPermissions()
+    {
+        string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "IDDS Community");
+        Directory.CreateDirectory(dataDir);
+        try
+        {
+            DirectoryInfo dirInfo = new(dataDir);
+            var security = dirInfo.GetAccessControl();
+            security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+                new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
+                System.Security.AccessControl.FileSystemRights.Modify,
+                System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit,
+                System.Security.AccessControl.PropagationFlags.None,
+                System.Security.AccessControl.AccessControlType.Allow));
+            dirInfo.SetAccessControl(security);
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Configure data directory permissions", exception);
+        }
     }
 
     /// <summary>
