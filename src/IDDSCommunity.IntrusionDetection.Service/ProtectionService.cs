@@ -1097,8 +1097,7 @@ public bool LimitMailSent { get; set; }
     internal static bool ShouldProcessLegacyDetection(INotificationEventArgs notificationEventArgs)
     {
         ArgumentNullException.ThrowIfNull(notificationEventArgs);
-        return notificationEventArgs is not AuthenticationNotificationEventArgs authentication ||
-            (authentication.IsCredentialFailure && authentication.IsLocalThresholdExceeded);
+        return notificationEventArgs is not AuthenticationNotificationEventArgs authentication || authentication.IsCredentialFailure;
     }
 
     private CorrelationEvaluationResult CompleteCorrelationObservation(SecurityObservationEvent observation)

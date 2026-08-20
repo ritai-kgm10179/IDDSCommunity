@@ -1205,6 +1205,32 @@ public sealed class SecurityEventPipelineTest
     }
 
     /// <summary>
+    /// 驗證單次驗證失敗事件（即使未超過本機門檻）仍會通過 ShouldProcessLegacyDetection 判定以進行日誌記錄與計數。
+    /// </summary>
+    [TestMethod]
+    public void ShouldProcessLegacyDetection_WhenCredentialFailureWithoutLocalThresholdExceeded_ReturnsTrue()
+    {
+        AuthenticationNotificationEventArgs notification = CreateAuthenticationEvent();
+        notification.IsCredentialFailure = true;
+        notification.IsLocalThresholdExceeded = false;
+
+        Assert.IsTrue(Service.ShouldProcessLegacyDetection(notification));
+    }
+
+    /// <summary>
+    /// 驗證非憑證失敗（例如存取授權限制）事件不會進入既有登入失敗與封鎖管線。
+    /// </summary>
+    [TestMethod]
+    public void ShouldProcessLegacyDetection_WhenNotCredentialFailure_ReturnsFalse()
+    {
+        AuthenticationNotificationEventArgs notification = CreateAuthenticationEvent();
+        notification.IsCredentialFailure = false;
+        notification.IsLocalThresholdExceeded = true;
+
+        Assert.IsFalse(Service.ShouldProcessLegacyDetection(notification));
+    }
+
+    /// <summary>
     /// 建立一筆測試用偵測事件。
     /// </summary>
     /// <param name="address">The source address.</param>
