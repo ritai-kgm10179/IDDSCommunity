@@ -111,6 +111,85 @@ public sealed class DashboardStatisticsTest
     }
 
     [TestMethod]
+    public void DashboardStatisticsResolvesLegacyEnglishNamesWithLocalizedConfig()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-dashboard-legacy-localized-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            DateTime start = new(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime end = start.AddDays(30);
+
+            Guid sqlAgentId = WellKnownAgentIds.SqlServer;
+            Guid winBaseAgentId = WellKnownAgentIds.WindowsBase;
+            Guid ftpAgentId = WellKnownAgentIds.Ftp;
+
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents
+                  (AgentId,Name,AssemblyName,OverwriteConfiguration,DisplayName,Enabled,Serial)
+                  VALUES(@p0,@p1,@p2,0,@p3,1,0)",
+                sqlAgentId,
+                "SqlFailedLoginWatcher",
+                "IDDSCommunity.Agents.SqlServer.dll",
+                "SQL Server 安全性代理程式");
+
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents
+                  (AgentId,Name,AssemblyName,OverwriteConfiguration,DisplayName,Enabled,Serial)
+                  VALUES(@p0,@p1,@p2,0,@p3,1,0)",
+                winBaseAgentId,
+                "WindowsSecurityBase",
+                "IDDSCommunity.IntrusionDetection.Base.dll",
+                "Windows 基礎安全性代理程式");
+
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents
+                  (AgentId,Name,AssemblyName,OverwriteConfiguration,DisplayName,Enabled,Serial)
+                  VALUES(@p0,@p1,@p2,0,@p3,1,0)",
+                ftpAgentId,
+                "FtpAgent",
+                "IDDSCommunity.Agents.FtpServer.dll",
+                "FTP 安全性代理程式");
+
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                start.AddDays(1),
+                "SQL Server Security Agent",
+                "192.0.2.10",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                start.AddDays(2),
+                "Windows Base Security Agent",
+                "192.0.2.11",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            database.ExecuteNonQuery(
+                "INSERT INTO AgentStatistics(AgentId,FailedLogins,SoftLocks,HardLocks) VALUES(@p0,5,3,1)",
+                "FTP Security Agent");
+
+            FailedLoginStatisticsSnapshot snapshot = Locks.ReadFailedLoginStatistics(start, end);
+            IReadOnlyDictionary<Guid, AgentLockStatistics> lockStatistics = Locks.ReadAgentLockStatistics();
+
+            Assert.AreEqual(2, snapshot.Total);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[sqlAgentId]);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[winBaseAgentId]);
+            Assert.AreEqual(1, lockStatistics[ftpAgentId].HardLocks);
+            Assert.AreEqual(3, lockStatistics[ftpAgentId].SoftLocks);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
     public void DashboardCountsCrossAgentAlertsInTheSameThirtyDayWindow()
     {
         string directory = Path.Combine(Path.GetTempPath(), "idds-dashboard-cross-agent-" + Guid.NewGuid().ToString("N"));
@@ -187,6 +266,79 @@ public sealed class DashboardStatisticsTest
                     IntrusionLog.STATUS_INTRUSION_ATTEMPT_FROM_SAFE
                 },
                 IntrusionLog.FailedLoginActions.ToArray());
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
+    [TestMethod]
+    public void WellKnownAgentIds_ResolvesAllKnownAgentsSuccessfully()
+    {
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("Windows Base Security Agent", out Guid winBase));
+        Assert.AreEqual(WellKnownAgentIds.WindowsBase, winBase);
+
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("SQL Server Security Agent", out Guid sql));
+        Assert.AreEqual(WellKnownAgentIds.SqlServer, sql);
+
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("IDDSCommunity.Agents.MailServer.SmtpAgent", out Guid smtp));
+        Assert.AreEqual(WellKnownAgentIds.Smtp, smtp);
+
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("FTP Security Agent", out Guid ftp));
+        Assert.AreEqual(WellKnownAgentIds.Ftp, ftp);
+
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("遠端桌面安全性代理程式", out Guid rdp));
+        Assert.AreEqual(WellKnownAgentIds.TerminalServer, rdp);
+    }
+
+    [TestMethod]
+    public void Migration12_CanonicalizesLegacyAgentIdentities_MergesStatisticsCorrectly()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-migration12-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+
+            // 模擬已套用至 Migration 11 的狀態，寫入舊版未正規化 AgentId
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                DateTime.UtcNow,
+                "SQL Server Security Agent",
+                "192.0.2.50",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            // 既有 AgentStatistics 包含舊名稱 (5, 2, 1) 與 新 GUID (3, 1, 2)
+            database.ExecuteNonQuery(
+                "INSERT INTO AgentStatistics(AgentId,FailedLogins,HardLocks,SoftLocks) VALUES(@p0,5,2,1)",
+                "SQL Server Security Agent");
+
+            database.ExecuteNonQuery(
+                "INSERT OR REPLACE INTO AgentStatistics(AgentId,FailedLogins,HardLocks,SoftLocks) VALUES(@p0,3,1,2)",
+                WellKnownAgentIds.SqlServer.ToString());
+
+            // 模擬 Migration 12 執行
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 12");
+            Db.SchemaMigrationRunner.Migrate(database.Connection);
+
+            // 驗證 IntrusionLog 已轉換為標準 GUID
+            object? intrusionAgentId = database.ExecuteScalar("SELECT AgentId FROM IntrusionLog WHERE ClientIP='192.0.2.50'");
+            Assert.AreEqual(WellKnownAgentIds.SqlServer.ToString(), intrusionAgentId?.ToString());
+
+            // 驗證 AgentStatistics 已合併且無重複列
+            object? count = database.ExecuteScalar("SELECT COUNT(*) FROM AgentStatistics WHERE AgentId LIKE '%SQL%'");
+            Assert.AreEqual(0L, Convert.ToInt64(count));
+
+            using System.Data.IDataReader reader = database.ExecuteReader("SELECT FailedLogins, HardLocks, SoftLocks FROM AgentStatistics WHERE AgentId=@p0", WellKnownAgentIds.SqlServer.ToString());
+            Assert.IsTrue(reader.Read());
+            Assert.AreEqual(8, Convert.ToInt32(reader["FailedLogins"])); // 5 + 3
+            Assert.AreEqual(3, Convert.ToInt32(reader["HardLocks"]));    // 2 + 1
+            Assert.AreEqual(3, Convert.ToInt32(reader["SoftLocks"]));    // 1 + 2
         }
         finally
         {

@@ -92,3 +92,12 @@
 
 - **單一設定來源**：所有 Agent 的來源 IP 例外均須使用管理工具「設定 → 安全網路」的全域允許清單；Agent 自訂設定不得另建重複的 IP 排除欄位。
 - **位址格式**：安全網路必須支援單一 IPv4、單一 IPv6、IPv4 CIDR 與 IPv6 CIDR；本機位址由服務層統一辨識，不得要求使用者在每個 Agent 重複輸入。
+
+---
+
+## 10. 實體識別碼與多語系分離規範 (Identity and Localization Separation)
+
+- **不可變唯一識別碼 (Invariant ID)**：所有資料表關聯、外鍵、事件日誌（`IntrusionLog.AgentId`）與統計累加（`AgentStatistics.AgentId`）必須一律使用不可變之唯一識別碼（`Guid`）；嚴禁將代理程式名稱（`Name`）、介面顯示文字（`DisplayName`）、組件名稱（`AssemblyName`）或任何可本地化之字串作為資料庫實體關聯或分組依據。
+- **確定性 Invariant Agent GUID**：所有內建安全性代理程式必須於程式碼中宣告常數型別之確定性 GUID（定義於 [`WellKnownAgentIds`](src/IDDSCommunity.IntrusionDetection.Shared/WellKnownAgentIds.cs)），確保跨執行環境、多語系切換與版本升級時識別碼完全恆久一致。
+- **歷史資料庫單向一次性遷移**：升級舊版資料庫若存在非 GUID 之歷史文字標識，必須於 [`SchemaMigrationRunner`](src/IDDSCommunity.IntrusionDetection.Shared/Db/SchemaMigrationRunner.cs) 中執行單向確定性遷移（Migration 12）批次正規化為標準 GUID，並正確合併累計統計數據；禁止在執行階段（Runtime UI / Query Path）仰賴動態字串模糊比對以避免多語系翻譯或重構造成統計遺漏與效能損耗。
+- **進門端寫入防禦**：所有寫入日誌、統計或觀察事件之服務與管線必須確保 AgentId 符合 GUID 格式，非 GUID 字串一律於進門端（Ingestion Pipeline）完成正規化。

@@ -101,6 +101,8 @@ internal static class SchemaMigrationRunner
             MigrateLegacyLocalTimestampsToUtc(connection, transaction);
         if (!MigrationApplied(connection, transaction, 11))
             CanonicalizePersistedIpAddresses(connection, transaction);
+        if (!MigrationApplied(connection, transaction, 12))
+            CanonicalizeAgentIdentities(connection, transaction);
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -147,7 +149,221 @@ internal static class SchemaMigrationRunner
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (11, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (12, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
         transaction.Commit();
+    }
+
+    private static void CanonicalizeAgentIdentities(SqliteConnection connection, SqliteTransaction transaction)
+    {
+        // 1. IntrusionLog 資料表 AgentId 正規化
+        if (TableExists(connection, transaction, "IntrusionLog") && ColumnExists(connection, transaction, "IntrusionLog", "AgentId"))
+        {
+            List<(string OldId, string CanonicalId)> updates = [];
+            using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT DISTINCT AgentId FROM IntrusionLog WHERE AgentId IS NOT NULL";
+                using SqliteDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
+                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
+                        updates.Add((oldId, canonical.ToString()));
+                }
+            }
+            foreach ((string oldId, string canonicalId) in updates)
+            {
+                using SqliteCommand update = connection.CreateCommand();
+                update.Transaction = transaction;
+                update.CommandText = "UPDATE IntrusionLog SET AgentId=$canonicalId WHERE AgentId=$oldId";
+                update.Parameters.AddWithValue("$canonicalId", canonicalId);
+                update.Parameters.AddWithValue("$oldId", oldId);
+                update.ExecuteNonQuery();
+            }
+        }
+
+        // 2. AgentStatistics 資料表 AgentId 正規化與合併
+        if (TableExists(connection, transaction, "AgentStatistics") &&
+            ColumnExists(connection, transaction, "AgentStatistics", "AgentId") &&
+            ColumnExists(connection, transaction, "AgentStatistics", "FailedLogins") &&
+            ColumnExists(connection, transaction, "AgentStatistics", "HardLocks") &&
+            ColumnExists(connection, transaction, "AgentStatistics", "SoftLocks"))
+        {
+            List<(string OldId, string CanonicalId, int FailedLogins, int HardLocks, int SoftLocks)> pendingMerges = [];
+            using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT AgentId, FailedLogins, HardLocks, SoftLocks FROM AgentStatistics";
+                using SqliteDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
+                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
+                    {
+                        int failed = Convert.ToInt32(reader["FailedLogins"]);
+                        int hard = Convert.ToInt32(reader["HardLocks"]);
+                        int soft = Convert.ToInt32(reader["SoftLocks"]);
+                        pendingMerges.Add((oldId, canonical.ToString(), failed, hard, soft));
+                    }
+                }
+            }
+
+            foreach ((string oldId, string canonicalId, int failed, int hard, int soft) in pendingMerges)
+            {
+                bool targetExists = false;
+                using (SqliteCommand check = connection.CreateCommand())
+                {
+                    check.Transaction = transaction;
+                    check.CommandText = "SELECT COUNT(*) FROM AgentStatistics WHERE AgentId=$canonicalId";
+                    check.Parameters.AddWithValue("$canonicalId", canonicalId);
+                    targetExists = Convert.ToInt64(check.ExecuteScalar()) > 0;
+                }
+
+                if (targetExists)
+                {
+                    using SqliteCommand update = connection.CreateCommand();
+                    update.Transaction = transaction;
+                    update.CommandText = @"UPDATE AgentStatistics
+                                           SET FailedLogins=FailedLogins+$failed,
+                                               HardLocks=HardLocks+$hard,
+                                               SoftLocks=SoftLocks+$soft
+                                           WHERE AgentId=$canonicalId";
+                    update.Parameters.AddWithValue("$failed", failed);
+                    update.Parameters.AddWithValue("$hard", hard);
+                    update.Parameters.AddWithValue("$soft", soft);
+                    update.Parameters.AddWithValue("$canonicalId", canonicalId);
+                    update.ExecuteNonQuery();
+
+                    using SqliteCommand delete = connection.CreateCommand();
+                    delete.Transaction = transaction;
+                    delete.CommandText = "DELETE FROM AgentStatistics WHERE AgentId=$oldId";
+                    delete.Parameters.AddWithValue("$oldId", oldId);
+                    delete.ExecuteNonQuery();
+                }
+                else
+                {
+                    using SqliteCommand update = connection.CreateCommand();
+                    update.Transaction = transaction;
+                    update.CommandText = "UPDATE AgentStatistics SET AgentId=$canonicalId WHERE AgentId=$oldId";
+                    update.Parameters.AddWithValue("$canonicalId", canonicalId);
+                    update.Parameters.AddWithValue("$oldId", oldId);
+                    update.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // 3. SecurityAgentConfig 資料表 AgentId 正規化
+        if (TableExists(connection, transaction, "SecurityAgentConfig") &&
+            ColumnExists(connection, transaction, "SecurityAgentConfig", "AgentId") &&
+            ColumnExists(connection, transaction, "SecurityAgentConfig", "PropertyName"))
+        {
+            List<(string OldId, string CanonicalId, string PropertyName, string? PropertyValue)> configs = [];
+            using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT AgentId, PropertyName, PropertyValueString FROM SecurityAgentConfig";
+                using SqliteDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
+                    if (!Guid.TryParse(oldId, out _) && WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical))
+                    {
+                        string prop = reader.GetValue(1)?.ToString() ?? string.Empty;
+                        string? val = reader.GetValue(2)?.ToString();
+                        configs.Add((oldId, canonical.ToString(), prop, val));
+                    }
+                }
+            }
+
+            foreach ((string oldId, string canonicalId, string prop, string? val) in configs)
+            {
+                using SqliteCommand delete = connection.CreateCommand();
+                delete.Transaction = transaction;
+                delete.CommandText = "DELETE FROM SecurityAgentConfig WHERE AgentId=$oldId AND PropertyName=$prop";
+                delete.Parameters.AddWithValue("$oldId", oldId);
+                delete.Parameters.AddWithValue("$prop", prop);
+                delete.ExecuteNonQuery();
+
+                using SqliteCommand insert = connection.CreateCommand();
+                insert.Transaction = transaction;
+                insert.CommandText = @"INSERT OR REPLACE INTO SecurityAgentConfig (AgentId, PropertyName, PropertyValueString)
+                                       VALUES ($canonicalId, $prop, $val)";
+                insert.Parameters.AddWithValue("$canonicalId", canonicalId);
+                insert.Parameters.AddWithValue("$prop", prop);
+                insert.Parameters.AddWithValue("$val", (object?)val ?? DBNull.Value);
+                insert.ExecuteNonQuery();
+            }
+        }
+
+        // 4. SecurityAgents 資料表 AgentId 正規化
+        if (TableExists(connection, transaction, "SecurityAgents") && ColumnExists(connection, transaction, "SecurityAgents", "AgentId"))
+        {
+            bool hasName = ColumnExists(connection, transaction, "SecurityAgents", "Name");
+            bool hasDisplayName = ColumnExists(connection, transaction, "SecurityAgents", "DisplayName");
+            bool hasAssemblyName = ColumnExists(connection, transaction, "SecurityAgents", "AssemblyName");
+
+            List<(string OldId, string CanonicalId)> agentRows = [];
+            using (SqliteCommand select = connection.CreateCommand())
+            {
+                select.Transaction = transaction;
+                select.CommandText = "SELECT AgentId" +
+                    (hasName ? ", Name" : ", '' AS Name") +
+                    (hasDisplayName ? ", DisplayName" : ", '' AS DisplayName") +
+                    (hasAssemblyName ? ", AssemblyName" : ", '' AS AssemblyName") +
+                    " FROM SecurityAgents";
+                using SqliteDataReader reader = select.ExecuteReader();
+                while (reader.Read())
+                {
+                    string oldId = reader.GetValue(0)?.ToString() ?? string.Empty;
+                    if (!Guid.TryParse(oldId, out _))
+                    {
+                        string name = reader.GetValue(1)?.ToString() ?? string.Empty;
+                        string displayName = reader.GetValue(2)?.ToString() ?? string.Empty;
+                        string assemblyName = reader.GetValue(3)?.ToString() ?? string.Empty;
+                        if (WellKnownAgentIds.TryResolveCanonicalGuid(oldId, out Guid canonical) ||
+                            WellKnownAgentIds.TryResolveCanonicalGuid(name, out canonical) ||
+                            WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out canonical) ||
+                            WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out canonical))
+                        {
+                            agentRows.Add((oldId, canonical.ToString()));
+                        }
+                    }
+                }
+            }
+
+            foreach ((string oldId, string canonicalId) in agentRows)
+            {
+                bool targetExists = false;
+                using (SqliteCommand check = connection.CreateCommand())
+                {
+                    check.Transaction = transaction;
+                    check.CommandText = "SELECT COUNT(*) FROM SecurityAgents WHERE AgentId=$canonicalId";
+                    check.Parameters.AddWithValue("$canonicalId", canonicalId);
+                    targetExists = Convert.ToInt64(check.ExecuteScalar()) > 0;
+                }
+
+                if (targetExists)
+                {
+                    using SqliteCommand delete = connection.CreateCommand();
+                    delete.Transaction = transaction;
+                    delete.CommandText = "DELETE FROM SecurityAgents WHERE AgentId=$oldId";
+                    delete.Parameters.AddWithValue("$oldId", oldId);
+                    delete.ExecuteNonQuery();
+                }
+                else
+                {
+                    using SqliteCommand update = connection.CreateCommand();
+                    update.Transaction = transaction;
+                    update.CommandText = "UPDATE SecurityAgents SET AgentId=$canonicalId WHERE AgentId=$oldId";
+                    update.Parameters.AddWithValue("$canonicalId", canonicalId);
+                    update.Parameters.AddWithValue("$oldId", oldId);
+                    update.ExecuteNonQuery();
+                }
+            }
+        }
     }
 
     private static void CanonicalizePersistedIpAddresses(SqliteConnection connection, SqliteTransaction transaction)

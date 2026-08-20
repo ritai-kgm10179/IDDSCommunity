@@ -208,13 +208,25 @@ public class Locks
         if (Guid.TryParse(persistedAgentId, out agentId))
             return true;
 
+        if (string.IsNullOrWhiteSpace(persistedAgentId))
+        {
+            agentId = Guid.Empty;
+            return false;
+        }
+
         object? configuredAgentId = Database.Instance.ExecuteScalar(
             @"select AgentId
               from SecurityAgents
-              where Name=@p0 or DisplayName=@p0
+              where Name=@p0 or DisplayName=@p0 or AssemblyName=@p0
               limit 1",
             persistedAgentId);
-        return Guid.TryParse(Db.DbValueConverter.ToString(configuredAgentId), out agentId);
+        if (Guid.TryParse(Db.DbValueConverter.ToString(configuredAgentId), out agentId))
+            return true;
+
+        if (WellKnownAgentIds.TryResolveCanonicalGuid(persistedAgentId, out agentId))
+            return true;
+
+        return false;
     }
     /// <summary>
     /// Counts recent locks created for the same Agent and source IP address.
