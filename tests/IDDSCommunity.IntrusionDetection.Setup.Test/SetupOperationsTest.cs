@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -52,6 +52,37 @@ public sealed class SetupOperationsTest
     }
 
     [TestMethod]
+    public void MoveDirectoryWithRetry_MovesCompleteDirectoryAtomically()
+    {
+        using TemporaryDirectory parent = new();
+        string source = Path.Combine(parent.Path, "source");
+        string destination = Path.Combine(parent.Path, "destination");
+        Directory.CreateDirectory(source);
+        File.WriteAllText(Path.Combine(source, "payload.bin"), "payload");
+
+        SetupOperations.MoveDirectoryWithRetry(source, destination, CancellationToken.None);
+
+        Assert.IsFalse(Directory.Exists(source));
+        Assert.AreEqual("payload", File.ReadAllText(Path.Combine(destination, "payload.bin")));
+    }
+
+    [TestMethod]
+    public void MoveDirectoryWithRetry_HonorsCancellationBeforeMovingDirectory()
+    {
+        using TemporaryDirectory parent = new();
+        string source = Path.Combine(parent.Path, "source");
+        string destination = Path.Combine(parent.Path, "destination");
+        Directory.CreateDirectory(source);
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+
+        Assert.ThrowsExactly<OperationCanceledException>(() =>
+            SetupOperations.MoveDirectoryWithRetry(source, destination, cancellation.Token));
+        Assert.IsTrue(Directory.Exists(source));
+        Assert.IsFalse(Directory.Exists(destination));
+    }
+
+    [TestMethod]
     public void SafeDeleteDirectory_DeletesRebuildableTreeWithoutRestart()
     {
         TemporaryDirectory directory = new();
@@ -73,7 +104,7 @@ public sealed class SetupOperationsTest
             "ProgressPreparing", "ProgressValidating", "ProgressStoppingService", "ProgressInstallingFiles",
             "ProgressRegisteringService", "ProgressStartingService", "ProgressRemovingFiles", "ProgressCompleted",
             "ProgressCancelling", "CancelledAndRolledBack", "RestartRequired", "OperationFailed",
-            "DiagnosticLogPath", "RollbackFailed", "RollbackServiceMissing", "DeleteFailed",
+            "DiagnosticLogPath", "RollbackFailed", "RollbackServiceMissing", "DeleteFailed", "DirectoryMoveFailed",
             "ShortcutCreationFailed", "FirewallCleanupStartFailed", "FirewallCleanupTimedOut",
             "FirewallCleanupFailed", "ServiceControlTimedOut", "ServiceControlFailedWithDetails",
             "ApplicationLaunchFailed", "ProcessStopTimedOut", "CleanupIncomplete", "TransactionAlreadyCommitted",

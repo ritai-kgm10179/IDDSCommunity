@@ -53,6 +53,7 @@
   <data name="RollbackFailed" xml:space="preserve"><value>安裝及自動回復皆失敗。請先檢視診斷日誌再重試。</value></data>
   <data name="RollbackServiceMissing" xml:space="preserve"><value>找不到先前版本的服務執行檔，因此無法還原安裝。</value></data>
   <data name="DeleteFailed" xml:space="preserve"><value>無法移除：{0}</value></data>
+  <data name="DirectoryMoveFailed" xml:space="preserve"><value>嘗試 {2} 次後仍無法將安裝目錄從 {0} 移至 {1}。</value></data>
   <data name="ShortcutCreationFailed" xml:space="preserve"><value>無法建立捷徑：{0}</value></data>
   <data name="FirewallCleanupStartFailed" xml:space="preserve"><value>無法啟動 Windows 防火牆清理程序。</value></data>
   <data name="FirewallCleanupTimedOut" xml:space="preserve"><value>Windows 防火牆清理逾時。</value></data>

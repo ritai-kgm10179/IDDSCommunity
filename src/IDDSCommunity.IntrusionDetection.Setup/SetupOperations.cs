@@ -17,6 +17,8 @@ internal static class SetupOperations
     private const string ServiceDisplayName = Globals.WINDOWS_SERVICE_DISPLAY_NAME;
     private static readonly TimeSpan ServiceStartTimeout = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DirectoryMoveRetryDelay = TimeSpan.FromMilliseconds(500);
+    private const int DirectoryMoveAttempts = 20;
     internal static readonly string InstallDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "IDDS Community");
     internal static readonly string AdminExecutablePath = Path.Combine(InstallDirectory, "IDDSCommunity.IntrusionDetection.Admin.exe");
     /// <summary>
@@ -400,10 +402,10 @@ internal static class SetupOperations
             Report(progress, "ProgressInstallingFiles", 50);
             if (Directory.Exists(InstallDirectory))
             {
-                Directory.Move(InstallDirectory, backupDirectory);
+                MoveDirectoryWithRetry(InstallDirectory, backupDirectory, cancellationToken);
                 previousInstallationMoved = true;
             }
-            Directory.Move(stagingDirectory, InstallDirectory);
+            MoveDirectoryWithRetry(stagingDirectory, InstallDirectory, cancellationToken);
             installationDirectoryReplaced = true;
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -487,7 +489,7 @@ internal static class SetupOperations
         {
             if (!Directory.Exists(backupDirectory))
                 throw new DirectoryNotFoundException(backupDirectory);
-            Directory.Move(backupDirectory, InstallDirectory);
+            MoveDirectoryWithRetry(backupDirectory, InstallDirectory, CancellationToken.None);
         }
         RestoreServiceState(serviceState);
     }
@@ -651,9 +653,9 @@ internal static class SetupOperations
                 rollback.Record(() =>
                 {
                     if (Directory.Exists(quarantineDirectory) && !Directory.Exists(InstallDirectory))
-                        Directory.Move(quarantineDirectory, InstallDirectory);
+                        MoveDirectoryWithRetry(quarantineDirectory, InstallDirectory, CancellationToken.None);
                 });
-                Directory.Move(InstallDirectory, quarantineDirectory);
+                MoveDirectoryWithRetry(InstallDirectory, quarantineDirectory, cancellationToken);
                 filesQuarantined = true;
             }
             rollback.Record(() => CreateShortcuts(desktopShortcut, startMenuShortcut));
@@ -970,6 +972,34 @@ internal static class SetupOperations
             }
             File.Copy(file, destFile, true);
         }
+    }
+
+    internal static void MoveDirectoryWithRetry(string source, string destination, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(source);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destination);
+
+        Exception? lastFailure = null;
+        for (int attempt = 1; attempt <= DirectoryMoveAttempts; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                Directory.Move(source, destination);
+                return;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                lastFailure = exception;
+                if (!Directory.Exists(source) && Directory.Exists(destination))
+                    return;
+                if (attempt == DirectoryMoveAttempts)
+                    break;
+                cancellationToken.WaitHandle.WaitOne(DirectoryMoveRetryDelay);
+            }
+        }
+
+        throw new IOException(SetupText.Format("DirectoryMoveFailed", source, destination, DirectoryMoveAttempts), lastFailure);
     }
 
     private static void RunSc(string command, string serviceName, params string[] arguments) => RunSc(command, serviceName, false, arguments);

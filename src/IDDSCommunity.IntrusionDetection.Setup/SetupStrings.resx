@@ -53,6 +53,7 @@ Target location: {1}</value></data>
   <data name="RollbackFailed" xml:space="preserve"><value>Installation and automatic rollback both failed. Review the diagnostic log before retrying.</value></data>
   <data name="RollbackServiceMissing" xml:space="preserve"><value>The previous service executable is missing, so the installation cannot be restored.</value></data>
   <data name="DeleteFailed" xml:space="preserve"><value>Could not remove: {0}</value></data>
+  <data name="DirectoryMoveFailed" xml:space="preserve"><value>Could not move the installation directory from {0} to {1} after {2} attempts.</value></data>
   <data name="ShortcutCreationFailed" xml:space="preserve"><value>Could not create the shortcut: {0}</value></data>
   <data name="FirewallCleanupStartFailed" xml:space="preserve"><value>Windows Firewall cleanup could not be started.</value></data>
   <data name="FirewallCleanupTimedOut" xml:space="preserve"><value>Windows Firewall cleanup timed out.</value></data>
