@@ -292,12 +292,13 @@ public bool IsInEditMode { get; set; }
 
         Controls.Remove(buttonSave);
         Controls.Remove(buttonDiscard);
-        actionButtonsLayout.AutoSize = false;
+        actionButtonsLayout.AutoSize = true;
+        actionButtonsLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
         actionButtonsLayout.FlowDirection = FlowDirection.LeftToRight;
         actionButtonsLayout.Location = new Point(112, 516);
         actionButtonsLayout.Margin = Padding.Empty;
         actionButtonsLayout.Name = "actionButtonsLayout";
-        actionButtonsLayout.Size = new Size(220, 26);
+        actionButtonsLayout.Padding = new Padding(0, 0, 1, 1);
         actionButtonsLayout.WrapContents = false;
         buttonSave.Location = Point.Empty;
         buttonSave.Margin = Padding.Empty;

@@ -52,6 +52,8 @@ public sealed class PluginPackagingContractTest
         StringAssert.Contains(source, "actionButtonsLayout.Controls.Add(buttonSave)");
         StringAssert.Contains(source, "actionButtonsLayout.Controls.Add(buttonDiscard)");
         StringAssert.Contains(source, "buttonDiscard.Margin = new Padding(12, 0, 0, 0)");
+        StringAssert.Contains(source, "actionButtonsLayout.AutoSize = true");
+        StringAssert.Contains(source, "actionButtonsLayout.Padding = new Padding(0, 0, 1, 1)");
     }
 
     /// <summary>
@@ -68,6 +70,24 @@ public sealed class PluginPackagingContractTest
             "IddsAdmin.cs"));
 
         StringAssert.Contains(source, "SecurityLogWindow = TimeSpan.FromDays(30)");
+    }
+
+    /// <summary>
+    /// 驗證啟動畫面預載安全性記錄時，即使管理視窗尚未建立 Handle，仍會釋放更新閘門。
+    /// </summary>
+    [TestMethod]
+    public void AdminInitialSecurityLog_ReleasesRefreshGateWithoutWindowHandle()
+    {
+        string repositoryRoot = FindRepositoryRoot();
+        string source = File.ReadAllText(Path.Combine(
+            repositoryRoot,
+            "src",
+            "IDDSCommunity.IntrusionDetection.Admin",
+            "IddsAdmin.cs"));
+
+        StringAssert.Contains(source, "if (IsHandleCreated)");
+        StringAssert.Contains(source, "the refresh gate must still be released for the first dashboard tick");
+        StringAssert.Contains(source, "IsUpdating = false;");
     }
 
     private static string FindRepositoryRoot()

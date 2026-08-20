@@ -259,10 +259,20 @@ public partial class IddsAdmin : Form
             {
                 if (!IsDisposed && !uiRefreshCancellation.IsCancellationRequested)
                 {
-                    await this.InvokeAsync(() =>
+                    if (IsHandleCreated)
                     {
+                        await this.InvokeAsync(() =>
+                        {
+                            IsUpdating = false;
+                        }, uiRefreshCancellation.Token);
+                    }
+                    else
+                    {
+                        // The security-log panel is preloaded while the splash screen is still
+                        // active. The administration form may not have a window handle yet, but
+                        // the refresh gate must still be released for the first dashboard tick.
                         IsUpdating = false;
-                    }, uiRefreshCancellation.Token);
+                    }
                 }
             }
             catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
