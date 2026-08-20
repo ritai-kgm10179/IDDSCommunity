@@ -20,10 +20,9 @@ internal sealed class RestartManagerSession : IDisposable
         this.sessionHandle = sessionHandle;
     }
 
-    internal static RestartManagerSession CreateForDirectory(string directoryPath, string serviceName)
+    internal static RestartManagerSession CreateForDirectory(string directoryPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directoryPath);
-        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
 
         StringBuilder sessionKey = new(SessionKeyLength + 1);
         int result = RmStartSession(out uint handle, 0, sessionKey);
@@ -34,8 +33,7 @@ internal sealed class RestartManagerSession : IDisposable
             string[] files = Directory.Exists(directoryPath)
                 ? Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories).ToArray()
                 : [];
-            string[] services = [serviceName];
-            result = RmRegisterResources(handle, checked((uint)files.Length), files, 0, null, 1, services);
+            result = RmRegisterResources(handle, checked((uint)files.Length), files, 0, null, 0, null);
             ThrowIfFailed(result, nameof(RmRegisterResources));
             return session;
         }
@@ -65,7 +63,8 @@ internal sealed class RestartManagerSession : IDisposable
                 process.ApplicationName,
                 checked((int)process.Process.ProcessId),
                 process.ServiceShortName,
-                process.Restartable))
+                process.Restartable,
+                (ApplicationStatus)process.ApplicationStatus))
             .ToArray();
     }
 
@@ -104,7 +103,28 @@ internal sealed class RestartManagerSession : IDisposable
         string ApplicationName,
         int ProcessId,
         string ServiceShortName,
-        bool Restartable);
+        bool Restartable,
+        ApplicationStatus Status)
+    {
+        internal bool IsStopped =>
+            (Status & (ApplicationStatus.Stopped | ApplicationStatus.StoppedOther)) != 0 &&
+            (Status & (ApplicationStatus.Running | ApplicationStatus.Restarted |
+                ApplicationStatus.ErrorOnStop | ApplicationStatus.ShutdownMasked)) == 0;
+    }
+
+    [Flags]
+    internal enum ApplicationStatus : uint
+    {
+        Unknown = 0x0,
+        Running = 0x1,
+        Stopped = 0x2,
+        StoppedOther = 0x4,
+        Restarted = 0x8,
+        ErrorOnStop = 0x10,
+        ErrorOnRestart = 0x20,
+        ShutdownMasked = 0x40,
+        RestartMasked = 0x80
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct RmUniqueProcess
@@ -139,7 +159,7 @@ internal sealed class RestartManagerSession : IDisposable
         uint applicationCount,
         RmUniqueProcess[]? applications,
         uint serviceCount,
-        string[] serviceNames);
+        string[]? serviceNames);
 
     [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
     private static extern int RmGetList(

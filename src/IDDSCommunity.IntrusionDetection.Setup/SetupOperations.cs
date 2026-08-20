@@ -878,12 +878,16 @@ internal static class SetupOperations
     private static void ReleaseInstallDirectoryLocks()
     {
         if (!Directory.Exists(InstallDirectory)) return;
-        using RestartManagerSession session = RestartManagerSession.CreateForDirectory(InstallDirectory, ServiceName);
-        IReadOnlyList<RestartManagerSession.AffectedApplication> affected = session.GetAffectedApplications();
+        using RestartManagerSession session = RestartManagerSession.CreateForDirectory(InstallDirectory);
+        IReadOnlyList<RestartManagerSession.AffectedApplication> affected = session.GetAffectedApplications()
+            .Where(application => !application.IsStopped)
+            .ToArray();
         if (affected.Count == 0) return;
 
         session.ShutdownApplications();
-        IReadOnlyList<RestartManagerSession.AffectedApplication> remaining = session.GetAffectedApplications();
+        IReadOnlyList<RestartManagerSession.AffectedApplication> remaining = session.GetAffectedApplications()
+            .Where(application => !application.IsStopped)
+            .ToArray();
         if (remaining.Count != 0)
         {
             string details = RestartManagerSession.FormatAffectedApplications(remaining);

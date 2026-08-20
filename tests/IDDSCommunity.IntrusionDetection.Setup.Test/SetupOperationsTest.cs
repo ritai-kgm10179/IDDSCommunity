@@ -132,14 +132,39 @@ public sealed class SetupOperationsTest
     {
         RestartManagerSession.AffectedApplication[] applications =
         [
-            new("IDDS 管理主控台", 42, string.Empty, true),
-            new(string.Empty, 84, "IDDSCommunityService", false)
+            new("IDDS 管理主控台", 42, string.Empty, true, RestartManagerSession.ApplicationStatus.Running),
+            new(string.Empty, 84, "IDDSCommunityService", false, RestartManagerSession.ApplicationStatus.Running)
         ];
 
         string result = RestartManagerSession.FormatAffectedApplications(applications);
 
         StringAssert.Contains(result, "IDDS 管理主控台 (PID 42)");
         StringAssert.Contains(result, "IDDSCommunityService (PID 84)");
+    }
+
+    [TestMethod]
+    [DataRow(0x2u)]
+    [DataRow(0x4u)]
+    public void AffectedApplication_IsStopped_RecognizesStoppedServiceStatus(uint statusValue)
+    {
+        RestartManagerSession.ApplicationStatus status = (RestartManagerSession.ApplicationStatus)statusValue;
+        RestartManagerSession.AffectedApplication application =
+            new("IDDSCommunityProtection", 0, "IDDSCommunityProtection", true, status);
+
+        Assert.IsTrue(application.IsStopped);
+    }
+
+    [TestMethod]
+    [DataRow(0x1u)]
+    [DataRow(0x10u)]
+    [DataRow(0xAu)]
+    public void AffectedApplication_IsStopped_DoesNotHideActiveOrFailedStatus(uint statusValue)
+    {
+        RestartManagerSession.ApplicationStatus status = (RestartManagerSession.ApplicationStatus)statusValue;
+        RestartManagerSession.AffectedApplication application =
+            new("IDDS 管理主控台", 42, string.Empty, true, status);
+
+        Assert.IsFalse(application.IsStopped);
     }
 
     [TestMethod]
