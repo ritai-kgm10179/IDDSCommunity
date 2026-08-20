@@ -459,6 +459,65 @@ public sealed class DashboardStatisticsTest
         }
     }
 
+    [TestMethod]
+    public void Migration13_UpgradesFromVersion12_NormalizesDatesAndRandomGuids()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-migration13-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+
+            Guid legacyRandomGuid = Guid.NewGuid();
+
+            // 模擬已套用至 Version 12 但遺留隨機 GUID 與斜線日期的狀態
+            database.ExecuteNonQuery(
+                @"INSERT INTO SecurityAgents (AgentId, Name, DisplayName, AssemblyName, Enabled, Serial, OverwriteConfiguration)
+                  VALUES (@p0, 'TlsSslAgent', '遠端桌面安全性代理程式', 'IDDSCommunity.Agents.TerminalServer.dll', 1, 0, 0)",
+                legacyRandomGuid.ToString());
+
+            // 寫入斜線格式日期之事件
+            database.ExecuteNonQuery(
+                "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",
+                "2026/08/19 14:44:00",
+                legacyRandomGuid.ToString(),
+                "192.0.2.70",
+                IntrusionLog.STATUS_INTRUSION_ATTEMPT);
+
+            database.ExecuteNonQuery(
+                "INSERT INTO AgentStatistics(AgentId,FailedLogins,HardLocks,SoftLocks) VALUES(@p0,7,1,2)",
+                legacyRandomGuid.ToString());
+
+            // 確保 SchemaMigrations 包含 Version 12
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 13");
+            Db.SchemaMigrationRunner.Migrate(database.Connection);
+
+            // 驗證 IntrusionLog 的日期已被正規化為破折號 ISO 格式
+            object? rawIncidentTime = database.ExecuteScalar("SELECT IncidentTime FROM IntrusionLog WHERE ClientIP='192.0.2.70'");
+            Assert.IsNotNull(rawIncidentTime);
+            Assert.IsTrue(rawIncidentTime.ToString()!.StartsWith("2026-08-19"), $"預期為 ISO 破折號格式，實際為: {rawIncidentTime}");
+
+            // 驗證 Locks.ReadFailedLoginStatistics 在 30 天查詢視窗內能成功查詢到此筆事件
+            DateTime now = new(2026, 8, 20, 10, 0, 0, DateTimeKind.Utc);
+            FailedLoginStatisticsSnapshot snapshot = Locks.ReadFailedLoginStatistics(now.AddDays(-30), now.AddDays(1));
+            Assert.AreEqual(1, snapshot.Total);
+            Assert.AreEqual(1, snapshot.AttemptsByAgent[WellKnownAgentIds.TerminalServer]);
+
+            // 驗證 AgentStatistics 已正確歸併至 TerminalServer
+            IReadOnlyDictionary<Guid, AgentLockStatistics> lockStats = Locks.ReadAgentLockStatistics();
+            Assert.AreEqual(1, lockStats[WellKnownAgentIds.TerminalServer].HardLocks);
+            Assert.AreEqual(2, lockStats[WellKnownAgentIds.TerminalServer].SoftLocks);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     private static void InsertIncident(Database database, DateTime time, Guid agentId, int action) =>
         database.ExecuteNonQuery(
             "INSERT INTO IntrusionLog(IncidentTime,AgentId,ClientIP,Action,ActionTriggeredByUser) VALUES(@p0,@p1,@p2,@p3,0)",

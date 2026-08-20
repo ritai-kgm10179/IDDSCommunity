@@ -103,6 +103,11 @@ internal static class SchemaMigrationRunner
             CanonicalizePersistedIpAddresses(connection, transaction);
         if (!MigrationApplied(connection, transaction, 12))
             CanonicalizeAgentIdentities(connection, transaction);
+        if (!MigrationApplied(connection, transaction, 13))
+        {
+            CanonicalizeAgentIdentities(connection, transaction);
+            NormalizeIncidentTimestamps(connection, transaction);
+        }
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -153,7 +158,57 @@ internal static class SchemaMigrationRunner
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (12, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (13, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
         transaction.Commit();
+    }
+
+    /// <summary>
+    /// 正規化 IntrusionLog.IncidentTime 時間欄位之字串表示為標準 ISO 格式，
+    /// 確保 SQLite 字串範圍比對在任何環境下皆能正確命中。
+    /// </summary>
+    /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
+    /// <param name="transaction">作用中的移轉交易。</param>
+    private static void NormalizeIncidentTimestamps(SqliteConnection connection, SqliteTransaction transaction)
+    {
+        if (!TableExists(connection, transaction, "IntrusionLog") ||
+            !ColumnExists(connection, transaction, "IntrusionLog", "IncidentTime") ||
+            !ColumnExists(connection, transaction, "IntrusionLog", "Id"))
+            return;
+
+        List<(long Id, string NormalizedTime)> updates = [];
+        using (SqliteCommand select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText = "SELECT Id, IncidentTime FROM IntrusionLog WHERE IncidentTime IS NOT NULL";
+            using SqliteDataReader reader = select.ExecuteReader();
+            while (reader.Read())
+            {
+                long id = reader.GetInt64(0);
+                string rawTime = reader.GetString(1);
+                if (DateTime.TryParse(rawTime, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime dt) ||
+                    DateTime.TryParse(rawTime, out dt))
+                {
+                    string iso = dt.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF", System.Globalization.CultureInfo.InvariantCulture);
+                    if (!string.Equals(rawTime, iso, StringComparison.Ordinal))
+                    {
+                        updates.Add((id, iso));
+                    }
+                }
+            }
+        }
+
+        foreach ((long id, string normalizedTime) in updates)
+        {
+            using SqliteCommand update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE IntrusionLog SET IncidentTime = $time WHERE Id = $id";
+            update.Parameters.AddWithValue("$time", normalizedTime);
+            update.Parameters.AddWithValue("$id", id);
+            update.ExecuteNonQuery();
+        }
     }
 
     private static void CanonicalizeAgentIdentities(SqliteConnection connection, SqliteTransaction transaction)
