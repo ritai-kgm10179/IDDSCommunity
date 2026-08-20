@@ -223,7 +223,7 @@ public bool IsInEditMode { get; set; }
         for (int row = 0; row < 8; row++)
             advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
         advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-        advancedSettingsLayout.Size = new Size(414, 312);
+        advancedSettingsLayout.Size = new Size(392, 312);
 
         checkBoxLockForever.Anchor = AnchorStyles.Left;
         checkBoxLockForever.Margin = Padding.Empty;
@@ -288,11 +288,11 @@ public bool IsInEditMode { get; set; }
         advancedSettingsLayout.Controls.Add(labelFirewallModeDescription, 0, 8);
         advancedSettingsLayout.SetColumnSpan(labelFirewallModeDescription, 2);
         Controls.Add(advancedSettingsLayout);
-
-        buttonSave.Location = new Point(112, 522);
-        buttonDiscard.Location = new Point(220, 522);
+        buttonSave.Location = new Point(112, 516);
+        buttonDiscard.Location = new Point(224, 516);
         AutoScroll = true;
-        Size = new Size(462, 562);
+        AutoScrollMargin = new Size(0, 32);
+        Size = new Size(440, 580);
     }
 
     private static void ConfigureCheckBox(CheckBox checkBox, string text)

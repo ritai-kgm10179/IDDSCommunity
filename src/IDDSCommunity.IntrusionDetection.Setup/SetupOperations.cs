@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
 using System.IO;
@@ -828,6 +828,20 @@ internal static class SetupOperations
 
     private static void KillRunningProcesses()
     {
+        try
+        {
+            using ServiceController sc = new(ServiceName);
+            if (sc.Status != ServiceControllerStatus.Stopped && sc.Status != ServiceControllerStatus.StopPending)
+            {
+                sc.Stop();
+                sc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(5));
+            }
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Stop service before process cleanup", exception);
+        }
+
         string[] targetProcessNames = ["IDDSCommunity.IntrusionDetection.Service", "IDDSCommunity.IntrusionDetection.Admin"];
         foreach (string name in targetProcessNames)
         {
@@ -838,17 +852,26 @@ internal static class SetupOperations
                     using Process p = discoveredProcess;
                     try
                     {
-                        string? mainModulePath = p.MainModule?.FileName;
-                        if (mainModulePath != null && mainModulePath.StartsWith(InstallDirectory, StringComparison.OrdinalIgnoreCase))
+                        string? mainModulePath = null;
+                        try
+                        {
+                            mainModulePath = p.MainModule?.FileName;
+                        }
+                        catch (System.ComponentModel.Win32Exception winEx)
+                        {
+                            LogNonFatal($"Query module path for {name} (PID {p.Id})", winEx);
+                        }
+
+                        if (mainModulePath == null || mainModulePath.StartsWith(InstallDirectory, StringComparison.OrdinalIgnoreCase))
                         {
                             p.Kill(true);
-                            if (!p.WaitForExit(2000))
+                            if (!p.WaitForExit(3000))
                                 throw new System.TimeoutException(SetupText.Format("ProcessStopTimedOut", name));
                         }
                     }
                     catch (Exception exception)
                     {
-                        LogNonFatal($"Inspect process {name}", exception);
+                        LogNonFatal($"Inspect or terminate process {name}", exception);
                     }
                 }
             }
