@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.AccessControl;
@@ -93,8 +93,19 @@ internal static class DatabaseEncryptionKeyStore
         if (!Path.GetFullPath(keyPath).StartsWith(commonApplicationData + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             return;
 
-        FileSecurity security = CreateHardenedFileSecurity();
-        FileSystemAclExtensions.SetAccessControl(new FileInfo(keyPath), security);
+        try
+        {
+            FileSecurity security = CreateHardenedFileSecurity();
+            FileSystemAclExtensions.SetAccessControl(new FileInfo(keyPath), security);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // 非提升權限之操作員或處理程序無 WRITE_DAC 權限，略過 ACL 修改並繼續讀取金鑰
+        }
+        catch (System.Security.SecurityException)
+        {
+            // 權限受限環境略過 ACL 修改
+        }
     }
 
     /// <summary>
@@ -117,6 +128,14 @@ internal static class DatabaseEncryptionKeyStore
         {
             security.AddAccessRule(new FileSystemAccessRule(
                 operatorsGroupSid!,
+                FileSystemRights.Read,
+                AccessControlType.Allow));
+        }
+        else
+        {
+            // 若本機群組尚未由安裝程式建立，暫時授予已驗證使用者讀取權限，避免主控台無法載入資料庫
+            security.AddAccessRule(new FileSystemAccessRule(
+                new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
                 FileSystemRights.Read,
                 AccessControlType.Allow));
         }
