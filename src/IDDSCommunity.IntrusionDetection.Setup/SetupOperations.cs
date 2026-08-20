@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.DirectoryServices.AccountManagement;
 using System.IO;
@@ -522,14 +522,14 @@ internal static class SetupOperations
         Directory.CreateDirectory(dataDir);
         try
         {
+            SecurityIdentifier? operatorsSid = null;
+            using PrincipalContext ctx = new(ContextType.Machine);
+            using GroupPrincipal? operatorsGroup = GroupPrincipal.FindByIdentity(ctx, Globals.IDDSCOMMUNITY_OPERATORS_GROUP_NAME);
+            if (operatorsGroup?.Sid is not null)
+                operatorsSid = operatorsGroup.Sid;
+
             DirectoryInfo dirInfo = new(dataDir);
-            var security = dirInfo.GetAccessControl();
-            security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
-                new SecurityIdentifier(WellKnownSidType.AuthenticatedUserSid, null),
-                System.Security.AccessControl.FileSystemRights.Modify,
-                System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit,
-                System.Security.AccessControl.PropagationFlags.None,
-                System.Security.AccessControl.AccessControlType.Allow));
+            System.Security.AccessControl.DirectorySecurity security = CreateDataDirectorySecurity(operatorsSid);
             dirInfo.SetAccessControl(security);
         }
         catch (Exception exception)
@@ -537,6 +537,60 @@ internal static class SetupOperations
             LogNonFatal("Configure data directory permissions", exception);
         }
     }
+
+    /// <summary>
+    /// 建立資料目錄的存取控制描述元。
+    /// </summary>
+    /// <remarks>
+    /// 僅授予 <c>SYSTEM</c>（完全控制）、<c>BUILTIN\Administrators</c>（完全控制）
+    /// 與選用的 <paramref name="operatorsSid"/>（修改），符合 AGENTS.md 規範第 8 條。
+    /// 禁止對 <c>BUILTIN\Users</c>、<c>Everyone</c>、<c>Authenticated Users</c> 等廣泛群組授予任何存取權限。
+    /// </remarks>
+    /// <param name="operatorsSid">
+    /// <c>IDDSCommunityOperators</c> 群組的 SID；若群組尚未建立則傳入 <see langword="null"/>，此時略過操作人員授權規則。
+    /// </param>
+    /// <returns>已設定繼承保護與明確 ACL 的 <see cref="System.Security.AccessControl.DirectorySecurity"/> 執行個體。</returns>
+    internal static System.Security.AccessControl.DirectorySecurity CreateDataDirectorySecurity(SecurityIdentifier? operatorsSid)
+    {
+        System.Security.AccessControl.DirectorySecurity security = new();
+
+        // 停用繼承並保留現有繼承條目為明確規則，確保子物件（-wal、-shm）遵守相同邊界
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+
+        System.Security.AccessControl.InheritanceFlags inherit =
+            System.Security.AccessControl.InheritanceFlags.ContainerInherit |
+            System.Security.AccessControl.InheritanceFlags.ObjectInherit;
+
+        // SYSTEM：完全控制（服務寫入資料庫與 WAL 所需）
+        security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null),
+            System.Security.AccessControl.FileSystemRights.FullControl,
+            inherit,
+            System.Security.AccessControl.PropagationFlags.None,
+            System.Security.AccessControl.AccessControlType.Allow));
+
+        // Administrators：完全控制（本機管理員維護所需）
+        security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+            System.Security.AccessControl.FileSystemRights.FullControl,
+            inherit,
+            System.Security.AccessControl.PropagationFlags.None,
+            System.Security.AccessControl.AccessControlType.Allow));
+
+        // IDDSCommunityOperators：Modify 繼承（Admin 主控台取得 SQLite WAL 鎖所需）
+        if (operatorsSid is not null)
+        {
+            security.AddAccessRule(new System.Security.AccessControl.FileSystemAccessRule(
+                operatorsSid,
+                System.Security.AccessControl.FileSystemRights.Modify,
+                inherit,
+                System.Security.AccessControl.PropagationFlags.None,
+                System.Security.AccessControl.AccessControlType.Allow));
+        }
+
+        return security;
+    }
+
 
     /// <summary>
     /// 建立（若不存在）供非提升權限管理主控台使用的本機群組，並將目前執行安裝程式的使用者加入其中，

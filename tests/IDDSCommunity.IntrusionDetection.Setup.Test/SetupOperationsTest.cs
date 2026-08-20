@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading;
@@ -6,6 +6,8 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.ServiceProcess;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Setup.Test;
@@ -204,6 +206,84 @@ public sealed class SetupOperationsTest
             yield return child;
             foreach (Control descendant in EnumerateControls(child)) yield return descendant;
         }
+    }
+
+    [TestMethod]
+    public void CreateDataDirectorySecurity_WithoutOperatorsSid_DeniesUnauthorizedPrincipalsAndGrantsSystemAndAdmins()
+    {
+        if (!OperatingSystem.IsWindows())
+            Assert.Inconclusive("NTFS ACL security descriptor verification requires Windows.");
+
+        DirectorySecurity security = SetupOperations.CreateDataDirectorySecurity(operatorsSid: null);
+
+        Assert.IsTrue(security.AreAccessRulesProtected, "資料目錄安全描述元必須停用繼承。");
+
+        SecurityIdentifier builtinUsersSid = new(WellKnownSidType.BuiltinUsersSid, null);
+        SecurityIdentifier worldSid = new(WellKnownSidType.WorldSid, null);
+        SecurityIdentifier authenticatedUserSid = new(WellKnownSidType.AuthenticatedUserSid, null);
+        SecurityIdentifier localSystemSid = new(WellKnownSidType.LocalSystemSid, null);
+        SecurityIdentifier builtinAdminsSid = new(WellKnownSidType.BuiltinAdministratorsSid, null);
+
+        AuthorizationRuleCollection rules = security.GetAccessRules(true, false, typeof(SecurityIdentifier));
+        Assert.IsTrue(rules.Count >= 2, "安全描述元至少必須包含 SYSTEM 與 Administrators 規則。");
+
+        bool hasSystem = false;
+        bool hasAdmins = false;
+
+        foreach (FileSystemAccessRule rule in rules)
+        {
+            Assert.AreNotEqual(builtinUsersSid, rule.IdentityReference, "BUILTIN\\Users 不得出現在資料目錄安全描述元中。");
+            Assert.AreNotEqual(worldSid, rule.IdentityReference, "Everyone 不得出現在資料目錄安全描述元中。");
+            Assert.AreNotEqual(authenticatedUserSid, rule.IdentityReference, "Authenticated Users 不得出現在資料目錄安全描述元中（違反 AGENTS.md 規範第 8 條）。");
+
+            if (rule.IdentityReference.Equals(localSystemSid))
+            {
+                hasSystem = true;
+                Assert.AreEqual(FileSystemRights.FullControl, rule.FileSystemRights, "SYSTEM 必須具有完全控制。");
+                Assert.AreEqual(AccessControlType.Allow, rule.AccessControlType);
+            }
+
+            if (rule.IdentityReference.Equals(builtinAdminsSid))
+            {
+                hasAdmins = true;
+                Assert.AreEqual(FileSystemRights.FullControl, rule.FileSystemRights, "Administrators 必須具有完全控制。");
+                Assert.AreEqual(AccessControlType.Allow, rule.AccessControlType);
+            }
+        }
+
+        Assert.IsTrue(hasSystem, "SYSTEM 必須擁有 FullControl 存取。");
+        Assert.IsTrue(hasAdmins, "BuiltinAdministrators 必須擁有 FullControl 存取。");
+    }
+
+    [TestMethod]
+    public void CreateDataDirectorySecurity_WithOperatorsSid_IncludesModifyRuleForOperators()
+    {
+        if (!OperatingSystem.IsWindows())
+            Assert.Inconclusive("NTFS ACL security descriptor verification requires Windows.");
+
+        // 使用目前使用者的 SID 模擬操作人員群組 SID（CI 環境無法保證群組存在）
+        SecurityIdentifier? operatorsSid = System.Security.Principal.WindowsIdentity.GetCurrent().User;
+        Assert.IsNotNull(operatorsSid, "無法取得目前使用者 SID 作為測試替代。");
+
+        DirectorySecurity security = SetupOperations.CreateDataDirectorySecurity(operatorsSid);
+
+        AuthorizationRuleCollection rules = security.GetAccessRules(true, false, typeof(SecurityIdentifier));
+
+        bool hasOperatorsModify = false;
+        foreach (FileSystemAccessRule rule in rules)
+        {
+            if (rule.IdentityReference.Equals(operatorsSid) && rule.AccessControlType == AccessControlType.Allow)
+            {
+                // Modify 是一組複合旗標；確認至少包含 WriteData（寫入）與 ReadData（讀取）
+                Assert.IsTrue(
+                    rule.FileSystemRights.HasFlag(FileSystemRights.WriteData) &&
+                    rule.FileSystemRights.HasFlag(FileSystemRights.ReadData),
+                    "操作人員規則必須至少包含 ReadData 與 WriteData（Modify 的子集）。");
+                hasOperatorsModify = true;
+            }
+        }
+
+        Assert.IsTrue(hasOperatorsModify, "操作人員 SID 必須在安全描述元中出現並具有 Modify（含）以上的存取權限。");
     }
 
     private sealed class TemporaryDirectory : IDisposable
