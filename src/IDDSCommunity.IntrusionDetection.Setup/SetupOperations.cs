@@ -1037,24 +1037,27 @@ internal static class SetupOperations
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(destination);
         Directory.CreateDirectory(destination);
-        List<(string Source, string Destination, bool IsDirectory)> movedEntries = [];
+        List<(string Source, string Destination)> movedFiles = [];
         try
         {
-            foreach (string entry in Directory.EnumerateFileSystemEntries(source).ToArray())
+            foreach (string sourceFile in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories).ToArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                string destinationEntry = Path.Combine(destination, Path.GetFileName(entry));
-                bool isDirectory = Directory.Exists(entry);
-                MoveFileSystemEntryWithRetry(entry, destinationEntry, isDirectory, cancellationToken);
-                movedEntries.Add((entry, destinationEntry, isDirectory));
+                string destinationFile = Path.Combine(destination, Path.GetRelativePath(source, sourceFile));
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationFile) ?? destination);
+                MoveFileWithRetry(sourceFile, destinationFile, cancellationToken);
+                movedFiles.Add((sourceFile, destinationFile));
             }
         }
         catch (Exception moveFailure)
         {
             try
             {
-                foreach ((string original, string moved, bool isDirectory) in movedEntries.AsEnumerable().Reverse())
-                    MoveFileSystemEntryWithRetry(moved, original, isDirectory, CancellationToken.None);
+                foreach ((string original, string moved) in movedFiles.AsEnumerable().Reverse())
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(original) ?? source);
+                    MoveFileWithRetry(moved, original, CancellationToken.None);
+                }
             }
             catch (Exception rollbackFailure)
             {
@@ -1064,18 +1067,8 @@ internal static class SetupOperations
         }
     }
 
-    private static void MoveFileSystemEntryWithRetry(
-        string source,
-        string destination,
-        bool isDirectory,
-        CancellationToken cancellationToken)
+    private static void MoveFileWithRetry(string source, string destination, CancellationToken cancellationToken)
     {
-        if (isDirectory)
-        {
-            MoveDirectoryWithRetry(source, destination, cancellationToken);
-            return;
-        }
-
         Exception? lastFailure = null;
         for (int attempt = 1; attempt <= DirectoryMoveAttempts; attempt++)
         {
@@ -1098,13 +1091,11 @@ internal static class SetupOperations
 
     private static void ClearDirectoryContents(string directory)
     {
-        foreach (string file in Directory.EnumerateFiles(directory))
+        foreach (string file in Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories))
         {
             File.SetAttributes(file, FileAttributes.Normal);
             File.Delete(file);
         }
-        foreach (string childDirectory in Directory.EnumerateDirectories(directory))
-            Directory.Delete(childDirectory, true);
     }
 
     private static void RunSc(string command, string serviceName, params string[] arguments) => RunSc(command, serviceName, false, arguments);

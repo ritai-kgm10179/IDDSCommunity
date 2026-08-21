@@ -97,7 +97,8 @@ public sealed class SetupOperationsTest
         SetupOperations.MoveDirectoryContentsTransactional(source, destination, CancellationToken.None);
 
         Assert.IsTrue(Directory.Exists(source));
-        Assert.IsFalse(Directory.EnumerateFileSystemEntries(source).Any());
+        Assert.IsFalse(Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories).Any());
+        Assert.IsTrue(Directory.Exists(Path.Combine(source, "plugins")));
         Assert.AreEqual("service", File.ReadAllText(Path.Combine(destination, "service.exe")));
         Assert.AreEqual("agent", File.ReadAllText(Path.Combine(destination, "plugins", "agent.dll")));
     }
