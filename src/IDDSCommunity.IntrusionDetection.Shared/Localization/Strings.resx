@@ -580,6 +580,7 @@
   <data name="Please select plugin assembly" xml:space="preserve"><value>Please select plugin assembly</value></data>
   <data name="None" xml:space="preserve"><value>None</value></data>
   <data name="Agent {0} is not registered." xml:space="preserve"><value>Agent {0} is not registered.</value></data>
+  <data name="Historical agent ({0})" xml:space="preserve"><value>Historical agent ({0})</value></data>
   <data name="Possible intrusion attempt." xml:space="preserve"><value>Possible intrusion attempt.</value></data>
   <data name="Invalid logon from localhost. Local addresses will not be blocked" xml:space="preserve"><value>Invalid logon from localhost. Local addresses will not be blocked</value></data>
   <data name="Invalid logon from safe network!" xml:space="preserve"><value>Invalid logon from safe network!</value></data>

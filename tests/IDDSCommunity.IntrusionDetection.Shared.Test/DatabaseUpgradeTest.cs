@@ -82,10 +82,10 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13)";
-            Assert.AreEqual(13L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14)";
+            Assert.AreEqual(14L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(13L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(14L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ObservationWatermarks'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='SecurityObservationEvents'";

@@ -388,6 +388,36 @@ public sealed class DashboardStatisticsTest
 
         Assert.IsFalse(WellKnownAgentIds.IsWellKnown(Guid.NewGuid()));
         Assert.IsTrue(WellKnownAgentIds.IsWellKnown(WellKnownAgentIds.TerminalServer));
+
+        Assert.IsFalse(WellKnownAgentIds.TryResolveCanonicalGuid(
+            "ED541DED-E7B0-4796-8939-F2A66AAC4154",
+            out Guid unknownGuid));
+        Assert.AreEqual(Guid.Empty, unknownGuid);
+    }
+
+    [TestMethod]
+    public void SecurityAgents_LabelsOrphanedGuidAsHistoricalAgent()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-historical-agent-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            SecurityAgents securityAgents = new(database, new IddsConfig(database));
+            const string orphanedGuid = "ED541DED-E7B0-4796-8939-F2A66AAC4154";
+
+            string displayName = securityAgents.GetDisplayName(orphanedGuid);
+
+            Assert.AreEqual(Localization.Strings.Format("Historical agent ({0})", orphanedGuid), displayName);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
 
     [TestMethod]

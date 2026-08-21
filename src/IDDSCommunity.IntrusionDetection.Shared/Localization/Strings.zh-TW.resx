@@ -580,6 +580,7 @@
   <data name="Please select plugin assembly" xml:space="preserve"><value>請選擇代理程式組件</value></data>
   <data name="None" xml:space="preserve"><value>無</value></data>
   <data name="Agent {0} is not registered." xml:space="preserve"><value>代理程式 {0} 尚未註冊。</value></data>
+  <data name="Historical agent ({0})" xml:space="preserve"><value>歷史代理程式（{0}）</value></data>
   <data name="Possible intrusion attempt." xml:space="preserve"><value>偵測到可能的入侵嘗試。</value></data>
   <data name="Invalid logon from localhost. Local addresses will not be blocked" xml:space="preserve"><value>本機登入無效；本機位址不會被封鎖。</value></data>
   <data name="Invalid logon from safe network!" xml:space="preserve"><value>安全網路發生無效登入。</value></data>

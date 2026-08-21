@@ -220,6 +220,9 @@ public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
             _ = RollingDiagnosticLog.Write(component, summary, exception);
         }
 
+        if (isGuid)
+            return Localization.Strings.Format("Historical agent ({0})", agentId);
+
         return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }
     /// <summary>

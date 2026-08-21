@@ -108,6 +108,8 @@ internal static class SchemaMigrationRunner
             CanonicalizeAgentIdentities(connection, transaction);
             NormalizeIncidentTimestamps(connection, transaction);
         }
+        if (!MigrationApplied(connection, transaction, 14))
+            CanonicalizeAgentIdentities(connection, transaction);
 
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
@@ -160,6 +162,10 @@ internal static class SchemaMigrationRunner
         journal.ExecuteNonQuery();
         journal.Parameters.Clear();
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (13, $appliedUtc)";
+        journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
+        journal.ExecuteNonQuery();
+        journal.Parameters.Clear();
+        journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (14, $appliedUtc)";
         journal.Parameters.AddWithValue("$appliedUtc", DateTimeOffset.UtcNow.ToString("O"));
         journal.ExecuteNonQuery();
         transaction.Commit();

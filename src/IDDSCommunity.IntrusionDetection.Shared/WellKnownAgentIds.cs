@@ -190,7 +190,13 @@ public static class WellKnownAgentIds
         }
 
         if (Guid.TryParse(rawIdentifier, out canonicalGuid))
-            return true;
+        {
+            if (IsWellKnown(canonicalGuid))
+                return true;
+
+            canonicalGuid = Guid.Empty;
+            return false;
+        }
 
         string trimmed = rawIdentifier.Trim();
         string shortName = GetShortName(trimmed);
