@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 
@@ -12,8 +12,14 @@ public sealed class LockoutPolicyTest
         Assert.AreEqual(2, LockoutPolicy.CalculateSoftLockMinutes(1, 1));
         Assert.AreEqual(4, LockoutPolicy.CalculateSoftLockMinutes(1, 2));
         Assert.AreEqual(32, LockoutPolicy.CalculateSoftLockMinutes(1, 5));
-        Assert.AreEqual(60, LockoutPolicy.CalculateSoftLockMinutes(1, 6));
-        Assert.AreEqual(60, LockoutPolicy.CalculateSoftLockMinutes(1, int.MaxValue));
+        Assert.AreEqual(64, LockoutPolicy.CalculateSoftLockMinutes(1, 6));
+        Assert.AreEqual(43200, LockoutPolicy.CalculateSoftLockMinutes(1, 20));
+        Assert.AreEqual(43200, LockoutPolicy.CalculateSoftLockMinutes(1, int.MaxValue));
+
+        // 測試自訂上限
+        Assert.AreEqual(60, LockoutPolicy.CalculateSoftLockMinutes(1, 6, 60));
+        Assert.AreEqual(60, LockoutPolicy.CalculateSoftLockMinutes(1, int.MaxValue, 60));
+        Assert.AreEqual(1440, LockoutPolicy.CalculateSoftLockMinutes(5, 10, 1440));
     }
 
     [TestMethod]
