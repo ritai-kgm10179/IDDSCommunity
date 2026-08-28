@@ -59,6 +59,30 @@ public class LanguageManagerTest
             Strings.Get("Restore the settings on this page to their defaults? Unsaved changes will be replaced."));
     }
     /// <summary>
+    /// 驗證通知信主旨與內文提供完整的英文與正體中文在地化支援，並符合全形標點與盤古之白規範。
+    /// </summary>
+    [TestMethod]
+    public void NotificationEmail_Localization_FormatsProperlyInChineseAndEnglish()
+    {
+        LanguageManager.Instance.Initialize("zh-TW");
+        Assert.AreEqual("IDDS 社群版：解除封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Unlock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS 社群版：暫時封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Soft lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS 社群版：強制封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Hard lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被強制封鎖。", Strings.Format("Client with IP address {0} was hard locked.", "192.168.1.100"));
+        Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被暫時封鎖。", Strings.Format("Client with IP address {0} was soft locked.", "192.168.1.100"));
+        Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被解除封鎖。", Strings.Format("Client with IP address {0} was unlocked.", "192.168.1.100"));
+        Assert.AreEqual("嘗試強制封鎖 IP 位址為 192.168.1.100 之用戶端時發生錯誤：\r\nAccess denied", Strings.Format("Error while trying to hard lock client with IP address {0}:\r\n{1}", "192.168.1.100", "Access denied"));
+
+        LanguageManager.Instance.Initialize("en-US");
+        Assert.AreEqual("IDDS Community: Unlock notification (192.168.1.100)", Strings.Format("IDDS Community: Unlock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS Community: Soft lock notification (192.168.1.100)", Strings.Format("IDDS Community: Soft lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS Community: Hard lock notification (192.168.1.100)", Strings.Format("IDDS Community: Hard lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("Client with IP address 192.168.1.100 was hard locked.", Strings.Format("Client with IP address {0} was hard locked.", "192.168.1.100"));
+        Assert.AreEqual("Client with IP address 192.168.1.100 was soft locked.", Strings.Format("Client with IP address {0} was soft locked.", "192.168.1.100"));
+        Assert.AreEqual("Client with IP address 192.168.1.100 was unlocked.", Strings.Format("Client with IP address {0} was unlocked.", "192.168.1.100"));
+        Assert.AreEqual("Error while trying to hard lock client with IP address 192.168.1.100:\r\nAccess denied", Strings.Format("Error while trying to hard lock client with IP address {0}:\r\n{1}", "192.168.1.100", "Access denied"));
+    }
+    /// <summary>
     /// 執行 test unsupported culture fallback 作業。
     /// </summary>
 

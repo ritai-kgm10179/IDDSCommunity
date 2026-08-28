@@ -789,13 +789,13 @@
   <data name="Database.BackupRetention" xml:space="preserve"><value>備份保留清理</value></data>
   <data name="Firewall.SoftLock" xml:space="preserve"><value>套用軟封鎖</value></data>
   <data name="Firewall.HardLock" xml:space="preserve"><value>套用硬封鎖</value></data>
-  <data name="Firewall.Unlock" xml:space="preserve"><value>解封鎖 IP 位址</value></data>
+  <data name="Firewall.Unlock" xml:space="preserve"><value>解除封鎖 IP 位址</value></data>
   <data name="Report.Daily" xml:space="preserve"><value>每日報表產生</value></data>
   <data name="Report.Weekly" xml:space="preserve"><value>每週報表產生</value></data>
   <data name="Report.Monthly" xml:space="preserve"><value>每月報表產生</value></data>
   <data name="Runtime.Start" xml:space="preserve"><value>服務已啟動</value></data>
   <data name="Runtime.Stop" xml:space="preserve"><value>服務已停止</value></data>
-  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解除封鎖通知 ({0})</value></data>
   <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：暫時封鎖通知 ({0})</value></data>
   <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：強制封鎖通知 ({0})</value></data>
   <data name="FileZilla Security Agent" xml:space="preserve">
@@ -844,4 +844,10 @@
   <data name="Diagnostic export failed: {0}" xml:space="preserve"><value>診斷匯出失敗：{0}</value></data>
   <data name="IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]" xml:space="preserve"><value>IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf 路徑&gt;] [--output &lt;json 路徑&gt;]</value></data>
   <data name="By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory." xml:space="preserve"><value>未指定時讀取 %ProgramData%\IDDS Community\iddscommunity.dbf，並輸出至目前目錄。</value></data>
+  <data name="Client with IP address {0} was hard locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被強制封鎖。</value></data>
+  <data name="Client with IP address {0} was soft locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被暫時封鎖。</value></data>
+  <data name="Client with IP address {0} was unlocked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被解除封鎖。</value></data>
+  <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試強制封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
+  <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試暫時封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
+  <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試解除封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
 </root>

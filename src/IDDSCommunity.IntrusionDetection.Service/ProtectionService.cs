@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -281,7 +281,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         if (ClientIpAddressHardLocked != null)
         {
-            ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, "hard");
+            ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, LockType.HardLock);
             co.AgentId = agentId;
             ClientIpAddressHardLocked(co, EventArgs.Empty);
         }
@@ -291,9 +291,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// </summary>
     /// <param name="ipAddress">ip address 的值。</param>
     /// <param name="ex">The exception associated with the operation.</param>
-    /// <param name="info">info 的值。</param>
+    /// <param name="lockType">lockType 的值。</param>
     /// <returns>傳回 get client operation information 的結果。</returns>
-    private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception? ex, string info)
+    private static ClientOperationInformation GetClientOperationInformation(string ipAddress, Exception? ex, LockType lockType)
     {
         ClientOperationInformation op = new()
         {
@@ -303,11 +303,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         if (ex != null)
         {
             op.HasError = true;
-            op.Message = "Error while trying to " + info + " lock client with IP address " + ipAddress + ":\r\n" + ex.Message;
+            op.Message = lockType == LockType.HardLock
+                ? Strings.Format("Error while trying to hard lock client with IP address {0}:\r\n{1}", ipAddress, ex.Message)
+                : Strings.Format("Error while trying to soft lock client with IP address {0}:\r\n{1}", ipAddress, ex.Message);
         }
         else
         {
-            op.Message = "Client with IP address " + ipAddress + " was " + info + " locked";
+            op.Message = lockType == LockType.HardLock
+                ? Strings.Format("Client with IP address {0} was hard locked.", ipAddress)
+                : Strings.Format("Client with IP address {0} was soft locked.", ipAddress);
         }
         return op;
     }
@@ -321,7 +325,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     {
         if (ClientIpAddressSoftLocked != null)
         {
-            ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, "soft");
+            ClientOperationInformation co = GetClientOperationInformation(lockItem.IpAddress, ex, LockType.SoftLock);
             co.AgentId = agentId;
             ClientIpAddressSoftLocked(co, EventArgs.Empty);
         }
@@ -344,11 +348,11 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             if (ex != null)
             {
                 op.HasError = true;
-                op.Message = "Error while unlocking " + lockItem.IpAddress + ":\r\n" + ex.Message;
+                op.Message = Strings.Format("Error while unlocking client with IP address {0}:\r\n{1}", lockItem.IpAddress, ex.Message);
             }
             else
             {
-                op.Message = "Client with IP address " + lockItem.IpAddress + " was unlocked";
+                op.Message = Strings.Format("Client with IP address {0} was unlocked.", lockItem.IpAddress);
             }
             ClientIpAddressUnlocked(op, EventArgs.Empty);
         }

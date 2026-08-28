@@ -844,5 +844,11 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Diagnostic export failed: {0}" xml:space="preserve"><value>Diagnostic export failed: {0}</value></data>
   <data name="IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]" xml:space="preserve"><value>IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]</value></data>
   <data name="By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory." xml:space="preserve"><value>By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory.</value></data>
+  <data name="Client with IP address {0} was hard locked." xml:space="preserve"><value>Client with IP address {0} was hard locked.</value></data>
+  <data name="Client with IP address {0} was soft locked." xml:space="preserve"><value>Client with IP address {0} was soft locked.</value></data>
+  <data name="Client with IP address {0} was unlocked." xml:space="preserve"><value>Client with IP address {0} was unlocked.</value></data>
+  <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}</value></data>
+  <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}</value></data>
+  <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while unlocking client with IP address {0}:&#xD;&#xA;{1}</value></data>
 </root>
 
