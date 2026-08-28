@@ -89,7 +89,7 @@
             this.smartLabel7.AutoSize = true;
             this.smartLabel7.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
-            this.smartLabel7.Location = new System.Drawing.Point(631, 8);
+            this.smartLabel7.Location = new System.Drawing.Point(615, 8);
             this.smartLabel7.Name = "smartLabel7";
             this.smartLabel7.Selected = false;
             this.smartLabel7.SelectedColor = System.Drawing.Color.Empty;
@@ -102,7 +102,7 @@
             this.smartLabel6.AutoSize = true;
             this.smartLabel6.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
-            this.smartLabel6.Location = new System.Drawing.Point(508, 8);
+            this.smartLabel6.Location = new System.Drawing.Point(455, 8);
             this.smartLabel6.Name = "smartLabel6";
             this.smartLabel6.Selected = false;
             this.smartLabel6.SelectedColor = System.Drawing.Color.Empty;
@@ -115,7 +115,7 @@
             this.smartLabel5.AutoSize = true;
             this.smartLabel5.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
-            this.smartLabel5.Location = new System.Drawing.Point(230, 8);
+            this.smartLabel5.Location = new System.Drawing.Point(235, 8);
             this.smartLabel5.Name = "smartLabel5";
             this.smartLabel5.Selected = false;
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
@@ -128,7 +128,7 @@
             this.smartLabel4.AutoSize = true;
             this.smartLabel4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.smartLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
-            this.smartLabel4.Location = new System.Drawing.Point(130, 8);
+            this.smartLabel4.Location = new System.Drawing.Point(125, 8);
             this.smartLabel4.Name = "smartLabel4";
             this.smartLabel4.Selected = false;
             this.smartLabel4.SelectedColor = System.Drawing.Color.Empty;
@@ -381,7 +381,7 @@
             this.dataGridViewColumnTypeName.ReadOnly = true;
             this.dataGridViewColumnTypeName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnTypeName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.dataGridViewColumnTypeName.Width = 90;
+            this.dataGridViewColumnTypeName.Width = 85;
             //
             // dataGridViewColumnIpAddress
             //
@@ -390,6 +390,7 @@
             this.dataGridViewColumnIpAddress.ReadOnly = true;
             this.dataGridViewColumnIpAddress.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnIpAddress.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.dataGridViewColumnIpAddress.Width = 110;
             //
             // dataGridViewColumnAgent
             //
@@ -398,7 +399,7 @@
             this.dataGridViewColumnAgent.ReadOnly = true;
             this.dataGridViewColumnAgent.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnAgent.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.dataGridViewColumnAgent.Width = 280;
+            this.dataGridViewColumnAgent.Width = 220;
             //
             // dataGridViewColumnLockDate
             //
@@ -407,7 +408,7 @@
             this.dataGridViewColumnLockDate.ReadOnly = true;
             this.dataGridViewColumnLockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnLockDate.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.dataGridViewColumnLockDate.Width = 120;
+            this.dataGridViewColumnLockDate.Width = 160;
             //
             // dataGridViewColumnUnlockDate
             //
@@ -416,7 +417,7 @@
             this.dataGridViewColumnUnlockDate.ReadOnly = true;
             this.dataGridViewColumnUnlockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnUnlockDate.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.dataGridViewColumnUnlockDate.Width = 120;
+            this.dataGridViewColumnUnlockDate.Width = 160;
             //
             // LockId
             //

@@ -375,7 +375,7 @@
             this.LatestEntry.ReadOnly = true;
             this.LatestEntry.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.LatestEntry.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.LatestEntry.Width = 125;
+            this.LatestEntry.Width = 155;
             //
             // NumberOfEvents
             //

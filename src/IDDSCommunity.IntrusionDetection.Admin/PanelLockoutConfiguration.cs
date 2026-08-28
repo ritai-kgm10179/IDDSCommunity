@@ -215,8 +215,8 @@ public bool IsInEditMode { get; set; }
     {
         advancedSettingsLayout.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         advancedSettingsLayout.ColumnCount = 2;
-        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 59F));
-        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 41F));
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75F));
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
         advancedSettingsLayout.Location = new Point(24, 187);
         advancedSettingsLayout.Margin = Padding.Empty;
         advancedSettingsLayout.Name = "advancedSettingsLayout";
@@ -224,7 +224,7 @@ public bool IsInEditMode { get; set; }
         for (int row = 0; row < 8; row++)
             advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
         advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-        advancedSettingsLayout.Size = new Size(392, 312);
+        advancedSettingsLayout.Size = new Size(420, 312);
 
         checkBoxLockForever.Anchor = AnchorStyles.Left;
         checkBoxLockForever.Margin = Padding.Empty;

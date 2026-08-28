@@ -23,8 +23,8 @@ public partial class IDDSCommunityDashboard : UserControl
         InitializeComponent();
         labelCrossAgentAlerts.Font = new System.Drawing.Font("Segoe UI", 8F);
         labelCrossAgentAlerts.ForeColor = System.Drawing.Color.White;
-        labelCrossAgentAlerts.Location = new System.Drawing.Point(150, 8);
-        labelCrossAgentAlerts.Size = new System.Drawing.Size(92, 32);
+        labelCrossAgentAlerts.Location = new System.Drawing.Point(115, 8);
+        labelCrossAgentAlerts.Size = new System.Drawing.Size(127, 20);
         labelCrossAgentAlerts.TextAlign = System.Drawing.ContentAlignment.TopRight;
         panelUnsuccessfulLogins.Controls.Add(labelCrossAgentAlerts);
         SetCrossAgentAlerts(0);
