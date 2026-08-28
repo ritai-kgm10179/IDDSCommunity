@@ -13,15 +13,15 @@ public class Locks
 
 
     /// <summary>
-    /// Determines whether s updates.
+    /// 判斷自指定時間戳記以來資料庫中的封鎖記錄是否有更新。
     /// </summary>
-    /// <param name="lastUpdate">last update參數。</param>
-    /// <returns>若s updates傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    /// <param name="lastUpdate">前次更新時間戳記。</param>
+    /// <returns>若有更新傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public static bool HasUpdates(DateTime lastUpdate)
     {
         if (Database.Instance.IsConfigured)
         {
-            object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where LastUpdate>@p0", lastUpdate);
+            object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where coalesce(LastUpdate, LockDate)>@p0", lastUpdate);
             if (result != null && int.TryParse(result.ToString(), out int count))
             {
                 return count > 0;
@@ -65,16 +65,16 @@ public class Locks
         return result;
     }
     /// <summary>
-    /// Reads locks.
+    /// 讀取目前所有生效中之硬封鎖與軟封鎖記錄。
     /// </summary>
-    /// <returns>傳回read locks結果。</returns>
+    /// <returns>包含封鎖識別碼、客戶端 IP、封鎖時間、預計解鎖時間、代理程式名稱與狀態之資料讀取器。</returns>
     public static IDataReader ReadLocks()
     {
         if (Database.Instance.IsConfigured)
         {
-            return Database.Instance.ExecuteReader(@"select l.LockId, i.ClientIp, l.LockDate, l.UnlockDate,i.IncidentTime, a.DisplayName, l.status
-                                                        from Locks l inner join IntrusionLog i on l.TriggerIncident = i.Id
-                                                            inner join SecurityAgents a on i.AgentId = a.AgentId
+            return Database.Instance.ExecuteReader(@"select l.LockId, coalesce(nullif(l.IpAddress, ''), i.ClientIp, '') as ClientIp, l.LockDate, l.UnlockDate, coalesce(i.IncidentTime, l.LockDate) as IncidentTime, coalesce(a.DisplayName, '') as DisplayName, l.status
+                                                        from Locks l left join IntrusionLog i on l.TriggerIncident = i.Id
+                                                            left join SecurityAgents a on i.AgentId = a.AgentId
                                                         where l.status in (@p0,@p1) order by l.LockDate desc", Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
         }
         else
