@@ -82,6 +82,7 @@ public IDDSCommunitySecurityLog()
         comboBoxAgentSelection.DisplayMember = "DisplayName";
         comboBoxAgentSelection.ValueMember = "Id";
         comboBoxAgentSelection.DropDownStyle = ComboBoxStyle.DropDownList;
+        comboBoxAgentSelection.DropDownWidth = 320;
         comboBoxAgentSelection.Items.Add(new AgentFilter(new Guid(ALL_AGENTS), Strings.Get("All Agents")));
         comboBoxAgentSelection.SelectedIndex = 0;
         comboBoxAgentSelection.SelectionChangeCommitted += new EventHandler(comboBoxAgentSelection_SelectionChangeCommitted);

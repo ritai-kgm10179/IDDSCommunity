@@ -215,22 +215,22 @@ public bool IsInEditMode { get; set; }
     {
         advancedSettingsLayout.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         advancedSettingsLayout.ColumnCount = 2;
-        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 75F));
-        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+        advancedSettingsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
         advancedSettingsLayout.Location = new Point(24, 187);
         advancedSettingsLayout.Margin = Padding.Empty;
         advancedSettingsLayout.Name = "advancedSettingsLayout";
         advancedSettingsLayout.RowCount = 9;
         for (int row = 0; row < 8; row++)
             advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-        advancedSettingsLayout.Size = new Size(420, 312);
+        advancedSettingsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
+        advancedSettingsLayout.Size = new Size(460, 316);
 
         checkBoxLockForever.Anchor = AnchorStyles.Left;
         checkBoxLockForever.Margin = Padding.Empty;
 
         labelSemanticDeduplicationSeconds.AutoEllipsis = true;
-        labelSemanticDeduplicationSeconds.AutoSize = false;
+        labelSemanticDeduplicationSeconds.AutoSize = true;
         labelSemanticDeduplicationSeconds.Dock = DockStyle.Fill;
         labelSemanticDeduplicationSeconds.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
         labelSemanticDeduplicationSeconds.ForeColor = Color.FromArgb(102, 102, 102);
@@ -259,12 +259,13 @@ public bool IsInEditMode { get; set; }
             Shared.Localization.Strings.Get("Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist."));
 
         labelFirewallMode.AutoEllipsis = true;
-        labelFirewallMode.AutoSize = false;
+        labelFirewallMode.AutoSize = true;
         labelFirewallMode.Dock = DockStyle.Fill;
         labelFirewallMode.Margin = new Padding(0, 0, 8, 0);
         labelFirewallMode.TextAlign = ContentAlignment.MiddleLeft;
         comboBoxFirewallMode.Dock = DockStyle.Fill;
         comboBoxFirewallMode.Margin = new Padding(0, 3, 0, 3);
+        comboBoxFirewallMode.DropDownWidth = 260;
         labelFirewallModeDescription.AutoEllipsis = true;
         labelFirewallModeDescription.Dock = DockStyle.Fill;
         labelFirewallModeDescription.Margin = Padding.Empty;
@@ -309,7 +310,7 @@ public bool IsInEditMode { get; set; }
         Controls.Add(actionButtonsLayout);
         AutoScroll = true;
         AutoScrollMargin = new Size(0, 32);
-        Size = new Size(440, 580);
+        Size = new Size(460, 580);
     }
 
     private static void ConfigureCheckBox(CheckBox checkBox, string text)
@@ -336,7 +337,7 @@ public bool IsInEditMode { get; set; }
         SmartLabel label = new()
         {
             AutoEllipsis = true,
-            AutoSize = false,
+            AutoSize = true,
             Dock = DockStyle.Fill,
             Font = new Font("Segoe UI", 9F),
             ForeColor = Color.FromArgb(102, 102, 102),

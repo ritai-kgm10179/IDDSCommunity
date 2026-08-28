@@ -26,6 +26,7 @@ public sealed class PanelLanguageSettings : UserControl
         languageSelector = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
+            DropDownWidth = 240,
             Font = new Font("Segoe UI", 9F),
             ForeColor = BodyTextColor,
             Location = new Point(15, 70),

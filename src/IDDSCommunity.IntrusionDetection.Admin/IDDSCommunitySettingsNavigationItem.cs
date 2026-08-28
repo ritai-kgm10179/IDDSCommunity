@@ -17,29 +17,39 @@ public event EventHandler? NavigationClicked;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
-    public IDDSCommunitySettingsNavigationItem() => InitializeComponent();
+    public IDDSCommunitySettingsNavigationItem()
+    {
+        InitializeComponent();
+        AccessibleRole = AccessibleRole.PushButton;
+    }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 IsSelected。
     /// </summary>
-public bool IsSelected { get; set; }
+    public bool IsSelected { get; set; }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 SelectedIcon。
     /// </summary>
-public Image? SelectedIcon { get; set; }
+    public Image? SelectedIcon { get; set; }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 UnselectedIcon。
     /// </summary>
-public Image? UnselectedIcon { get; set; }
+    public Image? UnselectedIcon { get; set; }
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 本地化顯示名稱。
     /// </summary>
-public string DisplayName
+    public string DisplayName
     {
-        get => smartLabelAgentName.Text; set => smartLabelAgentName.Text = value;
+        get => smartLabelAgentName.Text;
+        set
+        {
+            smartLabelAgentName.Text = value;
+            AccessibleName = value;
+            AccessibleDescription = value;
+        }
     }
     /// <summary>
     /// 處理 on paint 事件。
@@ -60,6 +70,12 @@ public string DisplayName
             pictureBoxNavigationIcon.Image = UnselectedIcon;
         }
         base.OnPaint(e);
+        if (Focused)
+        {
+            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1.5F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            Rectangle focusRect = new(1, 1, Math.Max(1, Width - 3), Math.Max(1, Height - 3));
+            e.Graphics.DrawRectangle(focusPen, focusRect);
+        }
     }
 
 

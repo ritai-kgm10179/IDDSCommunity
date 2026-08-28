@@ -22,7 +22,23 @@ public event EventHandler? SecurityAgentConfigurationRequest;
     /// <summary>
     /// 初始化 <see cref="PluginItem"/> 類別的新執行個體。
     /// </summary>
-    public PluginItem() => InitializeComponent();
+    public PluginItem()
+    {
+        InitializeComponent();
+        AccessibleRole = AccessibleRole.Grouping;
+    }
+
+    /// <inheritdoc/>
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+        if (Focused)
+        {
+            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1.5F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            Rectangle focusRect = new(1, 1, Math.Max(1, Width - 3), Math.Max(1, Height - 3));
+            e.Graphics.DrawRectangle(focusPen, focusRect);
+        }
+    }
     /// <summary>
     /// Sets soft locks.
     /// </summary>
@@ -106,11 +122,13 @@ public SecurityAgent SecurityAgent
             return;
 
         string localizedStatus = Strings.Get(enabled ? "enabled" : "disabled");
-        pictureBoxEnabledState.AccessibleName = $"{Strings.Get("Agent status")}: {localizedStatus}";
-        pictureBoxEnabledState.AccessibleDescription = Strings.Format(
+        AccessibleName = displayName;
+        AccessibleDescription = Strings.Format(
             "The security agent {0} is {1}. Double-click to configure this agent.",
             displayName,
             localizedStatus);
+        pictureBoxEnabledState.AccessibleName = $"{Strings.Get("Agent status")}: {localizedStatus}";
+        pictureBoxEnabledState.AccessibleDescription = AccessibleDescription;
         toolTip1.ToolTipTitle = Strings.Get("Agent status");
         toolTip1.SetToolTip(pictureBoxEnabledState, pictureBoxEnabledState.AccessibleDescription);
     }
