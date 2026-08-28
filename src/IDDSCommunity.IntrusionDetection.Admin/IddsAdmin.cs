@@ -637,7 +637,17 @@ public partial class IddsAdmin : Form
                 DateTime lockDate = DateTime.SpecifyKind(lockDateUtc, DateTimeKind.Utc).ToLocalTime();
                 DateTime unlockDate = DateTime.SpecifyKind(unlockDateUtc, DateTimeKind.Utc).ToLocalTime();
                 int status = Shared.Db.DbValueConverter.ToInt(reader["Status"]);
-                locks.Add(new AdminLockRow(Shared.Db.DbValueConverter.ToInt(reader["LockId"]), status, Shared.Db.DbValueConverter.ToString(reader["ClientIp"]), Shared.Db.DbValueConverter.ToString(reader["DisplayName"]), lockDate, unlockDate));
+                string agentId = Shared.Db.DbValueConverter.ToString(reader["AgentId"]);
+                string displayName = Shared.Db.DbValueConverter.ToString(reader["DisplayName"]);
+                if (!string.IsNullOrWhiteSpace(agentId))
+                {
+                    displayName = SecurityAgents.Instance.GetDisplayName(agentId);
+                }
+                else if (string.IsNullOrWhiteSpace(displayName))
+                {
+                    displayName = Shared.Localization.Strings.Get("System");
+                }
+                locks.Add(new AdminLockRow(Shared.Db.DbValueConverter.ToInt(reader["LockId"]), status, Shared.Db.DbValueConverter.ToString(reader["ClientIp"]), displayName, lockDate, unlockDate));
             }
         }
         if (mode == AdminRefreshMode.Dashboard)

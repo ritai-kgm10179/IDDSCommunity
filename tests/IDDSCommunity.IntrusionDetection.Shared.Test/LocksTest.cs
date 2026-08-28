@@ -115,4 +115,43 @@ public class LocksTest
         bool hasUpdates = Locks.HasUpdates(DateTime.UtcNow.AddMinutes(-5));
         Assert.IsTrue(hasUpdates, "當 LastUpdate 為 NULL 時，應能藉由 LockDate 成功判斷存在更新。");
     }
+
+    /// <summary>
+    /// 驗證 ReadLocks 能自關聯之 IntrusionLog 正確傳回 AgentId。
+    /// </summary>
+    [TestMethod]
+    public void ReadLocks_WithIncidentAgentId_ReturnsAgentId()
+    {
+        string targetIp = "198.51.100.77";
+        Guid agentGuid = WellKnownAgentIds.WindowsNetworkLogon;
+        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, agentGuid, targetIp, IntrusionLog.STATUS_INTRUSION_ATTEMPT, false);
+
+        Lock l = new()
+        {
+            IpAddress = targetIp,
+            LockDate = DateTime.UtcNow,
+            UnlockDate = DateTime.UtcNow.AddDays(1),
+            Port = 445,
+            Status = Lock.LOCK_STATUS_HARDLOCK,
+            NumberOfSoftLocks = 0,
+            TriggerIncident = incidentId
+        };
+        l.Id = Locks.CreateLock(l);
+
+        bool found = false;
+        using System.Data.IDataReader reader = Locks.ReadLocks();
+        while (reader.Read())
+        {
+            long lockId = Db.DbValueConverter.ToInt64(reader["LockId"]);
+            if (lockId == l.Id)
+            {
+                found = true;
+                string readAgentId = Db.DbValueConverter.ToString(reader["AgentId"]);
+                Assert.IsTrue(Guid.TryParse(readAgentId, out Guid parsedGuid) && parsedGuid == agentGuid);
+                break;
+            }
+        }
+
+        Assert.IsTrue(found, "ReadLocks 應成功傳回包含關聯 IntrusionLog 之 AgentId。");
+    }
 }

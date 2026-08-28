@@ -72,9 +72,9 @@ public class Locks
     {
         if (Database.Instance.IsConfigured)
         {
-            return Database.Instance.ExecuteReader(@"select l.LockId, coalesce(nullif(l.IpAddress, ''), i.ClientIp, '') as ClientIp, l.LockDate, l.UnlockDate, coalesce(i.IncidentTime, l.LockDate) as IncidentTime, coalesce(a.DisplayName, '') as DisplayName, l.status
+            return Database.Instance.ExecuteReader(@"select l.LockId, coalesce(nullif(l.IpAddress, ''), i.ClientIp, '') as ClientIp, l.LockDate, l.UnlockDate, coalesce(i.IncidentTime, l.LockDate) as IncidentTime, coalesce(a.DisplayName, '') as DisplayName, coalesce(i.AgentId, '') as AgentId, l.status
                                                         from Locks l left join IntrusionLog i on l.TriggerIncident = i.Id
-                                                            left join SecurityAgents a on i.AgentId = a.AgentId
+                                                            left join SecurityAgents a on lower(i.AgentId) = lower(a.AgentId)
                                                         where l.status in (@p0,@p1) order by l.LockDate desc", Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
         }
         else
