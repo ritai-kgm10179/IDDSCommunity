@@ -32,6 +32,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly WebhookNotificationService webhookNotificationService;
     private readonly SyslogNotificationService syslogNotificationService;
     private readonly MetricsHttpServer metricsHttpServer;
+    private readonly CloudPerimeter.CloudPerimeterService cloudPerimeterService;
+    private readonly SelfService.SelfServiceUnblockServer selfServiceUnblockServer;
+    private readonly SlowAndLowAttackDetector slowAndLowAttackDetector;
     private readonly SecurityAgents securityAgents;
     private readonly ReportScheduler reportScheduler;
     private readonly Statistics statistics;
@@ -119,6 +122,27 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         this.webhookNotificationService = new WebhookNotificationService(notificationSettings);
         this.syslogNotificationService = new SyslogNotificationService(notificationSettings);
         this.metricsHttpServer = new MetricsHttpServer(notificationSettings, database);
+        var cloudSettings = new Shared.CloudPerimeter.CloudPerimeterSettings
+        {
+            EnableCloudPerimeter = configuration.EnableCloudPerimeter,
+            ProviderType = configuration.CloudPerimeterType,
+            ApiKey = configuration.CloudPerimeterApiKey,
+            EndpointUrl = configuration.CloudPerimeterEndpoint,
+            ResourceId = configuration.CloudPerimeterResourceId,
+            SecondaryId = configuration.CloudPerimeterSecondaryId,
+            TertiaryId = configuration.CloudPerimeterTertiaryId
+        };
+        this.cloudPerimeterService = new CloudPerimeter.CloudPerimeterService(cloudSettings);
+        var portalSettings = new Shared.SelfService.SelfServicePortalSettings
+        {
+            EnableSelfServicePortal = configuration.EnableSelfServicePortal,
+            PortalPort = configuration.SelfServicePortalPort,
+            PortalListenIp = configuration.SelfServicePortalListenIp,
+            TotpBase32Secret = configuration.SelfServiceTotpSecret
+        };
+        this.selfServiceUnblockServer = new SelfService.SelfServiceUnblockServer(portalSettings, database);
+        this.slowAndLowAttackDetector = new SlowAndLowAttackDetector(24.0, configuration.SlowAndLowAnomalyThreshold);
+        this.slowAndLowAttackDetector.SlowAndLowAttackDetected += HandleSlowAndLowAttackDetected;
         this.securityAgents = securityAgents;
         this.reportScheduler = reportScheduler;
         this.statistics = statistics;
@@ -270,6 +294,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCKED, false);
         }
         SendInfoMail(op, LockType.None);
+        _ = cloudPerimeterService.NotifyUnblockAsync(op.IpAddress);
     }
     /// <summary>
     /// 處理 client ip address soft locked 事件。
@@ -660,6 +685,7 @@ public bool LimitMailSent { get; set; }
                     break;
                 case LockType.HardLock:
                     OnClientIpAddressHardLocked(lockItem, null, reportingAgent.Id);
+                    _ = cloudPerimeterService.NotifyBlockAsync(lockItem.IpAddress, reportingAgent.Name ?? "IDDS HardLock");
                     break;
             }
         }
@@ -755,6 +781,9 @@ public bool LimitMailSent { get; set; }
             // 啟動 Prometheus Metrics HTTP 服務
             metricsHttpServer.Start();
 
+            // 啟動合法用戶自助驗證解鎖門戶 (Self-Service Unblock Portal)
+            selfServiceUnblockServer.Start();
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -804,6 +833,8 @@ public bool LimitMailSent { get; set; }
     private void StopComponents(bool throwOnFailure)
     {
         List<Exception> failures = [];
+        TryStop(selfServiceUnblockServer.Stop, failures);
+        TryStop(cloudPerimeterService.Dispose, failures);
         TryStop(metricsHttpServer.Stop, failures);
         if (externalThreatFeedSubscriberService is not null)
             TryStop(externalThreatFeedSubscriberService.Stop, failures);
@@ -1010,6 +1041,15 @@ public bool LimitMailSent { get; set; }
                     incidentId = IntrusionLog.AddEntry(incidentTimeUtc, reportingAgent.Id, notificationEventArgs.IpAddress,
                         IntrusionLog.STATUS_INTRUSION_ATTEMPT, false);
 
+                    if (configuration.EnableSlowAndLowDetection)
+                    {
+                        slowAndLowAttackDetector.RecordEvent(
+                            notificationEventArgs.IpAddress,
+                            notificationEventArgs.EventMessage,
+                            reportingAgent.Name ?? "SecurityAgent",
+                            incidentTimeUtc);
+                    }
+
                     try
                     {
                         if (!Locks.LockExists(notificationEventArgs.IpAddress))
@@ -1153,6 +1193,37 @@ public bool LimitMailSent { get; set; }
         catch (Exception ex)
         {
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", ip, ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// 處理長週期慢速隱蔽探測 (Slow &amp; Low) 機器學習異常偵測觸發之自動硬封鎖。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="score">異常分數。</param>
+    /// <param name="uniqueAccounts">探測的不重複帳號估算數量。</param>
+    /// <param name="agentName">發動偵測之安全代理程式名稱。</param>
+    private void HandleSlowAndLowAttackDetected(string ipAddress, double score, int uniqueAccounts, string agentName)
+    {
+        if (!configuration.EnableSlowAndLowDetection) return;
+        string ip = IpAddressCanonicalizer.Canonicalize(ipAddress);
+        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
+        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+
+        try
+        {
+            firewallPolicy.Block(ip);
+            TryRecordAudit("Firewall.SlowAndLowLock", "Succeeded", ip, $"Score: {score:F1}, UniqueAccounts: {uniqueAccounts}");
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCKED, false);
+            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+            logManager.WriteEntry(
+                string.Format("IP address {0} was hard-locked via Slow & Low ML detection (Score: {1:F1}, Accounts tested: {2}, Agent: {3}).", ip, score, uniqueAccounts, agentName),
+                EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+            _ = cloudPerimeterService.NotifyBlockAsync(ip, "Slow & Low ML Anomaly Detected");
+        }
+        catch (Exception ex)
+        {
+            TryRecordAudit("Firewall.SlowAndLowLock", "Failed", ip, ex.GetType().Name);
         }
     }
     /// <summary>

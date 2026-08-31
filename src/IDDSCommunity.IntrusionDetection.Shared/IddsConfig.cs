@@ -809,6 +809,127 @@ public CSafeNetworks SafeNetworks
         set => SetConfigValue("BlockedCountryCodes", value ?? string.Empty);
     }
 
+    /// <summary>
+    /// 取得或設定 是否啟用雲端邊界 WAF / NSG / 電信雲防火牆聯動。
+    /// </summary>
+    public bool EnableCloudPerimeter
+    {
+        get => bool.TryParse(GetConfigValue("EnableCloudPerimeter"), out bool b) && b;
+        set => SetConfigValue("EnableCloudPerimeter", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界提供者類型。
+    /// </summary>
+    public CloudPerimeter.CloudPerimeterType CloudPerimeterType
+    {
+        get => Enum.TryParse(GetConfigValue("CloudPerimeterType"), out CloudPerimeter.CloudPerimeterType t) ? t : CloudPerimeter.CloudPerimeterType.None;
+        set => SetConfigValue("CloudPerimeterType", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界 API 金鑰 / Token。
+    /// </summary>
+    public string CloudPerimeterApiKey
+    {
+        get => GetConfigValue("CloudPerimeterApiKey") ?? string.Empty;
+        set => SetConfigValue("CloudPerimeterApiKey", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界端點 URL。
+    /// </summary>
+    public string CloudPerimeterEndpoint
+    {
+        get => GetConfigValue("CloudPerimeterEndpoint") ?? string.Empty;
+        set => SetConfigValue("CloudPerimeterEndpoint", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界資源識別碼 (Security Group ID / WAF IPSet ID 等)。
+    /// </summary>
+    public string CloudPerimeterResourceId
+    {
+        get => GetConfigValue("CloudPerimeterResourceId") ?? string.Empty;
+        set => SetConfigValue("CloudPerimeterResourceId", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界次要識別碼 (Region / Subscription ID / Project ID / Zone ID)。
+    /// </summary>
+    public string CloudPerimeterSecondaryId
+    {
+        get => GetConfigValue("CloudPerimeterSecondaryId") ?? string.Empty;
+        set => SetConfigValue("CloudPerimeterSecondaryId", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 雲端邊界第三識別碼 (Azure Resource Group 等)。
+    /// </summary>
+    public string CloudPerimeterTertiaryId
+    {
+        get => GetConfigValue("CloudPerimeterTertiaryId") ?? string.Empty;
+        set => SetConfigValue("CloudPerimeterTertiaryId", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用合法用戶自助驗證解鎖門戶。
+    /// </summary>
+    public bool EnableSelfServicePortal
+    {
+        get => bool.TryParse(GetConfigValue("EnableSelfServicePortal"), out bool b) && b;
+        set => SetConfigValue("EnableSelfServicePortal", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 自助解鎖門戶 HTTP 監聽連接埠 (預設 8444)。
+    /// </summary>
+    public int SelfServicePortalPort
+    {
+        get => int.TryParse(GetConfigValue("SelfServicePortalPort"), out int p) && p > 0 ? p : 8444;
+        set => SetConfigValue("SelfServicePortalPort", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 自助解鎖門戶監聽 IP 位址 (預設 "0.0.0.0")。
+    /// </summary>
+    public string SelfServicePortalListenIp
+    {
+        get
+        {
+            string ip = GetConfigValue("SelfServicePortalListenIp");
+            return string.IsNullOrWhiteSpace(ip) ? "0.0.0.0" : ip;
+        }
+        set => SetConfigValue("SelfServicePortalListenIp", value ?? "0.0.0.0");
+    }
+
+    /// <summary>
+    /// 取得或設定 自助門戶 RFC 6238 TOTP 共享 Base32 密鑰。
+    /// </summary>
+    public string SelfServiceTotpSecret
+    {
+        get => GetConfigValue("SelfServiceTotpSecret") ?? string.Empty;
+        set => SetConfigValue("SelfServiceTotpSecret", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用長週期慢速隱蔽探測 (Slow &amp; Low) 機器學習異常分析。
+    /// </summary>
+    public bool EnableSlowAndLowDetection
+    {
+        get => bool.TryParse(GetConfigValue("EnableSlowAndLowDetection"), out bool b) ? b : true;
+        set => SetConfigValue("EnableSlowAndLowDetection", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 慢速隱蔽探測觸發封鎖之異常分數門檻 (預設 8.0)。
+    /// </summary>
+    public double SlowAndLowAnomalyThreshold
+    {
+        get => double.TryParse(GetConfigValue("SlowAndLowAnomalyThreshold"), out double t) && t > 0 ? t : 8.0;
+        set => SetConfigValue("SlowAndLowAnomalyThreshold", value.ToString());
+    }
+
         /// <summary>
     /// 取得或設定 SendInfoMail。
     /// </summary>

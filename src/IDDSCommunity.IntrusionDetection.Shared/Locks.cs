@@ -582,4 +582,65 @@ public class Locks
                 lockId);
         }
     }
+
+    /// <summary>
+    /// 依 IP 位址取得目前處於活躍封鎖狀態之鎖定記錄。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <returns>若存在傳回 <see cref="Lock"/> 執行個體；否則傳回 <see langword="null"/>。</returns>
+    public static Lock? GetActiveLockByIp(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress)) return null;
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
+
+        if (!Database.Instance.IsConfigured) return null;
+
+        using IDataReader reader = Database.Instance.ExecuteReader(
+            "select * from Locks where IpAddress=@p0 and status in (@p1,@p2,@p3,@p4) order by LockId desc limit 1",
+            ipAddress,
+            Lock.LOCK_STATUS_HARDLOCK,
+            Lock.LOCK_STATUS_SOFTLOCK,
+            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
+
+        if (reader.Read())
+        {
+            return new Lock
+            {
+                Id = Db.DbValueConverter.ToInt64(reader["LockId"]),
+                IpAddress = Db.DbValueConverter.ToString(reader["IpAddress"]),
+                LockDate = Db.DbValueConverter.ToDateTime(reader["LockDate"]),
+                Port = Db.DbValueConverter.ToInt(reader["Port"]),
+                Status = Db.DbValueConverter.ToInt(reader["Status"]),
+                TriggerIncident = Db.DbValueConverter.ToInt64(reader["TriggerIncident"]),
+                UnlockDate = Db.DbValueConverter.ToDateTime(reader["UnlockDate"])
+            };
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 將指定 IP 位址之活躍鎖定標記為待解除並更新狀態為已解除。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <returns>若成功解除傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool UnlockIp(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress)) return false;
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
+
+        if (!Database.Instance.IsConfigured) return false;
+
+        Database.Instance.ExecuteNonQuery(
+            "update Locks set Status=@p0, LastUpdate=@p1 where IpAddress=@p2 and status in (@p3,@p4,@p5,@p6)",
+            Lock.LOCK_STATUS_UNLOCKED,
+            DateTime.UtcNow,
+            ipAddress,
+            Lock.LOCK_STATUS_HARDLOCK,
+            Lock.LOCK_STATUS_SOFTLOCK,
+            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
+
+        return true;
+    }
 }
