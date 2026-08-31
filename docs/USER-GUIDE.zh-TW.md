@@ -102,6 +102,18 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 - **實體空間壓縮 (Vacuum / Compact)**：點擊「回收資料庫空間」，執行 `PRAGMA optimize` 與 `VACUUM`，實體釋放已刪除資料所佔用的磁碟空間（執行前會自動建立防護回滾副本）。
 - **完整在地化維護歷程**：歷程清單支援完整的正體中文 i18n 轉譯（如 `資料庫保留清理`、`資料庫空間回收`、`成功` 等），並維持底層 Audit Log 事件碼的一致性。
 
+### 3.9 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence & Cluster Defense)
+- **分散式叢集聯防架構 (Edge / Hub Topology)**：
+  - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資。
+  - `EdgeNode`（邊緣節點）：定時與 Threat Hub 雙向同步全網高危威脅清單，並回報本機永久封鎖事件。
+  - `ThreatHub`（威脅中繼中心）：集中對外訂閱全球情報，並提供內部邊緣主機秒級威脅情資廣播。
+- **主動式外部威脅情報自動訂閱 (External Threat Feeds)**：
+  - 支援訂閱開源 IPsum（分級 Level 1~8）、AbuseIPDB Blacklist（提供自備 API Key 與信心度門檻）與自訂 URL 清單。
+  - 情資具備 TTL 生命週期（預設 7 天），未再遭通報之外部 IP 將自動移出防火牆，防止規則無限膨脹。
+- **雙層 Bogon 與智慧假釋防護 (Bogon & Probation Guardrails)**：
+  - 整合靜態 RFC 1918 硬過濾與 Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步，杜絕內網誤封。
+  - 永久硬封鎖在 90 天無攻擊活動後自動轉入假釋觀察期；處於假釋期之 IP 若再次違規 1 次立即永久再鎖定。
+
 ---
 
 ## 4. 常見問題與故障排除 (FAQ)

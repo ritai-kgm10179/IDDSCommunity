@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -19,6 +19,10 @@ public const string MENU_LOCK_OUT_CONFIGURATION = "Lock out configuration";
     /// 定義 MENU_SAFE_NETWORKS 之數值。
     /// </summary>
 public const string MENU_SAFE_NETWORKS = "Safe networks";
+        /// <summary>
+    /// 定義 MENU_THREAT_INTELLIGENCE 之數值。
+    /// </summary>
+public const string MENU_THREAT_INTELLIGENCE = "Threat intelligence and cluster";
         /// <summary>
     /// 定義 MENU_NOTIFICATION_SETTINGS 之數值。
     /// </summary>
@@ -67,6 +71,7 @@ public event EventHandler? ConfigurationChanged;
         iddscommunitySettingsNavigation.NavigationChanged += new EventHandler(iddscommunitySettingsNavigation_NavigationChanged);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_THREAT_INTELLIGENCE), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null, null);
@@ -165,10 +170,24 @@ public PanelSmtpSettings PanelSmtpSettings
     void _panelSmtpSettings_SmtpSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
 
     private PanelNotificationSettings? _panelNotificationSettings;
+    private PanelThreatIntelligenceSettings? _panelThreatIntelligenceSettings;
     private PanelLanguageSettings? _panelLanguageSettings;
     private PanelDatabaseMaintenance? _panelDatabaseMaintenance;
     private PanelConfigurationTransfer? _panelConfigurationTransfer;
     private PanelReportExport? _panelReportExport;
+
+    /// <summary>
+    /// 取得或設定 PanelThreatIntelligenceSettings。
+    /// </summary>
+    public PanelThreatIntelligenceSettings PanelThreatIntelligenceSettings => _panelThreatIntelligenceSettings ??= CreateThreatIntelligenceSettingsPanel();
+
+    private PanelThreatIntelligenceSettings CreateThreatIntelligenceSettingsPanel()
+    {
+        PanelThreatIntelligenceSettings panel = new();
+        panel.ThreatIntelligenceSettingsChanged += (_, _) => OnConfigurationChanged();
+        configurationPanel.Controls.Add(panel);
+        return panel;
+    }
 
         /// <summary>
     /// 取得或設定 PanelLanguageSettings。
@@ -255,12 +274,16 @@ public PanelNotificationSettings PanelNotificationSettings
             case var displayName when displayName == Strings.Get(MENU_LOCK_OUT_CONFIGURATION):
                 LockoutConfiguration.BringToFront();
                 break;
+            case var displayName when displayName == Strings.Get(MENU_SAFE_NETWORKS):
+                PanelSafeNetworks.BringToFront();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_THREAT_INTELLIGENCE):
+                PanelThreatIntelligenceSettings.BringToFront();
+                PanelThreatIntelligenceSettings.LoadData();
+                break;
             case var displayName when displayName == Strings.Get(MENU_NOTIFICATION_SETTINGS):
                 PanelNotificationSettings.BringToFront();
                 PanelNotificationSettings.LoadData();
-                break;
-            case var displayName when displayName == Strings.Get(MENU_SAFE_NETWORKS):
-                PanelSafeNetworks.BringToFront();
                 break;
             case var displayName when displayName == Strings.Get(MENU_SMTP_SETTINGS):
                 PanelSmtpSettings.BringToFront();

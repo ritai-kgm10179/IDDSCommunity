@@ -851,5 +851,26 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}</value></data>
   <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}</value></data>
   <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>Error while unlocking client with IP address {0}:&#xD;&#xA;{1}</value></data>
+  <data name="Threat intelligence and cluster" xml:space="preserve"><value>Threat intelligence and cluster</value></data>
+  <data name="Cluster topology &amp; Threat Hub" xml:space="preserve"><value>Cluster topology &amp; Threat Hub</value></data>
+  <data name="Cluster node role" xml:space="preserve"><value>Cluster node role</value></data>
+  <data name="Threat Hub endpoint URL" xml:space="preserve"><value>Threat Hub endpoint URL</value></data>
+  <data name="Cluster API key" xml:space="preserve"><value>Cluster API key</value></data>
+  <data name="Threat Hub port" xml:space="preserve"><value>Threat Hub port</value></data>
+  <data name="Cluster sync interval (seconds)" xml:space="preserve"><value>Cluster sync interval (seconds)</value></data>
+  <data name="External threat feeds subscription" xml:space="preserve"><value>External threat feeds subscription</value></data>
+  <data name="Enable automated threat feed subscription" xml:space="preserve"><value>Enable automated threat feed subscription</value></data>
+  <data name="Feed update interval (hours)" xml:space="preserve"><value>Feed update interval (hours)</value></data>
+  <data name="IPsum minimum severity level (1-8)" xml:space="preserve"><value>IPsum minimum severity level (1-8)</value></data>
+  <data name="Threat intelligence TTL (days)" xml:space="preserve"><value>Threat intelligence TTL (days)</value></data>
+  <data name="AbuseIPDB API key" xml:space="preserve"><value>AbuseIPDB API key</value></data>
+  <data name="AbuseIPDB minimum confidence (%)" xml:space="preserve"><value>AbuseIPDB minimum confidence (%)</value></data>
+  <data name="Custom threat feed URLs (one per line)" xml:space="preserve"><value>Custom threat feed URLs (one per line)</value></data>
+  <data name="Bogon &amp; probation guardrails" xml:space="preserve"><value>Bogon &amp; probation guardrails</value></data>
+  <data name="Enable Team Cymru Fullbogons dynamic updates" xml:space="preserve"><value>Enable Team Cymru Fullbogons dynamic updates</value></data>
+  <data name="Probation decay period (days)" xml:space="preserve"><value>Probation decay period (days)</value></data>
+  <data name="Dynamic Bogon IPv4 list URL" xml:space="preserve"><value>Dynamic Bogon IPv4 list URL</value></data>
+  <data name="Dynamic Bogon IPv6 list URL" xml:space="preserve"><value>Dynamic Bogon IPv6 list URL</value></data>
+  <data name="Configuration was saved successfully." xml:space="preserve"><value>Configuration was saved successfully.</value></data>
 </root>
 

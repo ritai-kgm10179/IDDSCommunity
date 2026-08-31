@@ -130,3 +130,34 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+## External Threat Feeds & Intelligence Sources
+
+IDDS Community supports optional automated subscription to external threat intelligence feeds for proactive defensive IP blocking. The following open/community threat lists may be utilized:
+
+### IPsum
+- Author: Miroslav Stampar (@stamparm)
+- License: MIT License
+- Source: https://github.com/stamparm/ipsum
+- Description: IPsum is an aggregated threat intelligence feed containing IPv4 addresses derived from 30+ public blocklists.
+
+### AbuseIPDB
+- Maintainer: AbuseIPDB (Marconi Software)
+- Terms of Use: https://www.abuseipdb.com/terms
+- Description: Community-driven IP blacklist database. Users supply their own registered API key to access blacklist endpoints in accordance with AbuseIPDB usage quotas.
+
+### Spamhaus DROP (Don't Route Or Peer)
+- Maintainer: The Spamhaus Project
+- Terms of Use: https://www.spamhaus.org/drop/
+- Description: Advisory drop list of hijacked and malicious network netblocks for network defense.
+
+### CINS Army
+- Maintainer: Sentinel IPS / CINS Score
+- Terms: https://cinsscore.com/
+- Description: Collective Intelligence Network Security badguys list compiled from Sentinel intrusion sensor nodes.
+
+### Blocklist.de
+- Maintainer: Blocklist.de
+- Terms: https://www.blocklist.de/
+- Description: Fail2Ban community-reported attacking IP addresses.
+

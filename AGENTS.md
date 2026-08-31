@@ -111,3 +111,11 @@
   - **一擊立即硬封鎖 (One-Strike Relock)**：處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖（`UnlockDate = DateTime.MaxValue`），免除軟封鎖累計程序。
 - **安全網路 DDNS 動態主機名稱解析 (Dynamic DNS FQDN Resolver)**：
   - 安全網路（Safe Networks）支援填入 FQDN 主機名稱（如 `office.ddns.net`）；由 [`DynamicDnsResolverService`](src/IDDSCommunity.IntrusionDetection.Service/DynamicDnsResolverService.cs) 定時（預設 5 分鐘）於背景非同步解析並更新執行緒安全之 [`DynamicDnsCache`](src/IDDSCommunity.IntrusionDetection.Shared/ThreatIntelligence/DynamicDnsCache.cs)，確保動態 IP 之合法管理者連線隨時精準放行。
+- **外部威脅情報訂閱與主動防護規範 (External Threat Feeds & Bogon Filtering)**：
+  - 支援自動訂閱開源與社群威脅黑名單（如 IPsum、AbuseIPDB、Spamhaus DROP）；由 [`ExternalThreatFeedSubscriberService`](src/IDDSCommunity.IntrusionDetection.Service/ExternalThreatFeedSubscriberService.cs) 定時非同步抓取。
+  - **進門端雙層 Bogon 硬過濾**：所有外部情資在寫入資料庫或防火牆前，必須強制通過 [`BogonIpFilter`](src/IDDSCommunity.IntrusionDetection.Shared/ThreatIntelligence/BogonIpFilter.cs) 檢查，包含第一級靜態硬編碼（RFC 1918 私有 IP、RFC 6598 CGNAT、迴路、多播、廣播與保留區段）與第二級動態 [Team Cymru Fullbogons](https://www.team-cymru.com/bogon-reference) IPv4/IPv6 前綴定時同步，嚴禁將未分配或特殊位址列入封鎖。
+  - **白名單最高優先權**：外部情報中若包含安全網路或 DDNS 網域名稱解析出的 IP，一律無條件跳過並記錄安全稽核。
+  - **Hub 集中訂閱分發**：由 Threat Hub 統一對外訂閱情資並秒級同步至邊緣節點，防止重複對外請求。情資設定 TTL（預設 7 天）自動過期轉移。
+  - **管理主控台視覺化配置**：於 [`IDDSCommunityApplicationSettings`](src/IDDSCommunity.IntrusionDetection.Admin/IDDSCommunityApplicationSettings.cs) 提供專屬 [`PanelThreatIntelligenceSettings`](src/IDDSCommunity.IntrusionDetection.Admin/PanelThreatIntelligenceSettings.cs) 面板，完整視覺化呈現拓撲角色、情資訂閱、門檻與 Fullbogons 參數。
+
+

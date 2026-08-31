@@ -12,10 +12,12 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 
 ## 主要功能
 
-- Windows 服務型防護核心與 WinForms 管理介面。
+- Windows 服務型防護核心與 WinForms 管理介面（含「威脅情報與叢集聯防」專屬視覺化設定面板）。
 - 硬封鎖、軟封鎖、安全網路允許清單（支援 IPv4、IPv6、CIDR 與動態 DNS FQDN 解析）與自動解除封鎖。
 - 分散式跨主機威脅情資聯防（Edge / Hub 節點拓撲）與動態 IP 智慧假釋／一擊立即硬封鎖機制（Probation & One-Strike Relock）。
-- Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
+- 主動式外部威脅情報自動訂閱（支援 IPsum 分級清單、AbuseIPDB API、Spamhaus DROP 與自訂黑名單 URL）及情資 TTL 生命週期淘汰機制。
+- 雙層雙軌 Bogon 防禦體系（RFC 1918 靜態極速硬過濾 + Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步），杜絕誤封與自鎖。
+- Windows 防火牆規則管理（支援 Inbound 與 Bidirectional 雙向阻絕）、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
 - 代理程式外掛：通用 FTP、FileZilla Server、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security、Windows DNS Server 與 Technitium DNS Security。
 - 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各代理程式可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。

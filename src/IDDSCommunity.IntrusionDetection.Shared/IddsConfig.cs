@@ -693,6 +693,104 @@ public CSafeNetworks SafeNetworks
         set => SetConfigValue("DynamicDnsIntervalMinutes", value.ToString());
     }
 
+    /// <summary>
+    /// 取得或設定 是否啟用外部威脅情報（Threat Feeds）自動訂閱與主動防護（預設 false）。
+    /// </summary>
+    public bool EnableExternalThreatFeeds
+    {
+        get => bool.TryParse(GetConfigValue("EnableExternalThreatFeeds"), out bool b) && b;
+        set => SetConfigValue("EnableExternalThreatFeeds", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 外部威脅情報更新週期小時數（預設 24 小時）。
+    /// </summary>
+    public int ThreatFeedUpdateIntervalHours
+    {
+        get => int.TryParse(GetConfigValue("ThreatFeedUpdateIntervalHours"), out int h) && h > 0 ? h : 24;
+        set => SetConfigValue("ThreatFeedUpdateIntervalHours", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 IPsum 情資最低採納等級門檻（預設 3，代表至少被 3 個獨立組織標記為惡意）。
+    /// </summary>
+    public int ThreatFeedMinLevel
+    {
+        get => int.TryParse(GetConfigValue("ThreatFeedMinLevel"), out int l) && l > 0 ? l : 3;
+        set => SetConfigValue("ThreatFeedMinLevel", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 外部情資惡意 IP 預設存活天數（TTL，預設 7 天）。
+    /// </summary>
+    public int ThreatFeedTtlDays
+    {
+        get => int.TryParse(GetConfigValue("ThreatFeedTtlDays"), out int d) && d > 0 ? d : 7;
+        set => SetConfigValue("ThreatFeedTtlDays", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 自訂外部威脅情資 URL 清單（以換行或分號分隔）。
+    /// </summary>
+    public string ThreatFeedCustomUrls
+    {
+        get => GetConfigValue("ThreatFeedCustomUrls");
+        set => SetConfigValue("ThreatFeedCustomUrls", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 AbuseIPDB API 金鑰（留空表示未啟用 AbuseIPDB 訂閱）。
+    /// </summary>
+    public string AbuseIpDbApiKey
+    {
+        get => GetConfigValue("AbuseIpDbApiKey");
+        set => SetConfigValue("AbuseIpDbApiKey", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 AbuseIPDB 惡意信心度門檻百分比（預設 90%）。
+    /// </summary>
+    public int AbuseIpDbMinConfidence
+    {
+        get => int.TryParse(GetConfigValue("AbuseIpDbMinConfidence"), out int c) && c > 0 ? c : 90;
+        set => SetConfigValue("AbuseIpDbMinConfidence", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用動態 Bogon (Team Cymru Fullbogons) 前綴自動更新（預設 true）。
+    /// </summary>
+    public bool EnableDynamicBogonUpdate
+    {
+        get => bool.TryParse(GetConfigValue("EnableDynamicBogonUpdate"), out bool b) ? b : true;
+        set => SetConfigValue("EnableDynamicBogonUpdate", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 動態 Bogon (Fullbogons IPv4) 清單下載 URL。
+    /// </summary>
+    public string DynamicBogonIpv4Url
+    {
+        get
+        {
+            string url = GetConfigValue("DynamicBogonIpv4Url");
+            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt" : url;
+        }
+        set => SetConfigValue("DynamicBogonIpv4Url", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 動態 Bogon (Fullbogons IPv6) 清單下載 URL。
+    /// </summary>
+    public string DynamicBogonIpv6Url
+    {
+        get
+        {
+            string url = GetConfigValue("DynamicBogonIpv6Url");
+            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv6.txt" : url;
+        }
+        set => SetConfigValue("DynamicBogonIpv6Url", value ?? string.Empty);
+    }
+
         /// <summary>
     /// 取得或設定 SendInfoMail。
     /// </summary>

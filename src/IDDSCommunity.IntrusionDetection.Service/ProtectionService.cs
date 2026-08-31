@@ -37,6 +37,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private DynamicDnsResolverService? dynamicDnsResolverService;
     private ThreatIntelligenceHubServer? threatHubServer;
     private ThreatIntelligenceSyncService? threatSyncService;
+    private ExternalThreatFeedSubscriberService? externalThreatFeedSubscriberService;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -725,6 +726,14 @@ public bool LimitMailSent { get; set; }
                 threatSyncService.Start();
             }
 
+            // 啟動外部威脅情資自動訂閱與主動防護服務
+            externalThreatFeedSubscriberService = new ExternalThreatFeedSubscriberService(
+                configuration,
+                HandleExternalThreatFeedDiscovered,
+                msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+            externalThreatFeedSubscriberService.Start();
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -774,6 +783,8 @@ public bool LimitMailSent { get; set; }
     private void StopComponents(bool throwOnFailure)
     {
         List<Exception> failures = [];
+        if (externalThreatFeedSubscriberService is not null)
+            TryStop(externalThreatFeedSubscriberService.Stop, failures);
         if (threatSyncService is not null)
             TryStop(threatSyncService.Stop, failures);
         if (threatHubServer is not null)
@@ -867,6 +878,7 @@ public bool LimitMailSent { get; set; }
         dynamicDnsResolverService?.Dispose();
         threatHubServer?.Dispose();
         threatSyncService?.Dispose();
+        externalThreatFeedSubscriberService?.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
     }
@@ -1084,6 +1096,38 @@ public bool LimitMailSent { get; set; }
         catch (Exception ex)
         {
             TryRecordAudit("Firewall.ClusterLock", "Failed", ip, ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// 處理自外部威脅情報（Threat Feeds）訂閱來源發現之惡意 IP。
+    /// </summary>
+    /// <param name="item">外部威脅情報項目。</param>
+    private void HandleExternalThreatFeedDiscovered(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    {
+        if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
+        string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+        if (Shared.ThreatIntelligence.BogonIpFilter.IsBogonOrReserved(ip)) return;
+        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
+
+        // 若本主機為 Threat Hub，主動將外部情報注入 Hub 威脅庫以廣播給邊緣節點
+        threatHubServer?.IngestLocalThreat(item);
+
+        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+
+        try
+        {
+            firewallPolicy.Block(ip);
+            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", ip);
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ExternalThreatFeed, ip, IntrusionLog.STATUS_HARD_LOCKED, false);
+            Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+            logManager.WriteEntry(
+                string.Format("IP address {0} was preemptively locked via External Threat Feed subscription ({1}).", ip, item.ReporterNodeName),
+                EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+        }
+        catch (Exception ex)
+        {
+            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", ip, ex.GetType().Name);
         }
     }
     /// <summary>

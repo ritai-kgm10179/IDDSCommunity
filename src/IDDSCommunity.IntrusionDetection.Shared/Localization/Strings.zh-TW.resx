@@ -851,4 +851,25 @@
   <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試硬封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
   <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試軟封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
   <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試解除封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
+  <data name="Threat intelligence and cluster" xml:space="preserve"><value>威脅情報與叢集聯防</value></data>
+  <data name="Cluster topology &amp; Threat Hub" xml:space="preserve"><value>跨主機叢集聯防與 Threat Hub</value></data>
+  <data name="Cluster node role" xml:space="preserve"><value>叢集節點角色</value></data>
+  <data name="Threat Hub endpoint URL" xml:space="preserve"><value>Threat Hub 端點 URL</value></data>
+  <data name="Cluster API key" xml:space="preserve"><value>叢集 API 金鑰</value></data>
+  <data name="Threat Hub port" xml:space="preserve"><value>Threat Hub 監聽連接埠</value></data>
+  <data name="Cluster sync interval (seconds)" xml:space="preserve"><value>叢集同步週期（秒）</value></data>
+  <data name="External threat feeds subscription" xml:space="preserve"><value>外部威脅情報訂閱</value></data>
+  <data name="Enable automated threat feed subscription" xml:space="preserve"><value>啟用外部威脅情報自動訂閱</value></data>
+  <data name="Feed update interval (hours)" xml:space="preserve"><value>情報更新週期（小時）</value></data>
+  <data name="IPsum minimum severity level (1-8)" xml:space="preserve"><value>IPsum 最小嚴重等級（1-8）</value></data>
+  <data name="Threat intelligence TTL (days)" xml:space="preserve"><value>威脅情報存活天數（TTL）</value></data>
+  <data name="AbuseIPDB API key" xml:space="preserve"><value>AbuseIPDB API 金鑰</value></data>
+  <data name="AbuseIPDB minimum confidence (%)" xml:space="preserve"><value>AbuseIPDB 最小信心度（%）</value></data>
+  <data name="Custom threat feed URLs (one per line)" xml:space="preserve"><value>自訂威脅情報 URL 清單（每行一個）</value></data>
+  <data name="Bogon &amp; probation guardrails" xml:space="preserve"><value>Bogon 與智慧假釋防護</value></data>
+  <data name="Enable Team Cymru Fullbogons dynamic updates" xml:space="preserve"><value>啟用 Team Cymru Fullbogons 動態前綴更新</value></data>
+  <data name="Probation decay period (days)" xml:space="preserve"><value>永久封鎖轉移至假釋觀察期天數</value></data>
+  <data name="Dynamic Bogon IPv4 list URL" xml:space="preserve"><value>動態 Bogon IPv4 清單 URL</value></data>
+  <data name="Dynamic Bogon IPv6 list URL" xml:space="preserve"><value>動態 Bogon IPv6 清單 URL</value></data>
+  <data name="Configuration was saved successfully." xml:space="preserve"><value>設定已成功儲存。</value></data>
 </root>

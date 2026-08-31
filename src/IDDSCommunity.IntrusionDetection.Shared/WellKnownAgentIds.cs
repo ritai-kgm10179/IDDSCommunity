@@ -128,6 +128,11 @@ public static class WellKnownAgentIds
     /// </summary>
     public static readonly Guid ClusterThreatHub = new("{A71D5E99-4A9B-4D29-9154-152063A48C9E}");
 
+    /// <summary>
+    /// 外部威脅情報訂閱代理程式（External Threat Feeds Subscriber Agent）。
+    /// </summary>
+    public static readonly Guid ExternalThreatFeed = new("{C32E5A88-2917-4D24-8F7E-388D6A42E40A}");
+
     private sealed record AgentDescriptor(Guid Id, string PrimaryName, string AssemblyName, string DisplayName, string[] Aliases);
 
     private static readonly AgentDescriptor[] KnownAgents =
@@ -179,7 +184,9 @@ public static class WellKnownAgentIds
         new(FileZilla, "FileZillaSecurityAgent", "IDDSCommunity.Agents.FileZilla.dll", "FileZilla 安全性代理程式",
             ["FileZilla Security Agent", "FileZilla", "IDDSCommunity.Agents.FileZilla"]),
         new(ClusterThreatHub, "ClusterThreatHubSyncAgent", "IDDSCommunity.IntrusionDetection.Service.dll", "叢集威脅情資聯防",
-            ["Threat Intelligence Cluster", "ClusterThreatHub", "叢集聯防", "ThreatHub", "IDDSCommunity.ThreatIntelligence.Cluster"])
+            ["Threat Intelligence Cluster", "ClusterThreatHub", "叢集聯防", "ThreatHub", "IDDSCommunity.ThreatIntelligence.Cluster"]),
+        new(ExternalThreatFeed, "ExternalThreatFeedSubscriber", "IDDSCommunity.IntrusionDetection.Service.dll", "外部威脅情報訂閱",
+            ["External Threat Feeds", "ExternalThreatFeed", "威脅情報訂閱", "ThreatFeeds", "IDDSCommunity.ThreatIntelligence.ExternalFeeds"])
     ];
 
     /// <summary>
