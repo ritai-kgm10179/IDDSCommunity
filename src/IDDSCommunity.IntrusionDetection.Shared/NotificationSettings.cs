@@ -1,4 +1,4 @@
-namespace IDDSCommunity.IntrusionDetection.Shared;
+﻿namespace IDDSCommunity.IntrusionDetection.Shared;
 
 using System;
 
@@ -524,7 +524,12 @@ public enum WebhookPlatform
     /// <summary>
     /// 通用標準 JSON 格式。
     /// </summary>
-    GenericJson = 5
+    GenericJson = 5,
+
+    /// <summary>
+    /// LINE Messaging API（Push Message 格式）。
+    /// </summary>
+    LineMessagingApi = 6
 }
 
 /// <summary>

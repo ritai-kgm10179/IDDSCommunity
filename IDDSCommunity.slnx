@@ -27,8 +27,10 @@
     <Project Path="agents/IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WinRm/IDDSCommunity.Agents.WinRm.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.Honeypot/IDDSCommunity.Agents.Honeypot.csproj" />
+    <Project Path="agents/IDDSCommunity.Agents.ActiveDirectory/IDDSCommunity.Agents.ActiveDirectory.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/IDDSCommunity.Agents.ActiveDirectory.Test/IDDSCommunity.Agents.ActiveDirectory.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FileMaker.Test/IDDSCommunity.Agents.FileMaker.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FileZilla.Test/IDDSCommunity.Agents.FileZilla.Test.csproj" />

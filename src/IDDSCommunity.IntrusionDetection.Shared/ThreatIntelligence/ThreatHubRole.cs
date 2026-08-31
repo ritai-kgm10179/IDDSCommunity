@@ -1,4 +1,4 @@
-namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
+﻿namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 
 /// <summary>
 /// 定義 IDDS Community 叢集威脅情資中繼架構中的主機節點角色。

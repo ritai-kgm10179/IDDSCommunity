@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -86,6 +86,9 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
             if (config.ThreatHubRole != ThreatHubRole.EdgeNode || string.IsNullOrWhiteSpace(config.ThreatHubEndpoint))
                 return;
 
+            string[] endpoints = config.ThreatHubEndpoint.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (endpoints.Length == 0) return;
+
             List<ThreatIntelligenceItem> localBatch = [];
             while (pendingLocalThreats.TryDequeue(out ThreatIntelligenceItem? threat))
             {
@@ -101,25 +104,38 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                 NewThreats = localBatch
             };
 
-            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
-            ThreatHubSyncResponse response = await client.SynchronizeAsync(
-                config.ThreatHubEndpoint,
-                config.ThreatHubApiKey,
-                payload,
-                cts.Token).ConfigureAwait(false);
-
-            if (response.Success)
+            bool syncSucceeded = false;
+            foreach (string endpoint in endpoints)
             {
-                lastSyncUtc = response.ServerTimeUtc;
-                foreach (ThreatIntelligenceItem clusterThreat in response.ActiveThreats)
+                try
                 {
-                    if (string.IsNullOrWhiteSpace(clusterThreat.SourceIp)) continue;
-                    onClusterThreatReceived(clusterThreat);
+                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
+                    ThreatHubSyncResponse response = await client.SynchronizeAsync(
+                        endpoint,
+                        config.ThreatHubApiKey,
+                        payload,
+                        cts.Token).ConfigureAwait(false);
+
+                    if (response.Success)
+                    {
+                        lastSyncUtc = response.ServerTimeUtc;
+                        foreach (ThreatIntelligenceItem clusterThreat in response.ActiveThreats)
+                        {
+                            if (string.IsNullOrWhiteSpace(clusterThreat.SourceIp)) continue;
+                            onClusterThreatReceived(clusterThreat);
+                        }
+                        syncSucceeded = true;
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logWarning($"Threat Hub failover: endpoint '{endpoint}' unavailable, trying next.", ex);
                 }
             }
-            else
+
+            if (!syncSucceeded)
             {
-                logWarning($"Threat Hub synchronization reported failure: {response.ErrorMessage}", new Exception(response.ErrorMessage));
                 // 將未成功同步之本機威脅重新放回佇列
                 foreach (ThreatIntelligenceItem item in localBatch)
                 {

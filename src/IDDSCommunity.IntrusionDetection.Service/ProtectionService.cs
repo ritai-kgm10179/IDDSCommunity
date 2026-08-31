@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -29,9 +29,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly Database database;
     private readonly IddsConfig configuration;
     private readonly NotificationSettings notificationSettings;
-    private readonly WebhookNotificationService webhookNotificationService;
-    private readonly SyslogNotificationService syslogNotificationService;
+    private readonly NotificationDispatcher notificationDispatcher;
     private readonly MetricsHttpServer metricsHttpServer;
+    private readonly ManagementApi.ManagementApiHttpServer managementApiHttpServer;
+    private readonly Shared.Deception.HoneyAccountDetector honeyAccountDetector;
     private readonly CloudPerimeter.CloudPerimeterService cloudPerimeterService;
     private readonly SelfService.SelfServiceUnblockServer selfServiceUnblockServer;
     private readonly SlowAndLowAttackDetector slowAndLowAttackDetector;
@@ -119,8 +120,14 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         this.database = database;
         this.configuration = configuration;
         this.notificationSettings = notificationSettings;
-        this.webhookNotificationService = new WebhookNotificationService(notificationSettings);
-        this.syslogNotificationService = new SyslogNotificationService(notificationSettings);
+        var emailService = new EmailNotificationService(configuration, notificationSettings);
+        var webhookService = new WebhookNotificationService(notificationSettings);
+        var syslogService = new SyslogNotificationService(notificationSettings);
+        var soarExecutor = new SoarRemediationExecutor(configuration);
+        this.notificationDispatcher = new NotificationDispatcher(emailService, webhookService, syslogService, soarExecutor);
+        this.managementApiHttpServer = new ManagementApi.ManagementApiHttpServer(configuration, database);
+        this.honeyAccountDetector = new Shared.Deception.HoneyAccountDetector(configuration.HoneyAccounts);
+        this.honeyAccountDetector.HoneyAccountBreached += HandleHoneyAccountBreached;
         this.metricsHttpServer = new MetricsHttpServer(notificationSettings, database);
         var cloudSettings = new Shared.CloudPerimeter.CloudPerimeterSettings
         {
@@ -175,7 +182,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             // IncidentTime 以 UTC 儲存；標題與副標維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Monthly report"), Strings.Format("Report for {0:Y}", start), Strings.Format("Server: {0}", hostName),
                 start.ToUniversalTime(), end.ToUniversalTime());
-            await SendMailAsync(Strings.Format("Monthly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            await notificationDispatcher.EmailService.SendMailAsync(Strings.Format("Monthly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Monthly", "Succeeded", hostName);
         }
         catch (Exception ex)
@@ -200,7 +207,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             // IncidentTime 以 UTC 儲存；標題與副標維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Weekly report"), Strings.Format("Week of {0:d}", start), Strings.Format("Server: {0}", hostName),
                 start.ToUniversalTime(), end.ToUniversalTime());
-            await SendMailAsync(Strings.Format("Weekly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            await notificationDispatcher.EmailService.SendMailAsync(Strings.Format("Weekly report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Weekly", "Succeeded", hostName);
         }
         catch (Exception ex)
@@ -224,7 +231,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             // IncidentTime 以 UTC 儲存；標題維持本機日期顯示，僅查詢邊界轉換為 UTC。
             string report = ReportGenerator.Instance.GetReport(Strings.Get("Daily report"), d.ToString("d", LanguageManager.Instance.CurrentCulture), Strings.Format("Server: {0}", hostName),
                 d.ToUniversalTime(), d.AddDays(1).ToUniversalTime());
-            await SendMailAsync(Strings.Format("Daily report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
+            await notificationDispatcher.EmailService.SendMailAsync(Strings.Format("Daily report for {0}", hostName), report, true, cancellationToken, true).ConfigureAwait(false);
             TryRecordAudit("Report.Daily", "Succeeded", hostName);
         }
         catch (Exception ex)
@@ -396,7 +403,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     }
 
     /// <summary>
-    /// Sends info mail.
+    /// Sends info mail and dispatches alerts to all notification channels.
     /// </summary>
     /// <param name="o">o 的值。</param>
     /// <param name="lockOperation">lock operation 的值。</param>
@@ -406,88 +413,16 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         var op = (ClientOperationInformation)o;
         try
         {
-            string subject = string.Empty;
-            switch (lockOperation)
-            {
-                case LockType.None:
-                    if (notificationSettings.OnUnlock)
-                        subject = Strings.Format("IDDS Community: Unlock notification ({0})", op.IpAddress);
-                    break;
-                case LockType.SoftLock:
-                    if (notificationSettings.OnSoftLock)
-                        subject = Strings.Format("IDDS Community: Soft lock notification ({0})", op.IpAddress);
-                    break;
-                case LockType.HardLock:
-                    if (notificationSettings.OnHardLock)
-                        subject = Strings.Format("IDDS Community: Hard lock notification ({0})", op.IpAddress);
-                    break;
-            }
-            if (!string.IsNullOrEmpty(subject))
-            {
-                _ = SendMailAsync(subject, op.Message, false);
-            }
-
             string agentName = (op.AgentId != Guid.Empty && securityAgents != null)
                 ? (securityAgents.Find(a => a.Id == op.AgentId)?.DisplayName ?? Strings.AppTitle)
                 : Strings.AppTitle;
 
-            _ = webhookNotificationService.SendWebhookAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
-            _ = syslogNotificationService.SendSyslogAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
+            _ = notificationDispatcher.DispatchAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
         }
         catch (Exception ex)
         {
-            logManager.WriteEntry(Strings.Get("Error while sending notification email.\r\n") + ex.Message,
-                        EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
-        }
-    }
-    /// <summary>
-    /// Sends mail.
-    /// </summary>
-    /// <param name="subject">subject 的值。</param>
-    /// <param name="message">message 的值。</param>
-    /// <param name="isHtml"><see langword="true"/> when the trusted report body contains HTML; otherwise, <see langword="false"/>.</param>
-    /// <param name="cancellationToken">Signals cancellation of SMTP delivery.</param>
-    /// <param name="rethrowOnFailure"><see langword="true"/> to propagate delivery failures to the scheduler.</param>
-    /// <returns>表示非同步執行的 Task。</returns>
-    async Task SendMailAsync(string subject, string message, bool isHtml, System.Threading.CancellationToken cancellationToken = default, bool rethrowOnFailure = false)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(configuration.SmtpServer) || string.IsNullOrEmpty(configuration.SenderEmailAddress)
-                || string.IsNullOrEmpty(configuration.NotificationEmailAddress))
-            {
-                if (rethrowOnFailure)
-                    throw new InvalidOperationException(Strings.Get("SMTP configuration is incomplete."));
-                return;
-            }
-
-            var mimeMessage = new MimeKit.MimeMessage();
-            mimeMessage.From.Add(MimeKit.MailboxAddress.Parse(configuration.SenderEmailAddress));
-            mimeMessage.To.Add(MimeKit.MailboxAddress.Parse(configuration.NotificationEmailAddress));
-            mimeMessage.Subject = subject;
-            mimeMessage.Body = new MimeKit.TextPart(isHtml ? "html" : "plain") { Text = message };
-
-            using var client = new MailKit.Net.Smtp.SmtpClient();
-            int port = configuration.SmtpPort == 0 ? 25 : configuration.SmtpPort;
-            SecureSocketOptions secureOption = configuration.SmtpSslRequired ? MailKit.Security.SecureSocketOptions.StartTls : MailKit.Security.SecureSocketOptions.Auto;
-            using System.Threading.CancellationTokenSource timeout = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(30));
-            await client.ConnectAsync(configuration.SmtpServer, port, secureOption, timeout.Token).ConfigureAwait(false);
-
-            if (configuration.SmtpRequiresAuthentication)
-            {
-                await client.AuthenticateAsync(configuration.SmtpUsername, configuration.GetSmtpPassword(), timeout.Token).ConfigureAwait(false);
-            }
-            await client.SendAsync(mimeMessage, timeout.Token).ConfigureAwait(false);
-            await client.DisconnectAsync(true, timeout.Token).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            string safeMessage = ex.Message.Replace('\r', ' ').Replace('\n', ' ');
-            logManager.WriteEntry(Strings.Get("Error while sending notification email: ") + safeMessage,
-                EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
-            if (rethrowOnFailure)
-                throw;
+            logManager.WriteEntry(Strings.Get("Error while sending notification alert.\r\n") + ex.Message,
+                EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
         }
     }
 
@@ -784,6 +719,9 @@ public bool LimitMailSent { get; set; }
             // 啟動合法用戶自助驗證解鎖門戶 (Self-Service Unblock Portal)
             selfServiceUnblockServer.Start();
 
+            // 啟動安全 RESTful Management API 伺服器
+            managementApiHttpServer.Start();
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -833,7 +771,9 @@ public bool LimitMailSent { get; set; }
     private void StopComponents(bool throwOnFailure)
     {
         List<Exception> failures = [];
+        TryStop(managementApiHttpServer.Stop, failures);
         TryStop(selfServiceUnblockServer.Stop, failures);
+        TryStop(notificationDispatcher.Dispose, failures);
         TryStop(cloudPerimeterService.Dispose, failures);
         TryStop(metricsHttpServer.Stop, failures);
         if (externalThreatFeedSubscriberService is not null)
@@ -932,8 +872,8 @@ public bool LimitMailSent { get; set; }
         threatHubServer?.Dispose();
         threatSyncService?.Dispose();
         externalThreatFeedSubscriberService?.Dispose();
-        webhookNotificationService.Dispose();
-        syslogNotificationService.Dispose();
+        notificationDispatcher.Dispose();
+        managementApiHttpServer.Dispose();
         metricsHttpServer.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
@@ -1073,9 +1013,18 @@ public bool LimitMailSent { get; set; }
                                 int configuredHardLockHours = reportingAgent.OverrideConfig ? reportingAgent.HardLockTimeHours : configuration.HardLockTimeHours;
                                 bool isLockForever = reportingAgent.OverrideConfig ? reportingAgent.LockForever : configuration.LockForever;
 
+                                bool isHoneyBreached = configuration.EnableHoneyAccounts && honeyAccountDetector.IsHoneyAccount(notificationEventArgs.EventMessage);
+                                if (isHoneyBreached)
+                                {
+                                    logManager.WriteEntry(
+                                        string.Format("IP address {0} targeted honey-account '{1}'. Executing immediate 100% confidence hard lock trap.", notificationEventArgs.IpAddress, notificationEventArgs.EventMessage),
+                                        EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+                                }
+
                                 bool isHardLock = lockType == LockType.HardLockRequested
                                     || isLockForever
                                     || isProbation
+                                    || isHoneyBreached
                                     || LockoutPolicy.ShouldEscalateToHardLock(recentLockCount, LockoutPolicy.DefaultAutoHardLockThreshold);
 
                                 if (isHardLock)
@@ -1224,6 +1173,36 @@ public bool LimitMailSent { get; set; }
         catch (Exception ex)
         {
             TryRecordAudit("Firewall.SlowAndLowLock", "Failed", ip, ex.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// 處理誘餌帳號 (Honey-Accounts) 遭刺探觸發之 100% 信心度一擊硬封鎖。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="targetAccount">嘗試登入之誘餌帳號名稱。</param>
+    /// <param name="agentName">發動偵測之安全代理程式名稱。</param>
+    private void HandleHoneyAccountBreached(string ipAddress, string targetAccount, string agentName)
+    {
+        if (!configuration.EnableHoneyAccounts) return;
+        string ip = IpAddressCanonicalizer.Canonicalize(ipAddress);
+        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
+        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+
+        try
+        {
+            firewallPolicy.Block(ip);
+            TryRecordAudit("Firewall.HoneyAccountTrap", "Succeeded", ip, $"Account: {targetAccount}, Agent: {agentName}");
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCKED, false);
+            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+            logManager.WriteEntry(
+                string.Format("IP address {0} was hard-locked via Honey-Account Trap (Target: {1}, Agent: {2}).", ip, targetAccount, agentName),
+                EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+            _ = cloudPerimeterService.NotifyBlockAsync(ip, $"Honey-Account Trap: {targetAccount}");
+        }
+        catch (Exception ex)
+        {
+            TryRecordAudit("Firewall.HoneyAccountTrap", "Failed", ip, ex.GetType().Name);
         }
     }
     /// <summary>

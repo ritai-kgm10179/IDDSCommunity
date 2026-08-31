@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -907,4 +907,6 @@
   <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>指標監聽 IP 位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
   <data name="Metrics port" xml:space="preserve"><value>指標監聽通訊埠</value></data>
   <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>允許之監控伺服器 CIDR (例如 10.0.0.0/8, 192.168.1.0/24)</value></data>
+  <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory 與 Kerberos 安全性代理程式</value></data>
+  <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>傳送通知警報時發生錯誤。&#xD;&#xA;</value></data>
 </root>

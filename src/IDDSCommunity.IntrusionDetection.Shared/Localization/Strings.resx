@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -907,5 +907,7 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)</value></data>
   <data name="Metrics port" xml:space="preserve"><value>Metrics port</value></data>
   <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)</value></data>
+  <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory &amp; Kerberos Security Agent</value></data>
+  <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>Error while sending notification alert.&#xD;&#xA;</value></data>
 </root>
 

@@ -77,7 +77,13 @@ public sealed class WebSecurityAgent : AuthenticationAgentBase<AuthenticationAge
                 continue;
 
             DateTimeOffset occurredAt = record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow;
-            return new AuthenticationFailureEvent(occurredAt, probe, record.Id, "Web Security", string.Empty, "Access denied");
+            string reason = "Access denied";
+            if (IDDSCommunity.IntrusionDetection.Shared.WebSecurity.WafRuleEngine.TryMatchThreat(propertyValue, out string? category))
+            {
+                reason = $"WAF-Lite: {category}";
+            }
+
+            return new AuthenticationFailureEvent(occurredAt, probe, record.Id, "Web Security", string.Empty, reason);
         }
         return null;
     }

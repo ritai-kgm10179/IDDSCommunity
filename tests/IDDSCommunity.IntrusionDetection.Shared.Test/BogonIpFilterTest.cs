@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
 using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

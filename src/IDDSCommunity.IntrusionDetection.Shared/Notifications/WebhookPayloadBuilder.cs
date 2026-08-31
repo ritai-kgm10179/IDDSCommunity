@@ -43,6 +43,7 @@ public static class WebhookPayloadBuilder
             WebhookPlatform.Slack => BuildSlackPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp),
             WebhookPlatform.Discord => BuildDiscordPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp),
             WebhookPlatform.Telegram => BuildTelegramPayload(telegramChatId ?? string.Empty, eventTitle, ipAddress, statusName, agentName, details, timestamp),
+            WebhookPlatform.LineMessagingApi => BuildLineMessagingPayload(telegramChatId ?? string.Empty, eventTitle, ipAddress, statusName, agentName, details, timestamp),
             _ => BuildGenericJsonPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp)
         };
     }
@@ -222,5 +223,34 @@ public static class WebhookPayloadBuilder
         };
 
         return JsonSerializer.Serialize(genericMessage, JsonOptions);
+    }
+
+    /// <summary>
+    /// 建構 LINE Messaging API Push Message 格式之 Webhook 酬載。
+    /// </summary>
+    public static string BuildLineMessagingPayload(string toUserIdOrGroupId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
+    {
+        string text = $"🛡️【IDDS Community 警報】\n" +
+                      $"• 事件：{eventTitle}\n" +
+                      $"• 來源 IP：{ipAddress}\n" +
+                      $"• 狀態：{statusName}\n" +
+                      $"• 代理：{agentName}\n" +
+                      $"• 時間：{timestamp:yyyy-MM-dd HH:mm:ss} UTC\n\n" +
+                      $"詳細說明：\n{details}";
+
+        var lineMessage = new Dictionary<string, object>
+        {
+            ["to"] = toUserIdOrGroupId,
+            ["messages"] = new List<object>
+            {
+                new Dictionary<string, string>
+                {
+                    ["type"] = "text",
+                    ["text"] = text
+                }
+            }
+        };
+
+        return JsonSerializer.Serialize(lineMessage, JsonOptions);
     }
 }

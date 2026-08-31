@@ -30,5 +30,6 @@
   <data name="OpenSSH requires Windows event log reading or a log file." xml:space="preserve"><value>OpenSSH 必須啟用 Windows 事件記錄讀取，或指定一個日誌檔案。</value></data>
   <data name="PostgreSQL log directory must be an absolute path." xml:space="preserve"><value>PostgreSQL 記錄目錄必須是絕對路徑。</value></data>
   <data name="PostgreSQL log pattern is invalid." xml:space="preserve"><value>PostgreSQL 記錄檔搜尋模式無效。</value></data>
-  <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}：驗證失敗次數已超過門檻。</value></data>
+  <data name="{0}: authentication failure threshold exceeded." xml:space="preserve"><value>{0}：已超過驗證失敗次數門檻。</value></data>
+  <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory 與 Kerberos 安全性代理程式</value></data>
 </root>

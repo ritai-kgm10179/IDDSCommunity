@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -15,8 +15,13 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// <summary>
 /// 提供 SQLite 頁面加密資料庫連線管理、結構升級、交易執行與查詢封裝之主要資料存取類別。
 /// </summary>
-public class Database
+public class Database : Storage.IDatabaseBackend
 {
+    /// <summary>
+    /// 取得資料庫後端型別（預設為 SQLite）。
+    /// </summary>
+    public Storage.DatabaseBackendType BackendType => Storage.DatabaseBackendType.SQLite;
+
     private const int MaximumRetryCount = 5;
     private static readonly ResiliencePipeline SqlitePipeline = new ResiliencePipelineBuilder()
         .AddRetry(new RetryStrategyOptions
@@ -42,6 +47,11 @@ public bool IsConfigured => _isConfigured;
     /// 取得 absolute path of the configured SQLite database.
     /// </summary>
     public string DataSource => connBuilder.DataSource;
+    /// <summary>
+    /// 開啟或重新建立作用中的資料庫連線。
+    /// </summary>
+    public void Open() => OpenConnection();
+
     /// <summary>
     /// Closes the active database connection and releases its file handle.
     /// </summary>

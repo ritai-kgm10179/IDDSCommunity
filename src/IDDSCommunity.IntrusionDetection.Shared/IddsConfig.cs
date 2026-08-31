@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -928,6 +928,69 @@ public CSafeNetworks SafeNetworks
     {
         get => double.TryParse(GetConfigValue("SlowAndLowAnomalyThreshold"), out double t) && t > 0 ? t : 8.0;
         set => SetConfigValue("SlowAndLowAnomalyThreshold", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用誘餌帳號 (Honey-Accounts) 欺敵陷阱防護。
+    /// </summary>
+    public bool EnableHoneyAccounts
+    {
+        get => bool.TryParse(GetConfigValue("EnableHoneyAccounts"), out bool b) ? b : true;
+        set => SetConfigValue("EnableHoneyAccounts", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 誘餌帳號清單（以逗號或分號分隔，如 admin_backup, test_vpn, sql_svc）。
+    /// </summary>
+    public string HoneyAccounts
+    {
+        get => GetConfigValue("HoneyAccounts") ?? "admin_backup,root_admin,test_vpn,sql_svc";
+        set => SetConfigValue("HoneyAccounts", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用安全 RESTful Management API。
+    /// </summary>
+    public bool EnableManagementApi
+    {
+        get => bool.TryParse(GetConfigValue("EnableManagementApi"), out bool b) ? b : false;
+        set => SetConfigValue("EnableManagementApi", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 RESTful Management API 監聽連接埠 (預設 8443)。
+    /// </summary>
+    public int ManagementApiPort
+    {
+        get => int.TryParse(GetConfigValue("ManagementApiPort"), out int p) && p > 0 ? p : 8443;
+        set => SetConfigValue("ManagementApiPort", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 RESTful Management API 金鑰 (X-Api-Key)。
+    /// </summary>
+    public string ManagementApiKey
+    {
+        get => GetConfigValue("ManagementApiKey") ?? string.Empty;
+        set => SetConfigValue("ManagementApiKey", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 自訂 SOAR 處置 PowerShell / CMD 腳本路徑。
+    /// </summary>
+    public string SoarRemediationScriptPath
+    {
+        get => GetConfigValue("SoarRemediationScriptPath") ?? string.Empty;
+        set => SetConfigValue("SoarRemediationScriptPath", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 資料庫後端引擎型別 (0: SQLite, 1: PostgreSQL, 2: SqlServer)。
+    /// </summary>
+    public Storage.DatabaseBackendType DatabaseBackend
+    {
+        get => Enum.TryParse(GetConfigValue("DatabaseBackend"), out Storage.DatabaseBackendType b) ? b : Storage.DatabaseBackendType.SQLite;
+        set => SetConfigValue("DatabaseBackend", value.ToString());
     }
 
         /// <summary>

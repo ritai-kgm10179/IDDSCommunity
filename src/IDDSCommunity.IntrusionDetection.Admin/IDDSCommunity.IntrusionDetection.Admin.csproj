@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -19,6 +19,7 @@
     <EmbeddedResource Include="..\..\assets\branding\idds-community.ico" LogicalName="IDDSCommunity.Branding.idds-community.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.ActiveDirectory\IDDSCommunity.Agents.ActiveDirectory.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.FileMaker\IDDSCommunity.Agents.FileMaker.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.FileZilla\IDDSCommunity.Agents.FileZilla.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.FtpServer\IDDSCommunity.Agents.FtpServer.csproj" ReferenceOutputAssembly="false" />
