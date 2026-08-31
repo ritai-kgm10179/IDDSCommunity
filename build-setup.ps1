@@ -54,6 +54,9 @@ dotnet publish (Join-Path $repositoryRoot 'src\IDDSCommunity.IntrusionDetection.
 if ($LASTEXITCODE -ne 0) { throw '管理介面發佈失敗。' }
 dotnet publish (Join-Path $repositoryRoot 'tools\IDDSCommunity.DatabaseDiagnostics\IDDSCommunity.DatabaseDiagnostics.csproj') @commonArguments --output $diagnosticsRoot
 if ($LASTEXITCODE -ne 0) { throw '資料庫診斷工具發佈失敗。' }
+$psModuleRoot = Join-Path $payloadRoot 'PowerShell\Modules\IDDSCommunity'
+New-Item -ItemType Directory -Path $psModuleRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'tools\IDDSCommunity.PowerShell\*') -Destination $psModuleRoot -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $payloadRoot -Force

@@ -427,6 +427,7 @@ internal static class SetupOperations
             ConfigureEventLog();
             EnsureOperatorsGroup();
             ConfigureDataDirectoryPermissions();
+            DeployPowerShellModule();
             cancellationToken.ThrowIfCancellationRequested();
             if (!serviceState.Exists)
             {
@@ -705,6 +706,15 @@ internal static class SetupOperations
         catch (Exception exception)
         {
             LogNonFatal("Remove operators group", exception);
+            cleanupIncomplete = true;
+        }
+        try
+        {
+            CleanUpPowerShellModule();
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Clean PowerShell module", exception);
             cleanupIncomplete = true;
         }
         if (filesQuarantined && Directory.Exists(quarantineDirectory))
@@ -1125,6 +1135,70 @@ internal static class SetupOperations
             string details = standardError.GetAwaiter().GetResult().Trim();
             if (string.IsNullOrEmpty(details)) details = standardOutput.GetAwaiter().GetResult().Trim();
             throw new InvalidOperationException(SetupText.Format("ServiceControlFailedWithDetails", process.ExitCode, details));
+        }
+    }
+
+    private static void DeployPowerShellModule()
+    {
+        try
+        {
+            string sourceModule = Path.Combine(InstallDirectory, "PowerShell", "Modules", "IDDSCommunity");
+            if (!Directory.Exists(sourceModule))
+            {
+                sourceModule = Path.Combine(InstallDirectory, "Tools", "IDDSCommunity.PowerShell");
+            }
+            if (!Directory.Exists(sourceModule)) return;
+
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string[] targetDirectories = [
+                Path.Combine(programFiles, "WindowsPowerShell", "Modules", "IDDSCommunity"),
+                Path.Combine(programFiles, "PowerShell", "Modules", "IDDSCommunity")
+            ];
+
+            foreach (string targetDir in targetDirectories)
+            {
+                string? parentDir = Directory.GetParent(targetDir)?.FullName;
+                if (parentDir != null && Directory.Exists(parentDir))
+                {
+                    if (!Directory.Exists(targetDir))
+                    {
+                        Directory.CreateDirectory(targetDir);
+                    }
+                    foreach (string file in Directory.EnumerateFiles(sourceModule, "*.*", SearchOption.TopDirectoryOnly))
+                    {
+                        string destFile = Path.Combine(targetDir, Path.GetFileName(file));
+                        File.Copy(file, destFile, overwrite: true);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("Deploy PowerShell module", ex);
+        }
+    }
+
+    private static void CleanUpPowerShellModule()
+    {
+        try
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string[] targetDirectories = [
+                Path.Combine(programFiles, "WindowsPowerShell", "Modules", "IDDSCommunity"),
+                Path.Combine(programFiles, "PowerShell", "Modules", "IDDSCommunity")
+            ];
+
+            foreach (string targetDir in targetDirectories)
+            {
+                if (Directory.Exists(targetDir))
+                {
+                    Directory.Delete(targetDir, recursive: true);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("CleanUp PowerShell module", ex);
         }
     }
 
