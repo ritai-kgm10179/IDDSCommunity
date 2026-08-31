@@ -56,7 +56,7 @@ dotnet publish (Join-Path $repositoryRoot 'tools\IDDSCommunity.DatabaseDiagnosti
 if ($LASTEXITCODE -ne 0) { throw '資料庫診斷工具發佈失敗。' }
 $psModuleRoot = Join-Path $payloadRoot 'PowerShell\Modules\IDDSCommunity'
 New-Item -ItemType Directory -Path $psModuleRoot -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $repositoryRoot 'tools\IDDSCommunity.PowerShell\*') -Destination $psModuleRoot -Recurse -Force
+Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'tools\IDDSCommunity.PowerShell') | Copy-Item -Destination $psModuleRoot -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'FORK-NOTICE.md') -Destination $payloadRoot -Force
