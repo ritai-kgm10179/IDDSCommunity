@@ -13,7 +13,8 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 ## 主要功能
 
 - Windows 服務型防護核心與 WinForms 管理介面。
-- 硬封鎖、軟封鎖、安全網路允許清單與自動解除封鎖。
+- 硬封鎖、軟封鎖、安全網路允許清單（支援 IPv4、IPv6、CIDR 與動態 DNS FQDN 解析）與自動解除封鎖。
+- 分散式跨主機威脅情資聯防（Edge / Hub 節點拓撲）與動態 IP 智慧假釋／一擊立即硬封鎖機制（Probation & One-Strike Relock）。
 - Windows 防火牆規則管理、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
 - 代理程式外掛：通用 FTP、FileZilla Server、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security、Windows DNS Server 與 Technitium DNS Security。

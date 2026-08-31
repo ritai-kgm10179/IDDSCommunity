@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
@@ -35,6 +35,10 @@ public const int LOCK_STATUS_HARDLOCK = 310;
     /// 定義 LOCK_STATUS_HARDLOCK_EXPIRED 之數值。
     /// </summary>
 public const int LOCK_STATUS_HARDLOCK_EXPIRED = 320;
+        /// <summary>
+    /// 定義 LOCK_STATUS_PROBATION 假釋觀察期之數值（暫時放行防火牆但進入高警覺觀察）。
+    /// </summary>
+public const int LOCK_STATUS_PROBATION = 350;
         /// <summary>
     /// 定義 LOCK_STATUS_MANUAL 之數值。
     /// </summary>

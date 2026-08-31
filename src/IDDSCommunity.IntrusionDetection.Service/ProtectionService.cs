@@ -34,6 +34,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly IRuntimeLog logManager;
     private CrossAgentCorrelationEngine crossAgentCorrelationEngine = new();
     private SecurityEventPipeline? securityEventPipeline;
+    private DynamicDnsResolverService? dynamicDnsResolverService;
+    private ThreatIntelligenceHubServer? threatHubServer;
+    private ThreatIntelligenceSyncService? threatSyncService;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -484,6 +487,27 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 maintenance.PruneBackups(backupDirectory, protectionOptions.BackupRetentionDays, protectionOptions.MaximumBackupCount);
             }
             maintenance.Optimize();
+
+            // 執行動態 IP 智慧假釋（Probation）轉移維護
+            int decayDays = Math.Max(7, configuration.ProbationDecayDays);
+            DateTime probationCutoff = DateTime.UtcNow.AddDays(-decayDays);
+            List<Lock> staleLocks = Locks.GetStalePermanentLocks(probationCutoff);
+            foreach (Lock l in staleLocks)
+            {
+                try
+                {
+                    Locks.SetProbation(l.Id);
+                    firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                    TryRecordAudit("Firewall.Probation", "Succeeded", l.IpAddress);
+                    logManager.WriteEntry(
+                        string.Format("IP address {0} transitioned to probation after {1} days of zero activity.", l.IpAddress, decayDays),
+                        EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                }
+                catch (Exception ex)
+                {
+                    TryRecordAudit("Firewall.Probation", "Failed", l.IpAddress, ex.GetType().Name);
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -673,6 +697,34 @@ public bool LimitMailSent { get; set; }
             maintenanceTimer.Enabled = true;
             reportingStarted = true;
             reportScheduler.StartReporting();
+
+            // 啟動動態 DNS (DDNS) 安全網路解析服務
+            dynamicDnsResolverService = new DynamicDnsResolverService(
+                configuration,
+                msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+            dynamicDnsResolverService.Start();
+
+            // 依主機角色啟動威脅情資中繼中心 (Hub) 或邊緣節點 (Edge Node)
+            if (configuration.ThreatHubRole == Shared.ThreatIntelligence.ThreatHubRole.ThreatHub)
+            {
+                threatHubServer = new ThreatIntelligenceHubServer(
+                    configuration,
+                    HandleClusterThreatReceived,
+                    msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                threatHubServer.Start();
+            }
+            else if (configuration.ThreatHubRole == Shared.ThreatIntelligence.ThreatHubRole.EdgeNode)
+            {
+                threatSyncService = new ThreatIntelligenceSyncService(
+                    configuration,
+                    HandleClusterThreatReceived,
+                    msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                threatSyncService.Start();
+            }
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -722,6 +774,13 @@ public bool LimitMailSent { get; set; }
     private void StopComponents(bool throwOnFailure)
     {
         List<Exception> failures = [];
+        if (threatSyncService is not null)
+            TryStop(threatSyncService.Stop, failures);
+        if (threatHubServer is not null)
+            TryStop(threatHubServer.Stop, failures);
+        if (dynamicDnsResolverService is not null)
+            TryStop(dynamicDnsResolverService.Stop, failures);
+
         if (reportingStarted)
             TryStop(reportScheduler.StopReporting, failures);
         reportingStarted = false;
@@ -805,6 +864,9 @@ public bool LimitMailSent { get; set; }
         reportScheduler.RunMonthlyReportAsync -= Instance_RunMonthlyReportAsync;
         cleanupTimer.Dispose();
         maintenanceTimer.Dispose();
+        dynamicDnsResolverService?.Dispose();
+        threatHubServer?.Dispose();
+        threatSyncService?.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
     }
@@ -915,7 +977,15 @@ public bool LimitMailSent { get; set; }
                     {
                         if (!Locks.LockExists(notificationEventArgs.IpAddress))
                         {
-                            LockType lockType = reportingAgent.GetCurrentLockType(notificationEventArgs.IpAddress);
+                            bool isProbation = Locks.IsProbation(notificationEventArgs.IpAddress);
+                            if (isProbation)
+                            {
+                                logManager.WriteEntry(
+                                    string.Format("IP address {0} in probation state re-offended. Executing immediate one-strike permanent hard lock.", notificationEventArgs.IpAddress),
+                                    EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+                            }
+
+                            LockType lockType = isProbation ? LockType.HardLockRequested : reportingAgent.GetCurrentLockType(notificationEventArgs.IpAddress);
                             if (lockType != LockType.None && lockType != LockType.SoftLock)
                             {
                                 int recentLockCount = Locks.GetRecentLockCount(
@@ -928,6 +998,7 @@ public bool LimitMailSent { get; set; }
 
                                 bool isHardLock = lockType == LockType.HardLockRequested
                                     || isLockForever
+                                    || isProbation
                                     || LockoutPolicy.ShouldEscalateToHardLock(recentLockCount, LockoutPolicy.DefaultAutoHardLockThreshold);
 
                                 if (isHardLock)
@@ -937,6 +1008,18 @@ public bool LimitMailSent { get; set; }
                                         Locks.CreateLock(DateTime.UtcNow, hardUnlockDate, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress),
                                         LockType.HardLock,
                                         reportingAgent);
+
+                                    // 主動將本機永久硬封鎖威脅推播至叢集 (Hub / Edge)
+                                    Shared.ThreatIntelligence.ThreatIntelligenceItem threatItem = new()
+                                    {
+                                        SourceIp = notificationEventArgs.IpAddress,
+                                        ThreatCategory = reportingAgent.Name ?? "BRUTE_FORCE",
+                                        ConfidenceScore = 1.0,
+                                        ReportedUtc = DateTime.UtcNow,
+                                        ReporterNodeName = Environment.MachineName
+                                    };
+                                    threatHubServer?.IngestLocalThreat(threatItem);
+                                    threatSyncService?.EnqueueLocalThreat(threatItem);
                                 }
                                 else
                                 {
@@ -974,6 +1057,33 @@ public bool LimitMailSent { get; set; }
             logManager.WriteEntry(string.Format("AttackDetected delegate invocation of {0} caused a problem. \r\nDetails:\r\n{1}", sender != null ? sender.GetType().Name : "unknown", ex.Message),
                 EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_PLUGIN_ERROR, Globals.IDDSCOMMUNITY_LOG_CATEGORY_PLUGIN);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// 處理自 Threat Hub 或邊緣節點接收到之跨主機聯防威脅情資。
+    /// </summary>
+    /// <param name="item">威脅情資項目。</param>
+    private void HandleClusterThreatReceived(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    {
+        if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
+        string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
+        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+
+        try
+        {
+            firewallPolicy.Block(ip);
+            TryRecordAudit("Firewall.ClusterLock", "Succeeded", ip);
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, ip, IntrusionLog.STATUS_HARD_LOCKED, false);
+            Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+            logManager.WriteEntry(
+                string.Format("IP address {0} was locked via Threat Intelligence Cluster sync (reported by {1}).", ip, item.ReporterNodeName),
+                EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+        }
+        catch (Exception ex)
+        {
+            TryRecordAudit("Firewall.ClusterLock", "Failed", ip, ex.GetType().Name);
         }
     }
     /// <summary>

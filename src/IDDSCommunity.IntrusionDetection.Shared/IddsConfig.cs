@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -313,12 +313,29 @@ public Dictionary<string, string> AppConfig
     /// <returns>傳回load config結果。</returns>
     private Dictionary<string, string> LoadConfig(string configTable)
     {
-        if (!database.IsConfigured) configureDatabase();
-        Dictionary<string, string> config = [];
-        using IDataReader rdr = database.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
-        while (rdr.Read())
+        if (!database.IsConfigured)
         {
-            config.Add(Db.DbValueConverter.ToString(rdr["ConfigKey"]), Db.DbValueConverter.ToString(rdr["ConfigValue"]));
+            try
+            {
+                configureDatabase();
+            }
+            catch
+            {
+                return [];
+            }
+        }
+        Dictionary<string, string> config = [];
+        try
+        {
+            using IDataReader rdr = database.ExecuteReader(string.Format("select ConfigKey, ConfigValue from {0}", configTable));
+            while (rdr.Read())
+            {
+                config.Add(Db.DbValueConverter.ToString(rdr["ConfigKey"]), Db.DbValueConverter.ToString(rdr["ConfigValue"]));
+            }
+        }
+        catch
+        {
+            // 在未設定資料庫或無權限之獨立/測試環境中維持記憶體字典運作
         }
         return config;
     }
@@ -566,28 +583,32 @@ public CSafeNetworks SafeNetworks
     public class CSafeNetworks : List<CSafeNetwork> { }
 
     /// <summary>
-    /// 代表單一安全網路 IP 或 CIDR 子網路規則項目。
+    /// 代表單一安全網路 IP、CIDR 子網路或動態 DNS (DDNS FQDN) 規則項目。
     /// </summary>
     public class CSafeNetwork
     {
-                /// <summary>
-        /// 取得或設定 IpAddress。
+        /// <summary>
+        /// 取得或設定 IP 位址、CIDR 或動態主機名稱 (FQDN)。
         /// </summary>
-public string IpAddress { get; set; } = string.Empty;
-                /// <summary>
-        /// 取得或設定 SubnetMask。
+        public string IpAddress { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 取得或設定 子網路遮罩（若為 FQDN 則可為空白）。
         /// </summary>
-public string SubnetMask { get; set; } = string.Empty;
-                /// <summary>
+        public string SubnetMask { get; set; } = string.Empty;
+
+        /// <summary>
         /// 取得或設定 本地化顯示名稱。
         /// </summary>
-public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
+        public string DisplayName => string.IsNullOrWhiteSpace(SubnetMask) ? IpAddress : string.Format("{0}/{1}", IpAddress, SubnetMask);
+
         /// <summary>
         /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
         public CSafeNetwork()
         {
         }
+
         /// <summary>
         /// 初始化 <see cref="CSafeNetwork"/> class的新執行個體。
         /// </summary>
@@ -598,6 +619,78 @@ public string DisplayName => string.Format("{0}/{1}", IpAddress, SubnetMask);
             IpAddress = ipAddress;
             SubnetMask = subnetmask;
         }
+    }
+
+    /// <summary>
+    /// 取得或設定 威脅情資叢集主機角色（獨立單機、邊緣節點、威脅中繼中心）。
+    /// </summary>
+    public ThreatIntelligence.ThreatHubRole ThreatHubRole
+    {
+        get => Enum.TryParse(GetConfigValue("ThreatHubRole"), out ThreatIntelligence.ThreatHubRole role) ? role : ThreatIntelligence.ThreatHubRole.Standalone;
+        set => SetConfigValue("ThreatHubRole", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 威脅情資中繼中心（Threat Hub）伺服器端點 URL。
+    /// </summary>
+    public string ThreatHubEndpoint
+    {
+        get => GetConfigValue("ThreatHubEndpoint");
+        set => SetConfigValue("ThreatHubEndpoint", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 威脅情資叢集 API 金鑰。
+    /// </summary>
+    public string ThreatHubApiKey
+    {
+        get
+        {
+            string key = GetConfigValue("ThreatHubApiKey");
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = Guid.NewGuid().ToString("N");
+                SetConfigValue("ThreatHubApiKey", key);
+            }
+            return key;
+        }
+        set => SetConfigValue("ThreatHubApiKey", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 Threat Hub 內建服務監聽之連接埠（預設 8443）。
+    /// </summary>
+    public int ThreatHubPort
+    {
+        get => int.TryParse(GetConfigValue("ThreatHubPort"), out int port) && port > 0 ? port : 8443;
+        set => SetConfigValue("ThreatHubPort", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 邊緣節點與 Threat Hub 同步威脅情資之間隔秒數（預設 60 秒）。
+    /// </summary>
+    public int ThreatHubSyncIntervalSeconds
+    {
+        get => int.TryParse(GetConfigValue("ThreatHubSyncIntervalSeconds"), out int s) && s > 0 ? s : 60;
+        set => SetConfigValue("ThreatHubSyncIntervalSeconds", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 永久硬封鎖在無攻擊活動後自動轉移至假釋觀察期之天數（預設 90 天）。
+    /// </summary>
+    public int ProbationDecayDays
+    {
+        get => int.TryParse(GetConfigValue("ProbationDecayDays"), out int d) && d > 0 ? d : 90;
+        set => SetConfigValue("ProbationDecayDays", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 動態 DNS (DDNS FQDN) 安全網路解析更新頻率分鐘數（預設 5 分鐘）。
+    /// </summary>
+    public int DynamicDnsIntervalMinutes
+    {
+        get => int.TryParse(GetConfigValue("DynamicDnsIntervalMinutes"), out int m) && m > 0 ? m : 5;
+        set => SetConfigValue("DynamicDnsIntervalMinutes", value.ToString());
     }
 
         /// <summary>
@@ -828,20 +921,28 @@ public string Language
             {
                 try
                 {
-                    IPAddress networkAddress = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(net.IpAddress));
-                    if (networkAddress.AddressFamily.Equals(address.AddressFamily))
+                    if (ThreatIntelligence.DynamicDnsCache.IsIpInDdns(address, net.IpAddress))
                     {
-                        switch (address.AddressFamily)
-                        {
-                            case System.Net.Sockets.AddressFamily.InterNetwork:
-                                result = IsIp4InNetwork(address, networkAddress, net.SubnetMask);
-                                break;
-                            case System.Net.Sockets.AddressFamily.InterNetworkV6:
-                                result = IsIp6InNetwork(address, networkAddress, int.Parse(net.SubnetMask));
-                                break;
-                        }
+                        return true;
                     }
-                    if (result) return true;
+
+                    if (IPAddress.TryParse(net.IpAddress, out IPAddress? rawNetAddress))
+                    {
+                        IPAddress networkAddress = IpAddressCanonicalizer.Canonicalize(rawNetAddress);
+                        if (networkAddress.AddressFamily.Equals(address.AddressFamily))
+                        {
+                            switch (address.AddressFamily)
+                            {
+                                case System.Net.Sockets.AddressFamily.InterNetwork:
+                                    result = IsIp4InNetwork(address, networkAddress, net.SubnetMask);
+                                    break;
+                                case System.Net.Sockets.AddressFamily.InterNetworkV6:
+                                    result = IsIp6InNetwork(address, networkAddress, int.Parse(net.SubnetMask));
+                                    break;
+                            }
+                        }
+                        if (result) return true;
+                    }
                 }
                 catch (Exception exception)
                 {

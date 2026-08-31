@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -609,6 +609,7 @@
   <data name="Error adding lock" xml:space="preserve"><value>Error adding lock</value></data>
   <data name="Unlock error" xml:space="preserve"><value>Unlock error</value></data>
   <data name="Protection unavailable" xml:space="preserve"><value>Protection unavailable</value></data>
+  <data name="Probation" xml:space="preserve"><value>Probation</value></data>
   <data name="Display name for status {0} was not found." xml:space="preserve"><value>Display name for status {0} was not found.</value></data>
   <data name="Status {0} not found in LockStatusNames!" xml:space="preserve"><value>Status {0} not found in LockStatusNames!</value></data>
   <data name="The application executable path is unavailable." xml:space="preserve"><value>The application executable path is unavailable.</value></data>

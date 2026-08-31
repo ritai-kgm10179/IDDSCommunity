@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -123,6 +123,11 @@ public static class WellKnownAgentIds
     /// </summary>
     public static readonly Guid FileZilla = new("{88B67B54-9E7D-4F7B-8A5F-4E90B0F33A11}");
 
+    /// <summary>
+    /// 叢集威脅情資聯防代理程式（Threat Intelligence Cluster Sync Agent）。
+    /// </summary>
+    public static readonly Guid ClusterThreatHub = new("{A71D5E99-4A9B-4D29-9154-152063A48C9E}");
+
     private sealed record AgentDescriptor(Guid Id, string PrimaryName, string AssemblyName, string DisplayName, string[] Aliases);
 
     private static readonly AgentDescriptor[] KnownAgents =
@@ -172,7 +177,9 @@ public static class WellKnownAgentIds
         new(Ftp, "FtpAgent", "IDDSCommunity.Agents.FtpServer.dll", "FTP 安全性代理程式",
             ["FTP Security Agent", "FTP Server", "FtpAgent", "FTP", "IDDSCommunity.Agents.FtpServer"]),
         new(FileZilla, "FileZillaSecurityAgent", "IDDSCommunity.Agents.FileZilla.dll", "FileZilla 安全性代理程式",
-            ["FileZilla Security Agent", "FileZilla", "IDDSCommunity.Agents.FileZilla"])
+            ["FileZilla Security Agent", "FileZilla", "IDDSCommunity.Agents.FileZilla"]),
+        new(ClusterThreatHub, "ClusterThreatHubSyncAgent", "IDDSCommunity.IntrusionDetection.Service.dll", "叢集威脅情資聯防",
+            ["Threat Intelligence Cluster", "ClusterThreatHub", "叢集聯防", "ThreatHub", "IDDSCommunity.ThreatIntelligence.Cluster"])
     ];
 
     /// <summary>

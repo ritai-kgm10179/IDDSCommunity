@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -153,5 +153,39 @@ public class LocksTest
         }
 
         Assert.IsTrue(found, "ReadLocks 應成功傳回包含關聯 IntrusionLog 之 AgentId。");
+    }
+
+    /// <summary>
+    /// 驗證假釋觀察期（Probation）狀態設定、查詢與陳舊鎖定掃描之正確性。
+    /// </summary>
+    [TestMethod]
+    public void Probation_Lifecycle_TransitionAndCheck_Works()
+    {
+        string targetIp = $"198.51.100.{Random.Shared.Next(10, 250)}";
+        Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0", targetIp);
+
+        Lock l = new()
+        {
+            IpAddress = targetIp,
+            LockDate = DateTime.UtcNow.AddDays(-100),
+            UnlockDate = DateTime.MaxValue,
+            Port = 0,
+            Status = Lock.LOCK_STATUS_HARDLOCK,
+            TriggerIncident = 0
+        };
+        l.Id = Locks.CreateLock(l);
+
+        Assert.IsFalse(Locks.IsProbation(targetIp));
+
+        // 測試陳舊永久鎖定掃描
+        var staleList = Locks.GetStalePermanentLocks(DateTime.UtcNow.AddDays(-90));
+        Assert.IsTrue(staleList.Exists(item => item.Id == l.Id));
+
+        // 轉移至假釋觀察期
+        Locks.SetProbation(l.Id);
+        Assert.IsTrue(Locks.IsProbation(targetIp));
+
+        var probationList = Locks.GetProbationLocks();
+        Assert.IsTrue(probationList.Exists(item => item.Id == l.Id));
     }
 }

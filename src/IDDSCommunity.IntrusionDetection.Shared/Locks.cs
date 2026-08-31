@@ -481,6 +481,105 @@ public class Locks
         }
     }
 
+    /// <summary>
+    /// 取得目前所有處於假釋觀察期（Probation）之鎖定記錄。
+    /// </summary>
+    /// <returns>假釋中之鎖定記錄清單。</returns>
+    public static List<Lock> GetProbationLocks()
+    {
+        List<Lock> result = [];
+        if (Database.Instance.IsConfigured)
+        {
+            string sqlString = @"select * from Locks where status=@p0 order by LockDate desc";
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_PROBATION);
+            while (rdr.Read())
+            {
+                result.Add(new Lock
+                {
+                    Id = Db.DbValueConverter.ToInt64(rdr["LockId"]),
+                    IpAddress = Db.DbValueConverter.ToString(rdr["IpAddress"]),
+                    LockDate = Db.DbValueConverter.ToDateTime(rdr["LockDate"]),
+                    Port = Db.DbValueConverter.ToInt(rdr["Port"]),
+                    Status = Db.DbValueConverter.ToInt(rdr["Status"]),
+                    TriggerIncident = Db.DbValueConverter.ToInt64(rdr["TriggerIncident"]),
+                    UnlockDate = Db.DbValueConverter.ToDateTime(rdr["UnlockDate"])
+                });
+            }
+            return result;
+        }
+        else
+        {
+            throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
+        }
+    }
 
+    /// <summary>
+    /// 取得自指定截止時間前建立且處於永久硬封鎖之陳舊記錄（供轉移假釋或歸檔）。
+    /// </summary>
+    /// <param name="cutoffDate">截止時間點（例如 90 天前）。</param>
+    /// <returns>陳舊永久鎖定清單。</returns>
+    public static List<Lock> GetStalePermanentLocks(DateTime cutoffDate)
+    {
+        List<Lock> result = [];
+        if (Database.Instance.IsConfigured)
+        {
+            string sqlString = @"select * from Locks where status=@p0 and LockDate<@p1";
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, cutoffDate);
+            while (rdr.Read())
+            {
+                result.Add(new Lock
+                {
+                    Id = Db.DbValueConverter.ToInt64(rdr["LockId"]),
+                    IpAddress = Db.DbValueConverter.ToString(rdr["IpAddress"]),
+                    LockDate = Db.DbValueConverter.ToDateTime(rdr["LockDate"]),
+                    Port = Db.DbValueConverter.ToInt(rdr["Port"]),
+                    Status = Db.DbValueConverter.ToInt(rdr["Status"]),
+                    TriggerIncident = Db.DbValueConverter.ToInt64(rdr["TriggerIncident"]),
+                    UnlockDate = Db.DbValueConverter.ToDateTime(rdr["UnlockDate"])
+                });
+            }
+            return result;
+        }
+        else
+        {
+            throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
+        }
+    }
 
+    /// <summary>
+    /// 檢查指定之 IP 位址目前是否處於假釋觀察期（Probation）。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <returns>若處於假釋觀察期則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool IsProbation(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress)) return false;
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
+
+        if (Database.Instance.IsConfigured)
+        {
+            object? result = Database.Instance.ExecuteScalar(
+                "select count(*) from Locks where IpAddress=@p0 and status=@p1",
+                ipAddress,
+                Lock.LOCK_STATUS_PROBATION);
+            return result != null && int.TryParse(result.ToString(), out int count) && count > 0;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 將指定鎖定記錄之狀態轉移為假釋觀察期（Probation）。
+    /// </summary>
+    /// <param name="lockId">鎖定記錄識別碼。</param>
+    public static void SetProbation(long lockId)
+    {
+        if (Database.Instance.IsConfigured)
+        {
+            Database.Instance.ExecuteNonQuery(
+                "update Locks set Status=@p0, LastUpdate=@p1 where LockId=@p2",
+                Lock.LOCK_STATUS_PROBATION,
+                DateTime.UtcNow,
+                lockId);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 
@@ -53,10 +53,14 @@ LockError = Lock.LOCK_STATUS_LOCK_ERROR,
     /// 定義 UnlockError 列舉值。
     /// </summary>
 UnlockError = Lock.LOCK_STATUS_UNLOCK_ERROR,
-        /// <summary>
+    /// <summary>
     /// 定義 ProtectionUnavailable 列舉值。
     /// </summary>
-ProtectionUnavailable = Lock.LOCK_STATUS_PROTECTION_UNAVAILABLE
+ProtectionUnavailable = Lock.LOCK_STATUS_PROTECTION_UNAVAILABLE,
+    /// <summary>
+    /// 處於假釋觀察期狀態。
+    /// </summary>
+Probation = Lock.LOCK_STATUS_PROBATION
 }
 
 /// <summary>
@@ -85,7 +89,8 @@ public static Dictionary<int, string> LockStatusNames
                     { (int)LockStatus.ManuallyUnlocked, "Manually unlocked" },
                     { (int)LockStatus.LockError, "Error adding lock" },
                     { (int)LockStatus.UnlockError, "Unlock error" },
-                    { (int)LockStatus.ProtectionUnavailable, "Protection unavailable" }
+                    { (int)LockStatus.ProtectionUnavailable, "Protection unavailable" },
+                    { (int)LockStatus.Probation, "Probation" }
                 };
             return _lockStatusNames;
         }

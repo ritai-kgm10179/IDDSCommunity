@@ -97,7 +97,17 @@
 
 ## 10. 實體識別碼與多語系分離規範 (Identity and Localization Separation)
 
-- **不可變唯一識別碼 (Invariant ID)**：所有資料表關聯、外鍵、事件日誌（`IntrusionLog.AgentId`）與統計累加（`AgentStatistics.AgentId`）必須一律使用不可變之唯一識別碼（`Guid`）；嚴禁將代理程式名稱（`Name`）、介面顯示文字（`DisplayName`）、組件名稱（`AssemblyName`）或任何可本地化之字串作為資料庫實體關聯或分組依據。
-- **確定性 Invariant Agent GUID**：所有內建安全性代理程式必須於程式碼中宣告常數型別之確定性 GUID（定義於 [`WellKnownAgentIds`](src/IDDSCommunity.IntrusionDetection.Shared/WellKnownAgentIds.cs)），確保跨執行環境、多語系切換與版本升級時識別碼完全恆久一致。
-- **歷史資料庫單向一次性遷移**：升級舊版資料庫若存在非 GUID 之歷史文字標識，必須於 [`SchemaMigrationRunner`](src/IDDSCommunity.IntrusionDetection.Shared/Db/SchemaMigrationRunner.cs) 中執行單向確定性遷移（Migration 12）批次正規化為標準 GUID，並正確合併累計統計數據；禁止在執行階段（Runtime UI / Query Path）仰賴動態字串模糊比對以避免多語系翻譯或重構造成統計遺漏與效能損耗。
 - **進門端寫入防禦**：所有寫入日誌、統計或觀察事件之服務與管線必須確保 AgentId 符合 GUID 格式，非 GUID 字串一律於進門端（Ingestion Pipeline）完成正規化。
+
+---
+
+## 11. 分散式聯防與智慧假釋防禦規範 (Threat Intelligence & Probation Defense)
+
+- **分散式跨主機聯防架構 (Edge / Hub Topology)**：
+  - 支援 `Standalone`（獨立單機）、`EdgeNode`（邊緣防禦節點）與 `ThreatHub`（威脅情資中繼中心）三種節點拓撲。
+  - 邊緣節點於本機產生永久硬封鎖（Hard Lock）時，主動推播至 Threat Hub；並定時（預設 60 秒）雙向同步全網高信心度威脅情資，透過確定性 Agent GUID ([`WellKnownAgentIds.ClusterThreatHub`](src/IDDSCommunity.IntrusionDetection.Shared/WellKnownAgentIds.cs)) 實施跨主機即時同步封鎖。
+- **動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)**：
+  - **自動假釋轉移 (Probation)**：永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態（`Lock.LOCK_STATUS_PROBATION = 350`）並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。
+  - **一擊立即硬封鎖 (One-Strike Relock)**：處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖（`UnlockDate = DateTime.MaxValue`），免除軟封鎖累計程序。
+- **安全網路 DDNS 動態主機名稱解析 (Dynamic DNS FQDN Resolver)**：
+  - 安全網路（Safe Networks）支援填入 FQDN 主機名稱（如 `office.ddns.net`）；由 [`DynamicDnsResolverService`](src/IDDSCommunity.IntrusionDetection.Service/DynamicDnsResolverService.cs) 定時（預設 5 分鐘）於背景非同步解析並更新執行緒安全之 [`DynamicDnsCache`](src/IDDSCommunity.IntrusionDetection.Shared/ThreatIntelligence/DynamicDnsCache.cs)，確保動態 IP 之合法管理者連線隨時精準放行。
