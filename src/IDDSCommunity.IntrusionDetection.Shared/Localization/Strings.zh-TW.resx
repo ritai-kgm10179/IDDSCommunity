@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -520,8 +520,8 @@
   <data name="Intrusion attempts" xml:space="preserve"><value>入侵嘗試</value></data>
   <data name="Total" xml:space="preserve"><value>總計</value></data>
   <data name="Intrusion attempts by IP address" xml:space="preserve"><value>依 IP 位址統計入侵嘗試</value></data>
-  <data name="Soft locks by IP address" xml:space="preserve"><value>依 IP 位址統計暫時封鎖</value></data>
-  <data name="Hard locks by IP address" xml:space="preserve"><value>依 IP 位址統計強制封鎖</value></data>
+  <data name="Soft locks by IP address" xml:space="preserve"><value>依 IP 位址統計軟封鎖</value></data>
+  <data name="Hard locks by IP address" xml:space="preserve"><value>依 IP 位址統計硬封鎖</value></data>
   <data name="Client IP" xml:space="preserve"><value>用戶端 IP</value></data>
   <data name="To configure reporting options, use the IDDS administration software on the server." xml:space="preserve"><value>若要設定報表選項，請使用伺服器上的 IDDS 社群版管理軟體。</value></data>
   <data name="The audit export destination must be writable." xml:space="preserve"><value>稽核匯出目的地必須可寫入。</value></data>
@@ -584,26 +584,26 @@
   <data name="Possible intrusion attempt." xml:space="preserve"><value>偵測到可能的入侵嘗試。</value></data>
   <data name="Invalid logon from localhost. Local addresses will not be blocked" xml:space="preserve"><value>本機登入無效；本機位址不會被封鎖。</value></data>
   <data name="Invalid logon from safe network!" xml:space="preserve"><value>安全網路發生無效登入。</value></data>
-  <data name="Soft lock threshold exceeded. Soft lock requested." xml:space="preserve"><value>已超過暫時封鎖門檻，要求執行暫時封鎖。</value></data>
-  <data name="This client was soft locked." xml:space="preserve"><value>此用戶端已被暫時封鎖。</value></data>
-  <data name="There was a soft lock error. Please see event viewer for details." xml:space="preserve"><value>暫時封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
-  <data name="Hard lock threshold exceeded. Hard lock requested." xml:space="preserve"><value>已超過強制封鎖門檻，要求執行強制封鎖。</value></data>
-  <data name="The client was hard locked." xml:space="preserve"><value>此用戶端已被強制封鎖。</value></data>
-  <data name="There was a hard lock error. Please see event viewer for details." xml:space="preserve"><value>強制封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
+  <data name="Soft lock threshold exceeded. Soft lock requested." xml:space="preserve"><value>已超過軟封鎖門檻，要求執行軟封鎖。</value></data>
+  <data name="This client was soft locked." xml:space="preserve"><value>此用戶端已被軟封鎖。</value></data>
+  <data name="There was a soft lock error. Please see event viewer for details." xml:space="preserve"><value>軟封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
+  <data name="Hard lock threshold exceeded. Hard lock requested." xml:space="preserve"><value>已超過硬封鎖門檻，要求執行硬封鎖（永久封鎖）。</value></data>
+  <data name="The client was hard locked." xml:space="preserve"><value>此用戶端已被硬封鎖（永久封鎖）。</value></data>
+  <data name="There was a hard lock error. Please see event viewer for details." xml:space="preserve"><value>硬封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
   <data name="Lock has expired. Unlock requested." xml:space="preserve"><value>封鎖已到期，要求解除封鎖。</value></data>
   <data name="This client was unlocked." xml:space="preserve"><value>此用戶端已解除封鎖。</value></data>
   <data name="There was an unlock error. Please see event viewer for details." xml:space="preserve"><value>解除封鎖失敗，請查看事件檢視器以取得詳細資訊。</value></data>
   <data name="Protection is unavailable." xml:space="preserve"><value>防護功能目前無法使用。</value></data>
   <data name="Intrusion" xml:space="preserve"><value>入侵</value></data>
-  <data name="Soft lock" xml:space="preserve"><value>暫時封鎖</value></data>
-  <data name="Hard lock" xml:space="preserve"><value>強制封鎖</value></data>
+  <data name="Soft lock" xml:space="preserve"><value>軟封鎖</value></data>
+  <data name="Hard lock" xml:space="preserve"><value>硬封鎖</value></data>
   <data name="Unlock" xml:space="preserve"><value>解除封鎖</value></data>
   <data name="System" xml:space="preserve"><value>系統</value></data>
   <data name="New" xml:space="preserve"><value>新增</value></data>
-  <data name="Soft lock requested" xml:space="preserve"><value>已要求暫時封鎖</value></data>
-  <data name="Soft lock expired" xml:space="preserve"><value>暫時封鎖已到期</value></data>
-  <data name="Hard lock requested" xml:space="preserve"><value>已要求強制封鎖</value></data>
-  <data name="Hard lock expired" xml:space="preserve"><value>強制封鎖已到期</value></data>
+  <data name="Soft lock requested" xml:space="preserve"><value>已要求軟封鎖</value></data>
+  <data name="Soft lock expired" xml:space="preserve"><value>軟封鎖已到期</value></data>
+  <data name="Hard lock requested" xml:space="preserve"><value>已要求硬封鎖</value></data>
+  <data name="Hard lock expired" xml:space="preserve"><value>硬封鎖已到期</value></data>
   <data name="Unlocked" xml:space="preserve"><value>已解除封鎖</value></data>
   <data name="Manually unlocked" xml:space="preserve"><value>已手動解除封鎖</value></data>
   <data name="Error adding lock" xml:space="preserve"><value>新增封鎖失敗</value></data>
@@ -796,8 +796,8 @@
   <data name="Runtime.Start" xml:space="preserve"><value>服務已啟動</value></data>
   <data name="Runtime.Stop" xml:space="preserve"><value>服務已停止</value></data>
   <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解除封鎖通知 ({0})</value></data>
-  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：暫時封鎖通知 ({0})</value></data>
-  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：強制封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：軟封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：硬封鎖通知 ({0})</value></data>
   <data name="FileZilla Security Agent" xml:space="preserve">
     <value>FileZilla 安全性代理程式</value>
   </data>
@@ -844,10 +844,10 @@
   <data name="Diagnostic export failed: {0}" xml:space="preserve"><value>診斷匯出失敗：{0}</value></data>
   <data name="IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf path&gt;] [--output &lt;json path&gt;]" xml:space="preserve"><value>IDDSCommunity.DatabaseDiagnostics [--database &lt;dbf 路徑&gt;] [--output &lt;json 路徑&gt;]</value></data>
   <data name="By default, the tool reads %ProgramData%\IDDS Community\iddscommunity.dbf and writes to the current directory." xml:space="preserve"><value>未指定時讀取 %ProgramData%\IDDS Community\iddscommunity.dbf，並輸出至目前目錄。</value></data>
-  <data name="Client with IP address {0} was hard locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被強制封鎖。</value></data>
-  <data name="Client with IP address {0} was soft locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被暫時封鎖。</value></data>
+  <data name="Client with IP address {0} was hard locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被硬封鎖（永久封鎖）。</value></data>
+  <data name="Client with IP address {0} was soft locked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被軟封鎖。</value></data>
   <data name="Client with IP address {0} was unlocked." xml:space="preserve"><value>IP 位址為 {0} 之用戶端已被解除封鎖。</value></data>
-  <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試強制封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
-  <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試暫時封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
+  <data name="Error while trying to hard lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試硬封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
+  <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試軟封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
   <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試解除封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
 </root>

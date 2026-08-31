@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -257,15 +257,43 @@ public class Locks
         return false;
     }
     /// <summary>
-    /// Counts recent locks created for the same Agent and source IP address.
+    /// 計算指定代理程式與來源 IP 位址在指定起始時間後的近期封鎖累計次數。
     /// </summary>
+    /// <param name="agentId">代理程式識別碼。</param>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="startDate">計算起始時間（UTC）。</param>
+    /// <returns>傳回符合條件之近期封鎖次數。</returns>
     public static int GetRecentLockCount(Guid agentId, string ipAddress, DateTime startDate)
     {
+        if (!Database.Instance.IsConfigured)
+            return 0;
+
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
         object? result = Database.Instance.ExecuteScalar(
             @"select count(*) from Locks l
-              inner join IntrusionLog i on l.TriggerIncident = i.Id
-              where i.AgentId=@p0 and l.IpAddress=@p1 and l.LockDate>=@p2",
+              where (l.IpAddress=@p0 or exists (select 1 from IntrusionLog i where l.TriggerIncident = i.Id and i.ClientIP=@p0 and i.AgentId=@p1))
+                and l.LockDate>=@p2",
+            ipAddress,
             agentId,
+            startDate);
+        return Db.DbValueConverter.ToInt(result);
+    }
+
+    /// <summary>
+    /// 計算指定來源 IP 位址在指定起始時間後的所有近期封鎖累計次數。
+    /// </summary>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="startDate">計算起始時間（UTC）。</param>
+    /// <returns>傳回符合條件之近期封鎖次數。</returns>
+    public static int GetRecentLockCount(string ipAddress, DateTime startDate)
+    {
+        if (!Database.Instance.IsConfigured)
+            return 0;
+
+        ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
+        object? result = Database.Instance.ExecuteScalar(
+            @"select count(*) from Locks
+              where IpAddress=@p0 and LockDate>=@p1",
             ipAddress,
             startDate);
         return Db.DbValueConverter.ToInt(result);

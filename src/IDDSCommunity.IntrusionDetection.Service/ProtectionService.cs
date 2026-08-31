@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -916,46 +916,41 @@ public bool LimitMailSent { get; set; }
                         if (!Locks.LockExists(notificationEventArgs.IpAddress))
                         {
                             LockType lockType = reportingAgent.GetCurrentLockType(notificationEventArgs.IpAddress);
-                            switch (lockType)
+                            if (lockType != LockType.None && lockType != LockType.SoftLock)
                             {
-                                case LockType.SoftLockRequested:
-                                    //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
-                                    //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_SOFT_LOCK_REQUESTED, false);
-                                    int recentLockCount = Locks.GetRecentLockCount(
-                                        reportingAgent.Id,
-                                        notificationEventArgs.IpAddress,
-                                        DateTime.UtcNow.AddDays(-7));
-                                    int baseSoftLockMinutes = configuration.GetSoftLockMinutes(reportingAgent);
-                                    int configuredHardLockHours = configuration.GetHardLockHours(reportingAgent);
-                                    bool isLockForever = reportingAgent.OverrideConfig ? reportingAgent.LockForever : configuration.LockForever;
+                                int recentLockCount = Locks.GetRecentLockCount(
+                                    reportingAgent.Id,
+                                    notificationEventArgs.IpAddress,
+                                    DateTime.UtcNow.AddDays(-7));
+                                int baseSoftLockMinutes = reportingAgent.OverrideConfig ? reportingAgent.SoftLockTimeMinutes : configuration.SoftLockTimeMinutes;
+                                int configuredHardLockHours = reportingAgent.OverrideConfig ? reportingAgent.HardLockTimeHours : configuration.HardLockTimeHours;
+                                bool isLockForever = reportingAgent.OverrideConfig ? reportingAgent.LockForever : configuration.LockForever;
 
-                                    if (recentLockCount >= 5)
-                                    {
-                                        DateTime hardUnlockDate = isLockForever ? DateTime.MaxValue : DateTime.UtcNow.AddHours(Math.Max(1, configuredHardLockHours));
-                                        LockDownIp(Locks.CreateLock(DateTime.UtcNow, hardUnlockDate, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
-                                    }
-                                    else
-                                    {
-                                        int maxSoftLockMinutes = isLockForever
-                                            ? LockoutPolicy.DefaultMaxSoftLockMinutes
-                                            : Math.Max(baseSoftLockMinutes, configuredHardLockHours * 60);
-                                        int softLockMinutes = LockoutPolicy.CalculateSoftLockMinutes(
-                                            baseSoftLockMinutes,
-                                            recentLockCount,
-                                            maxSoftLockMinutes);
-                                        LockDownIp(Locks.CreateLock(DateTime.UtcNow, DateTime.UtcNow.AddMinutes(softLockMinutes), incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.SoftLock, reportingAgent);
-                                    }
-                                    break;
-                                case LockType.SoftLock:
-                                    // already locked, ignore
-                                    break;
-                                case LockType.HardLockRequested:
-                                    //IntrusionLog.AddEntry(notificationEventArgs.CreateDate, reportingAgent.Id,
-                                    //    notificationEventArgs.IpAddress, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                                    bool isHardForever = reportingAgent.OverrideConfig ? reportingAgent.LockForever : configuration.LockForever;
-                                    DateTime hardLockUnlockDate = isHardForever ? DateTime.MaxValue : DateTime.UtcNow.AddHours(Math.Max(1, configuration.GetHardLockHours(reportingAgent)));
-                                    LockDownIp(Locks.CreateLock(DateTime.UtcNow, hardLockUnlockDate, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress), LockType.HardLock, reportingAgent);
-                                    break;
+                                bool isHardLock = lockType == LockType.HardLockRequested
+                                    || isLockForever
+                                    || LockoutPolicy.ShouldEscalateToHardLock(recentLockCount, LockoutPolicy.DefaultAutoHardLockThreshold);
+
+                                if (isHardLock)
+                                {
+                                    DateTime hardUnlockDate = DateTime.MaxValue;
+                                    LockDownIp(
+                                        Locks.CreateLock(DateTime.UtcNow, hardUnlockDate, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, notificationEventArgs.IpAddress),
+                                        LockType.HardLock,
+                                        reportingAgent);
+                                }
+                                else
+                                {
+                                    int maxSoftLockMinutes = Math.Max(baseSoftLockMinutes, Math.Max(1, configuredHardLockHours) * 60);
+                                    int softLockMinutes = LockoutPolicy.CalculateSoftLockMinutes(
+                                        baseSoftLockMinutes,
+                                        recentLockCount,
+                                        maxSoftLockMinutes);
+                                    DateTime softUnlockDate = DateTime.UtcNow.AddMinutes(softLockMinutes);
+                                    LockDownIp(
+                                        Locks.CreateLock(DateTime.UtcNow, softUnlockDate, incidentId, Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, 0, notificationEventArgs.IpAddress),
+                                        LockType.SoftLock,
+                                        reportingAgent);
+                                }
                             }
                         }
                     }

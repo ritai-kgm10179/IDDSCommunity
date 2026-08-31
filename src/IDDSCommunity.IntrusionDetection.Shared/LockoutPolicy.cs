@@ -17,6 +17,11 @@ public static class LockoutPolicy
     public const int MaximumSoftLockMinutes = 60;
 
     /// <summary>
+    /// 定義預設重複違規自動升級硬封鎖（永久封鎖）之軟封鎖次數門檻（5 次）。
+    /// </summary>
+    public const int DefaultAutoHardLockThreshold = 5;
+
+    /// <summary>
     /// 依據基礎鎖定分鐘數、近期被鎖定次數以及上限值，以指數翻倍演算法計算漸進式軟鎖定分鐘數。
     /// </summary>
     /// <param name="baseMinutes">基礎鎖定分鐘數；必須大於或等於 1。</param>
@@ -37,4 +42,13 @@ public static class LockoutPolicy
         }
         return (int)Math.Min(delay, effectiveMax);
     }
+
+    /// <summary>
+    /// 判斷來源 IP 之近期被軟封鎖次數是否已達到自動升級為硬封鎖（永久封鎖）之門檻。
+    /// </summary>
+    /// <param name="priorLockCount">近期被鎖定次數。</param>
+    /// <param name="threshold">升級門檻次數；若未指定則使用預設值 5 次。</param>
+    /// <returns>若已達到或超過升級門檻傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool ShouldEscalateToHardLock(int priorLockCount, int threshold = DefaultAutoHardLockThreshold) =>
+        priorLockCount >= Math.Max(1, threshold);
 }
