@@ -35,10 +35,20 @@ public sealed class PowerShellModuleTest
             Assert.IsTrue(psd1Content.Contains("RootModule = 'IDDSCommunity.psm1'"));
             Assert.IsTrue(psd1Content.Contains("Get-IddsStatus"));
             Assert.IsTrue(psd1Content.Contains("Get-IddsBlockedIp"));
+            Assert.IsTrue(psd1Content.Contains("Block-IddsIp"));
+            Assert.IsTrue(psd1Content.Contains("Unblock-IddsIp"));
+            Assert.IsTrue(psd1Content.Contains("Get-IddsCloudPerimeter"));
+            Assert.IsTrue(psd1Content.Contains("Test-IddsHoneyAccount"));
+            Assert.IsTrue(psd1Content.Contains("Invoke-IddsCisScan"));
 
             string psm1Content = File.ReadAllText(psm1);
             Assert.IsTrue(psm1Content.Contains("function Get-IddsStatus"));
             Assert.IsTrue(psm1Content.Contains("function Get-IddsBlockedIp"));
+            Assert.IsTrue(psm1Content.Contains("function Block-IddsIp"));
+            Assert.IsTrue(psm1Content.Contains("function Unblock-IddsIp"));
+            Assert.IsTrue(psm1Content.Contains("function Get-IddsCloudPerimeter"));
+            Assert.IsTrue(psm1Content.Contains("function Test-IddsHoneyAccount"));
+            Assert.IsTrue(psm1Content.Contains("function Invoke-IddsCisScan"));
             Assert.IsTrue(psm1Content.Contains("function Export-IddsStixBundle"));
             Assert.IsTrue(psm1Content.Contains("function Export-IddsIso27001Report"));
         }

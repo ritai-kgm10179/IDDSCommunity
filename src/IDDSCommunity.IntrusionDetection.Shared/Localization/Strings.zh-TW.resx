@@ -909,4 +909,38 @@
   <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>允許之監控伺服器 CIDR (例如 10.0.0.0/8, 192.168.1.0/24)</value></data>
   <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory 與 Kerberos 安全性代理程式</value></data>
   <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>傳送通知警報時發生錯誤。&#xD;&#xA;</value></data>
+  <data name="Cloud perimeter defense" xml:space="preserve"><value>多雲邊界安全聯防</value></data>
+  <data name="Self-service unblock portal" xml:space="preserve"><value>自助解鎖門戶與 TOTP</value></data>
+  <data name="Deception and Management API" xml:space="preserve"><value>動態欺敵與管理 API</value></data>
+  <data name="Compliance and forensics" xml:space="preserve"><value>CIS 安全基準與取證</value></data>
+  <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>啟用雲端邊界安全同步 (AWS, Azure, GCP, Cloudflare, HiCloud)</value></data>
+  <data name="Cloud service provider" xml:space="preserve"><value>雲端服務供應商 (Cloud Provider)</value></data>
+  <data name="API Key / Access Token" xml:space="preserve"><value>API 金鑰 / 存取權杖 (API Key / Bearer Token)</value></data>
+  <data name="Endpoint URL / Region Endpoint" xml:space="preserve"><value>端點 URL / 區域端點 (Endpoint URL / Region Endpoint)</value></data>
+  <data name="Primary Resource ID (IPSet ID / Zone ID)" xml:space="preserve"><value>主要資源識別碼 (Resource ID / IPSet ID / Zone ID)</value></data>
+  <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>次要識別碼 (Scope / Security Policy Name / Project ID)</value></data>
+  <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>三級識別碼 (Network ID / HiCloud CVPC ID)</value></data>
+  <data name="Test Connection" xml:space="preserve"><value>測試連線與驗證</value></data>
+  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法用戶自助網頁解鎖門戶 (Self-Service Portal)</value></data>
+  <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠 (預設 8444)</value></data>
+  <data name="Portal listening IP address" xml:space="preserve"><value>門戶監聽位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
+  <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP 認證金鑰 (Base32 Authenticator Key)</value></data>
+  <data name="Generate Secret" xml:space="preserve"><value>隨機產生金鑰</value></data>
+  <data name="Test Verification Code" xml:space="preserve"><value>驗證碼測試 (輸入 Authenticator App 上的 6 位數代碼)</value></data>
+  <data name="Verify Code" xml:space="preserve"><value>驗證代碼</value></data>
+  <data name="Deception &amp; Honey-Accounts" xml:space="preserve"><value>動態欺敵防禦與誘餌帳號</value></data>
+  <data name="Enable honey-account one-strike defense" xml:space="preserve"><value>啟用誘餌帳號一擊即鎖機制</value></data>
+  <data name="Honey-accounts list" xml:space="preserve"><value>誘餌帳號清單（以逗號或換行分隔）</value></data>
+  <data name="SOAR remediation automation script" xml:space="preserve"><value>SOAR 處置自動化腳本</value></data>
+  <data name="SOAR script path" xml:space="preserve"><value>觸發永久硬封鎖時執行之腳本路徑</value></data>
+  <data name="Browse..." xml:space="preserve"><value>瀏覽...</value></data>
+  <data name="RESTful Management API" xml:space="preserve"><value>RESTful Management API 服務</value></data>
+  <data name="Enable RESTful Management API" xml:space="preserve"><value>啟用 RESTful Management API (預設 TCP 8443)</value></data>
+  <data name="Management API port" xml:space="preserve"><value>API 監聽通訊埠</value></data>
+  <data name="Management API key (X-Api-Key)" xml:space="preserve"><value>API 認證金鑰 (X-Api-Key Header)</value></data>
+  <data name="Generate API Key" xml:space="preserve"><value>隨機產生金鑰</value></data>
+  <data name="CIS Windows Server Benchmark &amp; Forensics" xml:space="preserve"><value>CIS Windows Server 安全基準合規掃描與取證評估</value></data>
+  <data name="Run CIS Benchmark Scan" xml:space="preserve"><value>執行 CIS 合規掃描</value></data>
+  <data name="Export Report" xml:space="preserve"><value>匯出合規與取證報告</value></data>
+  <data name="Scan not executed" xml:space="preserve"><value>尚未執行掃描</value></data>
 </root>

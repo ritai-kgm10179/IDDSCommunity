@@ -200,6 +200,36 @@ public sealed class ManagementApiHttpServer : IDisposable
                 return;
             }
 
+            // ChatOps 雙向互動一鍵封鎖與解鎖 (Action Token 驗證)
+            if (path == "/api/v1/actions/block")
+            {
+                string? token = request.QueryString["token"];
+                if (Shared.Security.ActionTokenService.ValidateToken(token, "block", out string targetIp, configuration.ManagementApiKey))
+                {
+                    targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
+                    long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCKED, false);
+                    Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK, 0, targetIp);
+                    await SendJsonResponseAsync(response, HttpStatusCode.OK, new { success = true, action = "blocked", ipAddress = targetIp, message = $"IP {targetIp} has been hard-locked via ChatOps." });
+                    return;
+                }
+                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
+                return;
+            }
+
+            if (path == "/api/v1/actions/unblock")
+            {
+                string? token = request.QueryString["token"];
+                if (Shared.Security.ActionTokenService.ValidateToken(token, "unblock", out string targetIp, configuration.ManagementApiKey))
+                {
+                    targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
+                    bool unblocked = Locks.UnlockIp(targetIp);
+                    await SendJsonResponseAsync(response, HttpStatusCode.OK, new { success = unblocked, action = "unblocked", ipAddress = targetIp, message = $"IP {targetIp} has been unblocked via ChatOps." });
+                    return;
+                }
+                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
+                return;
+            }
+
             response.StatusCode = (int)HttpStatusCode.NotFound;
             await SendJsonResponseAsync(response, HttpStatusCode.NotFound, new { error = "Endpoint Not Found" });
         }

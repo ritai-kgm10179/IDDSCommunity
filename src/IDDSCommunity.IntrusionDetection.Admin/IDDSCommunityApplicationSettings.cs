@@ -48,6 +48,22 @@ public const string MENU_CONFIGURATION_TRANSFER = "Configuration import and expo
     /// </summary>
 public const string MENU_REPORT_EXPORT = "Report export";
         /// <summary>
+    /// 定義 MENU_CLOUD_PERIMETER 之數值。
+    /// </summary>
+public const string MENU_CLOUD_PERIMETER = "Cloud perimeter defense";
+        /// <summary>
+    /// 定義 MENU_SELF_SERVICE 之數值。
+    /// </summary>
+public const string MENU_SELF_SERVICE = "Self-service unblock portal";
+        /// <summary>
+    /// 定義 MENU_DECEPTION_AND_API 之數值。
+    /// </summary>
+public const string MENU_DECEPTION_AND_API = "Deception and Management API";
+        /// <summary>
+    /// 定義 MENU_COMPLIANCE_AND_FORENSICS 之數值。
+    /// </summary>
+public const string MENU_COMPLIANCE_AND_FORENSICS = "Compliance and forensics";
+        /// <summary>
     /// 當 ConfigurationChanged 時引發之事件。
     /// </summary>
 public event EventHandler? ConfigurationChanged;
@@ -72,8 +88,12 @@ public event EventHandler? ConfigurationChanged;
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LOCK_OUT_CONFIGURATION), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SAFE_NETWORKS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_THREAT_INTELLIGENCE), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CLOUD_PERIMETER), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SELF_SERVICE), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DECEPTION_AND_API), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_NOTIFICATION_SETTINGS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_SMTP_SETTINGS), null, null);
+        iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_COMPLIANCE_AND_FORENSICS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_LANGUAGE_SETTINGS), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_DATABASE_MAINTENANCE), null, null);
         iddscommunitySettingsNavigation.AddNavigationItem(Strings.Get(MENU_CONFIGURATION_TRANSFER), null, null);
@@ -261,6 +281,89 @@ public PanelNotificationSettings PanelNotificationSettings
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     void _panelNotificationSettings_NotificationSettingsChanged(object? sender, EventArgs? e) => OnConfigurationChanged();
+    private PanelCloudPerimeterSettings? _panelCloudPerimeter;
+    /// <summary>
+    /// 取得或設定 PanelCloudPerimeterSettings。
+    /// </summary>
+    public PanelCloudPerimeterSettings PanelCloudPerimeterSettings
+    {
+        get
+        {
+            if (_panelCloudPerimeter == null)
+            {
+                _panelCloudPerimeter = new PanelCloudPerimeterSettings
+                {
+                    Dock = DockStyle.Fill
+                };
+                _panelCloudPerimeter.CloudPerimeterSettingsChanged += (s, e) => OnConfigurationChanged();
+                configurationPanel.Controls.Add(_panelCloudPerimeter);
+            }
+            return _panelCloudPerimeter;
+        }
+    }
+
+    private PanelSelfServiceSettings? _panelSelfService;
+    /// <summary>
+    /// 取得或設定 PanelSelfServiceSettings。
+    /// </summary>
+    public PanelSelfServiceSettings PanelSelfServiceSettings
+    {
+        get
+        {
+            if (_panelSelfService == null)
+            {
+                _panelSelfService = new PanelSelfServiceSettings
+                {
+                    Dock = DockStyle.Fill
+                };
+                _panelSelfService.SelfServiceSettingsChanged += (s, e) => OnConfigurationChanged();
+                configurationPanel.Controls.Add(_panelSelfService);
+            }
+            return _panelSelfService;
+        }
+    }
+
+    private PanelDeceptionAndApiSettings? _panelDeceptionAndApi;
+    /// <summary>
+    /// 取得或設定 PanelDeceptionAndApiSettings。
+    /// </summary>
+    public PanelDeceptionAndApiSettings PanelDeceptionAndApiSettings
+    {
+        get
+        {
+            if (_panelDeceptionAndApi == null)
+            {
+                _panelDeceptionAndApi = new PanelDeceptionAndApiSettings
+                {
+                    Dock = DockStyle.Fill
+                };
+                _panelDeceptionAndApi.DeceptionAndApiSettingsChanged += (s, e) => OnConfigurationChanged();
+                configurationPanel.Controls.Add(_panelDeceptionAndApi);
+            }
+            return _panelDeceptionAndApi;
+        }
+    }
+
+    private PanelComplianceAndForensics? _panelComplianceAndForensics;
+    /// <summary>
+    /// 取得或設定 PanelComplianceAndForensics。
+    /// </summary>
+    public PanelComplianceAndForensics PanelComplianceAndForensics
+    {
+        get
+        {
+            if (_panelComplianceAndForensics == null)
+            {
+                _panelComplianceAndForensics = new PanelComplianceAndForensics
+                {
+                    Dock = DockStyle.Fill
+                };
+                configurationPanel.Controls.Add(_panelComplianceAndForensics);
+            }
+            return _panelComplianceAndForensics;
+        }
+    }
+
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>
@@ -281,12 +384,27 @@ public PanelNotificationSettings PanelNotificationSettings
                 PanelThreatIntelligenceSettings.BringToFront();
                 PanelThreatIntelligenceSettings.LoadData();
                 break;
+            case var displayName when displayName == Strings.Get(MENU_CLOUD_PERIMETER):
+                PanelCloudPerimeterSettings.BringToFront();
+                PanelCloudPerimeterSettings.LoadSettings();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_SELF_SERVICE):
+                PanelSelfServiceSettings.BringToFront();
+                PanelSelfServiceSettings.LoadSettings();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_DECEPTION_AND_API):
+                PanelDeceptionAndApiSettings.BringToFront();
+                PanelDeceptionAndApiSettings.LoadSettings();
+                break;
             case var displayName when displayName == Strings.Get(MENU_NOTIFICATION_SETTINGS):
                 PanelNotificationSettings.BringToFront();
                 PanelNotificationSettings.LoadData();
                 break;
             case var displayName when displayName == Strings.Get(MENU_SMTP_SETTINGS):
                 PanelSmtpSettings.BringToFront();
+                break;
+            case var displayName when displayName == Strings.Get(MENU_COMPLIANCE_AND_FORENSICS):
+                PanelComplianceAndForensics.BringToFront();
                 break;
             case var displayName when displayName == Strings.Get(MENU_LANGUAGE_SETTINGS):
                 PanelLanguageSettings.BringToFront();

@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
@@ -72,8 +72,9 @@ if (Test-Path -LiteralPath $userGuideEnSource) {
 }
 
 $pluginProjects = @(
+    'IDDSCommunity.Agents.ActiveDirectory',
     'IDDSCommunity.Agents.Authentication.Common',
-    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FileZilla', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.IisAuthentication',
+    'IDDSCommunity.Agents.FileMaker', 'IDDSCommunity.Agents.FileZilla', 'IDDSCommunity.Agents.FtpServer', 'IDDSCommunity.Agents.Honeypot', 'IDDSCommunity.Agents.IisAuthentication',
     'IDDSCommunity.Agents.MailServer', 'IDDSCommunity.Agents.MySql', 'IDDSCommunity.Agents.OpenSsh',
     'IDDSCommunity.Agents.PostgreSql', 'IDDSCommunity.Agents.Radius', 'IDDSCommunity.Agents.RemoteDesktopGateway', 'IDDSCommunity.Agents.SqlServer',
     'IDDSCommunity.Agents.TechnitiumDns', 'IDDSCommunity.Agents.TerminalServer', 'IDDSCommunity.Agents.WebSecurity', 'IDDSCommunity.Agents.WindowsDns',

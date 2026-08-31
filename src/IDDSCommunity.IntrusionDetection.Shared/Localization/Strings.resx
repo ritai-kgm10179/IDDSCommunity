@@ -909,5 +909,39 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)</value></data>
   <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory &amp; Kerberos Security Agent</value></data>
   <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>Error while sending notification alert.&#xD;&#xA;</value></data>
+  <data name="Cloud perimeter defense" xml:space="preserve"><value>Cloud perimeter defense</value></data>
+  <data name="Self-service unblock portal" xml:space="preserve"><value>Self-service unblock portal</value></data>
+  <data name="Deception and Management API" xml:space="preserve"><value>Deception and Management API</value></data>
+  <data name="Compliance and forensics" xml:space="preserve"><value>Compliance and forensics</value></data>
+  <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>Enable cloud perimeter synchronization</value></data>
+  <data name="Cloud service provider" xml:space="preserve"><value>Cloud service provider</value></data>
+  <data name="API Key / Access Token" xml:space="preserve"><value>API Key / Access Token</value></data>
+  <data name="Endpoint URL / Region Endpoint" xml:space="preserve"><value>Endpoint URL / Region Endpoint</value></data>
+  <data name="Primary Resource ID (IPSet ID / Zone ID)" xml:space="preserve"><value>Primary Resource ID (IPSet ID / Zone ID)</value></data>
+  <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>Secondary Resource ID (Scope / Policy Name / Project ID)</value></data>
+  <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>Tertiary Resource ID (Network ID / HiCloud CVPC ID)</value></data>
+  <data name="Test Connection" xml:space="preserve"><value>Test Connection</value></data>
+  <data name="Enable self-service unblock portal" xml:space="preserve"><value>Enable self-service unblock portal</value></data>
+  <data name="Portal listening port" xml:space="preserve"><value>Portal listening port</value></data>
+  <data name="Portal listening IP address" xml:space="preserve"><value>Portal listening IP address</value></data>
+  <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP Secret Key (Base32)</value></data>
+  <data name="Generate Secret" xml:space="preserve"><value>Generate Secret</value></data>
+  <data name="Test Verification Code" xml:space="preserve"><value>Test Verification Code</value></data>
+  <data name="Verify Code" xml:space="preserve"><value>Verify Code</value></data>
+  <data name="Deception &amp; Honey-Accounts" xml:space="preserve"><value>Deception &amp; Honey-Accounts</value></data>
+  <data name="Enable honey-account one-strike defense" xml:space="preserve"><value>Enable honey-account one-strike defense</value></data>
+  <data name="Honey-accounts list" xml:space="preserve"><value>Honey-accounts list</value></data>
+  <data name="SOAR remediation automation script" xml:space="preserve"><value>SOAR remediation automation script</value></data>
+  <data name="SOAR script path" xml:space="preserve"><value>SOAR script path</value></data>
+  <data name="Browse..." xml:space="preserve"><value>Browse...</value></data>
+  <data name="RESTful Management API" xml:space="preserve"><value>RESTful Management API</value></data>
+  <data name="Enable RESTful Management API" xml:space="preserve"><value>Enable RESTful Management API</value></data>
+  <data name="Management API port" xml:space="preserve"><value>Management API port</value></data>
+  <data name="Management API key (X-Api-Key)" xml:space="preserve"><value>Management API key (X-Api-Key)</value></data>
+  <data name="Generate API Key" xml:space="preserve"><value>Generate API Key</value></data>
+  <data name="CIS Windows Server Benchmark &amp; Forensics" xml:space="preserve"><value>CIS Windows Server Benchmark &amp; Forensics</value></data>
+  <data name="Run CIS Benchmark Scan" xml:space="preserve"><value>Run CIS Benchmark Scan</value></data>
+  <data name="Export Report" xml:space="preserve"><value>Export Report</value></data>
+  <data name="Scan not executed" xml:space="preserve"><value>Scan not executed</value></data>
 </root>
 
