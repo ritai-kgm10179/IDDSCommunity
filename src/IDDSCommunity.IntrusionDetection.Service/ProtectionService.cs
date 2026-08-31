@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
+using IDDSCommunity.IntrusionDetection.Service.Notifications;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -27,6 +28,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly Database database;
     private readonly IddsConfig configuration;
     private readonly NotificationSettings notificationSettings;
+    private readonly WebhookNotificationService webhookNotificationService;
     private readonly SecurityAgents securityAgents;
     private readonly ReportScheduler reportScheduler;
     private readonly Statistics statistics;
@@ -111,6 +113,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         this.database = database;
         this.configuration = configuration;
         this.notificationSettings = notificationSettings;
+        this.webhookNotificationService = new WebhookNotificationService(notificationSettings);
         this.securityAgents = securityAgents;
         this.reportScheduler = reportScheduler;
         this.statistics = statistics;
@@ -377,19 +380,28 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             switch (lockOperation)
             {
                 case LockType.None:
-                    if (!notificationSettings.OnUnlock) return;
-                    subject = Strings.Format("IDDS Community: Unlock notification ({0})", op.IpAddress);
+                    if (notificationSettings.OnUnlock)
+                        subject = Strings.Format("IDDS Community: Unlock notification ({0})", op.IpAddress);
                     break;
                 case LockType.SoftLock:
-                    if (!notificationSettings.OnSoftLock) return;
-                    subject = Strings.Format("IDDS Community: Soft lock notification ({0})", op.IpAddress);
+                    if (notificationSettings.OnSoftLock)
+                        subject = Strings.Format("IDDS Community: Soft lock notification ({0})", op.IpAddress);
                     break;
                 case LockType.HardLock:
-                    if (!notificationSettings.OnHardLock) return;
-                    subject = Strings.Format("IDDS Community: Hard lock notification ({0})", op.IpAddress);
+                    if (notificationSettings.OnHardLock)
+                        subject = Strings.Format("IDDS Community: Hard lock notification ({0})", op.IpAddress);
                     break;
             }
-            _ = SendMailAsync(subject, op.Message, false);
+            if (!string.IsNullOrEmpty(subject))
+            {
+                _ = SendMailAsync(subject, op.Message, false);
+            }
+
+            string agentName = (op.AgentId != Guid.Empty && securityAgents != null)
+                ? (securityAgents.Find(a => a.Id == op.AgentId)?.DisplayName ?? Strings.AppTitle)
+                : Strings.AppTitle;
+
+            _ = webhookNotificationService.SendWebhookAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
         }
         catch (Exception ex)
         {
@@ -879,6 +891,7 @@ public bool LimitMailSent { get; set; }
         threatHubServer?.Dispose();
         threatSyncService?.Dispose();
         externalThreatFeedSubscriberService?.Dispose();
+        webhookNotificationService.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
     }

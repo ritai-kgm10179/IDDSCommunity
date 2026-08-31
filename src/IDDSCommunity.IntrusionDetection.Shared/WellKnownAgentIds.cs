@@ -133,6 +133,11 @@ public static class WellKnownAgentIds
     /// </summary>
     public static readonly Guid ExternalThreatFeed = new("{C32E5A88-2917-4D24-8F7E-388D6A42E40A}");
 
+    /// <summary>
+    /// 誘餌蜜罐主動防禦代理程式（Honeypot Decoy Security Agent）。
+    /// </summary>
+    public static readonly Guid Honeypot = new("{E88DA514-9985-4D14-9A4B-391D3C5C384B}");
+
     private sealed record AgentDescriptor(Guid Id, string PrimaryName, string AssemblyName, string DisplayName, string[] Aliases);
 
     private static readonly AgentDescriptor[] KnownAgents =
@@ -186,7 +191,9 @@ public static class WellKnownAgentIds
         new(ClusterThreatHub, "ClusterThreatHubSyncAgent", "IDDSCommunity.IntrusionDetection.Service.dll", "叢集威脅情資聯防",
             ["Threat Intelligence Cluster", "ClusterThreatHub", "叢集聯防", "ThreatHub", "IDDSCommunity.ThreatIntelligence.Cluster"]),
         new(ExternalThreatFeed, "ExternalThreatFeedSubscriber", "IDDSCommunity.IntrusionDetection.Service.dll", "外部威脅情報訂閱",
-            ["External Threat Feeds", "ExternalThreatFeed", "威脅情報訂閱", "ThreatFeeds", "IDDSCommunity.ThreatIntelligence.ExternalFeeds"])
+            ["External Threat Feeds", "ExternalThreatFeed", "威脅情報訂閱", "ThreatFeeds", "IDDSCommunity.ThreatIntelligence.ExternalFeeds"]),
+        new(Honeypot, "HoneypotSecurityAgent", "IDDSCommunity.Agents.Honeypot.dll", "誘餌蜜罐主動防禦代理程式",
+            ["Honeypot Decoy Security Agent", "Honeypot", "蜜罐", "誘餌蜜罐", "IDDSCommunity.Agents.Honeypot"])
     ];
 
     /// <summary>

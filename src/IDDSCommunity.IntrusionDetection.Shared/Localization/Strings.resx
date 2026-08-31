@@ -872,5 +872,16 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Dynamic Bogon IPv4 list URL" xml:space="preserve"><value>Dynamic Bogon IPv4 list URL</value></data>
   <data name="Dynamic Bogon IPv6 list URL" xml:space="preserve"><value>Dynamic Bogon IPv6 list URL</value></data>
   <data name="Configuration was saved successfully." xml:space="preserve"><value>Configuration was saved successfully.</value></data>
+  <data name="Webhook notifications (Teams / Slack / Discord / Telegram)" xml:space="preserve"><value>Webhook notifications (Teams / Slack / Discord / Telegram)</value></data>
+  <data name="Enable Webhook alerts" xml:space="preserve"><value>Enable Webhook alerts</value></data>
+  <data name="Webhook platform" xml:space="preserve"><value>Webhook platform</value></data>
+  <data name="Webhook URL / Endpoint" xml:space="preserve"><value>Webhook URL / Endpoint</value></data>
+  <data name="Telegram bot token" xml:space="preserve"><value>Telegram bot token</value></data>
+  <data name="Telegram chat ID" xml:space="preserve"><value>Telegram chat ID</value></data>
+  <data name="Test Webhook" xml:space="preserve"><value>Test Webhook</value></data>
+  <data name="Webhook test was sent successfully." xml:space="preserve"><value>Webhook test was sent successfully.</value></data>
+  <data name="Webhook test failed. Please verify the URL and network connectivity." xml:space="preserve"><value>Webhook test failed. Please verify the URL and network connectivity.</value></data>
+  <data name="Honeypot Decoy Security Agent" xml:space="preserve"><value>Honeypot Decoy Security Agent</value></data>
+  <data name="Honeypot decoy port probe detected on TCP port {0}." xml:space="preserve"><value>Honeypot decoy port probe detected on TCP port {0}.</value></data>
 </root>
 

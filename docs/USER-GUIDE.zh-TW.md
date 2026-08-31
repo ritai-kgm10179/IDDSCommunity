@@ -112,7 +112,27 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
   - 情資具備 TTL 生命週期（預設 7 天），未再遭通報之外部 IP 將自動移出防火牆，防止規則無限膨脹。
 - **雙層 Bogon 與智慧假釋防護 (Bogon & Probation Guardrails)**：
   - 整合靜態 RFC 1918 硬過濾與 Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步，杜絕內網誤封。
-  - 永久硬封鎖在 90 天無攻擊活動後自動轉入假釋觀察期；處於假釋期之 IP 若再次違規 1 次立即永久再鎖定。
+### 3.10 💬 多渠道 Webhook 即時告警 (Webhook Notifications)
+支援將入侵事件即時推播至企業常用即時通訊平台與自動化 SOC 管線：
+- **支援平台**：Microsoft Teams（Adaptive Cards 1.6 格式）、Slack（Block Kit 格式）、Discord（Rich Embed 嵌入卡片）、Telegram（Bot API `sendMessage`）、Generic JSON（標準 RESTful Webhook）。
+- **細緻事件觸發**：可獨立勾選軟封鎖、硬封鎖與解除封鎖事件。
+- **一鍵連通性測試**：於管理控制台「設定 → 通知」中提供「發送測試 Webhook」功能，快速驗證 Webhook 端點與網路連通性。
+
+### 3.11 🍯 誘餌蜜罐主動防禦 (Honeypot Decoy Agent)
+主動部署於未使用的通訊埠（預設 TCP 23 Telnet、2222 替代 SSH、33890 替代 RDP），引誘攻擊者探測：
+- **主動誘捕與一擊必殺**：任何對誘餌通訊埠的主動 TCP 探測連線將立即觸發入侵告警並由 Windows 防火牆施加硬封鎖。
+- **資訊不洩漏 (No Banner)**：接收連線後立即斷開，不傳回任何服務識別標籤，確保主機安全。
+- **全域白名單聯動**：探測來源自動經過 BogonIpFilter 與安全網路檢驗，防止誤觸。
+
+### 3.12 📊 OASIS STIX 2.1 威脅情資交換與 ISO/IEC 27001:2022 稽核報表 (STIX & ISO 27001 Compliance)
+- **OASIS STIX 2.1 格式匯出**：
+  - 支援將本機與叢集聯防之威脅指標匯出為標準 STIX 2.1 JSON Bundle（包含 `identity`、`indicator` 與 `report` SDO 物件），便利與外部 SIEM、MISP、OpenCTI 或 SOAR 系統對接。
+- **ISO/IEC 27001:2022 附錄 A (Annex A) 合規稽核報表**：
+  - 內建符合性稽核報表引擎，針對 A.5.7（威脅情報）、A.8.7（主動防禦）、A.8.15（日誌記錄）、A.8.16（活動監控）、A.8.20（網路安全）及 A.8.24（密碼學控制）產製專業 HTML 稽核報告與關鍵防護數據摘要。
+
+### 3.13 🗺️ GeoIP 國家地理標記與區域封鎖 (Geo-fencing)
+- **高效能 IP 地理位置解析**：支援 IPv4 與 IPv6 網段高速查詢所屬 ISO 3166-1 國家代碼與名稱。
+- **基於國家的主動存取限制 (Geo-blocking)**：可設定特定國家代碼（如 CN、RU、KP 等）阻絕規則，與防火牆聯動落實邊界地理圍欄。
 
 ---
 

@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/src/">
     <Project Path="src/IDDSCommunity.IntrusionDetection.Admin/IDDSCommunity.IntrusionDetection.Admin.csproj" />
     <Project Path="src/IDDSCommunity.IntrusionDetection.Api/IDDSCommunity.IntrusionDetection.Api.csproj" />
@@ -26,12 +26,14 @@
     <Project Path="agents/IDDSCommunity.Agents.WindowsDns/IDDSCommunity.Agents.WindowsDns.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WindowsNetworkLogon/IDDSCommunity.Agents.WindowsNetworkLogon.csproj" />
     <Project Path="agents/IDDSCommunity.Agents.WinRm/IDDSCommunity.Agents.WinRm.csproj" />
+    <Project Path="agents/IDDSCommunity.Agents.Honeypot/IDDSCommunity.Agents.Honeypot.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/IDDSCommunity.Agents.Authentication.Test/IDDSCommunity.Agents.Authentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FileMaker.Test/IDDSCommunity.Agents.FileMaker.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FileZilla.Test/IDDSCommunity.Agents.FileZilla.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.FtpServer.Test/IDDSCommunity.Agents.FtpServer.Test.csproj" />
+    <Project Path="tests/IDDSCommunity.Agents.Honeypot.Test/IDDSCommunity.Agents.Honeypot.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.IisAuthentication.Test/IDDSCommunity.Agents.IisAuthentication.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.MailServer.Test/IDDSCommunity.Agents.MailServer.Test.csproj" />
     <Project Path="tests/IDDSCommunity.Agents.MySql.Test/IDDSCommunity.Agents.MySql.Test.csproj" />

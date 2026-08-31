@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Shared;
+namespace IDDSCommunity.IntrusionDetection.Shared;
 
 using System;
 
@@ -60,6 +60,38 @@ public const string WEEKLY_REPORT_STATE = "Reports.Weekly.State";
     /// 定義 MONTHLY_REPORT_STATE 之數值。
     /// </summary>
 public const string MONTHLY_REPORT_STATE = "Reports.Monthly.State";
+        /// <summary>
+    /// 定義 NOTIFICATION_ENABLE_WEBHOOK 之數值。
+    /// </summary>
+public const string NOTIFICATION_ENABLE_WEBHOOK = "Notifications.Webhook.Enable";
+        /// <summary>
+    /// 定義 NOTIFICATION_WEBHOOK_PLATFORM 之數值。
+    /// </summary>
+public const string NOTIFICATION_WEBHOOK_PLATFORM = "Notifications.Webhook.Platform";
+        /// <summary>
+    /// 定義 NOTIFICATION_WEBHOOK_URL 之數值。
+    /// </summary>
+public const string NOTIFICATION_WEBHOOK_URL = "Notifications.Webhook.Url";
+        /// <summary>
+    /// 定義 NOTIFICATION_TELEGRAM_BOT_TOKEN 之數值。
+    /// </summary>
+public const string NOTIFICATION_TELEGRAM_BOT_TOKEN = "Notifications.Telegram.BotToken";
+        /// <summary>
+    /// 定義 NOTIFICATION_TELEGRAM_CHAT_ID 之數值。
+    /// </summary>
+public const string NOTIFICATION_TELEGRAM_CHAT_ID = "Notifications.Telegram.ChatId";
+        /// <summary>
+    /// 定義 NOTIFICATION_WEBHOOK_ON_SOFT_LOCK 之數值。
+    /// </summary>
+public const string NOTIFICATION_WEBHOOK_ON_SOFT_LOCK = "Notifications.Webhook.OnSoftLock";
+        /// <summary>
+    /// 定義 NOTIFICATION_WEBHOOK_ON_HARD_LOCK 之數值。
+    /// </summary>
+public const string NOTIFICATION_WEBHOOK_ON_HARD_LOCK = "Notifications.Webhook.OnHardLock";
+        /// <summary>
+    /// 定義 NOTIFICATION_WEBHOOK_ON_UNLOCK 之數值。
+    /// </summary>
+public const string NOTIFICATION_WEBHOOK_ON_UNLOCK = "Notifications.Webhook.OnUnlock";
 
     private static NotificationSettings? _instance;
 
@@ -185,6 +217,78 @@ public ReportDeliveryState MonthlyReportState
     }
 
     /// <summary>
+    /// 取得或設定是否啟用 Webhook 即時告警。
+    /// </summary>
+    public bool EnableWebhook
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_ENABLE_WEBHOOK));
+        set => configuration.SetConfigValue(NOTIFICATION_ENABLE_WEBHOOK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Webhook 目標平台類型。
+    /// </summary>
+    public WebhookPlatform WebhookPlatform
+    {
+        get => Enum.TryParse(configuration.GetConfigValue(NOTIFICATION_WEBHOOK_PLATFORM), ignoreCase: true, out WebhookPlatform platform) ? platform : WebhookPlatform.None;
+        set => configuration.SetConfigValue(NOTIFICATION_WEBHOOK_PLATFORM, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Webhook 端點 URL。
+    /// </summary>
+    public string WebhookUrl
+    {
+        get => configuration.GetConfigValue(NOTIFICATION_WEBHOOK_URL) ?? string.Empty;
+        set => configuration.SetConfigValue(NOTIFICATION_WEBHOOK_URL, value);
+    }
+
+    /// <summary>
+    /// 取得或設定 Telegram Bot Token。
+    /// </summary>
+    public string TelegramBotToken
+    {
+        get => configuration.GetConfigValue(NOTIFICATION_TELEGRAM_BOT_TOKEN) ?? string.Empty;
+        set => configuration.SetConfigValue(NOTIFICATION_TELEGRAM_BOT_TOKEN, value);
+    }
+
+    /// <summary>
+    /// 取得或設定 Telegram 頻道或群組 Chat ID。
+    /// </summary>
+    public string TelegramChatId
+    {
+        get => configuration.GetConfigValue(NOTIFICATION_TELEGRAM_CHAT_ID) ?? string.Empty;
+        set => configuration.SetConfigValue(NOTIFICATION_TELEGRAM_CHAT_ID, value);
+    }
+
+    /// <summary>
+    /// 取得或設定是否在軟封鎖事件觸發時發送 Webhook。
+    /// </summary>
+    public bool WebhookOnSoftLock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_WEBHOOK_ON_SOFT_LOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_WEBHOOK_ON_SOFT_LOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否在硬封鎖事件觸發時發送 Webhook。
+    /// </summary>
+    public bool WebhookOnHardLock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_WEBHOOK_ON_HARD_LOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_WEBHOOK_ON_HARD_LOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否在解除封鎖事件觸發時發送 Webhook。
+    /// </summary>
+    public bool WebhookOnUnlock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_WEBHOOK_ON_UNLOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_WEBHOOK_ON_UNLOCK, value.ToString());
+    }
+
+    /// <summary>
     /// 初始化 <see cref="NotificationSettings"/> class的新執行個體。
     /// </summary>
     public NotificationSettings(IddsConfig configuration)
@@ -217,4 +321,40 @@ public ReportDeliveryState MonthlyReportState
     /// 儲存設定變更作業。
     /// </summary>
     public void Save() => configuration.SaveAppConfig();
+}
+
+/// <summary>
+/// 代表支援的 Webhook 即時通知平台類型。
+/// </summary>
+public enum WebhookPlatform
+{
+    /// <summary>
+    /// 未指定或停用。
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Microsoft Teams（Adaptive Cards 1.6 格式）。
+    /// </summary>
+    MicrosoftTeams = 1,
+
+    /// <summary>
+    /// Slack（Block Kit 格式）。
+    /// </summary>
+    Slack = 2,
+
+    /// <summary>
+    /// Discord（Rich Embeds 格式）。
+    /// </summary>
+    Discord = 3,
+
+    /// <summary>
+    /// Telegram（Bot API sendMessage 格式）。
+    /// </summary>
+    Telegram = 4,
+
+    /// <summary>
+    /// 通用標準 JSON 格式。
+    /// </summary>
+    GenericJson = 5
 }
