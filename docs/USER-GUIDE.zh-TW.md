@@ -134,6 +134,29 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 - **高效能 IP 地理位置解析**：支援 IPv4 與 IPv6 網段高速查詢所屬 ISO 3166-1 國家代碼與名稱。
 - **基於國家的主動存取限制 (Geo-blocking)**：可設定特定國家代碼（如 CN、RU、KP 等）阻絕規則，與防火牆聯動落實邊界地理圍欄。
 
+### 3.14 📡 傳統 SOC / SIEM 協定即時轉送 (Syslog & CEF Integration)
+- **多格式標準支援**：
+  - **RFC 5424**：現代結構化 Syslog 格式，包含標準企業 PRI、Timestamp 與 Structured-Data。
+  - **RFC 3164**：傳統 BSD Syslog 格式，相容各式傳統網路設備與日誌收集器。
+  - **ArcSight CEF (Common Event Format)**：業界標準事件格式，便利與 Splunk、IBM QRadar、Micro Focus ArcSight 無縫對接。
+- **傳輸協定**：支援 UDP、TCP 與 TLS 加密傳輸，於控制台提供即時連通性測試按鈕。
+
+### 3.15 📈 現代 Observability 監控 (Prometheus & Grafana)
+- **內建 Prometheus 指標端點**：
+  - 提供符合 OpenMetrics / Prometheus 標準之 `/metrics` 抓取端點（如 `idds_active_firewall_blocks`、`idds_uptime_seconds`、`idds_probation_ips_total`）。
+  - 提供 `/healthz` JSON 健康狀態檢查端點。
+- **彈性安全監聽**：支援管理者自訂監聽 IP（如 `0.0.0.0` 供外部 Prometheus 抓取、特定網卡或 `127.0.0.1`），並支援監控伺服器 CIDR 白名單過濾。
+- **戰情儀表板範本**：於 [`assets/dashboards/idds-grafana-dashboard.json`](file:///d:/Dev/Project/Application/IDDSCommunity/assets/dashboards/idds-grafana-dashboard.json) 提供開箱即用的 Grafana 官方儀表板範本。
+
+### 3.16 💻 官方自動化管理模組 (PowerShell Automation Module)
+- 位於 [`tools/IDDSCommunity.PowerShell/`](file:///d:/Dev/Project/Application/IDDSCommunity/tools/IDDSCommunity.PowerShell/)，提供標準 PowerShell 7+ 模組：
+  - `Get-IddsStatus`：查詢服務運行狀態與資料庫檔案。
+  - `Get-IddsBlockedIp`：列出目前所有防火牆封鎖之 IP 清單。
+  - `Get-IddsSafeNetwork` / `Add-IddsSafeNetwork` / `Remove-IddsSafeNetwork`：安全網路白名單快速管理。
+  - `Export-IddsStixBundle`：命令列一鍵匯出 STIX 2.1 JSON 情資。
+  - `Export-IddsIso27001Report`：命令列一鍵產製 ISO 27001 合規稽核報告。
+  - `Test-IddsNotification`：批次測試通知端點連通性。
+
 ---
 
 ## 4. 常見問題與故障排除 (FAQ)

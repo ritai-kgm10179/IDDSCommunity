@@ -37,6 +37,10 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
     private readonly TextBox txtBogonIpv6Url;
     private readonly NumericUpDown numProbationDays;
 
+    // Section 4: GeoIP & Country-level Blocking
+    private readonly CheckBox chkEnableGeoBlocking;
+    private readonly TextBox txtBlockedCountries;
+
     /// <summary>
     /// 當威脅情報與叢集聯防設定變更並儲存時引發之事件。
     /// </summary>
@@ -285,6 +289,34 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         Controls.Add(txtBogonIpv6Url);
         currentY += 52;
 
+        // === Section 4: GeoIP & Geo-fencing ===
+        Label lblSectionGeo = CreateHeaderLabel(Strings.Get("GeoIP & Country-level Blocking (Geo-fencing)"), 10F, AccentColor, new Point(leftMargin, currentY));
+        Controls.Add(lblSectionGeo);
+        currentY += 24;
+
+        chkEnableGeoBlocking = new CheckBox
+        {
+            Text = Strings.Get("Enable country-level Geo-blocking"),
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY),
+            AutoSize = true
+        };
+        Controls.Add(chkEnableGeoBlocking);
+        currentY += 26;
+
+        Label lblBlockedCountries = CreateFieldLabel(Strings.Get("Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)"), new Point(leftMargin, currentY));
+        txtBlockedCountries = new TextBox
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(475, 23)
+        };
+        Controls.Add(lblBlockedCountries);
+        Controls.Add(txtBlockedCountries);
+        currentY += 52;
+
         // Action Buttons
         Button btnSave = new()
         {
@@ -333,6 +365,9 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         txtBogonIpv4Url.Text = config.DynamicBogonIpv4Url;
         txtBogonIpv6Url.Text = config.DynamicBogonIpv6Url;
         numProbationDays.Value = Math.Clamp(config.ProbationDecayDays, 1, 365);
+
+        chkEnableGeoBlocking.Checked = config.EnableGeoBlocking;
+        txtBlockedCountries.Text = config.BlockedCountryCodes;
     }
 
     private const string DefaultBogonV4 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt";
@@ -360,6 +395,9 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         config.DynamicBogonIpv4Url = txtBogonIpv4Url.Text.Trim();
         config.DynamicBogonIpv6Url = txtBogonIpv6Url.Text.Trim();
         config.ProbationDecayDays = (int)numProbationDays.Value;
+
+        config.EnableGeoBlocking = chkEnableGeoBlocking.Checked;
+        config.BlockedCountryCodes = txtBlockedCountries.Text.Trim();
 
         config.Save();
         ThreatIntelligenceSettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -391,6 +429,9 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         txtBogonIpv4Url.Text = DefaultBogonV4;
         txtBogonIpv6Url.Text = DefaultBogonV6;
         numProbationDays.Value = 90;
+
+        chkEnableGeoBlocking.Checked = false;
+        txtBlockedCountries.Text = string.Empty;
     }
 
     private static SmartLabel CreateHeaderLabel(string text, float fontSize, Color color, Point location) => new()

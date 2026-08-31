@@ -289,6 +289,174 @@ public ReportDeliveryState MonthlyReportState
     }
 
     /// <summary>
+    /// 定義 NOTIFICATION_ENABLE_SYSLOG 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_ENABLE_SYSLOG = "Notifications.EnableSyslog";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_HOST 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_HOST = "Notifications.SyslogHost";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_PORT 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_PORT = "Notifications.SyslogPort";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_PROTOCOL 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_PROTOCOL = "Notifications.SyslogProtocol";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_FORMAT 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_FORMAT = "Notifications.SyslogFormat";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_ON_SOFT_LOCK 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_ON_SOFT_LOCK = "Notifications.SyslogOnSoftLock";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_ON_HARD_LOCK 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_ON_HARD_LOCK = "Notifications.SyslogOnHardLock";
+
+    /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_ON_UNLOCK 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_ON_UNLOCK = "Notifications.SyslogOnUnlock";
+
+    /// <summary>
+    /// 定義 OBSERVABILITY_ENABLE_METRICS 之設定鍵值。
+    /// </summary>
+    public const string OBSERVABILITY_ENABLE_METRICS = "Observability.EnableMetrics";
+
+    /// <summary>
+    /// 定義 OBSERVABILITY_METRICS_LISTEN_IP 之設定鍵值。
+    /// </summary>
+    public const string OBSERVABILITY_METRICS_LISTEN_IP = "Observability.MetricsListenIp";
+
+    /// <summary>
+    /// 定義 OBSERVABILITY_METRICS_PORT 之設定鍵值。
+    /// </summary>
+    public const string OBSERVABILITY_METRICS_PORT = "Observability.MetricsPort";
+
+    /// <summary>
+    /// 定義 OBSERVABILITY_METRICS_ALLOWED_NETWORKS 之設定鍵值。
+    /// </summary>
+    public const string OBSERVABILITY_METRICS_ALLOWED_NETWORKS = "Observability.MetricsAllowedNetworks";
+
+    /// <summary>
+    /// 取得或設定是否啟用 Syslog / CEF 即時轉送。
+    /// </summary>
+    public bool EnableSyslog
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_ENABLE_SYSLOG));
+        set => configuration.SetConfigValue(NOTIFICATION_ENABLE_SYSLOG, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Syslog 伺服器主機名稱或 IP。
+    /// </summary>
+    public string SyslogHost
+    {
+        get => configuration.GetConfigValue(NOTIFICATION_SYSLOG_HOST) ?? string.Empty;
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_HOST, value);
+    }
+
+    /// <summary>
+    /// 取得或設定 Syslog 伺服器通訊埠（預設 514）。
+    /// </summary>
+    public int SyslogPort
+    {
+        get => int.TryParse(configuration.GetConfigValue(NOTIFICATION_SYSLOG_PORT), out int port) ? port : 514;
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_PORT, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Syslog 傳輸協定（UDP、TCP、TLS）。
+    /// </summary>
+    public SyslogProtocol SyslogProtocol
+    {
+        get => Enum.TryParse(configuration.GetConfigValue(NOTIFICATION_SYSLOG_PROTOCOL), ignoreCase: true, out SyslogProtocol proto) ? proto : SyslogProtocol.Udp;
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_PROTOCOL, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Syslog 訊息格式（RFC5424、RFC3164、CEF）。
+    /// </summary>
+    public SyslogFormat SyslogFormat
+    {
+        get => Enum.TryParse(configuration.GetConfigValue(NOTIFICATION_SYSLOG_FORMAT), ignoreCase: true, out SyslogFormat fmt) ? fmt : SyslogFormat.Rfc5424;
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_FORMAT, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否在軟封鎖時發送 Syslog。
+    /// </summary>
+    public bool SyslogOnSoftLock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_SYSLOG_ON_SOFT_LOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_ON_SOFT_LOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否在硬封鎖時發送 Syslog。
+    /// </summary>
+    public bool SyslogOnHardLock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_SYSLOG_ON_HARD_LOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_ON_HARD_LOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否在解鎖時發送 Syslog。
+    /// </summary>
+    public bool SyslogOnUnlock
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_SYSLOG_ON_UNLOCK));
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_ON_UNLOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定是否啟用 Prometheus / OpenMetrics 指標監控端點。
+    /// </summary>
+    public bool EnableMetricsEndpoint
+    {
+        get => StringToBool(configuration.GetConfigValue(OBSERVABILITY_ENABLE_METRICS));
+        set => configuration.SetConfigValue(OBSERVABILITY_ENABLE_METRICS, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Prometheus 監聽位址（例如 0.0.0.0 或 127.0.0.1）。
+    /// </summary>
+    public string MetricsListenIp
+    {
+        get => configuration.GetConfigValue(OBSERVABILITY_METRICS_LISTEN_IP) ?? "0.0.0.0";
+        set => configuration.SetConfigValue(OBSERVABILITY_METRICS_LISTEN_IP, value);
+    }
+
+    /// <summary>
+    /// 取得或設定 Prometheus 監聽通訊埠（預設 9100）。
+    /// </summary>
+    public int MetricsPort
+    {
+        get => int.TryParse(configuration.GetConfigValue(OBSERVABILITY_METRICS_PORT), out int port) ? port : 9100;
+        set => configuration.SetConfigValue(OBSERVABILITY_METRICS_PORT, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定允許 Scraping 的監控伺服器 CIDR 網段清單（逗號分隔）。
+    /// </summary>
+    public string MetricsAllowedNetworks
+    {
+        get => configuration.GetConfigValue(OBSERVABILITY_METRICS_ALLOWED_NETWORKS) ?? string.Empty;
+        set => configuration.SetConfigValue(OBSERVABILITY_METRICS_ALLOWED_NETWORKS, value);
+    }
+
+    /// <summary>
     /// 初始化 <see cref="NotificationSettings"/> class的新執行個體。
     /// </summary>
     public NotificationSettings(IddsConfig configuration)
@@ -357,4 +525,46 @@ public enum WebhookPlatform
     /// 通用標準 JSON 格式。
     /// </summary>
     GenericJson = 5
+}
+
+/// <summary>
+/// 代表 Syslog 網路傳輸協定類型。
+/// </summary>
+public enum SyslogProtocol
+{
+    /// <summary>
+    /// UDP 協定（預設埠 514）。
+    /// </summary>
+    Udp = 0,
+
+    /// <summary>
+    /// TCP 協定（預設埠 514）。
+    /// </summary>
+    Tcp = 1,
+
+    /// <summary>
+    /// TLS 加密 TCP 協定（預設埠 6514）。
+    /// </summary>
+    Tls = 2
+}
+
+/// <summary>
+/// 代表 Syslog 訊息格式標準。
+/// </summary>
+public enum SyslogFormat
+{
+    /// <summary>
+    /// RFC 5424 標準結構化 Syslog 協定。
+    /// </summary>
+    Rfc5424 = 0,
+
+    /// <summary>
+    /// RFC 3164 傳統 BSD Syslog 協定。
+    /// </summary>
+    Rfc3164 = 1,
+
+    /// <summary>
+    /// Micro Focus ArcSight CEF (Common Event Format) 格式。
+    /// </summary>
+    Cef = 2
 }

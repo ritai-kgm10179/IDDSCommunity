@@ -883,4 +883,28 @@
   <data name="Webhook test failed. Please verify the URL and network connectivity." xml:space="preserve"><value>Webhook 測試發送失敗，請確認 URL 與網路連線。</value></data>
   <data name="Honeypot Decoy Security Agent" xml:space="preserve"><value>誘餌蜜罐主動防禦代理程式</value></data>
   <data name="Honeypot decoy port probe detected on TCP port {0}." xml:space="preserve"><value>偵測到 TCP 通訊埠 {0} 之誘餌蜜罐探測行為。</value></data>
+  <data name="Export ISO 27001 report" xml:space="preserve"><value>匯出 ISO 27001 報告</value></data>
+  <data name="Export STIX 2.1 bundle" xml:space="preserve"><value>匯出 STIX 2.1 情資</value></data>
+  <data name="Export ISO 27001 compliance report" xml:space="preserve"><value>匯出 ISO 27001 合規稽核報告</value></data>
+  <data name="Export STIX 2.1 threat intelligence bundle" xml:space="preserve"><value>匯出 STIX 2.1 威脅情資 Bundle</value></data>
+  <data name="STIX 2.1 JSON bundle (*.json)|*.json" xml:space="preserve"><value>STIX 2.1 JSON 威脅情資 (*.json)|*.json</value></data>
+  <data name="STIX 2.1 bundle exported: {0}" xml:space="preserve"><value>STIX 2.1 情資已匯出：{0}</value></data>
+  <data name="ISO 27001 report exported: {0}" xml:space="preserve"><value>ISO 27001 報告已匯出：{0}</value></data>
+  <data name="Enable country-level Geo-blocking" xml:space="preserve"><value>啟用國家/地區地理封鎖</value></data>
+  <data name="Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)" xml:space="preserve"><value>封鎖國家代碼 (ISO 3166-1 alpha-2，例如 CN, RU)</value></data>
+  <data name="GeoIP &amp; Country-level Blocking (Geo-fencing)" xml:space="preserve"><value>GeoIP 國家地理圍欄與封鎖</value></data>
+  <data name="Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)" xml:space="preserve"><value>Syslog 與 SIEM 整合 (RFC 5424 / RFC 3164 / CEF)</value></data>
+  <data name="Enable Syslog alerts" xml:space="preserve"><value>啟用 Syslog 即時轉送</value></data>
+  <data name="Syslog server host" xml:space="preserve"><value>Syslog 伺服器主機</value></data>
+  <data name="Syslog server port" xml:space="preserve"><value>Syslog 伺服器通訊埠</value></data>
+  <data name="Syslog protocol" xml:space="preserve"><value>Syslog 傳輸協定</value></data>
+  <data name="Syslog format" xml:space="preserve"><value>Syslog 訊息格式</value></data>
+  <data name="Test Syslog" xml:space="preserve"><value>發送測試 Syslog</value></data>
+  <data name="Syslog test was sent successfully." xml:space="preserve"><value>Syslog 測試發送成功。</value></data>
+  <data name="Syslog test failed. Please verify the host and network connectivity." xml:space="preserve"><value>Syslog 測試失敗，請檢查主機與網路連線。</value></data>
+  <data name="Prometheus / OpenMetrics observability" xml:space="preserve"><value>Prometheus / OpenMetrics 監控端點</value></data>
+  <data name="Enable Prometheus metrics endpoint" xml:space="preserve"><value>啟用 Prometheus 指標端點</value></data>
+  <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>指標監聽 IP 位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
+  <data name="Metrics port" xml:space="preserve"><value>指標監聽通訊埠</value></data>
+  <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>允許之監控伺服器 CIDR (例如 10.0.0.0/8, 192.168.1.0/24)</value></data>
 </root>

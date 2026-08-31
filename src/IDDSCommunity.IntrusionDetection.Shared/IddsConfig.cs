@@ -791,6 +791,24 @@ public CSafeNetworks SafeNetworks
         set => SetConfigValue("DynamicBogonIpv6Url", value ?? string.Empty);
     }
 
+    /// <summary>
+    /// 取得或設定 是否啟用國家/地區地理封鎖 (Geo-blocking)。
+    /// </summary>
+    public bool EnableGeoBlocking
+    {
+        get => bool.TryParse(GetConfigValue("EnableGeoBlocking"), out bool b) && b;
+        set => SetConfigValue("EnableGeoBlocking", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 封鎖的國家 ISO 3166-1 代碼清單（逗號分隔，例如 CN,RU,KP）。
+    /// </summary>
+    public string BlockedCountryCodes
+    {
+        get => GetConfigValue("BlockedCountryCodes") ?? string.Empty;
+        set => SetConfigValue("BlockedCountryCodes", value ?? string.Empty);
+    }
+
         /// <summary>
     /// 取得或設定 SendInfoMail。
     /// </summary>

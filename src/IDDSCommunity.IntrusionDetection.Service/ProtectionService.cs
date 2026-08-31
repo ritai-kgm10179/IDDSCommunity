@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using IDDSCommunity.IntrusionDetection.Service.Notifications;
+using IDDSCommunity.IntrusionDetection.Service.Observability;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
@@ -29,6 +30,8 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly IddsConfig configuration;
     private readonly NotificationSettings notificationSettings;
     private readonly WebhookNotificationService webhookNotificationService;
+    private readonly SyslogNotificationService syslogNotificationService;
+    private readonly MetricsHttpServer metricsHttpServer;
     private readonly SecurityAgents securityAgents;
     private readonly ReportScheduler reportScheduler;
     private readonly Statistics statistics;
@@ -114,6 +117,8 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
         this.configuration = configuration;
         this.notificationSettings = notificationSettings;
         this.webhookNotificationService = new WebhookNotificationService(notificationSettings);
+        this.syslogNotificationService = new SyslogNotificationService(notificationSettings);
+        this.metricsHttpServer = new MetricsHttpServer(notificationSettings, database);
         this.securityAgents = securityAgents;
         this.reportScheduler = reportScheduler;
         this.statistics = statistics;
@@ -402,6 +407,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 : Strings.AppTitle;
 
             _ = webhookNotificationService.SendWebhookAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
+            _ = syslogNotificationService.SendSyslogAlertAsync(lockOperation, op.IpAddress, agentName, op.Message);
         }
         catch (Exception ex)
         {
@@ -746,6 +752,9 @@ public bool LimitMailSent { get; set; }
                 (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
             externalThreatFeedSubscriberService.Start();
 
+            // 啟動 Prometheus Metrics HTTP 服務
+            metricsHttpServer.Start();
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -795,6 +804,7 @@ public bool LimitMailSent { get; set; }
     private void StopComponents(bool throwOnFailure)
     {
         List<Exception> failures = [];
+        TryStop(metricsHttpServer.Stop, failures);
         if (externalThreatFeedSubscriberService is not null)
             TryStop(externalThreatFeedSubscriberService.Stop, failures);
         if (threatSyncService is not null)
@@ -892,6 +902,8 @@ public bool LimitMailSent { get; set; }
         threatSyncService?.Dispose();
         externalThreatFeedSubscriberService?.Dispose();
         webhookNotificationService.Dispose();
+        syslogNotificationService.Dispose();
+        metricsHttpServer.Dispose();
         lifecycleLock.Dispose();
         disposed = true;
     }

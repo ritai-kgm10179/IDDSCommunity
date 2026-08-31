@@ -883,5 +883,29 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Webhook test failed. Please verify the URL and network connectivity." xml:space="preserve"><value>Webhook test failed. Please verify the URL and network connectivity.</value></data>
   <data name="Honeypot Decoy Security Agent" xml:space="preserve"><value>Honeypot Decoy Security Agent</value></data>
   <data name="Honeypot decoy port probe detected on TCP port {0}." xml:space="preserve"><value>Honeypot decoy port probe detected on TCP port {0}.</value></data>
+  <data name="Export ISO 27001 report" xml:space="preserve"><value>Export ISO 27001 report</value></data>
+  <data name="Export STIX 2.1 bundle" xml:space="preserve"><value>Export STIX 2.1 bundle</value></data>
+  <data name="Export ISO 27001 compliance report" xml:space="preserve"><value>Export ISO 27001 compliance report</value></data>
+  <data name="Export STIX 2.1 threat intelligence bundle" xml:space="preserve"><value>Export STIX 2.1 threat intelligence bundle</value></data>
+  <data name="STIX 2.1 JSON bundle (*.json)|*.json" xml:space="preserve"><value>STIX 2.1 JSON bundle (*.json)|*.json</value></data>
+  <data name="STIX 2.1 bundle exported: {0}" xml:space="preserve"><value>STIX 2.1 bundle exported: {0}</value></data>
+  <data name="ISO 27001 report exported: {0}" xml:space="preserve"><value>ISO 27001 report exported: {0}</value></data>
+  <data name="Enable country-level Geo-blocking" xml:space="preserve"><value>Enable country-level Geo-blocking</value></data>
+  <data name="Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)" xml:space="preserve"><value>Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)</value></data>
+  <data name="GeoIP &amp; Country-level Blocking (Geo-fencing)" xml:space="preserve"><value>GeoIP &amp; Country-level Blocking (Geo-fencing)</value></data>
+  <data name="Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)" xml:space="preserve"><value>Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)</value></data>
+  <data name="Enable Syslog alerts" xml:space="preserve"><value>Enable Syslog alerts</value></data>
+  <data name="Syslog server host" xml:space="preserve"><value>Syslog server host</value></data>
+  <data name="Syslog server port" xml:space="preserve"><value>Syslog server port</value></data>
+  <data name="Syslog protocol" xml:space="preserve"><value>Syslog protocol</value></data>
+  <data name="Syslog format" xml:space="preserve"><value>Syslog format</value></data>
+  <data name="Test Syslog" xml:space="preserve"><value>Test Syslog</value></data>
+  <data name="Syslog test was sent successfully." xml:space="preserve"><value>Syslog test was sent successfully.</value></data>
+  <data name="Syslog test failed. Please verify the host and network connectivity." xml:space="preserve"><value>Syslog test failed. Please verify the host and network connectivity.</value></data>
+  <data name="Prometheus / OpenMetrics observability" xml:space="preserve"><value>Prometheus / OpenMetrics observability</value></data>
+  <data name="Enable Prometheus metrics endpoint" xml:space="preserve"><value>Enable Prometheus metrics endpoint</value></data>
+  <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)</value></data>
+  <data name="Metrics port" xml:space="preserve"><value>Metrics port</value></data>
+  <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)</value></data>
 </root>
 
