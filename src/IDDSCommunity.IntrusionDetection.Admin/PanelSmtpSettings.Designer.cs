@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Admin {
+namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class PanelSmtpSettings {
         /// <summary>
         /// Required designer variable.
@@ -296,11 +296,11 @@
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
             //
             // buttonSave
-            //
-            this.buttonSave.BackColor = System.Drawing.Color.White;
+            // 
+            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.ForeColor = System.Drawing.Color.White;
             this.buttonSave.Location = new System.Drawing.Point(112, 296);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
@@ -308,9 +308,9 @@
             this.buttonSave.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
-            //
+            // 
             // smartLabelTestError
-            //
+            // 
             this.smartLabelTestError.AutoSize = true;
             this.smartLabelTestError.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabelTestError.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
@@ -322,40 +322,40 @@
             this.smartLabelTestError.TabIndex = 15;
             this.smartLabelTestError.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Smtp test error");
             this.smartLabelTestError.Visible = false;
-            //
+            // 
             // errSmtpPort
-            //
+            // 
             this.errSmtpPort.AutoSize = true;
             this.errSmtpPort.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSmtpPort.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.errSmtpPort.Location = new System.Drawing.Point(329, 94);
+            this.errSmtpPort.Location = new System.Drawing.Point(325, 94);
             this.errSmtpPort.Name = "errSmtpPort";
             this.errSmtpPort.Selected = false;
             this.errSmtpPort.SelectedColor = System.Drawing.Color.Empty;
-            this.errSmtpPort.Size = new System.Drawing.Size(130, 13);
+            this.errSmtpPort.Size = new System.Drawing.Size(85, 13);
             this.errSmtpPort.TabIndex = 15;
             this.errSmtpPort.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSmtpPort.Visible = false;
-            //
+            // 
             // buttonTestSmtpSettings
-            //
+            // 
             this.buttonTestSmtpSettings.BackColor = System.Drawing.Color.White;
             this.buttonTestSmtpSettings.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonTestSmtpSettings.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonTestSmtpSettings.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.buttonTestSmtpSettings.Location = new System.Drawing.Point(332, 212);
+            this.buttonTestSmtpSettings.Location = new System.Drawing.Point(325, 212);
             this.buttonTestSmtpSettings.Name = "buttonTestSmtpSettings";
-            this.buttonTestSmtpSettings.Size = new System.Drawing.Size(74, 26);
+            this.buttonTestSmtpSettings.Size = new System.Drawing.Size(75, 26);
             this.buttonTestSmtpSettings.TabIndex = 8;
             this.buttonTestSmtpSettings.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Test");
             this.buttonTestSmtpSettings.UseVisualStyleBackColor = false;
             this.buttonTestSmtpSettings.Click += new System.EventHandler(this.buttonTestSmtpSettings_Click);
-            //
+            // 
             // pictureBoxSave
-            //
+            // 
             this.pictureBoxSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
-            this.pictureBoxSave.Location = new System.Drawing.Point(429, 0);
+            this.pictureBoxSave.Location = new System.Drawing.Point(379, 0);
             this.pictureBoxSave.Name = "pictureBoxSave";
             this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
             this.pictureBoxSave.TabIndex = 22;
@@ -369,12 +369,13 @@
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.pictureBoxSave);
             this.Controls.Add(this.smartLabel5);
             this.Controls.Add(this.pictureBoxEdit);
             this.Controls.Add(this.smartPanel1);
             this.Name = "PanelSmtpSettings";
-            this.Size = new System.Drawing.Size(486, 402);
+            this.Size = new System.Drawing.Size(410, 402);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).EndInit();
             this.smartPanel1.ResumeLayout(false);
             this.smartPanel1.PerformLayout();

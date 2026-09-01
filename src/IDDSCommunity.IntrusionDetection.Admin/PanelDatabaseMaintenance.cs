@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,25 +32,26 @@ public sealed class PanelDatabaseMaintenance : UserControl
         /// <summary>
     /// 初始化 <see cref="PanelDatabaseMaintenance"/> 類別之新執行個體。
     /// </summary>
-public PanelDatabaseMaintenance()
+    public PanelDatabaseMaintenance()
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
+        AutoScroll = true;
         Controls.Add(CreateLabel(Strings.Get("Database maintenance"), 11F, Color.FromArgb(19, 184, 166), new Point(11, 8)));
         Controls.Add(CreateLabel(Strings.Get("SQLite database health, verified backups, retention cleanup, and safe optimization."), 9F, BodyTextColor, new Point(15, 43)));
 
         statusLabel = CreateLabel(Strings.Get("Reading database status..."), 9F, BodyTextColor, new Point(15, 73));
         statusLabel.AutoSize = false;
-        statusLabel.Size = new Size(620, 90);
+        statusLabel.Size = new Size(380, 85);
         Controls.Add(statusLabel);
 
-        checkButton = CreateButton(Strings.Get("Run integrity check"), new Point(15, 178));
-        backupButton = CreateButton(Strings.Get("Create verified backup"), new Point(145, 178));
-        optimizeButton = CreateButton(Strings.Get("Optimize database"), new Point(275, 178));
-        purgeButton = CreateButton(Strings.Get("Clean expired data"), new Point(15, 216));
-        restoreButton = CreateButton(Strings.Get("Restore backup"), new Point(145, 216));
-        compactButton = CreateButton(Strings.Get("Reclaim database space"), new Point(275, 216));
-        verifyButton = CreateButton(Strings.Get("Verify selected backup"), new Point(405, 216));
+        checkButton = CreateButton(Strings.Get("Run integrity check"), new Point(15, 168));
+        backupButton = CreateButton(Strings.Get("Create verified backup"), new Point(205, 168));
+        optimizeButton = CreateButton(Strings.Get("Optimize database"), new Point(15, 202));
+        purgeButton = CreateButton(Strings.Get("Clean expired data"), new Point(205, 202));
+        restoreButton = CreateButton(Strings.Get("Restore backup"), new Point(15, 236));
+        compactButton = CreateButton(Strings.Get("Reclaim database space"), new Point(205, 236));
+        verifyButton = CreateButton(Strings.Get("Verify selected backup"), new Point(15, 270));
         checkButton.Click += async (_, _) => await RunAsync(() => maintenance.GetStatus(true), ShowStatus);
         backupButton.Click += async (_, _) => await RunAsync(CreateBackup, result =>
         {
@@ -72,11 +73,11 @@ public PanelDatabaseMaintenance()
         Controls.Add(compactButton);
         Controls.Add(verifyButton);
 
-        Controls.Add(CreateLabel(Strings.Get("Verified backups"), 9F, BodyTextColor, new Point(15, 258)));
-        backupList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 282), Size = new Size(620, 92) };
+        Controls.Add(CreateLabel(Strings.Get("Verified backups"), 9F, BodyTextColor, new Point(15, 308)));
+        backupList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 330), Size = new Size(380, 75) };
         Controls.Add(backupList);
-        Controls.Add(CreateLabel(Strings.Get("Maintenance history"), 9F, BodyTextColor, new Point(15, 386)));
-        historyList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 410), Size = new Size(620, 92) };
+        Controls.Add(CreateLabel(Strings.Get("Maintenance history"), 9F, BodyTextColor, new Point(15, 415)));
+        historyList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 437), Size = new Size(380, 75) };
         Controls.Add(historyList);
         SizeChanged += (_, _) => UpdateResponsiveWidths();
         VisibleChanged += (_, _) => { if (Visible) RefreshStatus(); };
@@ -102,7 +103,7 @@ public PanelDatabaseMaintenance()
 
     private void UpdateResponsiveWidths()
     {
-        int contentWidth = Math.Max(240, ClientSize.Width - 30);
+        int contentWidth = Math.Min(380, Math.Max(240, ClientSize.Width - 30));
         statusLabel.Width = contentWidth;
         backupList.Width = contentWidth;
         historyList.Width = contentWidth;
@@ -251,7 +252,7 @@ public PanelDatabaseMaintenance()
         Font = new Font("Segoe UI", 9F),
         ForeColor = BodyTextColor,
         Location = location,
-        Size = new Size(120, 28),
+        Size = new Size(180, 28),
         Text = text,
         UseVisualStyleBackColor = false
     };

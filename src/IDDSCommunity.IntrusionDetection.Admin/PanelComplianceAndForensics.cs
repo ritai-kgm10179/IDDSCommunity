@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Runtime.Versioning;
@@ -39,7 +39,7 @@ public sealed class PanelComplianceAndForensics : UserControl
         Panel topPanel = new()
         {
             Dock = DockStyle.Top,
-            Height = 100,
+            Height = 135,
             BackColor = Color.White
         };
         Controls.Add(topPanel);
@@ -57,8 +57,8 @@ public sealed class PanelComplianceAndForensics : UserControl
         btnRunScan = new Button
         {
             Text = Strings.Get("Run CIS Benchmark Scan"),
-            Location = new Point(20, 50),
-            Size = new Size(190, 32),
+            Location = new Point(20, 48),
+            Size = new Size(180, 32),
             BackColor = AccentColor,
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -70,7 +70,7 @@ public sealed class PanelComplianceAndForensics : UserControl
         btnExportReport = new Button
         {
             Text = Strings.Get("Export Report"),
-            Location = new Point(220, 50),
+            Location = new Point(210, 48),
             Size = new Size(180, 32),
             Font = defaultFont,
             Enabled = false
@@ -81,9 +81,9 @@ public sealed class PanelComplianceAndForensics : UserControl
         lblScore = new Label
         {
             Text = Strings.Get("Scan not executed"),
-            Location = new Point(420, 56),
+            Location = new Point(20, 92),
             AutoSize = true,
-            Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+            Font = new Font("Segoe UI", 10F, FontStyle.Bold),
             ForeColor = BodyTextColor
         };
         topPanel.Controls.Add(lblScore);

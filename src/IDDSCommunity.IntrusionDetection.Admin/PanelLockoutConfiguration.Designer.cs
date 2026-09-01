@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Admin {
+namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class PanelLockoutConfiguration {
         /// <summary>
         /// Required designer variable.
@@ -64,7 +64,7 @@
             this.textBoxSoftLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLocks.Location = new System.Drawing.Point(257, 46);
+            this.textBoxSoftLocks.Location = new System.Drawing.Point(230, 46);
             this.textBoxSoftLocks.Name = "textBoxSoftLocks";
             this.textBoxSoftLocks.Size = new System.Drawing.Size(65, 22);
             this.textBoxSoftLocks.TabIndex = 0;
@@ -75,7 +75,7 @@
             this.textBoxSoftLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(257, 74);
+            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(230, 74);
             this.textBoxSoftLockDuration.Name = "textBoxSoftLockDuration";
             this.textBoxSoftLockDuration.Size = new System.Drawing.Size(65, 22);
             this.textBoxSoftLockDuration.TabIndex = 1;
@@ -86,7 +86,7 @@
             this.textBoxHardLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLocks.Location = new System.Drawing.Point(257, 102);
+            this.textBoxHardLocks.Location = new System.Drawing.Point(230, 102);
             this.textBoxHardLocks.Name = "textBoxHardLocks";
             this.textBoxHardLocks.Size = new System.Drawing.Size(65, 22);
             this.textBoxHardLocks.TabIndex = 2;
@@ -97,7 +97,7 @@
             this.textBoxHardLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLockDuration.Location = new System.Drawing.Point(257, 130);
+            this.textBoxHardLockDuration.Location = new System.Drawing.Point(230, 130);
             this.textBoxHardLockDuration.Name = "textBoxHardLockDuration";
             this.textBoxHardLockDuration.Size = new System.Drawing.Size(65, 22);
             this.textBoxHardLockDuration.TabIndex = 3;
@@ -108,11 +108,11 @@
             this.errSoftLocks.AutoSize = true;
             this.errSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLocks.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLocks.Location = new System.Drawing.Point(328, 48);
+            this.errSoftLocks.Location = new System.Drawing.Point(300, 48);
             this.errSoftLocks.Name = "errSoftLocks";
             this.errSoftLocks.Selected = false;
             this.errSoftLocks.SelectedColor = System.Drawing.Color.Empty;
-            this.errSoftLocks.Size = new System.Drawing.Size(130, 13);
+            this.errSoftLocks.Size = new System.Drawing.Size(100, 13);
             this.errSoftLocks.TabIndex = 11;
             this.errSoftLocks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLocks.Visible = false;
@@ -122,11 +122,11 @@
             this.errSoftLockDuration.AutoSize = true;
             this.errSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLockDuration.Location = new System.Drawing.Point(328, 74);
+            this.errSoftLockDuration.Location = new System.Drawing.Point(300, 74);
             this.errSoftLockDuration.Name = "errSoftLockDuration";
             this.errSoftLockDuration.Selected = false;
             this.errSoftLockDuration.SelectedColor = System.Drawing.Color.Empty;
-            this.errSoftLockDuration.Size = new System.Drawing.Size(130, 13);
+            this.errSoftLockDuration.Size = new System.Drawing.Size(100, 13);
             this.errSoftLockDuration.TabIndex = 11;
             this.errSoftLockDuration.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLockDuration.Visible = false;
@@ -136,11 +136,11 @@
             this.errHardLocks.AutoSize = true;
             this.errHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLocks.ForeColor = System.Drawing.Color.Red;
-            this.errHardLocks.Location = new System.Drawing.Point(328, 104);
+            this.errHardLocks.Location = new System.Drawing.Point(300, 104);
             this.errHardLocks.Name = "errHardLocks";
             this.errHardLocks.Selected = false;
             this.errHardLocks.SelectedColor = System.Drawing.Color.Empty;
-            this.errHardLocks.Size = new System.Drawing.Size(130, 13);
+            this.errHardLocks.Size = new System.Drawing.Size(100, 13);
             this.errHardLocks.TabIndex = 11;
             this.errHardLocks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLocks.Visible = false;
@@ -150,11 +150,11 @@
             this.errHardLockDuration.AutoSize = true;
             this.errHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errHardLockDuration.Location = new System.Drawing.Point(328, 132);
+            this.errHardLockDuration.Location = new System.Drawing.Point(300, 132);
             this.errHardLockDuration.Name = "errHardLockDuration";
             this.errHardLockDuration.Selected = false;
             this.errHardLockDuration.SelectedColor = System.Drawing.Color.Empty;
-            this.errHardLockDuration.Size = new System.Drawing.Size(130, 13);
+            this.errHardLockDuration.Size = new System.Drawing.Size(100, 13);
             this.errHardLockDuration.TabIndex = 11;
             this.errHardLockDuration.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLockDuration.Visible = false;
@@ -271,10 +271,10 @@
             //
             // buttonSave
             //
-            this.buttonSave.BackColor = System.Drawing.Color.White;
+            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.ForeColor = System.Drawing.Color.White;
             this.buttonSave.Location = new System.Drawing.Point(112, 248);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
@@ -293,9 +293,9 @@
             this.comboBoxFirewallMode.Items.AddRange(new object[] {
             global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Inbound blocking (recommended)"),
             global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Bidirectional blocking")});
-            this.comboBoxFirewallMode.Location = new System.Drawing.Point(257, 187);
+            this.comboBoxFirewallMode.Location = new System.Drawing.Point(230, 187);
             this.comboBoxFirewallMode.Name = "comboBoxFirewallMode";
-            this.comboBoxFirewallMode.Size = new System.Drawing.Size(181, 23);
+            this.comboBoxFirewallMode.Size = new System.Drawing.Size(170, 23);
             this.comboBoxFirewallMode.TabIndex = 5;
             this.comboBoxFirewallMode.SelectedIndexChanged += new System.EventHandler(this.comboBoxFirewallMode_SelectedIndexChanged);
             //
@@ -320,7 +320,7 @@
             this.labelFirewallModeDescription.Name = "labelFirewallModeDescription";
             this.labelFirewallModeDescription.Selected = false;
             this.labelFirewallModeDescription.SelectedColor = System.Drawing.Color.Empty;
-            this.labelFirewallModeDescription.Size = new System.Drawing.Size(414, 29);
+            this.labelFirewallModeDescription.Size = new System.Drawing.Size(380, 29);
             this.labelFirewallModeDescription.TabIndex = 32;
             //
             // PanelLockoutConfiguration
@@ -328,7 +328,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.BackColor = System.Drawing.SystemColors.Control;
+            this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.buttonDiscard);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.comboBoxFirewallMode);

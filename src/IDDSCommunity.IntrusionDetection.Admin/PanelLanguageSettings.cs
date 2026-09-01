@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -43,24 +43,23 @@ public sealed class PanelLanguageSettings : UserControl
             9F,
             BodyTextColor,
             new Point(15, 104));
-        restartNotice.MaximumSize = new Size(430, 0);
+        restartNotice.MaximumSize = new Size(380, 0);
 
         Button save = new()
         {
-            BackColor = Color.White,
+            BackColor = AccentColor,
+            ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9F),
-            ForeColor = BodyTextColor,
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             Location = new Point(15, 142),
-            Size = new Size(102, 26),
-            Text = Strings.Get("&Save"),
-            UseVisualStyleBackColor = false
+            Size = new Size(120, 32),
+            Text = Strings.Get("&Save")
         };
         save.Click += SaveLanguage;
         SettingsResetButtonFactory.AddTo(
             this,
             (_, _) => languageSelector.SelectedIndex = 0,
-            new Point(123, 142));
+            new Point(145, 142));
 
         Controls.Add(pageTitle);
         Controls.Add(fieldLabel);

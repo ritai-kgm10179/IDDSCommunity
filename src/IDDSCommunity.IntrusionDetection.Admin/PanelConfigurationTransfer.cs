@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
@@ -32,22 +32,25 @@ public PanelConfigurationTransfer()
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
+        AutoScroll = true;
         Controls.Add(Label(Strings.Get("Configuration import and export"), 11F, Color.FromArgb(19, 184, 166), 11, 8));
         Controls.Add(Label(Strings.Get("Transfer policies, safe networks, application settings, and Agent settings using a versioned JSON package."), 9F, Color.FromArgb(102, 102, 102), 15, 43));
         includeSecrets = new CheckBox { AutoSize = true, Font = new Font("Segoe UI", 9F), Location = new Point(15, 82), Text = Strings.Get("Include encrypted SMTP password") };
         Controls.Add(includeSecrets);
         Controls.Add(Label(Strings.Get("Package passphrase"), 9F, Color.FromArgb(102, 102, 102), 15, 118));
-        passphrase = new TextBox { Font = new Font("Segoe UI", 9F), Location = new Point(145, 114), PasswordChar = '●', Size = new Size(260, 24) };
+        passphrase = new TextBox { Font = new Font("Segoe UI", 9F), Location = new Point(145, 114), PasswordChar = '●', Size = new Size(235, 24) };
         Controls.Add(passphrase);
         exportButton = Button(Strings.Get("Export settings"), 15, 158);
-        importButton = Button(Strings.Get("Import settings"), 145, 158);
+        exportButton.Size = new Size(160, 30);
+        importButton = Button(Strings.Get("Import settings"), 185, 158);
+        importButton.Size = new Size(160, 30);
         exportButton.Click += Export;
         importButton.Click += Import;
         Controls.Add(exportButton);
         Controls.Add(importButton);
         status = Label(DefaultStatusText, 9F, Color.FromArgb(102, 102, 102), 15, 205);
         status.AutoSize = false;
-        status.Size = new Size(620, 100);
+        status.Size = new Size(380, 80);
         Controls.Add(status);
         VisibleChanged += (_, _) => ResetStatus();
     }

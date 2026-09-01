@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Admin {
+namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class PanelPluginConfiguration {
         /// <summary>
         /// Required designer variable.
@@ -47,69 +47,69 @@
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
             this.SuspendLayout();
-            //
+            // 
             // textBoxHardLockDuration
-            //
+            // 
             this.textBoxHardLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLockDuration.Location = new System.Drawing.Point(245, 162);
+            this.textBoxHardLockDuration.Location = new System.Drawing.Point(220, 162);
             this.textBoxHardLockDuration.Name = "textBoxHardLockDuration";
-            this.textBoxHardLockDuration.Size = new System.Drawing.Size(77, 22);
+            this.textBoxHardLockDuration.Size = new System.Drawing.Size(65, 22);
             this.textBoxHardLockDuration.TabIndex = 19;
             this.textBoxHardLockDuration.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox_KeyPress);
-            //
+            // 
             // textBoxHardLocks
-            //
+            // 
             this.textBoxHardLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLocks.Location = new System.Drawing.Point(245, 134);
+            this.textBoxHardLocks.Location = new System.Drawing.Point(220, 134);
             this.textBoxHardLocks.Name = "textBoxHardLocks";
-            this.textBoxHardLocks.Size = new System.Drawing.Size(77, 22);
+            this.textBoxHardLocks.Size = new System.Drawing.Size(65, 22);
             this.textBoxHardLocks.TabIndex = 18;
             this.textBoxHardLocks.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox_KeyPress);
-            //
+            // 
             // textBoxSoftLockDuration
-            //
+            // 
             this.textBoxSoftLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(245, 106);
+            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(220, 106);
             this.textBoxSoftLockDuration.Name = "textBoxSoftLockDuration";
-            this.textBoxSoftLockDuration.Size = new System.Drawing.Size(77, 22);
+            this.textBoxSoftLockDuration.Size = new System.Drawing.Size(65, 22);
             this.textBoxSoftLockDuration.TabIndex = 17;
             this.textBoxSoftLockDuration.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox_KeyPress);
-            //
+            // 
             // textBoxSoftLocks
-            //
+            // 
             this.textBoxSoftLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLocks.Location = new System.Drawing.Point(245, 78);
+            this.textBoxSoftLocks.Location = new System.Drawing.Point(220, 78);
             this.textBoxSoftLocks.Name = "textBoxSoftLocks";
-            this.textBoxSoftLocks.Size = new System.Drawing.Size(77, 22);
+            this.textBoxSoftLocks.Size = new System.Drawing.Size(65, 22);
             this.textBoxSoftLocks.TabIndex = 13;
             this.textBoxSoftLocks.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox_KeyPress);
-            //
+            // 
             // checkBoxLockForever
-            //
+            // 
             this.checkBoxLockForever.AutoSize = true;
             this.checkBoxLockForever.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxLockForever.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.checkBoxLockForever.Location = new System.Drawing.Point(245, 190);
+            this.checkBoxLockForever.Location = new System.Drawing.Point(220, 190);
             this.checkBoxLockForever.Name = "checkBoxLockForever";
             this.checkBoxLockForever.Size = new System.Drawing.Size(114, 17);
             this.checkBoxLockForever.TabIndex = 20;
             this.checkBoxLockForever.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock forever");
             this.checkBoxLockForever.UseVisualStyleBackColor = true;
             this.checkBoxLockForever.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
-            //
+            // 
             // pictureBoxSave
-            //
+            // 
             this.pictureBoxSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
-            this.pictureBoxSave.Location = new System.Drawing.Point(420, 3);
+            this.pictureBoxSave.Location = new System.Drawing.Point(379, 3);
             this.pictureBoxSave.Name = "pictureBoxSave";
             this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
             this.pictureBoxSave.TabIndex = 22;
@@ -118,12 +118,12 @@
             this.pictureBoxSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
             this.pictureBoxSave.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
             this.pictureBoxSave.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
-            //
+            // 
             // pictureBoxEdit
-            //
+            // 
             this.pictureBoxEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxEdit.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
-            this.pictureBoxEdit.Location = new System.Drawing.Point(451, 3);
+            this.pictureBoxEdit.Location = new System.Drawing.Point(410, 3);
             this.pictureBoxEdit.Name = "pictureBoxEdit";
             this.pictureBoxEdit.Size = new System.Drawing.Size(25, 25);
             this.pictureBoxEdit.TabIndex = 21;
@@ -132,9 +132,9 @@
             this.pictureBoxEdit.Click += new System.EventHandler(this.pictureBoxEdit_Click);
             this.pictureBoxEdit.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
             this.pictureBoxEdit.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
-            //
+            // 
             // checkBoxEnableSecurityAgent
-            //
+            // 
             this.checkBoxEnableSecurityAgent.AutoSize = true;
             this.checkBoxEnableSecurityAgent.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxEnableSecurityAgent.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
@@ -145,27 +145,27 @@
             this.checkBoxEnableSecurityAgent.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Enable this Security Agent");
             this.checkBoxEnableSecurityAgent.UseVisualStyleBackColor = true;
             this.checkBoxEnableSecurityAgent.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
-            //
+            // 
             // checkBoxOverrideConfiguration
-            //
+            // 
             this.checkBoxOverrideConfiguration.AutoSize = true;
             this.checkBoxOverrideConfiguration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxOverrideConfiguration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.checkBoxOverrideConfiguration.Location = new System.Drawing.Point(245, 47);
+            this.checkBoxOverrideConfiguration.Location = new System.Drawing.Point(220, 47);
             this.checkBoxOverrideConfiguration.Name = "checkBoxOverrideConfiguration";
             this.checkBoxOverrideConfiguration.Size = new System.Drawing.Size(144, 17);
             this.checkBoxOverrideConfiguration.TabIndex = 20;
             this.checkBoxOverrideConfiguration.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Override configuration");
             this.checkBoxOverrideConfiguration.UseVisualStyleBackColor = true;
             this.checkBoxOverrideConfiguration.CheckedChanged += new System.EventHandler(this.checkBoxOverrideConfiguration_CheckedChanged);
-            //
+            // 
             // buttonSave
-            //
+            // 
             this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonSave.BackColor = System.Drawing.Color.White;
+            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.ForeColor = System.Drawing.Color.White;
             this.buttonSave.Location = new System.Drawing.Point(112, 363);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(102, 26);
@@ -173,9 +173,9 @@
             this.buttonSave.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
-            //
+            // 
             // buttonDiscard
-            //
+            // 
             this.buttonDiscard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.buttonDiscard.BackColor = System.Drawing.Color.White;
             this.buttonDiscard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -188,9 +188,9 @@
             this.buttonDiscard.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
             this.buttonDiscard.UseVisualStyleBackColor = false;
             this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
-            //
+            // 
             // flowLayoutPanelCustomPluginSettings
-            //
+            // 
             this.flowLayoutPanelCustomPluginSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -201,68 +201,68 @@
             this.flowLayoutPanelCustomPluginSettings.Location = new System.Drawing.Point(8, 268);
             this.flowLayoutPanelCustomPluginSettings.Name = "flowLayoutPanelCustomPluginSettings";
             this.flowLayoutPanelCustomPluginSettings.Padding = new System.Windows.Forms.Padding(8, 8, 8, 8);
-            this.flowLayoutPanelCustomPluginSettings.Size = new System.Drawing.Size(428, 70);
+            this.flowLayoutPanelCustomPluginSettings.Size = new System.Drawing.Size(395, 70);
             this.flowLayoutPanelCustomPluginSettings.TabIndex = 29;
             this.flowLayoutPanelCustomPluginSettings.WrapContents = false;
-            //
+            // 
             // errHardLockDuration
-            //
+            // 
             this.errHardLockDuration.AutoSize = true;
             this.errHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errHardLockDuration.Location = new System.Drawing.Point(328, 164);
+            this.errHardLockDuration.Location = new System.Drawing.Point(290, 164);
             this.errHardLockDuration.Name = "errHardLockDuration";
             this.errHardLockDuration.Selected = false;
             this.errHardLockDuration.SelectedColor = System.Drawing.Color.Empty;
-            this.errHardLockDuration.Size = new System.Drawing.Size(130, 13);
+            this.errHardLockDuration.Size = new System.Drawing.Size(100, 13);
             this.errHardLockDuration.TabIndex = 25;
             this.errHardLockDuration.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLockDuration.Visible = false;
-            //
+            // 
             // errHardLocks
-            //
+            // 
             this.errHardLocks.AutoSize = true;
             this.errHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLocks.ForeColor = System.Drawing.Color.Red;
-            this.errHardLocks.Location = new System.Drawing.Point(328, 136);
+            this.errHardLocks.Location = new System.Drawing.Point(290, 136);
             this.errHardLocks.Name = "errHardLocks";
             this.errHardLocks.Selected = false;
             this.errHardLocks.SelectedColor = System.Drawing.Color.Empty;
-            this.errHardLocks.Size = new System.Drawing.Size(130, 13);
+            this.errHardLocks.Size = new System.Drawing.Size(100, 13);
             this.errHardLocks.TabIndex = 24;
             this.errHardLocks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errHardLocks.Visible = false;
-            //
+            // 
             // errSoftLockDuration
-            //
+            // 
             this.errSoftLockDuration.AutoSize = true;
             this.errSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLockDuration.Location = new System.Drawing.Point(328, 106);
+            this.errSoftLockDuration.Location = new System.Drawing.Point(290, 106);
             this.errSoftLockDuration.Name = "errSoftLockDuration";
             this.errSoftLockDuration.Selected = false;
             this.errSoftLockDuration.SelectedColor = System.Drawing.Color.Empty;
-            this.errSoftLockDuration.Size = new System.Drawing.Size(130, 13);
+            this.errSoftLockDuration.Size = new System.Drawing.Size(100, 13);
             this.errSoftLockDuration.TabIndex = 27;
             this.errSoftLockDuration.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLockDuration.Visible = false;
-            //
+            // 
             // errSoftLocks
-            //
+            // 
             this.errSoftLocks.AutoSize = true;
             this.errSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLocks.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLocks.Location = new System.Drawing.Point(328, 80);
+            this.errSoftLocks.Location = new System.Drawing.Point(290, 80);
             this.errSoftLocks.Name = "errSoftLocks";
             this.errSoftLocks.Selected = false;
             this.errSoftLocks.SelectedColor = System.Drawing.Color.Empty;
-            this.errSoftLocks.Size = new System.Drawing.Size(130, 13);
+            this.errSoftLocks.Size = new System.Drawing.Size(100, 13);
             this.errSoftLocks.TabIndex = 26;
             this.errSoftLocks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("value must be a number");
             this.errSoftLocks.Visible = false;
-            //
+            // 
             // smartLabelCustomConfig
-            //
+            // 
             this.smartLabelCustomConfig.AutoSize = true;
             this.smartLabelCustomConfig.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.smartLabelCustomConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
