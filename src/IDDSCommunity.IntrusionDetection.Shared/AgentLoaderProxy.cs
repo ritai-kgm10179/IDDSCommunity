@@ -127,28 +127,42 @@ public class AgentLoaderProxy : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets custom configuration objects.
+    /// 依 Reflection 列舉指定 <see cref="PluginConfiguration"/> 執行個體中所有使用者可自訂屬性，
+    /// 並以屬性名稱為索引鍵、字串化屬性值為值傳回。
+    /// 宣告於 <see cref="PluginConfiguration"/> 根基底類別本身的屬性不予列入，
+    /// 避免未來在基底類別新增屬性時意外曝露未翻譯的欄位名稱於設定 UI。
     /// </summary>
-    /// <param name="config">config參數。</param>
-    /// <returns>傳回get custom configuration objects結果。</returns>
+    /// <param name="config">來源設定物件。</param>
+    /// <returns>傳回以屬性名稱為索引鍵、字串化值為值的字典。</returns>
     public static Dictionary<string, string> GetCustomConfigurationObjects(PluginConfiguration config)
     {
         Dictionary<string, string> result = [];
+        Type rootBase = typeof(PluginConfiguration);
         foreach (PropertyInfo pi in config.GetType().GetProperties())
         {
+            if (pi.DeclaringType == rootBase) continue;
             result.Add(pi.Name, pi.GetValue(config, null)?.ToString() ?? string.Empty);
         }
         return result;
     }
 
-        /// <summary>
-    /// 執行 GetCustomConfigurationTypes 作業。
+    /// <summary>
+    /// 依 Reflection 列舉指定 <see cref="PluginConfiguration"/> 執行個體中所有使用者可自訂屬性，
+    /// 並以屬性名稱為索引鍵、宣告型別完整名稱為值傳回，供 UI 決定適合的編輯器控制項。
+    /// 宣告於 <see cref="PluginConfiguration"/> 根基底類別本身的屬性不予列入，
+    /// 避免未來在基底類別新增屬性時意外曝露未翻譯的欄位名稱於設定 UI。
     /// </summary>
-public static Dictionary<string, string> GetCustomConfigurationTypes(PluginConfiguration config)
+    /// <param name="config">來源設定物件。</param>
+    /// <returns>傳回以屬性名稱為索引鍵、型別完整名稱為值的字典。</returns>
+    public static Dictionary<string, string> GetCustomConfigurationTypes(PluginConfiguration config)
     {
         Dictionary<string, string> result = [];
+        Type rootBase = typeof(PluginConfiguration);
         foreach (PropertyInfo property in config.GetType().GetProperties())
+        {
+            if (property.DeclaringType == rootBase) continue;
             result[property.Name] = property.PropertyType.FullName ?? property.PropertyType.Name;
+        }
         return result;
     }
 
