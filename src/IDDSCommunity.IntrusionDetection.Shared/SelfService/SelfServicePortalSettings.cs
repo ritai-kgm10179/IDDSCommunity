@@ -1,4 +1,4 @@
-﻿namespace IDDSCommunity.IntrusionDetection.Shared.SelfService;
+namespace IDDSCommunity.IntrusionDetection.Shared.SelfService;
 
 /// <summary>
 /// 定義自助解鎖門戶之驗證方式。
@@ -27,7 +27,7 @@ public enum SelfServiceVerificationMethod
 public sealed class SelfServicePortalSettings
 {
     /// <summary>
-    /// 取得或設定是否啟用合法用戶自助驗證解鎖門戶。
+    /// 取得或設定是否啟用合法使用者自助驗證解鎖門戶。
     /// </summary>
     public bool EnableSelfServicePortal { get; set; } = false;
 

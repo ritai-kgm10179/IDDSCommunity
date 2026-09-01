@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter;
 
 /// <summary>
-/// 提供依據組態建立對應多雲邊界聯防提供者實例之處理工廠。
+/// 提供依據組態建立對應多雲邊界聯防提供者執行個體之處理工廠。
 /// </summary>
 public static class CloudPerimeterProviderFactory
 {

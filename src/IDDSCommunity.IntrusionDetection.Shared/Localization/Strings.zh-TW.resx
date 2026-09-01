@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -878,9 +878,9 @@
   <data name="Webhook URL / Endpoint" xml:space="preserve"><value>Webhook URL 端點</value></data>
   <data name="Telegram bot token" xml:space="preserve"><value>Telegram Bot 金鑰 (Token)</value></data>
   <data name="Telegram chat ID" xml:space="preserve"><value>Telegram 頻道／群組 Chat ID</value></data>
-  <data name="Test Webhook" xml:space="preserve"><value>發送測試 Webhook</value></data>
-  <data name="Webhook test was sent successfully." xml:space="preserve"><value>Webhook 測試訊息已成功發送。</value></data>
-  <data name="Webhook test failed. Please verify the URL and network connectivity." xml:space="preserve"><value>Webhook 測試發送失敗，請確認 URL 與網路連線。</value></data>
+  <data name="Test Webhook" xml:space="preserve"><value>傳送測試 Webhook</value></data>
+  <data name="Webhook test was sent successfully." xml:space="preserve"><value>Webhook 測試訊息已成功傳送。</value></data>
+  <data name="Webhook test failed. Please verify the URL and network connectivity." xml:space="preserve"><value>Webhook 測試傳送失敗，請確認 URL 與網路連線。</value></data>
   <data name="Honeypot Decoy Security Agent" xml:space="preserve"><value>誘餌蜜罐主動防禦代理程式</value></data>
   <data name="Honeypot decoy port probe detected on TCP port {0}." xml:space="preserve"><value>偵測到 TCP 通訊埠 {0} 之誘餌蜜罐探測行為。</value></data>
   <data name="Export ISO 27001 report" xml:space="preserve"><value>匯出 ISO 27001 報告</value></data>
@@ -899,9 +899,9 @@
   <data name="Syslog server port" xml:space="preserve"><value>Syslog 伺服器通訊埠</value></data>
   <data name="Syslog protocol" xml:space="preserve"><value>Syslog 傳輸協定</value></data>
   <data name="Syslog format" xml:space="preserve"><value>Syslog 訊息格式</value></data>
-  <data name="Test Syslog" xml:space="preserve"><value>發送測試 Syslog</value></data>
-  <data name="Syslog test was sent successfully." xml:space="preserve"><value>Syslog 測試發送成功。</value></data>
-  <data name="Syslog test failed. Please verify the host and network connectivity." xml:space="preserve"><value>Syslog 測試失敗，請檢查主機與網路連線。</value></data>
+  <data name="Test Syslog" xml:space="preserve"><value>傳送測試 Syslog</value></data>
+  <data name="Syslog test was sent successfully." xml:space="preserve"><value>Syslog 測試傳送成功。</value></data>
+  <data name="Syslog test failed. Please verify the host and network connectivity." xml:space="preserve"><value>Syslog 測試傳送失敗，請檢查主機與網路連線。</value></data>
   <data name="Prometheus / OpenMetrics observability" xml:space="preserve"><value>Prometheus / OpenMetrics 監控端點</value></data>
   <data name="Enable Prometheus metrics endpoint" xml:space="preserve"><value>啟用 Prometheus 指標端點</value></data>
   <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>指標監聽 IP 位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
@@ -921,7 +921,7 @@
   <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>次要識別碼 (Scope / Security Policy Name / Project ID)</value></data>
   <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>三級識別碼 (Network ID / HiCloud CVPC ID)</value></data>
   <data name="Test Connection" xml:space="preserve"><value>測試連線與驗證</value></data>
-  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法用戶自助網頁解鎖門戶 (Self-Service Portal)</value></data>
+  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖門戶 (Self-Service Portal)</value></data>
   <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠 (預設 8444)</value></data>
   <data name="Portal listening IP address" xml:space="preserve"><value>門戶監聽位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
   <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP 認證金鑰 (Base32 Authenticator Key)</value></data>
@@ -931,8 +931,8 @@
   <data name="Deception &amp; Honey-Accounts" xml:space="preserve"><value>動態欺敵防禦與誘餌帳號</value></data>
   <data name="Enable honey-account one-strike defense" xml:space="preserve"><value>啟用誘餌帳號一擊即鎖機制</value></data>
   <data name="Honey-accounts list" xml:space="preserve"><value>誘餌帳號清單（以逗號或換行分隔）</value></data>
-  <data name="SOAR remediation automation script" xml:space="preserve"><value>SOAR 處置自動化腳本</value></data>
-  <data name="SOAR script path" xml:space="preserve"><value>觸發永久硬封鎖時執行之腳本路徑</value></data>
+  <data name="SOAR remediation automation script" xml:space="preserve"><value>SOAR 處置自動化指令碼</value></data>
+  <data name="SOAR script path" xml:space="preserve"><value>觸發永久硬封鎖時執行之指令碼路徑</value></data>
   <data name="Browse..." xml:space="preserve"><value>瀏覽...</value></data>
   <data name="RESTful Management API" xml:space="preserve"><value>RESTful Management API 服務</value></data>
   <data name="Enable RESTful Management API" xml:space="preserve"><value>啟用 RESTful Management API (預設 TCP 8443)</value></data>

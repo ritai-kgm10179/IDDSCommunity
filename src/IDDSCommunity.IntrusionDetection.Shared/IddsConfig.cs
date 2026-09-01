@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -873,7 +873,7 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
-    /// 取得或設定 是否啟用合法用戶自助驗證解鎖門戶。
+    /// 取得或設定 是否啟用合法使用者自助驗證解鎖門戶。
     /// </summary>
     public bool EnableSelfServicePortal
     {

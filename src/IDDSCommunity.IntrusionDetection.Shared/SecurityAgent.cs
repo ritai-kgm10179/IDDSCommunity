@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -229,7 +229,7 @@ public Image Icon
     private Database? _database;
 
     /// <summary>
-    /// 取得或設定目前 SecurityAgent 關聯的 SQLite 資料庫實例。
+    /// 取得或設定目前 SecurityAgent 關聯的 SQLite 資料庫執行個體。
     /// </summary>
     public Database DatabaseInstance
     {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -8,7 +8,7 @@ using IDDSCommunity.IntrusionDetection.Api.Plugin;
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
 /// <summary>
-/// 提供跨 AppDomain/進程載入與分析擴充元件組件資訊之遠端代理類別。
+/// 提供跨 AppDomain/處理程序載入與分析擴充元件組件資訊之遠端代理類別。
 /// </summary>
 [Serializable]
 public class AgentLoaderProxy : MarshalByRefObject

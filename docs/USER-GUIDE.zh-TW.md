@@ -54,8 +54,8 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
   - 提供事件狀態勾選方塊：`[x] 入侵嘗試`、`[x] 軟鎖定`、`[x] 硬鎖定`、`[x] 系統`，支援單選或多選組合篩選。
 - **代理程式選單篩選**：
   - 可選擇「全部代理程式」或特定模組（如 `RDP` 或 `OpenSSH`）精確定位問題。
-- **250ms 防抖搜尋與雙重緩衝**：
-  - 搜尋框內建 250ms 防抖遲延 (Debounce Timer)，避免高頻打字造成介面卡頓；DataGrid 全面啟用雙重緩衝 (DoubleBuffering)，滾動零閃爍。
+- **250ms 去彈跳搜尋與雙重緩衝**：
+  - 搜尋框內建 250ms 去彈跳延遲 (Debounce Timer)，避免高頻打字造成介面卡頓；DataGrid 全面啟用雙重緩衝 (DoubleBuffering)，捲動零閃爍。
 
 ### 3.3 🔒 目前封鎖 (Current Locks & Manual Relief)
 管理因多次登入失敗而被系統暫時或永久封鎖的來源 IP：
@@ -90,9 +90,9 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 - **硬鎖定 (Hard Lock)**：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱包含 `Blocked by IDDS Community` 前綴，並歸屬於 `IDDS Community` 防火牆規則群組）。
 
 ### 3.7 📧 SMTP 告警與通知 (SMTP Notifications)
-當系統觸發硬鎖定或嚴重事件時自動發送 Email 告警：
+當系統觸發硬鎖定或嚴重事件時自動傳送 Email 告警：
 - **發信設定**：設定 SMTP 伺服器、連接埠、SSL/TLS 加密、寄件者與收件者信箱。
-- **測試郵件**：點擊「發送測試郵件」即時驗證 SMTP 設定是否正確。
+- **測試郵件**：點擊「傳送測試郵件」即時驗證 SMTP 設定是否正確。
 - **加密設定匯出**：設定檔匯出時，SMTP 密碼採用 **Argon2id 金鑰衍生 + AES-256-GCM 高強度加密**，確保機密不外洩。
 
 ### 3.8 🧹 資料庫維護與極致壓縮 (Database Maintenance)
@@ -116,7 +116,7 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 支援將入侵事件即時推播至企業常用即時通訊平台與自動化 SOC 管線：
 - **支援平台**：Microsoft Teams（Adaptive Cards 1.6 格式）、Slack（Block Kit 格式）、Discord（Rich Embed 嵌入卡片）、Telegram（Bot API `sendMessage`）、Generic JSON（標準 RESTful Webhook）。
 - **細緻事件觸發**：可獨立勾選軟封鎖、硬封鎖與解除封鎖事件。
-- **一鍵連通性測試**：於管理控制台「設定 → 通知」中提供「發送測試 Webhook」功能，快速驗證 Webhook 端點與網路連通性。
+- **一鍵連通性測試**：於管理控制台「設定 → 通知」中提供「傳送測試 Webhook」功能，快速驗證 Webhook 端點與網路連通性。
 
 ### 3.11 🍯 誘餌蜜罐主動防禦 (Honeypot Decoy Agent)
 主動部署於未使用的通訊埠（預設 TCP 23 Telnet、2222 替代 SSH、33890 替代 RDP），引誘攻擊者探測：

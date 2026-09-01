@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
@@ -34,7 +34,7 @@ Unload = 500
 }
 
 /// <summary>
-/// 代表擴充元件執行異常時之事件引數物件。
+/// 代表擴充元件發生例外狀況時之事件引數物件。
 /// </summary>
 public class PluginExceptionArguments
 {

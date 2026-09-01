@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
@@ -11,7 +11,7 @@ using IDDSCommunity.IntrusionDetection.Shared.SelfService;
 namespace IDDSCommunity.IntrusionDetection.Service.SelfService;
 
 /// <summary>
-/// 提供合法用戶自助驗證解鎖門戶之嵌入式 HTTP 服務伺服器。
+/// 提供合法使用者自助驗證解鎖門戶之嵌入式 HTTP 服務伺服器。
 /// </summary>
 public sealed class SelfServiceUnblockServer : IDisposable
 {
@@ -224,7 +224,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
           <div class="card">
             <div class="header">
               <h1>🛡️ IDDS Community</h1>
-              <p>伺服器安全防禦系統 - 合法用戶自助解鎖門戶</p>
+              <p>伺服器安全防禦系統 - 合法使用者自助解鎖門戶</p>
             </div>
             
             <div style="text-align: center;">

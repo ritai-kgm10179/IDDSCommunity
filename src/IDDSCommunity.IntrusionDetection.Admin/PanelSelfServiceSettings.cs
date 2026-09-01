@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -8,7 +8,7 @@ using IDDSCommunity.IntrusionDetection.Shared.SelfService;
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
 /// <summary>
-/// 提供合法用戶自助解除誤封鎖門戶（Self-Service Unblock Portal 與 RFC 6238 TOTP 認證）視覺化設定面板。
+/// 提供合法使用者自助解除誤封鎖門戶（Self-Service Unblock Portal 與 RFC 6238 TOTP 認證）視覺化設定面板。
 /// </summary>
 public sealed class PanelSelfServiceSettings : UserControl
 {

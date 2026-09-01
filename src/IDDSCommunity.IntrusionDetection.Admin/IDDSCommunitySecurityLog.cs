@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Data;
@@ -119,7 +119,7 @@ public IDDSCommunitySecurityLog()
     /// <param name="e">事件資料。</param>
     void IDDSCommunitySecurityLog_FilterSelectionChanged(object? sender, EventArgs? e) => ApplyAdvancedFilter();
     /// <summary>
-    /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件（附帶 250ms 防抖遲延）。
+    /// 依據事件類型選取狀態、Agent 模組及關鍵字/CIDR 網段設定 DataView 的事件過濾條件（附帶 250ms 去彈跳延遲）。
     /// </summary>
     /// <param name="searchQuery">搜尋關鍵字或 CIDR 網段（如 192.168.1.0/24）。</param>
     public void ApplyAdvancedFilter(string? searchQuery = null)
