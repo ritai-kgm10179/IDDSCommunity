@@ -21,6 +21,8 @@ public event EventHandler? NavigationClicked;
     {
         InitializeComponent();
         AccessibleRole = AccessibleRole.PushButton;
+        DoubleBuffered = true;
+        Margin = new Padding(3, 1, 3, 1);
     }
 
     /// <summary>

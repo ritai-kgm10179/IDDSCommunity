@@ -43,7 +43,9 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         Font defaultFont = new("Segoe UI", 9F);
         Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
 
-        int y = 20;
+        int leftMargin = 15;
+        int controlWidth = 380;
+        int y = 15;
 
         // Title
         Label lblTitle = new()
@@ -51,7 +53,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
             Text = Strings.Get("Cloud perimeter defense"),
             Font = sectionHeaderFont,
             ForeColor = AccentColor,
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true
         };
         Controls.Add(lblTitle);
@@ -60,29 +62,29 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         chkEnableCloudPerimeter = new CheckBox
         {
             Text = Strings.Get("Enable cloud perimeter synchronization"),
-            Location = new Point(20, y),
-            Size = new Size(500, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(chkEnableCloudPerimeter);
-        y += 35;
+        y += 32;
 
         // Provider ComboBox
         Label lblProvider = new()
         {
             Text = Strings.Get("Cloud service provider"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblProvider);
-        y += 20;
+        y += 18;
 
         comboProviderType = new ComboBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = defaultFont
         };
@@ -97,120 +99,120 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         ]);
         comboProviderType.SelectedIndex = 0;
         Controls.Add(comboProviderType);
-        y += 35;
+        y += 32;
 
         // API Key
         Label lblApiKey = new()
         {
             Text = Strings.Get("API Key / Access Token"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblApiKey);
-        y += 20;
+        y += 18;
 
         txtApiKey = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             UseSystemPasswordChar = true,
             Font = defaultFont
         };
         Controls.Add(txtApiKey);
-        y += 35;
+        y += 32;
 
         // Endpoint
         Label lblEndpoint = new()
         {
             Text = Strings.Get("Endpoint URL / Region Endpoint"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblEndpoint);
-        y += 20;
+        y += 18;
 
         txtEndpointUrl = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(txtEndpointUrl);
-        y += 35;
+        y += 32;
 
         // Resource ID
         Label lblResource = new()
         {
             Text = Strings.Get("Primary Resource ID (IPSet ID / Zone ID)"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblResource);
-        y += 20;
+        y += 18;
 
         txtResourceId = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(txtResourceId);
-        y += 35;
+        y += 32;
 
         // Secondary ID
         Label lblSecondary = new()
         {
             Text = Strings.Get("Secondary Resource ID (Scope / Policy Name / Project ID)"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblSecondary);
-        y += 20;
+        y += 18;
 
         txtSecondaryId = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(txtSecondaryId);
-        y += 35;
+        y += 32;
 
         // Tertiary ID
         Label lblTertiary = new()
         {
             Text = Strings.Get("Tertiary Resource ID (Network ID / HiCloud CVPC ID)"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblTertiary);
-        y += 20;
+        y += 18;
 
         txtTertiaryId = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(400, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(txtTertiaryId);
-        y += 40;
+        y += 38;
 
         // Test button
         btnTestConnection = new Button
         {
             Text = Strings.Get("Test Connection"),
-            Location = new Point(20, y),
-            Size = new Size(200, 30),
+            Location = new Point(leftMargin, y),
+            Size = new Size(160, 30),
             Font = defaultFont
         };
         btnTestConnection.Click += async (s, e) => await TestConnectionAsync().ConfigureAwait(true);
@@ -218,20 +220,20 @@ public sealed class PanelCloudPerimeterSettings : UserControl
 
         lblStatus = new Label
         {
-            Location = new Point(230, y + 6),
-            Size = new Size(300, 24),
+            Location = new Point(leftMargin + 170, y + 6),
+            Size = new Size(210, 24),
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Text = string.Empty
         };
         Controls.Add(lblStatus);
-        y += 50;
+        y += 48;
 
         // Save button
         Button btnSave = new()
         {
             Text = Strings.Get("&Save"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             Size = new Size(120, 32),
             BackColor = AccentColor,
             ForeColor = Color.White,

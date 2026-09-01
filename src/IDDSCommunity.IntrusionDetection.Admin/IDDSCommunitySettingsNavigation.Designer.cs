@@ -32,14 +32,15 @@
             //
             // flowLayoutPanelNavigationItems
             //
-            this.flowLayoutPanelNavigationItems.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)));
+            this.flowLayoutPanelNavigationItems.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.flowLayoutPanelNavigationItems.AutoScroll = true;
             this.flowLayoutPanelNavigationItems.WrapContents = false;
             this.flowLayoutPanelNavigationItems.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanelNavigationItems.Location = new System.Drawing.Point(3, 36);
+            this.flowLayoutPanelNavigationItems.Location = new System.Drawing.Point(0, 36);
             this.flowLayoutPanelNavigationItems.Name = "flowLayoutPanelNavigationItems";
-            this.flowLayoutPanelNavigationItems.Size = new System.Drawing.Size(268, 463);
+            this.flowLayoutPanelNavigationItems.Size = new System.Drawing.Size(286, 463);
             this.flowLayoutPanelNavigationItems.TabIndex = 0;
             //
             // smartPanelActionBar

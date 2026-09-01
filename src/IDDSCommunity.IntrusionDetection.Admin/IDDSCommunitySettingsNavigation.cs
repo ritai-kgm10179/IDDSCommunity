@@ -102,11 +102,13 @@ public bool ShowTopMenu { get; set; }
     /// <param name="unselectedIcon">unselected icon 的值。</param>
     public void AddNavigationItem(string name, Image? selectedIcon, Image? unselectedIcon)
     {
+        int targetWidth = Math.Max(200, flowLayoutPanelNavigationItems.ClientSize.Width > 20 ? flowLayoutPanelNavigationItems.ClientSize.Width - 8 : 245);
         IDDSCommunitySettingsNavigationItem item = new()
         {
             SelectedIcon = selectedIcon,
             DisplayName = name,
-            UnselectedIcon = unselectedIcon
+            UnselectedIcon = unselectedIcon,
+            Width = targetWidth
         };
         flowLayoutPanelNavigationItems.Controls.Add(item);
         item.NavigationClicked += new EventHandler(iddscommunitySettingsNavigationItem_Click);
@@ -114,6 +116,23 @@ public bool ShowTopMenu { get; set; }
         {
             item.IsSelected = true;
             OnNavigationChanged(item);
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        if (flowLayoutPanelNavigationItems != null)
+        {
+            int targetWidth = Math.Max(200, flowLayoutPanelNavigationItems.ClientSize.Width > 20 ? flowLayoutPanelNavigationItems.ClientSize.Width - 8 : 245);
+            foreach (Control c in flowLayoutPanelNavigationItems.Controls)
+            {
+                if (c is IDDSCommunitySettingsNavigationItem item && item.Width != targetWidth)
+                {
+                    item.Width = targetWidth;
+                }
+            }
         }
     }
     /// <summary>
@@ -158,6 +177,7 @@ public IDDSCommunitySettingsNavigationItem? SelectedItem
                 UnselectAll();
                 item.IsSelected = true;
                 flowLayoutPanelNavigationItems.ScrollControlIntoView(item);
+                flowLayoutPanelNavigationItems.AutoScrollPosition = new Point(0, flowLayoutPanelNavigationItems.VerticalScroll.Value);
                 OnNavigationChanged(this);
             }
         }

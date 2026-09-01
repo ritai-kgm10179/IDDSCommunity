@@ -44,20 +44,20 @@ public sealed class PanelReportExport : UserControl
         export.Text = Strings.Get("Export HTML report");
         export.Font = new Font("Segoe UI", 9F);
         export.Location = new Point(15, 160);
-        export.Size = new Size(160, 30);
+        export.Size = new Size(180, 30);
         export.Click += Export;
         Controls.Add(export);
 
         exportIso.Text = Strings.Get("Export ISO 27001 report");
         exportIso.Font = new Font("Segoe UI", 9F);
-        exportIso.Location = new Point(185, 160);
-        exportIso.Size = new Size(190, 30);
+        exportIso.Location = new Point(205, 160);
+        exportIso.Size = new Size(180, 30);
         exportIso.Click += ExportIso;
         Controls.Add(exportIso);
 
         exportStix.Text = Strings.Get("Export STIX 2.1 bundle");
         exportStix.Font = new Font("Segoe UI", 9F);
-        exportStix.Location = new Point(385, 160);
+        exportStix.Location = new Point(15, 200);
         exportStix.Size = new Size(180, 30);
         exportStix.Click += ExportStix;
         Controls.Add(exportStix);
@@ -65,8 +65,8 @@ public sealed class PanelReportExport : UserControl
         status.AutoSize = false;
         status.Font = new Font("Segoe UI", 9F);
         status.ForeColor = Color.FromArgb(102, 102, 102);
-        status.Location = new Point(15, 210);
-        status.Size = new Size(620, 100);
+        status.Location = new Point(15, 245);
+        status.Size = new Size(420, 80);
         Controls.Add(status);
         VisibleChanged += (_, _) => ResetStatus();
     }

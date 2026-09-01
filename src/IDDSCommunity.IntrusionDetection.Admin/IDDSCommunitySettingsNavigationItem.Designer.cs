@@ -47,7 +47,7 @@
             this.smartLabelAgentName.Name = "smartLabelAgentName";
             this.smartLabelAgentName.Selected = false;
             this.smartLabelAgentName.SelectedColor = System.Drawing.Color.Empty;
-            this.smartLabelAgentName.Size = new System.Drawing.Size(247, 20);
+            this.smartLabelAgentName.Size = new System.Drawing.Size(210, 20);
             this.smartLabelAgentName.TabIndex = 1;
             this.smartLabelAgentName.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("AgentName");
             this.smartLabelAgentName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -63,7 +63,7 @@
             this.Controls.Add(this.smartLabelAgentName);
             this.Controls.Add(this.pictureBoxNavigationIcon);
             this.Name = "IDDSCommunitySettingsNavigationItem";
-            this.Size = new System.Drawing.Size(279, 28);
+            this.Size = new System.Drawing.Size(245, 28);
             this.Click += new System.EventHandler(this.IDDSCommunitySettingsNavigationItem_Click);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.IDDSCommunitySettingsNavigationItem_MouseDown);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.IDDSCommunitySettingsNavigationItem_MouseUp);

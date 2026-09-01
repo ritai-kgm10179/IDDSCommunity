@@ -8,21 +8,21 @@ using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
 /// <summary>
-/// 提供跨主機威脅聯防、外部情資訂閱、雙層 Bogon 防護與智慧假釋參數設定之管理主控台面板。
+/// 提供分散式威脅情資中繼 (Threat Hub)、外部威脅名單訂閱 (IPsum, AbuseIPDB) 與 Bogon 動態過濾配置面板。
 /// </summary>
 public sealed class PanelThreatIntelligenceSettings : UserControl
 {
-    private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
+    private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
 
-    // Section 1: Cluster
+    // Section 1: Topology
     private readonly ComboBox comboClusterRole;
     private readonly TextBox txtHubEndpoint;
     private readonly TextBox txtHubApiKey;
     private readonly NumericUpDown numHubPort;
     private readonly NumericUpDown numSyncInterval;
 
-    // Section 2: External Feeds
+    // Section 2: Threat Feeds
     private readonly CheckBox chkEnableFeeds;
     private readonly NumericUpDown numFeedInterval;
     private readonly NumericUpDown numIpsumLevel;
@@ -37,7 +37,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
     private readonly TextBox txtBogonIpv6Url;
     private readonly NumericUpDown numProbationDays;
 
-    // Section 4: GeoIP & Country-level Blocking
+    // Section 4: GeoIP
     private readonly CheckBox chkEnableGeoBlocking;
     private readonly TextBox txtBlockedCountries;
 
@@ -59,6 +59,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
 
         int leftMargin = 15;
+        int controlWidth = 380;
         int currentY = 10;
 
         // Page Header
@@ -78,23 +79,24 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(220, 23)
+            Size = new Size(controlWidth, 23)
         };
         comboClusterRole.Items.AddRange(["Standalone (0)", "EdgeNode (1)", "ThreatHub (2)"]);
         Controls.Add(lblRole);
         Controls.Add(comboClusterRole);
+        currentY += 46;
 
-        Label lblEndpoint = CreateFieldLabel(Strings.Get("Threat Hub endpoint URL"), new Point(250, currentY));
+        Label lblEndpoint = CreateFieldLabel(Strings.Get("Threat Hub endpoint URL"), new Point(leftMargin, currentY));
         txtHubEndpoint = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(250, currentY + 18),
-            Size = new Size(240, 23)
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblEndpoint);
         Controls.Add(txtHubEndpoint);
-        currentY += 48;
+        currentY += 46;
 
         Label lblApiKey = CreateFieldLabel(Strings.Get("Cluster API key"), new Point(leftMargin, currentY));
         txtHubApiKey = new TextBox
@@ -102,18 +104,19 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(220, 23)
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblApiKey);
         Controls.Add(txtHubApiKey);
+        currentY += 46;
 
-        Label lblPort = CreateFieldLabel(Strings.Get("Threat Hub port"), new Point(250, currentY));
+        Label lblPort = CreateFieldLabel(Strings.Get("Threat Hub port"), new Point(leftMargin, currentY));
         numHubPort = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(250, currentY + 18),
-            Size = new Size(100, 23),
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(180, 23),
             Minimum = 1,
             Maximum = 65535,
             Value = 8443
@@ -121,13 +124,13 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         Controls.Add(lblPort);
         Controls.Add(numHubPort);
 
-        Label lblSync = CreateFieldLabel(Strings.Get("Cluster sync interval (seconds)"), new Point(370, currentY));
+        Label lblSync = CreateFieldLabel(Strings.Get("Cluster sync interval (seconds)"), new Point(leftMargin + 195, currentY));
         numSyncInterval = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(370, currentY + 18),
-            Size = new Size(120, 23),
+            Location = new Point(leftMargin + 195, currentY + 18),
+            Size = new Size(185, 23),
             Minimum = 5,
             Maximum = 3600,
             Value = 60
@@ -158,7 +161,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(100, 23),
+            Size = new Size(180, 23),
             Minimum = 1,
             Maximum = 168,
             Value = 24
@@ -166,34 +169,49 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         Controls.Add(lblFeedInterval);
         Controls.Add(numFeedInterval);
 
-        Label lblIpsumLevel = CreateFieldLabel(Strings.Get("IPsum minimum severity level (1-8)"), new Point(135, currentY));
+        Label lblIpsumLevel = CreateFieldLabel(Strings.Get("IPsum minimum severity level (1-8)"), new Point(leftMargin + 195, currentY));
         numIpsumLevel = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(135, currentY + 18),
-            Size = new Size(100, 23),
+            Location = new Point(leftMargin + 195, currentY + 18),
+            Size = new Size(185, 23),
             Minimum = 1,
             Maximum = 8,
             Value = 3
         };
         Controls.Add(lblIpsumLevel);
         Controls.Add(numIpsumLevel);
+        currentY += 46;
 
-        Label lblFeedTtl = CreateFieldLabel(Strings.Get("Threat intelligence TTL (days)"), new Point(255, currentY));
+        Label lblFeedTtl = CreateFieldLabel(Strings.Get("Threat intelligence TTL (days)"), new Point(leftMargin, currentY));
         numFeedTtlDays = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(255, currentY + 18),
-            Size = new Size(100, 23),
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(180, 23),
             Minimum = 1,
             Maximum = 365,
             Value = 7
         };
         Controls.Add(lblFeedTtl);
         Controls.Add(numFeedTtlDays);
-        currentY += 48;
+
+        Label lblAbuseMin = CreateFieldLabel(Strings.Get("AbuseIPDB minimum confidence (%)"), new Point(leftMargin + 195, currentY));
+        numAbuseMinConfidence = new NumericUpDown
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin + 195, currentY + 18),
+            Size = new Size(185, 23),
+            Minimum = 25,
+            Maximum = 100,
+            Value = 90
+        };
+        Controls.Add(lblAbuseMin);
+        Controls.Add(numAbuseMinConfidence);
+        currentY += 46;
 
         Label lblAbuseKey = CreateFieldLabel(Strings.Get("AbuseIPDB API key"), new Point(leftMargin, currentY));
         txtAbuseApiKey = new TextBox
@@ -201,25 +219,11 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(280, 23)
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblAbuseKey);
         Controls.Add(txtAbuseApiKey);
-
-        Label lblAbuseMin = CreateFieldLabel(Strings.Get("AbuseIPDB minimum confidence (%)"), new Point(310, currentY));
-        numAbuseMinConfidence = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(310, currentY + 18),
-            Size = new Size(100, 23),
-            Minimum = 25,
-            Maximum = 100,
-            Value = 90
-        };
-        Controls.Add(lblAbuseMin);
-        Controls.Add(numAbuseMinConfidence);
-        currentY += 48;
+        currentY += 46;
 
         Label lblCustomUrls = CreateFieldLabel(Strings.Get("Custom threat feed URLs (one per line)"), new Point(leftMargin, currentY));
         txtCustomUrls = new TextBox
@@ -227,7 +231,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(475, 48),
+            Size = new Size(controlWidth, 48),
             Multiline = true,
             ScrollBars = ScrollBars.Vertical
         };
@@ -249,14 +253,15 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             AutoSize = true
         };
         Controls.Add(chkEnableDynamicBogon);
+        currentY += 26;
 
-        Label lblProbationDays = CreateFieldLabel(Strings.Get("Probation decay period (days)"), new Point(340, currentY - 4));
+        Label lblProbationDays = CreateFieldLabel(Strings.Get("Probation decay period (days)"), new Point(leftMargin, currentY));
         numProbationDays = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(340, currentY + 16),
-            Size = new Size(100, 23),
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(180, 23),
             Minimum = 1,
             Maximum = 365,
             Value = 90
@@ -271,7 +276,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(475, 23)
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblBogonV4);
         Controls.Add(txtBogonIpv4Url);
@@ -283,7 +288,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(475, 23)
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblBogonV6);
         Controls.Add(txtBogonIpv6Url);
@@ -311,7 +316,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(475, 23)
+            Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblBlockedCountries);
         Controls.Add(txtBlockedCountries);
@@ -320,14 +325,13 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         // Action Buttons
         Button btnSave = new()
         {
-            BackColor = Color.White,
+            BackColor = AccentColor,
+            ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             Location = new Point(leftMargin, currentY),
-            Size = new Size(102, 26),
-            Text = Strings.Get("&Save"),
-            UseVisualStyleBackColor = false
+            Size = new Size(120, 32),
+            Text = Strings.Get("&Save")
         };
         btnSave.Click += SaveSettings;
         Controls.Add(btnSave);
@@ -335,7 +339,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         SettingsResetButtonFactory.AddTo(
             this,
             (_, _) => ResetToDefaults(),
-            new Point(leftMargin + 108, currentY));
+            new Point(leftMargin + 130, currentY));
 
         LoadData();
     }
@@ -425,7 +429,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         numAbuseMinConfidence.Value = 90;
         txtCustomUrls.Text = string.Empty;
 
-        chkEnableDynamicBogon.Checked = true;
+        chkEnableDynamicBogon.Checked = false;
         txtBogonIpv4Url.Text = DefaultBogonV4;
         txtBogonIpv6Url.Text = DefaultBogonV6;
         numProbationDays.Value = 90;
@@ -434,21 +438,23 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         txtBlockedCountries.Text = string.Empty;
     }
 
-    private static SmartLabel CreateHeaderLabel(string text, float fontSize, Color color, Point location) => new()
-    {
-        AutoSize = true,
-        Font = new Font("Segoe UI", fontSize),
-        ForeColor = color,
-        Location = location,
-        Text = text
-    };
+    private static SmartLabel CreateHeaderLabel(string text, float fontSize, Color color, Point location) =>
+        new()
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", fontSize, FontStyle.Bold),
+            ForeColor = color,
+            Location = location,
+            Text = text
+        };
 
-    private static Label CreateFieldLabel(string text, Point location) => new()
-    {
-        AutoSize = true,
-        Font = new Font("Segoe UI", 9F),
-        ForeColor = BodyTextColor,
-        Location = location,
-        Text = text
-    };
+    private static Label CreateFieldLabel(string text, Point location) =>
+        new()
+        {
+            AutoSize = true,
+            Font = new Font("Segoe UI", 9F),
+            ForeColor = BodyTextColor,
+            Location = location,
+            Text = text
+        };
 }

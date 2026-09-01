@@ -39,7 +39,9 @@ public sealed class PanelSelfServiceSettings : UserControl
         Font defaultFont = new("Segoe UI", 9F);
         Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
 
-        int y = 20;
+        int leftMargin = 15;
+        int controlWidth = 380;
+        int y = 15;
 
         // Title
         Label lblTitle = new()
@@ -47,7 +49,7 @@ public sealed class PanelSelfServiceSettings : UserControl
             Text = Strings.Get("Self-service unblock portal"),
             Font = sectionHeaderFont,
             ForeColor = AccentColor,
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true
         };
         Controls.Add(lblTitle);
@@ -56,75 +58,75 @@ public sealed class PanelSelfServiceSettings : UserControl
         chkEnablePortal = new CheckBox
         {
             Text = Strings.Get("Enable self-service unblock portal"),
-            Location = new Point(20, y),
-            Size = new Size(500, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont
         };
         Controls.Add(chkEnablePortal);
-        y += 35;
+        y += 32;
 
         // Port
         Label lblPort = new()
         {
             Text = Strings.Get("Portal listening port"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblPort);
-        y += 20;
+        y += 18;
 
         numPort = new NumericUpDown
         {
-            Location = new Point(20, y),
-            Size = new Size(120, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(180, 24),
             Minimum = 1,
             Maximum = 65535,
             Value = 8444,
             Font = defaultFont
         };
         Controls.Add(numPort);
-        y += 35;
+        y += 32;
 
         // Listen IP
         Label lblListenIp = new()
         {
             Text = Strings.Get("Portal listening IP address"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblListenIp);
-        y += 20;
+        y += 18;
 
         txtListenIp = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(250, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(controlWidth, 24),
             Text = "0.0.0.0",
             Font = defaultFont
         };
         Controls.Add(txtListenIp);
-        y += 35;
+        y += 32;
 
         // TOTP Secret
         Label lblSecret = new()
         {
             Text = Strings.Get("RFC 6238 TOTP Secret Key (Base32)"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblSecret);
-        y += 20;
+        y += 18;
 
         txtTotpSecret = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(350, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(250, 24),
             Font = defaultFont
         };
         Controls.Add(txtTotpSecret);
@@ -132,30 +134,30 @@ public sealed class PanelSelfServiceSettings : UserControl
         Button btnGenerate = new()
         {
             Text = Strings.Get("Generate Secret"),
-            Location = new Point(380, y - 2),
+            Location = new Point(leftMargin + 260, y - 2),
             Size = new Size(120, 28),
             Font = defaultFont
         };
         btnGenerate.Click += (s, e) => GenerateNewSecret();
         Controls.Add(btnGenerate);
-        y += 35;
+        y += 32;
 
         // Test TOTP code
         Label lblTest = new()
         {
             Text = Strings.Get("Test Verification Code"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor
         };
         Controls.Add(lblTest);
-        y += 20;
+        y += 18;
 
         txtTestCode = new TextBox
         {
-            Location = new Point(20, y),
-            Size = new Size(150, 24),
+            Location = new Point(leftMargin, y),
+            Size = new Size(140, 24),
             MaxLength = 6,
             Font = defaultFont
         };
@@ -164,8 +166,8 @@ public sealed class PanelSelfServiceSettings : UserControl
         Button btnVerify = new()
         {
             Text = Strings.Get("Verify Code"),
-            Location = new Point(180, y - 2),
-            Size = new Size(90, 28),
+            Location = new Point(leftMargin + 150, y - 2),
+            Size = new Size(100, 28),
             Font = defaultFont
         };
         btnVerify.Click += (s, e) => VerifyCode();
@@ -173,20 +175,20 @@ public sealed class PanelSelfServiceSettings : UserControl
 
         lblVerificationResult = new Label
         {
-            Location = new Point(280, y + 2),
-            Size = new Size(250, 24),
+            Location = new Point(leftMargin, y + 28),
+            Size = new Size(controlWidth, 24),
             Font = defaultFont,
             ForeColor = BodyTextColor,
             Text = string.Empty
         };
         Controls.Add(lblVerificationResult);
-        y += 50;
+        y += 56;
 
         // Save Button
         Button btnSave = new()
         {
             Text = Strings.Get("&Save"),
-            Location = new Point(20, y),
+            Location = new Point(leftMargin, y),
             Size = new Size(120, 32),
             BackColor = AccentColor,
             ForeColor = Color.White,

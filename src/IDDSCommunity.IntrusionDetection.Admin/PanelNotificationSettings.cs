@@ -74,24 +74,108 @@ public partial class PanelNotificationSettings : UserControl
         InitializeComponent();
 
         Font defaultFont = new("Segoe UI", 9F);
-        int webhookX = 370;
+        Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
+        int x = 20;
+        int controlWidth = 350;
+        int currentY = 15;
 
+        // === Section 1: E-Mail 通知設定 ===
+        smartLabel5.AutoSize = true;
+        smartLabel5.Font = sectionHeaderFont;
+        smartLabel5.ForeColor = AccentColor;
+        smartLabel5.Location = new Point(x, currentY);
+        smartLabel5.Text = Strings.Get("E-mail notification settings");
+        Controls.Add(smartLabel5);
+        currentY += 28;
+
+        smartLabel1.AutoSize = true;
+        smartLabel1.Font = defaultFont;
+        smartLabel1.ForeColor = BodyTextColor;
+        smartLabel1.Location = new Point(x, currentY);
+        smartLabel1.Text = Strings.Get("Basic notification");
+        Controls.Add(smartLabel1);
+        currentY += 20;
+
+        checkBoxSoftLock.AutoSize = true;
+        checkBoxSoftLock.Font = defaultFont;
+        checkBoxSoftLock.ForeColor = BodyTextColor;
+        checkBoxSoftLock.Location = new Point(x, currentY);
+        checkBoxSoftLock.Text = Strings.Get("On soft lock events");
+        checkBoxSoftLock.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxSoftLock);
+        currentY += 24;
+
+        checkBoxHardLocks.AutoSize = true;
+        checkBoxHardLocks.Font = defaultFont;
+        checkBoxHardLocks.ForeColor = BodyTextColor;
+        checkBoxHardLocks.Location = new Point(x, currentY);
+        checkBoxHardLocks.Text = Strings.Get("On hard lock events");
+        checkBoxHardLocks.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxHardLocks);
+        currentY += 24;
+
+        checkBoxOnUnlock.AutoSize = true;
+        checkBoxOnUnlock.Font = defaultFont;
+        checkBoxOnUnlock.ForeColor = BodyTextColor;
+        checkBoxOnUnlock.Location = new Point(x, currentY);
+        checkBoxOnUnlock.Text = Strings.Get("On unlock events");
+        checkBoxOnUnlock.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxOnUnlock);
+        currentY += 26;
+
+        smartLabelSummary.AutoSize = true;
+        smartLabelSummary.Font = defaultFont;
+        smartLabelSummary.ForeColor = BodyTextColor;
+        smartLabelSummary.Location = new Point(x, currentY);
+        smartLabelSummary.Text = Strings.Get("Reports");
+        Controls.Add(smartLabelSummary);
+        currentY += 20;
+
+        checkBoxDailySummary.AutoSize = true;
+        checkBoxDailySummary.Font = defaultFont;
+        checkBoxDailySummary.ForeColor = BodyTextColor;
+        checkBoxDailySummary.Location = new Point(x, currentY);
+        checkBoxDailySummary.Text = Strings.Get("Daily report");
+        checkBoxDailySummary.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxDailySummary);
+        currentY += 24;
+
+        checkBoxWeeklyReport.AutoSize = true;
+        checkBoxWeeklyReport.Font = defaultFont;
+        checkBoxWeeklyReport.ForeColor = BodyTextColor;
+        checkBoxWeeklyReport.Location = new Point(x, currentY);
+        checkBoxWeeklyReport.Text = Strings.Get("Weekly report");
+        checkBoxWeeklyReport.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxWeeklyReport);
+        currentY += 24;
+
+        checkBoxMonthlyReport.AutoSize = true;
+        checkBoxMonthlyReport.Font = defaultFont;
+        checkBoxMonthlyReport.ForeColor = BodyTextColor;
+        checkBoxMonthlyReport.Location = new Point(x, currentY);
+        checkBoxMonthlyReport.Text = Strings.Get("Monthly report");
+        checkBoxMonthlyReport.CheckedChanged += checkBox_CheckedChanged;
+        Controls.Add(checkBoxMonthlyReport);
+        currentY += 35;
+
+        // === Section 2: Webhook 即時告警 ===
         smartLabelWebhookHeader = new SmartLabel
         {
             AutoSize = true,
-            Font = new Font("Segoe UI", 11F),
+            Font = sectionHeaderFont,
             ForeColor = AccentColor,
-            Location = new Point(webhookX, 0),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Webhook notifications (Teams / Slack / Discord / Telegram)")
         };
         Controls.Add(smartLabelWebhookHeader);
+        currentY += 28;
 
         checkBoxEnableWebhook = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 40),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Enable Webhook alerts")
         };
         checkBoxEnableWebhook.CheckedChanged += (_, _) =>
@@ -100,13 +184,14 @@ public partial class PanelNotificationSettings : UserControl
             SetEditMode(true);
         };
         Controls.Add(checkBoxEnableWebhook);
+        currentY += 26;
 
         labelWebhookPlatform = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 68),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Webhook platform")
         };
         comboBoxWebhookPlatform = new ComboBox
@@ -114,8 +199,8 @@ public partial class PanelNotificationSettings : UserControl
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 86),
-            Size = new Size(260, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         comboBoxWebhookPlatform.Items.AddRange(["None (0)", "MicrosoftTeams (1)", "Slack (2)", "Discord (3)", "Telegram (4)", "GenericJson (5)"]);
         comboBoxWebhookPlatform.SelectedIndexChanged += (_, _) =>
@@ -125,96 +210,103 @@ public partial class PanelNotificationSettings : UserControl
         };
         Controls.Add(labelWebhookPlatform);
         Controls.Add(comboBoxWebhookPlatform);
+        currentY += 46;
 
         labelWebhookUrl = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 116),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Webhook URL / Endpoint")
         };
         textBoxWebhookUrl = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 134),
-            Size = new Size(320, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         textBoxWebhookUrl.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelWebhookUrl);
         Controls.Add(textBoxWebhookUrl);
+        currentY += 46;
 
         labelTelegramToken = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 164),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Telegram bot token")
         };
         textBoxTelegramToken = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 182),
-            Size = new Size(320, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         textBoxTelegramToken.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelTelegramToken);
         Controls.Add(textBoxTelegramToken);
+        currentY += 46;
 
         labelTelegramChatId = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 212),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Telegram chat ID")
         };
         textBoxTelegramChatId = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 230),
-            Size = new Size(320, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         textBoxTelegramChatId.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelTelegramChatId);
         Controls.Add(textBoxTelegramChatId);
+        currentY += 46;
 
         checkBoxWebhookSoftLock = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 260),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On soft lock events")
         };
         checkBoxWebhookSoftLock.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxWebhookSoftLock);
+        currentY += 24;
 
         checkBoxWebhookHardLocks = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 282),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On hard lock events")
         };
         checkBoxWebhookHardLocks.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxWebhookHardLocks);
+        currentY += 24;
 
         checkBoxWebhookOnUnlock = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 304),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On unlock events")
         };
         checkBoxWebhookOnUnlock.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxWebhookOnUnlock);
+        currentY += 26;
 
         buttonTestWebhook = new Button
         {
@@ -222,50 +314,53 @@ public partial class PanelNotificationSettings : UserControl
             FlatStyle = FlatStyle.Flat,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 339),
-            Size = new Size(130, 26),
+            Location = new Point(x, currentY),
+            Size = new Size(140, 28),
             Text = Strings.Get("Test Webhook"),
             UseVisualStyleBackColor = false
         };
         buttonTestWebhook.Click += async (_, _) => await RunTestWebhookAsync();
         Controls.Add(buttonTestWebhook);
+        currentY += 38;
 
-        // Syslog UI Controls
+        // === Section 3: Syslog & SIEM 整合 ===
         smartLabelSyslogHeader = new SmartLabel
         {
             AutoSize = true,
-            Font = new Font("Segoe UI", 11F),
+            Font = sectionHeaderFont,
             ForeColor = AccentColor,
-            Location = new Point(webhookX, 385),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Syslog & SIEM integration (RFC 5424 / RFC 3164 / CEF)")
         };
         Controls.Add(smartLabelSyslogHeader);
+        currentY += 28;
 
         checkBoxEnableSyslog = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 415),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Enable Syslog alerts")
         };
         checkBoxEnableSyslog.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxEnableSyslog);
+        currentY += 26;
 
         labelSyslogHost = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 440),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Syslog server host")
         };
         textBoxSyslogHost = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 458),
-            Size = new Size(200, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(230, 23)
         };
         textBoxSyslogHost.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelSyslogHost);
@@ -276,15 +371,15 @@ public partial class PanelNotificationSettings : UserControl
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX + 215, 440),
+            Location = new Point(x + 245, currentY),
             Text = Strings.Get("Syslog server port")
         };
         numSyslogPort = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX + 215, 458),
-            Size = new Size(80, 23),
+            Location = new Point(x + 245, currentY + 18),
+            Size = new Size(105, 23),
             Minimum = 1,
             Maximum = 65535,
             Value = 514
@@ -292,13 +387,14 @@ public partial class PanelNotificationSettings : UserControl
         numSyslogPort.ValueChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelSyslogPort);
         Controls.Add(numSyslogPort);
+        currentY += 46;
 
         labelSyslogProtocol = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 488),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Syslog protocol")
         };
         comboBoxSyslogProtocol = new ComboBox
@@ -306,8 +402,8 @@ public partial class PanelNotificationSettings : UserControl
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 506),
-            Size = new Size(130, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(160, 23)
         };
         comboBoxSyslogProtocol.Items.AddRange(["UDP (0)", "TCP (1)", "TLS (2)"]);
         comboBoxSyslogProtocol.SelectedIndexChanged += (_, _) => SetEditMode(true);
@@ -319,7 +415,7 @@ public partial class PanelNotificationSettings : UserControl
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX + 145, 488),
+            Location = new Point(x + 175, currentY),
             Text = Strings.Get("Syslog format")
         };
         comboBoxSyslogFormat = new ComboBox
@@ -327,46 +423,50 @@ public partial class PanelNotificationSettings : UserControl
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX + 145, 506),
-            Size = new Size(150, 23)
+            Location = new Point(x + 175, currentY + 18),
+            Size = new Size(175, 23)
         };
         comboBoxSyslogFormat.Items.AddRange(["RFC 5424 (0)", "RFC 3164 (1)", "CEF (2)"]);
         comboBoxSyslogFormat.SelectedIndexChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelSyslogFormat);
         Controls.Add(comboBoxSyslogFormat);
+        currentY += 46;
 
         checkBoxSyslogSoftLock = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 536),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On soft lock events")
         };
         checkBoxSyslogSoftLock.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxSyslogSoftLock);
+        currentY += 24;
 
         checkBoxSyslogHardLocks = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 558),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On hard lock events")
         };
         checkBoxSyslogHardLocks.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxSyslogHardLocks);
+        currentY += 24;
 
         checkBoxSyslogOnUnlock = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 580),
+            Location = new Point(x, currentY),
             Text = Strings.Get("On unlock events")
         };
         checkBoxSyslogOnUnlock.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxSyslogOnUnlock);
+        currentY += 26;
 
         buttonTestSyslog = new Button
         {
@@ -374,50 +474,53 @@ public partial class PanelNotificationSettings : UserControl
             FlatStyle = FlatStyle.Flat,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(webhookX, 610),
-            Size = new Size(130, 26),
+            Location = new Point(x, currentY),
+            Size = new Size(140, 28),
             Text = Strings.Get("Test Syslog"),
             UseVisualStyleBackColor = false
         };
         buttonTestSyslog.Click += async (_, _) => await RunTestSyslogAsync();
         Controls.Add(buttonTestSyslog);
+        currentY += 38;
 
-        // Observability / Prometheus UI Controls (Left column bottom)
+        // === Section 4: Prometheus / OpenMetrics 可觀測性 ===
         smartLabelMetricsHeader = new SmartLabel
         {
             AutoSize = true,
-            Font = new Font("Segoe UI", 11F),
+            Font = sectionHeaderFont,
             ForeColor = AccentColor,
-            Location = new Point(0, 385),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Prometheus / OpenMetrics observability")
         };
         Controls.Add(smartLabelMetricsHeader);
+        currentY += 28;
 
         checkBoxEnableMetrics = new CheckBox
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(0, 415),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Enable Prometheus metrics endpoint")
         };
         checkBoxEnableMetrics.CheckedChanged += (_, _) => SetEditMode(true);
         Controls.Add(checkBoxEnableMetrics);
+        currentY += 26;
 
         labelMetricsListenIp = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(0, 440),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)")
         };
         textBoxMetricsListenIp = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(0, 458),
-            Size = new Size(200, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(230, 23)
         };
         textBoxMetricsListenIp.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelMetricsListenIp);
@@ -428,15 +531,15 @@ public partial class PanelNotificationSettings : UserControl
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(215, 440),
+            Location = new Point(x + 245, currentY),
             Text = Strings.Get("Metrics port")
         };
         numMetricsPort = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(215, 458),
-            Size = new Size(80, 23),
+            Location = new Point(x + 245, currentY + 18),
+            Size = new Size(105, 23),
             Minimum = 1,
             Maximum = 65535,
             Value = 9100
@@ -444,25 +547,49 @@ public partial class PanelNotificationSettings : UserControl
         numMetricsPort.ValueChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelMetricsPort);
         Controls.Add(numMetricsPort);
+        currentY += 46;
 
         labelMetricsAllowed = new Label
         {
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(0, 488),
+            Location = new Point(x, currentY),
             Text = Strings.Get("Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)")
         };
         textBoxMetricsAllowedNetworks = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(0, 506),
-            Size = new Size(300, 23)
+            Location = new Point(x, currentY + 18),
+            Size = new Size(controlWidth, 23)
         };
         textBoxMetricsAllowedNetworks.TextChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelMetricsAllowed);
         Controls.Add(textBoxMetricsAllowedNetworks);
+        currentY += 50;
+
+        // === Section 5: 儲存與復原按鈕 ===
+        buttonSave.BackColor = AccentColor;
+        buttonSave.ForeColor = Color.White;
+        buttonSave.FlatStyle = FlatStyle.Flat;
+        buttonSave.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        buttonSave.Location = new Point(x, currentY);
+        buttonSave.Size = new Size(120, 32);
+        buttonSave.Text = Strings.Get("&Save");
+        buttonSave.Click += buttonSave_Click;
+        Controls.Add(buttonSave);
+
+        buttonDiscard.BackColor = Color.White;
+        buttonDiscard.ForeColor = BodyTextColor;
+        buttonDiscard.FlatStyle = FlatStyle.Flat;
+        buttonDiscard.Font = defaultFont;
+        buttonDiscard.Location = new Point(x + 130, currentY);
+        buttonDiscard.Size = new Size(120, 32);
+        buttonDiscard.Text = Strings.Get("&Discard");
+        buttonDiscard.Click += buttonDiscard_Click;
+        Controls.Add(buttonDiscard);
+        currentY += 50;
 
         Load += new EventHandler(PanelNotificationSettings_Load);
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
@@ -676,50 +803,7 @@ public partial class PanelNotificationSettings : UserControl
         SetEditMode(false);
     }
 
-    private void pictureBoxEdit_Click(object sender, EventArgs e)
-    {
-        if (IsInEditMode) LoadData();
-        ToggleEditMode();
-    }
-
-    private void ToggleEditMode()
-    {
-        if (!IsInEditMode)
-        {
-            pictureBoxEdit.Image = Properties.Resources.button25px_delete;
-            IsInEditMode = true;
-        }
-        else
-        {
-            pictureBoxEdit.Image = Properties.Resources.button25px_edit;
-            IsInEditMode = false;
-        }
-        pictureBoxSave.Visible = IsInEditMode;
-        checkBoxSoftLock.Enabled = IsInEditMode;
-        checkBoxHardLocks.Enabled = IsInEditMode;
-        checkBoxOnUnlock.Enabled = IsInEditMode;
-        checkBoxDailySummary.Enabled = IsInEditMode;
-        checkBoxWeeklyReport.Enabled = IsInEditMode;
-        checkBoxMonthlyReport.Enabled = IsInEditMode;
-    }
-
-    private void pictureBoxSave_Click(object sender, EventArgs e) => ToggleEditMode();
-
-    private void pictureBox_MouseDown(object sender, MouseEventArgs e)
-    {
-        if (sender is not Control control) return;
-        Point loc = control.Location;
-        control.Location = new Point(loc.X + 1, loc.Y + 1);
-    }
-
-    private void pictureBox_MouseUp(object sender, MouseEventArgs e)
-    {
-        if (sender is not Control control) return;
-        Point loc = control.Location;
-        control.Location = new Point(loc.X - 1, loc.Y - 1);
-    }
-
-    private void buttonSave_Click(object sender, EventArgs e)
+    private void buttonSave_Click(object? sender, EventArgs e)
     {
         NotificationSettings settings = NotificationSettings.Instance;
 
@@ -756,9 +840,10 @@ public partial class PanelNotificationSettings : UserControl
         IddsConfig.Instance.SaveAppConfig();
         OnNotificationSettingsChanged();
         SetEditMode(false);
+        MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
-    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
+    private void buttonDiscard_Click(object? sender, EventArgs e) => LoadData();
 
     private void ResetDefaults_Click(object? sender, EventArgs e)
     {
@@ -805,5 +890,5 @@ public partial class PanelNotificationSettings : UserControl
         buttonDiscard.Visible = hasChanges;
     }
 
-    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
+    private void checkBox_CheckedChanged(object? sender, EventArgs e) => SetEditMode(true);
 }
