@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -668,6 +668,9 @@
   <data name="LogDirectory" xml:space="preserve"><value>Log directory</value></data>
   <data name="SearchPattern" xml:space="preserve"><value>Log file search pattern</value></data>
   <data name="ProtectedPaths" xml:space="preserve"><value>Protected URL paths (optional)</value></data>
+  <data name="DecoyPortsString" xml:space="preserve"><value>Decoy ports (comma-separated)</value></data>
+  <data name="LogDirectoryPath" xml:space="preserve"><value>Log directory</value></data>
+  <data name="LogFilePattern" xml:space="preserve"><value>Log file pattern</value></data>
   <data name="DirectoryName" xml:space="preserve"><value>Directory</value></data>
   <data name="Browse" xml:space="preserve"><value>Browse</value></data>
   <data name="Source state retention must not be shorter than the detection window." xml:space="preserve"><value>Source state retention must not be shorter than the detection window.</value></data>

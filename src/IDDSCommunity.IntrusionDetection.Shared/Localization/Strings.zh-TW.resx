@@ -668,6 +668,9 @@
   <data name="LogDirectory" xml:space="preserve"><value>日誌資料夾</value></data>
   <data name="SearchPattern" xml:space="preserve"><value>日誌檔案搜尋模式</value></data>
   <data name="ProtectedPaths" xml:space="preserve"><value>受保護的 URL 路徑（選填）</value></data>
+  <data name="DecoyPortsString" xml:space="preserve"><value>誘餌監聽通訊埠（逗號分隔）</value></data>
+  <data name="LogDirectoryPath" xml:space="preserve"><value>日誌資料夾路徑</value></data>
+  <data name="LogFilePattern" xml:space="preserve"><value>日誌檔案搜尋模式</value></data>
   <data name="DirectoryName" xml:space="preserve"><value>資料夾</value></data>
   <data name="Browse" xml:space="preserve"><value>瀏覽</value></data>
   <data name="Source state retention must not be shorter than the detection window." xml:space="preserve"><value>來源狀態保留時間不得短於偵測時間範圍。</value></data>
