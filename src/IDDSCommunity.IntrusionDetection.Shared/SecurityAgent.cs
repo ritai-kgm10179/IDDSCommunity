@@ -173,12 +173,18 @@ public int HardLocks { get; set; }
     /// </summary>
 public int SoftLocks { get; set; }
     private byte[] _selectedIcon = [];
-        /// <summary>
+    /// <summary>
     /// 取得或設定 SelectedIcon。
     /// </summary>
-public Image SelectedIcon
+    public Image SelectedIcon
     {
-        get => FromByte(_selectedIcon); set => _selectedIcon = FromImage(value);
+        get
+        {
+            if (_selectedIcon.Length > 0) return FromByte(_selectedIcon);
+            AgentThemeCategory category = AgentThemeIconFactory.DetectCategory(DisplayName + " " + Name);
+            return AgentThemeIconFactory.Create(category, true);
+        }
+        set => _selectedIcon = FromImage(value);
     }
     /// <summary>
     /// 執行from image作業。
@@ -208,12 +214,18 @@ public Image SelectedIcon
 
 
     private byte[] _unselectedIcon = [];
-        /// <summary>
+    /// <summary>
     /// 取得或設定 UnselectedIcon。
     /// </summary>
-public Image UnselectedIcon
+    public Image UnselectedIcon
     {
-        get => FromByte(_unselectedIcon); set => _unselectedIcon = FromImage(value);
+        get
+        {
+            if (_unselectedIcon.Length > 0) return FromByte(_unselectedIcon);
+            AgentThemeCategory category = AgentThemeIconFactory.DetectCategory(DisplayName + " " + Name);
+            return AgentThemeIconFactory.Create(category, false);
+        }
+        set => _unselectedIcon = FromImage(value);
     }
 
     private byte[] _icon = [];

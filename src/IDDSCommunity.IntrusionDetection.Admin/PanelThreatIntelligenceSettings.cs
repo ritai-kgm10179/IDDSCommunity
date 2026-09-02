@@ -40,6 +40,14 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
     // Section 4: GeoIP
     private readonly CheckBox chkEnableGeoBlocking;
     private readonly TextBox txtBlockedCountries;
+    private readonly CheckBox chkEnableGeoIpAutoUpdate;
+    private readonly TextBox txtGeoIpDatabaseIpv4Url;
+    private readonly TextBox txtGeoIpDatabaseIpv6Url;
+    private readonly TextBox txtGeoIpLocalFilePath;
+    private readonly Button btnBrowseGeoIpFile;
+    private readonly NumericUpDown numGeoIpUpdateDays;
+    private readonly Button btnUpdateGeoIpNow;
+    private readonly Label lblGeoIpStatus;
 
     /// <summary>
     /// 當威脅情報與叢集聯防設定變更並儲存時引發之事件。
@@ -321,6 +329,148 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         };
         Controls.Add(lblBlockedCountries);
         Controls.Add(txtBlockedCountries);
+        currentY += 46;
+
+        chkEnableGeoIpAutoUpdate = new CheckBox
+        {
+            Text = Strings.Get("Enable GeoIP automatic database update"),
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY),
+            AutoSize = true
+        };
+        Controls.Add(chkEnableGeoIpAutoUpdate);
+        currentY += 26;
+
+        Label lblGeoV4 = CreateFieldLabel(Strings.Get("GeoIP IPv4 Database URL:"), new Point(leftMargin, currentY));
+        txtGeoIpDatabaseIpv4Url = new TextBox
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(controlWidth, 23)
+        };
+        Controls.Add(lblGeoV4);
+        Controls.Add(txtGeoIpDatabaseIpv4Url);
+        currentY += 46;
+
+        Label lblGeoV6 = CreateFieldLabel(Strings.Get("GeoIP IPv6 Database URL:"), new Point(leftMargin, currentY));
+        txtGeoIpDatabaseIpv6Url = new TextBox
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(controlWidth, 23)
+        };
+        Controls.Add(lblGeoV6);
+        Controls.Add(txtGeoIpDatabaseIpv6Url);
+        currentY += 46;
+
+        Label lblGeoLocal = CreateFieldLabel(Strings.Get("Local GeoIP CSV file path (optional)"), new Point(leftMargin, currentY));
+        txtGeoIpLocalFilePath = new TextBox
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(controlWidth - 85, 23)
+        };
+        btnBrowseGeoIpFile = new Button
+        {
+            Font = defaultFont,
+            Location = new Point(leftMargin + controlWidth - 80, currentY + 17),
+            Size = new Size(80, 25),
+            Text = Strings.Get("Browse...")
+        };
+        btnBrowseGeoIpFile.Click += (_, _) =>
+        {
+            using OpenFileDialog dialog = new()
+            {
+                Filter = Strings.Get("CSV Files (*.csv)|*.csv|All Files (*.*)|*.*"),
+                Title = Strings.Get("Local GeoIP CSV file path (optional)")
+            };
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                txtGeoIpLocalFilePath.Text = dialog.FileName;
+            }
+        };
+        Controls.Add(lblGeoLocal);
+        Controls.Add(txtGeoIpLocalFilePath);
+        Controls.Add(btnBrowseGeoIpFile);
+        currentY += 46;
+
+        Label lblGeoDays = CreateFieldLabel(Strings.Get("GeoIP update interval (days)"), new Point(leftMargin, currentY));
+        numGeoIpUpdateDays = new NumericUpDown
+        {
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin, currentY + 18),
+            Size = new Size(120, 23),
+            Minimum = 1,
+            Maximum = 365,
+            Value = 7
+        };
+        Controls.Add(lblGeoDays);
+        Controls.Add(numGeoIpUpdateDays);
+        currentY += 48;
+
+        btnUpdateGeoIpNow = new Button
+        {
+            BackColor = AccentColor,
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+            Location = new Point(leftMargin, currentY),
+            Size = new Size(200, 30),
+            Text = Strings.Get("Update GeoIP Database Now")
+        };
+        lblGeoIpStatus = new Label
+        {
+            AutoSize = true,
+            Font = defaultFont,
+            ForeColor = BodyTextColor,
+            Location = new Point(leftMargin + 210, currentY + 6)
+        };
+        btnUpdateGeoIpNow.Click += async (_, _) =>
+        {
+            btnUpdateGeoIpNow.Enabled = false;
+            lblGeoIpStatus.Text = Strings.Get("Updating GeoIP database...");
+            try
+            {
+                IddsConfig cfg = IddsConfig.Instance;
+                cfg.GeoIpDatabaseIpv4Url = txtGeoIpDatabaseIpv4Url.Text.Trim();
+                cfg.GeoIpDatabaseIpv6Url = txtGeoIpDatabaseIpv6Url.Text.Trim();
+                cfg.GeoIpLocalFilePath = txtGeoIpLocalFilePath.Text.Trim();
+                cfg.EnableGeoIpAutoUpdate = chkEnableGeoIpAutoUpdate.Checked;
+                cfg.GeoIpUpdateIntervalDays = (int)numGeoIpUpdateDays.Value;
+
+                using GeoIpUpdateService updater = new(cfg);
+                var result = await updater.RefreshDatabaseAsync(isManual: true).ConfigureAwait(true);
+                if (result.Success)
+                {
+                    lblGeoIpStatus.Text = string.Format(
+                        Strings.Get("GeoIP database updated successfully: {0} prefixes across {1} countries loaded."),
+                        result.TotalRecords, result.TotalCountries);
+                }
+                else
+                {
+                    lblGeoIpStatus.Text = string.Format(
+                        Strings.Get("Failed to update GeoIP database: {0}"),
+                        result.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblGeoIpStatus.Text = string.Format(
+                    Strings.Get("Failed to update GeoIP database: {0}"),
+                    ex.Message);
+            }
+            finally
+            {
+                btnUpdateGeoIpNow.Enabled = true;
+            }
+        };
+        Controls.Add(btnUpdateGeoIpNow);
+        Controls.Add(lblGeoIpStatus);
         currentY += 52;
 
         // Action Buttons
@@ -371,8 +521,23 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         txtBogonIpv6Url.Text = config.DynamicBogonIpv6Url;
         numProbationDays.Value = Math.Clamp(config.ProbationDecayDays, 1, 365);
 
+        chkEnableGeoIpAutoUpdate.Checked = config.EnableGeoIpAutoUpdate;
+        txtGeoIpDatabaseIpv4Url.Text = config.GeoIpDatabaseIpv4Url;
+        txtGeoIpDatabaseIpv6Url.Text = config.GeoIpDatabaseIpv6Url;
+        txtGeoIpLocalFilePath.Text = config.GeoIpLocalFilePath;
+        numGeoIpUpdateDays.Value = Math.Clamp(config.GeoIpUpdateIntervalDays, 1, 365);
+
         chkEnableGeoBlocking.Checked = config.EnableGeoBlocking;
         txtBlockedCountries.Text = config.BlockedCountryCodes;
+
+        int loadedRecords = GeoIpLookupService.TotalLoadedRecords;
+        int loadedCountries = GeoIpLookupService.TotalLoadedCountries;
+        if (loadedRecords > 0)
+        {
+            lblGeoIpStatus.Text = string.Format(
+                Strings.Get("GeoIP database updated successfully: {0} prefixes across {1} countries loaded."),
+                loadedRecords, loadedCountries);
+        }
 
         UpdateClusterControlsState();
     }
@@ -405,6 +570,8 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
 
     private const string DefaultBogonV4 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt";
     private const string DefaultBogonV6 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv6.txt";
+    private const string DefaultGeoIpV4 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.net.csv";
+    private const string DefaultGeoIpV6 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.net.csv";
 
     private void SaveSettings(object? sender, EventArgs e)
     {
@@ -428,6 +595,12 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         config.DynamicBogonIpv4Url = txtBogonIpv4Url.Text.Trim();
         config.DynamicBogonIpv6Url = txtBogonIpv6Url.Text.Trim();
         config.ProbationDecayDays = (int)numProbationDays.Value;
+
+        config.EnableGeoIpAutoUpdate = chkEnableGeoIpAutoUpdate.Checked;
+        config.GeoIpDatabaseIpv4Url = txtGeoIpDatabaseIpv4Url.Text.Trim();
+        config.GeoIpDatabaseIpv6Url = txtGeoIpDatabaseIpv6Url.Text.Trim();
+        config.GeoIpLocalFilePath = txtGeoIpLocalFilePath.Text.Trim();
+        config.GeoIpUpdateIntervalDays = (int)numGeoIpUpdateDays.Value;
 
         config.EnableGeoBlocking = chkEnableGeoBlocking.Checked;
         config.BlockedCountryCodes = txtBlockedCountries.Text.Trim();
@@ -462,6 +635,12 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         txtBogonIpv4Url.Text = DefaultBogonV4;
         txtBogonIpv6Url.Text = DefaultBogonV6;
         numProbationDays.Value = 90;
+
+        chkEnableGeoIpAutoUpdate.Checked = true;
+        txtGeoIpDatabaseIpv4Url.Text = DefaultGeoIpV4;
+        txtGeoIpDatabaseIpv6Url.Text = DefaultGeoIpV6;
+        txtGeoIpLocalFilePath.Text = string.Empty;
+        numGeoIpUpdateDays.Value = 7;
 
         chkEnableGeoBlocking.Checked = false;
         txtBlockedCountries.Text = string.Empty;

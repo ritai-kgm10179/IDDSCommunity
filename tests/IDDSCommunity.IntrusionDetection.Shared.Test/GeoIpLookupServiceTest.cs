@@ -82,4 +82,51 @@ public sealed class GeoIpLookupServiceTest
         Assert.IsFalse(GeoIpLookupService.IsCountryBlocked(IPAddress.Parse("203.0.113.88"), blockedCountries)); // CN is not in list
         Assert.IsFalse(GeoIpLookupService.IsCountryBlocked(IPAddress.Parse("127.0.0.1"), blockedCountries));
     }
+
+    /// <summary>
+    /// 驗證解析 IP 範圍格式 (StartIP,EndIP,CountryCode,CountryName)、引號及標頭行略過。
+    /// </summary>
+    [TestMethod]
+    public void LoadFromCsv_ParsesIpRangeAndQuotes()
+    {
+        string csv = """
+            "start_ip","end_ip","country_code","country_name"
+            "1.0.0.0","1.0.0.255","AU","Australia"
+            "140.112.0.0","140.112.255.255","TW","Taiwan"
+            """;
+
+        int loaded = GeoIpLookupService.LoadFromCsv(csv);
+        Assert.AreEqual(2, loaded);
+        Assert.AreEqual(2, GeoIpLookupService.TotalLoadedCountries);
+
+        bool foundTw = GeoIpLookupService.TryLookup(IPAddress.Parse("140.112.50.1"), out string twCode, out string twName);
+        Assert.IsTrue(foundTw);
+        Assert.AreEqual("TW", twCode);
+        Assert.AreEqual("Taiwan", twName);
+
+        bool foundAu = GeoIpLookupService.TryLookup(IPAddress.Parse("1.0.0.123"), out string auCode, out string auName);
+        Assert.IsTrue(foundAu);
+        Assert.AreEqual("AU", auCode);
+        Assert.AreEqual("Australia", auName);
+    }
+
+    /// <summary>
+    /// 驗證自雙獨立字串載入 IPv4 與 IPv6 數據。
+    /// </summary>
+    [TestMethod]
+    public void LoadFromCsv_DualFeedLoading()
+    {
+        string v4 = "192.0.2.0/24,US,United States";
+        string v6 = "2001:db8::/32,DE,Germany";
+
+        int loaded = GeoIpLookupService.LoadFromCsv(v4, v6);
+        Assert.AreEqual(2, loaded);
+        Assert.AreEqual(2, GeoIpLookupService.TotalLoadedCountries);
+
+        Assert.IsTrue(GeoIpLookupService.TryLookup(IPAddress.Parse("192.0.2.100"), out string usCode, out _));
+        Assert.AreEqual("US", usCode);
+
+        Assert.IsTrue(GeoIpLookupService.TryLookup(IPAddress.Parse("2001:db8:1::1"), out string deCode, out _));
+        Assert.AreEqual("DE", deCode);
+    }
 }

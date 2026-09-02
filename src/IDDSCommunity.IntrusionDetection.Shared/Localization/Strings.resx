@@ -896,6 +896,16 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Enable country-level Geo-blocking" xml:space="preserve"><value>Enable country-level Geo-blocking</value></data>
   <data name="Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)" xml:space="preserve"><value>Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)</value></data>
   <data name="GeoIP &amp; Country-level Blocking (Geo-fencing)" xml:space="preserve"><value>GeoIP &amp; Country-level Blocking (Geo-fencing)</value></data>
+  <data name="Enable GeoIP automatic database update" xml:space="preserve"><value>Enable GeoIP automatic database update</value></data>
+  <data name="GeoIP IPv4 Database URL:" xml:space="preserve"><value>GeoIP IPv4 Database URL:</value></data>
+  <data name="GeoIP IPv6 Database URL:" xml:space="preserve"><value>GeoIP IPv6 Database URL:</value></data>
+  <data name="Local GeoIP CSV file path (optional)" xml:space="preserve"><value>Local GeoIP CSV file path (optional)</value></data>
+  <data name="GeoIP update interval (days)" xml:space="preserve"><value>GeoIP update interval (days)</value></data>
+  <data name="Update GeoIP Database Now" xml:space="preserve"><value>Update GeoIP Database Now</value></data>
+  <data name="GeoIP database updated successfully: {0} prefixes across {1} countries loaded." xml:space="preserve"><value>GeoIP database updated successfully: {0} prefixes across {1} countries loaded.</value></data>
+  <data name="Failed to update GeoIP database: {0}" xml:space="preserve"><value>Failed to update GeoIP database: {0}</value></data>
+  <data name="Updating GeoIP database..." xml:space="preserve"><value>Updating GeoIP database...</value></data>
+  <data name="CSV Files (*.csv)|*.csv|All Files (*.*)|*.*" xml:space="preserve"><value>CSV Files (*.csv)|*.csv|All Files (*.*)|*.*</value></data>
   <data name="Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)" xml:space="preserve"><value>Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)</value></data>
   <data name="Enable Syslog alerts" xml:space="preserve"><value>Enable Syslog alerts</value></data>
   <data name="Syslog server host" xml:space="preserve"><value>Syslog server host</value></data>

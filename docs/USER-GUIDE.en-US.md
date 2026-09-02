@@ -138,8 +138,9 @@ Active deception deployed on unused ports (default TCP 23 Telnet, 2222 alternate
   - Built-in compliance report engine evaluating A.5.7 (Threat Intelligence), A.8.7 (Malware Protection / Active Defense), A.8.15 (Logging), A.8.16 (Monitoring Activities), A.8.20 (Network Security), and A.8.24 (Use of Cryptography) into executive HTML reports.
 
 ### 3.13 🗺️ GeoIP Country Tagging & Geofencing
-- **High-Performance GeoIP Lookup**: Resolves IPv4/IPv6 addresses to ISO 3166-1 country codes and names.
-- **Active Country-Based Geo-blocking**: Blocks inbound connections originating from designated country codes (e.g. CN, RU, KP) at the perimeter firewall.
+- **High-Performance GeoIP Lookup**: Resolves IPv4/IPv6 addresses to ISO 3166-1 country codes and names supporting both CIDR and IP range CSV formats.
+- **Automated Feed Updates & Local Offline Caching**: Automatically downloads and refreshes GeoIP databases from remote URLs or local CSV files with fallback persistence in `%ProgramData%\IDDSCommunity\`.
+- **Active Country-Based Geo-blocking**: Blocks inbound connections originating from designated country codes (e.g. CN, RU, KP) with immediate one-strike permanent hard lock escalation upon attack detection.
 
 ### 3.14 📡 Traditional SOC / SIEM Integration (Syslog & CEF)
 - **Standard Format Support**:

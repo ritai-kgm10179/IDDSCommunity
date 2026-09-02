@@ -793,6 +793,59 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
+    /// 取得或設定 是否啟用 GeoIP 資料庫定期自動更新。
+    /// </summary>
+    public bool EnableGeoIpAutoUpdate
+    {
+        get => bool.TryParse(GetConfigValue("EnableGeoIpAutoUpdate"), out bool b) ? b : true;
+        set => SetConfigValue("EnableGeoIpAutoUpdate", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 GeoIP (IPv4) 資料庫下載 URL。
+    /// </summary>
+    public string GeoIpDatabaseIpv4Url
+    {
+        get
+        {
+            string url = GetConfigValue("GeoIpDatabaseIpv4Url");
+            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.net.csv" : url;
+        }
+        set => SetConfigValue("GeoIpDatabaseIpv4Url", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 GeoIP (IPv6) 資料庫下載 URL。
+    /// </summary>
+    public string GeoIpDatabaseIpv6Url
+    {
+        get
+        {
+            string url = GetConfigValue("GeoIpDatabaseIpv6Url");
+            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.net.csv" : url;
+        }
+        set => SetConfigValue("GeoIpDatabaseIpv6Url", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 本機自訂離線 GeoIP CSV 檔案路徑（選用）。
+    /// </summary>
+    public string GeoIpLocalFilePath
+    {
+        get => GetConfigValue("GeoIpLocalFilePath") ?? string.Empty;
+        set => SetConfigValue("GeoIpLocalFilePath", value ?? string.Empty);
+    }
+
+    /// <summary>
+    /// 取得或設定 GeoIP 資料庫自動更新週期天數（預設 7 天）。
+    /// </summary>
+    public int GeoIpUpdateIntervalDays
+    {
+        get => int.TryParse(GetConfigValue("GeoIpUpdateIntervalDays"), out int v) ? Math.Clamp(v, 1, 365) : 7;
+        set => SetConfigValue("GeoIpUpdateIntervalDays", Math.Clamp(value, 1, 365).ToString());
+    }
+
+    /// <summary>
     /// 取得或設定 是否啟用國家/地區地理封鎖 (Geo-blocking)。
     /// </summary>
     public bool EnableGeoBlocking

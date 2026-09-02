@@ -10,6 +10,7 @@ using IDDSCommunity.IntrusionDetection.Service.Observability;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Correlation;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 
@@ -47,6 +48,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private ThreatIntelligenceHubServer? threatHubServer;
     private ThreatIntelligenceSyncService? threatSyncService;
     private ExternalThreatFeedSubscriberService? externalThreatFeedSubscriberService;
+    private GeoIpUpdateService? geoIpUpdateService;
 
     internal event EventHandler ClientIpAddressSoftLocked;
     internal event EventHandler ClientIpAddressUnlocked;
@@ -713,6 +715,13 @@ public bool LimitMailSent { get; set; }
                 (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
             externalThreatFeedSubscriberService.Start();
 
+            // 啟動 GeoIP 資料庫定期自動更新與本地快取服務
+            geoIpUpdateService = new GeoIpUpdateService(
+                configuration,
+                msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+            geoIpUpdateService.Start();
+
             // 啟動 Prometheus Metrics HTTP 服務
             metricsHttpServer.Start();
 
@@ -778,6 +787,8 @@ public bool LimitMailSent { get; set; }
         TryStop(metricsHttpServer.Stop, failures);
         if (externalThreatFeedSubscriberService is not null)
             TryStop(externalThreatFeedSubscriberService.Stop, failures);
+        if (geoIpUpdateService is not null)
+            TryStop(geoIpUpdateService.Stop, failures);
         if (threatSyncService is not null)
             TryStop(threatSyncService.Stop, failures);
         if (threatHubServer is not null)
@@ -872,6 +883,7 @@ public bool LimitMailSent { get; set; }
         threatHubServer?.Dispose();
         threatSyncService?.Dispose();
         externalThreatFeedSubscriberService?.Dispose();
+        geoIpUpdateService?.Dispose();
         notificationDispatcher.Dispose();
         managementApiHttpServer.Dispose();
         metricsHttpServer.Dispose();
@@ -1002,7 +1014,22 @@ public bool LimitMailSent { get; set; }
                                     EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
                             }
 
-                            LockType lockType = isProbation ? LockType.HardLockRequested : reportingAgent.GetCurrentLockType(notificationEventArgs.IpAddress);
+                            bool isGeoBlocked = false;
+                            if (configuration.EnableGeoBlocking &&
+                                System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? targetIp))
+                            {
+                                var blockedList = configuration.BlockedCountryCodes.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                                if (Shared.ThreatIntelligence.GeoIpLookupService.IsCountryBlocked(targetIp, blockedList))
+                                {
+                                    isGeoBlocked = true;
+                                    Shared.ThreatIntelligence.GeoIpLookupService.TryLookup(targetIp, out string geoCode, out string geoName);
+                                    logManager.WriteEntry(
+                                        string.Format("IP address {0} from blocked country [{1} - {2}] violated Geo-fencing policy. Executing immediate permanent hard lock.", notificationEventArgs.IpAddress, geoCode, geoName),
+                                        EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+                                }
+                            }
+
+                            LockType lockType = (isProbation || isGeoBlocked) ? LockType.HardLockRequested : reportingAgent.GetCurrentLockType(notificationEventArgs.IpAddress);
                             if (lockType != LockType.None && lockType != LockType.SoftLock)
                             {
                                 int recentLockCount = Locks.GetRecentLockCount(
@@ -1025,6 +1052,7 @@ public bool LimitMailSent { get; set; }
                                     || isLockForever
                                     || isProbation
                                     || isHoneyBreached
+                                    || isGeoBlocked
                                     || LockoutPolicy.ShouldEscalateToHardLock(recentLockCount, LockoutPolicy.DefaultAutoHardLockThreshold);
 
                                 if (isHardLock)

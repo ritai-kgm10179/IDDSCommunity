@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -115,15 +115,7 @@ public class AgentLoaderProxy : MarshalByRefObject
     /// <returns>適用於清單呈現之 16x16 像素圖示。</returns>
     private static Image NormalizeIcon(Image? source, AgentThemeCategory fallbackCategory, bool selected)
     {
-        Image actual = source ?? AgentThemeIconFactory.Create(fallbackCategory, selected);
-        const int iconSize = 16;
-        Bitmap result = new(iconSize, iconSize);
-        using Graphics graphics = Graphics.FromImage(result);
-        graphics.CompositingQuality = CompositingQuality.HighQuality;
-        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-        graphics.DrawImage(actual, new Rectangle(0, 0, iconSize, iconSize));
-        return result;
+        return AgentThemeIconFactory.Create(fallbackCategory, selected);
     }
 
     /// <summary>
