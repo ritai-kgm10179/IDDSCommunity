@@ -985,4 +985,10 @@
   <data name="Default Active" xml:space="preserve"><value>預設啟用狀態</value></data>
   <data name="SMB signing required" xml:space="preserve"><value>已強制要求 SMB 簽章</value></data>
   <data name="Guest account disabled" xml:space="preserve"><value>Guest 訪客帳戶已停用</value></data>
+  <data name="DPAPI + ChaCha20-Poly1305 Active" xml:space="preserve"><value>DPAPI + ChaCha20-Poly1305 靜態加密運作中</value></data>
+  <data name="Ensure database encryption key is protected by Windows DPAPI machine/operator scope." xml:space="preserve"><value>確保資料庫加密金鑰受 Windows DPAPI（本機與操作人員範圍）保護。</value></data>
+  <data name="Protected &amp; Healthy" xml:space="preserve"><value>防護服務正常執行中</value></data>
+  <data name="Ensure IDDSCommunityProtection service is running with automatic start." xml:space="preserve"><value>確保 IDDSCommunityProtection 服務已設定為自動啟動且正常執行中。</value></data>
+  <data name="Enabled (1)" xml:space="preserve"><value>已啟用 (1)</value></data>
+  <data name="Registry key missing" xml:space="preserve"><value>登錄機碼不存在</value></data>
 </root>

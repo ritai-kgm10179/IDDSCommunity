@@ -533,11 +533,12 @@ public Dictionary<string, string> CustomConfigurationTypes
     /// <summary>
     /// 取得代理程式的分組排序權重。
     /// 系統與遠端存取：10
-    /// Web 與網域服務：20
-    /// 資料庫服務：30
-    /// 郵件服務：40
-    /// 檔案傳輸服務：50
-    /// 主動誘餌與蜜罐防禦：60
+    /// Web 與 HTTP 服務：20
+    /// DNS 網域名稱伺服器：30
+    /// 資料庫服務：40
+    /// 郵件服務：50
+    /// 檔案傳輸服務：60
+    /// 主動誘餌與蜜罐防禦：70
     /// 其他未分類擴充元件：90
     /// </summary>
     public int SortOrder => GetSortOrder(Name, DisplayName);
@@ -563,19 +564,19 @@ public Dictionary<string, string> CustomConfigurationTypes
             "RADIUSSECURITYAGENT" => 10,
             "WEBSECURITYAGENT" => 20,
             "IISAUTHENTICATIONSECURITYAGENT" => 20,
-            "WINDOWSDNSSECURITYAGENT" => 20,
-            "TECHNITIUMDNSSECURITYAGENT" => 20,
-            "SQLFAILEDLOGINWATCHER" => 30,
-            "MYSQLFAILEDLOGINWATCHER" => 30,
-            "POSTGRESQLSECURITYAGENT" => 30,
-            "FILEMAKERSECURITYAGENT" => 30,
-            "SMTPAGENT" => 40,
-            "POP3AGENT" => 40,
-            "IMAPAGENT" => 40,
-            "FTPAGENT" => 50,
-            "FTPSERVERAGENT" => 50,
-            "FILEZILLASECURITYAGENT" => 50,
-            "HONEYPOTSECURITYAGENT" => 60,
+            "WINDOWSDNSSECURITYAGENT" => 30,
+            "TECHNITIUMDNSSECURITYAGENT" => 30,
+            "SQLFAILEDLOGINWATCHER" => 40,
+            "MYSQLFAILEDLOGINWATCHER" => 40,
+            "POSTGRESQLSECURITYAGENT" => 40,
+            "FILEMAKERSECURITYAGENT" => 40,
+            "SMTPAGENT" => 50,
+            "POP3AGENT" => 50,
+            "IMAPAGENT" => 50,
+            "FTPAGENT" => 60,
+            "FTPSERVERAGENT" => 60,
+            "FILEZILLASECURITYAGENT" => 60,
+            "HONEYPOTSECURITYAGENT" => 70,
             _ => 0
         };
         if (canonicalOrder != 0) return canonicalOrder;
@@ -594,30 +595,31 @@ public Dictionary<string, string> CustomConfigurationTypes
         if (identifier.Contains("RRAS", StringComparison.OrdinalIgnoreCase)) return 10;
         if (identifier.Contains("RADIUS", StringComparison.OrdinalIgnoreCase) || identifier.Contains("NPS", StringComparison.OrdinalIgnoreCase)) return 10;
 
-        // 2. Web 與網域服務 (Web & Domain Services)
+        // 2. Web 站台與 HTTP 服務 (Web & HTTP Services)
         if (identifier.Contains("Web Security", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Web 安全", StringComparison.OrdinalIgnoreCase)) return 20;
         if (identifier.Contains("IIS Authentication", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IIS 驗證", StringComparison.OrdinalIgnoreCase)) return 20;
-        if (identifier.Contains("Windows DNS", StringComparison.OrdinalIgnoreCase)) return 20;
-        if (identifier.Contains("Technitium", StringComparison.OrdinalIgnoreCase)) return 20;
-        if (identifier.Contains("DNS", StringComparison.OrdinalIgnoreCase)) return 20;
+        // 3. DNS 網域名稱伺服器 (DNS Services)
+        if (identifier.Contains("Windows DNS", StringComparison.OrdinalIgnoreCase)) return 30;
+        if (identifier.Contains("Technitium", StringComparison.OrdinalIgnoreCase)) return 30;
+        if (identifier.Contains("DNS", StringComparison.OrdinalIgnoreCase)) return 30;
 
-        // 3. 資料庫服務 (Database Services)
-        if (identifier.Contains("SQL Server", StringComparison.OrdinalIgnoreCase)) return 30;
-        if (identifier.Contains("MySQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("MariaDB", StringComparison.OrdinalIgnoreCase)) return 30;
-        if (identifier.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Postgres", StringComparison.OrdinalIgnoreCase)) return 30;
-        if (identifier.Contains("FileMaker", StringComparison.OrdinalIgnoreCase)) return 30;
+        // 4. 資料庫服務 (Database Services)
+        if (identifier.Contains("SQL Server", StringComparison.OrdinalIgnoreCase)) return 40;
+        if (identifier.Contains("MySQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("MariaDB", StringComparison.OrdinalIgnoreCase)) return 40;
+        if (identifier.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Postgres", StringComparison.OrdinalIgnoreCase)) return 40;
+        if (identifier.Contains("FileMaker", StringComparison.OrdinalIgnoreCase)) return 40;
 
-        // 4. 郵件服務 (Mail Services)
-        if (identifier.Contains("SmtpAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("SMTP", StringComparison.OrdinalIgnoreCase) || identifier.Contains("郵件伺服器", StringComparison.OrdinalIgnoreCase)) return 40;
-        if (identifier.Contains("Pop3Agent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("POP3", StringComparison.OrdinalIgnoreCase)) return 40;
-        if (identifier.Contains("ImapAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IMAP", StringComparison.OrdinalIgnoreCase)) return 40;
+        // 5. 郵件服務 (Mail Services)
+        if (identifier.Contains("SmtpAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("SMTP", StringComparison.OrdinalIgnoreCase) || identifier.Contains("郵件伺服器", StringComparison.OrdinalIgnoreCase)) return 50;
+        if (identifier.Contains("Pop3Agent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("POP3", StringComparison.OrdinalIgnoreCase)) return 50;
+        if (identifier.Contains("ImapAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IMAP", StringComparison.OrdinalIgnoreCase)) return 50;
 
-        // 5. 檔案傳輸服務 (File Transfer Services)
-        if (identifier.Contains("FileZilla", StringComparison.OrdinalIgnoreCase)) return 50;
-        if (identifier.Contains("FTP", StringComparison.OrdinalIgnoreCase)) return 50;
+        // 6. 檔案傳輸服務 (File Transfer Services)
+        if (identifier.Contains("FileZilla", StringComparison.OrdinalIgnoreCase)) return 60;
+        if (identifier.Contains("FTP", StringComparison.OrdinalIgnoreCase)) return 60;
 
-        // 6. 主動誘餌與蜜罐防禦 (Active Deception & Honeypot)
-        if (identifier.Contains("Honeypot", StringComparison.OrdinalIgnoreCase) || identifier.Contains("蜜罐", StringComparison.OrdinalIgnoreCase) || identifier.Contains("誘餌", StringComparison.OrdinalIgnoreCase)) return 60;
+        // 7. 主動誘餌與蜜罐防禦 (Active Deception & Honeypot)
+        if (identifier.Contains("Honeypot", StringComparison.OrdinalIgnoreCase) || identifier.Contains("蜜罐", StringComparison.OrdinalIgnoreCase) || identifier.Contains("誘餌", StringComparison.OrdinalIgnoreCase)) return 70;
 
         return 90;
     }

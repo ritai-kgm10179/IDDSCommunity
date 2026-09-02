@@ -9,11 +9,17 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class IDDSCommunitySettingsNavigationItem : UserControl
 {
+    private string _displayName = string.Empty;
+    private bool _isSelected;
+    private Image? _selectedIcon;
+    private Image? _unselectedIcon;
+    private bool _isPressed;
 
-        /// <summary>
+    /// <summary>
     /// 當 NavigationClicked 時引發之事件。
     /// </summary>
-public event EventHandler? NavigationClicked;
+    public event EventHandler? NavigationClicked;
+
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigationItem"/> 類別的新執行個體。
     /// </summary>
@@ -22,36 +28,66 @@ public event EventHandler? NavigationClicked;
         InitializeComponent();
         AccessibleRole = AccessibleRole.PushButton;
         DoubleBuffered = true;
-        SetStyle(ControlStyles.Selectable | ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
+        SetStyle(ControlStyles.Selectable | ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
         Margin = new Padding(3, 1, 3, 1);
+        Font = new Font("Segoe UI", 9F);
+        Cursor = Cursors.Hand;
     }
 
     /// <summary>
     /// 取得或設定 IsSelected。
     /// </summary>
-    public bool IsSelected { get; set; }
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                Invalidate();
+            }
+        }
+    }
 
     /// <summary>
     /// 取得或設定 SelectedIcon。
     /// </summary>
-    public Image? SelectedIcon { get; set; }
+    public Image? SelectedIcon
+    {
+        get => _selectedIcon;
+        set
+        {
+            _selectedIcon = value;
+            if (_isSelected) Invalidate();
+        }
+    }
 
     /// <summary>
     /// 取得或設定 UnselectedIcon。
     /// </summary>
-    public Image? UnselectedIcon { get; set; }
+    public Image? UnselectedIcon
+    {
+        get => _unselectedIcon;
+        set
+        {
+            _unselectedIcon = value;
+            if (!_isSelected) Invalidate();
+        }
+    }
 
     /// <summary>
     /// 取得或設定 本地化顯示名稱。
     /// </summary>
     public string DisplayName
     {
-        get => smartLabelAgentName.Text;
+        get => _displayName;
         set
         {
-            smartLabelAgentName.Text = value;
-            AccessibleName = value;
-            AccessibleDescription = value;
+            _displayName = value ?? string.Empty;
+            AccessibleName = _displayName;
+            AccessibleDescription = _displayName;
+            Invalidate();
         }
     }
 
@@ -81,19 +117,38 @@ public event EventHandler? NavigationClicked;
     /// <param name="e">事件資料。</param>
     protected override void OnPaint(PaintEventArgs e)
     {
-        if (IsSelected)
-        {
-            BackColor = Color.FromArgb(4, 46, 100);
-            smartLabelAgentName.ForeColor = Color.White;
-            pictureBoxNavigationIcon.Image = SelectedIcon;
-        }
-        else
-        {
-            BackColor = Color.White;
-            smartLabelAgentName.ForeColor = Color.FromArgb(0x666666);
-            pictureBoxNavigationIcon.Image = UnselectedIcon;
-        }
         base.OnPaint(e);
+
+        // 1. 繪製背景色
+        Color backColor = IsSelected ? Color.FromArgb(4, 46, 100) : Color.White;
+        using (SolidBrush bgBrush = new(backColor))
+        {
+            e.Graphics.FillRectangle(bgBrush, ClientRectangle);
+        }
+
+        int offset = _isPressed ? 1 : 0;
+
+        // 2. 繪製圖示 (置中於左側 6px)
+        Image? icon = IsSelected ? SelectedIcon : UnselectedIcon;
+        if (icon != null)
+        {
+            int iconX = 6 + offset;
+            int iconY = Math.Max(0, (Height - icon.Height) / 2) + offset;
+            e.Graphics.DrawImage(icon, iconX, iconY, icon.Width, icon.Height);
+        }
+
+        // 3. 繪製文字
+        Color textColor = IsSelected ? Color.White : Color.FromArgb(0x66, 0x66, 0x66);
+        Rectangle textRect = new(32 + offset, offset, Math.Max(0, Width - 36), Height);
+        TextRenderer.DrawText(
+            e.Graphics,
+            DisplayName,
+            Font,
+            textRect,
+            textColor,
+            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+        // 4. 繪製鍵盤焦點框線 (完整包覆無任何子控制項覆蓋)
         if (Focused)
         {
             using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
@@ -102,40 +157,61 @@ public event EventHandler? NavigationClicked;
         }
     }
 
-
     /// <summary>
     /// 處理 mouse down 事件。
     /// </summary>
-    /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void IDDSCommunitySettingsNavigationItem_MouseDown(object sender, MouseEventArgs e)
+    protected override void OnMouseDown(MouseEventArgs e)
     {
-        pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X + 1, pictureBoxNavigationIcon.Location.Y + 1);
-        smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X + 1, smartLabelAgentName.Location.Y + 1);
+        base.OnMouseDown(e);
+        if (e.Button == MouseButtons.Left)
+        {
+            _isPressed = true;
+            Focus();
+            Invalidate();
+        }
     }
+
     /// <summary>
     /// 處理 mouse up 事件。
     /// </summary>
-    /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void IDDSCommunitySettingsNavigationItem_MouseUp(object sender, MouseEventArgs e)
+    protected override void OnMouseUp(MouseEventArgs e)
     {
-        pictureBoxNavigationIcon.Location = new Point(pictureBoxNavigationIcon.Location.X - 1, pictureBoxNavigationIcon.Location.Y - 1);
-        smartLabelAgentName.Location = new Point(smartLabelAgentName.Location.X - 1, smartLabelAgentName.Location.Y - 1);
+        base.OnMouseUp(e);
+        if (_isPressed)
+        {
+            _isPressed = false;
+            Invalidate();
+        }
     }
-
 
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
-    /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void IDDSCommunitySettingsNavigationItem_Click(object sender, EventArgs e) => OnNavigationClicked();
+    protected override void OnClick(EventArgs e)
+    {
+        base.OnClick(e);
+        OnNavigationClicked();
+    }
+
+    /// <summary>
+    /// 處理鍵盤按鍵事件 (Enter 或 Space 觸發選取)。
+    /// </summary>
+    /// <param name="e">事件資料。</param>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Space)
+        {
+            OnNavigationClicked();
+            e.Handled = true;
+        }
+    }
+
     /// <summary>
     /// Processes the navigation clicked notification.
     /// </summary>
     private void OnNavigationClicked() => NavigationClicked?.Invoke(this, EventArgs.Empty);
-
-
-
 }

@@ -985,5 +985,11 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Default Active" xml:space="preserve"><value>Default Active</value></data>
   <data name="SMB signing required" xml:space="preserve"><value>SMB signing required</value></data>
   <data name="Guest account disabled" xml:space="preserve"><value>Guest account disabled</value></data>
+<data name="DPAPI + ChaCha20-Poly1305 Active" xml:space="preserve"><value>DPAPI + ChaCha20-Poly1305 Active</value></data>
+  <data name="Ensure database encryption key is protected by Windows DPAPI machine/operator scope." xml:space="preserve"><value>Ensure database encryption key is protected by Windows DPAPI machine/operator scope.</value></data>
+  <data name="Protected &amp; Healthy" xml:space="preserve"><value>Protected &amp; Healthy</value></data>
+  <data name="Ensure IDDSCommunityProtection service is running with automatic start." xml:space="preserve"><value>Ensure IDDSCommunityProtection service is running with automatic start.</value></data>
+  <data name="Enabled (1)" xml:space="preserve"><value>Enabled (1)</value></data>
+  <data name="Registry key missing" xml:space="preserve"><value>Registry key missing</value></data>
 </root>
 
