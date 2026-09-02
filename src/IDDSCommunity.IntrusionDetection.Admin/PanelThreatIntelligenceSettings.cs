@@ -428,7 +428,8 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             AutoSize = true,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin + 210, currentY + 6)
+            Location = new Point(leftMargin, currentY + 36),
+            MaximumSize = new Size(controlWidth, 0)
         };
         btnUpdateGeoIpNow.Click += async (_, _) =>
         {
@@ -471,7 +472,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         };
         Controls.Add(btnUpdateGeoIpNow);
         Controls.Add(lblGeoIpStatus);
-        currentY += 52;
+        currentY += 80;
 
         // Action Buttons
         Button btnSave = new()
@@ -481,7 +482,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI", 9F, FontStyle.Bold),
             Location = new Point(leftMargin, currentY),
-            Size = new Size(120, 32),
+            Size = new Size(120, 30),
             Text = Strings.Get("&Save")
         };
         btnSave.Click += SaveSettings;
@@ -491,6 +492,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             this,
             (_, _) => ResetToDefaults(),
             new Point(leftMargin + 130, currentY));
+        currentY += 45;
 
         LoadData();
     }
@@ -568,10 +570,10 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         }
     }
 
-    private const string DefaultBogonV4 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt";
-    private const string DefaultBogonV6 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv6.txt";
-    private const string DefaultGeoIpV4 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.net.csv";
-    private const string DefaultGeoIpV6 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.net.csv";
+    private const string DefaultBogonV4 = "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt";
+    private const string DefaultBogonV6 = "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv6.txt";
+    private const string DefaultGeoIpV4 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.csv";
+    private const string DefaultGeoIpV6 = "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.csv";
 
     private void SaveSettings(object? sender, EventArgs e)
     {

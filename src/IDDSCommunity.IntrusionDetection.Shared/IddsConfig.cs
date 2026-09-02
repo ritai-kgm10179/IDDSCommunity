@@ -774,7 +774,7 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("DynamicBogonIpv4Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt" : url;
+            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt" : url;
         }
         set => SetConfigValue("DynamicBogonIpv4Url", value ?? string.Empty);
     }
@@ -787,7 +787,7 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("DynamicBogonIpv6Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv6.txt" : url;
+            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv6.txt" : url;
         }
         set => SetConfigValue("DynamicBogonIpv6Url", value ?? string.Empty);
     }
@@ -809,7 +809,7 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("GeoIpDatabaseIpv4Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.net.csv" : url;
+            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv4.csv" : url;
         }
         set => SetConfigValue("GeoIpDatabaseIpv4Url", value ?? string.Empty);
     }
@@ -822,7 +822,7 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("GeoIpDatabaseIpv6Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.net.csv" : url;
+            return string.IsNullOrWhiteSpace(url) ? "https://raw.githubusercontent.com/sapics/ip-location-db/main/dbip-country/dbip-country-ipv6.csv" : url;
         }
         set => SetConfigValue("GeoIpDatabaseIpv6Url", value ?? string.Empty);
     }

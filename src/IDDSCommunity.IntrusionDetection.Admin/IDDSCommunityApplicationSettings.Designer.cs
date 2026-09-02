@@ -35,7 +35,7 @@
             this.iddscommunitySettingsNavigation.SeparatorColor = System.Drawing.Color.FromArgb(((int)(((byte)(191)))), ((int)(((byte)(191)))), ((int)(((byte)(191)))));
             this.iddscommunitySettingsNavigation.ShowSeparator = true;
             this.iddscommunitySettingsNavigation.ShowTopMenu = false;
-            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(292, 584);
+            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(350, 584);
             this.iddscommunitySettingsNavigation.TabIndex = 0;
             //
             // configurationPanel
@@ -45,10 +45,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.configurationPanel.AutoScroll = true;
             this.configurationPanel.BorderColor = System.Drawing.SystemColors.ControlText;
-            this.configurationPanel.Location = new System.Drawing.Point(322, 28);
+            this.configurationPanel.Location = new System.Drawing.Point(380, 28);
             this.configurationPanel.Name = "configurationPanel";
             this.configurationPanel.PaintBorder = false;
-            this.configurationPanel.Size = new System.Drawing.Size(488, 584);
+            this.configurationPanel.Size = new System.Drawing.Size(430, 584);
             this.configurationPanel.TabIndex = 1;
             //
             // IDDSCommunityApplicationSettings

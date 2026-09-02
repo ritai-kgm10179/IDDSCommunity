@@ -28,13 +28,14 @@ internal static class SettingsResetButtonFactory
         Button button = new()
         {
             Anchor = AnchorStyles.Top | AnchorStyles.Left,
-            AutoSize = true,
+            AutoSize = fixedLocation is null,
             BackColor = Color.White,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI", 9F),
             ForeColor = Color.FromArgb(102, 102, 102),
             Location = fixedLocation ?? new Point(12, 6),
-            MinimumSize = new Size(112, 26),
+            MinimumSize = fixedLocation is null ? new Size(112, 26) : new Size(120, 30),
+            Size = fixedLocation is null ? new Size(112, 26) : new Size(120, 30),
             Name = "buttonResetDefaults",
             TabIndex = 90,
             Text = Strings.Get("Restore defaults"),
