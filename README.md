@@ -19,7 +19,9 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - 雙層雙軌 Bogon 防禦體系（RFC 1918 靜態極速硬過濾 + Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步），杜絕誤封與自鎖。
 - Windows 防火牆規則管理（支援 Inbound 與 Bidirectional 雙向阻絕）、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
-- 代理程式外掛：通用 FTP、FileZilla Server、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security、Windows DNS Server 與 Technitium DNS Security。
+- 代理程式外掛：通用 FTP、FileZilla Server、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security、Windows DNS Server、Technitium DNS Security 與 Honeypot 誘餌蜜罐主動防禦。
+- 多渠道資安整合：支援 Microsoft Teams、Slack、Discord、Telegram 與 Generic RESTful Webhook 即時告警推播；支援 RFC 5424、RFC 3164 與 ArcSight CEF 之 Syslog 即時轉送；內建 OpenMetrics / Prometheus `/metrics` 監控端點與官方 Grafana 儀表板範本。
+- 企業安全擴充：支援 TOTP 雙因素動態驗證之合法使用者 Web 自助解鎖門戶、AWS / Azure / Cloudflare 雲端邊界動態白名單同步、蜜帳戶欺敵與 SOAR 指令碼自動化聯動、具備 API Key 保護之 RESTful 管理 API，以及一鍵式 CIS Windows Server 安全基準合規掃描與取證評估。
 - 共用驗證失敗偵測框架採用每一來源 IP 的滑動時間窗、事件去重、容量上限、閒置狀態 TTL 清理，以及 IPv4／IPv6 單一位址或 CIDR 排除；預設門檻為 `10 次／5 分鐘`，各代理程式可個別調整，且封鎖仍由既有漸進式政策執行。文字日誌來源只提交完整換行紀錄，並以位元組位置與檔案錨點處理半行、截斷及輪替。
 - 設定頁提供版本化 JSON 匯入／匯出；預設排除密碼與機器路徑，選擇匯出 SMTP 密碼時以 Argon2id（64 MiB、3 次、單一平行度）衍生金鑰，再由 AES-256-GCM 加密及驗證。匯入前會限制密碼衍生參數、驗證套件並建立可驗證的 SQLite 安全備份，再於單一交易中套用。
 - SQLite 主資料庫、WAL 與應用程式建立的維護備份採 SQLite3 Multiple Ciphers 預設的 ChaCha20-Poly1305 頁面加密。應用程式首次開啟既有明文資料庫時會先建立快照、加密並驗證後再原子替換；隨機 256 位元資料庫金鑰由 Windows DPAPI（本機範圍）保護，金鑰遺失時會拒絕建立空白資料庫，以免靜默覆蓋既有資料。

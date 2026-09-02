@@ -104,14 +104,19 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
 
 ### 3.9 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence & Cluster Defense)
 - **分散式叢集聯防架構 (Edge / Hub Topology)**：
-  - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資。
-  - `EdgeNode`（邊緣節點）：定時與 Threat Hub 雙向同步全網高危威脅清單，並回報本機永久封鎖事件。
-  - `ThreatHub`（威脅中繼中心）：集中對外訂閱全球情報，並提供內部邊緣主機秒級威脅情資廣播。
+  - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。
+  - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
+  - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。
+- **動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)**：
+  - 永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。
+  - 處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖。
 - **主動式外部威脅情報自動訂閱 (External Threat Feeds)**：
   - 支援訂閱開源 IPsum（分級 Level 1~8）、AbuseIPDB Blacklist（提供自備 API Key 與信心度門檻）與自訂 URL 清單。
   - 情資具備 TTL 生命週期（預設 7 天），未再遭通報之外部 IP 將自動移出防火牆，防止規則無限膨脹。
-- **雙層 Bogon 與智慧假釋防護 (Bogon & Probation Guardrails)**：
-  - 整合靜態 RFC 1918 硬過濾與 Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步，杜絕內網誤封。
+- **雙層 Bogon 與安全網路防護 (Bogon Guardrails & DDNS Resolver)**：
+  - 整合靜態 RFC 1918 私有 IP 硬過濾與 Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步，杜絕內網誤封。
+  - 安全網路支援輸入 FQDN 網域名稱（如 `office.ddns.net`），由背景排程自動動態解析最新 IP 並維持白名單有效性。
+
 ### 3.10 💬 多渠道 Webhook 即時告警 (Webhook Notifications)
 支援將入侵事件即時推播至企業常用即時通訊平台與自動化 SOC 管線：
 - **支援平台**：Microsoft Teams（Adaptive Cards 1.6 格式）、Slack（Block Kit 格式）、Discord（Rich Embed 嵌入卡片）、Telegram（Bot API `sendMessage`）、Generic JSON（標準 RESTful Webhook）。
@@ -157,13 +162,41 @@ IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵�
   - `Export-IddsIso27001Report`：命令列一鍵產製 ISO 27001 合規稽核報告。
   - `Test-IddsNotification`：批次測試通知端點連通性。
 
+### 3.17 🔑 合法使用者自助驗證解鎖門戶 (Self-Service TOTP Unblock Portal)
+當合法管理者或內部同仁因多次密碼輸入錯誤遭到防火牆封鎖時，可透過獨立專屬連接埠（預設 TCP 8088）存取內建 Web 解鎖門戶：
+- **TOTP 雙因素動態驗證 (RFC 6238)**：支援搭配 Google Authenticator、Microsoft Authenticator 等標準 TOTP 應用程式。
+- **即時自動解除封鎖**：驗證成功後系統立即自 Windows 防火牆放行該 IP，免除必須登入伺服器後台手動解鎖之負擔。
+
+### 3.18 ☁️ 雲端邊界安全網路動態同步 (Cloud Perimeter Auto-Sync: AWS, Azure, Cloudflare)
+- **官方 IP 區段動態抓取**：自動定期非同步抓取並解析 AWS、Microsoft Azure、Cloudflare 官方公布之最新 IP Range JSON 清單。
+- **自動合併動態白名單**：將雲端服務供應商合法反向代理與 CDN IP 自動加入安全網路，防止反向代理流量遭誤封。
+
+### 3.19 🎭 蜜帳戶欺敵與 SOAR 指令碼自動化 (Honey Accounts & SOAR Automation)
+- **蜜帳戶欺敵 (Honey Accounts / Decoy Logins)**：可設定特定虛擬誘餌帳戶名稱（如 `admin`, `root`, `test`, `guest`, `superadmin`）。任何針對此類帳戶的登入嘗試將立即觸發「一擊立即硬封鎖」，跳過累計軟鎖定門檻。
+- **SOAR 自訂自動化指令碼聯動 (SOAR Script Execution)**：當系統觸發重大硬封鎖或特定威脅事件時，自動呼叫管理者預先撰寫之 PowerShell 或 Batch 腳本（傳入事件來源 IP、代理程式名稱、威脅等級等參數），無縫對接企業現有資安自動化處置流程。
+
+### 3.20 🔌 安全 RESTful 管理 API (RESTful Management API)
+內建輕量化 HTTP/HTTPS REST API 伺服器（預設 TCP 8444），提供 API Key 認證與 Bearer Token 保護：
+- `GET /api/v1/status`：查詢服務運行狀態與系統統計指標。
+- `GET /api/v1/locks`：列出目前所有鎖定 IP 清單。
+- `POST /api/v1/locks/release`：傳入 IP 參數即時解除特定 IP 之防火牆封鎖。
+- `POST /api/v1/locks/block`：傳入 IP 參數強制將特定惡意來源施加永久硬封鎖。
+- `GET /api/v1/safenetworks` / `POST /api/v1/safenetworks`：動態查詢與新增安全網路白名單。
+
+### 3.21 📋 CIS Windows Server 安全基準合規掃描與取證評估 (CIS Benchmark & Forensics)
+- **五大安全原則深度評估**：涵蓋帳戶安全原則、網路通訊協定原則、Windows 防火牆組態、安全性稽核原則與應用程式安全性防護。
+- **即時合規評分與改善建議**：一鍵執行完整 CIS 安全掃描，即時計算合規百分比，並針對未通過項目提供詳細之改善處置指引。
+- **取證報告匯出**：支援將評估結果匯出為 JSON 取證檔案，利於資安稽核存檔與合規追蹤。
+
 ---
 
 ## 4. 常見問題與故障排除 (FAQ)
 
 - **Q: 誤封鎖自己的管理主機 IP 該如何處置？**
-  - **A**: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。
+  - **A**: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。若已啟用 TOTP 自助解鎖門戶，亦可直接以手機 App 驗證解除。
 - **Q: 為什麼防火牆封鎖規則沒有生效？**
   - **A**: 請確認 `IDDSCommunityProtection` Windows 服務正常運作，且執行帳戶具備管理 Windows 防火牆之權限。
+- **Q: 節點設定為 Threat Hub（威脅情資中繼中心）時，需要填寫「Threat Hub 端點網址」嗎？**
+  - **A**: 不需要。Threat Hub 是服務監聽端（Server），只需設定監聽連接埠（如 8443）與 API Key 供邊緣節點連入；只有邊緣節點（EdgeNode）才需要填寫 Threat Hub 的連線網址。若在 Threat Hub 誤填了網址，系統會安全忽略，不會產生任何異常。
 - **Q: 如何安全備份與轉移設定檔？**
   - **A**: 在管理控制台中點擊「設定 > 匯出設定」，系統會產生加密的 `.json` 套件；至新伺服器安裝後選擇「匯入設定」即可在一秒內完成復原。

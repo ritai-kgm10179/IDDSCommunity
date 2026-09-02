@@ -82,6 +82,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             Size = new Size(controlWidth, 23)
         };
         comboClusterRole.Items.AddRange(["Standalone (0)", "EdgeNode (1)", "ThreatHub (2)"]);
+        comboClusterRole.SelectedIndexChanged += (_, _) => UpdateClusterControlsState();
         Controls.Add(lblRole);
         Controls.Add(comboClusterRole);
         currentY += 46;
@@ -372,6 +373,34 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
 
         chkEnableGeoBlocking.Checked = config.EnableGeoBlocking;
         txtBlockedCountries.Text = config.BlockedCountryCodes;
+
+        UpdateClusterControlsState();
+    }
+
+    private void UpdateClusterControlsState()
+    {
+        ThreatHubRole role = (ThreatHubRole)Math.Clamp(comboClusterRole.SelectedIndex, 0, 2);
+        switch (role)
+        {
+            case ThreatHubRole.Standalone:
+                txtHubEndpoint.Enabled = false;
+                txtHubApiKey.Enabled = false;
+                numHubPort.Enabled = false;
+                numSyncInterval.Enabled = false;
+                break;
+            case ThreatHubRole.EdgeNode:
+                txtHubEndpoint.Enabled = true;
+                txtHubApiKey.Enabled = true;
+                numHubPort.Enabled = false;
+                numSyncInterval.Enabled = true;
+                break;
+            case ThreatHubRole.ThreatHub:
+                txtHubEndpoint.Enabled = false;
+                txtHubApiKey.Enabled = true;
+                numHubPort.Enabled = true;
+                numSyncInterval.Enabled = false;
+                break;
+        }
     }
 
     private const string DefaultBogonV4 = "https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt";
