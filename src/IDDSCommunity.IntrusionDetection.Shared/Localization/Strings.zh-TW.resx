@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -946,4 +946,43 @@
   <data name="Run CIS Benchmark Scan" xml:space="preserve"><value>執行 CIS 合規掃描</value></data>
   <data name="Export Report" xml:space="preserve"><value>匯出合規與取證報告</value></data>
   <data name="Scan not executed" xml:space="preserve"><value>尚未執行掃描</value></data>
+  <data name="Check ID" xml:space="preserve"><value>項目代碼</value></data>
+  <data name="Category" xml:space="preserve"><value>類別分類</value></data>
+  <data name="Title" xml:space="preserve"><value>評估項目名稱</value></data>
+  <data name="Current Value" xml:space="preserve"><value>目前設定值</value></data>
+  <data name="Remediation Advice" xml:space="preserve"><value>改善建議處置</value></data>
+  <data name="PASS" xml:space="preserve"><value>符合 (PASS)</value></data>
+  <data name="FAIL" xml:space="preserve"><value>未符合 (FAIL)</value></data>
+  <data name="Firewall" xml:space="preserve"><value>防火牆原則</value></data>
+  <data name="Audit Policy" xml:space="preserve"><value>安全性稽核原則</value></data>
+  <data name="Account Policy" xml:space="preserve"><value>帳戶安全性原則</value></data>
+  <data name="Network Policy" xml:space="preserve"><value>網路通訊協定原則</value></data>
+  <data name="Application Security" xml:space="preserve"><value>應用程式安全性</value></data>
+  <data name="Windows Firewall: Domain Profile State" xml:space="preserve"><value>Windows 防火牆：網域設定檔啟用狀態</value></data>
+  <data name="Windows Firewall: Private Profile State" xml:space="preserve"><value>Windows 防火牆：私人設定檔啟用狀態</value></data>
+  <data name="Windows Firewall: Public Profile State" xml:space="preserve"><value>Windows 防火牆：公用設定檔啟用狀態</value></data>
+  <data name="Security Event Log: Maximum Size" xml:space="preserve"><value>安全性事件日誌：容量大小上限設定</value></data>
+  <data name="Audit Logon Failures (Event 4625)" xml:space="preserve"><value>稽核登入失敗事件 (Event 4625)</value></data>
+  <data name="Audit Kerberos Authentication Failures" xml:space="preserve"><value>稽核 Kerberos 驗證失敗事件</value></data>
+  <data name="Disable Guest Account Status" xml:space="preserve"><value>停用 Guest 訪客帳戶狀態</value></data>
+  <data name="Digitally Sign Server Communication (SMB)" xml:space="preserve"><value>數位簽署伺服器通訊 (SMB 通訊協定簽章)</value></data>
+  <data name="IDDS Community: DPAPI + ChaCha20 Database Encryption" xml:space="preserve"><value>IDDS Community：DPAPI + ChaCha20-Poly1305 資料庫靜態加密</value></data>
+  <data name="IDDS Community: Core Protection Service State" xml:space="preserve"><value>IDDS Community：核心主動防禦服務執行狀態</value></data>
+  <data name="Enable Windows Firewall for this profile via GPO or netsh advfirewall." xml:space="preserve"><value>透過群組原則 (GPO) 或 netsh advfirewall 為此設定檔啟用 Windows 防火牆。</value></data>
+  <data name="Configure Security Log Max Size to >= 196608 KB (192 MB) via GPO." xml:space="preserve"><value>透過群組原則 (GPO) 將安全性日誌最大大小設定為 &gt;= 196608 KB (192 MB)。</value></data>
+  <data name="Ensure Audit Logon is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>確保本機安全性原則中的「稽核登入事件」已設定為記錄成功與失敗。</value></data>
+  <data name="Ensure Audit Kerberos is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>確保本機安全性原則中的「稽核 Kerberos 驗證」已設定為記錄成功與失敗。</value></data>
+  <data name="Set registry value requiresecuritysignature at HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters to 1." xml:space="preserve"><value>將登錄機碼 requiresecuritysignature 設定為 1 以強制要求 SMB 伺服器通訊簽章。</value></data>
+  <data name="Set registry value F at HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Account\Users\000001F5 to 0." xml:space="preserve"><value>停用本機 Guest 訪客帳戶登入權限。</value></data>
+  <data name="Ensure SQLite database file is encrypted with ChaCha20-Poly1305." xml:space="preserve"><value>確保 SQLite 資料庫檔案已啟用 ChaCha20-Poly1305 靜態加密。</value></data>
+  <data name="Ensure IDDS Community Windows Service is installed and actively running." xml:space="preserve"><value>確保 IDDS Community Windows 服務已安裝且正常運作中。</value></data>
+  <data name="Success and Failure Enabled" xml:space="preserve"><value>成功與失敗稽核均已啟用</value></data>
+  <data name="Encrypted (ChaCha20-Poly1305)" xml:space="preserve"><value>已加密 (ChaCha20-Poly1305)</value></data>
+  <data name="Unencrypted (Plaintext)" xml:space="preserve"><value>未加密 (明文)</value></data>
+  <data name="Running" xml:space="preserve"><value>執行中</value></data>
+  <data name="Stopped" xml:space="preserve"><value>已停止</value></data>
+  <data name="Service Not Found" xml:space="preserve"><value>服務未安裝</value></data>
+  <data name="Default Active" xml:space="preserve"><value>預設啟用狀態</value></data>
+  <data name="SMB signing required" xml:space="preserve"><value>已強制要求 SMB 簽章</value></data>
+  <data name="Guest account disabled" xml:space="preserve"><value>Guest 訪客帳戶已停用</value></data>
 </root>

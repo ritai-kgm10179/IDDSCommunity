@@ -403,7 +403,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         config.EnableGeoBlocking = chkEnableGeoBlocking.Checked;
         config.BlockedCountryCodes = txtBlockedCountries.Text.Trim();
 
-        config.Save();
+        config.SaveAppConfig();
         ThreatIntelligenceSettingsChanged?.Invoke(this, EventArgs.Empty);
 
         MessageBox.Show(

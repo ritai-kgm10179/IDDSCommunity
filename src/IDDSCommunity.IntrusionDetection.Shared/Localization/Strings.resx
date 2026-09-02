@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -946,5 +946,44 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Run CIS Benchmark Scan" xml:space="preserve"><value>Run CIS Benchmark Scan</value></data>
   <data name="Export Report" xml:space="preserve"><value>Export Report</value></data>
   <data name="Scan not executed" xml:space="preserve"><value>Scan not executed</value></data>
+  <data name="Check ID" xml:space="preserve"><value>ID</value></data>
+  <data name="Category" xml:space="preserve"><value>Category</value></data>
+  <data name="Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Current Value" xml:space="preserve"><value>Current Value</value></data>
+  <data name="Remediation Advice" xml:space="preserve"><value>Remediation Advice</value></data>
+  <data name="PASS" xml:space="preserve"><value>PASS</value></data>
+  <data name="FAIL" xml:space="preserve"><value>FAIL</value></data>
+  <data name="Firewall" xml:space="preserve"><value>Firewall</value></data>
+  <data name="Audit Policy" xml:space="preserve"><value>Audit Policy</value></data>
+  <data name="Account Policy" xml:space="preserve"><value>Account Policy</value></data>
+  <data name="Network Policy" xml:space="preserve"><value>Network Policy</value></data>
+  <data name="Application Security" xml:space="preserve"><value>Application Security</value></data>
+  <data name="Windows Firewall: Domain Profile State" xml:space="preserve"><value>Windows Firewall: Domain Profile State</value></data>
+  <data name="Windows Firewall: Private Profile State" xml:space="preserve"><value>Windows Firewall: Private Profile State</value></data>
+  <data name="Windows Firewall: Public Profile State" xml:space="preserve"><value>Windows Firewall: Public Profile State</value></data>
+  <data name="Security Event Log: Maximum Size" xml:space="preserve"><value>Security Event Log: Maximum Size</value></data>
+  <data name="Audit Logon Failures (Event 4625)" xml:space="preserve"><value>Audit Logon Failures (Event 4625)</value></data>
+  <data name="Audit Kerberos Authentication Failures" xml:space="preserve"><value>Audit Kerberos Authentication Failures</value></data>
+  <data name="Disable Guest Account Status" xml:space="preserve"><value>Disable Guest Account Status</value></data>
+  <data name="Digitally Sign Server Communication (SMB)" xml:space="preserve"><value>Digitally Sign Server Communication (SMB)</value></data>
+  <data name="IDDS Community: DPAPI + ChaCha20 Database Encryption" xml:space="preserve"><value>IDDS Community: DPAPI + ChaCha20 Database Encryption</value></data>
+  <data name="IDDS Community: Core Protection Service State" xml:space="preserve"><value>IDDS Community: Core Protection Service State</value></data>
+  <data name="Enable Windows Firewall for this profile via GPO or netsh advfirewall." xml:space="preserve"><value>Enable Windows Firewall for this profile via GPO or netsh advfirewall.</value></data>
+  <data name="Configure Security Log Max Size to >= 196608 KB (192 MB) via GPO." xml:space="preserve"><value>Configure Security Log Max Size to &gt;= 196608 KB (192 MB) via GPO.</value></data>
+  <data name="Ensure Audit Logon is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>Ensure Audit Logon is set to Success and Failure in Local Security Policy.</value></data>
+  <data name="Ensure Audit Kerberos is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>Ensure Audit Kerberos is set to Success and Failure in Local Security Policy.</value></data>
+  <data name="Set registry value requiresecuritysignature at HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters to 1." xml:space="preserve"><value>Set registry value requiresecuritysignature at HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters to 1.</value></data>
+  <data name="Set registry value F at HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Account\Users\000001F5 to 0." xml:space="preserve"><value>Set registry value F at HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Account\Users\000001F5 to 0.</value></data>
+  <data name="Ensure SQLite database file is encrypted with ChaCha20-Poly1305." xml:space="preserve"><value>Ensure SQLite database file is encrypted with ChaCha20-Poly1305.</value></data>
+  <data name="Ensure IDDS Community Windows Service is installed and actively running." xml:space="preserve"><value>Ensure IDDS Community Windows Service is installed and actively running.</value></data>
+  <data name="Success and Failure Enabled" xml:space="preserve"><value>Success and Failure Enabled</value></data>
+  <data name="Encrypted (ChaCha20-Poly1305)" xml:space="preserve"><value>Encrypted (ChaCha20-Poly1305)</value></data>
+  <data name="Unencrypted (Plaintext)" xml:space="preserve"><value>Unencrypted (Plaintext)</value></data>
+  <data name="Running" xml:space="preserve"><value>Running</value></data>
+  <data name="Stopped" xml:space="preserve"><value>Stopped</value></data>
+  <data name="Service Not Found" xml:space="preserve"><value>Service Not Found</value></data>
+  <data name="Default Active" xml:space="preserve"><value>Default Active</value></data>
+  <data name="SMB signing required" xml:space="preserve"><value>SMB signing required</value></data>
+  <data name="Guest account disabled" xml:space="preserve"><value>Guest account disabled</value></data>
 </root>
 

@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Windows.Forms;
@@ -33,49 +34,52 @@ public sealed class PanelComplianceAndForensics : UserControl
         Dock = DockStyle.Fill;
 
         Font defaultFont = new("Segoe UI", 9F);
-        Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
+        Font headerFont = new("Segoe UI", 11F, FontStyle.Bold);
 
-        // Top Panel
+        // Top Control Panel
         Panel topPanel = new()
         {
             Dock = DockStyle.Top,
-            Height = 135,
-            BackColor = Color.White
+            Height = 130,
+            Padding = new Padding(20, 15, 20, 10)
         };
         Controls.Add(topPanel);
 
-        Label lblTitle = new()
+        Label title = new()
         {
             Text = Strings.Get("CIS Windows Server Benchmark & Forensics"),
-            Font = sectionHeaderFont,
+            Font = headerFont,
             ForeColor = AccentColor,
             Location = new Point(20, 15),
             AutoSize = true
         };
-        topPanel.Controls.Add(lblTitle);
+        topPanel.Controls.Add(title);
 
         btnRunScan = new Button
         {
             Text = Strings.Get("Run CIS Benchmark Scan"),
             Location = new Point(20, 48),
-            Size = new Size(180, 32),
+            Size = new Size(160, 32),
             BackColor = AccentColor,
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            Font = defaultFont
         };
-        btnRunScan.Click += (s, e) => RunCisScan();
+        btnRunScan.Click += (_, _) => RunCisScan();
         topPanel.Controls.Add(btnRunScan);
 
         btnExportReport = new Button
         {
             Text = Strings.Get("Export Report"),
-            Location = new Point(210, 48),
-            Size = new Size(180, 32),
+            Location = new Point(190, 48),
+            Size = new Size(160, 32),
+            BackColor = Color.White,
+            ForeColor = BodyTextColor,
+            FlatStyle = FlatStyle.Flat,
             Font = defaultFont,
             Enabled = false
         };
-        btnExportReport.Click += (s, e) => ExportReport();
+        btnExportReport.Click += (_, _) => ExportReport();
         topPanel.Controls.Add(btnExportReport);
 
         lblScore = new Label
@@ -97,12 +101,12 @@ public sealed class PanelComplianceAndForensics : UserControl
             GridLines = true,
             Font = defaultFont
         };
-        listChecks.Columns.Add("Status", 100);
-        listChecks.Columns.Add("ID", 80);
-        listChecks.Columns.Add("Category", 140);
-        listChecks.Columns.Add("Title", 260);
-        listChecks.Columns.Add("Current Value", 200);
-        listChecks.Columns.Add("Remediation Advice", 300);
+        listChecks.Columns.Add(Strings.Get("status"), 100);
+        listChecks.Columns.Add(Strings.Get("Check ID"), 80);
+        listChecks.Columns.Add(Strings.Get("Category"), 140);
+        listChecks.Columns.Add(Strings.Get("Title"), 260);
+        listChecks.Columns.Add(Strings.Get("Current Value"), 200);
+        listChecks.Columns.Add(Strings.Get("Remediation Advice"), 300);
 
         Controls.Add(listChecks);
         listChecks.BringToFront();
@@ -117,17 +121,22 @@ public sealed class PanelComplianceAndForensics : UserControl
             latestResult = CisBenchmarkScanner.RunScan();
             listChecks.Items.Clear();
 
-            foreach (var item in latestResult.Items)
+            var sortedItems = latestResult.Items
+                .OrderBy(item => GetCategoryOrder(item.Category))
+                .ThenBy(item => item.Id, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in sortedItems)
             {
-                var lvi = new ListViewItem(item.IsCompliant ? "PASS" : "FAIL")
+                string statusText = item.IsCompliant ? Strings.Get("PASS") : Strings.Get("FAIL");
+                var lvi = new ListViewItem(statusText)
                 {
                     ForeColor = item.IsCompliant ? Color.DarkGreen : Color.Red
                 };
                 lvi.SubItems.Add(item.Id);
-                lvi.SubItems.Add(item.Category);
-                lvi.SubItems.Add(item.Title);
-                lvi.SubItems.Add(item.CurrentValue);
-                lvi.SubItems.Add(item.RemediationAdvice);
+                lvi.SubItems.Add(Strings.Get(item.Category));
+                lvi.SubItems.Add(Strings.Get(item.Title));
+                lvi.SubItems.Add(Strings.Get(item.CurrentValue));
+                lvi.SubItems.Add(Strings.Get(item.RemediationAdvice));
                 listChecks.Items.Add(lvi);
             }
 
@@ -144,6 +153,16 @@ public sealed class PanelComplianceAndForensics : UserControl
             btnRunScan.Enabled = true;
         }
     }
+
+    private static int GetCategoryOrder(string category) => category switch
+    {
+        "Account Policy" => 10,
+        "Network Policy" => 20,
+        "Firewall" => 30,
+        "Audit Policy" => 40,
+        "Application Security" => 50,
+        _ => 90
+    };
 
     private void ExportReport()
     {

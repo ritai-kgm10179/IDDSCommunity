@@ -22,6 +22,7 @@ public event EventHandler? NavigationClicked;
         InitializeComponent();
         AccessibleRole = AccessibleRole.PushButton;
         DoubleBuffered = true;
+        SetStyle(ControlStyles.Selectable | ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
         Margin = new Padding(3, 1, 3, 1);
     }
 
@@ -53,6 +54,27 @@ public event EventHandler? NavigationClicked;
             AccessibleDescription = value;
         }
     }
+
+    /// <summary>
+    /// 處理 got focus 事件。
+    /// </summary>
+    /// <param name="e">事件資料。</param>
+    protected override void OnGotFocus(EventArgs e)
+    {
+        base.OnGotFocus(e);
+        Invalidate();
+    }
+
+    /// <summary>
+    /// 處理 lost focus 事件。
+    /// </summary>
+    /// <param name="e">事件資料。</param>
+    protected override void OnLostFocus(EventArgs e)
+    {
+        base.OnLostFocus(e);
+        Invalidate();
+    }
+
     /// <summary>
     /// 處理 on paint 事件。
     /// </summary>
@@ -74,7 +96,7 @@ public event EventHandler? NavigationClicked;
         base.OnPaint(e);
         if (Focused)
         {
-            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1.5F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
             Rectangle focusRect = new(1, 1, Math.Max(1, Width - 3), Math.Max(1, Height - 3));
             e.Graphics.DrawRectangle(focusPen, focusRect);
         }

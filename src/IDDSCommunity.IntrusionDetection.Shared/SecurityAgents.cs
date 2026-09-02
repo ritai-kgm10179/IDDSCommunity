@@ -424,7 +424,7 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
                 agent.UnselectedIcon = a.UnselectedIcon;
                 agent.DisplayName = a.DisplayName;
                 agent.BinaryMissing = false;
-                agent.CustomConfiguration = a.CustomConfiguration;
+                agent.CustomConfiguration = new Dictionary<string, string>(a.CustomConfiguration, StringComparer.Ordinal);
                 agent.DefaultCustomConfiguration = new Dictionary<string, string>(a.DefaultCustomConfiguration, StringComparer.Ordinal);
                 agent.CustomConfigurationTypes = a.CustomConfigurationTypes;
                 agent.LoadCustomConfig();

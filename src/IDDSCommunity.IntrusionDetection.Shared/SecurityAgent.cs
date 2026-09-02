@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
@@ -69,7 +69,7 @@ public event EventHandler? StatisticsUpdated;
     {
         if (Id.Equals(Guid.Empty)) return false;
         string sqlCommand = "Select Serial from SecurityAgents where AgentId=@p0";
-        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Id.ToString());
+        object? dbVersion = DatabaseInstance.ExecuteScalar(sqlCommand, Id.ToString());
         if (dbVersion != null)
         {
             if (Db.DbValueConverter.ToInt(dbVersion) > Serial)
@@ -87,7 +87,7 @@ public event EventHandler? StatisticsUpdated;
     public bool CheckConfigVersionByName()
     {
         string sqlCommand = "Select Serial from SecurityAgents where Name=@p0";
-        object? dbVersion = Database.Instance.ExecuteScalar(sqlCommand, Name);
+        object? dbVersion = DatabaseInstance.ExecuteScalar(sqlCommand, Name);
         if (dbVersion != null)
         {
             if (Db.DbValueConverter.ToInt(dbVersion) > Serial)
@@ -103,12 +103,12 @@ public event EventHandler? StatisticsUpdated;
     /// </summary>
     public void Reload()
     {
-        if (!Database.Instance.IsConfigured)
+        if (!DatabaseInstance.IsConfigured)
         {
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
         }
         if (Id.Equals(Guid.Empty)) return;
-        using IDataReader rdr = Database.Instance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id.ToString());
+        using IDataReader rdr = DatabaseInstance.ExecuteReader("select * from securityAgents where AgentId=@p0", Id.ToString());
         // load all agents
         if (rdr.Read())
         {
@@ -535,7 +535,9 @@ public Dictionary<string, string> CustomConfigurationTypes
     /// 系統與遠端存取：10
     /// Web 與網域服務：20
     /// 資料庫服務：30
-    /// 郵件與傳輸服務：40
+    /// 郵件服務：40
+    /// 檔案傳輸服務：50
+    /// 主動誘餌與蜜罐防禦：60
     /// 其他未分類擴充元件：90
     /// </summary>
     public int SortOrder => GetSortOrder(Name, DisplayName);
@@ -570,8 +572,10 @@ public Dictionary<string, string> CustomConfigurationTypes
             "SMTPAGENT" => 40,
             "POP3AGENT" => 40,
             "IMAPAGENT" => 40,
-            "FTPAGENT" => 40,
-            "FILEZILLASECURITYAGENT" => 40,
+            "FTPAGENT" => 50,
+            "FTPSERVERAGENT" => 50,
+            "FILEZILLASECURITYAGENT" => 50,
+            "HONEYPOTSECURITYAGENT" => 60,
             _ => 0
         };
         if (canonicalOrder != 0) return canonicalOrder;
@@ -603,12 +607,17 @@ public Dictionary<string, string> CustomConfigurationTypes
         if (identifier.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) || identifier.Contains("Postgres", StringComparison.OrdinalIgnoreCase)) return 30;
         if (identifier.Contains("FileMaker", StringComparison.OrdinalIgnoreCase)) return 30;
 
-        // 4. 郵件與傳輸服務 (Mail & Network Protocols)
-        if (identifier.Contains("SmtpAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("SMTP", StringComparison.OrdinalIgnoreCase)) return 40;
+        // 4. 郵件服務 (Mail Services)
+        if (identifier.Contains("SmtpAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("SMTP", StringComparison.OrdinalIgnoreCase) || identifier.Contains("郵件伺服器", StringComparison.OrdinalIgnoreCase)) return 40;
         if (identifier.Contains("Pop3Agent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("POP3", StringComparison.OrdinalIgnoreCase)) return 40;
         if (identifier.Contains("ImapAgent", StringComparison.OrdinalIgnoreCase) || identifier.Contains("IMAP", StringComparison.OrdinalIgnoreCase)) return 40;
-        if (identifier.Contains("FTP", StringComparison.OrdinalIgnoreCase)) return 40;
-        if (identifier.Contains("FileZilla", StringComparison.OrdinalIgnoreCase)) return 40;
+
+        // 5. 檔案傳輸服務 (File Transfer Services)
+        if (identifier.Contains("FileZilla", StringComparison.OrdinalIgnoreCase)) return 50;
+        if (identifier.Contains("FTP", StringComparison.OrdinalIgnoreCase)) return 50;
+
+        // 6. 主動誘餌與蜜罐防禦 (Active Deception & Honeypot)
+        if (identifier.Contains("Honeypot", StringComparison.OrdinalIgnoreCase) || identifier.Contains("蜜罐", StringComparison.OrdinalIgnoreCase) || identifier.Contains("誘餌", StringComparison.OrdinalIgnoreCase)) return 60;
 
         return 90;
     }

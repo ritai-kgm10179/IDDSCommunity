@@ -592,6 +592,7 @@ public partial class PanelNotificationSettings : UserControl
         currentY += 50;
 
         Load += new EventHandler(PanelNotificationSettings_Load);
+        UpdateWebhookControlsState();
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
     }
 
@@ -604,6 +605,77 @@ public partial class PanelNotificationSettings : UserControl
         textBoxTelegramToken.Visible = isTelegram;
         labelTelegramChatId.Visible = isTelegram;
         textBoxTelegramChatId.Visible = isTelegram;
+
+        int x = 20;
+        int currentY = comboBoxWebhookPlatform.Location.Y + 28;
+
+        if (isTelegram)
+        {
+            labelTelegramToken.Location = new Point(x, currentY);
+            textBoxTelegramToken.Location = new Point(x, currentY + 18);
+            currentY += 46;
+
+            labelTelegramChatId.Location = new Point(x, currentY);
+            textBoxTelegramChatId.Location = new Point(x, currentY + 18);
+            currentY += 46;
+        }
+        else
+        {
+            labelWebhookUrl.Location = new Point(x, currentY);
+            textBoxWebhookUrl.Location = new Point(x, currentY + 18);
+            currentY += 46;
+        }
+
+        checkBoxWebhookSoftLock.Location = new Point(x, currentY);
+        currentY += 24;
+        checkBoxWebhookHardLocks.Location = new Point(x, currentY);
+        currentY += 24;
+        checkBoxWebhookOnUnlock.Location = new Point(x, currentY);
+        currentY += 26;
+        buttonTestWebhook.Location = new Point(x, currentY);
+        currentY += 38;
+
+        smartLabelSyslogHeader.Location = new Point(x, currentY);
+        currentY += 28;
+        checkBoxEnableSyslog.Location = new Point(x, currentY);
+        currentY += 26;
+        labelSyslogHost.Location = new Point(x, currentY);
+        textBoxSyslogHost.Location = new Point(x, currentY + 18);
+        labelSyslogPort.Location = new Point(x + 245, currentY);
+        numSyslogPort.Location = new Point(x + 245, currentY + 18);
+        currentY += 46;
+
+        labelSyslogProtocol.Location = new Point(x, currentY);
+        comboBoxSyslogProtocol.Location = new Point(x, currentY + 18);
+        labelSyslogFormat.Location = new Point(x + 175, currentY);
+        comboBoxSyslogFormat.Location = new Point(x + 175, currentY + 18);
+        currentY += 46;
+
+        checkBoxSyslogSoftLock.Location = new Point(x, currentY);
+        currentY += 24;
+        checkBoxSyslogHardLocks.Location = new Point(x, currentY);
+        currentY += 24;
+        checkBoxSyslogOnUnlock.Location = new Point(x, currentY);
+        currentY += 26;
+        buttonTestSyslog.Location = new Point(x, currentY);
+        currentY += 38;
+
+        smartLabelMetricsHeader.Location = new Point(x, currentY);
+        currentY += 28;
+        checkBoxEnableMetrics.Location = new Point(x, currentY);
+        currentY += 26;
+        labelMetricsListenIp.Location = new Point(x, currentY);
+        textBoxMetricsListenIp.Location = new Point(x, currentY + 18);
+        labelMetricsPort.Location = new Point(x + 245, currentY);
+        numMetricsPort.Location = new Point(x + 245, currentY + 18);
+        currentY += 46;
+
+        labelMetricsAllowed.Location = new Point(x, currentY);
+        textBoxMetricsAllowedNetworks.Location = new Point(x, currentY + 18);
+        currentY += 50;
+
+        buttonSave.Location = new Point(x, currentY);
+        buttonDiscard.Location = new Point(x + 130, currentY);
     }
 
     private async Task RunTestWebhookAsync()

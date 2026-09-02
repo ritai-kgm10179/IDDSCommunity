@@ -34,12 +34,18 @@ public class SecurityAgentsSortTest
         Assert.AreEqual(30, SecurityAgent.GetSortOrder("PostgreSQL Security Agent", "PostgreSQL 安全性代理程式"));
         Assert.AreEqual(30, SecurityAgent.GetSortOrder("FileMaker Security Agent", "FileMaker 安全性代理程式"));
 
-        // 4. Mail & Network Protocols
+        // 4. Mail Services
         Assert.AreEqual(40, SecurityAgent.GetSortOrder("IDDSCommunity.Agents.MailServer.SmtpAgent", "郵件伺服器 SMTP 安全性代理程式"));
         Assert.AreEqual(40, SecurityAgent.GetSortOrder("IDDSCommunity.Agents.MailServer.Pop3Agent", "POP3 安全性代理程式"));
         Assert.AreEqual(40, SecurityAgent.GetSortOrder("IDDSCommunity.Agents.MailServer.ImapAgent", "IMAP 安全性代理程式"));
-        Assert.AreEqual(40, SecurityAgent.GetSortOrder("FTP Security Agent", "FTP 安全性代理程式"));
-        Assert.AreEqual(40, SecurityAgent.GetSortOrder("FileZillaSecurityAgent", "FileZilla 安全性代理程式"));
+
+        // 5. File Transfer Services
+        Assert.AreEqual(50, SecurityAgent.GetSortOrder("FTP Security Agent", "FTP 安全性代理程式"));
+        Assert.AreEqual(50, SecurityAgent.GetSortOrder("FileZillaSecurityAgent", "FileZilla 安全性代理程式"));
+
+        // 6. Active Deception & Honeypot
+        Assert.AreEqual(60, SecurityAgent.GetSortOrder("HoneypotSecurityAgent", "誘餌蜜罐主動防禦代理程式"));
+        Assert.AreEqual(60, SecurityAgent.GetSortOrder("Honeypot Decoy Security Agent", "誘餌蜜罐主動防禦代理程式"));
     }
 
     [TestMethod]

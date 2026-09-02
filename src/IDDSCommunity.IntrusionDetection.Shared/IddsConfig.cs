@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -160,6 +160,7 @@ public string PluginsDirectory
                 DBNull.Value, DBNull.Value, SendInfoMail, SmtpPort, SenderEmailAddress, SmtpRequiresAuthentication,
                 NotificationEmailAddress, SmtpServer, SmtpUsername, SmtpPassword, CyberSheriffContributor, WebBasedMonitoring, DBNull.Value, SmtpSslRequired);
             RecordConfigurationAudit(null, "Configuration");
+            SaveAppConfig();
         }
         catch (Exception)
         {
