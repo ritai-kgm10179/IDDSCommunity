@@ -645,7 +645,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(810, 580);
+            this.ClientSize = new System.Drawing.Size(980, 640);
             this.ControlBox = false;
             this.Controls.Add(this.borderS);
             this.Controls.Add(this.borderE);
@@ -658,7 +658,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(400, 300);
+            this.MinimumSize = new System.Drawing.Size(880, 580);
             this.Name = "IddsAdmin";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IDDSCommunity Intrusion Detection");

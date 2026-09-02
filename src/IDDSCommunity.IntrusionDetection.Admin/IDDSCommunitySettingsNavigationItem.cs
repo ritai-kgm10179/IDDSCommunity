@@ -14,6 +14,7 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
     private Image? _selectedIcon;
     private Image? _unselectedIcon;
     private bool _isPressed;
+    private readonly ToolTip _toolTip = new();
 
     /// <summary>
     /// 當 NavigationClicked 時引發之事件。
@@ -32,6 +33,9 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
         Margin = new Padding(3, 1, 3, 1);
         Font = new Font("Segoe UI", 9F);
         Cursor = Cursors.Hand;
+        _toolTip.AutoPopDelay = 5000;
+        _toolTip.InitialDelay = 500;
+        _toolTip.ReshowDelay = 100;
     }
 
     /// <summary>
@@ -87,6 +91,7 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
             _displayName = value ?? string.Empty;
             AccessibleName = _displayName;
             AccessibleDescription = _displayName;
+            _toolTip.SetToolTip(this, _displayName);
             Invalidate();
         }
     }

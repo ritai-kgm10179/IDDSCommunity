@@ -203,7 +203,10 @@ public PanelSmtpSettings PanelSmtpSettings
 
     private PanelThreatIntelligenceSettings CreateThreatIntelligenceSettingsPanel()
     {
-        PanelThreatIntelligenceSettings panel = new();
+        PanelThreatIntelligenceSettings panel = new()
+        {
+            Dock = DockStyle.Fill
+        };
         panel.ThreatIntelligenceSettingsChanged += (_, _) => OnConfigurationChanged();
         configurationPanel.Controls.Add(panel);
         return panel;
@@ -228,21 +231,30 @@ public PanelReportExport PanelReportExport => _panelReportExport ??= CreateRepor
 
     private PanelReportExport CreateReportExportPanel()
     {
-        PanelReportExport panel = new();
+        PanelReportExport panel = new()
+        {
+            Dock = DockStyle.Fill
+        };
         configurationPanel.Controls.Add(panel);
         return panel;
     }
 
     private PanelConfigurationTransfer CreateConfigurationTransferPanel()
     {
-        PanelConfigurationTransfer panel = new();
+        PanelConfigurationTransfer panel = new()
+        {
+            Dock = DockStyle.Fill
+        };
         configurationPanel.Controls.Add(panel);
         return panel;
     }
 
     private PanelDatabaseMaintenance CreateDatabaseMaintenancePanel()
     {
-        PanelDatabaseMaintenance panel = new();
+        PanelDatabaseMaintenance panel = new()
+        {
+            Dock = DockStyle.Fill
+        };
         configurationPanel.Controls.Add(panel);
         return panel;
     }
@@ -252,7 +264,10 @@ public PanelReportExport PanelReportExport => _panelReportExport ??= CreateRepor
     /// <returns>附加的語言設定面板。</returns>
     private PanelLanguageSettings CreateLanguageSettingsPanel()
     {
-        PanelLanguageSettings panel = new();
+        PanelLanguageSettings panel = new()
+        {
+            Dock = DockStyle.Fill
+        };
         configurationPanel.Controls.Add(panel);
         return panel;
     }

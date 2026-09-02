@@ -72,11 +72,14 @@ public partial class PanelNotificationSettings : UserControl
     public PanelNotificationSettings()
     {
         InitializeComponent();
+        AutoScroll = true;
+        HorizontalScroll.Enabled = false;
+        HorizontalScroll.Visible = false;
 
         Font defaultFont = new("Segoe UI", 9F);
         Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
         int x = 20;
-        int controlWidth = 350;
+        int controlWidth = 380;
         int currentY = 15;
 
         // === Section 1: E-Mail 通知設定 ===

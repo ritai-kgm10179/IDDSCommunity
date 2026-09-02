@@ -12,6 +12,9 @@
             if (disposing && (components != null)) {
                 components.Dispose();
             }
+            if (disposing) {
+                _toolTip.Dispose();
+            }
             base.Dispose(disposing);
         }
 
