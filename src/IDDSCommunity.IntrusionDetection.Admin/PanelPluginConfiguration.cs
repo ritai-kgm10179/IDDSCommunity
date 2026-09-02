@@ -154,8 +154,8 @@ public bool IsInEditMode { get; set; }
     /// </summary>
     private void UpdateCustomSettingsLayout()
     {
-        int availableWidth = Math.Max(240, flowLayoutPanelCustomPluginSettings.ClientSize.Width
-            - flowLayoutPanelCustomPluginSettings.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 2);
+        int availableWidth = Math.Max(260, flowLayoutPanelCustomPluginSettings.ClientSize.Width
+            - flowLayoutPanelCustomPluginSettings.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 4);
         foreach (Control control in flowLayoutPanelCustomPluginSettings.Controls)
             control.Width = availableWidth;
     }

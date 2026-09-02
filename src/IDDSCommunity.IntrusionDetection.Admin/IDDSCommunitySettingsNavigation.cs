@@ -208,7 +208,7 @@ public IDDSCommunitySettingsNavigationItem? SelectedItem
                 item.IsSelected = true;
                 flowLayoutPanelNavigationItems.ScrollControlIntoView(item);
                 flowLayoutPanelNavigationItems.AutoScrollPosition = new Point(0, flowLayoutPanelNavigationItems.VerticalScroll.Value);
-                OnNavigationChanged(this);
+                OnNavigationChanged(item);
             }
         }
     }

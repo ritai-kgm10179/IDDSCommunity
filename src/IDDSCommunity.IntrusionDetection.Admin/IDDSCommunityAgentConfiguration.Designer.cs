@@ -24,22 +24,22 @@
             this.configurationPanel = new IDDSCommunity.IntrusionDetection.Admin.SmartPanel();
             this.iddscommunitySettingsNavigation = new IDDSCommunity.IntrusionDetection.Admin.IDDSCommunitySettingsNavigation();
             this.SuspendLayout();
-            //
+            // 
             // configurationPanel
-            //
+            // 
             this.configurationPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.configurationPanel.AutoScroll = true;
             this.configurationPanel.BorderColor = System.Drawing.SystemColors.ControlText;
-            this.configurationPanel.Location = new System.Drawing.Point(420, 28);
+            this.configurationPanel.Location = new System.Drawing.Point(355, 28);
             this.configurationPanel.Name = "configurationPanel";
             this.configurationPanel.PaintBorder = false;
-            this.configurationPanel.Size = new System.Drawing.Size(515, 491);
+            this.configurationPanel.Size = new System.Drawing.Size(580, 584);
             this.configurationPanel.TabIndex = 2;
-            //
+            // 
             // iddscommunitySettingsNavigation
-            //
+            // 
             this.iddscommunitySettingsNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
             this.iddscommunitySettingsNavigation.BackColor = System.Drawing.Color.White;
@@ -48,18 +48,18 @@
             this.iddscommunitySettingsNavigation.SeparatorColor = System.Drawing.Color.FromArgb(((int)(((byte)(191)))), ((int)(((byte)(191)))), ((int)(((byte)(191)))));
             this.iddscommunitySettingsNavigation.ShowSeparator = true;
             this.iddscommunitySettingsNavigation.ShowTopMenu = false;
-            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(390, 491);
+            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(320, 584);
             this.iddscommunitySettingsNavigation.TabIndex = 0;
             this.iddscommunitySettingsNavigation.NavigationChanged += new System.EventHandler(this.iddscommunitySettingsNavigation_NavigationChanged);
-            //
+            // 
             // IDDSCommunityAgentConfiguration
-            //
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.configurationPanel);
             this.Controls.Add(this.iddscommunitySettingsNavigation);
             this.Name = "IDDSCommunityAgentConfiguration";
-            this.Size = new System.Drawing.Size(960, 540);
+            this.Size = new System.Drawing.Size(960, 634);
             this.ResumeLayout(false);
 
         }

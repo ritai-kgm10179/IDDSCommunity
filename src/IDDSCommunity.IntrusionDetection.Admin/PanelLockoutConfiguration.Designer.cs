@@ -1,4 +1,4 @@
-namespace IDDSCommunity.IntrusionDetection.Admin {
+﻿namespace IDDSCommunity.IntrusionDetection.Admin {
     partial class PanelLockoutConfiguration {
         /// <summary>
         /// Required designer variable.
@@ -51,9 +51,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.checkBoxLockForever.AutoSize = true;
             this.checkBoxLockForever.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.checkBoxLockForever.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.checkBoxLockForever.Location = new System.Drawing.Point(27, 159);
+            this.checkBoxLockForever.Location = new System.Drawing.Point(260, 159);
             this.checkBoxLockForever.Name = "checkBoxLockForever";
-            this.checkBoxLockForever.Size = new System.Drawing.Size(114, 17);
+            this.checkBoxLockForever.Size = new System.Drawing.Size(114, 19);
             this.checkBoxLockForever.TabIndex = 4;
             this.checkBoxLockForever.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Hard lock forever");
             this.checkBoxLockForever.UseVisualStyleBackColor = true;
@@ -64,9 +64,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.textBoxSoftLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLocks.Location = new System.Drawing.Point(230, 46);
+            this.textBoxSoftLocks.Location = new System.Drawing.Point(260, 46);
             this.textBoxSoftLocks.Name = "textBoxSoftLocks";
-            this.textBoxSoftLocks.Size = new System.Drawing.Size(65, 22);
+            this.textBoxSoftLocks.Size = new System.Drawing.Size(65, 23);
             this.textBoxSoftLocks.TabIndex = 0;
             this.textBoxSoftLocks.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxSoftLocks_KeyPress);
             //
@@ -75,9 +75,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.textBoxSoftLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSoftLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(230, 74);
+            this.textBoxSoftLockDuration.Location = new System.Drawing.Point(260, 74);
             this.textBoxSoftLockDuration.Name = "textBoxSoftLockDuration";
-            this.textBoxSoftLockDuration.Size = new System.Drawing.Size(65, 22);
+            this.textBoxSoftLockDuration.Size = new System.Drawing.Size(65, 23);
             this.textBoxSoftLockDuration.TabIndex = 1;
             this.textBoxSoftLockDuration.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxSoftLocks_KeyPress);
             //
@@ -86,9 +86,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.textBoxHardLocks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLocks.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLocks.Location = new System.Drawing.Point(230, 102);
+            this.textBoxHardLocks.Location = new System.Drawing.Point(260, 102);
             this.textBoxHardLocks.Name = "textBoxHardLocks";
-            this.textBoxHardLocks.Size = new System.Drawing.Size(65, 22);
+            this.textBoxHardLocks.Size = new System.Drawing.Size(65, 23);
             this.textBoxHardLocks.TabIndex = 2;
             this.textBoxHardLocks.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxSoftLocks_KeyPress);
             //
@@ -97,9 +97,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.textBoxHardLockDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.textBoxHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxHardLockDuration.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.textBoxHardLockDuration.Location = new System.Drawing.Point(230, 130);
+            this.textBoxHardLockDuration.Location = new System.Drawing.Point(260, 130);
             this.textBoxHardLockDuration.Name = "textBoxHardLockDuration";
-            this.textBoxHardLockDuration.Size = new System.Drawing.Size(65, 22);
+            this.textBoxHardLockDuration.Size = new System.Drawing.Size(65, 23);
             this.textBoxHardLockDuration.TabIndex = 3;
             this.textBoxHardLockDuration.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxSoftLocks_KeyPress);
             //
@@ -108,7 +108,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.errSoftLocks.AutoSize = true;
             this.errSoftLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLocks.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLocks.Location = new System.Drawing.Point(300, 48);
+            this.errSoftLocks.Location = new System.Drawing.Point(335, 48);
             this.errSoftLocks.Name = "errSoftLocks";
             this.errSoftLocks.Selected = false;
             this.errSoftLocks.SelectedColor = System.Drawing.Color.Empty;
@@ -122,7 +122,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.errSoftLockDuration.AutoSize = true;
             this.errSoftLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errSoftLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errSoftLockDuration.Location = new System.Drawing.Point(300, 74);
+            this.errSoftLockDuration.Location = new System.Drawing.Point(335, 74);
             this.errSoftLockDuration.Name = "errSoftLockDuration";
             this.errSoftLockDuration.Selected = false;
             this.errSoftLockDuration.SelectedColor = System.Drawing.Color.Empty;
@@ -136,7 +136,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.errHardLocks.AutoSize = true;
             this.errHardLocks.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLocks.ForeColor = System.Drawing.Color.Red;
-            this.errHardLocks.Location = new System.Drawing.Point(300, 104);
+            this.errHardLocks.Location = new System.Drawing.Point(335, 104);
             this.errHardLocks.Name = "errHardLocks";
             this.errHardLocks.Selected = false;
             this.errHardLocks.SelectedColor = System.Drawing.Color.Empty;
@@ -150,7 +150,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.errHardLockDuration.AutoSize = true;
             this.errHardLockDuration.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.errHardLockDuration.ForeColor = System.Drawing.Color.Red;
-            this.errHardLockDuration.Location = new System.Drawing.Point(300, 132);
+            this.errHardLockDuration.Location = new System.Drawing.Point(335, 132);
             this.errHardLockDuration.Name = "errHardLockDuration";
             this.errHardLockDuration.Selected = false;
             this.errHardLockDuration.SelectedColor = System.Drawing.Color.Empty;
@@ -293,9 +293,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.comboBoxFirewallMode.Items.AddRange(new object[] {
             global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Inbound blocking (recommended)"),
             global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Bidirectional blocking")});
-            this.comboBoxFirewallMode.Location = new System.Drawing.Point(230, 187);
+            this.comboBoxFirewallMode.Location = new System.Drawing.Point(260, 187);
             this.comboBoxFirewallMode.Name = "comboBoxFirewallMode";
-            this.comboBoxFirewallMode.Size = new System.Drawing.Size(170, 23);
+            this.comboBoxFirewallMode.Size = new System.Drawing.Size(200, 23);
             this.comboBoxFirewallMode.TabIndex = 5;
             this.comboBoxFirewallMode.SelectedIndexChanged += new System.EventHandler(this.comboBoxFirewallMode_SelectedIndexChanged);
             //

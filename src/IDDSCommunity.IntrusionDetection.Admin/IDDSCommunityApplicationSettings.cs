@@ -379,6 +379,16 @@ public PanelNotificationSettings PanelNotificationSettings
         }
     }
 
+    private void ShowSettingsPanel(Control target)
+    {
+        foreach (Control c in configurationPanel.Controls)
+        {
+            if (c != target) c.Visible = false;
+        }
+        target.Visible = true;
+        target.BringToFront();
+    }
+
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>
@@ -386,53 +396,57 @@ public PanelNotificationSettings PanelNotificationSettings
     /// <param name="e">事件資料。</param>
     void iddscommunitySettingsNavigation_NavigationChanged(object? sender, EventArgs? e)
     {
-        switch ((sender as IDDSCommunitySettingsNavigationItem)?.DisplayName)
+        string? targetName = (sender as IDDSCommunitySettingsNavigationItem)?.DisplayName
+            ?? (sender as IDDSCommunitySettingsNavigation)?.SelectedItem?.DisplayName
+            ?? iddscommunitySettingsNavigation.SelectedItem?.DisplayName;
+
+        switch (targetName)
         {
 
             case var displayName when displayName == Strings.Get(MENU_LOCK_OUT_CONFIGURATION):
-                LockoutConfiguration.BringToFront();
+                ShowSettingsPanel(LockoutConfiguration);
                 break;
             case var displayName when displayName == Strings.Get(MENU_SAFE_NETWORKS):
-                PanelSafeNetworks.BringToFront();
+                ShowSettingsPanel(PanelSafeNetworks);
                 break;
             case var displayName when displayName == Strings.Get(MENU_THREAT_INTELLIGENCE):
-                PanelThreatIntelligenceSettings.BringToFront();
+                ShowSettingsPanel(PanelThreatIntelligenceSettings);
                 PanelThreatIntelligenceSettings.LoadData();
                 break;
             case var displayName when displayName == Strings.Get(MENU_CLOUD_PERIMETER):
-                PanelCloudPerimeterSettings.BringToFront();
+                ShowSettingsPanel(PanelCloudPerimeterSettings);
                 PanelCloudPerimeterSettings.LoadSettings();
                 break;
             case var displayName when displayName == Strings.Get(MENU_SELF_SERVICE):
-                PanelSelfServiceSettings.BringToFront();
+                ShowSettingsPanel(PanelSelfServiceSettings);
                 PanelSelfServiceSettings.LoadSettings();
                 break;
             case var displayName when displayName == Strings.Get(MENU_DECEPTION_AND_API):
-                PanelDeceptionAndApiSettings.BringToFront();
+                ShowSettingsPanel(PanelDeceptionAndApiSettings);
                 PanelDeceptionAndApiSettings.LoadSettings();
                 break;
             case var displayName when displayName == Strings.Get(MENU_NOTIFICATION_SETTINGS):
-                PanelNotificationSettings.BringToFront();
+                ShowSettingsPanel(PanelNotificationSettings);
                 PanelNotificationSettings.LoadData();
                 break;
             case var displayName when displayName == Strings.Get(MENU_SMTP_SETTINGS):
-                PanelSmtpSettings.BringToFront();
+                ShowSettingsPanel(PanelSmtpSettings);
                 break;
             case var displayName when displayName == Strings.Get(MENU_COMPLIANCE_AND_FORENSICS):
-                PanelComplianceAndForensics.BringToFront();
+                ShowSettingsPanel(PanelComplianceAndForensics);
                 break;
             case var displayName when displayName == Strings.Get(MENU_LANGUAGE_SETTINGS):
-                PanelLanguageSettings.BringToFront();
+                ShowSettingsPanel(PanelLanguageSettings);
                 break;
             case var displayName when displayName == Strings.Get(MENU_DATABASE_MAINTENANCE):
-                PanelDatabaseMaintenance.BringToFront();
+                ShowSettingsPanel(PanelDatabaseMaintenance);
                 PanelDatabaseMaintenance.RefreshStatus();
                 break;
             case var displayName when displayName == Strings.Get(MENU_CONFIGURATION_TRANSFER):
-                PanelConfigurationTransfer.BringToFront();
+                ShowSettingsPanel(PanelConfigurationTransfer);
                 break;
             case var displayName when displayName == Strings.Get(MENU_REPORT_EXPORT):
-                PanelReportExport.BringToFront();
+                ShowSettingsPanel(PanelReportExport);
                 break;
         }
     }
