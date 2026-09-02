@@ -397,6 +397,18 @@ public sealed class SetupOperationsTest
         Assert.IsTrue(hasOperatorsModify, "操作人員 SID 必須在安全描述元中出現並具有 Modify（含）以上的存取權限。");
     }
 
+    [TestMethod]
+    public void GetStableServiceStatusTarget_ReturnsExpectedTarget()
+    {
+        Assert.AreEqual(ServiceControllerStatus.Running, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.StartPending));
+        Assert.AreEqual(ServiceControllerStatus.Running, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.ContinuePending));
+        Assert.AreEqual(ServiceControllerStatus.Stopped, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.StopPending));
+        Assert.AreEqual(ServiceControllerStatus.Paused, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.PausePending));
+        Assert.AreEqual(ServiceControllerStatus.Running, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.Running));
+        Assert.AreEqual(ServiceControllerStatus.Stopped, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.Stopped));
+        Assert.AreEqual(ServiceControllerStatus.Paused, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.Paused));
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         private bool cleanup = true;

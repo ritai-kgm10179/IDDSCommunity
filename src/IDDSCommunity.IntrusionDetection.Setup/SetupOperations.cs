@@ -808,8 +808,21 @@ internal static class SetupOperations
         {
             current.Refresh();
             if (current.Status == ServiceControllerStatus.Running) return;
+            if (current.Status == ServiceControllerStatus.StartPending)
+            {
+                try
+                {
+                    current.WaitForStatus(ServiceControllerStatus.Running, ServiceStartTimeout);
+                    current.Refresh();
+                    if (current.Status == ServiceControllerStatus.Running) return;
+                }
+                catch (Exception)
+                {
+                    // If wait times out or fails, proceed to attempt sc start
+                }
+            }
         }
-        RunSc("start", ServiceName);
+        RunSc("start", ServiceName, acceptMissing: true);
         using ServiceController controller = new(ServiceName);
         controller.WaitForStatus(ServiceControllerStatus.Running, ServiceStartTimeout);
         controller.Refresh();
@@ -1130,7 +1143,12 @@ internal static class SetupOperations
             process.Kill(true);
             throw new System.TimeoutException(SetupText.Get("ServiceControlTimedOut"));
         }
-        if (process.ExitCode != 0 && !(acceptMissing && (process.ExitCode == 1060 || process.ExitCode == 1062)))
+        bool isAcceptableExitCode = process.ExitCode == 0 ||
+            (acceptMissing && (
+                process.ExitCode == 1060 || // ERROR_SERVICE_DOES_NOT_EXIST
+                process.ExitCode == 1062 || // ERROR_SERVICE_NOT_ACTIVE
+                process.ExitCode == 1056)); // ERROR_SERVICE_ALREADY_RUNNING
+        if (!isAcceptableExitCode)
         {
             string details = standardError.GetAwaiter().GetResult().Trim();
             if (string.IsNullOrEmpty(details)) details = standardOutput.GetAwaiter().GetResult().Trim();
