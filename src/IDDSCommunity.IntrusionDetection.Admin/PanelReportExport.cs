@@ -30,6 +30,7 @@ public sealed class PanelReportExport : UserControl
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
+        AutoScroll = true;
         start.Value = DateTime.Today.AddDays(-30);
         end.Value = DateTime.Today;
         Controls.Add(CreateLabel(Strings.Get("Report export"), 11F, Color.FromArgb(19, 184, 166), 11, 8));

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -20,6 +20,7 @@ public sealed class PanelLanguageSettings : UserControl
     {
         BackColor = Color.White;
         Dock = DockStyle.Fill;
+        AutoScroll = true;
 
         SmartLabel pageTitle = CreateLabel(Strings.Get("Language settings"), 11F, AccentColor, new Point(11, 8));
         Label fieldLabel = CreateLabel(Strings.Get("Display language"), 9F, BodyTextColor, new Point(15, 48));
