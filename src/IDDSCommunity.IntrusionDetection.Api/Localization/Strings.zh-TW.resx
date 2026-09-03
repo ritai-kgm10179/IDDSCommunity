@@ -12,7 +12,7 @@
   <data name="Windows Base Security Agent" xml:space="preserve"><value>Windows 基礎安全性代理程式</value></data>
   <data name="Windows OpenSSH Security Agent" xml:space="preserve"><value>Windows OpenSSH 安全性代理程式</value></data>
   <data name="Windows Network Logon Security Agent" xml:space="preserve"><value>Windows 網路登入安全性代理程式</value></data>
-  <data name="Windows Remote Management (WinRM / WAC) Security Agent" xml:space="preserve"><value>Windows 遠端管理 (WinRM / WAC) 安全性代理程式</value></data>
+  <data name="Windows Remote Management (WinRM / WAC) Security Agent" xml:space="preserve"><value>Windows 遠端管理（WinRM / WAC）安全性代理程式</value></data>
   <data name="Remote Desktop Gateway Security Agent" xml:space="preserve"><value>遠端桌面閘道安全性代理程式</value></data>
   <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL 安全性代理程式</value></data>
   <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS 安全性代理程式</value></data>

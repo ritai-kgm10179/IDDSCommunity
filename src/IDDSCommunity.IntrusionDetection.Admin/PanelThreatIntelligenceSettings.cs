@@ -86,45 +86,49 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
             DropDownStyle = ComboBoxStyle.DropDownList,
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
+            Location = new Point(leftMargin, currentY + 22),
             Size = new Size(controlWidth, 23)
         };
-        comboClusterRole.Items.AddRange(["Standalone (0)", "EdgeNode (1)", "ThreatHub (2)"]);
+        comboClusterRole.Items.AddRange([
+            Strings.Get("Standalone"),
+            Strings.Get("Edge Node"),
+            Strings.Get("Threat Hub")
+        ]);
         comboClusterRole.SelectedIndexChanged += (_, _) => UpdateClusterControlsState();
         Controls.Add(lblRole);
         Controls.Add(comboClusterRole);
-        currentY += 46;
+        currentY += 52;
 
         Label lblEndpoint = CreateFieldLabel(Strings.Get("Threat Hub endpoint URL"), new Point(leftMargin, currentY));
         txtHubEndpoint = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
+            Location = new Point(leftMargin, currentY + 22),
             Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblEndpoint);
         Controls.Add(txtHubEndpoint);
-        currentY += 46;
+        currentY += 52;
 
         Label lblApiKey = CreateFieldLabel(Strings.Get("Cluster API key"), new Point(leftMargin, currentY));
         txtHubApiKey = new TextBox
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
+            Location = new Point(leftMargin, currentY + 22),
             Size = new Size(controlWidth, 23)
         };
         Controls.Add(lblApiKey);
         Controls.Add(txtHubApiKey);
-        currentY += 46;
+        currentY += 52;
 
         Label lblPort = CreateFieldLabel(Strings.Get("Threat Hub port"), new Point(leftMargin, currentY));
         numHubPort = new NumericUpDown
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
+            Location = new Point(leftMargin, currentY + 22),
             Size = new Size(180, 23),
             Minimum = 1,
             Maximum = 65535,
@@ -138,7 +142,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         {
             Font = defaultFont,
             ForeColor = BodyTextColor,
-            Location = new Point(leftMargin + 195, currentY + 18),
+            Location = new Point(leftMargin + 195, currentY + 22),
             Size = new Size(185, 23),
             Minimum = 5,
             Maximum = 3600,
@@ -146,7 +150,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         };
         Controls.Add(lblSync);
         Controls.Add(numSyncInterval);
-        currentY += 54;
+        currentY += 56;
 
         // === Section 2: External Threat Feeds ===
         Label lblSectionFeeds = CreateHeaderLabel(Strings.Get("External threat feeds subscription"), 10F, AccentColor, new Point(leftMargin, currentY));

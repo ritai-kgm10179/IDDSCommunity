@@ -730,7 +730,7 @@
   <data name="Configuration transfer failed. Review the application log for details." xml:space="preserve"><value>設定移轉失敗，請查看應用程式記錄以取得詳細資訊。</value></data>
   <data name="Windows OpenSSH Security Agent" xml:space="preserve"><value>Windows OpenSSH 安全性代理程式</value></data>
   <data name="Windows Network Logon Security Agent" xml:space="preserve"><value>Windows 網路登入安全性代理程式</value></data>
-  <data name="Windows Remote Management (WinRM / WAC) Security Agent" xml:space="preserve"><value>Windows 遠端管理 (WinRM / WAC) 安全性代理程式</value></data>
+  <data name="Windows Remote Management (WinRM / WAC) Security Agent" xml:space="preserve"><value>Windows 遠端管理（WinRM / WAC）安全性代理程式</value></data>
   <data name="Remote Desktop Gateway Security Agent" xml:space="preserve"><value>遠端桌面閘道安全性代理程式</value></data>
   <data name="PostgreSQL Security Agent" xml:space="preserve"><value>PostgreSQL 安全性代理程式</value></data>
   <data name="NPS RADIUS Security Agent" xml:space="preserve"><value>NPS RADIUS 安全性代理程式</value></data>
@@ -800,9 +800,9 @@
   <data name="Report.Monthly" xml:space="preserve"><value>每月報表產生</value></data>
   <data name="Runtime.Start" xml:space="preserve"><value>服務已啟動</value></data>
   <data name="Runtime.Stop" xml:space="preserve"><value>服務已停止</value></data>
-  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解除封鎖通知 ({0})</value></data>
-  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：軟封鎖通知 ({0})</value></data>
-  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：硬封鎖通知 ({0})</value></data>
+  <data name="IDDS Community: Unlock notification ({0})" xml:space="preserve"><value>IDDS 社群版：解除封鎖通知（{0}）</value></data>
+  <data name="IDDS Community: Soft lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：軟封鎖通知（{0}）</value></data>
+  <data name="IDDS Community: Hard lock notification ({0})" xml:space="preserve"><value>IDDS 社群版：硬封鎖通知（{0}）</value></data>
   <data name="FileZilla Security Agent" xml:space="preserve">
     <value>FileZilla 安全性代理程式</value>
   </data>
@@ -880,7 +880,7 @@
   <data name="Enable Webhook alerts" xml:space="preserve"><value>啟用 Webhook 即時告警</value></data>
   <data name="Webhook platform" xml:space="preserve"><value>Webhook 平台</value></data>
   <data name="Webhook URL / Endpoint" xml:space="preserve"><value>Webhook URL 端點</value></data>
-  <data name="Telegram bot token" xml:space="preserve"><value>Telegram Bot 金鑰 (Token)</value></data>
+  <data name="Telegram bot token" xml:space="preserve"><value>Telegram Bot 金鑰（Token）</value></data>
   <data name="Telegram chat ID" xml:space="preserve"><value>Telegram 頻道／群組 Chat ID</value></data>
   <data name="Test Webhook" xml:space="preserve"><value>傳送測試 Webhook</value></data>
   <data name="Webhook test was sent successfully." xml:space="preserve"><value>Webhook 測試訊息已成功傳送。</value></data>
@@ -895,7 +895,7 @@
   <data name="STIX 2.1 bundle exported: {0}" xml:space="preserve"><value>STIX 2.1 情資已匯出：{0}</value></data>
   <data name="ISO 27001 report exported: {0}" xml:space="preserve"><value>ISO 27001 報告已匯出：{0}</value></data>
   <data name="Enable country-level Geo-blocking" xml:space="preserve"><value>啟用國家/地區地理封鎖</value></data>
-  <data name="Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)" xml:space="preserve"><value>封鎖國家代碼 (ISO 3166-1 alpha-2，例如 CN, RU)</value></data>
+  <data name="Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)" xml:space="preserve"><value>封鎖國家代碼（ISO 3166-1 alpha-2，例如 CN、RU）</value></data>
   <data name="GeoIP &amp; Country-level Blocking (Geo-fencing)" xml:space="preserve"><value>GeoIP 國家地理圍欄與封鎖</value></data>
   <data name="Enable GeoIP automatic database update" xml:space="preserve"><value>啟用 GeoIP 資料庫定期自動更新</value></data>
   <data name="GeoIP IPv4 Database URL:" xml:space="preserve"><value>GeoIP IPv4 資料庫下載網址：</value></data>
@@ -907,7 +907,7 @@
   <data name="Failed to update GeoIP database: {0}" xml:space="preserve"><value>GeoIP 資料庫更新失敗：{0}</value></data>
   <data name="Updating GeoIP database..." xml:space="preserve"><value>正在更新 GeoIP 資料庫...</value></data>
   <data name="CSV Files (*.csv)|*.csv|All Files (*.*)|*.*" xml:space="preserve"><value>CSV 檔案 (*.csv)|*.csv|所有檔案 (*.*)|*.*</value></data>
-  <data name="Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)" xml:space="preserve"><value>Syslog 與 SIEM 整合 (RFC 5424 / RFC 3164 / CEF)</value></data>
+  <data name="Syslog &amp; SIEM integration (RFC 5424 / RFC 3164 / CEF)" xml:space="preserve"><value>Syslog 與 SIEM 整合（RFC 5424／RFC 3164／CEF）</value></data>
   <data name="Enable Syslog alerts" xml:space="preserve"><value>啟用 Syslog 即時轉送</value></data>
   <data name="Syslog server host" xml:space="preserve"><value>Syslog 伺服器主機</value></data>
   <data name="Syslog server port" xml:space="preserve"><value>Syslog 伺服器通訊埠</value></data>
@@ -918,29 +918,29 @@
   <data name="Syslog test failed. Please verify the host and network connectivity." xml:space="preserve"><value>Syslog 測試傳送失敗，請檢查主機與網路連線。</value></data>
   <data name="Prometheus / OpenMetrics observability" xml:space="preserve"><value>Prometheus / OpenMetrics 監控端點</value></data>
   <data name="Enable Prometheus metrics endpoint" xml:space="preserve"><value>啟用 Prometheus 指標端點</value></data>
-  <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>指標監聽 IP 位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
+  <data name="Metrics listen IP address (e.g. 0.0.0.0 or 127.0.0.1)" xml:space="preserve"><value>指標監聽 IP 位址（例如 0.0.0.0 或 127.0.0.1）</value></data>
   <data name="Metrics port" xml:space="preserve"><value>指標監聽通訊埠</value></data>
-  <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>允許之監控伺服器 CIDR (例如 10.0.0.0/8, 192.168.1.0/24)</value></data>
+  <data name="Allowed monitoring networks CIDR (e.g. 10.0.0.0/8, 192.168.1.0/24)" xml:space="preserve"><value>允許之監控伺服器 CIDR（例如 10.0.0.0/8，192.168.1.0/24）</value></data>
   <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory 與 Kerberos 安全性代理程式</value></data>
   <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>傳送通知警報時發生錯誤。&#xD;&#xA;</value></data>
   <data name="Cloud perimeter defense" xml:space="preserve"><value>多雲邊界安全聯防</value></data>
   <data name="Self-service unblock portal" xml:space="preserve"><value>自助解鎖門戶與 TOTP</value></data>
   <data name="Deception and Management API" xml:space="preserve"><value>動態欺敵與管理 API</value></data>
   <data name="Compliance and forensics" xml:space="preserve"><value>CIS 安全基準與取證</value></data>
-  <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>啟用雲端邊界安全同步 (AWS, Azure, GCP, Cloudflare, HiCloud)</value></data>
-  <data name="Cloud service provider" xml:space="preserve"><value>雲端服務供應商 (Cloud Provider)</value></data>
-  <data name="API Key / Access Token" xml:space="preserve"><value>API 金鑰 / 存取權杖 (API Key / Bearer Token)</value></data>
-  <data name="Endpoint URL / Region Endpoint" xml:space="preserve"><value>端點 URL / 區域端點 (Endpoint URL / Region Endpoint)</value></data>
-  <data name="Primary Resource ID (IPSet ID / Zone ID)" xml:space="preserve"><value>主要資源識別碼 (Resource ID / IPSet ID / Zone ID)</value></data>
-  <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>次要識別碼 (Scope / Security Policy Name / Project ID)</value></data>
-  <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>三級識別碼 (Network ID / HiCloud CVPC ID)</value></data>
+  <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>啟用雲端邊界安全同步（AWS、Azure、GCP、Cloudflare、HiCloud）</value></data>
+  <data name="Cloud service provider" xml:space="preserve"><value>雲端服務供應商（Cloud Provider）</value></data>
+  <data name="API Key / Access Token" xml:space="preserve"><value>API 金鑰／存取權杖（API Key / Bearer Token）</value></data>
+  <data name="Endpoint URL / Region Endpoint" xml:space="preserve"><value>端點 URL／區域端點（Endpoint URL / Region Endpoint）</value></data>
+  <data name="Primary Resource ID (IPSet ID / Zone ID)" xml:space="preserve"><value>主要資源識別碼（Resource ID / IPSet ID / Zone ID）</value></data>
+  <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>次要識別碼（Scope / Security Policy Name / Project ID）</value></data>
+  <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>三級識別碼（Network ID / HiCloud CVPC ID）</value></data>
   <data name="Test Connection" xml:space="preserve"><value>測試連線與驗證</value></data>
-  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖門戶 (Self-Service Portal)</value></data>
-  <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠 (預設 8444)</value></data>
-  <data name="Portal listening IP address" xml:space="preserve"><value>門戶監聽位址 (例如 0.0.0.0 或 127.0.0.1)</value></data>
-  <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP 認證金鑰 (Base32 Authenticator Key)</value></data>
+  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖門戶（Self-Service Portal）</value></data>
+  <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠（預設 8444）</value></data>
+  <data name="Portal listening IP address" xml:space="preserve"><value>門戶監聽位址（例如 0.0.0.0 或 127.0.0.1）</value></data>
+  <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP 認證金鑰（Base32 Authenticator Key）</value></data>
   <data name="Generate Secret" xml:space="preserve"><value>隨機產生金鑰</value></data>
-  <data name="Test Verification Code" xml:space="preserve"><value>驗證碼測試 (輸入 Authenticator App 上的 6 位數代碼)</value></data>
+  <data name="Test Verification Code" xml:space="preserve"><value>驗證碼測試（輸入 Authenticator App 上的 6 位數代碼）</value></data>
   <data name="Verify Code" xml:space="preserve"><value>驗證代碼</value></data>
   <data name="Deception &amp; Honey-Accounts" xml:space="preserve"><value>動態欺敵防禦與誘餌帳號</value></data>
   <data name="Enable honey-account one-strike defense" xml:space="preserve"><value>啟用誘餌帳號一擊即鎖機制</value></data>
@@ -949,9 +949,9 @@
   <data name="SOAR script path" xml:space="preserve"><value>觸發永久硬封鎖時執行之指令碼路徑</value></data>
   <data name="Browse..." xml:space="preserve"><value>瀏覽...</value></data>
   <data name="RESTful Management API" xml:space="preserve"><value>RESTful Management API 服務</value></data>
-  <data name="Enable RESTful Management API" xml:space="preserve"><value>啟用 RESTful Management API (預設 TCP 8443)</value></data>
+  <data name="Enable RESTful Management API" xml:space="preserve"><value>啟用 RESTful Management API（預設 TCP 8443）</value></data>
   <data name="Management API port" xml:space="preserve"><value>API 監聽通訊埠</value></data>
-  <data name="Management API key (X-Api-Key)" xml:space="preserve"><value>API 認證金鑰 (X-Api-Key Header)</value></data>
+  <data name="Management API key (X-Api-Key)" xml:space="preserve"><value>API 認證金鑰（X-Api-Key Header）</value></data>
   <data name="Generate API Key" xml:space="preserve"><value>隨機產生金鑰</value></data>
   <data name="CIS Windows Server Benchmark &amp; Forensics" xml:space="preserve"><value>CIS Windows Server 安全基準合規掃描與取證評估</value></data>
   <data name="Run CIS Benchmark Scan" xml:space="preserve"><value>執行 CIS 合規掃描</value></data>
@@ -962,8 +962,8 @@
   <data name="Title" xml:space="preserve"><value>評估項目名稱</value></data>
   <data name="Current Value" xml:space="preserve"><value>目前設定值</value></data>
   <data name="Remediation Advice" xml:space="preserve"><value>改善建議處置</value></data>
-  <data name="PASS" xml:space="preserve"><value>符合 (PASS)</value></data>
-  <data name="FAIL" xml:space="preserve"><value>未符合 (FAIL)</value></data>
+  <data name="PASS" xml:space="preserve"><value>符合（PASS）</value></data>
+  <data name="FAIL" xml:space="preserve"><value>未符合（FAIL）</value></data>
   <data name="Firewall" xml:space="preserve"><value>防火牆原則</value></data>
   <data name="Audit Policy" xml:space="preserve"><value>安全性稽核原則</value></data>
   <data name="Account Policy" xml:space="preserve"><value>帳戶安全性原則</value></data>
@@ -973,14 +973,14 @@
   <data name="Windows Firewall: Private Profile State" xml:space="preserve"><value>Windows 防火牆：私人設定檔啟用狀態</value></data>
   <data name="Windows Firewall: Public Profile State" xml:space="preserve"><value>Windows 防火牆：公用設定檔啟用狀態</value></data>
   <data name="Security Event Log: Maximum Size" xml:space="preserve"><value>安全性事件日誌：容量大小上限設定</value></data>
-  <data name="Audit Logon Failures (Event 4625)" xml:space="preserve"><value>稽核登入失敗事件 (Event 4625)</value></data>
+  <data name="Audit Logon Failures (Event 4625)" xml:space="preserve"><value>稽核登入失敗事件（Event 4625）</value></data>
   <data name="Audit Kerberos Authentication Failures" xml:space="preserve"><value>稽核 Kerberos 驗證失敗事件</value></data>
   <data name="Disable Guest Account Status" xml:space="preserve"><value>停用 Guest 訪客帳戶狀態</value></data>
-  <data name="Digitally Sign Server Communication (SMB)" xml:space="preserve"><value>數位簽署伺服器通訊 (SMB 通訊協定簽章)</value></data>
+  <data name="Digitally Sign Server Communication (SMB)" xml:space="preserve"><value>數位簽署伺服器通訊（SMB 通訊協定簽章）</value></data>
   <data name="IDDS Community: DPAPI + ChaCha20 Database Encryption" xml:space="preserve"><value>IDDS Community：DPAPI + ChaCha20-Poly1305 資料庫靜態加密</value></data>
   <data name="IDDS Community: Core Protection Service State" xml:space="preserve"><value>IDDS Community：核心主動防禦服務執行狀態</value></data>
-  <data name="Enable Windows Firewall for this profile via GPO or netsh advfirewall." xml:space="preserve"><value>透過群組原則 (GPO) 或 netsh advfirewall 為此設定檔啟用 Windows 防火牆。</value></data>
-  <data name="Configure Security Log Max Size to >= 196608 KB (192 MB) via GPO." xml:space="preserve"><value>透過群組原則 (GPO) 將安全性日誌最大大小設定為 &gt;= 196608 KB (192 MB)。</value></data>
+  <data name="Enable Windows Firewall for this profile via GPO or netsh advfirewall." xml:space="preserve"><value>透過群組原則（GPO）或 netsh advfirewall 為此設定檔啟用 Windows 防火牆。</value></data>
+  <data name="Configure Security Log Max Size to >= 196608 KB (192 MB) via GPO." xml:space="preserve"><value>透過群組原則（GPO）將安全性日誌最大大小設定為 &gt;= 196608 KB (192 MB)。</value></data>
   <data name="Ensure Audit Logon is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>確保本機安全性原則中的「稽核登入事件」已設定為記錄成功與失敗。</value></data>
   <data name="Ensure Audit Kerberos is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>確保本機安全性原則中的「稽核 Kerberos 驗證」已設定為記錄成功與失敗。</value></data>
   <data name="Set registry value requiresecuritysignature at HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters to 1." xml:space="preserve"><value>將登錄機碼 requiresecuritysignature 設定為 1 以強制要求 SMB 伺服器通訊簽章。</value></data>
@@ -988,8 +988,8 @@
   <data name="Ensure SQLite database file is encrypted with ChaCha20-Poly1305." xml:space="preserve"><value>確保 SQLite 資料庫檔案已啟用 ChaCha20-Poly1305 靜態加密。</value></data>
   <data name="Ensure IDDS Community Windows Service is installed and actively running." xml:space="preserve"><value>確保 IDDS Community Windows 服務已安裝且正常運作中。</value></data>
   <data name="Success and Failure Enabled" xml:space="preserve"><value>成功與失敗稽核均已啟用</value></data>
-  <data name="Encrypted (ChaCha20-Poly1305)" xml:space="preserve"><value>已加密 (ChaCha20-Poly1305)</value></data>
-  <data name="Unencrypted (Plaintext)" xml:space="preserve"><value>未加密 (明文)</value></data>
+  <data name="Encrypted (ChaCha20-Poly1305)" xml:space="preserve"><value>已加密（ChaCha20-Poly1305）</value></data>
+  <data name="Unencrypted (Plaintext)" xml:space="preserve"><value>未加密（明文）</value></data>
   <data name="Running" xml:space="preserve"><value>執行中</value></data>
   <data name="Stopped" xml:space="preserve"><value>已停止</value></data>
   <data name="Service Not Found" xml:space="preserve"><value>服務未安裝</value></data>
@@ -1000,6 +1000,13 @@
   <data name="Ensure database encryption key is protected by Windows DPAPI machine/operator scope." xml:space="preserve"><value>確保資料庫加密金鑰受 Windows DPAPI（本機與操作人員範圍）保護。</value></data>
   <data name="Protected &amp; Healthy" xml:space="preserve"><value>防護服務正常執行中</value></data>
   <data name="Ensure IDDSCommunityProtection service is running with automatic start." xml:space="preserve"><value>確保 IDDSCommunityProtection 服務已設定為自動啟動且正常執行中。</value></data>
-  <data name="Enabled (1)" xml:space="preserve"><value>已啟用 (1)</value></data>
+  <data name="Enabled (1)" xml:space="preserve"><value>已啟用（1）</value></data>
   <data name="Registry key missing" xml:space="preserve"><value>登錄機碼不存在</value></data>
+  <data name="last 30 days" xml:space="preserve"><value>最近 30 天</value></data>
+  <data name="Standalone" xml:space="preserve"><value>獨立單機（Standalone）</value></data>
+  <data name="Edge Node" xml:space="preserve"><value>邊緣防禦節點（Edge Node）</value></data>
+  <data name="Threat Hub" xml:space="preserve"><value>威脅情資中繼中心（Threat Hub）</value></data>
+  <data name="Generic JSON" xml:space="preserve"><value>通用 JSON（Generic JSON）</value></data>
+  <data name="Chunghwa HiCloud" xml:space="preserve"><value>中華電信 HiCloud</value></data>
+  <data name="Generic Webhook" xml:space="preserve"><value>通用 Webhook</value></data>
 </root>

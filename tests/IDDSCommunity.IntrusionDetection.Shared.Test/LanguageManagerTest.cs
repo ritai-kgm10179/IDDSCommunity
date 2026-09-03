@@ -65,9 +65,9 @@ public class LanguageManagerTest
     public void NotificationEmail_Localization_FormatsProperlyInChineseAndEnglish()
     {
         LanguageManager.Instance.Initialize("zh-TW");
-        Assert.AreEqual("IDDS 社群版：解除封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Unlock notification ({0})", "192.168.1.100"));
-        Assert.AreEqual("IDDS 社群版：軟封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Soft lock notification ({0})", "192.168.1.100"));
-        Assert.AreEqual("IDDS 社群版：硬封鎖通知 (192.168.1.100)", Strings.Format("IDDS Community: Hard lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS 社群版：解除封鎖通知（192.168.1.100）", Strings.Format("IDDS Community: Unlock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS 社群版：軟封鎖通知（192.168.1.100）", Strings.Format("IDDS Community: Soft lock notification ({0})", "192.168.1.100"));
+        Assert.AreEqual("IDDS 社群版：硬封鎖通知（192.168.1.100）", Strings.Format("IDDS Community: Hard lock notification ({0})", "192.168.1.100"));
         Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被硬封鎖（永久封鎖）。", Strings.Format("Client with IP address {0} was hard locked.", "192.168.1.100"));
         Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被軟封鎖。", Strings.Format("Client with IP address {0} was soft locked.", "192.168.1.100"));
         Assert.AreEqual("IP 位址為 192.168.1.100 之用戶端已被解除封鎖。", Strings.Format("Client with IP address {0} was unlocked.", "192.168.1.100"));

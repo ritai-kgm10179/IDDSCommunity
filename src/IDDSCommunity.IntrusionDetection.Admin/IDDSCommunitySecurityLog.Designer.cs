@@ -96,7 +96,7 @@
             this.labelFilter.Name = "labelFilter";
             this.labelFilter.Size = new System.Drawing.Size(67, 13);
             this.labelFilter.TabIndex = 11;
-            this.labelFilter.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("last 24 hours");
+            this.labelFilter.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("last 30 days");
             //
             // pictureBox2
             //

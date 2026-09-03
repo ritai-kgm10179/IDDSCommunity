@@ -31,4 +31,7 @@ public Guid Id { get; set; }
     /// 取得或設定 本地化顯示名稱。
     /// </summary>
 public string DisplayName { get; set; } = string.Empty;
+
+    /// <inheritdoc/>
+    public override string ToString() => DisplayName;
 }

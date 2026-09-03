@@ -32,10 +32,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.configurationPanel.AutoScroll = true;
             this.configurationPanel.BorderColor = System.Drawing.SystemColors.ControlText;
-            this.configurationPanel.Location = new System.Drawing.Point(355, 28);
+            this.configurationPanel.Location = new System.Drawing.Point(435, 16);
             this.configurationPanel.Name = "configurationPanel";
             this.configurationPanel.PaintBorder = false;
-            this.configurationPanel.Size = new System.Drawing.Size(580, 584);
+            this.configurationPanel.Size = new System.Drawing.Size(533, 515);
             this.configurationPanel.TabIndex = 2;
             // 
             // iddscommunitySettingsNavigation
@@ -43,12 +43,12 @@
             this.iddscommunitySettingsNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
             this.iddscommunitySettingsNavigation.BackColor = System.Drawing.Color.White;
-            this.iddscommunitySettingsNavigation.Location = new System.Drawing.Point(24, 28);
+            this.iddscommunitySettingsNavigation.Location = new System.Drawing.Point(12, 16);
             this.iddscommunitySettingsNavigation.Name = "iddscommunitySettingsNavigation";
             this.iddscommunitySettingsNavigation.SeparatorColor = System.Drawing.Color.FromArgb(((int)(((byte)(191)))), ((int)(((byte)(191)))), ((int)(((byte)(191)))));
             this.iddscommunitySettingsNavigation.ShowSeparator = true;
             this.iddscommunitySettingsNavigation.ShowTopMenu = false;
-            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(320, 584);
+            this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(415, 515);
             this.iddscommunitySettingsNavigation.TabIndex = 0;
             this.iddscommunitySettingsNavigation.NavigationChanged += new System.EventHandler(this.iddscommunitySettingsNavigation_NavigationChanged);
             // 
@@ -59,7 +59,7 @@
             this.Controls.Add(this.configurationPanel);
             this.Controls.Add(this.iddscommunitySettingsNavigation);
             this.Name = "IDDSCommunityAgentConfiguration";
-            this.Size = new System.Drawing.Size(960, 634);
+            this.Size = new System.Drawing.Size(978, 549);
             this.ResumeLayout(false);
 
         }

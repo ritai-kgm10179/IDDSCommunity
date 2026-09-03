@@ -205,7 +205,14 @@ public partial class PanelNotificationSettings : UserControl
             Location = new Point(x, currentY + 18),
             Size = new Size(controlWidth, 23)
         };
-        comboBoxWebhookPlatform.Items.AddRange(["None (0)", "MicrosoftTeams (1)", "Slack (2)", "Discord (3)", "Telegram (4)", "GenericJson (5)"]);
+        comboBoxWebhookPlatform.Items.AddRange([
+            Strings.Get("None"),
+            "Microsoft Teams",
+            "Slack",
+            "Discord",
+            "Telegram",
+            Strings.Get("Generic JSON")
+        ]);
         comboBoxWebhookPlatform.SelectedIndexChanged += (_, _) =>
         {
             UpdateWebhookControlsState();
@@ -408,7 +415,7 @@ public partial class PanelNotificationSettings : UserControl
             Location = new Point(x, currentY + 18),
             Size = new Size(160, 23)
         };
-        comboBoxSyslogProtocol.Items.AddRange(["UDP (0)", "TCP (1)", "TLS (2)"]);
+        comboBoxSyslogProtocol.Items.AddRange(["UDP", "TCP", "TLS"]);
         comboBoxSyslogProtocol.SelectedIndexChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelSyslogProtocol);
         Controls.Add(comboBoxSyslogProtocol);
@@ -429,7 +436,7 @@ public partial class PanelNotificationSettings : UserControl
             Location = new Point(x + 175, currentY + 18),
             Size = new Size(175, 23)
         };
-        comboBoxSyslogFormat.Items.AddRange(["RFC 5424 (0)", "RFC 3164 (1)", "CEF (2)"]);
+        comboBoxSyslogFormat.Items.AddRange(["RFC 5424", "RFC 3164", "CEF"]);
         comboBoxSyslogFormat.SelectedIndexChanged += (_, _) => SetEditMode(true);
         Controls.Add(labelSyslogFormat);
         Controls.Add(comboBoxSyslogFormat);

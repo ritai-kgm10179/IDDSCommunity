@@ -110,10 +110,76 @@ public sealed class PanelComplianceAndForensics : UserControl
 
         Controls.Add(listChecks);
         listChecks.BringToFront();
+        listChecks.Resize += (_, _) => AutoResizeListViewColumns();
+        AutoResizeListViewColumns();
     }
 
+    private bool _isResizingColumns;
+
+    /// <summary>
+    /// 自動計算並最佳化 ListView 各欄位寬度，使其符合內容與標頭尺寸並自適應容器寬度。
+    /// </summary>
+    public void AutoResizeListViewColumns()
+    {
+        if (_isResizingColumns || listChecks == null || listChecks.Columns.Count == 0) return;
+        _isResizingColumns = true;
+        listChecks.SuspendLayout();
+        try
+        {
+            if (listChecks.Items.Count > 0)
+            {
+                listChecks.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+                for (int i = 0; i < listChecks.Columns.Count; i++)
+                {
+                    int contentWidth = listChecks.Columns[i].Width;
+                    listChecks.AutoResizeColumn(i, ColumnHeaderAutoResizeStyle.HeaderSize);
+                    int headerWidth = listChecks.Columns[i].Width;
+                    listChecks.Columns[i].Width = Math.Max(contentWidth, headerWidth) + 16;
+                }
+            }
+            else
+            {
+                listChecks.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+                for (int i = 0; i < listChecks.Columns.Count; i++)
+                {
+                    listChecks.Columns[i].Width += 20;
+                }
+            }
+
+            int totalWidth = 0;
+            for (int i = 0; i < listChecks.Columns.Count; i++)
+            {
+                totalWidth += listChecks.Columns[i].Width;
+            }
+            int availableWidth = listChecks.ClientSize.Width;
+            if (availableWidth > totalWidth && listChecks.Columns.Count >= 6)
+            {
+                int remaining = availableWidth - totalWidth;
+                int col4Share = remaining / 3;
+                int col5Share = remaining - col4Share;
+                listChecks.Columns[4].Width += col4Share;
+                listChecks.Columns[5].Width += col5Share;
+            }
+        }
+        finally
+        {
+            listChecks.ResumeLayout();
+            _isResizingColumns = false;
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        AutoResizeListViewColumns();
+    }
+
+    /// <summary>
+    /// 執行本機 CIS 安全基準合規掃描並更新清單顯示。
+    /// </summary>
     [SupportedOSPlatform("windows")]
-    private void RunCisScan()
+    internal void RunCisScan()
     {
         btnRunScan.Enabled = false;
         try
@@ -143,10 +209,14 @@ public sealed class PanelComplianceAndForensics : UserControl
             lblScore.ForeColor = latestResult.ComplianceScore >= 80.0 ? Color.DarkGreen : Color.DarkOrange;
             lblScore.Text = $"{latestResult.ComplianceScore}% ({latestResult.PassedChecks}/{latestResult.TotalChecks})";
             btnExportReport.Enabled = true;
+            AutoResizeListViewColumns();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (Environment.GetEnvironmentVariable("IDDS_TEST_MODE") != "1")
+            {
+                MessageBox.Show(ex.Message, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         finally
         {

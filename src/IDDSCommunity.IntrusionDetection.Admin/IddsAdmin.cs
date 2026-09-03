@@ -816,6 +816,8 @@ public partial class IddsAdmin : Form
     /// <param name="e">FormClosingEventArgs 物件。</param>
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        logReader?.Stop();
+        timerRefreshServiceStatus?.Stop();
         _panelAgentConfiguration?.FlushUnsavedChanges();
         base.OnFormClosing(e);
     }

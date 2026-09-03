@@ -635,5 +635,8 @@ public Dictionary<string, string> CustomConfigurationTypes
 
         return 90;
     }
+
+    /// <inheritdoc/>
+    public override string ToString() => DisplayName;
 }
 

@@ -1002,5 +1002,12 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Ensure IDDSCommunityProtection service is running with automatic start." xml:space="preserve"><value>Ensure IDDSCommunityProtection service is running with automatic start.</value></data>
   <data name="Enabled (1)" xml:space="preserve"><value>Enabled (1)</value></data>
   <data name="Registry key missing" xml:space="preserve"><value>Registry key missing</value></data>
+  <data name="last 30 days" xml:space="preserve"><value>last 30 days</value></data>
+  <data name="Standalone" xml:space="preserve"><value>Standalone</value></data>
+  <data name="Edge Node" xml:space="preserve"><value>Edge Node</value></data>
+  <data name="Threat Hub" xml:space="preserve"><value>Threat Hub</value></data>
+  <data name="Generic JSON" xml:space="preserve"><value>Generic JSON</value></data>
+  <data name="Chunghwa HiCloud" xml:space="preserve"><value>Chunghwa HiCloud</value></data>
+  <data name="Generic Webhook" xml:space="preserve"><value>Generic Webhook</value></data>
 </root>
 

@@ -89,13 +89,13 @@ public sealed class PanelCloudPerimeterSettings : UserControl
             Font = defaultFont
         };
         comboProviderType.Items.AddRange([
-            "None (0)",
-            "AWS WAFv2 (1)",
-            "Azure NSG (2)",
-            "GCP Cloud Armor (3)",
-            "Cloudflare WAF (4)",
-            "Chunghwa HiCloud (5)",
-            "Generic Webhook (6)"
+            Strings.Get("None"),
+            "AWS WAFv2",
+            "Azure NSG",
+            "GCP Cloud Armor",
+            "Cloudflare WAF",
+            Strings.Get("Chunghwa HiCloud"),
+            Strings.Get("Generic Webhook")
         ]);
         comboProviderType.SelectedIndex = 0;
         Controls.Add(comboProviderType);
