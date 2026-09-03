@@ -156,10 +156,10 @@
     <value>目前軟封鎖</value>
   </data>
   <data name="IDDSCommunity IDDS" xml:space="preserve">
-    <value>IDDS 社群版 入侵防禦系統</value>
+    <value>IDDS 社群版入侵防禦系統</value>
   </data>
   <data name="IDDSCommunity IDDS is starting..." xml:space="preserve">
-    <value>IDDS 社群版 正在啟動…</value>
+    <value>IDDS 社群版正在啟動…</value>
   </data>
   <data name="Daily report" xml:space="preserve">
     <value>每日報表</value>
@@ -478,8 +478,8 @@
   <data name="Usage:" xml:space="preserve"><value>用法：</value></data>
   <data name="Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately." xml:space="preserve"><value>確定要從封鎖清單移除選取的位址嗎？這些位址將立即能夠存取您的伺服器。</value></data>
   <data name="Unlock selected IP Addresses" xml:space="preserve"><value>解除封鎖選取的 IP 位址</value></data>
-  <data name="IDDSCommunity Intrusion Detection" xml:space="preserve"><value>IDDS 社群版 入侵防禦系統</value></data>
-  <data name="IDDSCommunity IDDS is starting up..." xml:space="preserve"><value>IDDS 社群版 正在啟動…</value></data>
+  <data name="IDDSCommunity Intrusion Detection" xml:space="preserve"><value>IDDS 社群版入侵防禦系統</value></data>
+  <data name="IDDSCommunity IDDS is starting up..." xml:space="preserve"><value>IDDS 社群版正在啟動…</value></data>
   <data name="Safe networks" xml:space="preserve"><value>安全網路</value></data>
   <data name="Notification settings" xml:space="preserve"><value>通知設定</value></data>
   <data name="SMTP configuration" xml:space="preserve"><value>SMTP 設定</value></data>
@@ -533,8 +533,8 @@
   <data name="AgentProxy AttackDetected subscriber failed: {0}" xml:space="preserve"><value>AgentProxy AttackDetected 訂閱者失敗：{0}</value></data>
   <data name="Firewall block failed for {0}: {1}" xml:space="preserve"><value>防火牆封鎖 {0} 失敗：{1}</value></data>
   <data name="Firewall reconciliation failed for {0}: {1}" xml:space="preserve"><value>防火牆對帳 {0} 失敗：{1}</value></data>
-  <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS 社群版 入侵防禦系統 - 版本 {0}</value></data>
-  <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS 社群版 入侵偵測測試郵件</value></data>
+  <data name="IDDSCommunity Intrusion Detection - Version {0}" xml:space="preserve"><value>IDDS 社群版入侵防禦系統 - 版本 {0}</value></data>
+  <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS 社群版入侵偵測測試郵件</value></data>
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS 社群版管理工具的測試郵件。</value></data>
   <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDSCommunity 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>

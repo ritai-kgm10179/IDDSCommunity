@@ -1,6 +1,6 @@
 # SQLite 資料庫維護
 
-IDDS 社群版 的資料庫維護分為自動維護與必須停用服務的人工維護，所有成功操作都會寫入 `ProtectionAuditLog`。主資料庫、WAL 與維護備份均由 SQLite3 Multiple Ciphers 以 ChaCha20-Poly1305 加密；256 位元隨機資料庫金鑰另由 Windows DPAPI 本機範圍保護。
+IDDS 社群版的資料庫維護分為自動維護與必須停用服務的人工維護，所有成功操作都會寫入 `ProtectionAuditLog`。主資料庫、WAL 與維護備份均由 SQLite3 Multiple Ciphers 以 ChaCha20-Poly1305 加密；256 位元隨機資料庫金鑰另由 Windows DPAPI 本機範圍保護。
 
 ## 自動維護
 
