@@ -1,6 +1,6 @@
 # IDDS 社群版（IDDS Community）
 
-IDDS 社群版是 Windows Server 上的社群維護入侵偵測與主動防護系統。它會由可載入的代理程式分析支援的服務事件或通訊協定失敗回應，將事件送入有界非同步處理管線，並透過 Windows 防火牆封鎖達到門檻的來源 IP。
+IDDS 社群版（IDDS Community）是一套專為 Windows Server 打造的開源主機型入侵偵測與主動防禦系統（HIDS/IPS）。系統透過模組化代理程式（Agent）即時監控各項服務日誌與認證失敗事件，以高效非同步管線進行關聯分析；當攻擊行為達到預設門檻時，即自動調用 Windows 防火牆精準封鎖惡意來源 IP。
 
 ## AI 產製聲明
 
