@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IDDS Community Installation and User Guide" />
+  <title>Installation and User Guide - IDDS Community</title>
+  <style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --border-color: #94a3b8;
+  --border-light: #cbd5e1;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-light: #ccfbf1;
+  --focus-ring: #0f766e;
+  --table-stripe: #f8fafc;
+  --table-border: #94a3b8;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --badge-bg: #0f766e;
+  --badge-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #64748b;
+  --border-light: #374151;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-light: #134e4a;
+  --focus-ring: #2dd4bf;
+  --table-stripe: #111827;
+  --table-border: #64748b;
+  --card-bg: #111827;
+  --card-border: #374151;
+  --badge-bg: #134e4a;
+  --badge-text: #2dd4bf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #64748b;
+    --border-light: #374151;
+    --accent: #2dd4bf;
+    --accent-hover: #5eead4;
+    --accent-light: #134e4a;
+    --focus-ring: #2dd4bf;
+    --table-stripe: #111827;
+    --table-border: #64748b;
+    --card-bg: #111827;
+    --card-border: #374151;
+    --badge-bg: #134e4a;
+    --badge-text: #2dd4bf;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  word-break: break-word;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+header[role="banner"] {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-container {
+  max-width: 76rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-btn, .lang-switch-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover, .lang-switch-btn:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.layout-wrapper {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 20rem 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 960px) {
+  .layout-wrapper {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+nav[role="navigation"] {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  font-size: 0.9375rem;
+  border-right: 1px solid var(--border-light);
+}
+
+@media (max-width: 960px) {
+  nav[role="navigation"] {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+nav h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav li {
+  margin-bottom: 0.4rem;
+}
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+nav a:hover, nav a:focus-visible {
+  color: var(--accent);
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+main {
+  min-width: 0;
+  max-width: 52rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.75rem;
+}
+
+h2 {
+  font-size: 1.625rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+ul, ol {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  padding-left: 1.75rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--accent);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 0 6px 6px 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+  border: 1px solid var(--table-border);
+}
+
+caption {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--table-border);
+}
+
+th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+tr:nth-child(even) {
+  background: var(--table-stripe);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-light);
+  margin: 2.5rem 0;
+}
+
+footer[role="contentinfo"] {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  padding: 2.5rem 1.5rem;
+  margin-top: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+@media print {
+  header[role="banner"], nav[role="navigation"], .theme-toggle-btn, .lang-switch-btn, .skip-link {
+    display: none !important;
+  }
+  .layout-wrapper {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+}
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <header role="banner">
+    <div class="header-container">
+      <div class="header-title-group">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#0f766e" />
+          <path d="M16 6L24 10V16C24 21.5 20.5 25.5 16 27C11.5 25.5 8 21.5 8 16V10L16 6Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M13 16L15.5 18.5L20 13.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="header-title">IDDS Community</span>
+        <span class="version-badge">v3.0.0</span>
+      </div>
+
+      <div class="header-controls">
+        <a href="USER-GUIDE.zh-TW.html" class="lang-switch-btn" aria-label="Switch language">正體中文</a>
+        <button id="theme-toggle" class="theme-toggle-btn" type="button"
+          data-text-auto="Theme: Auto"
+          data-text-light="Theme: Light"
+          data-text-dark="Theme: Dark">
+          Theme: Auto
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+<nav role="navigation" aria-label="Table of Contents">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><a href="#sec-1-system-architecture">1. System Architecture</a></li>
+    <li><a href="#sec-2-installation-upgrade-and-uninstallation">2. Installation, Upgrade, and Uninstallation</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-fresh-installation">2.1 Fresh Installation</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-uninstallation">2.3 Uninstallation</a></li>
+    <li><a href="#sec-3-administration-console-guide">3. Administration Console Guide</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-dashboard">3.1 📊 Dashboard</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-security-log-siem-search">3.2 🔎 Security Log &amp; SIEM Search</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-3-current-locks-manual-relief">3.3 🔒 Current Locks &amp; Manual Relief</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-4-safe-networks-allow-list">3.4 🛡️ Safe Networks (Allow List)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-5-agent-configuration">3.5 ⚙️ Agent Configuration</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-6-lockout-policy">3.6 🚨 Lockout Policy</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-7-smtp-notifications">3.7 📧 SMTP Notifications</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-8-database-maintenance-and-compaction">3.8 🧹 Database Maintenance and Compaction</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-9-threat-intelligence-distributed-cluster-defense">3.9 🌐 Threat Intelligence &amp; Distributed Cluster Defense</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-10-multi-channel-webhook-notifications">3.10 💬 Multi-Channel Webhook Notifications</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-11-honeypot-decoy-agent">3.11 🍯 Honeypot Decoy Agent</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-12-oasis-stix-2-1-threat-sharing-iso-iec-27001-2022-reports">3.12 📊 OASIS STIX 2.1 Threat Sharing &amp; ISO/IEC 27001:2022 Reports</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-13-geoip-country-tagging-geofencing">3.13 🗺️ GeoIP Country Tagging &amp; Geofencing</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-14-traditional-soc-siem-integration-syslog-cef">3.14 📡 Traditional SOC / SIEM Integration (Syslog &amp; CEF)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-15-modern-observability-prometheus-grafana">3.15 📈 Modern Observability (Prometheus &amp; Grafana)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-16-official-automation-module-powershell-7">3.16 💻 Official Automation Module (PowerShell 7+)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-17-self-service-totp-unblock-portal">3.17 🔑 Self-Service TOTP Unblock Portal</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-18-cloud-perimeter-auto-sync-aws-azure-cloudflare">3.18 ☁️ Cloud Perimeter Auto-Sync (AWS, Azure, Cloudflare)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-19-honey-accounts-soar-script-automation">3.19 🎭 Honey Accounts &amp; SOAR Script Automation</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-20-restful-management-api">3.20 🔌 RESTful Management API</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-21-cis-windows-server-benchmark-forensics">3.21 📋 CIS Windows Server Benchmark &amp; Forensics</a></li>
+    <li><a href="#sec-4-frequently-asked-questions-faq">4. Frequently Asked Questions (FAQ)</a></li>
+  </ul>
+</nav>
+
+    <main id="main" role="main">
+      <article>
+<h1 id="sec-idds-community-installation-and-user-guide">IDDS Community - Installation and User Guide</h1>
+<p>Welcome to <strong>IDDS Community</strong>! This document provides a comprehensive guide for installation, Admin Console interface operations, SIEM search filtering, security agent configuration, and safe network management.</p>
+<hr />
+<h2 id="sec-1-system-architecture">1. System Architecture</h2>
+<p>IDDS Community is a high-performance Windows host-level intrusion detection and active defense system built on .NET 10, comprising three core components:</p>
+<ol>
+  <li><strong>IDDS Community Protection Service (<code>IDDSCommunity.IntrusionDetection.Service.exe</code>)</strong>:</li>
+</ol>
+<ul>
+  <li>Windows background service responsible for event subscriptions, log monitoring, brute-force attack detection, and automated Windows Firewall blocking.</li>
+</ul>
+<ol>
+  <li><strong>IDDS Community Admin Console (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>:</li>
+</ol>
+<ul>
+  <li>GUI administration console providing real-time dashboard monitoring, SIEM-grade log search, safe network list management, and security agent tuning.</li>
+</ul>
+<ol>
+  <li><strong>Setup Installer (<code>Setup.exe</code>)</strong>:</li>
+</ol>
+<ul>
+  <li>Standalone integrated installer/upgrade/repair/uninstallation tool supporting automatic version identification and all-user shortcut management.</li>
+</ul>
+<hr />
+<h2 id="sec-2-installation-upgrade-and-uninstallation">2. Installation, Upgrade, and Uninstallation</h2>
+<h3 id="sec-2-1-fresh-installation">2.1 Fresh Installation</h3>
+<ol>
+  <li>Run <code>Setup.exe</code> with <strong>Administrator Rights (Run as Administrator)</strong>.</li>
+  <li>Select desired shortcut options:</li>
+</ol>
+<ul>
+  <li><code>[x] Create desktop shortcut</code> (automatically written to Public Desktop <code>C:\Users\Public\Desktop</code>)</li>
+  <li><code>[x] Create Start Menu shortcut</code></li>
+</ul>
+<ol>
+  <li>Click <strong>"Install"</strong>. The installer will deploy to <code>C:\Program Files\IDDS Community</code> and start the background service.</li>
+</ol>
+<h3 id="sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</h3>
+<ul>
+  <li>When executing a newer version of <code>Setup.exe</code>, the installer automatically detects existing installations:</li>
+  <li><strong>Upgrade / Reinstall</strong>: Click <strong>"Reinstall"</strong> or <strong>"Upgrade"</strong> to seamlessly update service and agent assets.</li>
+  <li><strong>Downgrade Warning</strong>: Attempting to install an older version prompts a confirmation dialog to prevent accidental downgrades.</li>
+</ul>
+<h3 id="sec-2-3-uninstallation">2.3 Uninstallation</h3>
+<ol>
+  <li>Run <code>Setup.exe</code> and click <strong>"Uninstall"</strong> (displayed when already installed).</li>
+  <li>The installer automatically stops the Windows service, removes created firewall rules, and cleans up shortcuts.</li>
+</ol>
+<hr />
+<h2 id="sec-3-administration-console-guide">3. Administration Console Guide</h2>
+<p>Launch <strong>IDDS Community Admin Console (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>. The navigation menu on the left includes 8 core panels:</p>
+<h3 id="sec-3-1-dashboard">3.1 📊 Dashboard</h3>
+<ul>
+  <li><strong>Service Status</strong>: Displays current service state (Running / Stopped). Click "Start Service" or "Stop Service" as needed.</li>
+  <li><strong>Threat Visualizations</strong>: Bar and pie charts depicting attack attempts and lock counts per security agent.</li>
+  <li><strong>Protection Metrics</strong>: Summary of active security agents, soft locks, hard locks, and total blocked attacks.</li>
+</ul>
+<h3 id="sec-3-2-security-log-siem-search">3.2 🔎 Security Log & SIEM Search</h3>
+<p>Provides high-performance SIEM-grade attack log queries and multi-dimensional filtering:</p>
+<ul>
+  <li><strong>CIDR Subnet Search</strong>:</li>
+  <li>Enter a single IP address (e.g. <code>192.168.1.50</code>) or an <strong>IPv4 CIDR subnet (e.g. <code>192.168.1.0/24</code>)</strong> to parse all matching attack logs.</li>
+  <li><strong>Composite Event Status Filtering</strong>:</li>
+  <li>Filter by event types: <code>[x] Intrusion Attempt</code>, <code>[x] Soft Lock</code>, <code>[x] Hard Lock</code>, <code>[x] System</code>.</li>
+  <li><strong>Security Agent Filtering</strong>:</li>
+  <li>Filter by "All Security Agents" or specific agents (e.g. <code>RDP</code> or <code>OpenSSH</code>).</li>
+  <li><strong>250ms Debounced Input & Double Buffering</strong>:</li>
+  <li>Search box incorporates a 250ms debounce delay; DataGrid utilizes double-buffering for flicker-free scrolling.</li>
+</ul>
+<h3 id="sec-3-3-current-locks-manual-relief">3.3 🔒 Current Locks & Manual Relief</h3>
+<p>Manage source IP addresses currently locked out due to repeated failed logins:</p>
+<ul>
+  <li><strong>View Locked IPs</strong>: Lists blocked addresses, the triggering agent, lock status (Soft Lock / Hard Lock), remaining lock duration, and the time the lock was triggered.</li>
+  <li><strong>Manual Unlock (Remove Lock)</strong>:</li>
+  <li>Select an IP and click "Remove Lock" to immediately clear the lock and remove the address from the Windows Firewall rule.</li>
+  <li><strong>Promote to Hard Lock</strong>: Select a soft-locked entry to manually promote it to an enforced firewall hard lock.</li>
+</ul>
+<h3 id="sec-3-4-safe-networks-allow-list">3.4 🛡️ Safe Networks (Allow List)</h3>
+<p>Maintain IP addresses and subnets that are never blocked (management hosts, internal gateways, etc.):</p>
+<ul>
+  <li><strong>Add Allowed Address</strong>: Accepts a single IPv4, a single IPv6, an IPv4 CIDR (<code>192.168.0.0/16</code>), or an IPv6 CIDR (<code>fe80::/10</code>).</li>
+  <li><strong>Automatic Loopback Protection</strong>: Local IPv4 (<code>127.0.0.1</code>) and IPv6 (<code>::1</code>) are automatically recognized and protected at the service layer; no manual entry is required.</li>
+  <li><strong>Whitelist Collision Exclusion Guard</strong>: Even if an allow-listed IP crosses any agent's attack threshold, the firewall blocking module automatically excludes it, ensuring the management channel is never severed.</li>
+</ul>
+<h3 id="sec-3-5-agent-configuration">3.5 ⚙️ Agent Configuration</h3>
+<p>Configure failure thresholds and the sliding detection window per service:</p>
+<ul>
+  <li><strong>Supported Agent List</strong>:</li>
+  <li><code>Windows Network Logon</code> (SMB/network logon Event 4625)</li>
+  <li><code>Remote Desktop</code> (RDP logon failures)</li>
+  <li><code>Windows OpenSSH</code> (SSH service)</li>
+  <li><code>IIS Authentication</code> & <code>Web Security</code> (W3C 401 & HTTP attacks)</li>
+  <li><code>Microsoft SQL Server</code> / <code>MySQL</code> / <code>PostgreSQL</code> (database connection failures)</li>
+  <li><code>Mail Server</code> (POP3 / IMAP / SMTP authentication failures)</li>
+  <li><code>Generic FTP</code> & <code>FileZilla Server</code> (FTP authentication failures)</li>
+  <li><code>NPS / RADIUS Server</code> & <code>Windows DNS Server</code> & <code>Technitium DNS Security</code> & <code>FileMaker Server</code></li>
+  <li><strong>Threshold Tuning</strong>:</li>
+  <li>Independently configure each agent's "failure threshold" (e.g. <code>5 attempts</code>) and "detection window" (e.g. <code>300 seconds</code>).</li>
+</ul>
+<h3 id="sec-3-6-lockout-policy">3.6 🚨 Lockout Policy</h3>
+<p>Controls the escalating defensive response after an attack is triggered:</p>
+<ul>
+  <li><strong>Soft Lock</strong>: Once the initial threshold is reached, the offending IP is held in an in-memory lock for a configured duration (e.g. <code>15 minutes</code>), during which requests to the affected service from that IP are rejected.</li>
+  <li><strong>Hard Lock</strong>: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (the rule name includes the <code>Blocked by IDDS Community</code> prefix and belongs to the <code>IDDS Community</code> firewall rule group).</li>
+</ul>
+<h3 id="sec-3-7-smtp-notifications">3.7 📧 SMTP Notifications</h3>
+<p>Automatically send email alerts when a hard lock or a critical event is triggered:</p>
+<ul>
+  <li><strong>Sending Configuration</strong>: Configure the SMTP server, port, SSL/TLS encryption, sender, and recipient addresses.</li>
+  <li><strong>Test Email</strong>: Click "Send Test Email" to verify the SMTP configuration immediately.</li>
+  <li><strong>Encrypted Configuration Export</strong>: When exporting the configuration package, the SMTP password is protected with <strong>Argon2id key derivation + AES-256-GCM</strong> authenticated encryption so the secret is never exposed in plaintext.</li>
+</ul>
+<h3 id="sec-3-8-database-maintenance-and-compaction">3.8 🧹 Database Maintenance and Compaction</h3>
+<p>Manage SQLite historical logs, space reclamation, and integrity maintenance:</p>
+<ul>
+  <li><strong>Automatic Log Retention</strong>: The background service runs a maintenance pass every 24 hours by default, purging logs older than the configured retention period in batches. The retention period is adjustable and can help support log-retention requirements found in regulations such as PCI DSS; this software makes no official compliance claim, and organizations remain responsible for reviewing applicable requirements themselves.</li>
+  <li><strong>Manual Verified Backup</strong>: Click "Create Verified Backup" to produce a ChaCha20-Poly1305-encrypted, SHA-256-verified SQLite backup file; a separate "Verify Selected Backup" action confirms the file is complete and usable. Backups reuse the DPAPI-protected database key of the local host, so cross-machine disaster recovery requires the corresponding key-preservation procedure.</li>
+  <li><strong>Vacuum / Compact</strong>: Click "Reclaim Database Space" to run <code>PRAGMA optimize</code> and <code>VACUUM</code>, physically freeing disk space occupied by deleted data (a protective rollback copy is created automatically before the operation runs).</li>
+  <li><strong>Fully Localized Maintenance History</strong>: The history list supports full Traditional Chinese and English i18n translation (e.g. "log retention cleanup", "database space reclamation", "succeeded"), and remains consistent with the underlying audit log event codes.</li>
+</ul>
+<p>Local backups are intended for rapid recovery on the local machine and do not replace an off-site disaster recovery plan. Encrypted backups are bound to the DPAPI master key of the current host installation and cannot be restored on a different machine without that key.</p>
+<h3 id="sec-3-9-threat-intelligence-distributed-cluster-defense">3.9 🌐 Threat Intelligence & Distributed Cluster Defense</h3>
+<ul>
+  <li><strong>Distributed Cluster Defense Topology (Edge / Hub)</strong>:</li>
+  <li><code>Standalone</code>: Single-host independent defense and threat subscription without cluster synchronization.</li>
+  <li><code>EdgeNode</code>: <strong>Requires specifying the "Threat Hub Endpoint URL"</strong> (e.g. <code>https://hub.example.com:8443</code> or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub.</li>
+  <li><code>ThreatHub</code>: <strong>Does NOT require specifying an endpoint URL (ignored if provided)</strong>; only requires configuring the listening "Threat Hub Port" (default TCP 8443) and Cluster API Key; centrally fetches external feeds and broadcasts intelligence to connected edge nodes.</li>
+  <li><strong>Intelligent Probation & One-Strike Relock</strong>:</li>
+  <li>Automatically transitions permanent hard locks with no malicious activity after a configurable period (default 90 days) to a probation observation status, releasing them from the Windows Firewall to prevent stale IP reuse issues from telecom dynamic pools.</li>
+  <li>If an IP under probation triggers any violation again (1 attempt), it is immediately escalated back to a permanent hard lock without waiting for soft lock accumulation.</li>
+  <li><strong>Automated External Threat Feeds Subscription</strong>:</li>
+  <li>Supports automated subscription to open-source IPsum (levels 1-8), AbuseIPDB Blacklists (with API key and confidence threshold), and custom text feed URLs.</li>
+  <li>Feeds enforce TTL expiration (default 7 days) to prevent firewall rule bloat.</li>
+  <li><strong>Dual-Layer Bogon Guardrails & Dynamic DNS Resolver</strong>:</li>
+  <li>Enforces static RFC 1918 private IP hard-filtering alongside Team Cymru Fullbogons IPv4/IPv6 dynamic prefix synchronization to prevent accidental internal lockouts.</li>
+  <li>Safe Networks allow list supports FQDN hostnames (e.g. <code>office.ddns.net</code>) with background dynamic DNS resolution.</li>
+</ul>
+<h3 id="sec-3-10-multi-channel-webhook-notifications">3.10 💬 Multi-Channel Webhook Notifications</h3>
+<p>Enables real-time push alerts to enterprise messaging platforms and automated SOC pipelines:</p>
+<ul>
+  <li><strong>Supported Platforms</strong>: Microsoft Teams (Adaptive Cards 1.6), Slack (Block Kit), Discord (Rich Embed), Telegram (Bot API <code>sendMessage</code>), Generic JSON (RESTful Webhook).</li>
+  <li><strong>Granular Event Triggers</strong>: Independently trigger on Soft Lock, Hard Lock, and Unlock events.</li>
+  <li><strong>Connectivity Testing</strong>: Provides a "Test Webhook" button in "Settings -> Notifications" for instant endpoint verification.</li>
+</ul>
+<h3 id="sec-3-11-honeypot-decoy-agent">3.11 🍯 Honeypot Decoy Agent</h3>
+<p>Active deception deployed on unused ports (default TCP 23 Telnet, 2222 alternate SSH, 33890 alternate RDP) to catch threat actors early:</p>
+<ul>
+  <li><strong>Zero-Tolerance Hard Lock</strong>: Any unsolicited TCP connection attempt to a decoy port triggers an immediate permanent firewall block.</li>
+  <li><strong>Silent Drop (No Banner)</strong>: Immediately terminates connection without returning service banners or software identification.</li>
+  <li><strong>Whitelist Integration</strong>: Probing sources are verified against BogonIpFilter and Safe Networks allow list.</li>
+</ul>
+<h3 id="sec-3-12-oasis-stix-2-1-threat-sharing-iso-iec-27001-2022-reports">3.12 📊 OASIS STIX 2.1 Threat Sharing & ISO/IEC 27001:2022 Reports</h3>
+<ul>
+  <li><strong>OASIS STIX 2.1 JSON Export</strong>:</li>
+  <li>Exports local and cluster threat intelligence as standard STIX 2.1 JSON Bundles (<code>identity</code>, <code>indicator</code>, <code>report</code> SDOs) for integration with SIEM, MISP, OpenCTI, and SOAR systems.</li>
+  <li><strong>ISO/IEC 27001:2022 Annex A Audit Reports</strong>:</li>
+  <li>Built-in compliance report engine evaluating A.5.7 (Threat Intelligence), A.8.7 (Malware Protection / Active Defense), A.8.15 (Logging), A.8.16 (Monitoring Activities), A.8.20 (Network Security), and A.8.24 (Use of Cryptography) into executive HTML reports.</li>
+</ul>
+<h3 id="sec-3-13-geoip-country-tagging-geofencing">3.13 🗺️ GeoIP Country Tagging & Geofencing</h3>
+<ul>
+  <li><strong>High-Performance GeoIP Lookup</strong>: Resolves IPv4/IPv6 addresses to ISO 3166-1 country codes and names supporting both CIDR and IP range CSV formats.</li>
+  <li><strong>Automated Feed Updates & Local Offline Caching</strong>: Automatically downloads and refreshes GeoIP databases from remote URLs or local CSV files with fallback persistence in <code>%ProgramData%\IDDSCommunity\</code>.</li>
+  <li><strong>Active Country-Based Geo-blocking</strong>: Blocks inbound connections originating from designated country codes (e.g. CN, RU, KP) with immediate one-strike permanent hard lock escalation upon attack detection.</li>
+</ul>
+<h3 id="sec-3-14-traditional-soc-siem-integration-syslog-cef">3.14 📡 Traditional SOC / SIEM Integration (Syslog & CEF)</h3>
+<ul>
+  <li><strong>Standard Format Support</strong>:</li>
+  <li><strong>RFC 5424</strong>: Modern structured Syslog with enterprise PRI, Timestamp, and Structured-Data.</li>
+  <li><strong>RFC 3164</strong>: Traditional BSD Syslog for legacy collectors.</li>
+  <li><strong>ArcSight CEF (Common Event Format)</strong>: Industry-standard security format for Splunk, IBM QRadar, Micro Focus ArcSight.</li>
+  <li><strong>Transport Protocols</strong>: Supports UDP, TCP, and TLS encrypted transmission with built-in test buttons.</li>
+</ul>
+<h3 id="sec-3-15-modern-observability-prometheus-grafana">3.15 📈 Modern Observability (Prometheus & Grafana)</h3>
+<ul>
+  <li><strong>Built-in Prometheus Metrics</strong>:</li>
+  <li>Provides OpenMetrics / Prometheus standard <code>/metrics</code> endpoint (<code>idds_active_firewall_blocks</code>, <code>idds_uptime_seconds</code>, <code>idds_probation_ips_total</code>).</li>
+  <li>Provides JSON <code>/healthz</code> endpoint for uptime monitoring.</li>
+  <li><strong>Custom Binding & Scrape Allow List</strong>: Configurable listen IP address and monitoring CIDR subnet filtering.</li>
+  <li><strong>Grafana Dashboard Template</strong>: Ready-to-import dashboard JSON located at <a href="file:///d:/Dev/Project/Application/IDDSCommunity/assets/dashboards/idds-grafana-dashboard.json"><code>assets/dashboards/idds-grafana-dashboard.json</code></a>.</li>
+</ul>
+<h3 id="sec-3-16-official-automation-module-powershell-7">3.16 💻 Official Automation Module (PowerShell 7+)</h3>
+<p>Located at <a href="file:///d:/Dev/Project/Application/IDDSCommunity/tools/IDDSCommunity.PowerShell/"><code>tools/IDDSCommunity.PowerShell/</code></a>:</p>
+<ul>
+  <li><code>Get-IddsStatus</code>: Query service status and database state.</li>
+  <li><code>Get-IddsBlockedIp</code>: List all currently blocked IP addresses.</li>
+  <li><code>Get-IddsSafeNetwork</code> / <code>Add-IddsSafeNetwork</code> / <code>Remove-IddsSafeNetwork</code>: Manage allow lists.</li>
+  <li><code>Export-IddsStixBundle</code>: Export STIX 2.1 threat intelligence bundles via CLI.</li>
+  <li><code>Export-IddsIso27001Report</code>: Generate ISO 27001 compliance audit reports via CLI.</li>
+  <li><code>Test-IddsNotification</code>: Batch test notification endpoints.</li>
+</ul>
+<h3 id="sec-3-17-self-service-totp-unblock-portal">3.17 🔑 Self-Service TOTP Unblock Portal</h3>
+<p>Dedicated lightweight web portal on a separate port (default TCP 8088) allowing legitimate administrators or users to unblock themselves:</p>
+<ul>
+  <li><strong>TOTP Two-Factor Authentication (RFC 6238)</strong>: Compatible with Google Authenticator, Microsoft Authenticator, and standard TOTP apps.</li>
+  <li><strong>Instant Automatic Relief</strong>: Instantly removes the user's IP from the Windows Firewall upon successful code verification.</li>
+</ul>
+<h3 id="sec-3-18-cloud-perimeter-auto-sync-aws-azure-cloudflare">3.18 ☁️ Cloud Perimeter Auto-Sync (AWS, Azure, Cloudflare)</h3>
+<ul>
+  <li><strong>Dynamic Official IP Range Ingestion</strong>: Automatically fetches and parses published JSON IP range lists from AWS, Microsoft Azure, and Cloudflare.</li>
+  <li><strong>Automatic Allow List Merging</strong>: Automatically protects reverse proxies and CDN nodes from false-positive blockages.</li>
+</ul>
+<h3 id="sec-3-19-honey-accounts-soar-script-automation">3.19 🎭 Honey Accounts & SOAR Script Automation</h3>
+<ul>
+  <li><strong>Honey Accounts (Decoy Logins)</strong>: Configures decoy account names (e.g. <code>admin</code>, <code>root</code>, <code>test</code>, <code>guest</code>, <code>superadmin</code>). Any authentication attempt using these accounts triggers an immediate One-Strike Hard Lock.</li>
+  <li><strong>SOAR Script Execution</strong>: Executes custom PowerShell or Batch scripts upon critical security events with event parameters for incident workflow orchestration.</li>
+</ul>
+<h3 id="sec-3-20-restful-management-api">3.20 🔌 RESTful Management API</h3>
+<p>Secure lightweight HTTP/HTTPS REST API server (default TCP 8444) protected by API Keys and Bearer Tokens:</p>
+<ul>
+  <li><code>GET /api/v1/status</code>: Query service operational status and security metrics.</li>
+  <li><code>GET /api/v1/locks</code>: Retrieve active locked IP list.</li>
+  <li><code>POST /api/v1/locks/release</code>: Instantly unblock a specified IP.</li>
+  <li><code>POST /api/v1/locks/block</code>: Manually enforce a permanent hard block on a malicious IP.</li>
+  <li><code>GET /api/v1/safenetworks</code> / <code>POST /api/v1/safenetworks</code>: Manage safe network allow lists.</li>
+</ul>
+<h3 id="sec-3-21-cis-windows-server-benchmark-forensics">3.21 📋 CIS Windows Server Benchmark & Forensics</h3>
+<ul>
+  <li><strong>Five Security Principles Deep Evaluation</strong>: Scans Account Policies, Network Policies, Windows Firewall Configurations, Audit Policies, and Application Security.</li>
+  <li><strong>Instant Score & Remediation Advice</strong>: One-click benchmark scan calculating compliance percentage with detailed remediation guidelines for failed checks.</li>
+  <li><strong>Forensic Report Export</strong>: Exports compliance audit findings to JSON forensic evidence files.</li>
+</ul>
+<hr />
+<h2 id="sec-4-frequently-asked-questions-faq">4. Frequently Asked Questions (FAQ)</h2>
+<ul>
+  <li><strong>Q: I accidentally blocked my own management host's IP address. What should I do?</strong></li>
+  <li><strong>A</strong>: Open the Admin Console, go to "Current Locks", find the target IP, and click "Remove Lock". Afterward, be sure to add that IP or its CIDR subnet to the allow list on the "Safe Networks" page. If the TOTP Unblock Portal is enabled, you can also unblock yourself directly via your mobile authenticator.</li>
+  <li><strong>Q: Why isn't a firewall block rule taking effect?</strong></li>
+  <li><strong>A</strong>: Confirm that the <code>IDDSCommunityProtection</code> Windows service is running normally, and that the account it runs as has permission to manage the Windows Firewall.</li>
+  <li><strong>Q: When a node is configured as a Threat Hub, do I need to fill in the "Threat Hub Endpoint URL"?</strong></li>
+  <li><strong>A</strong>: No. The Threat Hub functions as the server listener and only requires configuring the listening port (e.g. 8443) and Cluster API Key for edge nodes to connect. Only Edge Nodes need to provide the Threat Hub Endpoint URL. If an endpoint URL is entered on a Threat Hub, it is safely ignored and will cause no errors.</li>
+  <li><strong>Q: How do I safely back up and migrate my configuration?</strong></li>
+  <li><strong>A</strong>: In the Admin Console, click "Settings > Export Configuration" to produce an encrypted <code>.json</code> package. After installing on the new server, choose "Import Configuration" to restore it in seconds.</li>
+</ul>
+
+      </article>
+    </main>
+  </div>
+
+  <footer role="contentinfo">
+    <p>IDDS Community is open-source software distributed under the MIT License. This document conforms to WCAG 2.2 AAA accessibility guidelines.</p>
+    <p>&copy; 2026 IDDS Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const storedTheme = localStorage.getItem('idds-theme') || 'auto';
+  
+  function applyTheme(theme) {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-auto') || '主題：自動';
+        themeToggle.setAttribute('aria-label', '目前為系統自動主題，點擊切換為淺色');
+      }
+    } else if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-dark') || '主題：深色';
+        themeToggle.setAttribute('aria-label', '目前為深色主題，點擊切換為自動');
+      }
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-light') || '主題：淺色';
+        themeToggle.setAttribute('aria-label', '目前為淺色主題，點擊切換為深色');
+      }
+    }
+  }
+
+  applyTheme(storedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+      const current = localStorage.getItem('idds-theme') || 'auto';
+      let next = 'light';
+      if (current === 'light') next = 'dark';
+      else if (current === 'dark') next = 'auto';
+      else next = 'light';
+      
+      localStorage.setItem('idds-theme', next);
+      applyTheme(next);
+    });
+  }
+})();
+  </script>
+</body>
+</html>

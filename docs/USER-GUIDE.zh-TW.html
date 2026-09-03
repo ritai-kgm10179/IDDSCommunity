@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IDDS Community 使用與安裝說明文件" />
+  <title>使用與安裝說明文件 - IDDS Community</title>
+  <style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --border-color: #94a3b8;
+  --border-light: #cbd5e1;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-light: #ccfbf1;
+  --focus-ring: #0f766e;
+  --table-stripe: #f8fafc;
+  --table-border: #94a3b8;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --badge-bg: #0f766e;
+  --badge-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #64748b;
+  --border-light: #374151;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-light: #134e4a;
+  --focus-ring: #2dd4bf;
+  --table-stripe: #111827;
+  --table-border: #64748b;
+  --card-bg: #111827;
+  --card-border: #374151;
+  --badge-bg: #134e4a;
+  --badge-text: #2dd4bf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #64748b;
+    --border-light: #374151;
+    --accent: #2dd4bf;
+    --accent-hover: #5eead4;
+    --accent-light: #134e4a;
+    --focus-ring: #2dd4bf;
+    --table-stripe: #111827;
+    --table-border: #64748b;
+    --card-bg: #111827;
+    --card-border: #374151;
+    --badge-bg: #134e4a;
+    --badge-text: #2dd4bf;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  word-break: break-word;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+header[role="banner"] {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-container {
+  max-width: 76rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-btn, .lang-switch-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover, .lang-switch-btn:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.layout-wrapper {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 20rem 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 960px) {
+  .layout-wrapper {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+nav[role="navigation"] {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  font-size: 0.9375rem;
+  border-right: 1px solid var(--border-light);
+}
+
+@media (max-width: 960px) {
+  nav[role="navigation"] {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+nav h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav li {
+  margin-bottom: 0.4rem;
+}
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+nav a:hover, nav a:focus-visible {
+  color: var(--accent);
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+main {
+  min-width: 0;
+  max-width: 52rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.75rem;
+}
+
+h2 {
+  font-size: 1.625rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+ul, ol {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  padding-left: 1.75rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--accent);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 0 6px 6px 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+  border: 1px solid var(--table-border);
+}
+
+caption {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--table-border);
+}
+
+th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+tr:nth-child(even) {
+  background: var(--table-stripe);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-light);
+  margin: 2.5rem 0;
+}
+
+footer[role="contentinfo"] {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  padding: 2.5rem 1.5rem;
+  margin-top: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+@media print {
+  header[role="banner"], nav[role="navigation"], .theme-toggle-btn, .lang-switch-btn, .skip-link {
+    display: none !important;
+  }
+  .layout-wrapper {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+}
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <header role="banner">
+    <div class="header-container">
+      <div class="header-title-group">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#0f766e" />
+          <path d="M16 6L24 10V16C24 21.5 20.5 25.5 16 27C11.5 25.5 8 21.5 8 16V10L16 6Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M13 16L15.5 18.5L20 13.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="header-title">IDDS Community</span>
+        <span class="version-badge">v3.0.0</span>
+      </div>
+
+      <div class="header-controls">
+        <a href="USER-GUIDE.en-US.html" class="lang-switch-btn" aria-label="Switch language">English</a>
+        <button id="theme-toggle" class="theme-toggle-btn" type="button"
+          data-text-auto="主題：自動"
+          data-text-light="主題：淺色"
+          data-text-dark="主題：深色">
+          主題：自動
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+<nav role="navigation" aria-label="文件導覽目錄">
+  <h2>文件導覽目錄</h2>
+  <ul>
+    <li><a href="#sec-1-系統架構簡介">1. 系統架構簡介</a></li>
+    <li><a href="#sec-2-系統安裝-升級與解除安裝">2. 系統安裝、升級與解除安裝</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-全新安裝-fresh-installation">2.1 全新安裝 (Fresh Installation)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-升級與修復-upgrade-reinstall">2.2 升級與修復 (Upgrade &amp; Reinstall)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-解除安裝-uninstallation">2.3 解除安裝 (Uninstallation)</a></li>
+    <li><a href="#sec-3-管理控制台-admin-console-深度使用指南">3. 管理控制台 (Admin Console) 深度使用指南</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-儀表板-dashboard-總覽">3.1 📊 儀表板 (Dashboard / 總覽)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-安全性記錄-security-log-siem-search">3.2 🔎 安全性記錄 (Security Log &amp; SIEM Search)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-3-目前封鎖-current-locks-manual-relief">3.3 🔒 目前封鎖 (Current Locks &amp; Manual Relief)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-4-安全網路-safe-networks-白名單">3.4 🛡️ 安全網路 (Safe Networks / 白名單)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-5-代理程式配置-agent-configuration">3.5 ⚙️ 代理程式配置 (Agent Configuration)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-6-防護政策設定-lockout-policy">3.6 🚨 防護政策設定 (Lockout Policy)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-7-smtp-告警與通知-smtp-notifications">3.7 📧 SMTP 告警與通知 (SMTP Notifications)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-8-資料庫維護與極致壓縮-database-maintenance">3.8 🧹 資料庫維護與極致壓縮 (Database Maintenance)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-9-威脅情報與跨主機叢集聯防-threat-intelligence-cluster-defense">3.9 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence &amp; Cluster Defense)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-10-多渠道-webhook-即時告警-webhook-notifications">3.10 💬 多渠道 Webhook 即時告警 (Webhook Notifications)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-11-誘餌蜜罐主動防禦-honeypot-decoy-agent">3.11 🍯 誘餌蜜罐主動防禦 (Honeypot Decoy Agent)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-12-oasis-stix-2-1-威脅情資交換與-iso-iec-27001-2022-稽核報表-stix-iso-27001-compliance">3.12 📊 OASIS STIX 2.1 威脅情資交換與 ISO/IEC 27001:2022 稽核報表 (STIX &amp; ISO 27001 Compliance)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-13-geoip-國家地理標記與區域封鎖-geo-fencing">3.13 🗺️ GeoIP 國家地理標記與區域封鎖 (Geo-fencing)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-14-傳統-soc-siem-協定即時轉送-syslog-cef-integration">3.14 📡 傳統 SOC / SIEM 協定即時轉送 (Syslog &amp; CEF Integration)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-15-現代-observability-監控-prometheus-grafana">3.15 📈 現代 Observability 監控 (Prometheus &amp; Grafana)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-16-官方自動化管理模組-powershell-automation-module">3.16 💻 官方自動化管理模組 (PowerShell Automation Module)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-17-合法使用者自助驗證解鎖門戶-self-service-totp-unblock-portal">3.17 🔑 合法使用者自助驗證解鎖門戶 (Self-Service TOTP Unblock Portal)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-18-雲端邊界安全網路動態同步-cloud-perimeter-auto-sync-aws-azure-cloudflare">3.18 ☁️ 雲端邊界安全網路動態同步 (Cloud Perimeter Auto-Sync: AWS, Azure, Cloudflare)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-19-蜜帳戶欺敵與-soar-指令碼自動化-honey-accounts-soar-automation">3.19 🎭 蜜帳戶欺敵與 SOAR 指令碼自動化 (Honey Accounts &amp; SOAR Automation)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-20-安全-restful-管理-api-restful-management-api">3.20 🔌 安全 RESTful 管理 API (RESTful Management API)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-21-cis-windows-server-安全基準合規掃描與取證評估-cis-benchmark-forensics">3.21 📋 CIS Windows Server 安全基準合規掃描與取證評估 (CIS Benchmark &amp; Forensics)</a></li>
+    <li><a href="#sec-4-常見問題與故障排除-faq">4. 常見問題與故障排除 (FAQ)</a></li>
+  </ul>
+</nav>
+
+    <main id="main" role="main">
+      <article>
+<h1 id="sec-idds-社群版-使用與安裝說明文件">IDDS 社群版 - 使用與安裝說明文件</h1>
+<p>歡迎使用 <strong>IDDS 社群版</strong>！本文件提供系統安裝、管理控制台 (Admin Console) 介面操作、SIEM 搜尋過濾、代理程式配置與安全網路設定之完整導覽。</p>
+<hr />
+<h2 id="sec-1-系統架構簡介">1. 系統架構簡介</h2>
+<p>IDDS 社群版 為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵測與主動防護系統，包含以下三個核心元件：</p>
+<ol>
+  <li><strong>IDDS 社群版 Protection Service (<code>IDDSCommunity.IntrusionDetection.Service.exe</code>)</strong>：</li>
+</ol>
+<ul>
+  <li>Windows 後台服務，負責事件訂閱、日誌監控、暴力破解攻擊偵測與自動 Windows 防火牆封鎖。</li>
+</ul>
+<ol>
+  <li><strong>IDDS 社群版 Admin Console (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>：</li>
+</ol>
+<ul>
+  <li>正體中文 GUI 管理控制台，提供即時儀表板監控、SIEM 級日誌搜尋、安全網路清單管理與代理程式調校。</li>
+</ul>
+<ol>
+  <li><strong>Setup 安裝程式 (<code>Setup.exe</code>)</strong>：</li>
+</ol>
+<ul>
+  <li>獨立整合式安裝/升級/修復/移除工具，支援版本自動識別與全使用者捷徑管理。</li>
+</ul>
+<hr />
+<h2 id="sec-2-系統安裝-升級與解除安裝">2. 系統安裝、升級與解除安裝</h2>
+<h3 id="sec-2-1-全新安裝-fresh-installation">2.1 全新安裝 (Fresh Installation)</h3>
+<ol>
+  <li>以 <strong>系統管理者權限 (Run as Administrator)</strong> 執行 <code>Setup.exe</code>。</li>
+  <li>勾選需求項目：</li>
+</ol>
+<ul>
+  <li><code>[x] 建立桌面捷徑</code>（自動寫入公用桌面 <code>C:\Users\Public\Desktop</code>）</li>
+  <li><code>[x] 建立開始功能表捷徑</code></li>
+</ul>
+<ol>
+  <li>點擊 <strong>「安裝」</strong> 按鈕，安裝程式將自動部署至 <code>C:\Program Files\IDDS Community</code> 並啟動背景服務。</li>
+</ol>
+<h3 id="sec-2-2-升級與修復-upgrade-reinstall">2.2 升級與修復 (Upgrade & Reinstall)</h3>
+<ul>
+  <li>當執行新版本 <code>Setup.exe</code> 時，系統會自動偵測已安裝之版本：</li>
+  <li><strong>升級/重新安裝</strong>：點擊 <strong>「重新安裝」</strong> 或 <strong>「升級」</strong> 無縫更新服務與代理程式資產。</li>
+  <li><strong>降級警告</strong>：若嘗試安裝較舊版本，系統將彈出警告對話框要求確認，防止誤將系統降級。</li>
+</ul>
+<h3 id="sec-2-3-解除安裝-uninstallation">2.3 解除安裝 (Uninstallation)</h3>
+<ol>
+  <li>執行 <code>Setup.exe</code> 點擊 <strong>「解除安裝」</strong>（當系統已安裝時顯示）。</li>
+  <li>安裝程式將自動停止 Windows 服務、刪除建立之防火牆規則並乾淨清理公用桌面與開始功能表捷徑。</li>
+</ol>
+<hr />
+<h2 id="sec-3-管理控制台-admin-console-深度使用指南">3. 管理控制台 (Admin Console) 深度使用指南</h2>
+<p>啟動 <strong>IDDS 社群版 管理控制台 (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>，主畫面左側為功能導引選單，包含以下 8 大核心功能面板：</p>
+<h3 id="sec-3-1-儀表板-dashboard-總覽">3.1 📊 儀表板 (Dashboard / 總覽)</h3>
+<ul>
+  <li><strong>服務狀態控制</strong>：頂部顯示目前背景服務運轉狀態 (已啟動／已停止)。若未啟動，可點擊「啟動服務」按鈕控制服務。</li>
+  <li><strong>即時攻擊威脅圖表</strong>：以長條圖與圓餅圖呈現各 Security Agent 偵測到的攻擊嘗試與封鎖次數。</li>
+  <li><strong>即時防護統計</strong>：顯示目前受保護代理程式總數、動態硬鎖定 IP 數、軟鎖定 IP 數及累積攔截攻擊次數。</li>
+</ul>
+<h3 id="sec-3-2-安全性記錄-security-log-siem-search">3.2 🔎 安全性記錄 (Security Log & SIEM Search)</h3>
+<p>提供高效能 SIEM 級攻擊日誌查詢與多維度過濾功能：</p>
+<ul>
+  <li><strong>CIDR 網段模糊搜尋</strong>：</li>
+  <li>在搜尋框輸入單一 IP（如 <code>192.168.1.50</code>）或 <strong>IPv4 CIDR 網段（如 <code>192.168.1.0/24</code>）</strong>，系統將自動解析出符合該網段內的所有攻擊日誌。</li>
+  <li><strong>複合事件狀態過濾</strong>：</li>
+  <li>提供事件狀態勾選方塊：<code>[x] 入侵嘗試</code>、<code>[x] 軟鎖定</code>、<code>[x] 硬鎖定</code>、<code>[x] 系統</code>，支援單選或多選組合篩選。</li>
+  <li><strong>代理程式選單篩選</strong>：</li>
+  <li>可選擇「全部代理程式」或特定模組（如 <code>RDP</code> 或 <code>OpenSSH</code>）精確定位問題。</li>
+  <li><strong>250ms 去彈跳搜尋與雙重緩衝</strong>：</li>
+  <li>搜尋框內建 250ms 去彈跳延遲 (Debounce Timer)，避免高頻打字造成介面卡頓；DataGrid 全面啟用雙重緩衝 (DoubleBuffering)，捲動零閃爍。</li>
+</ul>
+<h3 id="sec-3-3-目前封鎖-current-locks-manual-relief">3.3 🔒 目前封鎖 (Current Locks & Manual Relief)</h3>
+<p>管理因多次登入失敗而被系統暫時或永久封鎖的來源 IP：</p>
+<ul>
+  <li><strong>檢視鎖定 IP</strong>：列出受封鎖位址、觸發代理程式、鎖定狀態 (Soft Lock / Hard Lock)、剩餘鎖定時間與觸發時間。</li>
+  <li><strong>手動解除封鎖 (Remove Lock)</strong>：</li>
+  <li>選取特定 IP 後點擊「解除封鎖」，系統將即時解除鎖定並自 Windows 防火牆規則中移除該位址。</li>
+  <li><strong>硬鎖定轉換</strong>：選取軟鎖定條目，可手動將其提升為強制防火牆硬鎖定。</li>
+</ul>
+<h3 id="sec-3-4-安全網路-safe-networks-白名單">3.4 🛡️ 安全網路 (Safe Networks / 白名單)</h3>
+<p>維護永遠不被封鎖的安全 IP 與網段（管理主機、內部 Gateway 等）：</p>
+<ul>
+  <li><strong>新增允許位址</strong>：支援輸入單一 IPv4、單一 IPv6，或 IPv4 CIDR (<code>192.168.0.0/16</code>) / IPv6 CIDR (<code>fe80::/10</code>)。</li>
+  <li><strong>本機迴路自動保護</strong>：本機 IPv4 (<code>127.0.0.1</code>) 與 IPv6 (<code>::1</code>) 已由服務層底層自動識別保護，無需重複手動輸入。</li>
+  <li><strong>白名單碰撞防護 (Whitelist Collision Exclusion Guard)</strong>：白名單中的 IP 即使觸發任何 Agent 攻擊門檻，防火牆封鎖模組亦會自動剔除，確保管理通道永中斷。</li>
+</ul>
+<h3 id="sec-3-5-代理程式配置-agent-configuration">3.5 ⚙️ 代理程式配置 (Agent Configuration)</h3>
+<p>針對特定服務設定失敗門檻與滑動時間窗 (Sliding Window)：</p>
+<ul>
+  <li><strong>支援 Agent 清單</strong>：</li>
+  <li><code>Windows Network Logon</code> (SMB/網路登入 Event 4625)</li>
+  <li><code>Remote Desktop</code> (RDP 登入失敗)</li>
+  <li><code>Windows OpenSSH</code> (SSH 服務)</li>
+  <li><code>IIS Authentication</code> & <code>Web Security</code> (W3C 401 & HTTP 攻擊)</li>
+  <li><code>Microsoft SQL Server</code> / <code>MySQL</code> / <code>PostgreSQL</code> (資料庫連線失敗)</li>
+  <li><code>Mail Server</code> (POP3 / IMAP / SMTP 驗證失敗)</li>
+  <li><code>通用 FTP</code> & <code>FileZilla Server</code> (FTP 驗證失敗)</li>
+  <li><code>NPS / RADIUS Server</code> & <code>Windows DNS Server</code> & <code>Technitium DNS Security</code> & <code>FileMaker Server</code></li>
+  <li><strong>門檻調校</strong>：</li>
+  <li>可獨立設定個別 Agent 之「失敗次數上限」（例如 <code>5 次</code>）與「計算時間窗」（例如 <code>300 秒</code>）。</li>
+</ul>
+<h3 id="sec-3-6-防護政策設定-lockout-policy">3.6 🚨 防護政策設定 (Lockout Policy)</h3>
+<p>控制攻擊觸發後的階梯式防禦反應：</p>
+<ul>
+  <li><strong>軟鎖定 (Soft Lock)</strong>：當達到初級門檻時，暫時記憶體鎖定該 IP 一定時間（如 <code>15 分鐘</code>），期間拒絕該 IP 的特定服務請求。</li>
+  <li><strong>硬鎖定 (Hard Lock)</strong>：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱包含 <code>Blocked by IDDS Community</code> 前綴，並歸屬於 <code>IDDS Community</code> 防火牆規則群組）。</li>
+</ul>
+<h3 id="sec-3-7-smtp-告警與通知-smtp-notifications">3.7 📧 SMTP 告警與通知 (SMTP Notifications)</h3>
+<p>當系統觸發硬鎖定或嚴重事件時自動傳送 Email 告警：</p>
+<ul>
+  <li><strong>發信設定</strong>：設定 SMTP 伺服器、連接埠、SSL/TLS 加密、寄件者與收件者信箱。</li>
+  <li><strong>測試郵件</strong>：點擊「傳送測試郵件」即時驗證 SMTP 設定是否正確。</li>
+  <li><strong>加密設定匯出</strong>：設定檔匯出時，SMTP 密碼採用 <strong>Argon2id 金鑰衍生 + AES-256-GCM 高強度加密</strong>，確保機密不外洩。</li>
+</ul>
+<h3 id="sec-3-8-資料庫維護與極致壓縮-database-maintenance">3.8 🧹 資料庫維護與極致壓縮 (Database Maintenance)</h3>
+<p>管理 SQLite 歷史日誌、空間回收與完整性維護：</p>
+<ul>
+  <li><strong>自動日誌清理 (Retention)</strong>：背景服務預設配置 24 小時自動維護作業，將超過保留天數的舊日誌分批清理（保留天數可調整，有助於支援 PCI DSS 等法規對日誌保留之要求，惟本軟體不構成官方合規聲明，實際是否符合特定法規仍須由組織自行依適用條款審查）。</li>
+  <li><strong>手動安全備份與驗證</strong>：點擊「建立可驗證備份」自動建立 ChaCha20-Poly1305 加密且經 SHA-256 驗證之 SQLite 備份檔；提供獨立的「驗證選取的備份」動作確保檔案完整可用。備份沿用本機 DPAPI 保護的資料庫金鑰，跨機災難復原需配合金鑰保存程序。</li>
+  <li><strong>實體空間壓縮 (Vacuum / Compact)</strong>：點擊「回收資料庫空間」，執行 <code>PRAGMA optimize</code> 與 <code>VACUUM</code>，實體釋放已刪除資料所佔用的磁碟空間（執行前會自動建立防護回滾副本）。</li>
+  <li><strong>完整在地化維護歷程</strong>：歷程清單支援完整的正體中文 i18n 轉譯（如 <code>資料庫保留清理</code>、<code>資料庫空間回收</code>、<code>成功</code> 等），並維持底層 Audit Log 事件碼的一致性。</li>
+</ul>
+<h3 id="sec-3-9-威脅情報與跨主機叢集聯防-threat-intelligence-cluster-defense">3.9 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence & Cluster Defense)</h3>
+<ul>
+  <li><strong>分散式叢集聯防架構 (Edge / Hub Topology)</strong>：</li>
+  <li><code>Standalone</code>（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。</li>
+  <li><code>EdgeNode</code>（邊緣防禦節點）：<strong>需填寫「Threat Hub 端點網址」</strong>（如 <code>https://hub.example.com:8443</code> 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。</li>
+  <li><code>ThreatHub</code>（威脅情資中繼中心）：<strong>無需填寫端點網址（若填寫會被系統安全忽略）</strong>，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。</li>
+  <li><strong>動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)</strong>：</li>
+  <li>永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。</li>
+  <li>處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖。</li>
+  <li><strong>主動式外部威脅情報自動訂閱 (External Threat Feeds)</strong>：</li>
+  <li>支援訂閱開源 IPsum（分級 Level 1~8）、AbuseIPDB Blacklist（提供自備 API Key 與信心度門檻）與自訂 URL 清單。</li>
+  <li>情資具備 TTL 生命週期（預設 7 天），未再遭通報之外部 IP 將自動移出防火牆，防止規則無限膨脹。</li>
+  <li><strong>雙層 Bogon 與安全網路防護 (Bogon Guardrails & DDNS Resolver)</strong>：</li>
+  <li>整合靜態 RFC 1918 私有 IP 硬過濾與 Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步，杜絕內網誤封。</li>
+  <li>安全網路支援輸入 FQDN 網域名稱（如 <code>office.ddns.net</code>），由背景排程自動動態解析最新 IP 並維持白名單有效性。</li>
+</ul>
+<h3 id="sec-3-10-多渠道-webhook-即時告警-webhook-notifications">3.10 💬 多渠道 Webhook 即時告警 (Webhook Notifications)</h3>
+<p>支援將入侵事件即時推播至企業常用即時通訊平台與自動化 SOC 管線：</p>
+<ul>
+  <li><strong>支援平台</strong>：Microsoft Teams（Adaptive Cards 1.6 格式）、Slack（Block Kit 格式）、Discord（Rich Embed 嵌入卡片）、Telegram（Bot API <code>sendMessage</code>）、Generic JSON（標準 RESTful Webhook）。</li>
+  <li><strong>細緻事件觸發</strong>：可獨立勾選軟封鎖、硬封鎖與解除封鎖事件。</li>
+  <li><strong>一鍵連通性測試</strong>：於管理控制台「設定 → 通知」中提供「傳送測試 Webhook」功能，快速驗證 Webhook 端點與網路連通性。</li>
+</ul>
+<h3 id="sec-3-11-誘餌蜜罐主動防禦-honeypot-decoy-agent">3.11 🍯 誘餌蜜罐主動防禦 (Honeypot Decoy Agent)</h3>
+<p>主動部署於未使用的通訊埠（預設 TCP 23 Telnet、2222 替代 SSH、33890 替代 RDP），引誘攻擊者探測：</p>
+<ul>
+  <li><strong>主動誘捕與一擊必殺</strong>：任何對誘餌通訊埠的主動 TCP 探測連線將立即觸發入侵告警並由 Windows 防火牆施加硬封鎖。</li>
+  <li><strong>資訊不洩漏 (No Banner)</strong>：接收連線後立即斷開，不傳回任何服務識別標籤，確保主機安全。</li>
+  <li><strong>全域白名單聯動</strong>：探測來源自動經過 BogonIpFilter 與安全網路檢驗，防止誤觸。</li>
+</ul>
+<h3 id="sec-3-12-oasis-stix-2-1-威脅情資交換與-iso-iec-27001-2022-稽核報表-stix-iso-27001-compliance">3.12 📊 OASIS STIX 2.1 威脅情資交換與 ISO/IEC 27001:2022 稽核報表 (STIX & ISO 27001 Compliance)</h3>
+<ul>
+  <li><strong>OASIS STIX 2.1 格式匯出</strong>：</li>
+  <li>支援將本機與叢集聯防之威脅指標匯出為標準 STIX 2.1 JSON Bundle（包含 <code>identity</code>、<code>indicator</code> 與 <code>report</code> SDO 物件），便利與外部 SIEM、MISP、OpenCTI 或 SOAR 系統對接。</li>
+  <li><strong>ISO/IEC 27001:2022 附錄 A (Annex A) 合規稽核報表</strong>：</li>
+  <li>內建符合性稽核報表引擎，針對 A.5.7（威脅情報）、A.8.7（主動防禦）、A.8.15（日誌記錄）、A.8.16（活動監控）、A.8.20（網路安全）及 A.8.24（密碼學控制）產製專業 HTML 稽核報告與關鍵防護數據摘要。</li>
+</ul>
+<h3 id="sec-3-13-geoip-國家地理標記與區域封鎖-geo-fencing">3.13 🗺️ GeoIP 國家地理標記與區域封鎖 (Geo-fencing)</h3>
+<ul>
+  <li><strong>高效能 IP 地理位置解析</strong>：支援 IPv4 與 IPv6 網段（CIDR 及 IP 範圍格式）高速查詢所屬 ISO 3166-1 國家代碼與名稱。</li>
+  <li><strong>資料來源自動下載與本機離線快取</strong>：支援開源或自訂 GeoIP CSV 下載 URL（預設整合開源 Country CIDR 鏡像）定期背景自動更新，並於本機 <code>%ProgramData%\IDDSCommunity\</code> 建立離線快取備援，亦可指定本機離線 CSV 檔案路徑。</li>
+  <li><strong>基於國家的主動存取限制 (Geo-blocking)</strong>：可設定特定國家代碼（如 CN、RU、KP 等）阻絕規則；受限制國家之來源一旦發生攻擊行為，立即觸發一擊永久硬封鎖（One-Strike Hard Lock）落實邊界地理圍欄防禦。</li>
+</ul>
+<h3 id="sec-3-14-傳統-soc-siem-協定即時轉送-syslog-cef-integration">3.14 📡 傳統 SOC / SIEM 協定即時轉送 (Syslog & CEF Integration)</h3>
+<ul>
+  <li><strong>多格式標準支援</strong>：</li>
+  <li><strong>RFC 5424</strong>：現代結構化 Syslog 格式，包含標準企業 PRI、Timestamp 與 Structured-Data。</li>
+  <li><strong>RFC 3164</strong>：傳統 BSD Syslog 格式，相容各式傳統網路設備與日誌收集器。</li>
+  <li><strong>ArcSight CEF (Common Event Format)</strong>：業界標準事件格式，便利與 Splunk、IBM QRadar、Micro Focus ArcSight 無縫對接。</li>
+  <li><strong>傳輸協定</strong>：支援 UDP、TCP 與 TLS 加密傳輸，於控制台提供即時連通性測試按鈕。</li>
+</ul>
+<h3 id="sec-3-15-現代-observability-監控-prometheus-grafana">3.15 📈 現代 Observability 監控 (Prometheus & Grafana)</h3>
+<ul>
+  <li><strong>內建 Prometheus 指標端點</strong>：</li>
+  <li>提供符合 OpenMetrics / Prometheus 標準之 <code>/metrics</code> 抓取端點（如 <code>idds_active_firewall_blocks</code>、<code>idds_uptime_seconds</code>、<code>idds_probation_ips_total</code>）。</li>
+  <li>提供 <code>/healthz</code> JSON 健康狀態檢查端點。</li>
+  <li><strong>彈性安全監聽</strong>：支援管理者自訂監聽 IP（如 <code>0.0.0.0</code> 供外部 Prometheus 抓取、特定網卡或 <code>127.0.0.1</code>），並支援監控伺服器 CIDR 白名單過濾。</li>
+  <li><strong>戰情儀表板範本</strong>：於 <a href="file:///d:/Dev/Project/Application/IDDSCommunity/assets/dashboards/idds-grafana-dashboard.json"><code>assets/dashboards/idds-grafana-dashboard.json</code></a> 提供開箱即用的 Grafana 官方儀表板範本。</li>
+</ul>
+<h3 id="sec-3-16-官方自動化管理模組-powershell-automation-module">3.16 💻 官方自動化管理模組 (PowerShell Automation Module)</h3>
+<ul>
+  <li>位於 <a href="file:///d:/Dev/Project/Application/IDDSCommunity/tools/IDDSCommunity.PowerShell/"><code>tools/IDDSCommunity.PowerShell/</code></a>，提供標準 PowerShell 7+ 模組：</li>
+  <li><code>Get-IddsStatus</code>：查詢服務運行狀態與資料庫檔案。</li>
+  <li><code>Get-IddsBlockedIp</code>：列出目前所有防火牆封鎖之 IP 清單。</li>
+  <li><code>Get-IddsSafeNetwork</code> / <code>Add-IddsSafeNetwork</code> / <code>Remove-IddsSafeNetwork</code>：安全網路白名單快速管理。</li>
+  <li><code>Export-IddsStixBundle</code>：命令列一鍵匯出 STIX 2.1 JSON 情資。</li>
+  <li><code>Export-IddsIso27001Report</code>：命令列一鍵產製 ISO 27001 合規稽核報告。</li>
+  <li><code>Test-IddsNotification</code>：批次測試通知端點連通性。</li>
+</ul>
+<h3 id="sec-3-17-合法使用者自助驗證解鎖門戶-self-service-totp-unblock-portal">3.17 🔑 合法使用者自助驗證解鎖門戶 (Self-Service TOTP Unblock Portal)</h3>
+<p>當合法管理者或內部同仁因多次密碼輸入錯誤遭到防火牆封鎖時，可透過獨立專屬連接埠（預設 TCP 8088）存取內建 Web 解鎖門戶：</p>
+<ul>
+  <li><strong>TOTP 雙因素動態驗證 (RFC 6238)</strong>：支援搭配 Google Authenticator、Microsoft Authenticator 等標準 TOTP 應用程式。</li>
+  <li><strong>即時自動解除封鎖</strong>：驗證成功後系統立即自 Windows 防火牆放行該 IP，免除必須登入伺服器後台手動解鎖之負擔。</li>
+</ul>
+<h3 id="sec-3-18-雲端邊界安全網路動態同步-cloud-perimeter-auto-sync-aws-azure-cloudflare">3.18 ☁️ 雲端邊界安全網路動態同步 (Cloud Perimeter Auto-Sync: AWS, Azure, Cloudflare)</h3>
+<ul>
+  <li><strong>官方 IP 區段動態抓取</strong>：自動定期非同步抓取並解析 AWS、Microsoft Azure、Cloudflare 官方公布之最新 IP Range JSON 清單。</li>
+  <li><strong>自動合併動態白名單</strong>：將雲端服務供應商合法反向代理與 CDN IP 自動加入安全網路，防止反向代理流量遭誤封。</li>
+</ul>
+<h3 id="sec-3-19-蜜帳戶欺敵與-soar-指令碼自動化-honey-accounts-soar-automation">3.19 🎭 蜜帳戶欺敵與 SOAR 指令碼自動化 (Honey Accounts & SOAR Automation)</h3>
+<ul>
+  <li><strong>蜜帳戶欺敵 (Honey Accounts / Decoy Logins)</strong>：可設定特定虛擬誘餌帳戶名稱（如 <code>admin</code>, <code>root</code>, <code>test</code>, <code>guest</code>, <code>superadmin</code>）。任何針對此類帳戶的登入嘗試將立即觸發「一擊立即硬封鎖」，跳過累計軟鎖定門檻。</li>
+  <li><strong>SOAR 自訂自動化指令碼聯動 (SOAR Script Execution)</strong>：當系統觸發重大硬封鎖或特定威脅事件時，自動呼叫管理者預先撰寫之 PowerShell 或 Batch 腳本（傳入事件來源 IP、代理程式名稱、威脅等級等參數），無縫對接企業現有資安自動化處置流程。</li>
+</ul>
+<h3 id="sec-3-20-安全-restful-管理-api-restful-management-api">3.20 🔌 安全 RESTful 管理 API (RESTful Management API)</h3>
+<p>內建輕量化 HTTP/HTTPS REST API 伺服器（預設 TCP 8444），提供 API Key 認證與 Bearer Token 保護：</p>
+<ul>
+  <li><code>GET /api/v1/status</code>：查詢服務運行狀態與系統統計指標。</li>
+  <li><code>GET /api/v1/locks</code>：列出目前所有鎖定 IP 清單。</li>
+  <li><code>POST /api/v1/locks/release</code>：傳入 IP 參數即時解除特定 IP 之防火牆封鎖。</li>
+  <li><code>POST /api/v1/locks/block</code>：傳入 IP 參數強制將特定惡意來源施加永久硬封鎖。</li>
+  <li><code>GET /api/v1/safenetworks</code> / <code>POST /api/v1/safenetworks</code>：動態查詢與新增安全網路白名單。</li>
+</ul>
+<h3 id="sec-3-21-cis-windows-server-安全基準合規掃描與取證評估-cis-benchmark-forensics">3.21 📋 CIS Windows Server 安全基準合規掃描與取證評估 (CIS Benchmark & Forensics)</h3>
+<ul>
+  <li><strong>五大安全原則深度評估</strong>：涵蓋帳戶安全原則、網路通訊協定原則、Windows 防火牆組態、安全性稽核原則與應用程式安全性防護。</li>
+  <li><strong>即時合規評分與改善建議</strong>：一鍵執行完整 CIS 安全掃描，即時計算合規百分比，並針對未通過項目提供詳細之改善處置指引。</li>
+  <li><strong>取證報告匯出</strong>：支援將評估結果匯出為 JSON 取證檔案，利於資安稽核存檔與合規追蹤。</li>
+</ul>
+<hr />
+<h2 id="sec-4-常見問題與故障排除-faq">4. 常見問題與故障排除 (FAQ)</h2>
+<ul>
+  <li><strong>Q: 誤封鎖自己的管理主機 IP 該如何處置？</strong></li>
+  <li><strong>A</strong>: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。若已啟用 TOTP 自助解鎖門戶，亦可直接以手機 App 驗證解除。</li>
+  <li><strong>Q: 為什麼防火牆封鎖規則沒有生效？</strong></li>
+  <li><strong>A</strong>: 請確認 <code>IDDSCommunityProtection</code> Windows 服務正常運作，且執行帳戶具備管理 Windows 防火牆之權限。</li>
+  <li><strong>Q: 節點設定為 Threat Hub（威脅情資中繼中心）時，需要填寫「Threat Hub 端點網址」嗎？</strong></li>
+  <li><strong>A</strong>: 不需要。Threat Hub 是服務監聽端（Server），只需設定監聽連接埠（如 8443）與 API Key 供邊緣節點連入；只有邊緣節點（EdgeNode）才需要填寫 Threat Hub 的連線網址。若在 Threat Hub 誤填了網址，系統會安全忽略，不會產生任何異常。</li>
+  <li><strong>Q: 如何安全備份與轉移設定檔？</strong></li>
+  <li><strong>A</strong>: 在管理控制台中點擊「設定 > 匯出設定」，系統會產生加密的 <code>.json</code> 套件；至新伺服器安裝後選擇「匯入設定」即可在一秒內完成復原。</li>
+</ul>
+
+      </article>
+    </main>
+  </div>
+
+  <footer role="contentinfo">
+    <p>IDDS 社群版（IDDS Community）專案依據 MIT 授權條款開放原始碼。本文件符合 WCAG 2.2 AAA 無障礙規範與繁體中文（臺灣地區）技術用語。</p>
+    <p>&copy; 2026 IDDS Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const storedTheme = localStorage.getItem('idds-theme') || 'auto';
+  
+  function applyTheme(theme) {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-auto') || '主題：自動';
+        themeToggle.setAttribute('aria-label', '目前為系統自動主題，點擊切換為淺色');
+      }
+    } else if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-dark') || '主題：深色';
+        themeToggle.setAttribute('aria-label', '目前為深色主題，點擊切換為自動');
+      }
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-light') || '主題：淺色';
+        themeToggle.setAttribute('aria-label', '目前為淺色主題，點擊切換為深色');
+      }
+    }
+  }
+
+  applyTheme(storedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+      const current = localStorage.getItem('idds-theme') || 'auto';
+      let next = 'light';
+      if (current === 'light') next = 'dark';
+      else if (current === 'dark') next = 'auto';
+      else next = 'light';
+      
+      localStorage.setItem('idds-theme', next);
+      applyTheme(next);
+    });
+  }
+})();
+  </script>
+</body>
+</html>

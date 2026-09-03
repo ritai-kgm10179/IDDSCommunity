@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IDDS Community Installer User Guide" />
+  <title>Installer User Guide - IDDS Community</title>
+  <style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --border-color: #94a3b8;
+  --border-light: #cbd5e1;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-light: #ccfbf1;
+  --focus-ring: #0f766e;
+  --table-stripe: #f8fafc;
+  --table-border: #94a3b8;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --badge-bg: #0f766e;
+  --badge-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #64748b;
+  --border-light: #374151;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-light: #134e4a;
+  --focus-ring: #2dd4bf;
+  --table-stripe: #111827;
+  --table-border: #64748b;
+  --card-bg: #111827;
+  --card-border: #374151;
+  --badge-bg: #134e4a;
+  --badge-text: #2dd4bf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #64748b;
+    --border-light: #374151;
+    --accent: #2dd4bf;
+    --accent-hover: #5eead4;
+    --accent-light: #134e4a;
+    --focus-ring: #2dd4bf;
+    --table-stripe: #111827;
+    --table-border: #64748b;
+    --card-bg: #111827;
+    --card-border: #374151;
+    --badge-bg: #134e4a;
+    --badge-text: #2dd4bf;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  word-break: break-word;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+header[role="banner"] {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-container {
+  max-width: 76rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-btn, .lang-switch-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover, .lang-switch-btn:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.layout-wrapper {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 20rem 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 960px) {
+  .layout-wrapper {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+nav[role="navigation"] {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  font-size: 0.9375rem;
+  border-right: 1px solid var(--border-light);
+}
+
+@media (max-width: 960px) {
+  nav[role="navigation"] {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+nav h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav li {
+  margin-bottom: 0.4rem;
+}
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+nav a:hover, nav a:focus-visible {
+  color: var(--accent);
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+main {
+  min-width: 0;
+  max-width: 52rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.75rem;
+}
+
+h2 {
+  font-size: 1.625rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+ul, ol {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  padding-left: 1.75rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--accent);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 0 6px 6px 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+  border: 1px solid var(--table-border);
+}
+
+caption {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--table-border);
+}
+
+th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+tr:nth-child(even) {
+  background: var(--table-stripe);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-light);
+  margin: 2.5rem 0;
+}
+
+footer[role="contentinfo"] {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  padding: 2.5rem 1.5rem;
+  margin-top: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+@media print {
+  header[role="banner"], nav[role="navigation"], .theme-toggle-btn, .lang-switch-btn, .skip-link {
+    display: none !important;
+  }
+  .layout-wrapper {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+}
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <header role="banner">
+    <div class="header-container">
+      <div class="header-title-group">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#0f766e" />
+          <path d="M16 6L24 10V16C24 21.5 20.5 25.5 16 27C11.5 25.5 8 21.5 8 16V10L16 6Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M13 16L15.5 18.5L20 13.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="header-title">IDDS Community</span>
+        <span class="version-badge">v3.0.0</span>
+      </div>
+
+      <div class="header-controls">
+        <a href="SETUP-GUIDE.zh-TW.html" class="lang-switch-btn" aria-label="Switch language">正體中文</a>
+        <button id="theme-toggle" class="theme-toggle-btn" type="button"
+          data-text-auto="Theme: Auto"
+          data-text-light="Theme: Light"
+          data-text-dark="Theme: Dark">
+          Theme: Auto
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+<nav role="navigation" aria-label="Table of Contents">
+  <h2>Table of Contents</h2>
+  <ul>
+    <li><a href="#sec-1-system-requirements-and-prerequisites">1. System Requirements and Prerequisites</a></li>
+    <li><a href="#sec-2-installation-and-lifecycle-management">2. Installation and Lifecycle Management</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-fresh-installation">2.1 Fresh Installation</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-downgrade-protection">2.3 Downgrade Protection</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-uninstallation">2.4 Uninstallation</a></li>
+    <li><a href="#sec-3-automation-and-cli-verification">3. Automation and CLI Verification</a></li>
+    <li><a href="#sec-4-troubleshooting-faq">4. Troubleshooting FAQ</a></li>
+  </ul>
+</nav>
+
+    <main id="main" role="main">
+      <article>
+<h1 id="sec-idds-community-installer-user-guide-setup-guide">IDDS Community - Installer User Guide (Setup Guide)</h1>
+<p>Welcome to the <strong>IDDS Community</strong> Installer Guide! This document provides complete instructions for system administrators deploying, upgrading, repairing, and uninstalling IDDS Community using Setup.exe.</p>
+<hr />
+<h2 id="sec-1-system-requirements-and-prerequisites">1. System Requirements and Prerequisites</h2>
+<ul>
+  <li><strong>Supported Operating Systems</strong>:</li>
+  <li>Windows Server 2025, Windows Server 2022, Windows Server 2019, Windows Server 2016</li>
+  <li>Windows 11, Windows 10 (64-bit x64 or ARM64)</li>
+  <li><strong>Privilege Requirements</strong>:</li>
+  <li>Installation, upgrade, and uninstallation require <strong>Local Administrator Rights (Run as Administrator)</strong>. The installer automatically requests UAC elevation.</li>
+  <li><strong>Runtime Environment</strong>:</li>
+  <li>IDDS Community distributions are <strong>Self-Contained</strong>. The package includes an optimized .NET 10 runtime; target servers do not require pre-installed .NET SDKs or runtimes.</li>
+  <li><strong>Default Installation Paths</strong>:</li>
+  <li>Application Binaries: %ProgramFiles%\IDDS Community (typically C:\Program Files\IDDS Community)</li>
+  <li>Operational Data & Database: %ProgramData%\IDDSCommunity (typically C:\ProgramData\IDDSCommunity)</li>
+</ul>
+<hr />
+<h2 id="sec-2-installation-and-lifecycle-management">2. Installation and Lifecycle Management</h2>
+<h3 id="sec-2-1-fresh-installation">2.1 Fresh Installation</h3>
+<ol>
+  <li>Download the appropriate distribution archive (idds-community-3.0.0-win-x64.zip or idds-community-3.0.0-win-arm64.zip) from official GitHub Releases and extract files.</li>
+  <li>Right-click Setup.exe and select <strong>"Run as Administrator"</strong>.</li>
+  <li>Review the license agreement and version information.</li>
+  <li>Select shortcut preferences:</li>
+</ol>
+<ul>
+  <li><strong>Create Desktop Shortcut</strong>: Deploys a shortcut to Public Desktop (C:\Users\Public\Desktop) accessible to all administrators.</li>
+  <li><strong>Create Start Menu Shortcut</strong>: Installs shortcuts under the IDDS Community Start Menu folder.</li>
+</ul>
+<ol>
+  <li>Click <strong>"Install"</strong>.</li>
+  <li>The installer executes the following operations:</li>
+</ol>
+<ul>
+  <li>Deploys core service binaries, Admin Console, security agent plugins, and assets to %ProgramFiles%\IDDS Community.</li>
+  <li>Registers and launches the Windows background service: IDDSCommunityProtection.</li>
+  <li>Configures service startup to "Automatic (Delayed Start)" with recovery restart policies.</li>
+  <li>Initializes the DPAPI-encrypted SQLite database (iddscommunity.db).</li>
+  <li>Configures default firewall rule groups and shortcuts.</li>
+</ul>
+<ol>
+  <li>Click "Finish" to complete setup and optionally launch the Admin Console.</li>
+</ol>
+<h3 id="sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</h3>
+<ul>
+  <li>When executing Setup.exe on a system with an existing installation, the installer detects the deployed version and changes the action button to <strong>"Upgrade"</strong> or <strong>"Reinstall"</strong>.</li>
+  <li>During upgrade:</li>
+</ul>
+<ol>
+  <li>The installer gracefully halts the active IDDSCommunityProtection service.</li>
+  <li>Updates core executables and agent plugins while preserving user logs, lock records, and safe network configurations.</li>
+  <li>Executes forward database schema migrations.</li>
+  <li>Restarts the protection service and verifies service health.</li>
+</ol>
+<h3 id="sec-2-3-downgrade-protection">2.3 Downgrade Protection</h3>
+<ul>
+  <li>If an administrator executes an older installer on a system running a newer version, the installer displays a downgrade warning modal.</li>
+  <li>Explicit confirmation is required to prevent accidental schema incompatibility.</li>
+</ul>
+<h3 id="sec-2-4-uninstallation">2.4 Uninstallation</h3>
+<ol>
+  <li>Trigger uninstallation through:</li>
+</ol>
+<ul>
+  <li>Windows "Settings -> Apps & Features -> IDDS Community -> Uninstall".</li>
+  <li>Executing %ProgramFiles%\IDDS Community\Setup.exe and selecting <strong>"Uninstall"</strong>.</li>
+  <li>Start Menu shortcut "Uninstall IDDS Community".</li>
+</ul>
+<ol>
+  <li>The uninstallation process:</li>
+</ol>
+<ul>
+  <li>Halts and removes the IDDSCommunityProtection Windows service.</li>
+  <li>Deletes all firewall block rules created by the system (IDDS Community rule group).</li>
+  <li>Removes desktop and Start Menu shortcuts.</li>
+  <li>Removes %ProgramFiles%\IDDS Community program files.</li>
+</ul>
+<ol>
+  <li><strong>Data Retention</strong>:</li>
+</ol>
+<ul>
+  <li>To protect forensic audit history, the database and logs in %ProgramData%\IDDSCommunity are preserved. To completely purge data, remove this directory manually.</li>
+</ul>
+<hr />
+<h2 id="sec-3-automation-and-cli-verification">3. Automation and CLI Verification</h2>
+<p>The installer supports automated test verification for CI/CD environments:</p>
+<p>`powershell</p>
+<h1 id="sec-perform-automated-reinstall-verification-uninstall-fresh-install-overwrite-reinstall">Perform automated reinstall verification (uninstall, fresh install, overwrite reinstall)</h1>
+<p>.\Setup.exe --verify-reinstall</p>
+<p>`</p>
+<hr />
+<h2 id="sec-4-troubleshooting-faq">4. Troubleshooting FAQ</h2>
+<ul>
+  <li><strong>Q1: Setup prompts "Access Denied" upon launch?</strong></li>
+  <li><strong>Resolution</strong>: Ensure you launch Setup.exe with "Run as Administrator". Installing Windows services and firewall rules requires elevated administrative privileges.</li>
+  <li><strong>Q2: Service fails to start after installation?</strong></li>
+  <li><strong>Resolution</strong>: Open Windows Event Viewer (Windows Logs -> Application) and inspect entries from source IDDSCommunity. Verify that security software has not blocked service registration or required communication ports.</li>
+  <li><strong>Q3: Blocked IPs remain inaccessible after uninstallation?</strong></li>
+  <li><strong>Resolution</strong>: If the Windows Firewall service was inactive during uninstallation, open "Windows Defender Firewall with Advanced Security" and delete inbound/outbound rules prefixed with Blocked by IDDS Community.</li>
+</ul>
+
+      </article>
+    </main>
+  </div>
+
+  <footer role="contentinfo">
+    <p>IDDS Community is open-source software distributed under the MIT License. This document conforms to WCAG 2.2 AAA accessibility guidelines.</p>
+    <p>&copy; 2026 IDDS Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const storedTheme = localStorage.getItem('idds-theme') || 'auto';
+  
+  function applyTheme(theme) {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-auto') || '主題：自動';
+        themeToggle.setAttribute('aria-label', '目前為系統自動主題，點擊切換為淺色');
+      }
+    } else if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-dark') || '主題：深色';
+        themeToggle.setAttribute('aria-label', '目前為深色主題，點擊切換為自動');
+      }
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-light') || '主題：淺色';
+        themeToggle.setAttribute('aria-label', '目前為淺色主題，點擊切換為深色');
+      }
+    }
+  }
+
+  applyTheme(storedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+      const current = localStorage.getItem('idds-theme') || 'auto';
+      let next = 'light';
+      if (current === 'light') next = 'dark';
+      else if (current === 'dark') next = 'auto';
+      else next = 'light';
+      
+      localStorage.setItem('idds-theme', next);
+      applyTheme(next);
+    });
+  }
+})();
+  </script>
+</body>
+</html>

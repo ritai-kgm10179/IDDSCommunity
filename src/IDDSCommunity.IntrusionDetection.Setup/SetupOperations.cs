@@ -269,12 +269,26 @@ internal static class SetupOperations
     {
         string[] candidatePaths =
         [
-            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
-            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
-            Path.Combine(InstallDirectory, "USER-GUIDE.md"),
-            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.md"),
-            Path.Combine(AppContext.BaseDirectory, "README.md"),
-            Path.Combine(InstallDirectory, "README.md")
+            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.zh-TW.html"),
+            Path.Combine(AppContext.BaseDirectory, "docs", "SETUP-GUIDE.zh-TW.html"),
+            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.html"),
+            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.zh-TW.html"),
+            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.html"),
+            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.html"),
+            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.en-US.html"),
+            Path.Combine(AppContext.BaseDirectory, "docs", "SETUP-GUIDE.en-US.html"),
+            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.html"),
+            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.html"),
+            Path.Combine(InstallDirectory, "SETUP-GUIDE.zh-TW.html"),
+            Path.Combine(InstallDirectory, "docs", "SETUP-GUIDE.zh-TW.html"),
+            Path.Combine(InstallDirectory, "SETUP-GUIDE.html"),
+            Path.Combine(InstallDirectory, "USER-GUIDE.zh-TW.html"),
+            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.html"),
+            Path.Combine(InstallDirectory, "USER-GUIDE.html"),
+            Path.Combine(InstallDirectory, "SETUP-GUIDE.en-US.html"),
+            Path.Combine(InstallDirectory, "docs", "SETUP-GUIDE.en-US.html"),
+            Path.Combine(InstallDirectory, "USER-GUIDE.en-US.html"),
+            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.en-US.html")
         ];
 
         foreach (string path in candidatePaths)

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string] $RuntimeIdentifier = 'win-x64',
@@ -66,12 +66,39 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'assets\asset-provenance.json'
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $payloadRoot -Force
 $userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
 $userGuideEnSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.md'
+$userGuideHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.html'
+$userGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.html'
+$setupGuideSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.md'
+$setupGuideEnSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.md'
+$setupGuideHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.html'
+$setupGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.html'
+
 if (Test-Path -LiteralPath $userGuideSource) {
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.md') -Force
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.zh-TW.md') -Force
 }
 if (Test-Path -LiteralPath $userGuideEnSource) {
     Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.en-US.md') -Force
+}
+if (Test-Path -LiteralPath $userGuideHtmlSource) {
+    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.html') -Force
+    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.zh-TW.html') -Force
+}
+if (Test-Path -LiteralPath $userGuideEnHtmlSource) {
+    Copy-Item -LiteralPath $userGuideEnHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.en-US.html') -Force
+}
+if (Test-Path -LiteralPath $setupGuideSource) {
+    Copy-Item -LiteralPath $setupGuideSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.zh-TW.md') -Force
+}
+if (Test-Path -LiteralPath $setupGuideEnSource) {
+    Copy-Item -LiteralPath $setupGuideEnSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.en-US.md') -Force
+}
+if (Test-Path -LiteralPath $setupGuideHtmlSource) {
+    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.html') -Force
+    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.zh-TW.html') -Force
+}
+if (Test-Path -LiteralPath $setupGuideEnHtmlSource) {
+    Copy-Item -LiteralPath $setupGuideEnHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.en-US.html') -Force
 }
 
 $pluginProjects = @(
@@ -94,6 +121,13 @@ foreach ($projectName in $pluginProjects) {
 $disallowedWinDivertFiles = @(Get-ChildItem -LiteralPath $payloadRoot -Recurse -File | Where-Object { $_.Name -like 'WinDivert*' })
 if ($disallowedWinDivertFiles.Count -ne 0) {
     throw "發行內容不得包含 WinDivert：$($disallowedWinDivertFiles.FullName -join ', ')"
+}
+
+# 排除安裝包與外掛代理程式中非執行期所需之符號檔 (*.pdb) 與編譯說明文件 (*.xml)
+$excludedBuildArtifacts = @(Get-ChildItem -LiteralPath $payloadRoot -Recurse -File | Where-Object { $_.Extension -in '.pdb', '.xml' })
+if ($excludedBuildArtifacts.Count -gt 0) {
+    Write-Host "排除非執行期資產 ($($excludedBuildArtifacts.Count) 個 *.pdb / *.xml 檔案)..."
+    $excludedBuildArtifacts | Remove-Item -Force
 }
 
 # Compress payload directory into a zip archive and embed it into the Setup project for a 100% self-contained Single EXE
@@ -131,15 +165,42 @@ finally {
     if (Test-Path -LiteralPath $payloadRoot) { Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
-$userGuideSource = Join-Path $repositoryRoot 'USER-GUIDE.md'
-$userGuideEnSource = Join-Path $repositoryRoot 'USER-GUIDE.en-US.md'
+$userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
+$userGuideEnSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.md'
+$userGuideHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.html'
+$userGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.html'
+$setupGuideSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.md'
+$setupGuideEnSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.md'
+$setupGuideHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.html'
+$setupGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.html'
 
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packageRoot -Force
 if (Test-Path -LiteralPath $userGuideSource) {
     Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.md') -Force
+    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.zh-TW.md') -Force
 }
 if (Test-Path -LiteralPath $userGuideEnSource) {
     Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $packageRoot 'USER-GUIDE.en-US.md') -Force
+}
+if (Test-Path -LiteralPath $userGuideHtmlSource) {
+    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.html') -Force
+    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.zh-TW.html') -Force
+}
+if (Test-Path -LiteralPath $userGuideEnHtmlSource) {
+    Copy-Item -LiteralPath $userGuideEnHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.en-US.html') -Force
+}
+if (Test-Path -LiteralPath $setupGuideSource) {
+    Copy-Item -LiteralPath $setupGuideSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.zh-TW.md') -Force
+}
+if (Test-Path -LiteralPath $setupGuideEnSource) {
+    Copy-Item -LiteralPath $setupGuideEnSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.en-US.md') -Force
+}
+if (Test-Path -LiteralPath $setupGuideHtmlSource) {
+    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.html') -Force
+    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.zh-TW.html') -Force
+}
+if (Test-Path -LiteralPath $setupGuideEnHtmlSource) {
+    Copy-Item -LiteralPath $setupGuideEnHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.en-US.html') -Force
 }
 
 # --- SBOM 生成 (SPDX 3.0 與相容性 SPDX 2.2) ---

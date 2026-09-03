@@ -117,5 +117,3 @@
   - **白名單最高優先權**：外部情報中若包含安全網路或 DDNS 網域名稱解析出的 IP，一律無條件跳過並記錄安全稽核。
   - **Hub 集中訂閱分發**：由 Threat Hub 統一對外訂閱情資並秒級同步至邊緣節點，防止重複對外請求。情資設定 TTL（預設 7 天）自動過期轉移。
   - **管理主控台視覺化配置**：於 [`IDDSCommunityApplicationSettings`](src/IDDSCommunity.IntrusionDetection.Admin/IDDSCommunityApplicationSettings.cs) 提供專屬 [`PanelThreatIntelligenceSettings`](src/IDDSCommunity.IntrusionDetection.Admin/PanelThreatIntelligenceSettings.cs) 面板，完整視覺化呈現拓撲角色、情資訂閱、門檻與 Fullbogons 參數。
-
-

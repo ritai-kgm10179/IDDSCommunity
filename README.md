@@ -46,7 +46,9 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 4. 到「代理程式」只啟用本機實際使用的服務，確認事件記錄或日誌來源後儲存設定。
 5. 啟動服務，從隔離測試主機製造受控的失敗登入，再到「安全性記錄」及「目前封鎖」確認結果。
 
-完整的 Agent 支援矩陣、首次設定、驗證、備份、報表、誤封鎖復原與移除步驟請參閱 [`docs/USER-GUIDE.zh-TW.md`](docs/USER-GUIDE.zh-TW.md)。
+完整的 Agent 支援矩陣、首次設定、驗證、備份、報表、誤封鎖復原與移除步驟請參閱 [使用說明文件（Markdown）](docs/USER-GUIDE.zh-TW.md)、[美化版使用說明文件（HTML / WCAG 2.2 AAA）](docs/USER-GUIDE.zh-TW.html)，以及 [Setup 安裝程式專屬指南（HTML）](docs/SETUP-GUIDE.zh-TW.html)。
+
+English documentation is also available: [User Guide (Markdown)](docs/USER-GUIDE.en-US.md) | [Enhanced User Guide (HTML / WCAG 2.2 AAA)](docs/USER-GUIDE.en-US.html) | [Setup Guide (HTML)](docs/SETUP-GUIDE.en-US.html).
 
 ## 建置與測試
 

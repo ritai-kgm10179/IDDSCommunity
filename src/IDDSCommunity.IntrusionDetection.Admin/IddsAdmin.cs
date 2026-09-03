@@ -905,18 +905,19 @@ public partial class IddsAdmin : Form
         string[] candidatePaths = isEnglish
             ?
             [
-                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.zh-TW.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.html")
             ]
             :
             [
-                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.md"),
-                System.IO.Path.Combine(AppContext.BaseDirectory, "README.md")
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.zh-TW.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.html"),
+                System.IO.Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.html")
             ];
 
         foreach (string path in candidatePaths)

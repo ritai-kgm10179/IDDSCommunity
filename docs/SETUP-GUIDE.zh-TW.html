@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="IDDS Community 安裝程式使用指南" />
+  <title>安裝程式使用指南 - IDDS Community</title>
+  <style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --border-color: #94a3b8;
+  --border-light: #cbd5e1;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-light: #ccfbf1;
+  --focus-ring: #0f766e;
+  --table-stripe: #f8fafc;
+  --table-border: #94a3b8;
+  --card-bg: #ffffff;
+  --card-border: #cbd5e1;
+  --badge-bg: #0f766e;
+  --badge-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #64748b;
+  --border-light: #374151;
+  --accent: #2dd4bf;
+  --accent-hover: #5eead4;
+  --accent-light: #134e4a;
+  --focus-ring: #2dd4bf;
+  --table-stripe: #111827;
+  --table-border: #64748b;
+  --card-bg: #111827;
+  --card-border: #374151;
+  --badge-bg: #134e4a;
+  --badge-text: #2dd4bf;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #64748b;
+    --border-light: #374151;
+    --accent: #2dd4bf;
+    --accent-hover: #5eead4;
+    --accent-light: #134e4a;
+    --focus-ring: #2dd4bf;
+    --table-stripe: #111827;
+    --table-border: #64748b;
+    --card-bg: #111827;
+    --card-border: #374151;
+    --badge-bg: #134e4a;
+    --badge-text: #2dd4bf;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  word-break: break-word;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #ffffff;
+  padding: 8px 16px;
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+header[role="banner"] {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.header-container {
+  max-width: 76rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.version-badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle-btn, .lang-switch-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover, .lang-switch-btn:hover {
+  background: var(--border-light);
+  color: var(--text-primary);
+}
+
+.layout-wrapper {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 20rem 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 960px) {
+  .layout-wrapper {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+nav[role="navigation"] {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  font-size: 0.9375rem;
+  border-right: 1px solid var(--border-light);
+}
+
+@media (max-width: 960px) {
+  nav[role="navigation"] {
+    position: static;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+nav h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+nav li {
+  margin-bottom: 0.4rem;
+}
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: block;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+nav a:hover, nav a:focus-visible {
+  color: var(--accent);
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+main {
+  min-width: 0;
+  max-width: 52rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2.25rem;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.75rem;
+}
+
+h2 {
+  font-size: 1.625rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+ul, ol {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  padding-left: 1.75rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  margin: 1.5em 0;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--accent);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 0 6px 6px 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.9375rem;
+  border: 1px solid var(--table-border);
+}
+
+caption {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--table-border);
+}
+
+th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+tr:nth-child(even) {
+  background: var(--table-stripe);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-light);
+  margin: 2.5rem 0;
+}
+
+footer[role="contentinfo"] {
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  padding: 2.5rem 1.5rem;
+  margin-top: 4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+@media print {
+  header[role="banner"], nav[role="navigation"], .theme-toggle-btn, .lang-switch-btn, .skip-link {
+    display: none !important;
+  }
+  .layout-wrapper {
+    display: block;
+    max-width: 100%;
+    padding: 0;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+  }
+}
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">跳至主要內容</a>
+
+  <header role="banner">
+    <div class="header-container">
+      <div class="header-title-group">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="32" height="32" rx="6" fill="#0f766e" />
+          <path d="M16 6L24 10V16C24 21.5 20.5 25.5 16 27C11.5 25.5 8 21.5 8 16V10L16 6Z" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M13 16L15.5 18.5L20 13.5" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="header-title">IDDS Community</span>
+        <span class="version-badge">v3.0.0</span>
+      </div>
+
+      <div class="header-controls">
+        <a href="SETUP-GUIDE.en-US.html" class="lang-switch-btn" aria-label="Switch language">English</a>
+        <button id="theme-toggle" class="theme-toggle-btn" type="button"
+          data-text-auto="主題：自動"
+          data-text-light="主題：淺色"
+          data-text-dark="主題：深色">
+          主題：自動
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+<nav role="navigation" aria-label="文件導覽目錄">
+  <h2>文件導覽目錄</h2>
+  <ul>
+    <li><a href="#sec-1-系統需求與前置準備">1. 系統需求與前置準備</a></li>
+    <li><a href="#sec-2-安裝流程與選項說明">2. 安裝流程與選項說明</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-全新安裝-fresh-installation">2.1 全新安裝（Fresh Installation）</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-升級與修復安裝-upgrade-repair">2.2 升級與修復安裝（Upgrade &amp; Repair）</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-降級防護機制-downgrade-protection">2.3 降級防護機制（Downgrade Protection）</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-解除安裝-uninstallation">2.4 解除安裝（Uninstallation）</a></li>
+    <li><a href="#sec-3-自動化與指令行支援-automation-cli">3. 自動化與指令行支援（Automation CLI）</a></li>
+    <li><a href="#sec-4-常見問題與故障排除-troubleshooting">4. 常見問題與故障排除（Troubleshooting）</a></li>
+  </ul>
+</nav>
+
+    <main id="main" role="main">
+      <article>
+<h1 id="sec-idds-社群版-安裝程式使用指南-setup-guide">IDDS 社群版 - 安裝程式使用指南（Setup Guide）</h1>
+<p>歡迎使用 <strong>IDDS 社群版（IDDS Community）</strong> 安裝程式！本指南針對系統管理員提供安裝程式（Setup.exe）之操作指引，涵蓋系統需求、全新部署、無縫升級、修復安裝、降級防護、解除安裝以及常見問題排查。</p>
+<hr />
+<h2 id="sec-1-系統需求與前置準備">1. 系統需求與前置準備</h2>
+<ul>
+  <li><strong>作業系統</strong>：</li>
+  <li>Windows Server 2025、Windows Server 2022、Windows Server 2019、Windows Server 2016</li>
+  <li>Windows 11、Windows 10（64 位元 x64 或 ARM64）</li>
+  <li><strong>執行權限</strong>：</li>
+  <li>安裝、升級與解除安裝需要具備<strong>本機系統管理員權限（Run as Administrator）</strong>，安裝程式會主動要求 UAC 提權確認。</li>
+  <li><strong>執行階段（Runtime）</strong>：</li>
+  <li>IDDS 社群版發行套件為<strong>自包含執行環境（Self-Contained Deployment）</strong>，安裝包已內建最佳化之 .NET 10 執行階段程式庫，目標主機無需預先手動安裝 .NET Runtime 或 SDK。</li>
+  <li><strong>預設安裝目錄</strong>：</li>
+  <li>程式二進位檔目錄：%ProgramFiles%\IDDS Community（即 C:\Program Files\IDDS Community）</li>
+  <li>運作資料與資料庫目錄：%ProgramData%\IDDSCommunity（即 C:\ProgramData\IDDSCommunity）</li>
+</ul>
+<hr />
+<h2 id="sec-2-安裝流程與選項說明">2. 安裝流程與選項說明</h2>
+<h3 id="sec-2-1-全新安裝-fresh-installation">2.1 全新安裝（Fresh Installation）</h3>
+<ol>
+  <li>自官方 GitHub Release 下載對應架構之安裝壓縮檔（idds-community-3.0.0-win-x64.zip 或 idds-community-3.0.0-win-arm64.zip）並解壓縮。</li>
+  <li>對 Setup.exe 按右鍵，選擇 <strong>「以系統管理員身分執行」</strong>。</li>
+  <li>於安裝精靈介面中檢視授權協議與版本資訊。</li>
+  <li>勾選所需之捷徑建立選項：</li>
+</ol>
+<ul>
+  <li><strong>建立桌面捷徑</strong>：於公用桌面（C:\Users\Public\Desktop）建立管理主控台捷徑，讓所有登入該主機之管理員皆可存取。</li>
+  <li><strong>建立開始功能表捷徑</strong>：於系統開始功能表（IDDS Community 資料夾）建立「IDDS Community Admin Console」與「解除安裝 IDDS Community」捷徑。</li>
+</ul>
+<ol>
+  <li>點擊 <strong>「安裝」</strong> 按鈕。</li>
+  <li>安裝程式將依序執行下列作業：</li>
+</ol>
+<ul>
+  <li>自動將核心程式檔、管理主控台、代理程式擴充元件與預設設定檔部署至 %ProgramFiles%\IDDS Community。</li>
+  <li>建立並啟動 Windows 核心服務：IDDSCommunityProtection（IDDS Community Protection Service）。</li>
+  <li>設定服務啟動類型為「自動（延遲啟動）」，並配置自動復原（當服務意外終止時自動重啟）。</li>
+  <li>初始化受 DPAPI 加密保護之 SQLite 安全資料庫（iddscommunity.db）。</li>
+  <li>建立系統防火牆基礎規則群組與公用捷徑。</li>
+</ul>
+<ol>
+  <li>安裝完成後，可勾選「啟動 IDDS 社群版管理主控台」並點擊「完成」立即開啟介面進行後續設定。</li>
+</ol>
+<h3 id="sec-2-2-升級與修復安裝-upgrade-repair">2.2 升級與修復安裝（Upgrade & Repair）</h3>
+<ul>
+  <li>當主機已存在舊版或相同版本之 IDDS 社群版時，執行新版 Setup.exe，系統將自動偵測並顯示已安裝版本。</li>
+  <li>安裝按鈕將動態轉為 <strong>「升級」</strong> 或 <strong>「重新安裝」</strong>。</li>
+  <li>點擊後，安裝程式將：</li>
+</ul>
+<ol>
+  <li>安全暫停並停止執行中之 IDDSCommunityProtection 服務。</li>
+  <li>更新核心主程式、代理程式擴充元件及靜態圖資（保留使用者的歷史日誌、封鎖名單及安全網路設定）。</li>
+  <li>自動執行 SQLite 資料庫綱要之平滑向前遷移（Forward Migration）。</li>
+  <li>重新啟動背景防護服務並驗證其運行健康度。</li>
+</ol>
+<h3 id="sec-2-3-降級防護機制-downgrade-protection">2.3 降級防護機制（Downgrade Protection）</h3>
+<ul>
+  <li>若嘗試以較舊版本之 Setup.exe 覆蓋安裝於已部署新版本之主機上，系統將彈出警告視窗，提示目前版本高於安裝檔版本。</li>
+  <li>系統將要求管理員明確確認是否執行降級，以避免資料庫綱要向下不相容造成服務啟動失敗。</li>
+</ul>
+<h3 id="sec-2-4-解除安裝-uninstallation">2.4 解除安裝（Uninstallation）</h3>
+<ol>
+  <li>透過下列任一方式啟動解除安裝程序：</li>
+</ol>
+<ul>
+  <li>至 Windows「設定 → 應用程式與功能」選擇「IDDS Community」點擊解除安裝。</li>
+  <li>執行 %ProgramFiles%\IDDS Community\Setup.exe 並點擊 <strong>「解除安裝」</strong>。</li>
+  <li>點擊開始功能表之「解除安裝 IDDS Community」捷徑。</li>
+</ul>
+<ol>
+  <li>解除安裝程式將執行下列清理作業：</li>
+</ol>
+<ul>
+  <li>安全停止並移除 IDDSCommunityProtection Windows 服務。</li>
+  <li>清除所有由系統動態建立之 Windows 防火牆阻絕規則（規則群組：IDDS Community）。</li>
+  <li>刪除公用桌面與開始功能表之捷徑項目。</li>
+  <li>移除 %ProgramFiles%\IDDS Community 程式檔案。</li>
+</ul>
+<ol>
+  <li><strong>資料保留原則</strong>：</li>
+</ol>
+<ul>
+  <li>為防止誤刪歷史資安鑑識紀錄與黑名單，歷史資料庫與稽核日誌目錄（%ProgramData%\IDDSCommunity）預設將完整保留。如需徹底抹除，可於解除安裝後手動刪除該資料夾。</li>
+</ul>
+<hr />
+<h2 id="sec-3-自動化與指令行支援-automation-cli">3. 自動化與指令行支援（Automation CLI）</h2>
+<p>安裝程式提供自動化驗證與 CI/CD 測試開關：</p>
+<p>`powershell</p>
+<h1 id="sec-執行自動化重新安裝驗證-先卸載-再全新安裝-再執行覆蓋安裝驗證">執行自動化重新安裝驗證（先卸載、再全新安裝、再執行覆蓋安裝驗證）</h1>
+<p>.\Setup.exe --verify-reinstall</p>
+<p>`</p>
+<hr />
+<h2 id="sec-4-常見問題與故障排除-troubleshooting">4. 常見問題與故障排除（Troubleshooting）</h2>
+<ul>
+  <li><strong>Q1: 啟動 Setup.exe 時提示「存取被拒絕（Access Denied）」？</strong></li>
+  <li><strong>排除方法</strong>：請確認您是否使用「以系統管理員身分執行」啟動安裝程式。Windows 服務安裝與系統防火牆操作必須具備 Elevated Administrator 權限。</li>
+  <li><strong>Q2: 安裝完成後，服務顯示「找不到服務」或無法啟動？</strong></li>
+  <li><strong>排除方法</strong>：開啟 Windows 事件檢視器（Event Viewer），依序檢查 Windows 記錄 → 應用程式，尋找來源為 IDDSCommunity 之錯誤紀錄。常見原因包含防毒軟體攔截服務註冊，或通訊埠（如 REST API 8444 或 Webhook 監聽）遭其他應用程式佔用。</li>
+  <li><strong>Q3: 解除安裝後，先前被封鎖的 IP 為何依然無法連線？</strong></li>
+  <li><strong>排除方法</strong>：解除安裝程序會自動調用 Windows 防火牆 API 批次清除規則。若解除安裝時防火牆服務被停用，可手動開啟「進階安全 Windows 防火牆」，搜尋名稱以 Blocked by IDDS Community 為開頭的規則並予以刪除。</li>
+</ul>
+
+      </article>
+    </main>
+  </div>
+
+  <footer role="contentinfo">
+    <p>IDDS 社群版（IDDS Community）專案依據 MIT 授權條款開放原始碼。本文件符合 WCAG 2.2 AAA 無障礙規範與繁體中文（臺灣地區）技術用語。</p>
+    <p>&copy; 2026 IDDS Community. All rights reserved.</p>
+  </footer>
+
+  <script>
+(function() {
+  const themeToggle = document.getElementById('theme-toggle');
+  const storedTheme = localStorage.getItem('idds-theme') || 'auto';
+  
+  function applyTheme(theme) {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-auto') || '主題：自動';
+        themeToggle.setAttribute('aria-label', '目前為系統自動主題，點擊切換為淺色');
+      }
+    } else if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-dark') || '主題：深色';
+        themeToggle.setAttribute('aria-label', '目前為深色主題，點擊切換為自動');
+      }
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (themeToggle) {
+        themeToggle.textContent = themeToggle.getAttribute('data-text-light') || '主題：淺色';
+        themeToggle.setAttribute('aria-label', '目前為淺色主題，點擊切換為深色');
+      }
+    }
+  }
+
+  applyTheme(storedTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function() {
+      const current = localStorage.getItem('idds-theme') || 'auto';
+      let next = 'light';
+      if (current === 'light') next = 'dark';
+      else if (current === 'dark') next = 'auto';
+      else next = 'light';
+      
+      localStorage.setItem('idds-theme', next);
+      applyTheme(next);
+    });
+  }
+})();
+  </script>
+</body>
+</html>
