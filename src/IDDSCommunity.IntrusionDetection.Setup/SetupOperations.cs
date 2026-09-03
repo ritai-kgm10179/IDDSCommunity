@@ -267,28 +267,45 @@ internal static class SetupOperations
     /// </summary>
     internal static void OpenUserGuide()
     {
+        bool isEnglish = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("en", StringComparison.OrdinalIgnoreCase);
+        string preferredFile = isEnglish ? "SETUP-GUIDE.en-US.html" : "SETUP-GUIDE.zh-TW.html";
+        string fallbackFile = isEnglish ? "SETUP-GUIDE.zh-TW.html" : "SETUP-GUIDE.en-US.html";
+
+        // 1. 優先從 Setup.exe 內嵌組件資源中抽取並開啟
+        Assembly asm = typeof(SetupOperations).Assembly;
+        foreach (string resName in new[] { preferredFile, fallbackFile })
+        {
+            using Stream? resStream = asm.GetManifestResourceStream(resName);
+            if (resStream != null)
+            {
+                try
+                {
+                    string tempDir = Path.Combine(Path.GetTempPath(), "IDDSCommunity");
+                    Directory.CreateDirectory(tempDir);
+                    string targetPath = Path.Combine(tempDir, resName);
+                    using (FileStream fs = File.Create(targetPath))
+                    {
+                        resStream.CopyTo(fs);
+                    }
+                    Process.Start(new ProcessStartInfo(targetPath) { UseShellExecute = true });
+                    return;
+                }
+                catch (Exception exception)
+                {
+                    LogNonFatal("Extract embedded setup guide", exception);
+                }
+            }
+        }
+
+        // 2. 本機備援路徑搜尋（開發除錯環境）
         string[] candidatePaths =
         [
-            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.zh-TW.html"),
-            Path.Combine(AppContext.BaseDirectory, "docs", "SETUP-GUIDE.zh-TW.html"),
-            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.html"),
-            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.zh-TW.html"),
-            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.zh-TW.html"),
-            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.html"),
-            Path.Combine(AppContext.BaseDirectory, "SETUP-GUIDE.en-US.html"),
-            Path.Combine(AppContext.BaseDirectory, "docs", "SETUP-GUIDE.en-US.html"),
-            Path.Combine(AppContext.BaseDirectory, "USER-GUIDE.en-US.html"),
-            Path.Combine(AppContext.BaseDirectory, "docs", "USER-GUIDE.en-US.html"),
-            Path.Combine(InstallDirectory, "SETUP-GUIDE.zh-TW.html"),
-            Path.Combine(InstallDirectory, "docs", "SETUP-GUIDE.zh-TW.html"),
-            Path.Combine(InstallDirectory, "SETUP-GUIDE.html"),
-            Path.Combine(InstallDirectory, "USER-GUIDE.zh-TW.html"),
-            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.zh-TW.html"),
-            Path.Combine(InstallDirectory, "USER-GUIDE.html"),
-            Path.Combine(InstallDirectory, "SETUP-GUIDE.en-US.html"),
-            Path.Combine(InstallDirectory, "docs", "SETUP-GUIDE.en-US.html"),
-            Path.Combine(InstallDirectory, "USER-GUIDE.en-US.html"),
-            Path.Combine(InstallDirectory, "docs", "USER-GUIDE.en-US.html")
+            Path.Combine(AppContext.BaseDirectory, "docs", preferredFile),
+            Path.Combine(AppContext.BaseDirectory, preferredFile),
+            Path.Combine(AppContext.BaseDirectory, "docs", fallbackFile),
+            Path.Combine(AppContext.BaseDirectory, fallbackFile),
+            Path.Combine(InstallDirectory, "docs", preferredFile),
+            Path.Combine(InstallDirectory, "docs", fallbackFile)
         ];
 
         foreach (string path in candidatePaths)

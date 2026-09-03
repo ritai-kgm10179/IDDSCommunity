@@ -25,5 +25,13 @@
     <PackageReference Include="System.DirectoryServices.AccountManagement" />
     <PackageReference Include="System.ServiceProcess.ServiceController" />
     <EmbeddedResource Include="payload.zip" Condition="Exists('payload.zip')" />
+    <EmbeddedResource Include="..\..\docs\SETUP-GUIDE.zh-TW.html" Link="SETUP-GUIDE.zh-TW.html" LogicalName="SETUP-GUIDE.zh-TW.html">
+      <WithCulture>false</WithCulture>
+      <Type>Non-Resx</Type>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\docs\SETUP-GUIDE.en-US.html" Link="SETUP-GUIDE.en-US.html" LogicalName="SETUP-GUIDE.en-US.html">
+      <WithCulture>false</WithCulture>
+      <Type>Non-Resx</Type>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

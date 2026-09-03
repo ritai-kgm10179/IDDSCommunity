@@ -64,41 +64,17 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE-PROVENANCE.md') -Dest
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'ASSET-PROVENANCE.md') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'assets\asset-provenance.json') -Destination $payloadRoot -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.md') -Destination $payloadRoot -Force
-$userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
-$userGuideEnSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.md'
+# 將管理控制台使用手冊放置於 payload/docs 目錄（安裝至 %ProgramFiles%\IDDS Community\docs\）
+$payloadDocs = Join-Path $payloadRoot 'docs'
+New-Item -ItemType Directory -Path $payloadDocs -Force | Out-Null
 $userGuideHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.html'
 $userGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.html'
-$setupGuideSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.md'
-$setupGuideEnSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.md'
-$setupGuideHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.html'
-$setupGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.html'
 
-if (Test-Path -LiteralPath $userGuideSource) {
-    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.md') -Force
-    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.zh-TW.md') -Force
-}
-if (Test-Path -LiteralPath $userGuideEnSource) {
-    Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.en-US.md') -Force
-}
 if (Test-Path -LiteralPath $userGuideHtmlSource) {
-    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.html') -Force
-    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.zh-TW.html') -Force
+    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $payloadDocs 'USER-GUIDE.zh-TW.html') -Force
 }
 if (Test-Path -LiteralPath $userGuideEnHtmlSource) {
-    Copy-Item -LiteralPath $userGuideEnHtmlSource -Destination (Join-Path $payloadRoot 'USER-GUIDE.en-US.html') -Force
-}
-if (Test-Path -LiteralPath $setupGuideSource) {
-    Copy-Item -LiteralPath $setupGuideSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.zh-TW.md') -Force
-}
-if (Test-Path -LiteralPath $setupGuideEnSource) {
-    Copy-Item -LiteralPath $setupGuideEnSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.en-US.md') -Force
-}
-if (Test-Path -LiteralPath $setupGuideHtmlSource) {
-    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.html') -Force
-    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.zh-TW.html') -Force
-}
-if (Test-Path -LiteralPath $setupGuideEnHtmlSource) {
-    Copy-Item -LiteralPath $setupGuideEnHtmlSource -Destination (Join-Path $payloadRoot 'SETUP-GUIDE.en-US.html') -Force
+    Copy-Item -LiteralPath $userGuideEnHtmlSource -Destination (Join-Path $payloadDocs 'USER-GUIDE.en-US.html') -Force
 }
 
 $pluginProjects = @(
@@ -165,43 +141,8 @@ finally {
     if (Test-Path -LiteralPath $payloadRoot) { Remove-Item -LiteralPath $payloadRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
-$userGuideSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.md'
-$userGuideEnSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.md'
-$userGuideHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.zh-TW.html'
-$userGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\USER-GUIDE.en-US.html'
-$setupGuideSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.md'
-$setupGuideEnSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.md'
-$setupGuideHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.zh-TW.html'
-$setupGuideEnHtmlSource = Join-Path $repositoryRoot 'docs\SETUP-GUIDE.en-US.html'
-
 Copy-Item -LiteralPath (Join-Path $repositoryRoot 'LICENSE') -Destination $packageRoot -Force
-if (Test-Path -LiteralPath $userGuideSource) {
-    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.md') -Force
-    Copy-Item -LiteralPath $userGuideSource -Destination (Join-Path $packageRoot 'USER-GUIDE.zh-TW.md') -Force
-}
-if (Test-Path -LiteralPath $userGuideEnSource) {
-    Copy-Item -LiteralPath $userGuideEnSource -Destination (Join-Path $packageRoot 'USER-GUIDE.en-US.md') -Force
-}
-if (Test-Path -LiteralPath $userGuideHtmlSource) {
-    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.html') -Force
-    Copy-Item -LiteralPath $userGuideHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.zh-TW.html') -Force
-}
-if (Test-Path -LiteralPath $userGuideEnHtmlSource) {
-    Copy-Item -LiteralPath $userGuideEnHtmlSource -Destination (Join-Path $packageRoot 'USER-GUIDE.en-US.html') -Force
-}
-if (Test-Path -LiteralPath $setupGuideSource) {
-    Copy-Item -LiteralPath $setupGuideSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.zh-TW.md') -Force
-}
-if (Test-Path -LiteralPath $setupGuideEnSource) {
-    Copy-Item -LiteralPath $setupGuideEnSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.en-US.md') -Force
-}
-if (Test-Path -LiteralPath $setupGuideHtmlSource) {
-    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.html') -Force
-    Copy-Item -LiteralPath $setupGuideHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.zh-TW.html') -Force
-}
-if (Test-Path -LiteralPath $setupGuideEnHtmlSource) {
-    Copy-Item -LiteralPath $setupGuideEnHtmlSource -Destination (Join-Path $packageRoot 'SETUP-GUIDE.en-US.html') -Force
-}
+Copy-Item -LiteralPath (Join-Path $repositoryRoot 'README.md') -Destination $packageRoot -Force
 
 # --- SBOM 生成 (SPDX 3.0 與相容性 SPDX 2.2) ---
 $sbomToolDir = Join-Path $repositoryRoot 'artifacts\tools\sbom-tool'
