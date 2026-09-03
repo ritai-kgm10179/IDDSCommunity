@@ -53,6 +53,7 @@
             this.labelMenuAgents = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuCurrentLocks = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuSecurityLog = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
+            this.labelMenuSystemLog = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuOnline = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuHome = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.borderS = new System.Windows.Forms.PictureBox();
@@ -368,6 +369,7 @@
             this.panelMenu.Controls.Add(this.labelMenuAgents);
             this.panelMenu.Controls.Add(this.labelMenuCurrentLocks);
             this.panelMenu.Controls.Add(this.labelMenuSecurityLog);
+            this.panelMenu.Controls.Add(this.labelMenuSystemLog);
             this.panelMenu.Controls.Add(this.labelMenuOnline);
             this.panelMenu.Controls.Add(this.labelMenuHome);
             this.panelMenu.Dock = System.Windows.Forms.DockStyle.Top;
@@ -498,7 +500,23 @@
             this.labelMenuSecurityLog.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("SECURITY LOG");
             this.labelMenuSecurityLog.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.labelMenuSecurityLog.Click += new System.EventHandler(this.labelMenuSecurityLog_Click);
-            //
+            // 
+            // labelMenuSystemLog
+            // 
+            this.labelMenuSystemLog.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.labelMenuSystemLog.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMenuSystemLog.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
+            this.labelMenuSystemLog.Location = new System.Drawing.Point(286, 14);
+            this.labelMenuSystemLog.Margin = new System.Windows.Forms.Padding(0);
+            this.labelMenuSystemLog.Name = "labelMenuSystemLog";
+            this.labelMenuSystemLog.Selected = false;
+            this.labelMenuSystemLog.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(190)))), ((int)(((byte)(190)))));
+            this.labelMenuSystemLog.Size = new System.Drawing.Size(100, 25);
+            this.labelMenuSystemLog.TabIndex = 0;
+            this.labelMenuSystemLog.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("SYSTEM LOG");
+            this.labelMenuSystemLog.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.labelMenuSystemLog.Click += new System.EventHandler(this.labelMenuSystemLog_Click);
+            // 
             // labelMenuOnline
             //
             this.labelMenuOnline.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
@@ -728,6 +746,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label labelUsername;
         private SmartLabel labelMenuCurrentLocks;
+        private SmartLabel labelMenuSystemLog;
         private System.Windows.Forms.PictureBox pictureBoxStopService;
         private System.Windows.Forms.PictureBox pictureBoxStartService;
         private SmartLabel smartLabelServiceStatus;

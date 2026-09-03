@@ -18,6 +18,9 @@ public partial class IddsAdmin : Form
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
     private static readonly TimeSpan SecurityLogWindow = TimeSpan.FromDays(30);
     private static readonly TimeSpan SecurityLogRefreshInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DashboardRefreshInterval = TimeSpan.FromSeconds(10);
+    private DateTime lastDashboardRefresh = DateTime.MinValue;
+    private int lastDashboardLogId = -1;
     readonly Color buttonHighlight = Color.FromArgb(205, 230, 247);
     readonly Color buttonPress = Color.FromArgb(105, 130, 147);
     readonly Color buttonNormal = Color.FromKnownColor(KnownColor.Window);
@@ -28,6 +31,7 @@ public partial class IddsAdmin : Form
     IDDSCommunityDashboard? _dashboard;
     IDDSCommunityAgentConfiguration? _panelAgentConfiguration;
     IDDSCommunityApplicationSettings? _panelApplicationSettings;
+    PanelSystemOperationsLog? _panelSystemOperationsLog;
 
     System.ServiceProcess.ServiceController? serviceController;
     private EventLog? eventLogIDDSCommunity;
@@ -43,6 +47,7 @@ public partial class IddsAdmin : Form
     public IddsAdmin()
     {
         InitializeComponent();
+        UpdateMenuPositions();
         Icon = BrandingIcons.CreateIcon();
         BrandingIcons.ApplyTo(pictureBox1);
         string version = typeof(IddsAdmin).Assembly.GetName().Version?.ToString(3) ?? "3.0.0";
@@ -53,6 +58,20 @@ public partial class IddsAdmin : Form
         panelContent.Paint += new PaintEventHandler(panelContent_Paint);
 
         Load += new EventHandler(IddsAdmin_Load);
+    }
+
+    /// <summary>
+    /// 依據目前語系與字元寬度自適應排列頂部選單按鈕，避免按鈕重疊。
+    /// </summary>
+    public void UpdateMenuPositions()
+    {
+        SmartLabel[] menus = [labelMenuHome, labelMenuCurrentLocks, labelMenuSecurityLog, labelMenuSystemLog, labelMenuAgents, labelMenuSettings];
+        int currentLeft = 4;
+        foreach (SmartLabel menu in menus)
+        {
+            menu.Location = new Point(currentLeft, 14);
+            currentLeft += menu.Width;
+        }
     }
     /// <summary>
     /// Cancels pending background snapshots before WinForms destroys control handles.
@@ -235,7 +254,7 @@ public partial class IddsAdmin : Form
         try
         {
             AdminRefreshSnapshot snapshot = await Task.Run(
-                () => LoadAdminSnapshot(AdminRefreshMode.SecurityLog, LastLogId, LastLockUpdate, lastSecurityLogRefresh),
+                () => LoadAdminSnapshot(AdminRefreshMode.SecurityLog, LastLogId, LastLockUpdate, lastSecurityLogRefresh, lastDashboardRefresh, lastDashboardLogId),
                 uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ApplyAdminSnapshot(snapshot), uiRefreshCancellation.Token);
         }
@@ -303,6 +322,25 @@ public partial class IddsAdmin : Form
                 panelContent.Controls.Add(_panelCurrentLocks);
             }
             return _panelCurrentLocks;
+        }
+    }
+
+    /// <summary>
+    /// 取得系統內部作業稽核日誌檢視面板之執行個體。
+    /// </summary>
+    public PanelSystemOperationsLog PanelSystemOperationsLog
+    {
+        get
+        {
+            if (_panelSystemOperationsLog == null)
+            {
+                _panelSystemOperationsLog = new PanelSystemOperationsLog
+                {
+                    Dock = DockStyle.Fill
+                };
+                panelContent.Controls.Add(_panelSystemOperationsLog);
+            }
+            return _panelSystemOperationsLog;
         }
     }
 
@@ -545,9 +583,11 @@ public partial class IddsAdmin : Form
         int lastLogId = LastLogId;
         DateTime lastLockUpdate = LastLockUpdate;
         DateTime securityLogRefresh = lastSecurityLogRefresh;
+        DateTime dashboardRefresh = lastDashboardRefresh;
+        int dashboardLogId = lastDashboardLogId;
         try
         {
-            AdminRefreshSnapshot snapshot = await Task.Run(() => LoadAdminSnapshot(mode, lastLogId, lastLockUpdate, securityLogRefresh), uiRefreshCancellation.Token).ConfigureAwait(false);
+            AdminRefreshSnapshot snapshot = await Task.Run(() => LoadAdminSnapshot(mode, lastLogId, lastLockUpdate, securityLogRefresh, dashboardRefresh, dashboardLogId), uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ApplyAdminSnapshot(snapshot), uiRefreshCancellation.Token);
         }
         catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
@@ -586,14 +626,18 @@ public partial class IddsAdmin : Form
     /// <param name="lastLogId">The last log identifier already displayed.</param>
     /// <param name="lastLockUpdate">The last lock refresh timestamp.</param>
     /// <param name="lastSecurityLogRefresh">上次完整載入安全性記錄時間。</param>
+    /// <param name="lastDashboardRefresh">上次儀表板 30 天統計重新彙總時間。</param>
+    /// <param name="lastDashboardLogId">上次儀表板彙總時的最大日誌識別碼。</param>
     /// <returns>背景載入的管理快照物件。</returns>
-    private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate, DateTime lastSecurityLogRefresh)
+    private static AdminRefreshSnapshot LoadAdminSnapshot(AdminRefreshMode mode, int lastLogId, DateTime lastLockUpdate, DateTime lastSecurityLogRefresh, DateTime lastDashboardRefresh, int lastDashboardLogId)
     {
         List<AdminLogRow> logs = [];
         List<AdminLockRow> locks = [];
         int maxLogId = lastLogId;
         DateTime? newLockUpdate = null;
         DateTime? newSecurityLogRefresh = null;
+        DateTime? newDashboardRefresh = null;
+        int? newDashboardLogId = null;
         bool replaceSecurityLog = false;
         FailedLoginStatisticsSnapshot? failedLoginStatistics = null;
         IReadOnlyDictionary<Guid, AgentLockStatistics>? agentLockStatistics = null;
@@ -652,18 +696,31 @@ public partial class IddsAdmin : Form
         }
         if (mode == AdminRefreshMode.Dashboard)
         {
-            DateTime endDate = DateTime.UtcNow;
-            DateTime startDate = endDate.AddDays(-30);
-            failedLoginStatistics = Locks.ReadFailedLoginStatistics(startDate, endDate);
-            agentLockStatistics = Locks.ReadAgentLockStatistics();
-            crossAgentAlerts = Locks.ReadCrossAgentAlertCount(startDate, endDate);
+            DateTime nowUtc = DateTime.UtcNow;
+            int currentLogId = IntrusionLog.GetLastLogId();
+            bool shouldRefreshDashboard = lastDashboardLogId < 0
+                || currentLogId != lastDashboardLogId
+                || (nowUtc - lastDashboardRefresh) >= DashboardRefreshInterval;
+
+            if (shouldRefreshDashboard)
+            {
+                newDashboardRefresh = nowUtc;
+                newDashboardLogId = currentLogId;
+                DateTime endDate = nowUtc;
+                DateTime startDate = endDate.AddDays(-30);
+                failedLoginStatistics = Locks.ReadFailedLoginStatistics(startDate, endDate);
+                agentLockStatistics = Locks.ReadAgentLockStatistics();
+                crossAgentAlerts = Locks.ReadCrossAgentAlertCount(startDate, endDate);
+                softLocks = Locks.ReadCurrentSoftLocks();
+                hardLocks = Locks.ReadCurrentHardLocks();
+            }
         }
-        if (mode is AdminRefreshMode.Dashboard or AdminRefreshMode.CurrentLocks)
+        if (mode == AdminRefreshMode.CurrentLocks)
         {
             softLocks = Locks.ReadCurrentSoftLocks();
             hardLocks = Locks.ReadCurrentHardLocks();
         }
-        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, newSecurityLogRefresh, replaceSecurityLog, failedLoginStatistics, agentLockStatistics, softLocks, hardLocks, crossAgentAlerts);
+        return new AdminRefreshSnapshot(mode, logs, locks, maxLogId, newLockUpdate, newSecurityLogRefresh, replaceSecurityLog, failedLoginStatistics, agentLockStatistics, softLocks, hardLocks, crossAgentAlerts, newDashboardRefresh, newDashboardLogId);
     }
     /// <summary>
     /// Applies a background-loaded administration snapshot on the UI thread.
@@ -690,6 +747,14 @@ public partial class IddsAdmin : Form
             PanelCurrentLocks.Clear();
             foreach (AdminLockRow row in snapshot.Locks)
                 PanelCurrentLocks.Add(row.Id, Properties.Resources.logIcon_softLock, LockStatusAdapter.GetLockStatusName(row.Status), row.ClientIp, row.DisplayName, row.LockDate, row.UnlockDate, row.Status);
+        }
+        if (snapshot.NewDashboardRefresh is DateTime dashboardRefresh)
+        {
+            lastDashboardRefresh = dashboardRefresh;
+            if (snapshot.NewDashboardLogId is int dashboardLogId)
+            {
+                lastDashboardLogId = dashboardLogId;
+            }
         }
         if (snapshot.FailedLoginStatistics is FailedLoginStatisticsSnapshot failedLogins &&
             snapshot.AgentLockStatistics is IReadOnlyDictionary<Guid, AgentLockStatistics> agentLocks)
@@ -725,7 +790,7 @@ public partial class IddsAdmin : Form
     }
     private sealed record AdminLogRow(int Id, int Action, string AgentId, DateTime IncidentTime, string ClientIp, string Message, int NumberOfEvents);
     private sealed record AdminLockRow(int Id, int Status, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate);
-    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks, int? CrossAgentAlerts);
+    private sealed record AdminRefreshSnapshot(AdminRefreshMode Mode, IReadOnlyList<AdminLogRow> Logs, IReadOnlyList<AdminLockRow> Locks, int MaxLogId, DateTime? NewLockUpdate, DateTime? NewSecurityLogRefresh, bool ReplaceSecurityLog, FailedLoginStatisticsSnapshot? FailedLoginStatistics, IReadOnlyDictionary<Guid, AgentLockStatistics>? AgentLockStatistics, int? SoftLocks, int? HardLocks, int? CrossAgentAlerts, DateTime? NewDashboardRefresh = null, int? NewDashboardLogId = null);
 
     /// <summary>
     /// 取得或設定 LastLogId。
@@ -857,6 +922,18 @@ public partial class IddsAdmin : Form
         PanelSecurityLog.BringToFront();
         panelOnlineServices.Hide();
 
+    }
+    /// <summary>
+    /// 處理系統日誌功能表項目點擊事件。
+    /// </summary>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
+    private void labelMenuSystemLog_Click(object? sender, EventArgs e)
+    {
+        ShowMenu(labelMenuSystemLog);
+        PanelSystemOperationsLog.BringToFront();
+        panelOnlineServices.Hide();
+        _ = PanelSystemOperationsLog.LoadLogsAsync();
     }
     /// <summary>
     /// 處理 click 事件。
@@ -1059,7 +1136,7 @@ public partial class IddsAdmin : Form
 
         timerRefreshServiceStatus = new Timer
         {
-            Interval = 1000
+            Interval = 3000
         };
         timerRefreshServiceStatus.Tick += new EventHandler(serviceReader_Tick);
         timerRefreshServiceStatus.Start();

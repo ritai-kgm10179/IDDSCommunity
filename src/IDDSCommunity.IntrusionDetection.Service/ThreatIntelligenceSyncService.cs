@@ -18,6 +18,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     private readonly Action<ThreatIntelligenceItem> onClusterThreatReceived;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
+    private readonly Action<string, string, string, string?>? recordAudit;
     private readonly ThreatHubClient client;
     private readonly ConcurrentQueue<ThreatIntelligenceItem> pendingLocalThreats = new();
 
@@ -34,18 +35,21 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// <param name="logInformation">資訊日誌委派。</param>
     /// <param name="logWarning">警告日誌委派。</param>
     /// <param name="client">可選之 ThreatHubClient 執行個體。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
     public ThreatIntelligenceSyncService(
         IddsConfig config,
         Action<ThreatIntelligenceItem> onClusterThreatReceived,
         Action<string>? logInformation = null,
         Action<string, Exception>? logWarning = null,
-        ThreatHubClient? client = null)
+        ThreatHubClient? client = null,
+        Action<string, string, string, string?>? recordAudit = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.onClusterThreatReceived = onClusterThreatReceived ?? throw new ArgumentNullException(nameof(onClusterThreatReceived));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.client = client ?? new ThreatHubClient();
+        this.recordAudit = recordAudit;
     }
 
     /// <summary>
@@ -81,6 +85,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         if (Interlocked.Exchange(ref syncing, 1) != 0)
             return;
 
+        string endpointTarget = config.ThreatHubEndpoint ?? string.Empty;
         try
         {
             if (config.ThreatHubRole != ThreatHubRole.EdgeNode || string.IsNullOrWhiteSpace(config.ThreatHubEndpoint))
@@ -125,6 +130,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                             onClusterThreatReceived(clusterThreat);
                         }
                         syncSucceeded = true;
+                        recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pushed: {localBatch.Count}, Pulled: {response.ActiveThreats.Count}");
                         break;
                     }
                 }
@@ -141,11 +147,13 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                 {
                     pendingLocalThreats.Enqueue(item);
                 }
+                recordAudit?.Invoke("Cluster.Sync", "Failed", endpointTarget, "All endpoints failed or returned unsuccessful response");
             }
         }
         catch (Exception ex)
         {
             logWarning("Failed to synchronize with Threat Hub", ex);
+            recordAudit?.Invoke("Cluster.Sync", "Failed", endpointTarget, ex.Message);
         }
         finally
         {

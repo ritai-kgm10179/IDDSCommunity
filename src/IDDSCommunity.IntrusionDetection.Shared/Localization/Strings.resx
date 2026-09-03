@@ -1009,5 +1009,29 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Generic JSON" xml:space="preserve"><value>Generic JSON</value></data>
   <data name="Chunghwa HiCloud" xml:space="preserve"><value>Chunghwa HiCloud</value></data>
   <data name="Generic Webhook" xml:space="preserve"><value>Generic Webhook</value></data>
+  <data name="SYSTEM LOG" xml:space="preserve"><value>SYSTEM LOG</value></data>
+  <data name="Event category:" xml:space="preserve"><value>Event category:</value></data>
+  <data name="Outcome:" xml:space="preserve"><value>Outcome:</value></data>
+  <data name="Search keyword:" xml:space="preserve"><value>Search keyword:</value></data>
+  <data name="All Categories" xml:space="preserve"><value>All Categories</value></data>
+  <data name="All Outcomes" xml:space="preserve"><value>All Outcomes</value></data>
+  <data name="Threat Intelligence Feeds" xml:space="preserve"><value>Threat Intelligence Feeds</value></data>
+  <data name="Dynamic Bogon Prefixes" xml:space="preserve"><value>Dynamic Bogon Prefixes</value></data>
+  <data name="GeoIP Database" xml:space="preserve"><value>GeoIP Database</value></data>
+  <data name="Dynamic DNS" xml:space="preserve"><value>Dynamic DNS</value></data>
+  <data name="Cluster Threat Sync" xml:space="preserve"><value>Cluster Threat Sync</value></data>
+  <data name="Firewall &amp; Probation" xml:space="preserve"><value>Firewall &amp; Probation</value></data>
+  <data name="Service Runtime" xml:space="preserve"><value>Service Runtime</value></data>
+  <data name="System Reports" xml:space="preserve"><value>System Reports</value></data>
+  <data name="Export CSV" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="Total records: {0}" xml:space="preserve"><value>Total records: {0}</value></data>
+  <data name="System operations and audit log exported: {0}" xml:space="preserve"><value>System operations and audit log exported: {0}</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Actor" xml:space="preserve"><value>Actor</value></data>
+  <data name="Target / Subject" xml:space="preserve"><value>Target / Subject</value></data>
+  <data name="No records available to export." xml:space="preserve"><value>No records available to export.</value></data>
+  <data name="Information" xml:space="preserve"><value>Information</value></data>
+  <data name="Error" xml:space="preserve"><value>Error</value></data>
 </root>
 

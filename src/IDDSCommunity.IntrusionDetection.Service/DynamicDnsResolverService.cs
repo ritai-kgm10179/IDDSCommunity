@@ -17,6 +17,7 @@ internal sealed class DynamicDnsResolverService : IDisposable
     private readonly IddsConfig config;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
+    private readonly Action<string, string, string, string?>? recordAudit;
     private System.Threading.Timer? timer;
     private int resolving;
     private bool disposed;
@@ -27,14 +28,17 @@ internal sealed class DynamicDnsResolverService : IDisposable
     /// <param name="config">全域設定執行個體。</param>
     /// <param name="logInformation">資訊日誌回報委派。</param>
     /// <param name="logWarning">警告日誌回報委派。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
     public DynamicDnsResolverService(
         IddsConfig config,
         Action<string>? logInformation = null,
-        Action<string, Exception>? logWarning = null)
+        Action<string, Exception>? logWarning = null,
+        Action<string, string, string, string?>? recordAudit = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.logInformation = logInformation ?? (msg => Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => Trace.TraceWarning("{0}: {1}", msg, ex.Message));
+        this.recordAudit = recordAudit;
     }
 
     /// <summary>
@@ -88,11 +92,13 @@ internal sealed class DynamicDnsResolverService : IDisposable
                     if (addresses != null && addresses.Length > 0)
                     {
                         DynamicDnsCache.Update(host, addresses);
+                        recordAudit?.Invoke("DynamicDns.Resolve", "Succeeded", host, $"{addresses.Length} IPs: {string.Join(", ", (IEnumerable<IPAddress>)addresses)}");
                     }
                 }
                 catch (Exception ex)
                 {
                     logWarning($"Failed to resolve dynamic safe-network host '{host}'", ex);
+                    recordAudit?.Invoke("DynamicDns.Resolve", "Failed", host, ex.Message);
                 }
             }
         }

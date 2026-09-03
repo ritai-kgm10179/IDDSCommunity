@@ -684,7 +684,8 @@ public bool LimitMailSent { get; set; }
             dynamicDnsResolverService = new DynamicDnsResolverService(
                 configuration,
                 msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                TryRecordAudit);
             dynamicDnsResolverService.Start();
 
             // 依主機角色啟動威脅情資中繼中心 (Hub) 或邊緣節點 (Edge Node)
@@ -703,7 +704,9 @@ public bool LimitMailSent { get; set; }
                     configuration,
                     HandleClusterThreatReceived,
                     msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                    null,
+                    TryRecordAudit);
                 threatSyncService.Start();
             }
 
@@ -712,14 +715,18 @@ public bool LimitMailSent { get; set; }
                 configuration,
                 HandleExternalThreatFeedDiscovered,
                 msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                null,
+                TryRecordAudit);
             externalThreatFeedSubscriberService.Start();
 
             // 啟動 GeoIP 資料庫定期自動更新與本地快取服務
             geoIpUpdateService = new GeoIpUpdateService(
                 configuration,
                 msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                null,
+                TryRecordAudit);
             geoIpUpdateService.Start();
 
             // 啟動 Prometheus Metrics HTTP 服務

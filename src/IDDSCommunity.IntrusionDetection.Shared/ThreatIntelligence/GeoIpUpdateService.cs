@@ -15,6 +15,7 @@ public sealed class GeoIpUpdateService : IDisposable
     private readonly IddsConfig config;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
+    private readonly Action<string, string, string, string?>? recordAudit;
     private readonly HttpClient httpClient;
     private readonly bool ownClient;
 
@@ -29,15 +30,18 @@ public sealed class GeoIpUpdateService : IDisposable
     /// <param name="logInformation">資訊日誌回報委派。</param>
     /// <param name="logWarning">警告日誌回報委派。</param>
     /// <param name="httpClient">可選之自訂 HttpClient 執行個體（用於單元測試隔離）。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
     public GeoIpUpdateService(
         IddsConfig config,
         Action<string>? logInformation = null,
         Action<string, Exception>? logWarning = null,
-        HttpClient? httpClient = null)
+        HttpClient? httpClient = null,
+        Action<string, string, string, string?>? recordAudit = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
+        this.recordAudit = recordAudit;
 
         if (httpClient != null)
         {
@@ -206,6 +210,7 @@ public sealed class GeoIpUpdateService : IDisposable
 
             if (string.IsNullOrWhiteSpace(v4Content) && string.IsNullOrWhiteSpace(v6Content))
             {
+                recordAudit?.Invoke("GeoIp.Update", "Failed", "GeoIP Database", "Failed to download GeoIP feeds from configured URLs.");
                 return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Failed to download GeoIP feeds from configured URLs.");
             }
 
@@ -237,11 +242,13 @@ public sealed class GeoIpUpdateService : IDisposable
             }
 
             logInformation($"GeoIP database updated successfully: {totalLoaded} prefixes across {totalCountries} countries loaded.");
+            recordAudit?.Invoke("GeoIp.Update", "Succeeded", "GeoIP Database", $"{totalLoaded} prefixes across {totalCountries} countries loaded");
             return (true, totalLoaded, totalCountries, string.Empty);
         }
         catch (Exception ex)
         {
             logWarning("Error occurred during GeoIP database update cycle", ex);
+            recordAudit?.Invoke("GeoIp.Update", "Failed", "GeoIP Database", ex.Message);
             return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, ex.Message);
         }
         finally

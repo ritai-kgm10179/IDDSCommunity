@@ -120,13 +120,15 @@ public bool IsInEditMode { get; set; }
         string? protectionDetails = GetProtectionDetails(Agent.Name);
         if (protectionDetails is not null)
         {
+            int initialWidth = Math.Max(260, flowLayoutPanelCustomPluginSettings.ClientSize.Width
+                - flowLayoutPanelCustomPluginSettings.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 4);
             Label details = new()
             {
-                AutoSize = false,
+                AutoSize = true,
+                MaximumSize = new Size(initialWidth, 0),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.FromArgb(102, 102, 102),
                 Margin = new Padding(0, 2, 0, 8),
-                Size = new Size(390, 38),
                 Text = protectionDetails
             };
             flowLayoutPanelCustomPluginSettings.Controls.Add(details);
@@ -157,7 +159,13 @@ public bool IsInEditMode { get; set; }
         int availableWidth = Math.Max(260, flowLayoutPanelCustomPluginSettings.ClientSize.Width
             - flowLayoutPanelCustomPluginSettings.Padding.Horizontal - SystemInformation.VerticalScrollBarWidth - 4);
         foreach (Control control in flowLayoutPanelCustomPluginSettings.Controls)
+        {
+            if (control is Label label)
+            {
+                label.MaximumSize = new Size(availableWidth, 0);
+            }
             control.Width = availableWidth;
+        }
     }
     /// <summary>
     /// Gets a localized description of the authoritative detection source and encrypted-traffic limitations.

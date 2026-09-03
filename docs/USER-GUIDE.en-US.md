@@ -64,13 +64,27 @@ Manage source IP addresses currently locked out due to repeated failed logins:
   - Select an IP and click "Remove Lock" to immediately clear the lock and remove the address from the Windows Firewall rule.
 - **Promote to Hard Lock**: Select a soft-locked entry to manually promote it to an enforced firewall hard lock.
 
-### 3.4 🛡️ Safe Networks (Allow List)
+### 3.4 📋 System Operations & Audit Log
+Provides administrators with complete forensic evidence and operational visibility for internal defense pipelines, external downloads, and maintenance operations:
+- **External Data Download Auditing**:
+  - **Threat Intelligence Feeds (`ThreatFeed.Download`)**: Tracks IPsum, AbuseIPDB, Spamhaus DROP downloads, bogon-filtered entries, whitelist-skipped IPs, and network errors.
+  - **Team Cymru Fullbogons Dynamic Prefixes (`Bogon.Update`)**: Tracks IPv4 and IPv6 bogon prefix list downloads and update counts.
+  - **GeoIP Database Updates (`GeoIp.Update`)**: Tracks MaxMind / DB-IP downloads, loaded prefix counts, country totals, and hot-swap events.
+  - **Dynamic DNS FQDN Resolution (`DynamicDns.Resolve`)**: Tracks DNS query results and resolved IPs for whitelisted domain names.
+  - **Cluster Threat Intelligence Sync (`Cluster.Sync`)**: Tracks threat items pushed to and pulled from the Threat Hub.
+- **Maintenance & Defensive Actions**:
+  - Audits probation transitions (`Firewall.Probation`), firewall unlocking (`Firewall.Unlock`), automated database maintenance (`Database.Maintenance`), and service runtime events (`Runtime.Start` / `Runtime.Stop`).
+- **Multi-Dimensional Filtering & CSV Export**:
+  - Filter by event category, outcome (Succeeded / Failed), and free-text search keywords.
+  - Export audit logs to standard CSV format for compliance, incident response, and regulatory audits.
+
+### 3.5 🛡️ Safe Networks (Allow List)
 Maintain IP addresses and subnets that are never blocked (management hosts, internal gateways, etc.):
 - **Add Allowed Address**: Accepts a single IPv4, a single IPv6, an IPv4 CIDR (`192.168.0.0/16`), or an IPv6 CIDR (`fe80::/10`).
 - **Automatic Loopback Protection**: Local IPv4 (`127.0.0.1`) and IPv6 (`::1`) are automatically recognized and protected at the service layer; no manual entry is required.
 - **Whitelist Collision Exclusion Guard**: Even if an allow-listed IP crosses any agent's attack threshold, the firewall blocking module automatically excludes it, ensuring the management channel is never severed.
 
-### 3.5 ⚙️ Agent Configuration
+### 3.6 ⚙️ Agent Configuration
 Configure failure thresholds and the sliding detection window per service:
 - **Supported Agent List**:
   - `Windows Network Logon` (SMB/network logon Event 4625)
@@ -84,18 +98,18 @@ Configure failure thresholds and the sliding detection window per service:
 - **Threshold Tuning**:
   - Independently configure each agent's "failure threshold" (e.g. `5 attempts`) and "detection window" (e.g. `300 seconds`).
 
-### 3.6 🚨 Lockout Policy
+### 3.7 🚨 Lockout Policy
 Controls the escalating defensive response after an attack is triggered:
 - **Soft Lock**: Once the initial threshold is reached, the offending IP is held in an in-memory lock for a configured duration (e.g. `15 minutes`), during which requests to the affected service from that IP are rejected.
 - **Hard Lock**: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (the rule name includes the `Blocked by IDDS Community` prefix and belongs to the `IDDS Community` firewall rule group).
 
-### 3.7 📧 SMTP Notifications
+### 3.8 📧 SMTP Notifications
 Automatically send email alerts when a hard lock or a critical event is triggered:
 - **Sending Configuration**: Configure the SMTP server, port, SSL/TLS encryption, sender, and recipient addresses.
 - **Test Email**: Click "Send Test Email" to verify the SMTP configuration immediately.
 - **Encrypted Configuration Export**: When exporting the configuration package, the SMTP password is protected with **Argon2id key derivation + AES-256-GCM** authenticated encryption so the secret is never exposed in plaintext.
 
-### 3.8 🧹 Database Maintenance and Compaction
+### 3.9 🧹 Database Maintenance and Compaction
 Manage SQLite historical logs, space reclamation, and integrity maintenance:
 - **Automatic Log Retention**: The background service runs a maintenance pass every 24 hours by default, purging logs older than the configured retention period in batches. The retention period is adjustable and can help support log-retention requirements found in regulations such as PCI DSS; this software makes no official compliance claim, and organizations remain responsible for reviewing applicable requirements themselves.
 - **Manual Verified Backup**: Click "Create Verified Backup" to produce a ChaCha20-Poly1305-encrypted, SHA-256-verified SQLite backup file; a separate "Verify Selected Backup" action confirms the file is complete and usable. Backups reuse the DPAPI-protected database key of the local host, so cross-machine disaster recovery requires the corresponding key-preservation procedure.
@@ -104,7 +118,7 @@ Manage SQLite historical logs, space reclamation, and integrity maintenance:
 
 Local backups are intended for rapid recovery on the local machine and do not replace an off-site disaster recovery plan. Encrypted backups are bound to the DPAPI master key of the current host installation and cannot be restored on a different machine without that key.
 
-### 3.9 🌐 Threat Intelligence & Distributed Cluster Defense
+### 3.10 🌐 Threat Intelligence & Distributed Cluster Defense
 - **Distributed Cluster Defense Topology (Edge / Hub)**:
   - `Standalone`: Single-host independent defense and threat subscription without cluster synchronization.
   - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443` or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub.
@@ -119,44 +133,44 @@ Local backups are intended for rapid recovery on the local machine and do not re
   - Enforces static RFC 1918 private IP hard-filtering alongside Team Cymru Fullbogons IPv4/IPv6 dynamic prefix synchronization to prevent accidental internal lockouts.
   - Safe Networks allow list supports FQDN hostnames (e.g. `office.ddns.net`) with background dynamic DNS resolution.
 
-### 3.10 💬 Multi-Channel Webhook Notifications
+### 3.11 💬 Multi-Channel Webhook Notifications
 Enables real-time push alerts to enterprise messaging platforms and automated SOC pipelines:
 - **Supported Platforms**: Microsoft Teams (Adaptive Cards 1.6), Slack (Block Kit), Discord (Rich Embed), Telegram (Bot API `sendMessage`), Generic JSON (RESTful Webhook).
 - **Granular Event Triggers**: Independently trigger on Soft Lock, Hard Lock, and Unlock events.
 - **Connectivity Testing**: Provides a "Test Webhook" button in "Settings -> Notifications" for instant endpoint verification.
 
-### 3.11 🍯 Honeypot Decoy Agent
+### 3.12 🍯 Honeypot Decoy Agent
 Active deception deployed on unused ports (default TCP 23 Telnet, 2222 alternate SSH, 33890 alternate RDP) to catch threat actors early:
 - **Zero-Tolerance Hard Lock**: Any unsolicited TCP connection attempt to a decoy port triggers an immediate permanent firewall block.
 - **Silent Drop (No Banner)**: Immediately terminates connection without returning service banners or software identification.
 - **Whitelist Integration**: Probing sources are verified against BogonIpFilter and Safe Networks allow list.
 
-### 3.12 📊 OASIS STIX 2.1 Threat Sharing & ISO/IEC 27001:2022 Reports
+### 3.13 📊 OASIS STIX 2.1 Threat Sharing & ISO/IEC 27001:2022 Reports
 - **OASIS STIX 2.1 JSON Export**:
   - Exports local and cluster threat intelligence as standard STIX 2.1 JSON Bundles (`identity`, `indicator`, `report` SDOs) for integration with SIEM, MISP, OpenCTI, and SOAR systems.
 - **ISO/IEC 27001:2022 Annex A Audit Reports**:
   - Built-in compliance report engine evaluating A.5.7 (Threat Intelligence), A.8.7 (Malware Protection / Active Defense), A.8.15 (Logging), A.8.16 (Monitoring Activities), A.8.20 (Network Security), and A.8.24 (Use of Cryptography) into executive HTML reports.
 
-### 3.13 🗺️ GeoIP Country Tagging & Geofencing
+### 3.14 🗺️ GeoIP Country Tagging & Geofencing
 - **High-Performance GeoIP Lookup**: Resolves IPv4/IPv6 addresses to ISO 3166-1 country codes and names supporting both CIDR and IP range CSV formats.
 - **Automated Feed Updates & Local Offline Caching**: Automatically downloads and refreshes GeoIP databases from remote URLs or local CSV files with fallback persistence in `%ProgramData%\IDDSCommunity\`.
 - **Active Country-Based Geo-blocking**: Blocks inbound connections originating from designated country codes (e.g. CN, RU, KP) with immediate one-strike permanent hard lock escalation upon attack detection.
 
-### 3.14 📡 Traditional SOC / SIEM Integration (Syslog & CEF)
+### 3.15 📡 Traditional SOC / SIEM Integration (Syslog & CEF)
 - **Standard Format Support**:
   - **RFC 5424**: Modern structured Syslog with enterprise PRI, Timestamp, and Structured-Data.
   - **RFC 3164**: Traditional BSD Syslog for legacy collectors.
   - **ArcSight CEF (Common Event Format)**: Industry-standard security format for Splunk, IBM QRadar, Micro Focus ArcSight.
 - **Transport Protocols**: Supports UDP, TCP, and TLS encrypted transmission with built-in test buttons.
 
-### 3.15 📈 Modern Observability (Prometheus & Grafana)
+### 3.16 📈 Modern Observability (Prometheus & Grafana)
 - **Built-in Prometheus Metrics**:
   - Provides OpenMetrics / Prometheus standard `/metrics` endpoint (`idds_active_firewall_blocks`, `idds_uptime_seconds`, `idds_probation_ips_total`).
   - Provides JSON `/healthz` endpoint for uptime monitoring.
 - **Custom Binding & Scrape Allow List**: Configurable listen IP address and monitoring CIDR subnet filtering.
 - **Grafana Dashboard Template**: Ready-to-import dashboard JSON located at [`assets/dashboards/idds-grafana-dashboard.json`](file:///d:/Dev/Project/Application/IDDSCommunity/assets/dashboards/idds-grafana-dashboard.json).
 
-### 3.16 💻 Official Automation Module (PowerShell 7+)
+### 3.17 💻 Official Automation Module (PowerShell 7+)
 Located at [`tools/IDDSCommunity.PowerShell/`](file:///d:/Dev/Project/Application/IDDSCommunity/tools/IDDSCommunity.PowerShell/):
 - `Get-IddsStatus`: Query service status and database state.
 - `Get-IddsBlockedIp`: List all currently blocked IP addresses.
@@ -165,20 +179,20 @@ Located at [`tools/IDDSCommunity.PowerShell/`](file:///d:/Dev/Project/Applicatio
 - `Export-IddsIso27001Report`: Generate ISO 27001 compliance audit reports via CLI.
 - `Test-IddsNotification`: Batch test notification endpoints.
 
-### 3.17 🔑 Self-Service TOTP Unblock Portal
+### 3.18 🔑 Self-Service TOTP Unblock Portal
 Dedicated lightweight web portal on a separate port (default TCP 8088) allowing legitimate administrators or users to unblock themselves:
 - **TOTP Two-Factor Authentication (RFC 6238)**: Compatible with Google Authenticator, Microsoft Authenticator, and standard TOTP apps.
 - **Instant Automatic Relief**: Instantly removes the user's IP from the Windows Firewall upon successful code verification.
 
-### 3.18 ☁️ Cloud Perimeter Auto-Sync (AWS, Azure, Cloudflare)
+### 3.19 ☁️ Cloud Perimeter Auto-Sync (AWS, Azure, Cloudflare)
 - **Dynamic Official IP Range Ingestion**: Automatically fetches and parses published JSON IP range lists from AWS, Microsoft Azure, and Cloudflare.
 - **Automatic Allow List Merging**: Automatically protects reverse proxies and CDN nodes from false-positive blockages.
 
-### 3.19 🎭 Honey Accounts & SOAR Script Automation
+### 3.20 🎭 Honey Accounts & SOAR Script Automation
 - **Honey Accounts (Decoy Logins)**: Configures decoy account names (e.g. `admin`, `root`, `test`, `guest`, `superadmin`). Any authentication attempt using these accounts triggers an immediate One-Strike Hard Lock.
 - **SOAR Script Execution**: Executes custom PowerShell or Batch scripts upon critical security events with event parameters for incident workflow orchestration.
 
-### 3.20 🔌 RESTful Management API
+### 3.21 🔌 RESTful Management API
 Secure lightweight HTTP/HTTPS REST API server (default TCP 8444) protected by API Keys and Bearer Tokens:
 - `GET /api/v1/status`: Query service operational status and security metrics.
 - `GET /api/v1/locks`: Retrieve active locked IP list.
@@ -186,7 +200,7 @@ Secure lightweight HTTP/HTTPS REST API server (default TCP 8444) protected by AP
 - `POST /api/v1/locks/block`: Manually enforce a permanent hard block on a malicious IP.
 - `GET /api/v1/safenetworks` / `POST /api/v1/safenetworks`: Manage safe network allow lists.
 
-### 3.21 📋 CIS Windows Server Benchmark & Forensics
+### 3.22 📋 CIS Windows Server Benchmark & Forensics
 - **Five Security Principles Deep Evaluation**: Scans Account Policies, Network Policies, Windows Firewall Configurations, Audit Policies, and Application Security.
 - **Instant Score & Remediation Advice**: One-click benchmark scan calculating compliance percentage with detailed remediation guidelines for failed checks.
 - **Forensic Report Export**: Exports compliance audit findings to JSON forensic evidence files.

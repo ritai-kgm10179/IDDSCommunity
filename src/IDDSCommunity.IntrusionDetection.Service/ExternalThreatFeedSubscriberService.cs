@@ -18,6 +18,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     private readonly Action<ThreatIntelligenceItem> onThreatDiscovered;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
+    private readonly Action<string, string, string, string?>? recordAudit;
     private readonly HttpClient httpClient;
     private readonly bool ownClient;
 
@@ -33,17 +34,20 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     /// <param name="logInformation">資訊日誌回報委派。</param>
     /// <param name="logWarning">警告日誌回報委派。</param>
     /// <param name="httpClient">可選之自訂 HttpClient 執行個體（用於單元測試隔離）。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
     public ExternalThreatFeedSubscriberService(
         IddsConfig config,
         Action<ThreatIntelligenceItem> onThreatDiscovered,
         Action<string>? logInformation = null,
         Action<string, Exception>? logWarning = null,
-        HttpClient? httpClient = null)
+        HttpClient? httpClient = null,
+        Action<string, string, string, string?>? recordAudit = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.onThreatDiscovered = onThreatDiscovered ?? throw new ArgumentNullException(nameof(onThreatDiscovered));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
+        this.recordAudit = recordAudit;
 
         if (httpClient != null)
         {
@@ -189,26 +193,36 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         int minConfidenceOrLevel,
         DateTime expiresUtc)
     {
-        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
-        using HttpResponseMessage response = await httpClient.GetAsync(url, cts.Token).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            logWarning($"Threat feed '{feedName}' returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-            return 0;
-        }
-
-        string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-        List<string> ips = ThreatFeedParser.ParseFeed(content, format, minConfidenceOrLevel, ThreatFeedParser.DefaultMaxEntriesPerFeed);
-
-        int count = 0;
-        foreach (string ip in ips)
-        {
-            if (EvaluateAndIngest(ip, feedName, expiresUtc))
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
+            using HttpResponseMessage response = await httpClient.GetAsync(url, cts.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
             {
-                count++;
+                logWarning($"Threat feed '{feedName}' returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                recordAudit?.Invoke("ThreatFeed.Download", "Failed", feedName, $"HTTP {(int)response.StatusCode}");
+                return 0;
             }
+
+            string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            List<string> ips = ThreatFeedParser.ParseFeed(content, format, minConfidenceOrLevel, ThreatFeedParser.DefaultMaxEntriesPerFeed);
+
+            int count = 0;
+            foreach (string ip in ips)
+            {
+                if (EvaluateAndIngest(ip, feedName, expiresUtc))
+                {
+                    count++;
+                }
+            }
+            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", feedName, $"Ingested: {count}, Evaluated: {ips.Count}");
+            return count;
         }
-        return count;
+        catch (Exception ex)
+        {
+            recordAudit?.Invoke("ThreatFeed.Download", "Failed", feedName, ex.Message);
+            throw;
+        }
     }
 
     private async Task<int> ProcessAbuseIpDbFeedAsync(
@@ -217,30 +231,40 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         int minConfidence,
         DateTime expiresUtc)
     {
-        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
-        using HttpRequestMessage request = new(HttpMethod.Get, url);
-        request.Headers.Add("Key", apiKey);
-        request.Headers.Add("Accept", "application/json");
-
-        using HttpResponseMessage response = await httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            logWarning($"AbuseIPDB feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-            return 0;
-        }
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
+            using HttpRequestMessage request = new(HttpMethod.Get, url);
+            request.Headers.Add("Key", apiKey);
+            request.Headers.Add("Accept", "application/json");
 
-        string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-        List<string> ips = ThreatFeedParser.ParseFeed(content, ThreatFeedFormat.AbuseIpDbJson, minConfidence, ThreatFeedParser.DefaultMaxEntriesPerFeed);
-
-        int count = 0;
-        foreach (string ip in ips)
-        {
-            if (EvaluateAndIngest(ip, "AbuseIPDB Blacklist", expiresUtc))
+            using HttpResponseMessage response = await httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
             {
-                count++;
+                logWarning($"AbuseIPDB feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                recordAudit?.Invoke("ThreatFeed.Download", "Failed", "AbuseIPDB Blacklist", $"HTTP {(int)response.StatusCode}");
+                return 0;
             }
+
+            string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            List<string> ips = ThreatFeedParser.ParseFeed(content, ThreatFeedFormat.AbuseIpDbJson, minConfidence, ThreatFeedParser.DefaultMaxEntriesPerFeed);
+
+            int count = 0;
+            foreach (string ip in ips)
+            {
+                if (EvaluateAndIngest(ip, "AbuseIPDB Blacklist", expiresUtc))
+                {
+                    count++;
+                }
+            }
+            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", "AbuseIPDB Blacklist", $"Ingested: {count}, Evaluated: {ips.Count}");
+            return count;
         }
-        return count;
+        catch (Exception ex)
+        {
+            recordAudit?.Invoke("ThreatFeed.Download", "Failed", "AbuseIPDB Blacklist", ex.Message);
+            throw;
+        }
     }
 
     private async Task RefreshDynamicBogonsAsync()
@@ -299,6 +323,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             BogonIpFilter.UpdateDynamicBogons(aggregatedNetworks);
             logInformation($"Dynamic Bogon prefix list updated successfully ({aggregatedNetworks.Count} total IPv4/IPv6 prefixes loaded).");
+            recordAudit?.Invoke("Bogon.Update", "Succeeded", "Team Cymru Fullbogons", $"{aggregatedNetworks.Count} prefixes updated");
         }
     }
 
