@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
@@ -489,6 +490,9 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                     TryRecordAudit("Firewall.Probation", "Failed", l.IpAddress, ex.GetType().Name);
                 }
             }
+
+            // 定期校準 Windows 防火牆傳入放行規則以防外部異動
+            ReconcileFirewallInboundRules();
         }
         catch (Exception ex)
         {
@@ -738,6 +742,9 @@ public bool LimitMailSent { get; set; }
             // 啟動安全 RESTful Management API 伺服器
             managementApiHttpServer.Start();
 
+            // 宣告式對齊 Windows 防火牆傳入放行規則
+            ReconcileFirewallInboundRules();
+
             runtimeStarted = true;
             TryRecordAudit("Runtime.Start", "Succeeded", Environment.MachineName);
             logManager.WriteEntry(Strings.Get("Intrusion Detection Service was started successfully."), EventLogEntryType.Information,
@@ -823,6 +830,10 @@ public bool LimitMailSent { get; set; }
             TryStop(() => securityEventPipeline.Drain(TimeSpan.FromSeconds(protectionOptions.SecurityEventDrainTimeoutSeconds)), failures);
             securityEventPipeline = null;
         }
+
+        // 清除所有由 IDDS 社群版建立之 Windows 防火牆傳入放行規則
+        TryStop(() => firewallPolicy.RemoveAllInboundAllowRules(TryRecordAudit), failures);
+
         bool wasStarted = runtimeStarted;
         runtimeStarted = false;
 
@@ -859,6 +870,106 @@ public bool LimitMailSent { get; set; }
                 EventLogEntryType.Error,
                 Globals.IDDSCOMMUNITY_EVENT_ID_CONFIGURATION_ERROR,
                 Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+        }
+    }
+
+    /// <summary>
+    /// 收集當前已啟用的內部監聽服務並宣告式對齊 Windows 防火牆傳入放行規則。
+    /// </summary>
+    private void ReconcileFirewallInboundRules()
+    {
+        if (!configuration.AutoManageFirewallInboundRules)
+            return;
+
+        try
+        {
+            List<FirewallInboundRuleDefinition> targetRules = [];
+
+            // 1. 自助解鎖網頁門戶 (Self-Service Unblock Portal)
+            if (configuration.EnableSelfServicePortal && configuration.SelfServicePortalPort > 0)
+            {
+                targetRules.Add(new FirewallInboundRuleDefinition(
+                    "SelfServicePortal",
+                    $"IDDS Community - Allow Self-Service Portal (TCP {configuration.SelfServicePortalPort})",
+                    configuration.SelfServicePortalPort,
+                    "TCP",
+                    "Inbound allow rule for IDDS Community Self-Service Unblock Portal"));
+            }
+
+            // 2. 管理與誘捕 API (Management API)
+            if (configuration.EnableManagementApi && configuration.ManagementApiPort > 0)
+            {
+                targetRules.Add(new FirewallInboundRuleDefinition(
+                    "ManagementApi",
+                    $"IDDS Community - Allow Management API (TCP {configuration.ManagementApiPort})",
+                    configuration.ManagementApiPort,
+                    "TCP",
+                    "Inbound allow rule for IDDS Community Management and Deception API"));
+            }
+
+            // 3. 威脅情資中繼中心 (Threat Intelligence Hub)
+            if (configuration.ThreatHubRole == Shared.ThreatIntelligence.ThreatHubRole.ThreatHub && configuration.ThreatHubPort > 0)
+            {
+                targetRules.Add(new FirewallInboundRuleDefinition(
+                    "ThreatHub",
+                    $"IDDS Community - Allow Threat Hub (TCP {configuration.ThreatHubPort})",
+                    configuration.ThreatHubPort,
+                    "TCP",
+                    "Inbound allow rule for IDDS Community Threat Intelligence Cluster Hub"));
+            }
+
+            // 4. 蜜罐誘捕代理程式 (Honeypot Decoy Ports)
+            try
+            {
+                SecurityAgent? honeypotAgent = securityAgents?.FirstOrDefault(a => a.Name.Contains("Honeypot", StringComparison.OrdinalIgnoreCase));
+                if (honeypotAgent is not null && honeypotAgent.Enabled)
+                {
+                    if (honeypotAgent.CustomConfiguration.TryGetValue("DecoyPortsString", out string? decoyPortsStr)
+                        || honeypotAgent.CustomConfiguration.TryGetValue("Ports", out decoyPortsStr))
+                    {
+                        if (!string.IsNullOrWhiteSpace(decoyPortsStr))
+                        {
+                            string[] tokens = decoyPortsStr.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                            foreach (string token in tokens)
+                            {
+                                if (int.TryParse(token, out int port) && port >= 1 && port <= 65535)
+                                {
+                                    targetRules.Add(new FirewallInboundRuleDefinition(
+                                        $"Honeypot_{port}",
+                                        $"IDDS Community - Allow Honeypot Decoy (TCP {port})",
+                                        port,
+                                        "TCP",
+                                        $"Inbound allow rule for IDDS Community Honeypot Decoy Port {port}"));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (int port in new[] { 23, 2222, 33890 })
+                        {
+                            targetRules.Add(new FirewallInboundRuleDefinition(
+                                $"Honeypot_{port}",
+                                $"IDDS Community - Allow Honeypot Decoy (TCP {port})",
+                                port,
+                                "TCP",
+                                $"Inbound allow rule for IDDS Community Honeypot Decoy Port {port}"));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logManager.WriteEntry($"Failed to collect honeypot decoy ports for firewall: {ex.Message}", EventLogEntryType.Warning,
+                    Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+            }
+
+            firewallPolicy.ReconcileInboundAllowRules(targetRules, TryRecordAudit);
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry($"ReconcileFirewallInboundRules failed: {ex.Message}", EventLogEntryType.Error,
+                Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         }
     }
 

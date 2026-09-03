@@ -73,6 +73,11 @@ public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
     public const string CONFIG_VALUE_FIREWALL_BLOCK_MODE = "Configuration.FirewallBlockMode";
 
     /// <summary>
+    /// 定義 CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES = "Configuration.AutoManageFirewallInboundRules";
+
+    /// <summary>
     /// 定義 CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION 之數值。
     /// </summary>
     public const string CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION = "Configuration.EnableCrossAgentCorrelation";
@@ -1155,6 +1160,15 @@ public string Language
                 throw new ArgumentOutOfRangeException(nameof(value));
             SetConfigValue(CONFIG_VALUE_FIREWALL_BLOCK_MODE, value.ToString());
         }
+    }
+
+    /// <summary>
+    /// 取得或設定是否自動於 Windows 防火牆維護內部監聽服務之傳入放行規則（預設為 true）。
+    /// </summary>
+    public bool AutoManageFirewallInboundRules
+    {
+        get => !bool.TryParse(GetConfigValue(CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES), out bool enabled) || enabled;
+        set => SetConfigValue(CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES, value.ToString());
     }
 
     /// <summary>

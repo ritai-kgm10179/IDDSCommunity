@@ -70,5 +70,15 @@ public sealed class FirewallStateReconcilerTest
         public bool IsLocked(string ipAddress) => addresses.Contains(ipAddress);
         public IReadOnlyCollection<string> GetBlockedAddresses() => addresses;
         public void RemoveIpAddressFromBlockList(string ipAddress) => addresses.Remove(ipAddress);
+        public List<FirewallInboundRuleDefinition> ReconciledRules { get; } = [];
+        public void ReconcileInboundAllowRules(IReadOnlyCollection<FirewallInboundRuleDefinition> targetRules, Action<string, string, string, string?>? auditRecorder = null)
+        {
+            ReconciledRules.Clear();
+            ReconciledRules.AddRange(targetRules);
+        }
+        public void RemoveAllInboundAllowRules(Action<string, string, string, string?>? auditRecorder = null)
+        {
+            ReconciledRules.Clear();
+        }
     }
 }

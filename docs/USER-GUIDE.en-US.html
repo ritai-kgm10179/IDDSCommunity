@@ -593,6 +593,7 @@ footer p {
   <li><strong>Dynamic DNS FQDN Resolution (<code>DynamicDns.Resolve</code>)</strong>: Tracks DNS query results and resolved IPs for whitelisted domain names.</li>
   <li><strong>Cluster Threat Intelligence Sync (<code>Cluster.Sync</code>)</strong>: Tracks threat items pushed to and pulled from the Threat Hub.</li>
   <li><strong>Maintenance & Defensive Actions</strong>:</li>
+  <li><strong>Inbound Allow Rules Lifecycle (<code>Firewall.RuleAdd</code> / <code>Firewall.RuleRemove</code>)</strong>: Tracks the declarative reconciliation and lifecycle management of Windows Firewall inbound allow rules for internal listening endpoints (Self-Service Portal, Management API, Threat Hub, Honeypot Decoys); automatically aligns on startup, port changes, and shutdown.</li>
   <li>Audits probation transitions (<code>Firewall.Probation</code>), firewall unlocking (<code>Firewall.Unlock</code>), automated database maintenance (<code>Database.Maintenance</code>), and service runtime events (<code>Runtime.Start</code> / <code>Runtime.Stop</code>).</li>
   <li><strong>Multi-Dimensional Filtering & CSV Export</strong>:</li>
   <li>Filter by event category, outcome (Succeeded / Failed), and free-text search keywords.</li>

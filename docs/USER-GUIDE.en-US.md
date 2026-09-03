@@ -73,6 +73,7 @@ Provides administrators with complete forensic evidence and operational visibili
   - **Dynamic DNS FQDN Resolution (`DynamicDns.Resolve`)**: Tracks DNS query results and resolved IPs for whitelisted domain names.
   - **Cluster Threat Intelligence Sync (`Cluster.Sync`)**: Tracks threat items pushed to and pulled from the Threat Hub.
 - **Maintenance & Defensive Actions**:
+  - **Inbound Allow Rules Lifecycle (`Firewall.RuleAdd` / `Firewall.RuleRemove`)**: Tracks the declarative reconciliation and lifecycle management of Windows Firewall inbound allow rules for internal listening endpoints (Self-Service Portal, Management API, Threat Hub, Honeypot Decoys); automatically aligns on startup, port changes, and shutdown.
   - Audits probation transitions (`Firewall.Probation`), firewall unlocking (`Firewall.Unlock`), automated database maintenance (`Database.Maintenance`), and service runtime events (`Runtime.Start` / `Runtime.Stop`).
 - **Multi-Dimensional Filtering & CSV Export**:
   - Filter by event category, outcome (Succeeded / Failed), and free-text search keywords.

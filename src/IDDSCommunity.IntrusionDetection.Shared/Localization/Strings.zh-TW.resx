@@ -1033,4 +1033,6 @@
   <data name="No records available to export." xml:space="preserve"><value>目前沒有可供匯出的紀錄。</value></data>
   <data name="Information" xml:space="preserve"><value>資訊</value></data>
   <data name="Error" xml:space="preserve"><value>錯誤</value></data>
+  <data name="Firewall Inbound Rules" xml:space="preserve"><value>防火牆傳入放行規則</value></data>
+  <data name="Auto-manage Windows Firewall inbound rules" xml:space="preserve"><value>自動維護 Windows 防火牆傳入放行規則</value></data>
 </root>

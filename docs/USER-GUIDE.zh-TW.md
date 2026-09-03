@@ -73,6 +73,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - **動態 DNS FQDN 解析 (DynamicDns.Resolve)**：記錄各設定網域名稱之解析狀態與最新動態 IP 清單。
   - **跨主機叢集情報同步 (Cluster.Sync)**：記錄 Edge 邊緣節點向 Threat Hub 推播與拉取之威脅情報筆數。
 - **維護與防禦事件**：
+  - **傳入放行規則對齊 (`Firewall.RuleAdd` / `Firewall.RuleRemove`)**：自動追蹤內部監聽服務（合法使用者自助解鎖網頁門戶、安全 RESTful 管理 API、威脅情資中繼中心 Hub、蜜罐誘捕 Decoy 通訊埠）在 Windows 防火牆中的傳入允許規則生命週期；隨服務啟用、連接埠變更或服務停止時自動執行宣告式對齊與清理。
   - 記錄智慧假釋移轉 (`Firewall.Probation`)、防火牆解鎖 (`Firewall.Unlock`)、資料庫自動清理備份 (`Database.Maintenance`) 與服務啟動停止 (`Runtime.Start` / `Runtime.Stop`)。
 - **多維度篩選與匯出**：
   - 支援依「事件類別」、「執行結果（成功/失敗）」與「關鍵字」進行快速交叉過濾。

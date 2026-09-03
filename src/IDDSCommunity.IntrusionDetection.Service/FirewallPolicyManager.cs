@@ -502,6 +502,158 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         result.AddRange(nonIpv4OrCidr);
         return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
+
+    /// <summary>
+    /// 定義由 IDDS 社群版所建立之傳入放行規則名稱前綴。
+    /// </summary>
+    internal const string INBOUND_ALLOW_RULE_PREFIX = "IDDSCommunity_Allow_";
+
+    /// <summary>
+    /// 產生傳入放行規則之標準化名稱。
+    /// </summary>
+    /// <param name="featureKey">功能識別碼。</param>
+    /// <param name="protocol">通訊協定。</param>
+    /// <param name="port">通訊埠號。</param>
+    /// <returns>傳回標準化之規則名稱字串。</returns>
+    internal static string GetInboundAllowRuleName(string featureKey, string protocol, int port) =>
+        $"{INBOUND_ALLOW_RULE_PREFIX}{featureKey}_{protocol.ToUpperInvariant()}_{port}";
+
+    /// <inheritdoc />
+    public void ReconcileInboundAllowRules(
+        IReadOnlyCollection<FirewallInboundRuleDefinition> targetRules,
+        Action<string, string, string, string?>? auditRecorder = null)
+    {
+        ArgumentNullException.ThrowIfNull(targetRules);
+        try
+        {
+            Dictionary<string, FirewallInboundRuleDefinition> expectedRules = new(StringComparer.OrdinalIgnoreCase);
+            foreach (FirewallInboundRuleDefinition tr in targetRules)
+            {
+                string name = GetInboundAllowRuleName(tr.FeatureKey, tr.Protocol, tr.Port);
+                expectedRules[name] = tr;
+            }
+
+            List<INetFwRule> existingManagedRules = FindRules(INBOUND_ALLOW_RULE_PREFIX);
+
+            foreach (INetFwRule existing in existingManagedRules)
+            {
+                string existingName = FirewallComString.Get(existing.Name);
+                if (!expectedRules.ContainsKey(existingName))
+                {
+                    try
+                    {
+                        FirewallComString.Set(existingName, firewallPolicyManager.Rules.Remove);
+                        logManager.WriteEntry(
+                            $"Removed stale firewall inbound allow rule: {existingName}",
+                            System.Diagnostics.EventLogEntryType.Information,
+                            Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED,
+                            Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                        auditRecorder?.Invoke("Firewall.RuleRemove", "Succeeded", existingName, "Removed obsolete inbound allow rule");
+                    }
+                    catch (Exception ex)
+                    {
+                        logManager.WriteEntry(
+                            $"Failed to remove firewall rule {existingName}: {ex.Message}",
+                            System.Diagnostics.EventLogEntryType.Warning,
+                            Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                            Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                        auditRecorder?.Invoke("Firewall.RuleRemove", "Failed", existingName, ex.Message);
+                    }
+                }
+            }
+
+            foreach (var (ruleName, def) in expectedRules)
+            {
+                INetFwRule? existing = GetRule(ruleName);
+                if (existing is null)
+                {
+                    try
+                    {
+                        INetFwRule newRule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
+                        FirewallComString.Set(ruleName, value => newRule.Name = value);
+                        FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => newRule.Grouping = value);
+                        FirewallComString.Set(def.Description, value => newRule.Description = value);
+                        newRule.Direction = NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN;
+                        newRule.Action = NET_FW_ACTION.NET_FW_ACTION_ALLOW;
+                        newRule.Protocol = def.Protocol.Equals("UDP", StringComparison.OrdinalIgnoreCase) ? 17 : 6;
+                        FirewallComString.Set(def.Port.ToString(), value => newRule.LocalPorts = value);
+                        newRule.Profiles = (int)NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL;
+                        newRule.Enabled = true;
+
+                        firewallPolicyManager.Rules.Add(newRule);
+
+                        logManager.WriteEntry(
+                            $"Created firewall inbound allow rule: {ruleName} ({def.Protocol} {def.Port})",
+                            System.Diagnostics.EventLogEntryType.Information,
+                            Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED,
+                            Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                        auditRecorder?.Invoke("Firewall.RuleAdd", "Succeeded", $"{def.FeatureKey} ({def.Protocol} {def.Port})", $"Created inbound allow rule: {ruleName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        logManager.WriteEntry(
+                            $"Failed to create firewall rule {ruleName}: {ex.Message}",
+                            System.Diagnostics.EventLogEntryType.Error,
+                            Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                            Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                        auditRecorder?.Invoke("Firewall.RuleAdd", "Failed", $"{def.FeatureKey} ({def.Protocol} {def.Port})", ex.Message);
+                    }
+                }
+                else if (!existing.Enabled)
+                {
+                    existing.Enabled = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry(
+                $"ReconcileInboundAllowRules encountered an error: {ex.Message}",
+                System.Diagnostics.EventLogEntryType.Error,
+                Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+        }
+    }
+
+    /// <inheritdoc />
+    public void RemoveAllInboundAllowRules(Action<string, string, string, string?>? auditRecorder = null)
+    {
+        try
+        {
+            List<INetFwRule> rules = FindRules(INBOUND_ALLOW_RULE_PREFIX);
+            foreach (INetFwRule rule in rules)
+            {
+                string ruleName = FirewallComString.Get(rule.Name);
+                try
+                {
+                    FirewallComString.Set(ruleName, firewallPolicyManager.Rules.Remove);
+                    logManager.WriteEntry(
+                        $"Cleaned up firewall inbound allow rule: {ruleName}",
+                        System.Diagnostics.EventLogEntryType.Information,
+                        Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_ALTERED,
+                        Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                    auditRecorder?.Invoke("Firewall.RuleRemove", "Succeeded", ruleName, "Cleaned up inbound allow rule on service shutdown");
+                }
+                catch (Exception ex)
+                {
+                    logManager.WriteEntry(
+                        $"Failed to remove firewall rule {ruleName}: {ex.Message}",
+                        System.Diagnostics.EventLogEntryType.Warning,
+                        Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                        Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logManager.WriteEntry(
+                $"RemoveAllInboundAllowRules encountered an error: {ex.Message}",
+                System.Diagnostics.EventLogEntryType.Warning,
+                Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+        }
+    }
+
     /// <summary>
     /// Releases the COM firewall policy object owned by this manager.
     /// </summary>

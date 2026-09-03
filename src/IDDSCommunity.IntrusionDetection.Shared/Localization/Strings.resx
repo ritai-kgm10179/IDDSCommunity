@@ -1033,5 +1033,7 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="No records available to export." xml:space="preserve"><value>No records available to export.</value></data>
   <data name="Information" xml:space="preserve"><value>Information</value></data>
   <data name="Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Firewall Inbound Rules" xml:space="preserve"><value>Firewall Inbound Rules</value></data>
+  <data name="Auto-manage Windows Firewall inbound rules" xml:space="preserve"><value>Auto-manage Windows Firewall inbound rules</value></data>
 </root>
 

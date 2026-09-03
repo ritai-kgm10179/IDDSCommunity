@@ -68,4 +68,38 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsTrue(aggregated.Contains("192.168.1.1"));
         Assert.IsTrue(aggregated.Contains("192.168.1.5"));
     }
+
+    /// <summary>
+    /// 驗證傳入放行規則規格模型之屬性驗證與相等性比較。
+    /// </summary>
+    [TestMethod]
+    public void FirewallInboundRuleDefinition_PropertiesAndEquality()
+    {
+        var rule1 = new FirewallInboundRuleDefinition("SelfServicePortal", "Portal Rule", 8444, "TCP");
+        var rule2 = new FirewallInboundRuleDefinition("selfserviceportal", "Different Display Name", 8444, "tcp");
+        var rule3 = new FirewallInboundRuleDefinition("ManagementApi", "API Rule", 8443, "TCP");
+
+        Assert.AreEqual("SelfServicePortal", rule1.FeatureKey);
+        Assert.AreEqual(8444, rule1.Port);
+        Assert.AreEqual("TCP", rule1.Protocol);
+        Assert.AreEqual(rule1, rule2);
+        Assert.AreNotEqual(rule1, rule3);
+        Assert.AreEqual(rule1.GetHashCode(), rule2.GetHashCode());
+
+        Assert.ThrowsExactly<System.ArgumentOutOfRangeException>(() => new FirewallInboundRuleDefinition("Test", "Test", 0));
+        Assert.ThrowsExactly<System.ArgumentOutOfRangeException>(() => new FirewallInboundRuleDefinition("Test", "Test", 65536));
+    }
+
+    /// <summary>
+    /// 驗證傳入放行規則命名之標準化格式。
+    /// </summary>
+    [TestMethod]
+    public void GetInboundAllowRuleName_GeneratesStandardizedName()
+    {
+        string name = FirewallPolicyManager.GetInboundAllowRuleName("SelfServicePortal", "tcp", 8444);
+        Assert.AreEqual("IDDSCommunity_Allow_SelfServicePortal_TCP_8444", name);
+
+        string hubName = FirewallPolicyManager.GetInboundAllowRuleName("ThreatHub", "TCP", 8443);
+        Assert.AreEqual("IDDSCommunity_Allow_ThreatHub_TCP_8443", hubName);
+    }
 }

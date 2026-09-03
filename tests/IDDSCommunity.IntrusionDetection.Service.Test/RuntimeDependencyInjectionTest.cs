@@ -84,5 +84,20 @@ public sealed class RuntimeDependencyInjectionTest
         public void RemoveIpAddressFromBlockList(string ipAddress)
         {
         }
+        /// <summary>
+        /// 於相依性插入測試中模擬對齊傳入放行規則。
+        /// </summary>
+        /// <param name="targetRules">目標規則集合。</param>
+        /// <param name="auditRecorder">稽核紀錄委派。</param>
+        public void ReconcileInboundAllowRules(System.Collections.Generic.IReadOnlyCollection<FirewallInboundRuleDefinition> targetRules, System.Action<string, string, string, string?>? auditRecorder = null)
+        {
+        }
+        /// <summary>
+        /// 於相依性插入測試中模擬清除傳入放行規則。
+        /// </summary>
+        /// <param name="auditRecorder">稽核紀錄委派。</param>
+        public void RemoveAllInboundAllowRules(System.Action<string, string, string, string?>? auditRecorder = null)
+        {
+        }
     }
 }

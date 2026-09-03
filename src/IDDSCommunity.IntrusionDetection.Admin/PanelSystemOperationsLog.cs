@@ -227,6 +227,7 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Dynamic DNS"), "DynamicDns."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Cluster Threat Sync"), "Cluster."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Firewall & Probation"), "Firewall."));
+        comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Firewall Inbound Rules"), "Firewall.Rule"));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Database maintenance"), "Database."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Service Runtime"), "Runtime."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("System Reports"), "Report."));
