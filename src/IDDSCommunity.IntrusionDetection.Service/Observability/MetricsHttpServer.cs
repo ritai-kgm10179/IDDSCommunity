@@ -36,6 +36,11 @@ public sealed class MetricsHttpServer : IDisposable
     }
 
     /// <summary>
+    /// 取得伺服器目前是否處於監聽狀態。
+    /// </summary>
+    public bool IsListening => listener != null && listener.IsListening;
+
+    /// <summary>
     /// 啟動 Metrics HTTP 伺服器監聽。
     /// </summary>
     public void Start()
@@ -126,27 +131,61 @@ public sealed class MetricsHttpServer : IDisposable
             }
 
             string path = context.Request.Url?.AbsolutePath.TrimEnd('/') ?? string.Empty;
+            if (string.IsNullOrEmpty(path)) path = "/";
+            string method = context.Request.HttpMethod.ToUpperInvariant();
 
-            if (path.Equals("/metrics", StringComparison.OrdinalIgnoreCase))
+            if (path is "/" or "/health" or "/healthz")
             {
-                string metricsText = BuildMetricsText();
-                byte[] buffer = Encoding.UTF8.GetBytes(metricsText);
-                context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
+                if (method != "GET" && method != "HEAD")
+                {
+                    context.Response.Headers["Allow"] = "GET, HEAD";
+                    context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    context.Response.ContentType = "application/json; charset=utf-8";
+                    byte[] notAllowed = Encoding.UTF8.GetBytes("{\"error\":\"Method Not Allowed\"}\n");
+                    await context.Response.OutputStream.WriteAsync(notAllowed).ConfigureAwait(false);
+                }
+                else
+                {
+                    string healthJson = path == "/"
+                        ? $"{{\"status\":\"healthy\",\"uptime_seconds\":{(int)(DateTime.UtcNow - startTimeUtc).TotalSeconds},\"endpoints\":[\"/metrics\",\"/healthz\"]}}\n"
+                        : $"{{\"status\":\"healthy\",\"uptime_seconds\":{(int)(DateTime.UtcNow - startTimeUtc).TotalSeconds}}}\n";
+
+                    byte[] buffer = Encoding.UTF8.GetBytes(healthJson);
+                    context.Response.ContentType = "application/json; charset=utf-8";
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    if (method != "HEAD")
+                    {
+                        await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
+                    }
+                }
             }
-            else if (path.Equals("/healthz", StringComparison.OrdinalIgnoreCase))
+            else if (path.Equals("/metrics", StringComparison.OrdinalIgnoreCase))
             {
-                string healthJson = $"{{\"status\":\"healthy\",\"uptime_seconds\":{(int)(DateTime.UtcNow - startTimeUtc).TotalSeconds}}}\n";
-                byte[] buffer = Encoding.UTF8.GetBytes(healthJson);
-                context.Response.ContentType = "application/json; charset=utf-8";
-                context.Response.StatusCode = (int)HttpStatusCode.OK;
-                await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
+                if (method != "GET" && method != "HEAD")
+                {
+                    context.Response.Headers["Allow"] = "GET, HEAD";
+                    context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    context.Response.ContentType = "application/json; charset=utf-8";
+                    byte[] notAllowed = Encoding.UTF8.GetBytes("{\"error\":\"Method Not Allowed\"}\n");
+                    await context.Response.OutputStream.WriteAsync(notAllowed).ConfigureAwait(false);
+                }
+                else
+                {
+                    context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                    if (method != "HEAD")
+                    {
+                        string metricsText = BuildMetricsText();
+                        byte[] buffer = Encoding.UTF8.GetBytes(metricsText);
+                        await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
+                    }
+                }
             }
             else
             {
                 context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                byte[] notFound = Encoding.UTF8.GetBytes("Not Found\n");
+                context.Response.ContentType = "application/json; charset=utf-8";
+                byte[] notFound = Encoding.UTF8.GetBytes("{\"error\":\"Not Found\"}\n");
                 await context.Response.OutputStream.WriteAsync(notFound).ConfigureAwait(false);
             }
 

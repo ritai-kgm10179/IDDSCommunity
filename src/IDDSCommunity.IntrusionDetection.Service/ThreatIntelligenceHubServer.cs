@@ -81,6 +81,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     }
 
     /// <summary>
+    /// 取得伺服器目前是否處於監聽狀態。
+    /// </summary>
+    public bool IsListening => listener != null && listener.IsListening;
+
+    /// <summary>
     /// 啟動 Threat Hub HTTP 監聽服務。
     /// </summary>
     public void Start()
@@ -91,7 +96,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         listener = new HttpListener();
         try
         {
-            listener.Prefixes.Add($"http://+:{port}/api/threat-hub/");
+            listener.Prefixes.Add($"http://+:{port}/");
             listener.Start();
         }
         catch
@@ -99,7 +104,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             // 若無管理員 URL ACL 權限，回退至 localhost 監聽
             listener.Close();
             listener = new HttpListener();
-            listener.Prefixes.Add($"http://*:{port}/api/threat-hub/");
+            listener.Prefixes.Add($"http://*:{port}/");
             try
             {
                 listener.Start();
@@ -108,7 +113,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             {
                 listener.Close();
                 listener = new HttpListener();
-                listener.Prefixes.Add($"http://localhost:{port}/api/threat-hub/");
+                listener.Prefixes.Add($"http://localhost:{port}/");
                 listener.Start();
             }
         }
@@ -116,6 +121,18 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         cts = new CancellationTokenSource();
         listenTask = ListenLoopAsync(listener, cts.Token);
         logInformation($"Threat Intelligence Hub server started listening on port {port}.");
+    }
+
+    private static readonly string[] SuspiciousProbePatterns =
+    [
+        ".env", "wp-", "admin", "phpmyadmin", "cgi-bin", ".git", "shell", "actuator", "swagger", "api-docs", "console", "solr"
+    ];
+
+    private static bool IsSuspiciousProbePath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        string lower = path.ToLowerInvariant();
+        return SuspiciousProbePatterns.Any(pattern => lower.Contains(pattern, StringComparison.Ordinal));
     }
 
     private async Task ListenLoopAsync(HttpListener httpListener, CancellationToken cancellationToken)
@@ -149,18 +166,50 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
         try
         {
-            string? apiKey = req.Headers[ApiKeyHeader];
-            if (string.IsNullOrEmpty(apiKey) || !string.Equals(apiKey, config.ThreatHubApiKey, StringComparison.Ordinal))
+            string path = req.Url?.AbsolutePath.TrimEnd('/') ?? string.Empty;
+            if (string.IsNullOrEmpty(path)) path = "/";
+            string method = req.HttpMethod.ToUpperInvariant();
+
+            // 1. 輕量公開健康探針 (Health Probe per RFC 9110 & CNCF Liveness / Readiness Standards)
+            if (path is "/" or "/health" or "/healthz")
             {
-                resp.StatusCode = (int)HttpStatusCode.Unauthorized;
-                await WriteJsonResponseAsync(resp, new { error = "Unauthorized: Invalid API Key" }).ConfigureAwait(false);
+                if (method != "GET" && method != "HEAD")
+                {
+                    resp.Headers["Allow"] = "GET, HEAD";
+                    resp.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    await WriteJsonResponseAsync(resp, new { error = "Method Not Allowed" }).ConfigureAwait(false);
+                    return;
+                }
+
+                resp.StatusCode = (int)HttpStatusCode.OK;
+                await WriteJsonResponseAsync(resp, new
+                {
+                    status = "online",
+                    timestampUtc = DateTime.UtcNow
+                }).ConfigureAwait(false);
                 return;
             }
 
-            string path = req.Url?.AbsolutePath.TrimEnd('/') ?? string.Empty;
-
-            if (req.HttpMethod == "POST" && path.EndsWith("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
+            // 2. 核心威脅情資同步端點 (/api/threat-hub/sync)
+            if (path.EndsWith("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
             {
+                string? apiKey = req.Headers[ApiKeyHeader];
+                if (string.IsNullOrEmpty(apiKey) || !string.Equals(apiKey, config.ThreatHubApiKey, StringComparison.Ordinal))
+                {
+                    resp.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
+                    return;
+                }
+
+                if (method != "POST")
+                {
+                    // RFC 9110 §15.5.6: 405 Method Not Allowed MUST include Allow header
+                    resp.Headers["Allow"] = "POST";
+                    resp.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    await WriteJsonResponseAsync(resp, new { error = "Method Not Allowed" }).ConfigureAwait(false);
+                    return;
+                }
+
                 using StreamReader reader = new(req.InputStream, req.ContentEncoding);
                 string body = await reader.ReadToEndAsync().ConfigureAwait(false);
                 ThreatHubSyncPayload? payload = JsonSerializer.Deserialize<ThreatHubSyncPayload>(body, JsonOptions);
@@ -204,8 +253,24 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 return;
             }
 
+            // 3. 惡意路徑探測檢測與資安記錄 (Scan-to-Ban 防禦陷阱)
+            if (IsSuspiciousProbePath(path))
+            {
+                logInformation($"Threat Hub probe detected from {req.RemoteEndPoint.Address}: {path}");
+                try
+                {
+                    if (!IPAddress.IsLoopback(req.RemoteEndPoint.Address))
+                    {
+                        string clientIp = req.RemoteEndPoint.Address.ToString();
+                        IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, clientIp, IntrusionLog.STATUS_INTRUSION_ATTEMPT, false);
+                    }
+                }
+                catch { }
+            }
+
+            // 4. 其他未定義端點
             resp.StatusCode = (int)HttpStatusCode.NotFound;
-            await WriteJsonResponseAsync(resp, new { error = "Endpoint not found" }).ConfigureAwait(false);
+            await WriteJsonResponseAsync(resp, new { error = "Not Found" }).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -213,7 +278,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             try
             {
                 resp.StatusCode = (int)HttpStatusCode.InternalServerError;
-                await WriteJsonResponseAsync(resp, new { error = ex.Message }).ConfigureAwait(false);
+                await WriteJsonResponseAsync(resp, new { error = "Internal Server Error" }).ConfigureAwait(false);
             }
             catch { }
         }
