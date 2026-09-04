@@ -32,8 +32,14 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - **降級警告**：若嘗試安裝較舊版本，系統將彈出警告對話框要求確認，防止誤將系統降級。
 
 ### 2.3 解除安裝 (Uninstallation)
-1. 執行 `Setup.exe` 點擊 **「解除安裝」**（當系統已安裝時顯示）。
-2. 安裝程式將自動停止 Windows 服務、刪除建立之防火牆規則並乾淨清理公用桌面與開始功能表捷徑。
+1. 可透過 Windows「設定 → 應用程式 → 已安裝的應用程式」、控制台「程式和功能」、開始功能表捷徑，或執行 `Setup.exe` 點擊 **「解除安裝」**。
+2. 安裝程式將自動停止 Windows 服務、清除 Windows 防火牆規則、撤銷系統註冊表機碼並乾淨清理公用桌面與開始功能表捷徑。
+
+### 2.4 自動化與無人值守靜默部署 (Silent Automation CLI)
+- 安裝程式提供完整的命令列引數支援：
+  - 靜默安裝：`.\Setup.exe /install /quiet`（可搭配 `/nodesktop` 或 `/nostartmenu`）
+  - 靜默解除安裝：`.\Setup.exe /uninstall /quiet`
+- 詳細參數清單、結束代碼與自動化指南請參閱 [Setup 安裝程式專屬指南（HTML）](docs/SETUP-GUIDE.zh-TW.html) 與 [Markdown 指南](docs/SETUP-GUIDE.zh-TW.md)。
 
 ---
 

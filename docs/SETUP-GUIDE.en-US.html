@@ -478,7 +478,10 @@ footer p {
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-downgrade-protection">2.3 Downgrade Protection</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-uninstallation">2.4 Uninstallation</a></li>
-    <li><a href="#sec-3-automation-and-cli-verification">3. Automation and CLI Verification</a></li>
+    <li><a href="#sec-3-automation-and-cli-deployment">3. Automation and CLI Deployment</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-command-line-switches">3.1 Command-Line Switches</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-exit-codes">3.2 Exit Codes</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-3-common-automation-examples">3.3 Common Automation Examples</a></li>
     <li><a href="#sec-4-troubleshooting-faq">4. Troubleshooting FAQ</a></li>
   </ul>
 </nav>
@@ -546,35 +549,125 @@ footer p {
 </ul>
 <h3 id="sec-2-4-uninstallation">2.4 Uninstallation</h3>
 <ol>
-  <li>Trigger uninstallation through:</li>
+  <li>Trigger uninstallation through any of the following methods:</li>
 </ol>
 <ul>
-  <li>Windows "Settings -> Apps & Features -> IDDS Community -> Uninstall".</li>
-  <li>Executing %ProgramFiles%\IDDS Community\Setup.exe and selecting <strong>"Uninstall"</strong>.</li>
-  <li>Start Menu shortcut "Uninstall IDDS Community".</li>
+  <li>Windows "Settings -> Apps -> Installed apps" or Control Panel "Programs and Features", select "IDDS Community" and click Uninstall.</li>
+  <li>Run the cached installer <code>%ProgramData%\IDDS Community\Setup.exe</code> or original setup executable and click <strong>"Uninstall"</strong>.</li>
+  <li>Click the Start Menu shortcut "Uninstall IDDS Community".</li>
+  <li>Execute an unattended silent uninstallation from an elevated command prompt: <code>.\Setup.exe /uninstall /quiet</code>.</li>
 </ul>
 <ol>
-  <li>The uninstallation process:</li>
+  <li>The uninstallation process performs the following cleanup operations:</li>
 </ol>
 <ul>
-  <li>Halts and removes the IDDSCommunityProtection Windows service.</li>
-  <li>Deletes all firewall block rules created by the system (IDDS Community rule group).</li>
+  <li>Gracefully halts and removes the IDDSCommunityProtection Windows service.</li>
+  <li>Removes all firewall rules created by the system via native COM APIs (rule group: IDDS Community and associated inbound/outbound rules).</li>
+  <li>Unregisters the uninstallation entry from the Windows Registry (<code>HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community</code>).</li>
   <li>Removes desktop and Start Menu shortcuts.</li>
-  <li>Removes %ProgramFiles%\IDDS Community program files.</li>
+  <li>Deletes <code>%ProgramFiles%\IDDS Community</code> program files.</li>
+  <li>Safely cleans up the cached setup executable (<code>%ProgramData%\IDDS Community\Setup.exe</code>).</li>
 </ul>
 <ol>
   <li><strong>Data Retention</strong>:</li>
 </ol>
 <ul>
-  <li>To protect forensic audit history, the database and logs in %ProgramData%\IDDSCommunity are preserved. To completely purge data, remove this directory manually.</li>
+  <li>To protect forensic audit history, the database and logs in <code>%ProgramData%\IDDSCommunity</code> are preserved. To completely purge data, remove this directory manually.</li>
 </ul>
 <hr />
-<h2 id="sec-3-automation-and-cli-verification">3. Automation and CLI Verification</h2>
-<p>The installer supports automated test verification for CI/CD environments:</p>
-<p>`powershell</p>
-<h1 id="sec-perform-automated-reinstall-verification-uninstall-fresh-install-overwrite-reinstall">Perform automated reinstall verification (uninstall, fresh install, overwrite reinstall)</h1>
-<p>.\Setup.exe --verify-reinstall</p>
-<p>`</p>
+<h2 id="sec-3-automation-and-cli-deployment">3. Automation and CLI Deployment</h2>
+<p>The installer supports a full suite of command-line switches for enterprise unattended deployment and orchestration via GPO, Microsoft Intune, SCCM, Ansible, or PowerShell:</p>
+<h3 id="sec-3-1-command-line-switches">3.1 Command-Line Switches</h3>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+  <thead>
+    <tr style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); text-align: left;">
+      <th style="padding: 0.6rem 0.8rem;">Option</th>
+      <th style="padding: 0.6rem 0.8rem;">Shorthand</th>
+      <th style="padding: 0.6rem 0.8rem;">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/install</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-i</code>, <code>--install</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Requests an installation or upgrade operation (default behavior).</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/uninstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-u</code>, <code>--uninstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Requests an uninstallation operation.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/quiet</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>/silent</code>, <code>-q</code>, <code>-s</code>, <code>--quiet</code>, <code>--silent</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Enables unattended silent mode without UI windows or prompts.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/nodesktop</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-nodesktop</code>, <code>--nodesktop</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Skips creating public desktop shortcuts.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/nostartmenu</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-nostartmenu</code>, <code>--nostartmenu</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Skips creating Start Menu shortcuts.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>--verify-reinstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;">-</td>
+      <td style="padding: 0.6rem 0.8rem;">CI/CD verification switch: performs uninstall, clean install, and overwrite regression verification.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="sec-3-2-exit-codes">3.2 Exit Codes</h3>
+<p>In silent mode (<code>/quiet</code>), <code>Setup.exe</code> returns structured exit codes indicating operational status:</p>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+  <thead>
+    <tr style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); text-align: left;">
+      <th style="padding: 0.6rem 0.8rem;">Exit Code</th>
+      <th style="padding: 0.6rem 0.8rem;">Constant / Meaning</th>
+      <th style="padding: 0.6rem 0.8rem;">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>0</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>SUCCESS</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Operation completed successfully.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>3010</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_SUCCESS_REBOOT_REQUIRED</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Operation completed successfully, but a system reboot is required to finalize locked files.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>2</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_FILE_NOT_FOUND / CLEANUP_INCOMPLETE</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Operation completed, but in-use files were scheduled for deferred deletion upon reboot.</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>1</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_FUNCTION_FAILED</code></td>
+      <td style="padding: 0.6rem 0.8rem;">Operation failed; error details are recorded in the diagnostic log.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="sec-3-3-common-automation-examples">3.3 Common Automation Examples</h3>
+<pre><code style="font-family: var(--font-mono); font-size: 0.9rem; display: block; background: var(--bg-tertiary); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-light); overflow-x: auto;"># 1. Enterprise server unattended silent installation (no desktop shortcut)
+.\Setup.exe /install /quiet /nodesktop
+
+# 2. Standard silent installation (desktop & Start Menu shortcuts included)
+.\Setup.exe /install /quiet
+
+# 3. Unattended silent uninstallation
+.\Setup.exe /uninstall /quiet
+
+# 4. CI/CD automated reinstall verification
+.\Setup.exe --verify-reinstall</code></pre>
 <hr />
 <h2 id="sec-4-troubleshooting-faq">4. Troubleshooting FAQ</h2>
 <ul>

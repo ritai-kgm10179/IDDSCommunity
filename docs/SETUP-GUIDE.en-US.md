@@ -54,28 +54,64 @@ Welcome to the **IDDS Community** Installer Guide! This document provides comple
 
 ### 2.4 Uninstallation
 
-1. Trigger uninstallation through:
-   - Windows "Settings -> Apps & Features -> IDDS Community -> Uninstall".
-   - Executing %ProgramFiles%\IDDS Community\Setup.exe and selecting **"Uninstall"**.
-   - Start Menu shortcut "Uninstall IDDS Community".
-2. The uninstallation process:
-   - Halts and removes the IDDSCommunityProtection Windows service.
-   - Deletes all firewall block rules created by the system (IDDS Community rule group).
+1. Trigger uninstallation through any of the following methods:
+   - Windows "Settings -> Apps -> Installed apps" or Control Panel "Programs and Features", select "IDDS Community" and click Uninstall.
+   - Run the cached installer `%ProgramData%\IDDS Community\Setup.exe` or original setup executable and click **"Uninstall"**.
+   - Click the Start Menu shortcut "Uninstall IDDS Community".
+   - Execute an unattended silent uninstallation from an elevated command prompt: `.\Setup.exe /uninstall /quiet`.
+2. The uninstallation process performs the following cleanup operations:
+   - Gracefully halts and removes the IDDSCommunityProtection Windows service.
+   - Removes all firewall rules created by the system via native COM APIs (rule group: IDDS Community and associated inbound/outbound rules).
+   - Unregisters the uninstallation entry from the Windows Registry (`HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community`).
    - Removes desktop and Start Menu shortcuts.
-   - Removes %ProgramFiles%\IDDS Community program files.
+   - Deletes `%ProgramFiles%\IDDS Community` program files.
+   - Safely cleans up the cached setup executable (`%ProgramData%\IDDS Community\Setup.exe`).
 3. **Data Retention**:
-   - To protect forensic audit history, the database and logs in %ProgramData%\IDDSCommunity are preserved. To completely purge data, remove this directory manually.
+   - To protect forensic audit history, the database and logs in `%ProgramData%\IDDSCommunity` are preserved. To completely purge data, remove this directory manually.
 
 ---
 
-## 3. Automation and CLI Verification
+## 3. Automation and CLI Deployment
 
-The installer supports automated test verification for CI/CD environments:
+The installer supports a full suite of command-line switches for enterprise unattended deployment and orchestration via GPO, Microsoft Intune, SCCM, Ansible, or PowerShell:
 
-`powershell
-# Perform automated reinstall verification (uninstall, fresh install, overwrite reinstall)
+### 3.1 Command-Line Switches
+
+| Option | Shorthand | Description |
+| :--- | :--- | :--- |
+| `/install` | `-i`, `--install` | Requests an installation or upgrade operation (default behavior). |
+| `/uninstall` | `-u`, `--uninstall` | Requests an uninstallation operation. |
+| `/quiet` | `/silent`, `-q`, `-s`, `--quiet`, `--silent` | Enables unattended silent mode without UI windows or prompts. |
+| `/nodesktop` | `-nodesktop`, `--nodesktop` | Skips creating public desktop shortcuts. |
+| `/nostartmenu` | `-nostartmenu`, `--nostartmenu` | Skips creating Start Menu shortcuts. |
+| `--verify-reinstall` | | CI/CD verification switch: performs uninstall, clean install, and overwrite regression verification. |
+
+### 3.2 Exit Codes
+
+In silent mode (`/quiet`), `Setup.exe` returns structured exit codes indicating operational status:
+
+| Exit Code | Constant / Meaning | Description |
+| :--- | :--- | :--- |
+| `0` | `SUCCESS` | Operation completed successfully. |
+| `3010` | `ERROR_SUCCESS_REBOOT_REQUIRED` | Operation completed successfully, but a system reboot is required to finalize locked files. |
+| `2` | `ERROR_FILE_NOT_FOUND / CLEANUP_INCOMPLETE` | Operation completed, but in-use files were scheduled for deferred deletion upon reboot. |
+| `1` | `ERROR_FUNCTION_FAILED` | Operation failed; error details are recorded in the diagnostic log. |
+
+### 3.3 Common Automation Examples
+
+```powershell
+# 1. Enterprise server unattended silent installation (no desktop shortcut)
+.\Setup.exe /install /quiet /nodesktop
+
+# 2. Standard silent installation (desktop & Start Menu shortcuts included)
+.\Setup.exe /install /quiet
+
+# 3. Unattended silent uninstallation
+.\Setup.exe /uninstall /quiet
+
+# 4. CI/CD automated reinstall verification
 .\Setup.exe --verify-reinstall
-`
+```
 
 ---
 

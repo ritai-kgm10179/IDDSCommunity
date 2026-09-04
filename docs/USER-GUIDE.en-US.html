@@ -477,6 +477,7 @@ footer p {
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-fresh-installation">2.1 Fresh Installation</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-upgrade-and-repair">2.2 Upgrade and Repair</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-uninstallation">2.3 Uninstallation</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-automation-and-silent-deployment-silent-automation-cli">2.4 Automation and Silent Deployment (Silent Automation CLI)</a></li>
     <li><a href="#sec-3-administration-console-guide">3. Administration Console Guide</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-dashboard">3.1 📊 Dashboard</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-security-log-siem-search">3.2 🔎 Security Log &amp; SIEM Search</a></li>
@@ -551,9 +552,16 @@ footer p {
 </ul>
 <h3 id="sec-2-3-uninstallation">2.3 Uninstallation</h3>
 <ol>
-  <li>Run <code>Setup.exe</code> and click <strong>"Uninstall"</strong> (displayed when already installed).</li>
-  <li>The installer automatically stops the Windows service, removes created firewall rules, and cleans up shortcuts.</li>
+  <li>Uninstall via Windows "Settings -> Apps -> Installed apps", Control Panel "Programs and Features", the Start Menu shortcut, or by launching <code>Setup.exe</code> and clicking <strong>"Uninstall"</strong>.</li>
+  <li>The uninstallation process automatically stops the Windows service, cleans up firewall rules, unregisters Windows Registry entries, and removes shortcuts.</li>
 </ol>
+<h3 id="sec-2-4-automation-and-silent-deployment-silent-automation-cli">2.4 Automation and Silent Deployment (Silent Automation CLI)</h3>
+<ul>
+  <li>The installer provides comprehensive command-line argument support:</li>
+  <li>Silent install: <code>.\Setup.exe /install /quiet</code> (with optional <code>/nodesktop</code> or <code>/nostartmenu</code>)</li>
+  <li>Silent uninstall: <code>.\Setup.exe /uninstall /quiet</code></li>
+  <li>For the full parameter reference, exit codes, and deployment patterns, refer to the <a href="SETUP-GUIDE.en-US.html">Setup Guide (HTML)</a> and <a href="SETUP-GUIDE.en-US.md">Markdown Setup Guide</a>.</li>
+</ul>
 <hr />
 <h2 id="sec-3-administration-console-guide">3. Administration Console Guide</h2>
 <p>Launch <strong>IDDS Community Admin Console (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>. The navigation menu on the left includes 8 core panels:</p>

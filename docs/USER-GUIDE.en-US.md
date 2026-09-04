@@ -32,8 +32,14 @@ IDDS Community is a high-performance Windows host-level intrusion detection and 
   - **Downgrade Warning**: Attempting to install an older version prompts a confirmation dialog to prevent accidental downgrades.
 
 ### 2.3 Uninstallation
-1. Run `Setup.exe` and click **"Uninstall"** (displayed when already installed).
-2. The installer automatically stops the Windows service, removes created firewall rules, and cleans up shortcuts.
+1. Uninstall via Windows "Settings -> Apps -> Installed apps", Control Panel "Programs and Features", the Start Menu shortcut, or by launching `Setup.exe` and clicking **"Uninstall"**.
+2. The uninstallation process automatically stops the Windows service, cleans up firewall rules, unregisters Windows Registry entries, and removes shortcuts.
+
+### 2.4 Automation and Silent Deployment (Silent Automation CLI)
+- The installer provides comprehensive command-line argument support:
+  - Silent install: `.\Setup.exe /install /quiet` (with optional `/nodesktop` or `/nostartmenu`)
+  - Silent uninstall: `.\Setup.exe /uninstall /quiet`
+- For the full parameter reference, exit codes, and deployment patterns, refer to the [Setup Guide (HTML)](docs/SETUP-GUIDE.en-US.html) and [Markdown Setup Guide](docs/SETUP-GUIDE.en-US.md).
 
 ---
 

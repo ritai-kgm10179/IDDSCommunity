@@ -477,6 +477,7 @@ footer p {
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-1-全新安裝-fresh-installation">2.1 全新安裝 (Fresh Installation)</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-2-升級與修復-upgrade-reinstall">2.2 升級與修復 (Upgrade &amp; Reinstall)</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-解除安裝-uninstallation">2.3 解除安裝 (Uninstallation)</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-自動化與無人值守靜默部署-silent-automation-cli">2.4 自動化與無人值守靜默部署 (Silent Automation CLI)</a></li>
     <li><a href="#sec-3-管理控制台-admin-console-深度使用指南">3. 管理控制台 (Admin Console) 深度使用指南</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-儀表板-dashboard-總覽">3.1 📊 儀表板 (Dashboard / 總覽)</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-安全性記錄-security-log-siem-search">3.2 🔎 安全性記錄 (Security Log &amp; SIEM Search)</a></li>
@@ -551,9 +552,16 @@ footer p {
 </ul>
 <h3 id="sec-2-3-解除安裝-uninstallation">2.3 解除安裝 (Uninstallation)</h3>
 <ol>
-  <li>執行 <code>Setup.exe</code> 點擊 <strong>「解除安裝」</strong>（當系統已安裝時顯示）。</li>
-  <li>安裝程式將自動停止 Windows 服務、刪除建立之防火牆規則並乾淨清理公用桌面與開始功能表捷徑。</li>
+  <li>可透過 Windows「設定 → 應用程式 → 已安裝的應用程式」、控制台「程式和功能」、開始功能表捷徑，或執行 <code>Setup.exe</code> 點擊 <strong>「解除安裝」</strong>。</li>
+  <li>安裝程式將自動停止 Windows 服務、清除 Windows 防火牆規則、撤銷系統註冊表機碼並乾淨清理公用桌面與開始功能表捷徑。</li>
 </ol>
+<h3 id="sec-2-4-自動化與無人值守靜默部署-silent-automation-cli">2.4 自動化與無人值守靜默部署 (Silent Automation CLI)</h3>
+<ul>
+  <li>安裝程式提供完整的命令列引數支援：</li>
+  <li>靜默安裝：<code>.\Setup.exe /install /quiet</code>（可搭配 <code>/nodesktop</code> 或 <code>/nostartmenu</code>）</li>
+  <li>靜默解除安裝：<code>.\Setup.exe /uninstall /quiet</code></li>
+  <li>詳細參數清單、結束代碼與自動化指南請參閱 <a href="SETUP-GUIDE.zh-TW.html">Setup 安裝程式專屬指南（HTML）</a> 與 <a href="SETUP-GUIDE.zh-TW.md">Markdown 指南</a>。</li>
+</ul>
 <hr />
 <h2 id="sec-3-管理控制台-admin-console-深度使用指南">3. 管理控制台 (Admin Console) 深度使用指南</h2>
 <p>啟動 <strong>IDDS 社群版管理控制台 (<code>IDDSCommunity.IntrusionDetection.Admin.exe</code>)</strong>，主畫面左側為功能導引選單，包含以下 8 大核心功能面板：</p>

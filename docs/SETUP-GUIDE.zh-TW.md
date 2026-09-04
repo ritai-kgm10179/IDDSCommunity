@@ -56,27 +56,63 @@
 ### 2.4 解除安裝（Uninstallation）
 
 1. 透過下列任一方式啟動解除安裝程序：
-   - 至 Windows「設定 → 應用程式與功能」選擇「IDDS Community」點擊解除安裝。
-   - 執行 %ProgramFiles%\IDDS Community\Setup.exe 並點擊 **「解除安裝」**。
+   - 至 Windows「設定 → 應用程式 → 已安裝的應用程式」或控制台「程式和功能」選擇「IDDS Community」點擊解除安裝。
+   - 執行安裝快取檔 `%ProgramData%\IDDS Community\Setup.exe` 或原安裝檔並點擊 **「解除安裝」**。
    - 點擊開始功能表之「解除安裝 IDDS Community」捷徑。
+   - 透過管理員命令列執行無人值守解除安裝：`.\Setup.exe /uninstall /quiet`。
 2. 解除安裝程式將執行下列清理作業：
    - 安全停止並移除 IDDSCommunityProtection Windows 服務。
-   - 清除所有由系統動態建立之 Windows 防火牆阻絕規則（規則群組：IDDS Community）。
+   - 透過 Windows 原生 COM 防火牆介面批次清除所有由系統動態建立之 Windows 防火牆規則（群組：IDDS Community 及相關放行/封鎖規則）。
+   - 自 Windows 註冊表登錄清單（`HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community`）移除解除安裝與維護項目。
    - 刪除公用桌面與開始功能表之捷徑項目。
-   - 移除 %ProgramFiles%\IDDS Community 程式檔案。
+   - 移除 `%ProgramFiles%\IDDS Community` 程式檔案。
+   - 安全清除快取維護目錄中的安裝程式（`%ProgramData%\IDDS Community\Setup.exe`）。
 3. **資料保留原則**：
-   - 為防止誤刪歷史資安鑑識紀錄與黑名單，歷史資料庫與稽核日誌目錄（%ProgramData%\IDDSCommunity）預設將完整保留。如需徹底抹除，可於解除安裝後手動刪除該資料夾。
+   - 為防止誤刪歷史資安鑑識紀錄與黑名單，歷史資料庫與稽核日誌目錄（`%ProgramData%\IDDSCommunity`）預設將完整保留。如需徹底抹除，可於解除安裝後手動刪除該資料夾。
 
 ---
 
 ## 3. 自動化與指令行支援（Automation CLI）
 
-安裝程式提供自動化驗證與 CI/CD 測試開關：
+安裝程式支援完整的命令列參數，方便企業透過 GPO、Microsoft Intune、SCCM、Ansible 或 PowerShell 進行批次靜默部署與維護：
 
-`powershell
-# 執行自動化重新安裝驗證（先卸載、再全新安裝、再執行覆蓋安裝驗證）
+### 3.1 命令列參數清單
+
+| 參數 | 簡寫 | 說明 |
+| :--- | :--- | :--- |
+| `/install` | `-i`, `--install` | 要求執行安裝或升級作業（預設行為）。 |
+| `/uninstall` | `-u`, `--uninstall` | 要求執行解除安裝作業。 |
+| `/quiet` | `/silent`, `-q`, `-s`, `--quiet`, `--silent` | 啟用無人值守靜默模式，不顯示任何 UI 視窗或對話方塊。 |
+| `/nodesktop` | `-nodesktop`, `--nodesktop` | 略過建立公用桌面捷徑。 |
+| `/nostartmenu` | `-nostartmenu`, `--nostartmenu` | 略過建立開始功能表捷徑。 |
+| `--verify-reinstall` | | 專案 CI/CD 專用：執行自動化重新安裝驗證（卸載、全新安裝與覆蓋安裝迴歸測試）。 |
+
+### 3.2 程式結束代碼（Exit Codes）
+
+在無人值守靜默模式（`/quiet`）下，`Setup.exe` 將透過程序結束代碼回報執行結果：
+
+| 結束代碼 | 常數意義 | 說明 |
+| :--- | :--- | :--- |
+| `0` | `SUCCESS` | 作業順利完成。 |
+| `3010` | `ERROR_SUCCESS_REBOOT_REQUIRED` | 作業順利完成，但因部分檔案鎖定需重新啟動作業系統以完成變更。 |
+| `2` | `ERROR_FILE_NOT_FOUND / CLEANUP_INCOMPLETE` | 作業完成，但部分正在使用之檔案已排程於重開機時延遲清理。 |
+| `1` | `ERROR_FUNCTION_FAILED` | 作業失敗，詳細例外狀況已寫入系統診斷日誌。 |
+
+### 3.3 常見自動化部署範例
+
+```powershell
+# 1. 企業伺服器標準無人值守靜默安裝（不建立桌面捷徑）
+.\Setup.exe /install /quiet /nodesktop
+
+# 2. 完整安裝（建立桌面與開始功能表捷徑）
+.\Setup.exe /install /quiet
+
+# 3. 無人值守靜默解除安裝
+.\Setup.exe /uninstall /quiet
+
+# 4. 執行 CI/CD 自動化重新安裝驗證
 .\Setup.exe --verify-reinstall
-`
+```
 
 ---
 

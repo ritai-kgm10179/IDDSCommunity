@@ -479,6 +479,9 @@ footer p {
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-3-降級防護機制-downgrade-protection">2.3 降級防護機制（Downgrade Protection）</a></li>
     <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-2-4-解除安裝-uninstallation">2.4 解除安裝（Uninstallation）</a></li>
     <li><a href="#sec-3-自動化與指令行支援-automation-cli">3. 自動化與指令行支援（Automation CLI）</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-1-命令列參數清單">3.1 命令列參數清單</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-2-程式結束代碼-exit-codes">3.2 程式結束代碼（Exit Codes）</a></li>
+    <li style="padding-left: 1.25rem; font-size: 0.875rem;"><a href="#sec-3-3-常見自動化部署範例">3.3 常見自動化部署範例</a></li>
     <li><a href="#sec-4-常見問題與故障排除-troubleshooting">4. 常見問題與故障排除（Troubleshooting）</a></li>
   </ul>
 </nav>
@@ -550,32 +553,122 @@ footer p {
   <li>透過下列任一方式啟動解除安裝程序：</li>
 </ol>
 <ul>
-  <li>至 Windows「設定 → 應用程式與功能」選擇「IDDS Community」點擊解除安裝。</li>
-  <li>執行 %ProgramFiles%\IDDS Community\Setup.exe 並點擊 <strong>「解除安裝」</strong>。</li>
+  <li>至 Windows「設定 → 應用程式 → 已安裝的應用程式」或控制台「程式和功能」選擇「IDDS Community」點擊解除安裝。</li>
+  <li>執行安裝快取檔 <code>%ProgramData%\IDDS Community\Setup.exe</code> 或原安裝檔並點擊 <strong>「解除安裝」</strong>。</li>
   <li>點擊開始功能表之「解除安裝 IDDS Community」捷徑。</li>
+  <li>透過管理員命令列執行無人值守解除安裝：<code>.\Setup.exe /uninstall /quiet</code>。</li>
 </ul>
 <ol>
   <li>解除安裝程式將執行下列清理作業：</li>
 </ol>
 <ul>
   <li>安全停止並移除 IDDSCommunityProtection Windows 服務。</li>
-  <li>清除所有由系統動態建立之 Windows 防火牆阻絕規則（規則群組：IDDS Community）。</li>
+  <li>透過 Windows 原生 COM 防火牆介面批次清除所有由系統動態建立之 Windows 防火牆規則（群組：IDDS Community 及相關放行/封鎖規則）。</li>
+  <li>自 Windows 註冊表登錄清單（<code>HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community</code>）移除解除安裝與維護項目。</li>
   <li>刪除公用桌面與開始功能表之捷徑項目。</li>
-  <li>移除 %ProgramFiles%\IDDS Community 程式檔案。</li>
+  <li>移除 <code>%ProgramFiles%\IDDS Community</code> 程式檔案。</li>
+  <li>安全清除快取維護目錄中的安裝程式（<code>%ProgramData%\IDDS Community\Setup.exe</code>）。</li>
 </ul>
 <ol>
   <li><strong>資料保留原則</strong>：</li>
 </ol>
 <ul>
-  <li>為防止誤刪歷史資安鑑識紀錄與黑名單，歷史資料庫與稽核日誌目錄（%ProgramData%\IDDSCommunity）預設將完整保留。如需徹底抹除，可於解除安裝後手動刪除該資料夾。</li>
+  <li>為防止誤刪歷史資安鑑識紀錄與黑名單，歷史資料庫與稽核日誌目錄（<code>%ProgramData%\IDDSCommunity</code>）預設將完整保留。如需徹底抹除，可於解除安裝後手動刪除該資料夾。</li>
 </ul>
 <hr />
 <h2 id="sec-3-自動化與指令行支援-automation-cli">3. 自動化與指令行支援（Automation CLI）</h2>
-<p>安裝程式提供自動化驗證與 CI/CD 測試開關：</p>
-<p>`powershell</p>
-<h1 id="sec-執行自動化重新安裝驗證-先卸載-再全新安裝-再執行覆蓋安裝驗證">執行自動化重新安裝驗證（先卸載、再全新安裝、再執行覆蓋安裝驗證）</h1>
-<p>.\Setup.exe --verify-reinstall</p>
-<p>`</p>
+<p>安裝程式支援完整的命令列參數，方便企業透過 GPO、Microsoft Intune、SCCM、Ansible 或 PowerShell 進行批次靜默部署與維護：</p>
+<h3 id="sec-3-1-命令列參數清單">3.1 命令列參數清單</h3>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+  <thead>
+    <tr style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); text-align: left;">
+      <th style="padding: 0.6rem 0.8rem;">參數</th>
+      <th style="padding: 0.6rem 0.8rem;">簡寫</th>
+      <th style="padding: 0.6rem 0.8rem;">說明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/install</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-i</code>, <code>--install</code></td>
+      <td style="padding: 0.6rem 0.8rem;">要求執行安裝或升級作業（預設行為）。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/uninstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-u</code>, <code>--uninstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;">要求執行解除安裝作業。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/quiet</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>/silent</code>, <code>-q</code>, <code>-s</code>, <code>--quiet</code>, <code>--silent</code></td>
+      <td style="padding: 0.6rem 0.8rem;">啟用無人值守靜默模式，不顯示任何 UI 視窗或對話方塊。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/nodesktop</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-nodesktop</code>, <code>--nodesktop</code></td>
+      <td style="padding: 0.6rem 0.8rem;">略過建立公用桌面捷徑。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>/nostartmenu</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>-nostartmenu</code>, <code>--nostartmenu</code></td>
+      <td style="padding: 0.6rem 0.8rem;">略過建立開始功能表捷徑。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>--verify-reinstall</code></td>
+      <td style="padding: 0.6rem 0.8rem;">-</td>
+      <td style="padding: 0.6rem 0.8rem;">專案 CI/CD 專用：執行自動化重新安裝驗證（卸載、全新安裝與覆蓋安裝迴歸測試）。</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="sec-3-2-程式結束代碼-exit-codes">3.2 程式結束代碼（Exit Codes）</h3>
+<p>在無人值守靜默模式（<code>/quiet</code>）下，<code>Setup.exe</code> 將透過程序結束代碼回報執行結果：</p>
+<div style="overflow-x: auto;">
+<table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
+  <thead>
+    <tr style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color); text-align: left;">
+      <th style="padding: 0.6rem 0.8rem;">結束代碼</th>
+      <th style="padding: 0.6rem 0.8rem;">常數意義</th>
+      <th style="padding: 0.6rem 0.8rem;">說明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>0</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>SUCCESS</code></td>
+      <td style="padding: 0.6rem 0.8rem;">作業順利完成。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>3010</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_SUCCESS_REBOOT_REQUIRED</code></td>
+      <td style="padding: 0.6rem 0.8rem;">作業順利完成，但因部分檔案鎖定需重新啟動作業系統以完成變更。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light);">
+      <td style="padding: 0.6rem 0.8rem;"><code>2</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_FILE_NOT_FOUND / CLEANUP_INCOMPLETE</code></td>
+      <td style="padding: 0.6rem 0.8rem;">作業完成，但部分正在使用之檔案已排程於重開機時延遲清理。</td>
+    </tr>
+    <tr style="border-bottom: 1px solid var(--border-light); background: var(--table-stripe);">
+      <td style="padding: 0.6rem 0.8rem;"><code>1</code></td>
+      <td style="padding: 0.6rem 0.8rem;"><code>ERROR_FUNCTION_FAILED</code></td>
+      <td style="padding: 0.6rem 0.8rem;">作業失敗，詳細例外狀況已寫入系統診斷日誌。</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="sec-3-3-常見自動化部署範例">3.3 常見自動化部署範例</h3>
+<pre><code style="font-family: var(--font-mono); font-size: 0.9rem; display: block; background: var(--bg-tertiary); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-light); overflow-x: auto;"># 1. 企業伺服器標準無人值守靜默安裝（不建立桌面捷徑）
+.\Setup.exe /install /quiet /nodesktop
+
+# 2. 完整安裝（建立桌面與開始功能表捷徑）
+.\Setup.exe /install /quiet
+
+# 3. 無人值守靜默解除安裝
+.\Setup.exe /uninstall /quiet
+
+# 4. 執行 CI/CD 自動化重新安裝驗證
+.\Setup.exe --verify-reinstall</code></pre>
 <hr />
 <h2 id="sec-4-常見問題與故障排除-troubleshooting">4. 常見問題與故障排除（Troubleshooting）</h2>
 <ul>
