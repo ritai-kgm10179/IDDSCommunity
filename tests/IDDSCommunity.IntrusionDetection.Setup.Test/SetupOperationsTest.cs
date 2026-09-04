@@ -409,6 +409,59 @@ public sealed class SetupOperationsTest
         Assert.AreEqual(ServiceControllerStatus.Paused, SetupOperations.GetStableServiceStatusTarget(ServiceControllerStatus.Paused));
     }
 
+    [TestMethod]
+    public void CommandLineOptions_Parse_HandlesAllSwitchesAndCombinations()
+    {
+        CommandLineOptions defaultOptions = CommandLineOptions.Parse([]);
+        Assert.IsFalse(defaultOptions.IsInstall);
+        Assert.IsFalse(defaultOptions.IsUninstall);
+        Assert.IsFalse(defaultOptions.IsQuiet);
+        Assert.IsFalse(defaultOptions.NoDesktop);
+        Assert.IsFalse(defaultOptions.NoStartMenu);
+
+        CommandLineOptions installQuiet = CommandLineOptions.Parse(["/install", "/quiet", "/nodesktop"]);
+        Assert.IsTrue(installQuiet.IsInstall);
+        Assert.IsFalse(installQuiet.IsUninstall);
+        Assert.IsTrue(installQuiet.IsQuiet);
+        Assert.IsTrue(installQuiet.NoDesktop);
+        Assert.IsFalse(installQuiet.NoStartMenu);
+
+        CommandLineOptions uninstallSilent = CommandLineOptions.Parse(["-u", "--silent", "-nostartmenu"]);
+        Assert.IsFalse(uninstallSilent.IsInstall);
+        Assert.IsTrue(uninstallSilent.IsUninstall);
+        Assert.IsTrue(uninstallSilent.IsQuiet);
+        Assert.IsFalse(uninstallSilent.NoDesktop);
+        Assert.IsTrue(uninstallSilent.NoStartMenu);
+    }
+
+    [TestMethod]
+    public void CachedSetupPath_IsLocatedInCommonApplicationData()
+    {
+        string expectedDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "IDDS Community");
+        Assert.AreEqual(expectedDir, SetupOperations.CachedSetupDirectory);
+        Assert.AreEqual(Path.Combine(expectedDir, "Setup.exe"), SetupOperations.CachedSetupPath);
+    }
+
+    [TestMethod]
+    public void UninstallRegistryKeyPath_MatchesStandardWindowsLocation()
+    {
+        Assert.AreEqual(
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community",
+            SetupOperations.UninstallRegistryKeyPath);
+    }
+
+    [TestMethod]
+    public void CleanUpFirewallRules_ExecutesWithoutException()
+    {
+        if (!OperatingSystem.IsWindows())
+            Assert.Inconclusive("Windows Firewall cleanup test requires Windows.");
+
+        // 原生 COM 清理在無任何規則時亦應平穩完成，絕不擲出例外狀況
+        SetupOperations.CleanUpFirewallRules();
+    }
+
     private sealed class TemporaryDirectory : IDisposable
     {
         private bool cleanup = true;

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using System.Security.Principal;
 using System.Threading;
+using Microsoft.Win32;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Setup;
@@ -130,6 +131,22 @@ internal static class SetupOperations
     internal static readonly string StartMenuShortcutPath =
         Path.Combine(StartMenuDirectory, "IDDS Community Admin.lnk");
 
+    internal static readonly string CommonAdminToolsDirectory =
+        Environment.GetFolderPath(Environment.SpecialFolder.CommonAdminTools);
+
+    internal static readonly string AdminToolsShortcutPath =
+        string.IsNullOrEmpty(CommonAdminToolsDirectory)
+            ? string.Empty
+            : Path.Combine(CommonAdminToolsDirectory, "IDDS Community Admin.lnk");
+
+    internal static readonly string CachedSetupDirectory =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "IDDS Community");
+
+    internal static readonly string CachedSetupPath =
+        Path.Combine(CachedSetupDirectory, "Setup.exe");
+
+    internal static readonly string UninstallRegistryKeyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\IDDS Community";
+
     /// <summary>
     /// 檢查桌面捷徑是否存在。
     /// </summary>
@@ -141,7 +158,13 @@ internal static class SetupOperations
     internal static bool HasStartMenuShortcut => File.Exists(StartMenuShortcutPath);
 
     /// <summary>
-    /// 建立或清理桌面與開始功能表捷徑。
+    /// 檢查系統管理工具捷徑是否存在。
+    /// </summary>
+    internal static bool HasAdminToolsShortcut =>
+        !string.IsNullOrEmpty(AdminToolsShortcutPath) && File.Exists(AdminToolsShortcutPath);
+
+    /// <summary>
+    /// 建立或清理桌面、開始功能表與系統管理工具捷徑。
     /// </summary>
     /// <param name="desktop">是否建立桌面捷徑。</param>
     /// <param name="startMenu">是否建立開始功能表捷徑。</param>
@@ -149,7 +172,11 @@ internal static class SetupOperations
     {
         if (desktop)
         {
-            CreateLnk(DesktopShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+            string? desktopDir = Path.GetDirectoryName(DesktopShortcutPath);
+            if (!string.IsNullOrEmpty(desktopDir) && Directory.Exists(desktopDir))
+            {
+                CreateLnk(DesktopShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+            }
         }
         else if (File.Exists(DesktopShortcutPath))
         {
@@ -159,24 +186,44 @@ internal static class SetupOperations
 
         if (startMenu)
         {
-            Directory.CreateDirectory(StartMenuDirectory);
-            CreateLnk(StartMenuShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+            string? startMenuDir = Path.GetDirectoryName(StartMenuDirectory);
+            if (!string.IsNullOrEmpty(startMenuDir) && Directory.Exists(startMenuDir))
+            {
+                Directory.CreateDirectory(StartMenuDirectory);
+                CreateLnk(StartMenuShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+            }
+
+            if (!string.IsNullOrEmpty(AdminToolsShortcutPath) && !string.IsNullOrEmpty(CommonAdminToolsDirectory) && Directory.Exists(CommonAdminToolsDirectory))
+            {
+                CreateLnk(AdminToolsShortcutPath, AdminExecutablePath, "IDDS Community Management Admin Console");
+            }
         }
-        else if (File.Exists(StartMenuShortcutPath))
+        else
         {
-            File.Delete(StartMenuShortcutPath);
-            SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+            if (File.Exists(StartMenuShortcutPath))
+            {
+                File.Delete(StartMenuShortcutPath);
+                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+            }
+
+            if (!string.IsNullOrEmpty(AdminToolsShortcutPath) && File.Exists(AdminToolsShortcutPath))
+            {
+                File.Delete(AdminToolsShortcutPath);
+                SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
+            }
         }
     }
 
     /// <summary>
-    /// 移除桌面與開始功能表捷徑。
+    /// 移除桌面、開始功能表與系統管理工具捷徑。
     /// </summary>
     internal static void RemoveShortcuts()
     {
         if (File.Exists(DesktopShortcutPath)) File.Delete(DesktopShortcutPath);
         if (Directory.Exists(StartMenuDirectory))
             Directory.Delete(StartMenuDirectory, true);
+        if (!string.IsNullOrEmpty(AdminToolsShortcutPath) && File.Exists(AdminToolsShortcutPath))
+            File.Delete(AdminToolsShortcutPath);
         SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_FLUSH, IntPtr.Zero, IntPtr.Zero);
     }
 
@@ -471,6 +518,8 @@ internal static class SetupOperations
                 RestoreServiceState(serviceState);
             }
             CreateShortcuts(desktopShortcut, startMenuShortcut);
+            EnsureSetupCached();
+            RegisterUninstall(CachedSetupPath);
             if (previousInstallationMoved)
             {
                 try
@@ -530,6 +579,8 @@ internal static class SetupOperations
             Directory.CreateDirectory(InstallDirectory);
             MoveDirectoryContentsTransactional(backupDirectory, InstallDirectory, CancellationToken.None);
         }
+        if (!previousInstallationMoved)
+            UnregisterUninstall();
         RestoreServiceState(serviceState);
     }
 
@@ -732,6 +783,15 @@ internal static class SetupOperations
         }
         try
         {
+            UnregisterUninstall();
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Unregister uninstall entry from Windows Registry", exception);
+            cleanupIncomplete = true;
+        }
+        try
+        {
             RemoveOperatorsGroup();
         }
         catch (Exception exception)
@@ -759,6 +819,15 @@ internal static class SetupOperations
                 LogNonFatal($"Clean uninstalled files {quarantineDirectory}", exception);
                 cleanupIncomplete = true;
             }
+        }
+        try
+        {
+            CleanUpCachedSetup();
+        }
+        catch (Exception exception)
+        {
+            LogNonFatal("Clean cached setup executable", exception);
+            cleanupIncomplete = true;
         }
         Report(progress, "ProgressCompleted", 100);
         return new SetupOperationResult(restartRequired, cleanupIncomplete);
@@ -861,21 +930,199 @@ internal static class SetupOperations
             throw new InvalidOperationException(SetupText.Get("ServiceStartVerificationFailed"));
     }
 
-    private static void CleanUpFirewallRules()
+    /// <summary>
+    /// 透過 Windows 防火牆原生 COM 介面清除所有由 IDDS 社群版建立之防火牆規則。
+    /// </summary>
+    internal static void CleanUpFirewallRules()
     {
-        ProcessStartInfo psi = new(Path.Combine(Environment.SystemDirectory, "netsh.exe"), "advfirewall firewall delete rule name=all group=\"IDDS Community\"")
+        if (!OperatingSystem.IsWindows()) return;
+        try
         {
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        using Process process = Process.Start(psi) ?? throw new InvalidOperationException(SetupText.Get("FirewallCleanupStartFailed"));
-        if (!process.WaitForExit((int)ProcessTimeout.TotalMilliseconds))
-        {
-            process.Kill(true);
-            throw new System.TimeoutException(SetupText.Get("FirewallCleanupTimedOut"));
+            Type? policyType = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
+            if (policyType is null) return;
+            dynamic? policy = Activator.CreateInstance(policyType);
+            if (policy is null) return;
+
+            List<string> rulesToRemove = [];
+            foreach (dynamic rule in policy.Rules)
+            {
+                try
+                {
+                    string? name = rule.Name;
+                    string? grouping = null;
+                    try { grouping = rule.Grouping; } catch { }
+
+                    bool isTargetGroup = !string.IsNullOrEmpty(grouping)
+                        && string.Equals(grouping, Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, StringComparison.OrdinalIgnoreCase);
+
+                    bool isTargetPrefix = !string.IsNullOrEmpty(name)
+                        && (name.StartsWith(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME, StringComparison.OrdinalIgnoreCase)
+                            || name.StartsWith("IDDSCommunity_Allow_", StringComparison.OrdinalIgnoreCase));
+
+                    if ((isTargetGroup || isTargetPrefix) && !string.IsNullOrEmpty(name))
+                    {
+                        rulesToRemove.Add(name);
+                    }
+                }
+                catch
+                {
+                    // 略過個別規則讀取例外
+                }
+            }
+
+            foreach (string ruleName in rulesToRemove)
+            {
+                try
+                {
+                    policy.Rules.Remove(ruleName);
+                }
+                catch (Exception ex)
+                {
+                    LogNonFatal($"Remove firewall rule {ruleName}", ex);
+                }
+            }
         }
-        if (process.ExitCode != 0)
-            throw new InvalidOperationException(SetupText.Format("FirewallCleanupFailed", process.ExitCode));
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(SetupText.Format("FirewallCleanupFailed", ex.Message), ex);
+        }
+    }
+
+    /// <summary>
+    /// 將當前安裝程式安全備份至快取維護目錄，並採用智慧原位檢測防止覆寫執行中之自身檔案。
+    /// </summary>
+    internal static void EnsureSetupCached()
+    {
+        try
+        {
+            string? currentExe = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+            if (string.IsNullOrWhiteSpace(currentExe) || !File.Exists(currentExe))
+                return;
+
+            string fullCurrent = Path.GetFullPath(currentExe);
+            string fullTarget = Path.GetFullPath(CachedSetupPath);
+
+            // 若目前執行檔已在快取目錄內（原位執行修復或重新安裝），絕不自我覆寫以避免檔案鎖死
+            if (string.Equals(fullCurrent, fullTarget, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            Directory.CreateDirectory(CachedSetupDirectory);
+            File.Copy(fullCurrent, fullTarget, overwrite: true);
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("Cache setup executable", ex);
+        }
+    }
+
+    /// <summary>
+    /// 在 Windows 註冊表中登記完整的應用程式解除安裝與維護機碼，支援控制台與伺服器自動化。
+    /// </summary>
+    /// <param name="cachedSetupPath">快取安裝程式之路徑。</param>
+    internal static void RegisterUninstall(string cachedSetupPath)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        try
+        {
+            using RegistryKey baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            using RegistryKey key = baseKey.CreateSubKey(UninstallRegistryKeyPath, writable: true);
+
+            string adminPath = AdminExecutablePath;
+            long estimatedSizeKb = 0;
+            try
+            {
+                if (Directory.Exists(InstallDirectory))
+                {
+                    long bytes = Directory.EnumerateFiles(InstallDirectory, "*", SearchOption.AllDirectories)
+                        .Sum(fi => new FileInfo(fi).Length);
+                    estimatedSizeKb = bytes / 1024;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogNonFatal("Calculate estimated installation size", ex);
+            }
+
+            key.SetValue("DisplayName", "IDDS Community", RegistryValueKind.String);
+            key.SetValue("DisplayVersion", CurrentSetupVersion.ToString(), RegistryValueKind.String);
+            key.SetValue("Publisher", "IDDS Community Project", RegistryValueKind.String);
+            key.SetValue("InstallLocation", InstallDirectory, RegistryValueKind.String);
+            key.SetValue("DisplayIcon", File.Exists(adminPath) ? $"{adminPath},0" : cachedSetupPath, RegistryValueKind.String);
+            key.SetValue("UninstallString", $"\"{cachedSetupPath}\" /uninstall", RegistryValueKind.String);
+            key.SetValue("QuietUninstallString", $"\"{cachedSetupPath}\" /uninstall /quiet", RegistryValueKind.String);
+            key.SetValue("ModifyPath", $"\"{cachedSetupPath}\"", RegistryValueKind.String);
+            key.SetValue("InstallDate", DateTime.UtcNow.ToString("yyyyMMdd"), RegistryValueKind.String);
+            key.SetValue("EstimatedSize", (int)Math.Min(estimatedSizeKb, int.MaxValue), RegistryValueKind.DWord);
+            key.SetValue("HelpLink", "https://github.com/ritai-kgm10179/IDDSCommunity", RegistryValueKind.String);
+            key.SetValue("URLInfoAbout", "https://github.com/ritai-kgm10179/IDDSCommunity", RegistryValueKind.String);
+            key.SetValue("NoModify", 0, RegistryValueKind.DWord);
+            key.SetValue("NoRepair", 0, RegistryValueKind.DWord);
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("Register uninstall entries in Windows Registry", ex);
+        }
+    }
+
+    /// <summary>
+    /// 自 Windows 註冊表中移除應用程式解除安裝與維護機碼。
+    /// </summary>
+    internal static void UnregisterUninstall()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        try
+        {
+            using RegistryKey baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+            baseKey.DeleteSubKeyTree(UninstallRegistryKeyPath, throwOnMissingSubKey: false);
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("Unregister uninstall entries from Windows Registry", ex);
+        }
+    }
+
+    /// <summary>
+    /// 解除安裝完成後安全清理維護快取中的安裝程式。
+    /// </summary>
+    internal static void CleanUpCachedSetup()
+    {
+        try
+        {
+            if (!File.Exists(CachedSetupPath))
+                return;
+
+            string? currentExe = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+            bool isCurrentRunningFromCache = !string.IsNullOrWhiteSpace(currentExe)
+                && string.Equals(Path.GetFullPath(currentExe), Path.GetFullPath(CachedSetupPath), StringComparison.OrdinalIgnoreCase);
+
+            if (isCurrentRunningFromCache)
+            {
+                MoveFileEx(CachedSetupPath, null, MOVEFILE_DELAY_UNTIL_REBOOT);
+                try
+                {
+                    ProcessStartInfo psi = new(
+                        Path.Combine(Environment.SystemDirectory, "cmd.exe"),
+                        $"/c timeout /t 2 >nul & del /f /q \"{CachedSetupPath}\"")
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    Process.Start(psi);
+                }
+                catch
+                {
+                    // 略過延遲清理程序啟動例外
+                }
+            }
+            else
+            {
+                File.Delete(CachedSetupPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogNonFatal("Clean cached setup executable", ex);
+        }
     }
 
     private static void KillRunningProcesses()

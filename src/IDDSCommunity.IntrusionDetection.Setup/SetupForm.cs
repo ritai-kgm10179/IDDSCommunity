@@ -28,11 +28,15 @@ internal sealed class SetupForm : Form
     private CancellationTokenSource? operationCancellation;
     private bool operationActive;
 
+    private readonly CommandLineOptions? commandLineOptions;
+
     /// <summary>
-    /// 初始化安裝程式視窗。
+    /// 初始化 <see cref="SetupForm"/> 類別的新執行個體。
     /// </summary>
-    internal SetupForm()
+    /// <param name="options">選用的命令列引數選項。</param>
+    internal SetupForm(CommandLineOptions? options = null)
     {
+        commandLineOptions = options;
         ClientSize = new Size(760, 390);
         MinimumSize = new Size(680, 410);
         BackColor = Color.FromArgb(243, 246, 248);
@@ -93,6 +97,12 @@ internal sealed class SetupForm : Form
         progressBar.Visible = false;
         progressLabel.Visible = false;
         RefreshLocalizedText();
+        if (commandLineOptions?.NoDesktop == true)
+            checkBoxDesktopShortcut.Checked = false;
+        if (commandLineOptions?.NoStartMenu == true)
+            checkBoxStartMenuShortcut.Checked = false;
+        if (commandLineOptions?.IsUninstall == true && SetupOperations.IsInstalled)
+            uninstallButton.Select();
     }
 
     /// <summary>

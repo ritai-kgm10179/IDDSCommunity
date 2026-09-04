@@ -10,7 +10,7 @@ namespace IDDSCommunity.IntrusionDetection.Setup;
 internal static class Program
 {
     /// <summary>
-    /// 啟動提升權限之安裝管理使用者介面。
+    /// 啟動提升權限之安裝管理使用者介面或執行無人值守命令列作業。
     /// </summary>
     [STAThread]
     private static int Main(string[] args)
@@ -18,9 +18,40 @@ internal static class Program
         if (args.Length == 1 && string.Equals(args[0], "--verify-reinstall", StringComparison.OrdinalIgnoreCase))
             return VerifyReinstall();
 
+        CommandLineOptions options = CommandLineOptions.Parse(args);
+        if (options.IsQuiet)
+        {
+            return RunSilent(options);
+        }
+
         ApplicationConfiguration.Initialize();
-        Application.Run(new SetupForm());
+        Application.Run(new SetupForm(options));
         return 0;
+    }
+
+    private static int RunSilent(CommandLineOptions options)
+    {
+        try
+        {
+            if (options.IsUninstall)
+            {
+                if (!SetupOperations.IsInstalled) return 0;
+                SetupOperations.SetupOperationResult result = SetupOperations.Uninstall();
+                return result.CleanupIncomplete ? 2 : (result.RestartRequired ? 3010 : 0);
+            }
+            else
+            {
+                SetupOperations.SetupOperationResult result = SetupOperations.Install(
+                    desktopShortcut: !options.NoDesktop,
+                    startMenuShortcut: !options.NoStartMenu);
+                return result.CleanupIncomplete ? 2 : (result.RestartRequired ? 3010 : 0);
+            }
+        }
+        catch (Exception exception)
+        {
+            _ = RollingDiagnosticLog.Write("Setup", "Silent setup operation failed", exception);
+            return 1;
+        }
     }
 
     private static int VerifyReinstall()
