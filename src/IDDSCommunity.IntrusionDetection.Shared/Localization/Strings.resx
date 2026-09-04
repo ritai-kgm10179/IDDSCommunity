@@ -1035,5 +1035,23 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Error" xml:space="preserve"><value>Error</value></data>
   <data name="Firewall Inbound Rules" xml:space="preserve"><value>Firewall Inbound Rules</value></data>
   <data name="Auto-manage Windows Firewall inbound rules" xml:space="preserve"><value>Auto-manage Windows Firewall inbound rules</value></data>
+  <data name="GeoIp.Update" xml:space="preserve"><value>GeoIP Database Update</value></data>
+  <data name="ThreatFeed.Download" xml:space="preserve"><value>Threat Intelligence Feed Download</value></data>
+  <data name="ThreatFeed.BogonDownload" xml:space="preserve"><value>Bogon Prefix Feed Download</value></data>
+  <data name="ThreatFeed.GeoIpDownload" xml:space="preserve"><value>GeoIP Feed Download</value></data>
+  <data name="Bogon.Sync" xml:space="preserve"><value>Bogon Prefix Sync</value></data>
+  <data name="DynamicDns.Resolve" xml:space="preserve"><value>Dynamic DNS Resolve</value></data>
+  <data name="Cluster.Sync" xml:space="preserve"><value>Cluster Threat Sync</value></data>
+  <data name="Firewall.Probation" xml:space="preserve"><value>Firewall Probation Release</value></data>
+  <data name="Firewall.OneStrikeRelock" xml:space="preserve"><value>One-Strike Relock</value></data>
+  <data name="Firewall.RuleAdd" xml:space="preserve"><value>Firewall Rule Add</value></data>
+  <data name="Firewall.RuleRemove" xml:space="preserve"><value>Firewall Rule Remove</value></data>
+  <data name="Firewall.RuleReconcile" xml:space="preserve"><value>Firewall Rule Reconcile</value></data>
+  <data name="Database.Shrink" xml:space="preserve"><value>Database Vacuum &amp; Shrink</value></data>
+  <data name="Database.IntegrityCheck" xml:space="preserve"><value>Database Integrity Check</value></data>
+  <data name="Configuration.Change" xml:space="preserve"><value>Configuration Change</value></data>
+  <data name="Configuration.Import" xml:space="preserve"><value>Configuration Import</value></data>
+  <data name="Configuration.Export" xml:space="preserve"><value>Configuration Export</value></data>
+  <data name="Auto-size column widths" xml:space="preserve"><value>Auto-size column widths</value></data>
 </root>
 

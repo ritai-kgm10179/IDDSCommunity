@@ -1035,4 +1035,22 @@
   <data name="Error" xml:space="preserve"><value>錯誤</value></data>
   <data name="Firewall Inbound Rules" xml:space="preserve"><value>防火牆傳入放行規則</value></data>
   <data name="Auto-manage Windows Firewall inbound rules" xml:space="preserve"><value>自動維護 Windows 防火牆傳入放行規則</value></data>
+  <data name="GeoIp.Update" xml:space="preserve"><value>地理位置更新</value></data>
+  <data name="ThreatFeed.Download" xml:space="preserve"><value>外部情報下載</value></data>
+  <data name="ThreatFeed.BogonDownload" xml:space="preserve"><value>Bogon 前綴下載</value></data>
+  <data name="ThreatFeed.GeoIpDownload" xml:space="preserve"><value>GeoIP 情報下載</value></data>
+  <data name="Bogon.Sync" xml:space="preserve"><value>Bogon 前綴同步</value></data>
+  <data name="DynamicDns.Resolve" xml:space="preserve"><value>動態 DNS 解析</value></data>
+  <data name="Cluster.Sync" xml:space="preserve"><value>跨主機情報同步</value></data>
+  <data name="Firewall.Probation" xml:space="preserve"><value>智慧假釋放行</value></data>
+  <data name="Firewall.OneStrikeRelock" xml:space="preserve"><value>一擊立即硬封鎖</value></data>
+  <data name="Firewall.RuleAdd" xml:space="preserve"><value>防火牆規則新增</value></data>
+  <data name="Firewall.RuleRemove" xml:space="preserve"><value>防火牆規則移除</value></data>
+  <data name="Firewall.RuleReconcile" xml:space="preserve"><value>防火牆規則對齊</value></data>
+  <data name="Database.Shrink" xml:space="preserve"><value>資料庫壓縮最佳化</value></data>
+  <data name="Database.IntegrityCheck" xml:space="preserve"><value>資料庫完整性檢查</value></data>
+  <data name="Configuration.Change" xml:space="preserve"><value>系統設定變更</value></data>
+  <data name="Configuration.Import" xml:space="preserve"><value>系統設定匯入</value></data>
+  <data name="Configuration.Export" xml:space="preserve"><value>系統設定匯出</value></data>
+  <data name="Auto-size column widths" xml:space="preserve"><value>自動最適欄寬</value></data>
 </root>

@@ -99,7 +99,7 @@
             this.panelWindowGrip.Location = new System.Drawing.Point(0, 0);
             this.panelWindowGrip.Margin = new System.Windows.Forms.Padding(0);
             this.panelWindowGrip.Name = "panelWindowGrip";
-            this.panelWindowGrip.Size = new System.Drawing.Size(978, 24);
+            this.panelWindowGrip.Size = new System.Drawing.Size(898, 24);
             this.panelWindowGrip.TabIndex = 0;
             this.panelWindowGrip.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelWindowGrip_MouseDown);
             this.panelWindowGrip.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panelWindowGrip_MouseMove);
@@ -126,7 +126,6 @@
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
             this.closeToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.closeToolStripMenuItem.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Close");
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
@@ -142,7 +141,7 @@
             this.labelFormText.Name = "labelFormText";
             this.labelFormText.Selected = false;
             this.labelFormText.SelectedColor = System.Drawing.Color.Empty;
-            this.labelFormText.Size = new System.Drawing.Size(730, 24);
+            this.labelFormText.Size = new System.Drawing.Size(665, 24);
             this.labelFormText.TabIndex = 1;
             this.labelFormText.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IDDSCommunity IDDS");
             this.labelFormText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -156,7 +155,7 @@
             this.pictureBoxMaximizeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxMaximizeButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
             this.pictureBoxMaximizeButton.InitialImage = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
-            this.pictureBoxMaximizeButton.Location = new System.Drawing.Point(923, 2);
+            this.pictureBoxMaximizeButton.Location = new System.Drawing.Point(843, 2);
             this.pictureBoxMaximizeButton.Name = "pictureBoxMaximizeButton";
             this.pictureBoxMaximizeButton.Size = new System.Drawing.Size(27, 20);
             this.pictureBoxMaximizeButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -172,7 +171,7 @@
             // 
             this.pictureBoxHelpButon.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxHelpButon.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_help;
-            this.pictureBoxHelpButon.Location = new System.Drawing.Point(870, 2);
+            this.pictureBoxHelpButon.Location = new System.Drawing.Point(789, 2);
             this.pictureBoxHelpButon.Name = "pictureBoxHelpButon";
             this.pictureBoxHelpButon.Size = new System.Drawing.Size(27, 20);
             this.pictureBoxHelpButon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -188,7 +187,7 @@
             // 
             this.pictureBoxMinimizeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxMinimizeButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_minimize;
-            this.pictureBoxMinimizeButton.Location = new System.Drawing.Point(896, 2);
+            this.pictureBoxMinimizeButton.Location = new System.Drawing.Point(816, 2);
             this.pictureBoxMinimizeButton.Name = "pictureBoxMinimizeButton";
             this.pictureBoxMinimizeButton.Size = new System.Drawing.Size(27, 20);
             this.pictureBoxMinimizeButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -204,7 +203,7 @@
             // 
             this.pictureBoxCloseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxCloseButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_close;
-            this.pictureBoxCloseButton.Location = new System.Drawing.Point(950, 2);
+            this.pictureBoxCloseButton.Location = new System.Drawing.Point(870, 2);
             this.pictureBoxCloseButton.Name = "pictureBoxCloseButton";
             this.pictureBoxCloseButton.Size = new System.Drawing.Size(27, 20);
             this.pictureBoxCloseButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -229,7 +228,7 @@
             this.panelForm.Location = new System.Drawing.Point(1, 1);
             this.panelForm.Margin = new System.Windows.Forms.Padding(0);
             this.panelForm.Name = "panelForm";
-            this.panelForm.Size = new System.Drawing.Size(978, 638);
+            this.panelForm.Size = new System.Drawing.Size(898, 578);
             this.panelForm.TabIndex = 1;
             // 
             // panelContent
@@ -240,7 +239,7 @@
             this.panelContent.Location = new System.Drawing.Point(0, 63);
             this.panelContent.Name = "panelContent";
             this.panelContent.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
-            this.panelContent.Size = new System.Drawing.Size(978, 549);
+            this.panelContent.Size = new System.Drawing.Size(898, 489);
             this.panelContent.TabIndex = 3;
             this.panelContent.Paint += new System.Windows.Forms.PaintEventHandler(this.panelContent_Paint);
             // 
@@ -337,10 +336,10 @@
             this.panelStatusBar.BackColor = System.Drawing.Color.White;
             this.panelStatusBar.Controls.Add(this.borderSE);
             this.panelStatusBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panelStatusBar.Location = new System.Drawing.Point(0, 612);
+            this.panelStatusBar.Location = new System.Drawing.Point(0, 552);
             this.panelStatusBar.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
             this.panelStatusBar.Name = "panelStatusBar";
-            this.panelStatusBar.Size = new System.Drawing.Size(978, 26);
+            this.panelStatusBar.Size = new System.Drawing.Size(898, 26);
             this.panelStatusBar.TabIndex = 2;
             // 
             // borderSE
@@ -349,7 +348,7 @@
             this.borderSE.BackColor = System.Drawing.Color.White;
             this.borderSE.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
             this.borderSE.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_grip;
-            this.borderSE.Location = new System.Drawing.Point(961, 9);
+            this.borderSE.Location = new System.Drawing.Point(881, 9);
             this.borderSE.Margin = new System.Windows.Forms.Padding(0);
             this.borderSE.Name = "borderSE";
             this.borderSE.Size = new System.Drawing.Size(17, 18);
@@ -361,6 +360,7 @@
             // 
             // panelMenu
             // 
+            this.panelMenu.BackColor = System.Drawing.Color.White;
             this.panelMenu.Controls.Add(this.buttonManageService);
             this.panelMenu.Controls.Add(this.smartLabelServiceStatus);
             this.panelMenu.Controls.Add(this.pictureBoxStopService);
@@ -376,7 +376,7 @@
             this.panelMenu.Location = new System.Drawing.Point(0, 24);
             this.panelMenu.Margin = new System.Windows.Forms.Padding(0);
             this.panelMenu.Name = "panelMenu";
-            this.panelMenu.Size = new System.Drawing.Size(978, 39);
+            this.panelMenu.Size = new System.Drawing.Size(898, 39);
             this.panelMenu.TabIndex = 1;
             // 
             // smartLabelServiceStatus
@@ -384,11 +384,11 @@
             this.smartLabelServiceStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.smartLabelServiceStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.smartLabelServiceStatus.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.smartLabelServiceStatus.Location = new System.Drawing.Point(752, 20);
+            this.smartLabelServiceStatus.Location = new System.Drawing.Point(580, 14);
             this.smartLabelServiceStatus.Name = "smartLabelServiceStatus";
             this.smartLabelServiceStatus.Selected = false;
             this.smartLabelServiceStatus.SelectedColor = System.Drawing.Color.Empty;
-            this.smartLabelServiceStatus.Size = new System.Drawing.Size(163, 19);
+            this.smartLabelServiceStatus.Size = new System.Drawing.Size(140, 20);
             this.smartLabelServiceStatus.TabIndex = 2;
             this.smartLabelServiceStatus.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("reading status....");
             this.smartLabelServiceStatus.TextAlign = System.Drawing.ContentAlignment.TopRight;
@@ -400,7 +400,7 @@
             this.buttonManageService.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonManageService.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.buttonManageService.ForeColor = System.Drawing.Color.FromArgb(102, 102, 102);
-            this.buttonManageService.Location = new System.Drawing.Point(642, 10);
+            this.buttonManageService.Location = new System.Drawing.Point(728, 10);
             this.buttonManageService.MinimumSize = new System.Drawing.Size(104, 25);
             this.buttonManageService.Name = "buttonManageService";
             this.buttonManageService.Size = new System.Drawing.Size(104, 25);
@@ -414,7 +414,7 @@
             this.pictureBoxStopService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxStopService.Enabled = false;
             this.pictureBoxStopService.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.service_controller_stop_deactivated;
-            this.pictureBoxStopService.Location = new System.Drawing.Point(947, 16);
+            this.pictureBoxStopService.Location = new System.Drawing.Point(869, 14);
             this.pictureBoxStopService.Name = "pictureBoxStopService";
             this.pictureBoxStopService.Size = new System.Drawing.Size(19, 19);
             this.pictureBoxStopService.TabIndex = 1;
@@ -428,7 +428,7 @@
             this.pictureBoxStartService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxStartService.Enabled = false;
             this.pictureBoxStartService.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.service_controller_start_deactivated;
-            this.pictureBoxStartService.Location = new System.Drawing.Point(921, 16);
+            this.pictureBoxStartService.Location = new System.Drawing.Point(844, 14);
             this.pictureBoxStartService.Name = "pictureBoxStartService";
             this.pictureBoxStartService.Size = new System.Drawing.Size(19, 19);
             this.pictureBoxStartService.TabIndex = 1;
@@ -557,10 +557,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.borderS.BackColor = System.Drawing.Color.Gray;
             this.borderS.Cursor = System.Windows.Forms.Cursors.SizeNS;
-            this.borderS.Location = new System.Drawing.Point(1, 639);
+            this.borderS.Location = new System.Drawing.Point(1, 579);
             this.borderS.Margin = new System.Windows.Forms.Padding(0);
             this.borderS.Name = "borderS";
-            this.borderS.Size = new System.Drawing.Size(978, 1);
+            this.borderS.Size = new System.Drawing.Size(898, 1);
             this.borderS.TabIndex = 2;
             this.borderS.TabStop = false;
             this.borderS.MouseDown += new System.Windows.Forms.MouseEventHandler(this.borderS_MouseDown);
@@ -573,10 +573,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.borderE.BackColor = System.Drawing.Color.Gray;
             this.borderE.Cursor = System.Windows.Forms.Cursors.SizeWE;
-            this.borderE.Location = new System.Drawing.Point(979, 1);
+            this.borderE.Location = new System.Drawing.Point(899, 1);
             this.borderE.Margin = new System.Windows.Forms.Padding(0);
             this.borderE.Name = "borderE";
-            this.borderE.Size = new System.Drawing.Size(1, 638);
+            this.borderE.Size = new System.Drawing.Size(1, 578);
             this.borderE.TabIndex = 2;
             this.borderE.TabStop = false;
             this.borderE.MouseDown += new System.Windows.Forms.MouseEventHandler(this.borderE_MouseDown);
@@ -591,7 +591,7 @@
             this.borderN.Cursor = System.Windows.Forms.Cursors.SizeNS;
             this.borderN.Location = new System.Drawing.Point(1, 0);
             this.borderN.Name = "borderN";
-            this.borderN.Size = new System.Drawing.Size(978, 1);
+            this.borderN.Size = new System.Drawing.Size(898, 1);
             this.borderN.TabIndex = 2;
             this.borderN.TabStop = false;
             this.borderN.MouseDown += new System.Windows.Forms.MouseEventHandler(this.borderN_MouseDown);
@@ -607,7 +607,7 @@
             this.borderW.Location = new System.Drawing.Point(0, 0);
             this.borderW.Margin = new System.Windows.Forms.Padding(0);
             this.borderW.Name = "borderW";
-            this.borderW.Size = new System.Drawing.Size(1, 640);
+            this.borderW.Size = new System.Drawing.Size(1, 580);
             this.borderW.TabIndex = 2;
             this.borderW.TabStop = false;
             this.borderW.MouseDown += new System.Windows.Forms.MouseEventHandler(this.borderW_MouseDown);
@@ -619,7 +619,7 @@
             this.borderNE.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.borderNE.BackColor = System.Drawing.Color.Gray;
             this.borderNE.Cursor = System.Windows.Forms.Cursors.SizeNESW;
-            this.borderNE.Location = new System.Drawing.Point(970, 0);
+            this.borderNE.Location = new System.Drawing.Point(890, 0);
             this.borderNE.Margin = new System.Windows.Forms.Padding(0);
             this.borderNE.Name = "borderNE";
             this.borderNE.Size = new System.Drawing.Size(10, 8);
@@ -647,7 +647,7 @@
             this.borderSW.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.borderSW.BackColor = System.Drawing.Color.Gray;
             this.borderSW.Cursor = System.Windows.Forms.Cursors.SizeNESW;
-            this.borderSW.Location = new System.Drawing.Point(0, 632);
+            this.borderSW.Location = new System.Drawing.Point(0, 572);
             this.borderSW.Margin = new System.Windows.Forms.Padding(0);
             this.borderSW.Name = "borderSW";
             this.borderSW.Size = new System.Drawing.Size(8, 8);
@@ -663,7 +663,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.ClientSize = new System.Drawing.Size(980, 640);
+            this.ClientSize = new System.Drawing.Size(900, 580);
             this.ControlBox = false;
             this.Controls.Add(this.borderS);
             this.Controls.Add(this.borderE);
@@ -676,7 +676,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(980, 640);
+            this.MinimumSize = new System.Drawing.Size(880, 560);
             this.Name = "IddsAdmin";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IDDSCommunity Intrusion Detection");

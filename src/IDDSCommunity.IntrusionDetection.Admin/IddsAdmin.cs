@@ -48,6 +48,9 @@ public partial class IddsAdmin : Form
     {
         InitializeComponent();
         UpdateMenuPositions();
+        UpdateTitleBarPositions();
+        panelMenu.Resize += (s, e) => UpdateMenuPositions();
+        panelWindowGrip.Resize += (s, e) => UpdateTitleBarPositions();
         Icon = BrandingIcons.CreateIcon();
         BrandingIcons.ApplyTo(pictureBox1);
         string version = typeof(IddsAdmin).Assembly.GetName().Version?.ToString(3) ?? "3.0.0";
@@ -61,7 +64,7 @@ public partial class IddsAdmin : Form
     }
 
     /// <summary>
-    /// 依據目前語系與字元寬度自適應排列頂部選單按鈕，避免按鈕重疊。
+    /// 依據目前語系與字元寬度自適應排列頂部選單按鈕與右側服務控制項，避免按鈕重疊或破邊遮蔽。
     /// </summary>
     public void UpdateMenuPositions()
     {
@@ -71,6 +74,38 @@ public partial class IddsAdmin : Form
         {
             menu.Location = new Point(currentLeft, 14);
             currentLeft += menu.Width;
+        }
+
+        int right = panelMenu.ClientSize.Width - 12;
+        pictureBoxStopService.Location = new Point(right - pictureBoxStopService.Width, 14);
+        right = pictureBoxStopService.Left - 7;
+        pictureBoxStartService.Location = new Point(right - pictureBoxStartService.Width, 14);
+        right = pictureBoxStartService.Left - 10;
+        buttonManageService.Location = new Point(right - buttonManageService.Width, 10);
+        right = buttonManageService.Left - 10;
+        int statusWidth = Math.Max(80, right - currentLeft - 10);
+        smartLabelServiceStatus.Location = new Point(right - statusWidth, 14);
+        smartLabelServiceStatus.Size = new Size(statusWidth, 20);
+    }
+
+    /// <summary>
+    /// 動態調整標題列按鈕與標題文字位置，確保標題列控制項不重疊且隨視窗大小自適應。
+    /// </summary>
+    public void UpdateTitleBarPositions()
+    {
+        int right = panelWindowGrip.ClientSize.Width - 12;
+        pictureBoxCloseButton.Location = new Point(right - pictureBoxCloseButton.Width, 4);
+        right = pictureBoxCloseButton.Left - 11;
+        pictureBoxMaximizeButton.Location = new Point(right - pictureBoxMaximizeButton.Width, 4);
+        right = pictureBoxMaximizeButton.Left - 11;
+        pictureBoxMinimizeButton.Location = new Point(right - pictureBoxMinimizeButton.Width, 4);
+        right = pictureBoxMinimizeButton.Left - 11;
+        pictureBoxHelpButon.Location = new Point(right - pictureBoxHelpButon.Width, 4);
+
+        int availableTextWidth = pictureBoxHelpButon.Left - labelFormText.Left - 10;
+        if (availableTextWidth > 50)
+        {
+            labelFormText.Width = availableTextWidth;
         }
     }
     /// <summary>
@@ -375,7 +410,7 @@ public partial class IddsAdmin : Form
             ShowMenu(labelMenuAgents);
             if (sender is SecurityAgent agent)
                 PanelAgentConfiguration.ShowAgentConfig(agent);
-            PanelAgentConfiguration.BringToFront();
+            ShowContentPanel(PanelAgentConfiguration);
             panelOnlineServices.Hide();
         }
     }
@@ -498,6 +533,7 @@ public partial class IddsAdmin : Form
             pictureBoxStopService.Enabled = false;
             pictureBoxStartService.Cursor = Cursors.Default;
             pictureBoxStopService.Cursor = Cursors.Default;
+            UpdateMenuPositions();
             return;
         }
         buttonManageService.Text = Strings.Get("Uninstall service");
@@ -541,6 +577,7 @@ public partial class IddsAdmin : Form
             Trace.TraceError("Applying service status failed: {0}", exception);
             ServiceError = true;
         }
+        UpdateMenuPositions();
     }
 
     /// <summary>
@@ -864,15 +901,31 @@ public partial class IddsAdmin : Form
         }
     }
     /// <summary>
-    /// 處理 click 事件。
+    /// 處理首頁功能表項目點擊事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void labelMenuHome_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuHome);
-        Dashboard.BringToFront();
+        ShowContentPanel(Dashboard);
         panelOnlineServices.Hide();
+    }
+
+    /// <summary>
+    /// 切換內容區域顯示之面板，隱藏非使用中面板並將指定面板置於最上層。
+    /// </summary>
+    /// <param name="activePanel">欲顯示之主要內容面板控制項。</param>
+    public void ShowContentPanel(Control activePanel)
+    {
+        foreach (Control c in panelContent.Controls)
+        {
+            if (c != panelOnlineServices)
+            {
+                c.Visible = (c == activePanel);
+            }
+        }
+        activePanel.BringToFront();
     }
 
     /// <summary>
@@ -918,8 +971,7 @@ public partial class IddsAdmin : Form
     private void labelMenuSecurityLog_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuSecurityLog);
-        //panelSecurityLog.BringToFront();
-        PanelSecurityLog.BringToFront();
+        ShowContentPanel(PanelSecurityLog);
         panelOnlineServices.Hide();
 
     }
@@ -931,7 +983,7 @@ public partial class IddsAdmin : Form
     private void labelMenuSystemLog_Click(object? sender, EventArgs e)
     {
         ShowMenu(labelMenuSystemLog);
-        PanelSystemOperationsLog.BringToFront();
+        ShowContentPanel(PanelSystemOperationsLog);
         panelOnlineServices.Hide();
         _ = PanelSystemOperationsLog.LoadLogsAsync();
     }
@@ -943,7 +995,7 @@ public partial class IddsAdmin : Form
     private void labelMenuAgents_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuAgents);
-        PanelAgentConfiguration.BringToFront();
+        ShowContentPanel(PanelAgentConfiguration);
         panelOnlineServices.Hide();
     }
     /// <summary>
@@ -954,7 +1006,7 @@ public partial class IddsAdmin : Form
     private void labelMenuSettings_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuSettings);
-        PanelApplicationSettings.BringToFront();
+        ShowContentPanel(PanelApplicationSettings);
         panelOnlineServices.Hide();
     }
 
@@ -1147,7 +1199,7 @@ public partial class IddsAdmin : Form
         };
 
         ShowMenu(labelMenuHome);
-        Dashboard.BringToFront();
+        ShowContentPanel(Dashboard);
         IsInitialized = true;
 
     }
@@ -1367,8 +1419,7 @@ public partial class IddsAdmin : Form
     private void labelMenuCurrentLocks_Click(object sender, EventArgs e)
     {
         ShowMenu(labelMenuCurrentLocks);
-        //panelCurrentLocks.BringToFront();
-        PanelCurrentLocks.BringToFront();
+        ShowContentPanel(PanelCurrentLocks);
         panelOnlineServices.Hide();
     }
 

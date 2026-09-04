@@ -33,12 +33,14 @@ public sealed class PanelSystemOperationsLog : UserControl
 
     private readonly SemaphoreSlim queryLock = new(1, 1);
     private CancellationTokenSource? currentQueryCts;
+    private bool isResizingColumns;
 
     /// <summary>
     /// 初始化 <see cref="PanelSystemOperationsLog"/> 類別之新執行個體。
     /// </summary>
     public PanelSystemOperationsLog()
     {
+        Size = new Size(898, 489);
         Dock = DockStyle.Fill;
         BackColor = Color.White;
         Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
@@ -46,8 +48,8 @@ public sealed class PanelSystemOperationsLog : UserControl
         panelFilterBar = new SmartPanel
         {
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-            Location = new Point(24, 16),
-            Size = new Size(810, 72),
+            Location = new Point(16, 12),
+            Size = new Size(866, 72),
             BackColor = Color.FromArgb(243, 246, 248),
             BorderColor = Color.FromArgb(191, 191, 191),
             PaintBorder = true
@@ -56,7 +58,6 @@ public sealed class PanelSystemOperationsLog : UserControl
         labelCategory = new Label
         {
             AutoSize = true,
-            Location = new Point(12, 14),
             Text = Strings.Get("Event category:"),
             ForeColor = Color.FromArgb(102, 102, 102)
         };
@@ -64,8 +65,7 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxCategory = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(90, 10),
-            Size = new Size(180, 24)
+            Size = new Size(185, 24)
         };
         PopulateCategories();
         comboBoxCategory.SelectedIndex = 0;
@@ -74,7 +74,6 @@ public sealed class PanelSystemOperationsLog : UserControl
         labelOutcome = new Label
         {
             AutoSize = true,
-            Location = new Point(285, 14),
             Text = Strings.Get("Outcome:"),
             ForeColor = Color.FromArgb(102, 102, 102)
         };
@@ -82,8 +81,7 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxOutcome = new ComboBox
         {
             DropDownStyle = ComboBoxStyle.DropDownList,
-            Location = new Point(355, 10),
-            Size = new Size(120, 24)
+            Size = new Size(125, 24)
         };
         comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
         comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
@@ -94,15 +92,13 @@ public sealed class PanelSystemOperationsLog : UserControl
         labelSearch = new Label
         {
             AutoSize = true,
-            Location = new Point(12, 44),
             Text = Strings.Get("Search keyword:"),
             ForeColor = Color.FromArgb(102, 102, 102)
         };
 
         textBoxSearch = new TextBox
         {
-            Location = new Point(115, 41),
-            Size = new Size(250, 24)
+            Size = new Size(240, 24)
         };
         textBoxSearch.KeyDown += (s, e) =>
         {
@@ -115,7 +111,6 @@ public sealed class PanelSystemOperationsLog : UserControl
 
         buttonRefresh = new Button
         {
-            Location = new Point(375, 40),
             Size = new Size(85, 26),
             Text = Strings.Get("Refresh"),
             UseVisualStyleBackColor = true,
@@ -125,7 +120,6 @@ public sealed class PanelSystemOperationsLog : UserControl
 
         buttonExport = new Button
         {
-            Location = new Point(468, 40),
             Size = new Size(95, 26),
             Text = Strings.Get("Export CSV"),
             UseVisualStyleBackColor = true,
@@ -138,8 +132,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Anchor = AnchorStyles.Top | AnchorStyles.Right,
             AutoSize = false,
             TextAlign = ContentAlignment.MiddleRight,
-            Location = new Point(570, 44),
-            Size = new Size(225, 20),
+            Size = new Size(220, 20),
             Text = string.Format(Strings.Get("Total records: {0}"), 0),
             ForeColor = Color.FromArgb(128, 128, 128)
         };
@@ -157,8 +150,8 @@ public sealed class PanelSystemOperationsLog : UserControl
         panelGridContainer = new SmartPanel
         {
             Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-            Location = new Point(24, 96),
-            Size = new Size(810, 400),
+            Location = new Point(16, 92),
+            Size = new Size(866, 385),
             BackColor = SystemColors.Window,
             BorderColor = Color.FromArgb(191, 191, 191),
             PaintBorder = true,
@@ -182,7 +175,9 @@ public sealed class PanelSystemOperationsLog : UserControl
             SelectionMode = DataGridViewSelectionMode.FullRowSelect,
             AllowUserToAddRows = false,
             AllowUserToDeleteRows = false,
-            AllowUserToResizeRows = false
+            AllowUserToResizeRows = false,
+            AllowUserToResizeColumns = true,
+            ScrollBars = ScrollBars.Both
         };
 
         typeof(DataGridView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -210,11 +205,112 @@ public sealed class PanelSystemOperationsLog : UserControl
 
         BuildGridColumns();
         dataGridViewLogs.CellFormatting += DataGridViewLogs_CellFormatting;
+        dataGridViewLogs.ColumnHeaderMouseDoubleClick += (_, _) => AutoResizeGridColumns();
 
         panelGridContainer.Controls.Add(dataGridViewLogs);
 
         Controls.Add(panelGridContainer);
         Controls.Add(panelFilterBar);
+
+        LayoutFilterBar();
+        panelFilterBar.Resize += (_, _) => LayoutFilterBar();
+    }
+
+    /// <summary>
+    /// 自適應計算並排列篩選列控制項之水平位置，避免不同語系字串寬度差異導致重疊或削角切邊。
+    /// </summary>
+    public void LayoutFilterBar()
+    {
+        panelFilterBar.SuspendLayout();
+        try
+        {
+            labelCategory.Location = new Point(12, 14);
+            comboBoxCategory.Location = new Point(labelCategory.Right + 8, 10);
+            labelOutcome.Location = new Point(comboBoxCategory.Right + 20, 14);
+            comboBoxOutcome.Location = new Point(labelOutcome.Right + 8, 10);
+
+            labelSearch.Location = new Point(12, 44);
+            textBoxSearch.Location = new Point(labelSearch.Right + 8, 41);
+            buttonRefresh.Location = new Point(textBoxSearch.Right + 12, 40);
+            buttonExport.Location = new Point(buttonRefresh.Right + 8, 40);
+
+            labelRecordCount.Location = new Point(panelFilterBar.ClientSize.Width - labelRecordCount.Width - 12, 44);
+        }
+        finally
+        {
+            panelFilterBar.ResumeLayout();
+        }
+    }
+
+    /// <summary>
+    /// 自動計算並最佳化日誌表格欄位寬度，使其適應資料內容與標頭尺寸。
+    /// </summary>
+    public void AutoResizeGridColumns()
+    {
+        if (isResizingColumns || dataGridViewLogs.Columns.Count == 0) return;
+        isResizingColumns = true;
+        dataGridViewLogs.SuspendLayout();
+        try
+        {
+            if (dataGridViewLogs.Rows.Count > 0)
+            {
+                for (int i = 0; i < dataGridViewLogs.Columns.Count - 1; i++)
+                {
+                    dataGridViewLogs.AutoResizeColumn(i, DataGridViewAutoSizeColumnMode.DisplayedCells);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < dataGridViewLogs.Columns.Count - 1; i++)
+                {
+                    dataGridViewLogs.AutoResizeColumn(i, DataGridViewAutoSizeColumnMode.ColumnHeader);
+                }
+            }
+
+            if (dataGridViewLogs.Columns["colTime"] is { } colTime && colTime.Width < 145) colTime.Width = 145;
+            if (dataGridViewLogs.Columns["colCategory"] is { } colCat && colCat.Width < 130) colCat.Width = 130;
+            if (dataGridViewLogs.Columns["colOutcome"] is { } colOut && colOut.Width < 85) colOut.Width = 85;
+            if (dataGridViewLogs.Columns["colActor"] is { } colAct && colAct.Width < 120) colAct.Width = 120;
+            if (dataGridViewLogs.Columns["colSubject"] is { } colSub && colSub.Width < 160) colSub.Width = 160;
+        }
+        finally
+        {
+            dataGridViewLogs.ResumeLayout();
+            isResizingColumns = false;
+        }
+    }
+
+    /// <summary>
+    /// 套用目前語系設定並更新所有介面控制項與欄位標題文字。
+    /// </summary>
+    public void ApplyLanguage()
+    {
+        labelCategory.Text = Strings.Get("Event category:");
+        labelOutcome.Text = Strings.Get("Outcome:");
+        labelSearch.Text = Strings.Get("Search keyword:");
+        buttonRefresh.Text = Strings.Get("Refresh");
+        buttonExport.Text = Strings.Get("Export CSV");
+
+        int prevCategoryIndex = comboBoxCategory.SelectedIndex;
+        PopulateCategories();
+        if (prevCategoryIndex >= 0 && prevCategoryIndex < comboBoxCategory.Items.Count)
+            comboBoxCategory.SelectedIndex = prevCategoryIndex;
+        else if (comboBoxCategory.Items.Count > 0)
+            comboBoxCategory.SelectedIndex = 0;
+
+        int prevOutcomeIndex = comboBoxOutcome.SelectedIndex;
+        comboBoxOutcome.Items.Clear();
+        comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
+        comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
+        comboBoxOutcome.Items.Add(Strings.Get("Failed"));
+        if (prevOutcomeIndex >= 0 && prevOutcomeIndex < comboBoxOutcome.Items.Count)
+            comboBoxOutcome.SelectedIndex = prevOutcomeIndex;
+        else if (comboBoxOutcome.Items.Count > 0)
+            comboBoxOutcome.SelectedIndex = 0;
+
+        BuildGridColumns();
+        LayoutFilterBar();
+        _ = LoadLogsAsync();
     }
 
     private void PopulateCategories()
@@ -242,6 +338,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Name = "colTime",
             HeaderText = Strings.Get("Time"),
             Width = 145,
+            MinimumWidth = 135,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
@@ -249,7 +346,8 @@ public sealed class PanelSystemOperationsLog : UserControl
         {
             Name = "colCategory",
             HeaderText = Strings.Get("Event category:").TrimEnd('：', ':'),
-            Width = 150,
+            Width = 145,
+            MinimumWidth = 120,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
@@ -258,6 +356,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Name = "colOutcome",
             HeaderText = Strings.Get("Outcome:").TrimEnd('：', ':'),
             Width = 90,
+            MinimumWidth = 80,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
@@ -266,6 +365,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Name = "colActor",
             HeaderText = Strings.Get("Actor"),
             Width = 130,
+            MinimumWidth = 110,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
@@ -274,6 +374,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Name = "colSubject",
             HeaderText = Strings.Get("Target / Subject"),
             Width = 180,
+            MinimumWidth = 140,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
 
@@ -282,6 +383,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             Name = "colDetails",
             HeaderText = Strings.Get("Details"),
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+            MinimumWidth = 160,
             SortMode = DataGridViewColumnSortMode.NotSortable
         });
     }
@@ -292,17 +394,51 @@ public sealed class PanelSystemOperationsLog : UserControl
 
         if (dataGridViewLogs.Columns[e.ColumnIndex].Name == "colOutcome" && e.Value is string outcome)
         {
-            if (string.Equals(outcome, "Succeeded", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(outcome, "Succeeded", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(outcome, Strings.Get("Succeeded"), StringComparison.OrdinalIgnoreCase))
             {
-                e.CellStyle!.ForeColor = Color.FromArgb(22, 101, 52); // Dark green
+                e.CellStyle!.ForeColor = Color.FromArgb(22, 101, 52); // 深綠色
                 e.CellStyle.Font = new Font(dataGridViewLogs.Font, FontStyle.Bold);
             }
-            else if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(outcome, Strings.Get("Failed"), StringComparison.OrdinalIgnoreCase))
             {
-                e.CellStyle!.ForeColor = Color.FromArgb(185, 28, 28); // Red
+                e.CellStyle!.ForeColor = Color.FromArgb(185, 28, 28); // 深紅色
                 e.CellStyle.Font = new Font(dataGridViewLogs.Font, FontStyle.Bold);
             }
         }
+    }
+
+    private static string FormatOutcome(string outcome)
+    {
+        if (string.Equals(outcome, "Succeeded", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Succeeded");
+        if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Failed");
+        return outcome;
+    }
+
+    private static string FormatEventType(string eventType)
+    {
+        if (string.IsNullOrWhiteSpace(eventType)) return eventType;
+        string localized = Strings.Get(eventType);
+        return !string.IsNullOrEmpty(localized) && localized != eventType ? localized : eventType;
+    }
+
+    private static string FormatActor(string actor)
+    {
+        if (string.IsNullOrWhiteSpace(actor)) return actor;
+        if (string.Equals(actor, "DatabaseMaintenance", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Database maintenance");
+        return actor;
+    }
+
+    private static string FormatSubject(string subject)
+    {
+        if (string.IsNullOrWhiteSpace(subject)) return subject;
+        if (string.Equals(subject, "GeoIP Database", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("GeoIP Database");
+        return subject;
     }
 
     /// <summary>
@@ -375,13 +511,23 @@ public sealed class PanelSystemOperationsLog : UserControl
                         ? parsed.ToLocalTime()
                         : DateTime.MinValue;
 
+                    string rawEventType = Shared.Db.DbValueConverter.ToString(reader["EventType"]);
+                    string rawOutcome = Shared.Db.DbValueConverter.ToString(reader["Outcome"]);
+                    string rawActor = Shared.Db.DbValueConverter.ToString(reader["Actor"]);
+                    string rawSubject = Shared.Db.DbValueConverter.ToString(reader["Subject"]);
+                    string rawDetails = Shared.Db.DbValueConverter.ToString(reader["Details"]);
+
                     rows.Add(new AuditDisplayRow(
                         localTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                        Shared.Db.DbValueConverter.ToString(reader["EventType"]),
-                        Shared.Db.DbValueConverter.ToString(reader["Outcome"]),
-                        Shared.Db.DbValueConverter.ToString(reader["Actor"]),
-                        Shared.Db.DbValueConverter.ToString(reader["Subject"]),
-                        Shared.Db.DbValueConverter.ToString(reader["Details"])));
+                        FormatEventType(rawEventType),
+                        FormatOutcome(rawOutcome),
+                        FormatActor(rawActor),
+                        FormatSubject(rawSubject),
+                        rawDetails,
+                        rawEventType,
+                        rawOutcome,
+                        rawActor,
+                        rawSubject));
                 }
             }
 
@@ -394,11 +540,13 @@ public sealed class PanelSystemOperationsLog : UserControl
                 dataGridViewLogs.Rows.Clear();
                 foreach (AuditDisplayRow r in rows)
                 {
-                    dataGridViewLogs.Rows.Add(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
+                    int rowIdx = dataGridViewLogs.Rows.Add(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
+                    dataGridViewLogs.Rows[rowIdx].Tag = r;
                 }
                 dataGridViewLogs.ResumeLayout();
                 labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
                 buttonRefresh.Enabled = true;
+                AutoResizeGridColumns();
             });
         }
         catch (OperationCanceledException) { }
@@ -471,5 +619,15 @@ public sealed class PanelSystemOperationsLog : UserControl
         public override string ToString() => DisplayName;
     }
 
-    private sealed record AuditDisplayRow(string Time, string EventType, string Outcome, string Actor, string Subject, string Details);
+    private sealed record AuditDisplayRow(
+        string Time,
+        string EventType,
+        string Outcome,
+        string Actor,
+        string Subject,
+        string Details,
+        string RawEventType,
+        string RawOutcome,
+        string RawActor,
+        string RawSubject);
 }
