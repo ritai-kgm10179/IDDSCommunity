@@ -41,7 +41,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -69,7 +69,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -97,7 +97,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -127,7 +127,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -156,7 +156,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -187,7 +187,7 @@ public sealed class ThreatIntelligenceHubServerTest
         config.ThreatHubPort = port;
         config.ThreatHubApiKey = "hub_test_key";
 
-        using var server = new ThreatIntelligenceHubServer(config, _ => { });
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
         server.Start();
         if (!server.IsListening)
         {
@@ -216,9 +216,9 @@ public sealed class ThreatIntelligenceHubServerTest
         IddsConfig config = IddsConfig.GetDefaultConfiguration();
         config.EnableManagementApi = true;
         config.ManagementApiPort = port;
-        config.ManagementApiKey = string.Empty;
+        config.ManagementApiKey = "management-test-key";
 
-        using var server = new ManagementApiHttpServer(config, new Database());
+        using var server = new ManagementApiHttpServer(config, new Database(), true);
         server.Start();
         if (!server.IsRunning)
         {
@@ -226,6 +226,19 @@ public sealed class ThreatIntelligenceHubServerTest
         }
 
         using var client = new HttpClient();
+        using var unauthorized = await client.GetAsync($"http://localhost:{port}/").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+        client.DefaultRequestHeaders.Add("X-Api-Key", "management-test-key");
+
+        foreach (string invalidBody in new[] { "[]", "{\"ipAddress\":123}", "{" })
+        {
+            using var invalid = new StringContent(invalidBody, Encoding.UTF8, "application/json");
+            using var invalidResponse = await client.PostAsync($"http://localhost:{port}/api/v1/locks", invalid).ConfigureAwait(false);
+            Assert.AreEqual(HttpStatusCode.BadRequest, invalidResponse.StatusCode);
+        }
+        using var oversized = new StringContent(new string('x', 65537), Encoding.UTF8, "application/json");
+        using var oversizedResponse = await client.PostAsync($"http://localhost:{port}/api/v1/locks", oversized).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.RequestEntityTooLarge, oversizedResponse.StatusCode);
 
         // 1. GET / 回傳 200 OK
         using var getResponse = await client.GetAsync($"http://localhost:{port}/").ConfigureAwait(false);

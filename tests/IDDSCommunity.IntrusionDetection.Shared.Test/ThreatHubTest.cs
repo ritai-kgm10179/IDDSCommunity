@@ -83,7 +83,7 @@ public sealed class ThreatHubTest
         };
 
         ThreatHubSyncResponse result = await hubClient.SynchronizeAsync(
-            "http://localhost:8443",
+            "https://localhost:8443",
             "test_api_key",
             payload,
             CancellationToken.None);

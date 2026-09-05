@@ -82,9 +82,9 @@
       },
       "Microsoft.Windows.CsWin32": {
         "type": "Direct",
-        "requested": "[0.3.330, )",
-        "resolved": "0.3.330",
-        "contentHash": "6Iu/AuWuGbIo5KaO43gqa5MOxexFph851Wg4IXgkWyjAwIAfjZ89To1YqJ2XpLNWWrvSEpECJ+/h5tZnP061kA==",
+        "requested": "[0.3.333, )",
+        "resolved": "0.3.333",
+        "contentHash": "UigiQ8BYaIJfon0FZ9rTy9reygbXr4VijncifNe/Az/GSnqd958ptd1/Hp9u9lyYrwI+3/xeIUHgqrLr1o5hQQ==",
         "dependencies": {
           "Microsoft.Windows.SDK.Win32Docs": "0.1.42-alpha",
           "Microsoft.Windows.SDK.Win32Metadata": "71.0.14-preview",
@@ -114,6 +114,11 @@
         "requested": "[10.0.11, )",
         "resolved": "10.0.11",
         "contentHash": "khROyIQ3GAZy5MbCabfmlbvxf9nuvdveFP2XbRCteZ9Lq8OFEvImmrjV6acl1LegRu/9T6VMxi9Lr+KZu29VHg=="
+      },
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "4.0.102.3",
+        "contentHash": "hGysXQOtru5CQmROaDLQURs5HK3W385ClLodTKZcLnd6o64YDOwvBaQrjYlfU9BEVLv7sdDR/ZRaATjpdBJ5Xw=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
@@ -496,6 +501,7 @@
       "iddscommunity.intrusiondetection.shared": {
         "type": "Project",
         "dependencies": {
+          "AWSSDK.WAFV2": "[4.0.101.7, )",
           "Dapper": "[2.1.79, )",
           "IDDSCommunity.IntrusionDetection.Api": "[3.0.0, )",
           "Konscious.Security.Cryptography.Argon2": "[1.3.1, )",
@@ -505,6 +511,15 @@
           "SQLite3MC.PCLRaw.bundle": "[2.4.0, )",
           "SharpPcap": "[6.3.1, )",
           "System.Management": "[10.0.11, )"
+        }
+      },
+      "AWSSDK.WAFV2": {
+        "type": "CentralTransitive",
+        "requested": "[4.0.101.7, )",
+        "resolved": "4.0.101.7",
+        "contentHash": "VigJAQ68JjCGnFfelFVJNUohT4o+kezC6PMOw2h1rKK/KiLef2F7DTOEYukZJKfpz0T+Q0V5EcuA4RGzVXFQuA==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.0.102.3, 5.0.0)"
         }
       },
       "Dapper": {

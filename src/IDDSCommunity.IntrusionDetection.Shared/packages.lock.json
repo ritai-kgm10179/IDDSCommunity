@@ -2,6 +2,15 @@
   "version": 2,
   "dependencies": {
     "net10.0-windows7.0": {
+      "AWSSDK.WAFV2": {
+        "type": "Direct",
+        "requested": "[4.0.101.7, )",
+        "resolved": "4.0.101.7",
+        "contentHash": "VigJAQ68JjCGnFfelFVJNUohT4o+kezC6PMOw2h1rKK/KiLef2F7DTOEYukZJKfpz0T+Q0V5EcuA4RGzVXFQuA==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.0.102.3, 5.0.0)"
+        }
+      },
       "Dapper": {
         "type": "Direct",
         "requested": "[2.1.79, )",
@@ -91,6 +100,11 @@
         "requested": "[10.0.11, )",
         "resolved": "10.0.11",
         "contentHash": "PNoxCTPb+Tlux+GJyq4c89ddYdpioVSqfGx8pqOF6shCSKwUNNctXhQtRkCICjbJmGrJJsW8NY52kVYO/b8mlQ=="
+      },
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "4.0.102.3",
+        "contentHash": "hGysXQOtru5CQmROaDLQURs5HK3W385ClLodTKZcLnd6o64YDOwvBaQrjYlfU9BEVLv7sdDR/ZRaATjpdBJ5Xw=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",

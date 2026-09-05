@@ -20,8 +20,9 @@ public sealed class GeoIpUpdateService : IDisposable
     private readonly bool ownClient;
 
     private System.Threading.Timer? refreshTimer;
-    private int refreshing;
-    private bool disposed;
+    private readonly SemaphoreSlim refreshGate = new(1, 1);
+    private readonly CancellationTokenSource stopping = new();
+    private volatile bool disposed;
 
     /// <summary>
     /// 初始化 <see cref="GeoIpUpdateService"/> 類別之新執行個體。
@@ -83,6 +84,7 @@ public sealed class GeoIpUpdateService : IDisposable
     /// </summary>
     public void Stop()
     {
+        stopping.Cancel();
         refreshTimer?.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
@@ -134,7 +136,7 @@ public sealed class GeoIpUpdateService : IDisposable
     /// <returns>更新結果物件。</returns>
     public async Task<(bool Success, int TotalRecords, int TotalCountries, string ErrorMessage)> RefreshDatabaseAsync(bool isManual = false)
     {
-        if (Interlocked.Exchange(ref refreshing, 1) != 0)
+        if (disposed || stopping.IsCancellationRequested || !await refreshGate.WaitAsync(0).ConfigureAwait(false))
         {
             return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Update is already in progress.");
         }
@@ -150,7 +152,7 @@ public sealed class GeoIpUpdateService : IDisposable
             string localPath = config.GeoIpLocalFilePath;
             if (!string.IsNullOrWhiteSpace(localPath) && File.Exists(localPath))
             {
-                string content = await File.ReadAllTextAsync(localPath).ConfigureAwait(false);
+                string content = await File.ReadAllTextAsync(localPath, stopping.Token).ConfigureAwait(false);
                 int loaded = GeoIpLookupService.LoadFromCsv(content);
                 int countries = GeoIpLookupService.TotalLoadedCountries;
                 logInformation($"GeoIP database refreshed from local file: {loaded} records across {countries} countries.");
@@ -168,11 +170,12 @@ public sealed class GeoIpUpdateService : IDisposable
             {
                 try
                 {
-                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(60));
-                    using HttpResponseMessage response = await httpClient.GetAsync(v4Url, cts.Token).ConfigureAwait(false);
+                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(60));
+                    using HttpResponseMessage response = await httpClient.GetAsync(v4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        v4Content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+                        v4Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
                     }
                     else
                     {
@@ -191,11 +194,12 @@ public sealed class GeoIpUpdateService : IDisposable
             {
                 try
                 {
-                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(60));
-                    using HttpResponseMessage response = await httpClient.GetAsync(v6Url, cts.Token).ConfigureAwait(false);
+                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(60));
+                    using HttpResponseMessage response = await httpClient.GetAsync(v6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
-                        v6Content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+                        v6Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
                     }
                     else
                     {
@@ -208,14 +212,21 @@ public sealed class GeoIpUpdateService : IDisposable
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(v4Content) && string.IsNullOrWhiteSpace(v6Content))
+            if ((!string.IsNullOrWhiteSpace(v4Url) && string.IsNullOrWhiteSpace(v4Content)) ||
+                (!string.IsNullOrWhiteSpace(v6Url) && string.IsNullOrWhiteSpace(v6Content)) ||
+                (string.IsNullOrWhiteSpace(v4Content) && string.IsNullOrWhiteSpace(v6Content)))
             {
                 recordAudit?.Invoke("GeoIp.Update", "Failed", "GeoIP Database", "Failed to download GeoIP feeds from configured URLs.");
                 return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Failed to download GeoIP feeds from configured URLs.");
             }
 
+            stopping.Token.ThrowIfCancellationRequested();
             // 熱更新記憶體快取
-            int totalLoaded = GeoIpLookupService.LoadFromCsv(v4Content, v6Content);
+            int totalLoaded = GeoIpLookupService.LoadValidatedDownload(v4Content, v6Content);
+            if (totalLoaded == 0)
+            {
+                return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Invalid GeoIP feed content.");
+            }
             int totalCountries = GeoIpLookupService.TotalLoadedCountries;
 
             // 儲存至本機快取檔案
@@ -253,7 +264,7 @@ public sealed class GeoIpUpdateService : IDisposable
         }
         finally
         {
-            Interlocked.Exchange(ref refreshing, 0);
+            refreshGate.Release();
         }
     }
 
@@ -265,7 +276,10 @@ public sealed class GeoIpUpdateService : IDisposable
         if (disposed) return;
         disposed = true;
 
+        Stop();
         refreshTimer?.Dispose();
+        refreshGate.Wait();
+        refreshGate.Release();
         if (ownClient)
         {
             httpClient.Dispose();

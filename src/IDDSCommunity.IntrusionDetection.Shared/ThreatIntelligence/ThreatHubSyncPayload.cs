@@ -9,6 +9,14 @@ namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 public sealed class ThreatHubSyncPayload
 {
     /// <summary>
+    /// 取得或設定已處理的持久化序號；初次同步為零。
+    /// </summary>
+    public long Cursor { get; set; }
+    /// <summary>
+    /// 取得或設定中繼資料庫的世代識別碼；更換資料庫時重新同步。
+    /// </summary>
+    public string Generation { get; set; } = string.Empty;
+    /// <summary>
     /// 取得或設定 邊緣節點之唯一識別碼。
     /// </summary>
     public string NodeId { get; set; } = string.Empty;
@@ -39,6 +47,18 @@ public sealed class ThreatHubSyncPayload
 /// </summary>
 public sealed class ThreatHubSyncResponse
 {
+    /// <summary>
+    /// 取得或設定本頁處理完成後應使用的游標。
+    /// </summary>
+    public long NextCursor { get; set; }
+    /// <summary>
+    /// 取得或設定中繼資料庫的世代識別碼。
+    /// </summary>
+    public string Generation { get; set; } = string.Empty;
+    /// <summary>
+    /// 取得或設定是否仍有下一頁資料。
+    /// </summary>
+    public bool HasMore { get; set; }
     /// <summary>
     /// 取得或設定 同步作業是否成功。
     /// </summary>

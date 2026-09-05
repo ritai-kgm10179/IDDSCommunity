@@ -1,4 +1,4 @@
-namespace IDDSCommunity.IntrusionDetection.Shared.SelfService;
+﻿namespace IDDSCommunity.IntrusionDetection.Shared.SelfService;
 
 /// <summary>
 /// 定義自助解鎖門戶之驗證方式。
@@ -40,6 +40,11 @@ public sealed class SelfServicePortalSettings
     /// 取得或設定門戶監聽 IP 位址 (預設 "0.0.0.0")。
     /// </summary>
     public string PortalListenIp { get; set; } = "0.0.0.0";
+
+    /// <summary>
+    /// 取得或設定可信代理來源的 IP／CIDR；門戶只接受這些代理轉送的原始來源。
+    /// </summary>
+    public string[] TrustedProxyCidrs { get; set; } = [];
 
     /// <summary>
     /// 取得或設定預設驗證方式。

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -41,12 +42,21 @@ public class Locks
     /// </summary>
     /// <returns>傳回 active lock records 的結果。</returns>
     public static List<Lock> GetActiveLocks()
+        => ReadActiveLocks(false);
+
+    /// <summary>
+    /// 取得尚待套用至防火牆的封鎖要求。
+    /// </summary>
+    /// <returns>待處理的封鎖清單。</returns>
+    public static List<Lock> GetPendingLocks() => ReadActiveLocks(true);
+
+    private static List<Lock> ReadActiveLocks(bool pendingOnly)
     {
         List<Lock> result = [];
         using IDataReader reader = Database.Instance.ExecuteReader(
             "select * from Locks where status in (@p0,@p1,@p2,@p3)",
-            Lock.LOCK_STATUS_HARDLOCK,
-            Lock.LOCK_STATUS_SOFTLOCK,
+            pendingOnly ? Lock.LOCK_STATUS_HARDLOCK_REQUESTED : Lock.LOCK_STATUS_HARDLOCK,
+            pendingOnly ? Lock.LOCK_STATUS_SOFTLOCK_REQUESTED : Lock.LOCK_STATUS_SOFTLOCK,
             Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
             Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
         while (reader.Read())
@@ -523,8 +533,9 @@ public class Locks
         List<Lock> result = [];
         if (Database.Instance.IsConfigured)
         {
-            string sqlString = @"select * from Locks where status=@p0 and LockDate<@p1";
-            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, cutoffDate);
+            string sqlString = @"select * from Locks where status=@p0 and LockDate<@p1 and UnlockDate=@p2
+                and not exists (select 1 from IpAttackActivity i where i.IpAddress=Locks.IpAddress and i.LastAttackTicks>=@p3)";
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Lock.LOCK_STATUS_HARDLOCK, cutoffDate, DateTime.MaxValue, cutoffDate.Ticks);
             while (rdr.Read())
             {
                 result.Add(new Lock
@@ -620,27 +631,21 @@ public class Locks
     }
 
     /// <summary>
-    /// 將指定 IP 位址之活躍鎖定標記為待解除並更新狀態為已解除。
+    /// 將指定 IP 位址之活躍鎖定標記為待解除，由服務套用後才標記完成。
     /// </summary>
     /// <param name="ipAddress">來源 IP 位址。</param>
     /// <returns>若成功解除傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-    public static bool UnlockIp(string ipAddress)
+    /// <param name="softOnly">是否僅允許解除軟封鎖，且拒絕已有硬封鎖的來源。</param>
+    public static bool UnlockIp(string ipAddress, bool softOnly = false)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress)) return false;
+        if (string.IsNullOrWhiteSpace(ipAddress) || !Database.Instance.IsConfigured) return false;
         ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
-
-        if (!Database.Instance.IsConfigured) return false;
-
-        Database.Instance.ExecuteNonQuery(
-            "update Locks set Status=@p0, LastUpdate=@p1 where IpAddress=@p2 and status in (@p3,@p4,@p5,@p6)",
-            Lock.LOCK_STATUS_UNLOCKED,
-            DateTime.UtcNow,
-            ipAddress,
-            Lock.LOCK_STATUS_HARDLOCK,
-            Lock.LOCK_STATUS_SOFTLOCK,
-            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
-            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
-
-        return true;
+        return Database.Instance.Query<long>(
+            @"UPDATE Locks SET Status=500, LastUpdate=@now
+              WHERE IpAddress=@ip AND Status IN (200,210,300,310,500)
+                AND (@softOnly=0 OR (Status IN (200,210) AND NOT EXISTS
+                    (SELECT 1 FROM Locks hard WHERE hard.IpAddress=@ip AND hard.Status IN (300,310))))
+              RETURNING LockId",
+            new { ip = ipAddress, now = DateTime.UtcNow, softOnly }).Any();
     }
 }

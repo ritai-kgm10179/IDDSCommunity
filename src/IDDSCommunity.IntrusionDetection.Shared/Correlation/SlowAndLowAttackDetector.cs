@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -10,7 +10,9 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Correlation;
 /// </summary>
 public sealed class SlowAndLowAttackDetector
 {
-    private readonly ConcurrentDictionary<string, IpAttackState> ipStates = new();
+    private readonly Dictionary<string, IpAttackState> ipStates = new(StringComparer.Ordinal);
+    private readonly LinkedList<string> recency = new();
+    private readonly object stateGate = new();
     private readonly double halfLifeSeconds;
     private readonly double anomalyThreshold;
     private readonly int maxCapacity;
@@ -28,6 +30,10 @@ public sealed class SlowAndLowAttackDetector
     /// <param name="maxCapacity">記憶體內最大追蹤 IP 數量 (預設 50000)。</param>
     public SlowAndLowAttackDetector(double halfLifeHours = 24.0, double anomalyThreshold = 8.0, int maxCapacity = 50000)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxCapacity);
+        if (!double.IsFinite(halfLifeHours) || halfLifeHours <= 0)
+            throw new ArgumentOutOfRangeException(nameof(halfLifeHours));
+        if (!double.IsFinite(anomalyThreshold) || anomalyThreshold < 0) throw new ArgumentOutOfRangeException(nameof(anomalyThreshold));
         this.halfLifeSeconds = Math.Max(1.0, halfLifeHours * 3600.0);
         this.anomalyThreshold = anomalyThreshold;
         this.maxCapacity = maxCapacity;
@@ -48,32 +54,47 @@ public sealed class SlowAndLowAttackDetector
         DateTime now = timestamp ?? DateTime.UtcNow;
         long nowSeconds = (long)(now - DateTime.UnixEpoch).TotalSeconds;
 
-        // 容量防護與 LRU 淘汰
-        if (ipStates.Count > maxCapacity)
-        {
-            TrimExcess(nowSeconds);
-        }
-
-        IpAttackState state = ipStates.GetOrAdd(ipAddress, _ => new IpAttackState(nowSeconds));
         double score;
         int uniqueAccounts;
 
-        lock (state)
+        lock (stateGate)
         {
+            if (!ipStates.TryGetValue(ipAddress, out IpAttackState? state))
+            {
+                if (ipStates.Count == maxCapacity)
+                {
+                    ipStates.Remove(recency.First!.Value);
+                    recency.RemoveFirst();
+                }
+                state = new IpAttackState(nowSeconds);
+                state.RecencyNode = recency.AddLast(ipAddress);
+                ipStates.Add(ipAddress, state);
+            }
+            else
+            {
+                recency.Remove(state.RecencyNode!);
+                recency.AddLast(state.RecencyNode!);
+            }
+            nowSeconds = Math.Max(nowSeconds, state.LastTimestampSeconds);
             long deltaSeconds = Math.Max(0, nowSeconds - state.LastTimestampSeconds);
             state.LastTimestampSeconds = nowSeconds;
+            if (nowSeconds - state.DiversityStartedSeconds >= halfLifeSeconds * 3)
+            {
+                Array.Clear(state.HllRegisters);
+                state.DiversityStartedSeconds = nowSeconds;
+            }
 
             // 1. 指數衰減計算 (Exponential Decay: Score = Score * 2^(-delta / halfLife))
             double decayFactor = Math.Pow(0.5, deltaSeconds / halfLifeSeconds);
             state.DecayedScore = (state.DecayedScore * decayFactor) + 1.0;
 
-            // 2. 帳號多樣性估算 (使用 16-register 4-bit HyperLogLog 暫存器)
+            // 2. 帳號多樣性估算 (使用 16 個 byte HyperLogLog 暫存器)
             if (!string.IsNullOrWhiteSpace(targetAccount))
             {
                 uint hash = ComputeFastHash(targetAccount.Trim().ToLowerInvariant());
                 int registerIndex = (int)(hash & 0x0F);
-                uint remaining = (hash >> 4) | 0x80000000;
-                byte leadingZeros = (byte)(Math.Min(15, System.Numerics.BitOperations.LeadingZeroCount(remaining) + 1));
+                uint remaining = hash >> 4;
+                byte leadingZeros = (byte)(System.Numerics.BitOperations.LeadingZeroCount(remaining) - 4 + 1);
                 if (leadingZeros > state.HllRegisters[registerIndex])
                 {
                     state.HllRegisters[registerIndex] = leadingZeros;
@@ -99,20 +120,25 @@ public sealed class SlowAndLowAttackDetector
     /// <summary>
     /// 取得指定 IP 目前之計算異常分數。
     /// </summary>
+    /// <param name="ipAddress">来源 IP 位址。</param>
+    /// <param name="timestamp">查詢時間，預設 UTC 現在時間。</param>
+    /// <returns>目前異常分數，未追蹤時為零。</returns>
     public double GetCurrentScore(string ipAddress, DateTime? timestamp = null)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress) || !ipStates.TryGetValue(ipAddress, out var state))
+        if (string.IsNullOrWhiteSpace(ipAddress))
             return 0.0;
 
         DateTime now = timestamp ?? DateTime.UtcNow;
         long nowSeconds = (long)(now - DateTime.UnixEpoch).TotalSeconds;
 
-        lock (state)
+        lock (stateGate)
         {
+            if (!ipStates.TryGetValue(ipAddress, out IpAttackState? state)) return 0.0;
             long deltaSeconds = Math.Max(0, nowSeconds - state.LastTimestampSeconds);
             double decayFactor = Math.Pow(0.5, deltaSeconds / halfLifeSeconds);
             double decayedScore = state.DecayedScore * decayFactor;
-            int uniqueAccounts = EstimateCardinality(state.HllRegisters);
+            int uniqueAccounts = nowSeconds - state.DiversityStartedSeconds >= halfLifeSeconds * 3
+                ? 1 : EstimateCardinality(state.HllRegisters);
             double diversityMultiplier = Math.Max(1.0, Math.Log2(uniqueAccounts + 1));
             return decayedScore * diversityMultiplier;
         }
@@ -121,28 +147,20 @@ public sealed class SlowAndLowAttackDetector
     /// <summary>
     /// 清除所有追蹤狀態。
     /// </summary>
-    public void Clear() => ipStates.Clear();
-
-    private void TrimExcess(long nowSeconds)
+    public void Clear()
     {
-        long cutoff = nowSeconds - (long)(halfLifeSeconds * 3);
-        foreach (var kvp in ipStates)
+        lock (stateGate)
         {
-            if (kvp.Value.LastTimestampSeconds < cutoff)
-            {
-                ipStates.TryRemove(kvp.Key, out _);
-            }
+            ipStates.Clear();
+            recency.Clear();
         }
     }
 
     private static uint ComputeFastHash(string text)
     {
-        uint hash = 2166136261;
-        foreach (char c in text)
-        {
-            hash = (hash ^ c) * 16777619;
-        }
-        return hash;
+        Span<byte> hash = stackalloc byte[32];
+        SHA256.HashData(Encoding.UTF8.GetBytes(text), hash);
+        return System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(hash);
     }
 
     private static int EstimateCardinality(byte[] registers)
@@ -174,10 +192,13 @@ public sealed class SlowAndLowAttackDetector
         public long LastTimestampSeconds { get; set; }
         public double DecayedScore { get; set; }
         public byte[] HllRegisters { get; } = new byte[16];
+        public LinkedListNode<string>? RecencyNode { get; set; }
+        public long DiversityStartedSeconds { get; set; }
 
         public IpAttackState(long startSeconds)
         {
             LastTimestampSeconds = startSeconds;
+            DiversityStartedSeconds = startSeconds;
             DecayedScore = 0.0;
         }
     }

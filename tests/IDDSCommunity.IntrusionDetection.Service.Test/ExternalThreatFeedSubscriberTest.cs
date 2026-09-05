@@ -64,6 +64,7 @@ public sealed class ExternalThreatFeedSubscriberTest
         config.EnableExternalThreatFeeds = true;
         config.EnableDynamicBogonUpdate = true;
         config.DynamicBogonIpv4Url = "http://localhost/cymru-fullbogons.txt";
+        config.DynamicBogonIpv6Url = "http://localhost/cymru-fullbogons-v6.txt";
         config.ThreatFeedMinLevel = 3;
 
         string mockBogonContent = "140.112.77.0/24\n";

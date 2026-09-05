@@ -16,7 +16,9 @@ public sealed class ManagementApiHttpServer : IDisposable
 {
     private readonly IddsConfig configuration;
     private readonly Database database;
+    private readonly bool allowLoopbackHttp;
     private HttpListener? listener;
+    private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
     private Task? listenerTask;
     private bool isDisposed;
@@ -26,8 +28,11 @@ public sealed class ManagementApiHttpServer : IDisposable
     /// </summary>
     /// <param name="configuration">全域組態。</param>
     /// <param name="database">資料庫執行個體。</param>
-    public ManagementApiHttpServer(IddsConfig configuration, Database database)
+    public ManagementApiHttpServer(IddsConfig configuration, Database database) : this(configuration, database, false) { }
+
+    internal ManagementApiHttpServer(IddsConfig configuration, Database database, bool allowLoopbackHttp)
     {
+        this.allowLoopbackHttp = allowLoopbackHttp;
         this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         this.database = database ?? throw new ArgumentNullException(nameof(database));
     }
@@ -43,6 +48,7 @@ public sealed class ManagementApiHttpServer : IDisposable
     public void Start()
     {
         if (!configuration.EnableManagementApi) return;
+        if (string.IsNullOrWhiteSpace(configuration.ManagementApiKey)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Management API requires an API key."));
         if (listener != null && listener.IsListening) return;
 
         try
@@ -51,14 +57,14 @@ public sealed class ManagementApiHttpServer : IDisposable
             listener = new HttpListener();
             try
             {
-                listener.Prefixes.Add($"http://+:{port}/");
+                listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
                 listener.Start();
             }
             catch
             {
                 listener.Close();
                 listener = new HttpListener();
-                listener.Prefixes.Add($"http://*:{port}/");
+                listener.Prefixes.Add($"https://*:{port}/");
                 try
                 {
                     listener.Start();
@@ -67,13 +73,14 @@ public sealed class ManagementApiHttpServer : IDisposable
                 {
                     listener.Close();
                     listener = new HttpListener();
-                    listener.Prefixes.Add($"http://localhost:{port}/");
+                    listener.Prefixes.Add($"https://localhost:{port}/");
                     listener.Start();
                 }
             }
 
-            cts = new CancellationTokenSource();
-            listenerTask = Task.Run(() => ListenLoopAsync(cts.Token));
+            dispatcher = new BoundedHttpDispatcher(ProcessRequestAsync);
+        cts = new CancellationTokenSource();
+            listenerTask = ListenLoopAsync(cts.Token);
             WindowsLogManager.Instance.WriteEntry($"[ManagementAPI] Server started listening on port {port}",
                 System.Diagnostics.EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         }
@@ -95,6 +102,10 @@ public sealed class ManagementApiHttpServer : IDisposable
             listener?.Stop();
             listener?.Close();
             listener = null;
+            dispatcher?.Dispose();
+            dispatcher = null;
+            cts?.Dispose();
+            cts = null;
         }
         catch { }
     }
@@ -106,7 +117,7 @@ public sealed class ManagementApiHttpServer : IDisposable
             try
             {
                 HttpListenerContext context = await listener.GetContextAsync();
-                _ = Task.Run(() => ProcessRequestAsync(context), cancellationToken);
+                dispatcher?.Submit(context);
             }
             catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
             {
@@ -132,9 +143,8 @@ public sealed class ManagementApiHttpServer : IDisposable
 
         try
         {
-            // 驗證 API 金鑰 (若有設定)
+            // 每次請求均驗證 API 金鑰。
             string expectedKey = configuration.ManagementApiKey;
-            if (!string.IsNullOrWhiteSpace(expectedKey))
             {
                 string? providedKey = request.Headers["X-Api-Key"];
                 if (string.IsNullOrWhiteSpace(providedKey))
@@ -146,7 +156,7 @@ public sealed class ManagementApiHttpServer : IDisposable
                     }
                 }
 
-                if (!string.Equals(expectedKey, providedKey, StringComparison.Ordinal))
+                if (string.IsNullOrWhiteSpace(expectedKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(expectedKey)), System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(providedKey ?? string.Empty))))
                 {
                     await SendJsonResponseAsync(response, HttpStatusCode.Unauthorized, new { error = "Unauthorized" });
                     return;
@@ -189,10 +199,12 @@ public sealed class ManagementApiHttpServer : IDisposable
 
                 if (method == "POST")
                 {
-                    using var reader = new System.IO.StreamReader(request.InputStream, Encoding.UTF8);
-                    string body = await reader.ReadToEndAsync();
-                    var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
-                    string? targetIp = doc.RootElement.TryGetProperty("ipAddress", out var ipElem) ? ipElem.GetString() : null;
+
+                    string body = await BoundedHttpDispatcher.ReadBodyAsync(request);
+                    using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
+                    string? targetIp = doc.RootElement.ValueKind == JsonValueKind.Object &&
+                        doc.RootElement.TryGetProperty("ipAddress", out var ipElem) && ipElem.ValueKind == JsonValueKind.String
+                        ? ipElem.GetString() : null;
 
                     if (string.IsNullOrWhiteSpace(targetIp) || !IPAddress.TryParse(targetIp, out _))
                     {
@@ -201,10 +213,11 @@ public sealed class ManagementApiHttpServer : IDisposable
                     }
 
                     targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
-                    long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCKED, false);
-                    Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK, 0, targetIp);
+                    if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
+                    long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+                    Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
 
-                    await SendJsonResponseAsync(response, HttpStatusCode.Created, new { success = true, message = $"IP {targetIp} has been hard-locked.", ipAddress = targetIp });
+                    await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, message = $"IP {targetIp} block request has been accepted.", ipAddress = targetIp });
                     return;
                 }
 
@@ -222,8 +235,8 @@ public sealed class ManagementApiHttpServer : IDisposable
                     return;
                 }
 
-                string targetIp = path[14..];
-                if (string.IsNullOrWhiteSpace(targetIp))
+                string targetIp = Uri.UnescapeDataString(path[14..]);
+                if (string.IsNullOrWhiteSpace(targetIp) || !IPAddress.TryParse(targetIp, out _))
                 {
                     await SendJsonResponseAsync(response, HttpStatusCode.BadRequest, new { error = "Target IP required" });
                     return;
@@ -231,7 +244,7 @@ public sealed class ManagementApiHttpServer : IDisposable
 
                 targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
                 bool unblocked = Locks.UnlockIp(targetIp);
-                await SendJsonResponseAsync(response, HttpStatusCode.OK, new { success = unblocked, ipAddress = targetIp });
+                await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, ipAddress = targetIp });
                 return;
             }
 
@@ -252,9 +265,9 @@ public sealed class ManagementApiHttpServer : IDisposable
             // ChatOps 雙向互動一鍵封鎖與解鎖 (Action Token 驗證)
             if (path is "/api/v1/actions/block" or "/api/v1/actions/unblock")
             {
-                if (method != "GET")
+                if (method != "POST")
                 {
-                    response.Headers["Allow"] = "GET";
+                    response.Headers["Allow"] = "POST";
                     await SendJsonResponseAsync(response, HttpStatusCode.MethodNotAllowed, new { error = "Method Not Allowed" });
                     return;
                 }
@@ -266,14 +279,15 @@ public sealed class ManagementApiHttpServer : IDisposable
                     targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
                     if (actionType == "block")
                     {
-                        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCKED, false);
-                        Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK, 0, targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.OK, new { success = true, action = "blocked", ipAddress = targetIp, message = $"IP {targetIp} has been hard-locked via ChatOps." });
+                        if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
+                        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+                        Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
+                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, action = "blockRequested", ipAddress = targetIp, message = $"IP {targetIp} block request has been accepted via ChatOps." });
                     }
                     else
                     {
                         bool unblocked = Locks.UnlockIp(targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.OK, new { success = unblocked, action = "unblocked", ipAddress = targetIp, message = $"IP {targetIp} has been unblocked via ChatOps." });
+                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, action = "unblockRequested", ipAddress = targetIp, message = $"IP {targetIp} unblock request has been accepted via ChatOps." });
                     }
                     return;
                 }
@@ -284,9 +298,11 @@ public sealed class ManagementApiHttpServer : IDisposable
             response.StatusCode = (int)HttpStatusCode.NotFound;
             await SendJsonResponseAsync(response, HttpStatusCode.NotFound, new { error = "Endpoint Not Found" });
         }
+        catch (RequestBodyTooLargeException) { await SendJsonResponseAsync(response, HttpStatusCode.RequestEntityTooLarge, new { error = "Body too large" }); }
+        catch (JsonException) { await SendJsonResponseAsync(response, HttpStatusCode.BadRequest, new { error = "Invalid JSON" }); }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry($"[ManagementAPI] Error handling request: {ex.Message}",
+            WindowsLogManager.Instance.WriteEntry($"[ManagementAPI] Error handling request: {ex.GetType().Name}",
                 System.Diagnostics.EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
             await SendJsonResponseAsync(response, HttpStatusCode.InternalServerError, new { error = "Internal Server Error" });
         }

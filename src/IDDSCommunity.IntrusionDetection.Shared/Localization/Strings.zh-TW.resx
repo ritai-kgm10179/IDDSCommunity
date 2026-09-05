@@ -929,11 +929,11 @@
   <data name="Compliance and forensics" xml:space="preserve"><value>CIS 安全基準與取證</value></data>
   <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>啟用雲端邊界安全同步（AWS、Azure、GCP、Cloudflare、HiCloud）</value></data>
   <data name="Cloud service provider" xml:space="preserve"><value>雲端服務供應商（Cloud Provider）</value></data>
-  <data name="API Key / Access Token" xml:space="preserve"><value>API 金鑰／存取權杖（API Key / Bearer Token）</value></data>
+  <data name="API token / AWS profile (blank: default credentials)" xml:space="preserve"><value>API 權杖／AWS 設定檔（留空使用預設認證）</value></data>
   <data name="Endpoint URL / Region Endpoint" xml:space="preserve"><value>端點 URL／區域端點（Endpoint URL / Region Endpoint）</value></data>
-  <data name="Primary Resource ID (IPSet ID / Zone ID)" xml:space="preserve"><value>主要資源識別碼（Resource ID / IPSet ID / Zone ID）</value></data>
-  <data name="Secondary Resource ID (Scope / Policy Name / Project ID)" xml:space="preserve"><value>次要識別碼（Scope / Security Policy Name / Project ID）</value></data>
-  <data name="Tertiary Resource ID (Network ID / HiCloud CVPC ID)" xml:space="preserve"><value>三級識別碼（Network ID / HiCloud CVPC ID）</value></data>
+  <data name="Primary resource (AWS IP set ARN / Azure NSG / GCP policy / CF zone)" xml:space="preserve"><value>主要資源（AWS IP 集合 ARN／Azure NSG／GCP 政策／CF 區域）</value></data>
+  <data name="Secondary resource (AWS region / Azure subscription / GCP project)" xml:space="preserve"><value>次要資源（AWS 區域／Azure 訂用帳戶／GCP 專案）</value></data>
+  <data name="Third resource (AWS IP set name / Azure resource group)" xml:space="preserve"><value>第三資源（AWS IP 集合名稱／Azure 資源群組）</value></data>
   <data name="Test Connection" xml:space="preserve"><value>測試連線與驗證</value></data>
   <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖門戶（Self-Service Portal）</value></data>
   <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠（預設 8444）</value></data>
@@ -1007,7 +1007,7 @@
   <data name="Edge Node" xml:space="preserve"><value>邊緣防禦節點（Edge Node）</value></data>
   <data name="Threat Hub" xml:space="preserve"><value>威脅情資中繼中心（Threat Hub）</value></data>
   <data name="Generic JSON" xml:space="preserve"><value>通用 JSON（Generic JSON）</value></data>
-  <data name="Chunghwa HiCloud" xml:space="preserve"><value>中華電信 HiCloud</value></data>
+  <data name="Chunghwa HiCloud (deny unsupported)" xml:space="preserve"><value>中華電信 HiCloud（不支援封鎖）</value></data>
   <data name="Generic Webhook" xml:space="preserve"><value>通用 Webhook</value></data>
   <data name="SYSTEM LOG" xml:space="preserve"><value>系統日誌</value></data>
   <data name="Event category:" xml:space="preserve"><value>事件類別：</value></data>
@@ -1053,4 +1053,22 @@
   <data name="Configuration.Import" xml:space="preserve"><value>系統設定匯入</value></data>
   <data name="Configuration.Export" xml:space="preserve"><value>系統設定匯出</value></data>
   <data name="Auto-size column widths" xml:space="preserve"><value>自動最適欄寬</value></data>
+  <data name="Cloud perimeter outbox requires a configured database." xml:space="preserve"><value>雲端待送匣需要已設定的資料庫。</value></data>
+  <data name="Cloud perimeter outbox capacity has been reached." xml:space="preserve"><value>雲端待送匣容量已滿。</value></data>
+  <data name="Management API requires an API key." xml:space="preserve"><value>管理 API 必須設定金鑰。</value></data>
+  <data name="Unsupported batch script path." xml:space="preserve"><value>不支援的批次檔路徑。</value></data>
+  <data name="Self-service portal requires a trusted independent proxy and a TOTP secret." xml:space="preserve"><value>自助門戶需要獨立可信代理入口與 TOTP 密鑰。</value></data>
+  <data name="The threat is invalid or the hub capacity has been reached." xml:space="preserve"><value>威脅無效或中繼容量已滿。</value></data>
+  <data name="Threat Hub requires an API key." xml:space="preserve"><value>Threat Hub 必須設定金鑰。</value></data>
+  <data name="Pending threat capacity has been reached." xml:space="preserve"><value>待同步威脅容量已滿。</value></data>
+  <data name="At most eight Threat Hub endpoints are supported." xml:space="preserve"><value>最多支援八個中繼端點。</value></data>
+  <data name="Invalid Threat Hub page response." xml:space="preserve"><value>無效的中繼分頁回應。</value></data>
+  <data name="Invalid WAFv2 IPSet ARN." xml:space="preserve"><value>無效的 WAFv2 IPSet ARN。</value></data>
+  <data name="IPSet name, identifier, and a valid scope are required." xml:space="preserve"><value>必須設定 IPSet 名稱、識別碼與有效範圍。</value></data>
+  <data name="AWS endpoint must use HTTPS." xml:space="preserve"><value>AWS 端點必須使用 HTTPS。</value></data>
+  <data name="AWS credential profile was not found for the service account." xml:space="preserve"><value>找不到服務帳戶的 AWS 認證設定檔。</value></data>
+  <data name="Unsupported remediation action." xml:space="preserve"><value>不支援的處置。</value></data>
+  <data name="Invalid target IP address." xml:space="preserve"><value>無效的 IP 位址。</value></data>
+  <data name="Threat Hub must use HTTPS." xml:space="preserve"><value>Threat Hub 必須使用 HTTPS。</value></data>
+  <data name="HTTP content exceeds the size limit." xml:space="preserve"><value>HTTP 內容超過大小上限。</value></data>
 </root>

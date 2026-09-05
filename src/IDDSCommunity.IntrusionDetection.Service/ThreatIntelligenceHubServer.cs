@@ -22,10 +22,13 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     private readonly Action<ThreatIntelligenceItem> onThreatReceived;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logError;
-    private readonly ConcurrentDictionary<string, ThreatIntelligenceItem> activeThreats = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ThreatHubStore store;
+    private readonly bool allowLoopbackHttp;
+    private readonly object nodeGate = new();
     private readonly ConcurrentDictionary<string, EdgeNodeState> registeredNodes = new(StringComparer.OrdinalIgnoreCase);
 
     private HttpListener? listener;
+    private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
     private Task? listenTask;
     private bool disposed;
@@ -48,13 +51,17 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <param name="onThreatReceived">當接收到邊緣節點回報之新威脅時引發之回呼委派。</param>
     /// <param name="logInformation">資訊日誌回報委派。</param>
     /// <param name="logError">錯誤日誌回報委派。</param>
+    /// <param name="database">持久化資料庫；測試可省略以使用有限記憶體儲存。</param>
+    /// <param name="allowLoopbackHttp">僅供本機測試使用的 HTTP 入口；正式服務固定採 HTTPS。</param>
     public ThreatIntelligenceHubServer(
         IddsConfig config,
         Action<ThreatIntelligenceItem> onThreatReceived,
         Action<string>? logInformation = null,
-        Action<string, Exception>? logError = null)
+        Action<string, Exception>? logError = null, Database? database = null, bool allowLoopbackHttp = false)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
+        store = new ThreatHubStore(database);
+        this.allowLoopbackHttp = allowLoopbackHttp;
         this.onThreatReceived = onThreatReceived ?? throw new ArgumentNullException(nameof(onThreatReceived));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logError = logError ?? ((msg, ex) => System.Diagnostics.Trace.TraceError("{0}: {1}", msg, ex.Message));
@@ -63,7 +70,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <summary>
     /// 取得目前中繼中心所維護之全網活動威脅情資清單。
     /// </summary>
-    public IReadOnlyList<ThreatIntelligenceItem> ActiveThreats => [.. activeThreats.Values];
+    public IReadOnlyList<ThreatIntelligenceItem> ActiveThreats => store.ReadPage(0, string.Empty).ActiveThreats;
 
     /// <summary>
     /// 取得目前已連線註冊之邊緣節點清單。
@@ -76,8 +83,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <param name="item">威脅情資項目。</param>
     public void IngestLocalThreat(ThreatIntelligenceItem item)
     {
-        if (item is null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
-        activeThreats[item.SourceIp.Trim()] = item;
+        if (!AcceptThreat(item)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("The threat is invalid or the hub capacity has been reached."));
     }
 
     /// <summary>
@@ -92,32 +98,13 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     {
         if (disposed || listener != null) return;
 
+        if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub requires an API key."));
         int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
         listener = new HttpListener();
-        try
-        {
-            listener.Prefixes.Add($"http://+:{port}/");
-            listener.Start();
-        }
-        catch
-        {
-            // 若無管理員 URL ACL 權限，回退至 localhost 監聽
-            listener.Close();
-            listener = new HttpListener();
-            listener.Prefixes.Add($"http://*:{port}/");
-            try
-            {
-                listener.Start();
-            }
-            catch
-            {
-                listener.Close();
-                listener = new HttpListener();
-                listener.Prefixes.Add($"http://localhost:{port}/");
-                listener.Start();
-            }
-        }
-
+        listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
+        try { listener.Start(); }
+        catch { listener.Close(); listener = null; throw; }
+        dispatcher = new BoundedHttpDispatcher(HandleRequestAsync);
         cts = new CancellationTokenSource();
         listenTask = ListenLoopAsync(listener, cts.Token);
         logInformation($"Threat Intelligence Hub server started listening on port {port}.");
@@ -142,7 +129,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             try
             {
                 HttpListenerContext context = await httpListener.GetContextAsync().ConfigureAwait(false);
-                _ = Task.Run(() => HandleRequestAsync(context), cancellationToken);
+                dispatcher?.Submit(context);
             }
             catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
             {
@@ -191,10 +178,10 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             }
 
             // 2. 核心威脅情資同步端點 (/api/threat-hub/sync)
-            if (path.EndsWith("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
+            if (path.Equals("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
             {
                 string? apiKey = req.Headers[ApiKeyHeader];
-                if (string.IsNullOrEmpty(apiKey) || !string.Equals(apiKey, config.ThreatHubApiKey, StringComparison.Ordinal))
+                if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
                 {
                     resp.StatusCode = (int)HttpStatusCode.Unauthorized;
                     await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
@@ -210,44 +197,34 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     return;
                 }
 
-                using StreamReader reader = new(req.InputStream, req.ContentEncoding);
-                string body = await reader.ReadToEndAsync().ConfigureAwait(false);
+
+                string body = await BoundedHttpDispatcher.ReadBodyAsync(req, 1024 * 1024).ConfigureAwait(false);
                 ThreatHubSyncPayload? payload = JsonSerializer.Deserialize<ThreatHubSyncPayload>(body, JsonOptions);
 
-                if (payload == null)
+                if (payload == null || payload.NewThreats is null || payload.NewThreats.Count > 256 || payload.NodeId?.Length > 128 || payload.NodeName?.Length > 128 || payload.Generation?.Length > 128)
                 {
                     resp.StatusCode = (int)HttpStatusCode.BadRequest;
                     await WriteJsonResponseAsync(resp, new ThreatHubSyncResponse { Success = false, ErrorMessage = "Invalid payload" }).ConfigureAwait(false);
                     return;
                 }
 
-                // 更新節點狀態
                 string nodeId = string.IsNullOrWhiteSpace(payload.NodeId) ? req.RemoteEndPoint.Address.ToString() : payload.NodeId;
-                registeredNodes[nodeId] = new EdgeNodeState(
-                    nodeId,
-                    payload.NodeName,
-                    req.RemoteEndPoint.Address.ToString(),
-                    DateTime.UtcNow,
-                    payload.NewThreats?.Count ?? 0);
-
-                // 處理新回報的威脅
-                if (payload.NewThreats != null)
+                lock (nodeGate)
                 {
-                    foreach (ThreatIntelligenceItem threat in payload.NewThreats)
-                    {
-                        if (string.IsNullOrWhiteSpace(threat.SourceIp)) continue;
-                        activeThreats[threat.SourceIp.Trim()] = threat;
-                        onThreatReceived(threat);
-                    }
+                    foreach (var node in registeredNodes.Where(p => p.Value.LastSeenUtc < DateTime.UtcNow.AddHours(-1)).ToArray()) registeredNodes.TryRemove(node.Key, out _);
+                    if (!registeredNodes.ContainsKey(nodeId) && registeredNodes.Count >= 1024) { resp.StatusCode = 503; return; }
+                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, req.RemoteEndPoint.Address.ToString(), DateTime.UtcNow, payload.NewThreats.Count);
                 }
-
-                ThreatHubSyncResponse syncResp = new()
+                foreach (ThreatIntelligenceItem threat in payload.NewThreats)
                 {
-                    Success = true,
-                    ServerTimeUtc = DateTime.UtcNow,
-                    ActiveThreats = [.. activeThreats.Values]
-                };
-
+                    if (!IsValidThreat(threat)) continue;
+                    if (!AcceptThreat(threat)) { resp.StatusCode = 503; return; }
+                    threat.SourceIp = IpAddressCanonicalizer.Canonicalize(threat.SourceIp);
+                    DateTime maximumExpiry = threat.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+                    if (threat.ExpiresUtc > maximumExpiry) threat.ExpiresUtc = maximumExpiry;
+                    onThreatReceived(threat);
+                }
+                ThreatHubSyncResponse syncResp = store.ReadPage(payload.Cursor, payload.Generation ?? string.Empty);
                 resp.StatusCode = (int)HttpStatusCode.OK;
                 await WriteJsonResponseAsync(resp, syncResp).ConfigureAwait(false);
                 return;
@@ -272,6 +249,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             resp.StatusCode = (int)HttpStatusCode.NotFound;
             await WriteJsonResponseAsync(resp, new { error = "Not Found" }).ConfigureAwait(false);
         }
+        catch (RequestBodyTooLargeException) { resp.StatusCode = 413; }
+        catch (JsonException) { resp.StatusCode = 400; }
         catch (Exception ex)
         {
             logError("Threat Hub request handling failed", ex);
@@ -290,6 +269,26 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             }
             catch { }
         }
+    }
+
+    private bool IsValidThreat(ThreatIntelligenceItem? item) => item is not null
+        && IPAddress.TryParse(item.SourceIp, out var ip) && !BogonIpFilter.IsBogonOrReserved(ip)
+        && !config.IsInSafeNetwork(ip.ToString())
+        && double.IsFinite(item.ConfidenceScore) && item.ConfidenceScore >= 0.8 && item.ConfidenceScore <= 1
+        && item.ExpiresUtc > DateTime.UtcNow && item.ReportedUtc <= DateTime.UtcNow.AddMinutes(5)
+        && item.ReportedUtc >= DateTime.UtcNow.AddDays(-Math.Clamp(config.ThreatFeedTtlDays, 1, 365))
+        && item.Notes?.Length <= 1024 && item.ThreatCategory?.Length <= 128
+        && item.ReporterNodeId?.Length <= 128 && item.ReporterNodeName?.Length <= 128;
+
+    private bool AcceptThreat(ThreatIntelligenceItem item)
+    {
+        if (!IsValidThreat(item)) return false;
+        ThreatIntelligenceItem normalized = JsonSerializer.Deserialize<ThreatIntelligenceItem>(JsonSerializer.Serialize(item))!;
+        normalized.SourceIp = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+        DateTime maximumExpiry = item.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+        if (normalized.ExpiresUtc > maximumExpiry) normalized.ExpiresUtc = maximumExpiry;
+        if (normalized.ExpiresUtc <= DateTime.UtcNow) return false;
+        return store.Upsert(normalized);
     }
 
     private static async Task WriteJsonResponseAsync(HttpListenerResponse response, object data)
@@ -313,6 +312,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         }
         catch { }
         listener = null;
+        dispatcher?.Dispose();
+        dispatcher = null;
         cts?.Dispose();
         cts = null;
     }

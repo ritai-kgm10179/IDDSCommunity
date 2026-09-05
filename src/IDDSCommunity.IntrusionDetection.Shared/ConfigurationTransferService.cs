@@ -78,12 +78,24 @@ public sealed class ConfigurationTransferService
             SafeNetworks = database.Query<NetworkRow>("SELECT IpAddress, NetworkMask FROM WhiteList").Select(item => new SafeNetworkTransfer(item.IpAddress, item.NetworkMask)).ToList(),
             Agents = ReadAgents()
         };
+        TransferSecrets secrets = new();
+        foreach (string key in applicationSettings.Keys.Where(key => !IsPublicSetting(key)).ToArray())
+        {
+            secrets.ApplicationSettings[key] = applicationSettings[key];
+            applicationSettings.Remove(key);
+        }
+        foreach (AgentConfigurationTransfer agent in package.Agents)
+        {
+            secrets.AgentSettings[agent.AgentId] = agent.Settings;
+            agent.Settings = new(StringComparer.Ordinal);
+        }
         if (includeSecrets)
         {
             if (string.IsNullOrWhiteSpace(passphrase)) throw Argument("A passphrase is required when exporting secrets.", nameof(passphrase));
             if (passphrase.Length < MinimumPassphraseCharacters) throw Argument("The configuration package passphrase must contain at least 12 characters.", nameof(passphrase));
             string clearPassword = string.IsNullOrEmpty(configuration.SmtpPassword) ? string.Empty : CryptoHelper.Decrypt(configuration.SmtpPassword, true);
-            package.Secrets = EncryptSecret(clearPassword, passphrase);
+            secrets.SmtpPassword = clearPassword;
+            package.Secrets = EncryptSecret(JsonSerializer.Serialize(secrets), passphrase);
         }
         Validate(package);
         return package;
@@ -153,9 +165,20 @@ public sealed class ConfigurationTransferService
         ConfigurationImportPreview preview = Preview(package);
         if (package.Secrets is not null && (string.IsNullOrWhiteSpace(passphrase) || passphrase.Length < MinimumPassphraseCharacters))
             throw Argument("The configuration package passphrase must contain at least 12 characters.", nameof(passphrase));
-        string? smtpPassword = package.Secrets is null ? null : DecryptSecret(package.Secrets, passphrase!);
+        TransferSecrets? secrets = null;
+        if (package.Secrets is not null)
+        {
+            string plaintext = DecryptSecret(package.Secrets, passphrase!, package.SchemaVersion);
+            secrets = package.SchemaVersion == 1 ? new TransferSecrets { SmtpPassword = plaintext }
+                : JsonSerializer.Deserialize<TransferSecrets>(plaintext) ?? throw Invalid("Invalid encrypted settings.");
+            if (secrets.ApplicationSettings is null || secrets.AgentSettings is null || secrets.SmtpPassword is null)
+                throw Invalid("Invalid encrypted settings.");
+            if (secrets.ApplicationSettings.Count > 1000 || secrets.AgentSettings.Count > package.Agents.Count || secrets.ApplicationSettings.Any(item => IsPublicSetting(item.Key) || item.Key.Length is 0 or > 250 || item.Value is null || item.Value.Length > MaximumPackageBytes)
+                || secrets.AgentSettings.Any(item => item.Value is null || item.Value.Count > 1000 || !package.Agents.Any(agent => agent.AgentId == item.Key) || item.Value.Any(value => value.Key.Length is 0 or > 250 || value.Value is null || value.Value.Length > MaximumPackageBytes)))
+                throw Invalid("Invalid encrypted settings.");
+        }
         DatabaseBackupResult backup = new SqliteMaintenanceService(database).CreateVerifiedBackup(backupDirectory);
-        database.ExecuteInTransaction((connection, transaction) => Apply(connection, transaction, package, smtpPassword));
+        database.ExecuteInTransaction((connection, transaction) => Apply(connection, transaction, package, secrets));
         return new ConfigurationImportResult(backup, preview);
     }
 
@@ -180,16 +203,21 @@ public sealed class ConfigurationTransferService
         return agents;
     }
 
-    private static void Apply(SqliteConnection connection, SqliteTransaction transaction, ConfigurationTransferPackage package, string? smtpPassword)
+    private static void Apply(SqliteConnection connection, SqliteTransaction transaction, ConfigurationTransferPackage package, TransferSecrets? secrets)
     {
+        string? smtpPassword = secrets?.SmtpPassword;
         GlobalConfigurationTransfer policy = package.GlobalPolicy;
         string protectedPassword = smtpPassword is null
             ? connection.ExecuteScalar<string?>("SELECT SmtpPassword FROM Configuration ORDER BY ConfigVersionNumber DESC LIMIT 1", transaction: transaction) ?? string.Empty
             : CryptoHelper.Encrypt(smtpPassword, true);
         connection.Execute(@"INSERT INTO Configuration(ConfigVersionDate,HardLockAttempts,HardLockTimeHours,LockForever,SoftLockAttempts,SoftLockTimeMinutes,UseSafeNetworkList,PluginDirectory,LicenseKey,ActivationId,SendInfoMail,SmtpPort,SenderEmailAddress,SmtpRequiresAuthentication,NotificationEmailAddress,SmtpServer,SmtpUsername,SmtpPassword,CyberSheriffContributor,WebBasedMonitoring,HardwareId,SmtpSslRequired)
 VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,@SoftLockTimeMinutes,@UseSafeNetworkList,NULL,NULL,NULL,@SendInfoMail,@SmtpPort,@SenderEmailAddress,@SmtpRequiresAuthentication,@NotificationEmailAddress,@SmtpServer,@SmtpUsername,@SmtpPassword,0,0,NULL,@SmtpSslRequired)", new { Now = DateTime.UtcNow, policy.HardLockAttempts, policy.HardLockTimeHours, policy.LockForever, policy.SoftLockAttempts, policy.SoftLockTimeMinutes, policy.UseSafeNetworkList, policy.SendInfoMail, policy.SmtpPort, policy.SenderEmailAddress, policy.SmtpRequiresAuthentication, policy.NotificationEmailAddress, policy.SmtpServer, policy.SmtpUsername, SmtpPassword = protectedPassword, policy.SmtpSslRequired }, transaction);
+        Dictionary<string, string> settings = connection.Query<KeyValueRow>("SELECT ConfigKey, ConfigValue FROM AppConfig", transaction: transaction)
+            .Where(row => !IsPublicSetting(row.ConfigKey)).ToDictionary(row => row.ConfigKey, row => row.ConfigValue ?? string.Empty, StringComparer.Ordinal);
+        foreach ((string key, string value) in package.ApplicationSettings) settings[key] = value;
+        if (secrets is not null) foreach ((string key, string value) in secrets.ApplicationSettings) settings[key] = value;
         connection.Execute("DELETE FROM AppConfig", transaction: transaction);
-        foreach ((string key, string value) in package.ApplicationSettings) connection.Execute("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@Key,@Value)", new { Key = key, Value = value }, transaction);
+        foreach ((string key, string value) in settings) connection.Execute("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@Key,@Value)", new { Key = key, Value = value }, transaction);
         connection.Execute("DELETE FROM WhiteList", transaction: transaction);
         foreach (SafeNetworkTransfer network in package.SafeNetworks) connection.Execute("INSERT INTO WhiteList(IpAddress,NetworkMask) VALUES(@IpAddress,@NetworkMask)", network, transaction);
         foreach (AgentConfigurationTransfer agent in package.Agents)
@@ -197,8 +225,11 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
             int exists = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM SecurityAgents WHERE AgentId=@AgentId", new { agent.AgentId }, transaction);
             if (exists == 0) continue;
             connection.Execute(@"UPDATE SecurityAgents SET HardLockAttempts=@HardLockAttempts,HardLockTimeHours=@HardLockTimeHours,LockForever=@LockForever,SoftLockAttempts=@SoftLockAttempts,SoftLockTimeMinutes=@SoftLockTimeMinutes,OverwriteConfiguration=@OverrideConfiguration,Enabled=@Enabled,Serial=Serial+1 WHERE AgentId=@AgentId", agent, transaction);
-            connection.Execute("DELETE FROM SecurityAgentConfig WHERE AgentId=@AgentId", new { agent.AgentId }, transaction);
-            foreach ((string key, string value) in agent.Settings) connection.Execute("INSERT INTO SecurityAgentConfig(AgentId,PropertyName,PropertyValueString) VALUES(@AgentId,@Key,@Value)", new { agent.AgentId, Key = key, Value = value }, transaction);
+            if (secrets?.AgentSettings.TryGetValue(agent.AgentId, out Dictionary<string, string>? agentSettings) == true)
+            {
+                connection.Execute("DELETE FROM SecurityAgentConfig WHERE AgentId=@AgentId", new { agent.AgentId }, transaction);
+                foreach ((string key, string value) in agentSettings) connection.Execute("INSERT INTO SecurityAgentConfig(AgentId,PropertyName,PropertyValueString) VALUES(@AgentId,@Key,@Value)", new { agent.AgentId, Key = key, Value = value }, transaction);
+            }
         }
         connection.Execute("INSERT INTO ProtectionAuditLog(OccurredUtc,EventType,Outcome,Actor,Subject,Details) VALUES(@OccurredUtc,'Configuration.Import','Succeeded',@Actor,'Configuration','')", new { OccurredUtc = DateTimeOffset.UtcNow.ToString("O"), Actor = Environment.UserDomainName + "\\" + Environment.UserName }, transaction);
     }
@@ -206,7 +237,7 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
     private static void Validate(ConfigurationTransferPackage package)
     {
         ArgumentNullException.ThrowIfNull(package);
-        if (package.Format != ConfigurationTransferPackage.CurrentFormat || package.SchemaVersion != ConfigurationTransferPackage.CurrentSchemaVersion) throw Invalid("Unsupported configuration package format or schema version.");
+        if (package.Format != ConfigurationTransferPackage.CurrentFormat || package.SchemaVersion is not (1 or 2)) throw Invalid("Unsupported configuration package format or schema version.");
         if (package.GlobalPolicy is null || package.ApplicationSettings is null || package.SafeNetworks is null || package.Agents is null) throw Invalid("Required configuration sections are missing.");
         if (package.GlobalPolicy.SoftLockAttempts is < 1 or > 100000)
             throw Invalid($"SoftLockAttempts must be between 1 and 100000; actual value: {package.GlobalPolicy.SoftLockAttempts}.");
@@ -225,6 +256,7 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         if (package.ApplicationSettings.Count > 10000 || package.SafeNetworks.Count > 10000 || package.Agents.Count > 1000) throw Invalid("Configuration package exceeds supported limits.");
         foreach ((string key, string value) in package.ApplicationSettings)
         {
+            if (!IsPublicSetting(key)) throw Invalid("Sensitive or unknown settings must be in the encrypted section.");
             if (key.Length is 0 or > 250)
                 throw Invalid($"Application setting name length is invalid; key: '{key}', length: {key.Length}.");
             if (value is null || value.Length > 250)
@@ -265,6 +297,7 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
                 throw Invalid($"Agent '{agent.Name}' has an empty identifier.");
             if (agent.Settings is null)
                 throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) has no settings collection.");
+            if (agent.Settings.Count != 0) throw Invalid("Agent settings must be encrypted; re-export the package with secrets.");
             if (agent.Settings.Count > 1000)
                 throw Invalid($"Agent '{agent.Name}' ({agent.AgentId}) exceeds the 1000-setting limit; actual count: {agent.Settings.Count}.");
             foreach ((string key, string value) in agent.Settings)
@@ -323,14 +356,14 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         return result;
     }
 
-    private static string DecryptSecret(EncryptedSecretTransfer secret, string passphrase)
+    private static string DecryptSecret(EncryptedSecretTransfer secret, string passphrase, int schemaVersion)
     {
         ValidateSecretParameters(secret);
         byte[] salt = Convert.FromBase64String(secret.Salt); byte[] nonce = Convert.FromBase64String(secret.Nonce); byte[] ciphertext = Convert.FromBase64String(secret.Ciphertext); byte[] tag = Convert.FromBase64String(secret.Tag);
         if (salt.Length != 16 || nonce.Length != 12 || tag.Length != 16 || ciphertext.Length > MaximumPackageBytes) throw Invalid("Invalid secret encryption parameters.");
         byte[] plaintext = new byte[ciphertext.Length];
         byte[] key = DeriveKey(passphrase, salt, secret);
-        byte[] associatedData = CreateAssociatedData(secret);
+        byte[] associatedData = CreateAssociatedData(secret, schemaVersion);
         try { using AesGcm aes = new(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, associatedData); return Encoding.UTF8.GetString(plaintext); }
         catch (CryptographicException exception) { throw Invalid("The configuration secret passphrase is invalid or the package was modified.", exception); }
         finally { CryptographicOperations.ZeroMemory(key); CryptographicOperations.ZeroMemory(plaintext); }
@@ -353,7 +386,32 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         finally { CryptographicOperations.ZeroMemory(passwordBytes); }
     }
 
-    private static byte[] CreateAssociatedData(EncryptedSecretTransfer parameters) => Encoding.UTF8.GetBytes(string.Create(CultureInfo.InvariantCulture, $"{ConfigurationTransferPackage.CurrentFormat}\nschema={ConfigurationTransferPackage.CurrentSchemaVersion}\nalgorithm={parameters.Algorithm}\nargon2Version={parameters.Argon2Version}\nmemoryKiB={parameters.MemoryKiB}\niterations={parameters.Iterations}\nparallelism={parameters.Parallelism}"));
+    private static byte[] CreateAssociatedData(EncryptedSecretTransfer parameters, int schemaVersion = ConfigurationTransferPackage.CurrentSchemaVersion) => Encoding.UTF8.GetBytes(string.Create(CultureInfo.InvariantCulture, $"{ConfigurationTransferPackage.CurrentFormat}\nschema={schemaVersion}\nalgorithm={parameters.Algorithm}\nargon2Version={parameters.Argon2Version}\nmemoryKiB={parameters.MemoryKiB}\niterations={parameters.Iterations}\nparallelism={parameters.Parallelism}"));
+
+    private static readonly HashSet<string> PublicSettings = new(StringComparer.Ordinal)
+    {
+        IddsConfig.CONFIG_VALUE_FIREWALL_BLOCK_MODE,
+        IddsConfig.CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION,
+        IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_ACCOUNT_THRESHOLD,
+        IddsConfig.CONFIG_VALUE_CROSS_AGENT_SPRAY_IP_THRESHOLD,
+        IddsConfig.CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES,
+        IddsConfig.CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS,
+        IddsConfig.CONFIG_VALUE_TRUSTED_PROXY_CIDRS,
+        "Configuration.Language", "ThreatHubRole", "ThreatHubPort", "ThreatHubSyncIntervalSeconds", "ProbationDecayDays",
+        "DynamicDnsIntervalMinutes", "EnableExternalThreatFeeds", "ThreatFeedUpdateIntervalHours",
+        "ThreatFeedMinLevel", "ThreatFeedTtlDays", "AbuseIpDbMinConfidence", "EnableDynamicBogonFiltering",
+        "EnableCloudPerimeter", "CloudPerimeterType", "EnableSelfServicePortal", "SelfServicePortalPort",
+        "SelfServicePortalListenIp", "EnableManagementApi", "ManagementApiPort", "AutoManageFirewallInboundRules"
+    };
+
+    private static bool IsPublicSetting(string key) => PublicSettings.Contains(key);
+
+    private sealed class TransferSecrets
+    {
+        public string SmtpPassword { get; set; } = string.Empty;
+        public Dictionary<string, string> ApplicationSettings { get; set; } = new(StringComparer.Ordinal);
+        public Dictionary<Guid, Dictionary<string, string>> AgentSettings { get; set; } = new();
+    }
 
     private static void ValidateSecretParameters(EncryptedSecretTransfer secret)
     {

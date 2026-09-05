@@ -10,6 +10,54 @@ public class LocksTest
     /// 初始化 <see cref="LocksTest"/> 類別的新執行個體。
     /// </summary>
     public LocksTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
+
+    /// <summary>
+    /// 驗證近期攻擊與有限期限封鎖均不會進入永久封鎖假釋候選。
+    /// </summary>
+    [TestMethod]
+    public void ProbationRequiresPermanentLockAndNoRecentActivity()
+    {
+        const string ip = "198.51.100.252";
+        Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0", ip);
+        Database.Instance.ExecuteNonQuery("delete from IpAttackActivity where IpAddress=@p0", ip);
+        try
+        {
+            Lock item = new() { IpAddress = ip, LockDate = DateTime.UtcNow.AddDays(-100), UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK };
+            item.Id = Locks.CreateLock(item);
+            DateTime cutoff = DateTime.UtcNow.AddDays(-90);
+            Assert.IsTrue(Locks.GetStalePermanentLocks(cutoff).Exists(row => row.Id == item.Id));
+            Database.Instance.ExecuteNonQuery("insert into IpAttackActivity(IpAddress, LastAttackTicks) values(@p0,@p1)", ip, DateTime.UtcNow.Ticks);
+            Assert.IsFalse(Locks.GetStalePermanentLocks(cutoff).Exists(row => row.Id == item.Id));
+            Database.Instance.ExecuteNonQuery("delete from IpAttackActivity where IpAddress=@p0", ip);
+            Database.Instance.ExecuteNonQuery("update Locks set UnlockDate=@p0 where LockId=@p1", DateTime.UtcNow.AddDays(1), item.Id);
+            Assert.IsFalse(Locks.GetStalePermanentLocks(cutoff).Exists(row => row.Id == item.Id));
+        }
+        finally
+        {
+            Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0", ip);
+            Database.Instance.ExecuteNonQuery("delete from IpAttackActivity where IpAddress=@p0", ip);
+        }
+    }
+
+    /// <summary>
+    /// 驗證自助解除軟封鎖時，已存在的硬封鎖要求不會被一併解除。
+    /// </summary>
+    [TestMethod]
+    public void SoftUnlockRejectsConcurrentHardLockRequest()
+    {
+        const string ip = "198.51.100.253";
+        Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0", ip);
+        try
+        {
+            Locks.CreateLock(new Lock { IpAddress = ip, LockDate = DateTime.UtcNow, UnlockDate = DateTime.UtcNow.AddHours(1), Status = Lock.LOCK_STATUS_SOFTLOCK });
+            Locks.CreateLock(new Lock { IpAddress = ip, LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK_REQUESTED });
+            Assert.IsFalse(Locks.UnlockIp(ip, softOnly: true));
+            Assert.IsTrue(Locks.LockExists(ip));
+            Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0 and Status=@p1", ip, Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
+            Assert.IsTrue(Locks.UnlockIp(ip, softOnly: true));
+        }
+        finally { Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress=@p0", ip); }
+    }
     /// <summary>
     /// Creates lock test.
     /// </summary>
@@ -29,7 +77,8 @@ public class LocksTest
             TriggerIncident = 100
         };
         l.Id = Locks.CreateLock(l);
-        Assert.AreEqual(currentMaxId + 1, l.Id);
+        Assert.IsTrue(l.Id > currentMaxId, "新增識別碼須遞增，但刪除資料後不保證連號。");
+        Assert.IsTrue(Locks.LockExists(l.IpAddress));
     }
     /// <summary>
     /// Gets max locks id.

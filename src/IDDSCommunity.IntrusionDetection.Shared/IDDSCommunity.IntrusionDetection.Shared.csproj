@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite.Core" />
     <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
     <PackageReference Include="Dapper" />
+    <PackageReference Include="AWSSDK.WAFV2" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="SharpPcap" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />

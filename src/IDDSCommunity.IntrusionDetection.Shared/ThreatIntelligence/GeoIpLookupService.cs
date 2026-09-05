@@ -13,9 +13,64 @@ namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 /// </summary>
 public static class GeoIpLookupService
 {
-    private static volatile List<GeoIpEntry> ipv4Entries = [];
-    private static volatile List<GeoIpEntry> ipv6Entries = [];
-
+    private static volatile Snapshot snapshot = new([], []);
+    private sealed class Snapshot(List<GeoIpEntry> ipv4, List<GeoIpEntry> ipv6)
+    {
+        internal readonly IntervalIndex V4 = new(ipv4, 32);
+        internal readonly IntervalIndex V6 = new(ipv6, 128);
+        internal readonly int Count = ipv4.Count + ipv6.Count;
+        internal readonly int Countries = ipv4.Concat(ipv6).Select(e => e.CountryCode).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+    }
+    private sealed class IntervalIndex
+    {
+        private readonly (UInt128 Start, GeoIpEntry? Entry)[] segments;
+        internal IntervalIndex(List<GeoIpEntry> entries, int bits)
+        {
+            UInt128 maximum = bits == 32 ? uint.MaxValue : UInt128.MaxValue;
+            List<(UInt128 Point, int Index, bool Add)> events = [];
+            for (int i = 0; i < entries.Count; i++)
+            {
+                GeoIpEntry entry = entries[i];
+                UInt128 start, end;
+                if (entry.Network is IPNetwork network)
+                {
+                    start = IpPrefixIndex.Number(network.BaseAddress);
+                    int hostBits = bits - network.PrefixLength;
+                    end = hostBits == 128 ? UInt128.MaxValue : start | ((UInt128.One << hostBits) - 1);
+                }
+                else if (bits == 32) { start = entry.StartV4; end = entry.EndV4; }
+                else { start = BinaryPrimitives.ReadUInt128BigEndian(entry.StartV6!); end = BinaryPrimitives.ReadUInt128BigEndian(entry.EndV6!); }
+                if (start > end) continue;
+                events.Add((start, i, true));
+                if (end < maximum) events.Add((end + 1, i, false));
+            }
+            events.Sort((a, b) => a.Point.CompareTo(b.Point));
+            SortedSet<int> active = [];
+            List<(UInt128, GeoIpEntry?)> result = [];
+            for (int i = 0; i < events.Count;)
+            {
+                UInt128 point = events[i].Point;
+                do
+                {
+                    var change = events[i++];
+                    if (change.Add) active.Add(change.Index); else active.Remove(change.Index);
+                } while (i < events.Count && events[i].Point == point);
+                GeoIpEntry? match = active.Count == 0 ? null : entries[active.Min];
+                if (result.Count == 0 || !ReferenceEquals(result[^1].Item2, match)) result.Add((point, match));
+            }
+            segments = [.. result];
+        }
+        internal GeoIpEntry? Find(UInt128 address)
+        {
+            int low = 0, high = segments.Length - 1;
+            while (low <= high)
+            {
+                int mid = low + (high - low) / 2;
+                if (segments[mid].Start <= address) low = mid + 1; else high = mid - 1;
+            }
+            return high < 0 ? null : segments[high].Entry;
+        }
+    }
     private sealed class GeoIpEntry
     {
         public IPNetwork? Network { get; }
@@ -83,24 +138,19 @@ public static class GeoIpLookupService
     /// <summary>
     /// 取得目前已載入之 GeoIP 網段記錄數量。
     /// </summary>
-    public static int TotalLoadedRecords => ipv4Entries.Count + ipv6Entries.Count;
+    public static int TotalLoadedRecords => snapshot.Count;
 
     /// <summary>
     /// 取得目前已載入之相異國家總數。
     /// </summary>
-    public static int TotalLoadedCountries =>
-        ipv4Entries.Concat(ipv6Entries)
-            .Select(e => e.CountryCode)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
+    public static int TotalLoadedCountries => snapshot.Countries;
 
     /// <summary>
     /// 清除所有已載入之 GeoIP 網段記錄。
     /// </summary>
     public static void Clear()
     {
-        ipv4Entries = [];
-        ipv6Entries = [];
+        snapshot = new([], []);
     }
 
     /// <summary>
@@ -120,8 +170,7 @@ public static class GeoIpLookupService
         List<GeoIpEntry> v6 = [];
         ParseCsvContent(csvContent, v4, v6);
 
-        ipv4Entries = v4;
-        ipv6Entries = v6;
+        snapshot = new(v4, v6);
         return v4.Count + v6.Count;
     }
 
@@ -146,8 +195,23 @@ public static class GeoIpLookupService
             ParseCsvContent(ipv6CsvContent, v4, v6);
         }
 
-        ipv4Entries = v4;
-        ipv6Entries = v6;
+        snapshot = new(v4, v6);
+        return v4.Count + v6.Count;
+    }
+
+    internal static int LoadValidatedDownload(string? ipv4Content, string? ipv6Content)
+    {
+        List<GeoIpEntry> v4 = [];
+        List<GeoIpEntry> v6 = [];
+        foreach (string? content in new[] { ipv4Content, ipv6Content })
+        {
+            if (content == null) continue;
+            int before = v4.Count + v6.Count;
+            ParseCsvContent(content, v4, v6);
+            if (v4.Count + v6.Count == before) return 0;
+        }
+        if (v4.Count + v6.Count == 0) return 0;
+        snapshot = new(v4, v6);
         return v4.Count + v6.Count;
     }
 
@@ -244,37 +308,14 @@ public static class GeoIpLookupService
 
         address = IpAddressCanonicalizer.Canonicalize(address);
 
-        if (address.AddressFamily == AddressFamily.InterNetwork)
+        Snapshot current = snapshot;
+        GeoIpEntry? entry = (address.AddressFamily == AddressFamily.InterNetwork ? current.V4 : current.V6).Find(IpPrefixIndex.Number(address));
+        if (entry is not null)
         {
-            uint addressInt = ToUInt32(address);
-            var list = ipv4Entries;
-            for (int i = 0; i < list.Count; i++)
-            {
-                var entry = list[i];
-                if (entry.Contains(address, addressInt, null))
-                {
-                    countryCode = entry.CountryCode;
-                    countryName = entry.CountryName;
-                    return true;
-                }
-            }
+            countryCode = entry.CountryCode;
+            countryName = entry.CountryName;
+            return true;
         }
-        else if (address.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            byte[] addressBytes = address.GetAddressBytes();
-            var list = ipv6Entries;
-            for (int i = 0; i < list.Count; i++)
-            {
-                var entry = list[i];
-                if (entry.Contains(address, null, addressBytes))
-                {
-                    countryCode = entry.CountryCode;
-                    countryName = entry.CountryName;
-                    return true;
-                }
-            }
-        }
-
         countryCode = "ZZ";
         countryName = "Unknown";
         return false;

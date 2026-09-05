@@ -37,7 +37,7 @@ public sealed class ThreatIntelligenceServiceTest
     {
         IddsConfig config = IddsConfig.GetDefaultConfiguration();
         config.ThreatHubRole = ThreatHubRole.EdgeNode;
-        config.ThreatHubEndpoint = "http://localhost:8443";
+        config.ThreatHubEndpoint = "https://hub.example.test:8443";
         config.ThreatHubApiKey = "sync_test_key";
 
         List<ThreatIntelligenceItem> receivedThreats = [];
@@ -45,15 +45,18 @@ public sealed class ThreatIntelligenceServiceTest
         ThreatHubSyncResponse mockResponse = new()
         {
             Success = true,
+            Generation = "test-generation",
+            NextCursor = 1,
             ServerTimeUtc = DateTime.UtcNow,
             ActiveThreats =
             [
                 new ThreatIntelligenceItem
                 {
-                    SourceIp = "192.0.2.88",
+                    SourceIp = "8.8.8.88",
                     ThreatCategory = "CROSS_AGENT_SPRAY",
                     ConfidenceScore = 1.0,
-                    ReporterNodeName = "NODE-ALPHA"
+                    ReporterNodeName = "NODE-ALPHA",
+                    ExpiresUtc = DateTime.UtcNow.AddDays(1)
                 }
             ]
         };
@@ -74,11 +77,11 @@ public sealed class ThreatIntelligenceServiceTest
             threat => receivedThreats.Add(threat),
             client: hubClient);
 
-        syncService.EnqueueLocalThreat(new ThreatIntelligenceItem { SourceIp = "198.51.100.12" });
+        syncService.EnqueueLocalThreat(new ThreatIntelligenceItem { SourceIp = "8.8.8.12" });
         await syncService.SynchronizeNowAsync().ConfigureAwait(false);
 
         Assert.AreEqual(1, receivedThreats.Count);
-        Assert.AreEqual("192.0.2.88", receivedThreats[0].SourceIp);
+        Assert.AreEqual("8.8.8.88", receivedThreats[0].SourceIp);
         Assert.AreEqual("NODE-ALPHA", receivedThreats[0].ReporterNodeName);
     }
 

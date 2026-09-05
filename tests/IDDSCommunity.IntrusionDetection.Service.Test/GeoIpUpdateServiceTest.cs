@@ -138,7 +138,7 @@ public sealed class GeoIpUpdateServiceTest
         IddsConfig config = IddsConfig.GetDefaultConfiguration();
         config.EnableGeoIpAutoUpdate = false;
         config.GeoIpDatabaseIpv4Url = "http://localhost/geoip-v4.csv";
-        config.GeoIpDatabaseIpv6Url = "http://localhost/geoip-v6.csv";
+        config.GeoIpDatabaseIpv6Url = string.Empty;
         config.GeoIpLocalFilePath = string.Empty;
 
         string mockV4Csv = "140.112.0.0/16,TW,Taiwan\n";
@@ -146,7 +146,7 @@ public sealed class GeoIpUpdateServiceTest
         HttpMessageHandler mockHandler = new MockHttpMessageHandler((req, ct) =>
         {
             string url = req.RequestUri!.ToString();
-            string content = url.Contains("geoip-v4") ? mockV4Csv : string.Empty;
+            string content = url.Contains("geoip-v4") ? mockV4Csv : "2001:db8::/32,TW,Taiwan";
             HttpResponseMessage resp = new(HttpStatusCode.OK)
             {
                 Content = new StringContent(content)
@@ -160,9 +160,61 @@ public sealed class GeoIpUpdateServiceTest
         var result = await service.RefreshDatabaseAsync(isManual: true).ConfigureAwait(false);
 
         Assert.IsTrue(result.Success);
-        Assert.AreEqual(1, result.TotalRecords);
+        Assert.AreEqual(2, result.TotalRecords);
         Assert.IsTrue(GeoIpLookupService.TryLookup(IPAddress.Parse("140.112.1.1"), out string twCode, out _));
         Assert.AreEqual("TW", twCode);
+    }
+
+    /// <summary>
+    /// 驗證部分下載失敗或內容無效時保留既有完整資料。
+    /// </summary>
+    /// <param name="invalidContent">是否回傳無效內容以模擬格式錯誤。</param>
+    /// <returns>表示測試完成的非同步作業。</returns>
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task PartialDownloadPreservesSnapshot(bool invalidContent)
+    {
+        GeoIpLookupService.LoadFromCsv("1.1.1.0/24,AU,Australia", "2001:db8::/32,TW,Taiwan");
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.GeoIpLocalFilePath = string.Empty;
+        config.GeoIpDatabaseIpv4Url = "https://example.test/v4";
+        config.GeoIpDatabaseIpv6Url = "https://example.test/v6";
+        using HttpClient client = new(new MockHttpMessageHandler((request, _) => Task.FromResult(
+            request.RequestUri!.AbsolutePath == "/v4"
+                ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("8.8.8.0/24,US,United States") }
+                : new HttpResponseMessage(invalidContent ? HttpStatusCode.OK : HttpStatusCode.ServiceUnavailable)
+                    { Content = new StringContent("invalid CSV") })));
+        using GeoIpUpdateService service = new(config, httpClient: client);
+        Assert.IsFalse((await service.RefreshDatabaseAsync(true)).Success);
+        Assert.AreEqual(2, GeoIpLookupService.TotalLoadedRecords);
+        Assert.IsTrue(GeoIpLookupService.TryLookup(IPAddress.Parse("1.1.1.1"), out _, out _));
+        Assert.IsTrue(GeoIpLookupService.TryLookup(IPAddress.Parse("2001:db8::1"), out _, out _));
+    }
+
+    /// <summary>
+    /// 驗證停止服務可取消下載，且不發布未完成資料。
+    /// </summary>
+    [TestMethod]
+    public async Task StopCancelsPendingDownload()
+    {
+        TaskCompletionSource entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.GeoIpLocalFilePath = string.Empty;
+        config.GeoIpDatabaseIpv4Url = "https://example.test/v4";
+        config.GeoIpDatabaseIpv6Url = string.Empty;
+        using HttpClient client = new(new MockHttpMessageHandler(async (_, token) =>
+        {
+            entered.TrySetResult();
+            await Task.Delay(Timeout.Infinite, token);
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        }));
+        using GeoIpUpdateService service = new(config, httpClient: client);
+        var refresh = service.RefreshDatabaseAsync(true);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        service.Stop();
+        Assert.IsFalse((await refresh.WaitAsync(TimeSpan.FromSeconds(5))).Success);
+        Assert.AreEqual(0, GeoIpLookupService.TotalLoadedRecords);
     }
 
     private sealed class MockHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) : HttpMessageHandler

@@ -16,7 +16,7 @@ public sealed class ConfigurationTransferPackage
     /// <summary>
     /// 定義目前支援的組態結構版本號碼。
     /// </summary>
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     /// <summary>
     /// 取得或設定組態套件格式識別碼。

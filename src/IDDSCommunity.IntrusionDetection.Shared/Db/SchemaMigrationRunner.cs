@@ -111,6 +111,19 @@ internal static class SchemaMigrationRunner
         if (!MigrationApplied(connection, transaction, 14))
             CanonicalizeAgentIdentities(connection, transaction);
 
+        if (ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
+            Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_Ip_Status_Expiry ON Locks(IpAddress,Status,UnlockDate)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubEntries (Sequence INTEGER PRIMARY KEY AUTOINCREMENT, SourceIp TEXT NOT NULL UNIQUE, Payload TEXT NOT NULL, ExpiresTicks INTEGER NOT NULL)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ThreatHubEntries_Expires ON ThreatHubEntries(ExpiresTicks)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubIdentity (Id INTEGER PRIMARY KEY CHECK(Id=1), Generation TEXT NOT NULL)");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO ThreatHubIdentity VALUES(1, lower(hex(randomblob(16))))");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS CloudPerimeterOutbox (IpAddress TEXT PRIMARY KEY NOT NULL, Version TEXT NOT NULL, ShouldBlock INTEGER NOT NULL, Reason TEXT NOT NULL, Attempts INTEGER NOT NULL DEFAULT 0, DueTicks INTEGER NOT NULL DEFAULT 0)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS IpAttackActivity (IpAddress TEXT PRIMARY KEY NOT NULL, LastAttackTicks INTEGER NOT NULL)");
+        Execute(connection, transaction, "DROP TRIGGER IF EXISTS TR_IntrusionLog_AttackActivity");
+        Execute(connection, transaction, "CREATE TRIGGER IF NOT EXISTS TR_IntrusionLog_AttackActivity AFTER INSERT ON IntrusionLog WHEN NEW.Action IN (100,200,210,300,310,600) BEGIN INSERT INTO IpAttackActivity(IpAddress,LastAttackTicks) VALUES(NEW.ClientIP, CAST((COALESCE(julianday(NEW.IncidentTime),julianday('now'))-1721425.5)*864000000000 AS INTEGER)) ON CONFLICT(IpAddress) DO UPDATE SET LastAttackTicks=MAX(LastAttackTicks,excluded.LastAttackTicks); END");
+        if (!MigrationApplied(connection, transaction, 15) && ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
+            Execute(connection, transaction, "INSERT OR IGNORE INTO IpAttackActivity(IpAddress,LastAttackTicks) SELECT DISTINCT IpAddress, CAST((julianday('now')-1721425.5)*864000000000 AS INTEGER) FROM Locks WHERE Status IN (300,310)");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(15,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";

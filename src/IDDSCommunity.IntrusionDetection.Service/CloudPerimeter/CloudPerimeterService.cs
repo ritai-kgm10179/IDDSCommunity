@@ -1,149 +1,166 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dapper;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter;
-using IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
 namespace IDDSCommunity.IntrusionDetection.Service.CloudPerimeter;
 
 /// <summary>
-/// 負責調度與執行雲端邊界 WAF / NSG / 電信雲防火牆主動聯動之背景服務。
+/// 以持久化待送匣、有序單一工作者及失敗退避管理雲端邊界處置。
 /// </summary>
 public sealed class CloudPerimeterService : IDisposable
 {
     private readonly CloudPerimeterSettings settings;
+    private readonly Database database;
+    private readonly CancellationTokenSource stopping = new();
+    private readonly SemaphoreSlim providerGate = new(1, 1);
+    private readonly Task worker;
     private ICloudPerimeterProvider? activeProvider;
     private bool isDisposed;
 
     /// <summary>
-    /// 取得目前是否已啟用且具備有效提供者。
+    /// 取得目前是否已啟用並具有提供者。
     /// </summary>
-    public bool IsEnabled => settings.EnableCloudPerimeter && activeProvider != null;
-
+    public bool IsEnabled => settings.EnableCloudPerimeter && activeProvider is not null && !isDisposed;
     /// <summary>
-    /// 取得目前啟用的提供者執行個體。
+    /// 取得目前的提供者。
     /// </summary>
     public ICloudPerimeterProvider? ActiveProvider => activeProvider;
 
     /// <summary>
-    /// 初始化 <see cref="CloudPerimeterService"/> 類別的新執行個體。
+    /// 建立待送匣服務。
     /// </summary>
-    /// <param name="settings">雲端邊界整合組態設定。</param>
-    public CloudPerimeterService(CloudPerimeterSettings settings)
+    /// <param name="settings">雲端設定。</param>
+    /// <param name="database">已設定的加密資料庫；省略時使用共用執行個體。</param>
+    public CloudPerimeterService(CloudPerimeterSettings settings, Database? database = null) : this(settings, database ?? Database.Instance, null) { }
+
+    internal CloudPerimeterService(CloudPerimeterSettings settings, Database database, ICloudPerimeterProvider? provider)
     {
         this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-        InitializeProvider();
+        this.database = database ?? Database.Instance;
+        activeProvider = provider ?? CloudPerimeterProviderFactory.Create(settings);
+        worker = Task.Run(RunAsync);
     }
 
     /// <summary>
-    /// 依據目前組態重新初始化提供者。
+    /// 等候目前處置結束後重新建立提供者。
     /// </summary>
     public void RefreshProvider()
     {
-        InitializeProvider();
-    }
-
-    private void InitializeProvider()
-    {
-        if (!settings.EnableCloudPerimeter || settings.ProviderType == CloudPerimeterType.None)
+        providerGate.Wait();
+        try
         {
-            activeProvider = null;
-            return;
+            ObjectDisposedException.ThrowIf(isDisposed, this);
+            (activeProvider as IDisposable)?.Dispose();
+            activeProvider = CloudPerimeterProviderFactory.Create(settings);
         }
-
-        activeProvider = settings.ProviderType switch
-        {
-            CloudPerimeterType.Aws => new AwsPerimeterProvider
-            {
-                ApiKey = settings.ApiKey,
-                IpSetId = settings.ResourceId,
-                Region = string.IsNullOrWhiteSpace(settings.SecondaryId) ? "us-east-1" : settings.SecondaryId,
-                EndpointUrl = settings.EndpointUrl
-            },
-            CloudPerimeterType.Azure => new AzureNsgPerimeterProvider
-            {
-                BearerToken = settings.ApiKey,
-                NetworkSecurityGroupName = settings.ResourceId,
-                SubscriptionId = settings.SecondaryId,
-                ResourceGroupName = settings.TertiaryId
-            },
-            CloudPerimeterType.Gcp => new GcpCloudArmorPerimeterProvider
-            {
-                BearerToken = settings.ApiKey,
-                SecurityPolicyName = settings.ResourceId,
-                ProjectId = settings.SecondaryId
-            },
-            CloudPerimeterType.Cloudflare => new CloudflareWafPerimeterProvider
-            {
-                ApiToken = settings.ApiKey,
-                ZoneId = settings.ResourceId
-            },
-            CloudPerimeterType.ChunghwaTelecomHiCloud => new ChunghwaHiCloudPerimeterProvider
-            {
-                AuthToken = settings.ApiKey,
-                SecurityGroupId = settings.ResourceId,
-                EndpointUrl = string.IsNullOrWhiteSpace(settings.EndpointUrl) ? "https://cvpc.hicloud.hinet.net:9696" : settings.EndpointUrl
-            },
-            CloudPerimeterType.GenericWebhook => new GenericPerimeterWebhookProvider
-            {
-                WebhookUrl = settings.EndpointUrl,
-                AuthHeader = settings.ApiKey
-            },
-            _ => null
-        };
+        finally { providerGate.Release(); }
     }
 
     /// <summary>
-    /// 非同步將封鎖 IP 推播至雲端邊界。
+    /// 將封鎖要求持久化，同一 IP 的較新要求會取代待送要求。
     /// </summary>
-    /// <param name="ipAddress">封鎖的 IP 位址。</param>
+    /// <param name="ipAddress">來源 IP。</param>
     /// <param name="reason">封鎖原因。</param>
     /// <param name="cancellationToken">取消權杖。</param>
-    public async Task<bool> NotifyBlockAsync(string ipAddress, string reason, CancellationToken cancellationToken = default)
-    {
-        if (!IsEnabled || activeProvider == null) return false;
-
-        try
-        {
-            return await activeProvider.BlockIpAsync(ipAddress, reason, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            WindowsLogManager.Instance.WriteEntry($"[CloudPerimeter] Failed to push block for {ipAddress}: {ex.Message}",
-                System.Diagnostics.EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
-            return false;
-        }
-    }
+    /// <returns>是否成功排入待送匣；不代表遠端已完成封鎖。</returns>
+    public Task<bool> NotifyBlockAsync(string ipAddress, string reason, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Enqueue(ipAddress, true, reason, cancellationToken));
 
     /// <summary>
-    /// 非同步將解除封鎖 IP 推播至雲端邊界。
+    /// 將解鎖要求持久化，依序覆蓋較舊的封鎖要求。
     /// </summary>
-    /// <param name="ipAddress">解除封鎖的 IP 位址。</param>
+    /// <param name="ipAddress">來源 IP。</param>
     /// <param name="cancellationToken">取消權杖。</param>
-    public async Task<bool> NotifyUnblockAsync(string ipAddress, CancellationToken cancellationToken = default)
-    {
-        if (!IsEnabled || activeProvider == null) return false;
+    /// <returns>是否成功排入待送匣；不代表遠端已完成解鎖。</returns>
+    public Task<bool> NotifyUnblockAsync(string ipAddress, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Enqueue(ipAddress, false, string.Empty, cancellationToken));
 
+    private bool Enqueue(string ipAddress, bool block, string reason, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (!IsEnabled) return false;
+        if (!database.IsConfigured) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Cloud perimeter outbox requires a configured database."));
+        string ip = IpAddressCanonicalizer.Canonicalize(ipAddress);
+        if (!System.Net.IPAddress.TryParse(ip, out _)) throw new ArgumentException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid IP address."), nameof(ipAddress));
+        database.ExecuteInTransaction((connection, transaction) =>
+        {
+            if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM CloudPerimeterOutbox", transaction: transaction) >= 100000
+                && connection.ExecuteScalar<int>("SELECT COUNT(*) FROM CloudPerimeterOutbox WHERE IpAddress=@ip", new { ip }, transaction) == 0)
+                throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Cloud perimeter outbox capacity has been reached."));
+            connection.Execute("INSERT INTO CloudPerimeterOutbox(IpAddress,Version,ShouldBlock,Reason) VALUES(@ip,@version,@block,@reason) ON CONFLICT(IpAddress) DO UPDATE SET Version=excluded.Version,ShouldBlock=excluded.ShouldBlock,Reason=excluded.Reason,Attempts=0,DueTicks=0",
+                new { ip, version = Guid.NewGuid().ToString("N"), block, reason = reason.Length > 512 ? reason[..512] : reason }, transaction);
+        });
+        return true;
+    }
+
+    private async Task RunAsync()
+    {
         try
         {
-            return await activeProvider.UnblockIpAsync(ipAddress, cancellationToken);
+            while (!stopping.IsCancellationRequested)
+            {
+                try
+                {
+                    if (IsEnabled && database.IsConfigured)
+                    {
+                        var row = database.Query<Pending>("SELECT * FROM CloudPerimeterOutbox WHERE DueTicks<=@now ORDER BY DueTicks,IpAddress LIMIT 1", new { now = DateTime.UtcNow.Ticks }).FirstOrDefault();
+                        if (row is not null)
+                        {
+                            await providerGate.WaitAsync(stopping.Token).ConfigureAwait(false);
+                            bool success;
+                            try
+                            {
+                                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                                deadline.CancelAfter(TimeSpan.FromSeconds(30));
+                                success = activeProvider is not null && (row.ShouldBlock
+                                    ? await activeProvider.BlockIpAsync(row.IpAddress, row.Reason, deadline.Token).ConfigureAwait(false)
+                                    : await activeProvider.UnblockIpAsync(row.IpAddress, deadline.Token).ConfigureAwait(false));
+                            }
+                            catch (Exception) when (!stopping.IsCancellationRequested) { success = false; }
+                            finally { providerGate.Release(); }
+                            if (success) database.ExecuteNonQuery("DELETE FROM CloudPerimeterOutbox WHERE IpAddress=@p0 AND Version=@p1", row.IpAddress, row.Version);
+                            else
+                            {
+                                long due = DateTime.UtcNow.AddSeconds(Math.Min(300, Math.Pow(2, Math.Min(row.Attempts + 1, 8)))).Ticks;
+                                database.ExecuteNonQuery("UPDATE CloudPerimeterOutbox SET Attempts=MIN(Attempts+1,30),DueTicks=@p0 WHERE IpAddress=@p1 AND Version=@p2", due, row.IpAddress, row.Version);
+                                System.Diagnostics.Trace.TraceWarning("Cloud perimeter delivery pending for {0}", row.IpAddress);
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException) when (stopping.IsCancellationRequested) { break; }
+                catch (Exception ex) { System.Diagnostics.Trace.TraceError("Cloud perimeter outbox: {0}", ex.GetType().Name); }
+                await Task.Delay(TimeSpan.FromSeconds(1), stopping.Token).ConfigureAwait(false);
+            }
         }
-        catch (Exception ex)
-        {
-            WindowsLogManager.Instance.WriteEntry($"[CloudPerimeter] Failed to push unblock for {ipAddress}: {ex.Message}",
-                System.Diagnostics.EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
-            return false;
-        }
+        catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
     }
 
     /// <summary>
-    /// 釋放服務所使用之資源。
+    /// 取消並等待工作者結束；未完成要求保留於資料庫供下次啟動重試。
     /// </summary>
     public void Dispose()
     {
         if (isDisposed) return;
         isDisposed = true;
+        stopping.Cancel();
+        worker.GetAwaiter().GetResult();
+        (activeProvider as IDisposable)?.Dispose();
         activeProvider = null;
+        stopping.Dispose();
+        providerGate.Dispose();
+    }
+
+    private sealed class Pending
+    {
+        public string IpAddress { get; set; } = string.Empty;
+        public string Version { get; set; } = string.Empty;
+        public bool ShouldBlock { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public int Attempts { get; set; }
     }
 }

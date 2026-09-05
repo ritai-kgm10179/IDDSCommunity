@@ -65,4 +65,18 @@ public sealed class WafRuleEngineTest
         Assert.IsFalse(WafRuleEngine.TryMatchThreat("/api/v1/products?category=electronics&page=2", out _));
         Assert.IsFalse(WafRuleEngine.TryMatchThreat(null, out _));
     }
+    /// <summary>
+    /// 驗證超長輸入不得繞過檢查，且長字串中的 SQL 攻擊仍可偵測。
+    /// </summary>
+    [TestMethod]
+    public void InputLimitsAndLongAttackAreEnforced()
+    {
+        Assert.IsTrue(WafRuleEngine.TryMatchThreat(new string('a', 65537), out string? category));
+        Assert.AreEqual("Inspection.InputLimit", category);
+        Assert.IsTrue(WafRuleEngine.TryMatchThreat(new string(' ', 65537), out category));
+        Assert.AreEqual("Inspection.InputLimit", category);
+        Assert.IsTrue(WafRuleEngine.TryMatchThreat(new string('a', 60000) + "' OR '1'='1", out category));
+        Assert.AreEqual("SQL.Injection", category);
+        Assert.IsFalse(WafRuleEngine.TryMatchThreat("/search?q=" + new string('a', 60000), out _));
+    }
 }

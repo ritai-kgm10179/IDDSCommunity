@@ -238,4 +238,29 @@ public sealed class ConfigurationTransferServiceTest
     {
         database.ExecuteNonQuery(@"INSERT INTO Configuration(ConfigVersionDate,HardLockAttempts,HardLockTimeHours,LockForever,SoftLockAttempts,SoftLockTimeMinutes,UseSafeNetworkList,PluginDirectory,LicenseKey,ActivationId,SendInfoMail,SmtpPort,SenderEmailAddress,SmtpRequiresAuthentication,NotificationEmailAddress,SmtpServer,SmtpUsername,SmtpPassword,CyberSheriffContributor,WebBasedMonitoring,HardwareId,SmtpSslRequired) VALUES(@p0,@p1,@p2,@p3,@p4,@p5,@p6,NULL,NULL,NULL,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14,0,0,NULL,@p15)", DateTime.UtcNow, configuration.HardLockAttempts, configuration.HardLockTimeHours, configuration.LockForever, configuration.SoftLockAttempts, configuration.SoftLockTimeMinutes, configuration.UseSafeNetworkList, configuration.SendInfoMail, configuration.SmtpPort, configuration.SenderEmailAddress, configuration.SmtpRequiresAuthentication, configuration.NotificationEmailAddress, configuration.SmtpServer, configuration.SmtpUsername, configuration.SmtpPassword, configuration.SmtpSslRequired);
     }
+    /// <summary>
+    /// 一般匯出不包含應用程式或代理機密，含機密匯出可完整加密往返。
+    /// </summary>
+    [TestMethod]
+    public void ApplicationAndAgentSecretsAreEncryptedAndPreserved()
+    {
+        Guid agent = Guid.Parse("fa68919b-6d0b-4508-9659-3cd1e160235c");
+        database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey,ConfigValue) VALUES(@p0,@p1)", "ManagementApiKey", "source-secret-sentinel");
+        database.ExecuteNonQuery("INSERT INTO SecurityAgentConfig(AgentId,PropertyName,PropertyValueString) VALUES(@p0,@p1,@p2)", agent, "Password", "agent-secret-sentinel");
+        var service = new ConfigurationTransferService(database);
+        string plainPath = Path.Combine(testDirectory, "public.json");
+        string encryptedPath = Path.Combine(testDirectory, "encrypted.json");
+        service.ExportToFile(plainPath);
+        service.ExportToFile(encryptedPath, true, "correct horse battery staple");
+        Assert.IsFalse(File.ReadAllText(plainPath).Contains("secret-sentinel", StringComparison.Ordinal));
+        Assert.IsFalse(File.ReadAllText(encryptedPath).Contains("secret-sentinel", StringComparison.Ordinal));
+        database.ExecuteNonQuery("UPDATE AppConfig SET ConfigValue=@p0 WHERE ConfigKey=@p1", "destination-secret", "ManagementApiKey");
+        database.ExecuteNonQuery("UPDATE SecurityAgentConfig SET PropertyValueString=@p0 WHERE AgentId=@p1 AND PropertyName='Password'", "destination-agent", agent);
+        service.ImportFromFile(plainPath, Path.Combine(testDirectory, "backups"));
+        Assert.AreEqual("destination-secret", database.ExecuteScalar("SELECT ConfigValue FROM AppConfig WHERE ConfigKey='ManagementApiKey'"));
+        Assert.AreEqual("destination-agent", database.ExecuteScalar("SELECT PropertyValueString FROM SecurityAgentConfig WHERE AgentId=@p0 AND PropertyName='Password'", agent));
+        service.ImportFromFile(encryptedPath, Path.Combine(testDirectory, "backups"), "correct horse battery staple");
+        Assert.AreEqual("source-secret-sentinel", database.ExecuteScalar("SELECT ConfigValue FROM AppConfig WHERE ConfigKey='ManagementApiKey'"));
+        Assert.AreEqual("agent-secret-sentinel", database.ExecuteScalar("SELECT PropertyValueString FROM SecurityAgentConfig WHERE AgentId=@p0 AND PropertyName='Password'", agent));
+    }
 }

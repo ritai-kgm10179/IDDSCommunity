@@ -16,6 +16,11 @@ public sealed class NotificationDispatcher : IDisposable
     private readonly WebhookNotificationService webhookService;
     private readonly SyslogNotificationService syslogService;
     private readonly SoarRemediationExecutor soarExecutor;
+    private readonly System.Threading.Channels.Channel<Alert> queue = System.Threading.Channels.Channel.CreateBounded<Alert>(128);
+    private readonly CancellationTokenSource stopping = new();
+    private readonly Task[] workers;
+    private int disposed;
+    private sealed record Alert(LockType Type, string Ip, string Agent, string Details, CancellationToken Cancellation, TaskCompletionSource Completion);
 
     /// <summary>
     /// 初始化 <see cref="NotificationDispatcher"/> 類別的新執行個體。
@@ -33,7 +38,23 @@ public sealed class NotificationDispatcher : IDisposable
         this.emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         this.webhookService = webhookService ?? throw new ArgumentNullException(nameof(webhookService));
         this.syslogService = syslogService ?? throw new ArgumentNullException(nameof(syslogService));
-        this.soarExecutor = soarExecutor ?? throw new ArgumentNullException(nameof(soarExecutor));
+        this.soarExecutor = soarExecutor ?? throw new ArgumentNullException(nameof(soarExecutor));        workers = new Task[4];
+        for (int i = 0; i < workers.Length; i++) workers[i] = Task.Run(async () =>
+        {
+            await foreach (Alert alert in queue.Reader.ReadAllAsync())
+            {
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token, alert.Cancellation);
+                deadline.CancelAfter(TimeSpan.FromSeconds(30));
+                try
+                {
+                    deadline.Token.ThrowIfCancellationRequested();
+                    await DispatchCoreAsync(alert.Type, alert.Ip, alert.Agent, alert.Details, deadline.Token).ConfigureAwait(false);
+                    alert.Completion.TrySetResult();
+                }
+                catch (OperationCanceledException) { alert.Completion.TrySetCanceled(); }
+                catch (Exception ex) { System.Diagnostics.Trace.TraceError("Notification dispatch: {0}", ex.GetType().Name); alert.Completion.TrySetResult(); }
+            }
+        });
     }
 
     /// <summary>
@@ -64,14 +85,25 @@ public sealed class NotificationDispatcher : IDisposable
     /// <param name="agentName">觸發之安全性代理程式名稱。</param>
     /// <param name="details">詳細事件描述。</param>
     /// <param name="cancellationToken">取消權杖。</param>
-    public async Task DispatchAlertAsync(
+    public Task DispatchAlertAsync(
         LockType lockType,
         string ipAddress,
         string agentName,
         string details,
         CancellationToken cancellationToken = default)
     {
-        List<Task> tasks = [];
+        cancellationToken.ThrowIfCancellationRequested();
+        TaskCompletionSource completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!queue.Writer.TryWrite(new Alert(lockType, ipAddress, agentName, details.Length > 8192 ? details[..8192] : details, cancellationToken, completion)))
+        {
+            System.Diagnostics.Trace.TraceWarning("Notification queue full or stopped; alert delivery rejected for {0}", ipAddress);
+            completion.TrySetResult();
+        }
+        return completion.Task;
+    }
+
+    private async Task DispatchCoreAsync(LockType lockType, string ipAddress, string agentName, string details, CancellationToken cancellationToken)
+    {        List<Task> tasks = [];
 
         // 1. E-Mail 警報通知
         tasks.Add(emailService.SendAlertEmailAsync(lockType, ipAddress, agentName, details, cancellationToken));
@@ -104,6 +136,11 @@ public sealed class NotificationDispatcher : IDisposable
     /// </summary>
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref disposed, 1) != 0) return;
+        queue.Writer.TryComplete();
+        stopping.Cancel();
+        Task.WhenAll(workers).GetAwaiter().GetResult();
+        stopping.Dispose();
         webhookService.Dispose();
         syslogService.Dispose();
     }

@@ -42,24 +42,13 @@ public sealed class CloudPerimeterAdaptersTest
     [TestMethod]
     public async Task AwsPerimeterProvider_BlockAndUnblock_SendsCorrectHeadersAndPayload()
     {
-        var handler = new MockHttpMessageHandler();
-        var client = new HttpClient(handler);
-        var provider = new AwsPerimeterProvider(client)
-        {
-            ApiKey = "test-aws-key",
-            IpSetId = "ipset-12345",
-            Region = "ap-northeast-1"
-        };
-
-        bool blocked = await provider.BlockIpAsync("198.51.100.25", "SSH brute force");
-        Assert.IsTrue(blocked);
-        Assert.IsNotNull(handler.LastRequest);
-        Assert.IsTrue(handler.LastRequestBody!.Contains("198.51.100.25/32"));
-        Assert.IsTrue(handler.LastRequestBody.Contains("ipset-12345"));
-
-        bool unblocked = await provider.UnblockIpAsync("198.51.100.25");
-        Assert.IsTrue(unblocked);
-        Assert.IsTrue(handler.LastRequestBody.Contains("Unblock"));
+        using var client = new FakeWafClient();
+        using var provider = new AwsPerimeterProvider(client) { IpSetId = "11111111-1111-1111-1111-111111111111", IpSetName = "owned", Region = "us-east-1" };
+        Assert.IsTrue(await provider.BlockIpAsync("198.51.100.25", "test"));
+        Assert.IsTrue(await provider.BlockIpAsync("198.51.100.26", "test"));
+        Assert.IsTrue(await provider.UnblockIpAsync("198.51.100.25"));
+        CollectionAssert.AreEquivalent(new[] { "8.8.8.8/32", "198.51.100.26/32" }, client.Addresses);
+        Assert.IsFalse(await provider.BlockIpAsync("2001:db8::1", "wrong family"));
     }
 
     /// <summary>
@@ -78,16 +67,10 @@ public sealed class CloudPerimeterAdaptersTest
             NetworkSecurityGroupName = "nsg-dmz"
         };
 
-        bool blocked = await provider.BlockIpAsync("203.0.113.88", "RDP Attack");
-        Assert.IsTrue(blocked);
-        Assert.IsNotNull(handler.LastRequest);
-        Assert.AreEqual(HttpMethod.Put, handler.LastRequest.Method);
-        Assert.IsTrue(handler.LastRequest.RequestUri!.ToString().Contains("subscriptions/sub-123/resourceGroups/rg-prod"));
-        Assert.IsTrue(handler.LastRequestBody!.Contains("203.0.113.88/32"));
-
-        bool unblocked = await provider.UnblockIpAsync("203.0.113.88");
-        Assert.IsTrue(unblocked);
-        Assert.AreEqual(HttpMethod.Delete, handler.LastRequest.Method);
+        handler.ResponseContent = "{\"properties\":{\"description\":\"user-owned\",\"sourceAddressPrefix\":\"203.0.113.88/32\",\"access\":\"Deny\",\"direction\":\"Inbound\"}}";
+        Assert.IsFalse(await provider.BlockIpAsync("203.0.113.88", "test"));
+        Assert.IsFalse(await provider.UnblockIpAsync("203.0.113.88"));
+        Assert.AreEqual(HttpMethod.Get, handler.LastRequest!.Method);
     }
 
     /// <summary>
@@ -105,11 +88,9 @@ public sealed class CloudPerimeterAdaptersTest
             SecurityPolicyName = "armor-policy-default"
         };
 
-        bool blocked = await provider.BlockIpAsync("198.51.100.77", "Web vulnerability scan");
-        Assert.IsTrue(blocked);
-        Assert.IsNotNull(handler.LastRequest);
-        Assert.IsTrue(handler.LastRequest.RequestUri!.ToString().Contains("projects/my-gcp-project/global/securityPolicies/armor-policy-default/addRule"));
-        Assert.IsTrue(handler.LastRequestBody!.Contains("198.51.100.77/32"));
+        handler.ResponseContent = "{\"rules\":[{\"priority\":1000,\"description\":\"user-owned\",\"action\":\"deny(403)\",\"match\":{\"config\":{\"srcIpRanges\":[\"198.51.100.77/32\"]}}}]}";
+        Assert.IsTrue(await provider.UnblockIpAsync("198.51.100.77"));
+        Assert.AreEqual(HttpMethod.Get, handler.LastRequest!.Method);
     }
 
     /// <summary>
@@ -148,11 +129,9 @@ public sealed class CloudPerimeterAdaptersTest
             EndpointUrl = "https://cvpc.hicloud.hinet.net:9696"
         };
 
-        bool blocked = await provider.BlockIpAsync("203.0.113.55", "SQL brute force");
-        Assert.IsTrue(blocked);
-        Assert.IsTrue(handler.LastRequest!.RequestUri!.ToString().Contains("v2.0/security-group-rules"));
-        Assert.IsTrue(handler.LastRequestBody!.Contains("sg-hinet-001"));
-        Assert.IsTrue(handler.LastRequestBody.Contains("203.0.113.55/32"));
+        Assert.IsFalse(await provider.BlockIpAsync("203.0.113.55", "test"));
+        Assert.IsFalse(await provider.UnblockIpAsync("203.0.113.55"));
+        Assert.IsNull(handler.LastRequest);
     }
 
     /// <summary>
@@ -174,5 +153,28 @@ public sealed class CloudPerimeterAdaptersTest
         Assert.AreEqual(HttpMethod.Post, handler.LastRequest!.Method);
         Assert.IsTrue(handler.LastRequestBody!.Contains("\"action\": \"block\""));
         Assert.IsTrue(handler.LastRequestBody.Contains("198.51.100.12"));
+    }
+    private sealed class FakeWafClient : Amazon.WAFV2.AmazonWAFV2Client
+    {
+        internal System.Collections.Generic.List<string> Addresses { get; private set; } = ["8.8.8.8/32"];
+        private int version;
+        internal FakeWafClient() : base(new Amazon.Runtime.AnonymousAWSCredentials(), Amazon.RegionEndpoint.USEast1) { }
+        public override Task<Amazon.WAFV2.Model.GetIPSetResponse> GetIPSetAsync(Amazon.WAFV2.Model.GetIPSetRequest request, CancellationToken cancellationToken = default)
+        {
+            Assert.AreEqual("owned", request.Name);
+            Assert.AreEqual("11111111-1111-1111-1111-111111111111", request.Id);
+            return Task.FromResult(new Amazon.WAFV2.Model.GetIPSetResponse
+            {
+                LockToken = version.ToString(), HttpStatusCode = HttpStatusCode.OK,
+                IPSet = new Amazon.WAFV2.Model.IPSet { Name = "owned", Id = "11111111-1111-1111-1111-111111111111", IPAddressVersion = Amazon.WAFV2.IPAddressVersion.IPV4, Addresses = [.. Addresses] }
+            });
+        }
+        public override Task<Amazon.WAFV2.Model.UpdateIPSetResponse> UpdateIPSetAsync(Amazon.WAFV2.Model.UpdateIPSetRequest request, CancellationToken cancellationToken = default)
+        {
+            Assert.AreEqual(version.ToString(), request.LockToken);
+            Addresses = [.. request.Addresses];
+            version++;
+            return Task.FromResult(new Amazon.WAFV2.Model.UpdateIPSetResponse { HttpStatusCode = HttpStatusCode.OK, NextLockToken = version.ToString() });
+        }
     }
 }

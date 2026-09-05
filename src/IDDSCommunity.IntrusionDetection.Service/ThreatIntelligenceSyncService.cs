@@ -20,10 +20,12 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     private readonly Action<string, Exception> logWarning;
     private readonly Action<string, string, string, string?>? recordAudit;
     private readonly ThreatHubClient client;
-    private readonly ConcurrentQueue<ThreatIntelligenceItem> pendingLocalThreats = new();
+    private readonly ThreatHubStore localStore;
+    private readonly Dictionary<string, (long Cursor, string Generation, long LocalCursor)> cursors = new(StringComparer.Ordinal);
+    private readonly CancellationTokenSource stopping = new();
+    private readonly SemaphoreSlim syncGate = new(1, 1);
 
     private System.Threading.Timer? syncTimer;
-    private int syncing;
     private bool disposed;
     private DateTime lastSyncUtc = DateTime.MinValue;
 
@@ -36,13 +38,14 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// <param name="logWarning">警告日誌委派。</param>
     /// <param name="client">可選之 ThreatHubClient 執行個體。</param>
     /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
+    /// <param name="database">持久化資料庫；測試可省略以使用有限記憶體儲存。</param>
     public ThreatIntelligenceSyncService(
         IddsConfig config,
         Action<ThreatIntelligenceItem> onClusterThreatReceived,
         Action<string>? logInformation = null,
         Action<string, Exception>? logWarning = null,
         ThreatHubClient? client = null,
-        Action<string, string, string, string?>? recordAudit = null)
+        Action<string, string, string, string?>? recordAudit = null, Database? database = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.onClusterThreatReceived = onClusterThreatReceived ?? throw new ArgumentNullException(nameof(onClusterThreatReceived));
@@ -50,6 +53,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.client = client ?? new ThreatHubClient();
         this.recordAudit = recordAudit;
+        localStore = new ThreatHubStore(database);
     }
 
     /// <summary>
@@ -58,8 +62,12 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// <param name="item">本機威脅情資項目。</param>
     public void EnqueueLocalThreat(ThreatIntelligenceItem item)
     {
-        if (item is null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
-        pendingLocalThreats.Enqueue(item);
+        if (item is null || !IPAddress.TryParse(item.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
+            || config.IsInSafeNetwork(ip.ToString()) || item.ExpiresUtc <= DateTime.UtcNow) return;
+        var copy = System.Text.Json.JsonSerializer.Deserialize<ThreatIntelligenceItem>(System.Text.Json.JsonSerializer.Serialize(item))!;
+        copy.SourceIp = IpAddressCanonicalizer.Canonicalize(ip).ToString();
+        if (copy.ExpiresUtc == DateTime.MaxValue) copy.ExpiresUtc = copy.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+        if (!localStore.Upsert(copy)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Pending threat capacity has been reached."));
     }
 
     /// <summary>
@@ -82,90 +90,61 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// <returns>表示非同步作業完成之 Task。</returns>
     public async Task SynchronizeNowAsync()
     {
-        if (Interlocked.Exchange(ref syncing, 1) != 0)
-            return;
-
-        string endpointTarget = config.ThreatHubEndpoint ?? string.Empty;
+        if (disposed || !await syncGate.WaitAsync(0).ConfigureAwait(false)) return;
         try
         {
-            if (config.ThreatHubRole != ThreatHubRole.EdgeNode || string.IsNullOrWhiteSpace(config.ThreatHubEndpoint))
-                return;
-
+            if (stopping.IsCancellationRequested || config.ThreatHubRole != ThreatHubRole.EdgeNode || string.IsNullOrWhiteSpace(config.ThreatHubEndpoint)) return;
             string[] endpoints = config.ThreatHubEndpoint.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            if (endpoints.Length == 0) return;
-
-            List<ThreatIntelligenceItem> localBatch = [];
-            while (pendingLocalThreats.TryDequeue(out ThreatIntelligenceItem? threat))
-            {
-                if (threat != null) localBatch.Add(threat);
-            }
-
-            ThreatHubSyncPayload payload = new()
-            {
-                NodeId = Environment.MachineName + "_" + config.ThreatHubApiKey[..Math.Min(8, config.ThreatHubApiKey.Length)],
-                NodeName = Environment.MachineName,
-                NodeIp = string.Empty,
-                LastSyncUtc = lastSyncUtc,
-                NewThreats = localBatch
-            };
-
-            bool syncSucceeded = false;
+            if (endpoints.Length > 8) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("At most eight Threat Hub endpoints are supported."));
+            foreach (string stale in System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Where(cursors.Keys, key => !System.Linq.Enumerable.Contains(endpoints, key)))) cursors.Remove(stale);
             foreach (string endpoint in endpoints)
             {
                 try
                 {
-                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(15));
-                    ThreatHubSyncResponse response = await client.SynchronizeAsync(
-                        endpoint,
-                        config.ThreatHubApiKey,
-                        payload,
-                        cts.Token).ConfigureAwait(false);
-
-                    if (response.Success)
+                    var previous = cursors.GetValueOrDefault(endpoint, (0L, string.Empty, 0L));
+                    ThreatHubSyncResponse localPage = localStore.ReadPage(previous.Item3, localStore.Generation);
+                    using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    deadline.CancelAfter(TimeSpan.FromSeconds(15));
+                    var payload = new ThreatHubSyncPayload
                     {
-                        lastSyncUtc = response.ServerTimeUtc;
-                        foreach (ThreatIntelligenceItem clusterThreat in response.ActiveThreats)
-                        {
-                            if (string.IsNullOrWhiteSpace(clusterThreat.SourceIp)) continue;
-                            onClusterThreatReceived(clusterThreat);
-                        }
-                        syncSucceeded = true;
-                        recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pushed: {localBatch.Count}, Pulled: {response.ActiveThreats.Count}");
-                        break;
+                        NodeId = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Environment.MachineName))),
+                        NodeName = Environment.MachineName,
+                        LastSyncUtc = lastSyncUtc,
+                        Cursor = previous.Item1,
+                        Generation = previous.Item2,
+                        NewThreats = localPage.ActiveThreats
+                    };
+                    ThreatHubSyncResponse response = await client.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
+                    if (!response.Success) continue;
+                    if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
+                        || response.Generation.Length > 128 || response.NextCursor < 0
+                        || (response.Generation == previous.Item2 && response.NextCursor < previous.Item1)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
+                    foreach (ThreatIntelligenceItem threat in response.ActiveThreats)
+                    {
+                        if (threat is null || !IPAddress.TryParse(threat.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
+                            || config.IsInSafeNetwork(ip.ToString()) || threat.ExpiresUtc <= DateTime.UtcNow
+                            || threat.ExpiresUtc > DateTime.UtcNow.AddDays(365) || !double.IsFinite(threat.ConfidenceScore)
+                            || threat.ConfidenceScore < 0.8 || threat.ConfidenceScore > 1) continue;
+                        onClusterThreatReceived(threat);
                     }
+                    cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
+                    lastSyncUtc = response.ServerTimeUtc;
+                    recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pushed: {localPage.ActiveThreats.Count}, Pulled: {response.ActiveThreats.Count}");
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    logWarning($"Threat Hub failover: endpoint '{endpoint}' unavailable, trying next.", ex);
-                }
+                catch (OperationCanceledException) when (stopping.IsCancellationRequested) { return; }
+                catch (Exception ex) { logWarning($"Threat Hub endpoint '{endpoint}' unavailable.", ex); }
             }
-
-            if (!syncSucceeded)
-            {
-                // 將未成功同步之本機威脅重新放回佇列
-                foreach (ThreatIntelligenceItem item in localBatch)
-                {
-                    pendingLocalThreats.Enqueue(item);
-                }
-                recordAudit?.Invoke("Cluster.Sync", "Failed", endpointTarget, "All endpoints failed or returned unsuccessful response");
-            }
+            recordAudit?.Invoke("Cluster.Sync", "Failed", string.Empty, "No endpoint accepted the pending page");
         }
-        catch (Exception ex)
-        {
-            logWarning("Failed to synchronize with Threat Hub", ex);
-            recordAudit?.Invoke("Cluster.Sync", "Failed", endpointTarget, ex.Message);
-        }
-        finally
-        {
-            Interlocked.Exchange(ref syncing, 0);
-        }
+        finally { syncGate.Release(); }
     }
-
     /// <summary>
     /// 停止同步排程。
     /// </summary>
     public void Stop()
     {
+        stopping.Cancel();
         syncTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         syncTimer?.Dispose();
         syncTimer = null;
@@ -180,7 +159,8 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         {
             disposed = true;
             Stop();
-            client.Dispose();
+            syncGate.Wait();
+            try { client.Dispose(); } finally { syncGate.Release(); }
         }
     }
 }

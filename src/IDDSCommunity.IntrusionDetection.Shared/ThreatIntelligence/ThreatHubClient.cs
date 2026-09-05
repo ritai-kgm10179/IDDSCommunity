@@ -61,13 +61,14 @@ public sealed class ThreatHubClient : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
         ArgumentNullException.ThrowIfNull(payload);
 
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri) || endpointUri.Scheme != "https") throw new ArgumentException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub must use HTTPS."), nameof(endpoint));
         string targetUrl = endpoint.TrimEnd('/') + "/api/threat-hub/sync";
 
         using HttpRequestMessage request = new(HttpMethod.Post, targetUrl);
         request.Headers.Add(ApiKeyHeader, apiKey);
         request.Content = JsonContent.Create(payload, options: JsonOptions);
 
-        using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
             return new ThreatHubSyncResponse
@@ -77,7 +78,7 @@ public sealed class ThreatHubClient : IDisposable
             };
         }
 
-        ThreatHubSyncResponse? result = await response.Content.ReadFromJsonAsync<ThreatHubSyncResponse>(JsonOptions, cancellationToken).ConfigureAwait(false);
+        ThreatHubSyncResponse? result = JsonSerializer.Deserialize<ThreatHubSyncResponse>(await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 1024 * 1024, cancellationToken).ConfigureAwait(false), JsonOptions);
         return result ?? new ThreatHubSyncResponse { Success = false, ErrorMessage = "Empty response from Threat Hub." };
     }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
@@ -24,12 +24,12 @@ public static class CloudPerimeterProviderFactory
 
         return settings.ProviderType switch
         {
-            CloudPerimeterType.Aws => new AwsPerimeterProvider(httpClient),
-            CloudPerimeterType.Azure => new AzureNsgPerimeterProvider(httpClient),
-            CloudPerimeterType.Gcp => new GcpCloudArmorPerimeterProvider(httpClient),
-            CloudPerimeterType.Cloudflare => new CloudflareWafPerimeterProvider(httpClient),
+            CloudPerimeterType.Aws => new AwsPerimeterProvider { ApiKey = settings.ApiKey, IpSetId = settings.ResourceId, IpSetName = settings.TertiaryId, Region = string.IsNullOrWhiteSpace(settings.SecondaryId) ? "us-east-1" : settings.SecondaryId, EndpointUrl = settings.EndpointUrl },
+            CloudPerimeterType.Azure => new AzureNsgPerimeterProvider(httpClient) { BearerToken = settings.ApiKey, NetworkSecurityGroupName = settings.ResourceId, SubscriptionId = settings.SecondaryId, ResourceGroupName = settings.TertiaryId },
+            CloudPerimeterType.Gcp => new GcpCloudArmorPerimeterProvider(httpClient) { BearerToken = settings.ApiKey, SecurityPolicyName = settings.ResourceId, ProjectId = settings.SecondaryId },
+            CloudPerimeterType.Cloudflare => new CloudflareWafPerimeterProvider(httpClient) { ApiToken = settings.ApiKey, ZoneId = settings.ResourceId },
             CloudPerimeterType.ChunghwaTelecomHiCloud => new ChunghwaHiCloudPerimeterProvider(httpClient),
-            CloudPerimeterType.GenericWebhook => new GenericPerimeterWebhookProvider(httpClient),
+            CloudPerimeterType.GenericWebhook => new GenericPerimeterWebhookProvider(httpClient) { WebhookUrl = settings.EndpointUrl, AuthHeader = settings.ApiKey },
             _ => null
         };
     }

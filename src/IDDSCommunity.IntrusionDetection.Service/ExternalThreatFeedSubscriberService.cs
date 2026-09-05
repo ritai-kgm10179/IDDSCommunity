@@ -23,8 +23,9 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     private readonly bool ownClient;
 
     private System.Threading.Timer? refreshTimer;
-    private int refreshing;
-    private bool disposed;
+    private readonly SemaphoreSlim refreshGate = new(1, 1);
+    private readonly CancellationTokenSource stopping = new();
+    private volatile bool disposed;
 
     /// <summary>
     /// 初始化 <see cref="ExternalThreatFeedSubscriberService"/> 類別之新執行個體。
@@ -85,7 +86,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     /// <returns>表示非同步作業完成之 Task。</returns>
     public async Task RefreshFeedsAsync()
     {
-        if (Interlocked.Exchange(ref refreshing, 1) != 0)
+        if (disposed || stopping.IsCancellationRequested || !await refreshGate.WaitAsync(0).ConfigureAwait(false))
             return;
 
         try
@@ -99,7 +100,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
             logInformation("Starting external threat intelligence feed update cycle...");
             int totalIngested = 0;
-            int ttlDays = Math.Max(1, config.ThreatFeedTtlDays);
+            int ttlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365);
             DateTime expiresUtc = DateTime.UtcNow.AddDays(ttlDays);
 
             // 0. 更新動態 Bogon 前綴清單（Team Cymru Fullbogons）
@@ -182,7 +183,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         }
         finally
         {
-            Interlocked.Exchange(ref refreshing, 0);
+            refreshGate.Release();
         }
     }
 
@@ -195,8 +196,9 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     {
         try
         {
-            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
-            using HttpResponseMessage response = await httpClient.GetAsync(url, cts.Token).ConfigureAwait(false);
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(30));
+            using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 logWarning($"Threat feed '{feedName}' returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
@@ -204,7 +206,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
                 return 0;
             }
 
-            string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
             List<string> ips = ThreatFeedParser.ParseFeed(content, format, minConfidenceOrLevel, ThreatFeedParser.DefaultMaxEntriesPerFeed);
 
             int count = 0;
@@ -233,12 +235,13 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     {
         try
         {
-            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(30));
             using HttpRequestMessage request = new(HttpMethod.Get, url);
             request.Headers.Add("Key", apiKey);
             request.Headers.Add("Accept", "application/json");
 
-            using HttpResponseMessage response = await httpClient.SendAsync(request, cts.Token).ConfigureAwait(false);
+            using HttpResponseMessage response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 logWarning($"AbuseIPDB feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
@@ -246,7 +249,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
                 return 0;
             }
 
-            string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
             List<string> ips = ThreatFeedParser.ParseFeed(content, ThreatFeedFormat.AbuseIpDbJson, minConfidence, ThreatFeedParser.DefaultMaxEntriesPerFeed);
 
             int count = 0;
@@ -270,6 +273,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     private async Task RefreshDynamicBogonsAsync()
     {
         List<System.Net.IPNetwork> aggregatedNetworks = [];
+        bool complete = true;
 
         // 抓取 IPv4 Fullbogons
         string ipv4Url = config.DynamicBogonIpv4Url;
@@ -277,20 +281,25 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             try
             {
-                using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
-                using HttpResponseMessage response = await httpClient.GetAsync(ipv4Url, cts.Token).ConfigureAwait(false);
+                using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(30));
+                using HttpResponseMessage response = await httpClient.GetAsync(ipv4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
-                    string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-                    aggregatedNetworks.AddRange(BogonIpFilter.ParseBogonList(content));
+                    string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                    var parsed = BogonIpFilter.ParseBogonList(content);
+                    if (parsed.Count == 0) complete = false;
+                    aggregatedNetworks.AddRange(parsed);
                 }
                 else
                 {
+                    complete = false;
                     logWarning($"Dynamic IPv4 Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
                 }
             }
             catch (Exception ex)
             {
+                complete = false;
                 logWarning("Failed to download dynamic IPv4 Bogon feed", ex);
             }
         }
@@ -301,25 +310,30 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             try
             {
-                using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
-                using HttpResponseMessage response = await httpClient.GetAsync(ipv6Url, cts.Token).ConfigureAwait(false);
+                using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(30));
+                using HttpResponseMessage response = await httpClient.GetAsync(ipv6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
-                    string content = await response.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-                    aggregatedNetworks.AddRange(BogonIpFilter.ParseBogonList(content));
+                    string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                    var parsed = BogonIpFilter.ParseBogonList(content);
+                    if (parsed.Count == 0) complete = false;
+                    aggregatedNetworks.AddRange(parsed);
                 }
                 else
                 {
+                    complete = false;
                     logWarning($"Dynamic IPv6 Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
                 }
             }
             catch (Exception ex)
             {
+                complete = false;
                 logWarning("Failed to download dynamic IPv6 Bogon feed", ex);
             }
         }
 
-        if (aggregatedNetworks.Count > 0)
+        if (complete && !stopping.IsCancellationRequested && aggregatedNetworks.Count > 0)
         {
             BogonIpFilter.UpdateDynamicBogons(aggregatedNetworks);
             logInformation($"Dynamic Bogon prefix list updated successfully ({aggregatedNetworks.Count} total IPv4/IPv6 prefixes loaded).");
@@ -329,6 +343,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
     private bool EvaluateAndIngest(string ip, string sourceFeedName, DateTime expiresUtc)
     {
+        stopping.Token.ThrowIfCancellationRequested();
         if (string.IsNullOrWhiteSpace(ip)) return false;
 
         // 1. Bogon & Reserved 硬過濾
@@ -360,6 +375,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     /// </summary>
     public void Stop()
     {
+        stopping.Cancel();
         refreshTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         refreshTimer?.Dispose();
         refreshTimer = null;
@@ -374,6 +390,8 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             disposed = true;
             Stop();
+            refreshGate.Wait();
+            refreshGate.Release();
             if (ownClient)
             {
                 httpClient.Dispose();

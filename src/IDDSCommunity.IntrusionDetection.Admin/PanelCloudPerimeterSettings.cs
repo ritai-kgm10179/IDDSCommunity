@@ -94,7 +94,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
             "Azure NSG",
             "GCP Cloud Armor",
             "Cloudflare WAF",
-            Strings.Get("Chunghwa HiCloud"),
+            Strings.Get("Chunghwa HiCloud (deny unsupported)"),
             Strings.Get("Generic Webhook")
         ]);
         comboProviderType.SelectedIndex = 0;
@@ -104,7 +104,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         // API Key
         Label lblApiKey = new()
         {
-            Text = Strings.Get("API Key / Access Token"),
+            Text = Strings.Get("API token / AWS profile (blank: default credentials)"),
             Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
@@ -147,7 +147,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         // Resource ID
         Label lblResource = new()
         {
-            Text = Strings.Get("Primary Resource ID (IPSet ID / Zone ID)"),
+            Text = Strings.Get("Primary resource (AWS IP set ARN / Azure NSG / GCP policy / CF zone)"),
             Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
@@ -168,7 +168,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         // Secondary ID
         Label lblSecondary = new()
         {
-            Text = Strings.Get("Secondary Resource ID (Scope / Policy Name / Project ID)"),
+            Text = Strings.Get("Secondary resource (AWS region / Azure subscription / GCP project)"),
             Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
@@ -189,7 +189,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
         // Tertiary ID
         Label lblTertiary = new()
         {
-            Text = Strings.Get("Tertiary Resource ID (Network ID / HiCloud CVPC ID)"),
+            Text = Strings.Get("Third resource (AWS IP set name / Azure resource group)"),
             Location = new Point(leftMargin, y),
             AutoSize = true,
             Font = defaultFont,
@@ -307,6 +307,7 @@ public sealed class PanelCloudPerimeterSettings : UserControl
                 return;
             }
 
+            using var providerLifetime = provider as IDisposable;
             (bool success, string message) = await provider.TestConnectionAsync().ConfigureAwait(true);
             if (success)
             {

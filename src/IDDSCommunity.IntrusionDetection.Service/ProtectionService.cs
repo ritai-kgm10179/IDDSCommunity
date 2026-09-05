@@ -29,6 +29,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly ProtectionOptions protectionOptions;
     private readonly System.Threading.SemaphoreSlim lifecycleLock = new(1, 1);
     private readonly Database database;
+    private readonly object firewallMutationGate = new();
     private readonly IddsConfig configuration;
     private readonly NotificationSettings notificationSettings;
     private readonly NotificationDispatcher notificationDispatcher;
@@ -148,6 +149,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             EnableSelfServicePortal = configuration.EnableSelfServicePortal,
             PortalPort = configuration.SelfServicePortalPort,
             PortalListenIp = configuration.SelfServicePortalListenIp,
+            TrustedProxyCidrs = configuration.TrustedProxyCidrs.Split([';', ',', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
             TotpBase32Secret = configuration.SelfServiceTotpSecret
         };
         this.selfServiceUnblockServer = new SelfService.SelfServiceUnblockServer(portalSettings, database);
@@ -304,7 +306,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), op.IpAddress, IntrusionLog.STATUS_UNLOCKED, false);
         }
         SendInfoMail(op, LockType.None);
-        _ = cloudPerimeterService.NotifyUnblockAsync(op.IpAddress);
+        if (!op.HasError) _ = cloudPerimeterService.NotifyUnblockAsync(op.IpAddress);
     }
     /// <summary>
     /// 處理 client ip address soft locked 事件。
@@ -478,8 +480,27 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             {
                 try
                 {
-                    Locks.SetProbation(l.Id);
-                    firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                    lock (firewallMutationGate)
+                    {
+                        bool reserved = database.Query<long>(@"UPDATE Locks SET Status=350,LastUpdate=@now
+                            WHERE LockId=@id AND Status=310 AND UnlockDate=@forever
+                            AND NOT EXISTS (SELECT 1 FROM IpAttackActivity a WHERE a.IpAddress=Locks.IpAddress AND a.LastAttackTicks>=@cutoff)
+                            RETURNING LockId", new { now = DateTime.UtcNow, id = l.Id, forever = DateTime.MaxValue, cutoff = probationCutoff.Ticks }).Any();
+                        if (!reserved) continue;
+                        try
+                        {
+                            if (Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND Status IN (200,210,300,310))", l.IpAddress)) == 0)
+                            {
+                                firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                                _ = cloudPerimeterService.NotifyUnblockAsync(l.IpAddress);
+                            }
+                        }
+                        catch
+                        {
+                            database.ExecuteNonQuery("UPDATE Locks SET Status=310 WHERE LockId=@p0 AND Status=350", l.Id);
+                            throw;
+                        }
+                    }
                     TryRecordAudit("Firewall.Probation", "Succeeded", l.IpAddress);
                     logManager.WriteEntry(
                         string.Format("IP address {0} transitioned to probation after {1} days of zero activity.", l.IpAddress, decayDays),
@@ -513,34 +534,54 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     /// <param name="e">事件資料。</param>
     void cleanupTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
     {
+        if (!System.Threading.Monitor.TryEnter(firewallMutationGate)) return;
+        try { CleanupLocksCore(sender, e); }
+        finally { System.Threading.Monitor.Exit(firewallMutationGate); }
+    }
+
+    private void CleanupLocksCore(object? sender, System.Timers.ElapsedEventArgs e)
+    {
         if (System.Threading.Interlocked.Exchange(ref cleanupActive, 1) != 0)
             return;
         try
         {
-            List<Lock> timedOutLocks = Locks.GetUnlockList();
-            foreach (Lock l in timedOutLocks)
+            foreach (Lock pending in Locks.GetPendingLocks())
             {
-                l.Status = Lock.LOCK_STATUS_UNLOCKED;
-                l.Save();
+                try
+                {
+                    if (configuration.IsInSafeNetwork(pending.IpAddress))
+                    {
+                        Locks.UnlockIp(pending.IpAddress);
+                        continue;
+                    }
+                    firewallPolicy.Block(pending.IpAddress);
+                    int applied = pending.Status == Lock.LOCK_STATUS_HARDLOCK_REQUESTED ? Lock.LOCK_STATUS_HARDLOCK : Lock.LOCK_STATUS_SOFTLOCK;
+                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3", applied, DateTime.UtcNow, pending.Id, pending.Status);
+                    TryRecordAudit("Firewall.Request", "Succeeded", pending.IpAddress);
+                    if (applied == Lock.LOCK_STATUS_HARDLOCK) _ = cloudPerimeterService.NotifyBlockAsync(pending.IpAddress, "Management request");
+                }
+                catch (Exception ex)
+                {
+                    TryRecordAudit("Firewall.Request", "Failed", pending.IpAddress, ex.GetType().Name);
+                }
             }
+            List<Lock> timedOutLocks = Locks.GetUnlockList();
             foreach (Lock l in timedOutLocks)
             {
                 try
                 {
-                    firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                    bool otherLock = Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND LockId<>@p1 AND Status IN (200,210,300,310) AND UnlockDate>@p2)", l.IpAddress, l.Id, DateTime.UtcNow)) != 0;
+                    if (!otherLock) firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3 AND UnlockDate=@p4",
+                        Lock.LOCK_STATUS_UNLOCKED, DateTime.UtcNow, l.Id, l.Status, l.UnlockDate);
                     TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
-                    OnClientIpAddressUnlocked(l, null);
+                    if (!otherLock) OnClientIpAddressUnlocked(l, null);
                 }
                 catch (Exception ex)
                 {
                     TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
-                    logManager.WriteEntry(Strings.Format("IP address {0} cannot be unlocked. Error details: {1}", l.IpAddress, ex.Message),
-                        EventLogEntryType.Error, Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
-                    l.Status = firewallPolicy.IsLocked(l.IpAddress)
-                        ? Lock.LOCK_STATUS_UNLOCK_ERROR
-                        : Lock.LOCK_STATUS_UNLOCKED;
-                    l.Save();
-                    OnClientIpAddressUnlocked(l, ex);
+                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3",
+                        Lock.LOCK_STATUS_UNLOCK_REQUESTED, DateTime.UtcNow, l.Id, l.Status);
                 }
             }
         }
@@ -567,6 +608,11 @@ public bool LimitMailSent { get; set; }
     /// <param name="lockType">lock type 的值。</param>
     /// <param name="reportingAgent">reporting agent 的值。</param>
     void LockDownIp(Lock lockItem, LockType lockType, SecurityAgent reportingAgent)
+    {
+        lock (firewallMutationGate) LockDownIpCore(lockItem, lockType, reportingAgent);
+    }
+
+    void LockDownIpCore(Lock lockItem, LockType lockType, SecurityAgent reportingAgent)
     {
         int locksForToday = Locks.Today();
         LimitMailSent = false;
@@ -699,7 +745,7 @@ public bool LimitMailSent { get; set; }
                     configuration,
                     HandleClusterThreatReceived,
                     msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
+                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME), database: database);
                 threatHubServer.Start();
             }
             else if (configuration.ThreatHubRole == Shared.ThreatIntelligence.ThreatHubRole.EdgeNode)
@@ -710,7 +756,7 @@ public bool LimitMailSent { get; set; }
                     msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                     (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                     null,
-                    TryRecordAudit);
+                    TryRecordAudit, database);
                 threatSyncService.Start();
             }
 
@@ -1238,17 +1284,27 @@ public bool LimitMailSent { get; set; }
     /// <param name="item">威脅情資項目。</param>
     private void HandleClusterThreatReceived(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
     {
+        lock (firewallMutationGate) HandleClusterThreatReceivedCore(item);
+    }
+
+    private void HandleClusterThreatReceivedCore(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    {
         if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
+        if (item.ExpiresUtc <= DateTime.UtcNow || !double.IsFinite(item.ConfidenceScore) || item.ConfidenceScore < 0.8
+            || BogonIpFilter.IsBogonOrReserved(item.SourceIp)) return;
         string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
         if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
         if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
 
         try
         {
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+            Lock requested = Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
             firewallPolicy.Block(ip);
+            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
+            requested.Save();
             TryRecordAudit("Firewall.ClusterLock", "Succeeded", ip);
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, ip, IntrusionLog.STATUS_HARD_LOCKED, false);
-            Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+
             logManager.WriteEntry(
                 string.Format("IP address {0} was locked via Threat Intelligence Cluster sync (reported by {1}).", ip, item.ReporterNodeName),
                 EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
@@ -1256,6 +1312,7 @@ public bool LimitMailSent { get; set; }
         catch (Exception ex)
         {
             TryRecordAudit("Firewall.ClusterLock", "Failed", ip, ex.GetType().Name);
+            throw;
         }
     }
 
@@ -1264,6 +1321,11 @@ public bool LimitMailSent { get; set; }
     /// </summary>
     /// <param name="item">外部威脅情報項目。</param>
     private void HandleExternalThreatFeedDiscovered(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    {
+        lock (firewallMutationGate) HandleExternalThreatFeedDiscoveredCore(item);
+    }
+
+    private void HandleExternalThreatFeedDiscoveredCore(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
     {
         if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
         string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
@@ -1277,10 +1339,13 @@ public bool LimitMailSent { get; set; }
 
         try
         {
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ExternalThreatFeed, ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+            Lock requested = Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
             firewallPolicy.Block(ip);
+            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
+            requested.Save();
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", ip);
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ExternalThreatFeed, ip, IntrusionLog.STATUS_HARD_LOCKED, false);
-            Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+
             logManager.WriteEntry(
                 string.Format("IP address {0} was preemptively locked via External Threat Feed subscription ({1}).", ip, item.ReporterNodeName),
                 EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
@@ -1288,6 +1353,7 @@ public bool LimitMailSent { get; set; }
         catch (Exception ex)
         {
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", ip, ex.GetType().Name);
+            throw;
         }
     }
 
@@ -1300,6 +1366,11 @@ public bool LimitMailSent { get; set; }
     /// <param name="agentName">發動偵測之安全代理程式名稱。</param>
     private void HandleSlowAndLowAttackDetected(string ipAddress, double score, int uniqueAccounts, string agentName)
     {
+        lock (firewallMutationGate) HandleSlowAndLowAttackDetectedCore(ipAddress, score, uniqueAccounts, agentName);
+    }
+
+    private void HandleSlowAndLowAttackDetectedCore(string ipAddress, double score, int uniqueAccounts, string agentName)
+    {
         if (!configuration.EnableSlowAndLowDetection) return;
         string ip = IpAddressCanonicalizer.Canonicalize(ipAddress);
         if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
@@ -1307,10 +1378,13 @@ public bool LimitMailSent { get; set; }
 
         try
         {
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+            Lock requested = Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
             firewallPolicy.Block(ip);
+            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
+            requested.Save();
             TryRecordAudit("Firewall.SlowAndLowLock", "Succeeded", ip, $"Score: {score:F1}, UniqueAccounts: {uniqueAccounts}");
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCKED, false);
-            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+
             logManager.WriteEntry(
                 string.Format("IP address {0} was hard-locked via Slow & Low ML detection (Score: {1:F1}, Accounts tested: {2}, Agent: {3}).", ip, score, uniqueAccounts, agentName),
                 EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
@@ -1330,6 +1404,11 @@ public bool LimitMailSent { get; set; }
     /// <param name="agentName">發動偵測之安全代理程式名稱。</param>
     private void HandleHoneyAccountBreached(string ipAddress, string targetAccount, string agentName)
     {
+        lock (firewallMutationGate) HandleHoneyAccountBreachedCore(ipAddress, targetAccount, agentName);
+    }
+
+    private void HandleHoneyAccountBreachedCore(string ipAddress, string targetAccount, string agentName)
+    {
         if (!configuration.EnableHoneyAccounts) return;
         string ip = IpAddressCanonicalizer.Canonicalize(ipAddress);
         if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
@@ -1337,10 +1416,13 @@ public bool LimitMailSent { get; set; }
 
         try
         {
+            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+            Lock requested = Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
             firewallPolicy.Block(ip);
+            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
+            requested.Save();
             TryRecordAudit("Firewall.HoneyAccountTrap", "Succeeded", ip, $"Account: {targetAccount}, Agent: {agentName}");
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), ip, IntrusionLog.STATUS_HARD_LOCKED, false);
-            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Lock.LOCK_STATUS_HARDLOCK, 0, ip);
+
             logManager.WriteEntry(
                 string.Format("IP address {0} was hard-locked via Honey-Account Trap (Target: {1}, Agent: {2}).", ip, targetAccount, agentName),
                 EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_FIREWALL_RULE_CREATED, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
@@ -1378,6 +1460,11 @@ public bool LimitMailSent { get; set; }
     /// Reconciles the persisted desired lock state with the IDDSCommunity Windows Firewall rule.
     /// </summary>
     private void ReconcileFirewallState()
+    {
+        lock (firewallMutationGate) ReconcileFirewallStateCore();
+    }
+
+    private void ReconcileFirewallStateCore()
     {
         FirewallStateReconciler reconciler = new(
             firewallPolicy,

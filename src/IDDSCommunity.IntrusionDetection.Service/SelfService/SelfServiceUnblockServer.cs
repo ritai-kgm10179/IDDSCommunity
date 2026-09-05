@@ -1,10 +1,13 @@
-using System;
-using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
+using IDDSCommunity.IntrusionDetection.Shared.Network;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.SelfService;
 
@@ -18,9 +21,12 @@ public sealed class SelfServiceUnblockServer : IDisposable
     private readonly SelfServicePortalSettings settings;
     private readonly Database database;
     private HttpListener? listener;
+    private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
     private Task? listenerTask;
-    private readonly ConcurrentDictionary<string, int> failedAttempts = new();
+    private readonly Dictionary<string, (int Count, DateTime Expires)> failedAttempts = new(StringComparer.Ordinal);
+    private readonly object attemptGate = new();
+    private DateTime nextAttemptCleanup;
     private bool isDisposed;
 
     /// <summary>
@@ -45,6 +51,8 @@ public sealed class SelfServiceUnblockServer : IDisposable
     public void Start()
     {
         if (!settings.EnableSelfServicePortal || isDisposed) return;
+        if (settings.TrustedProxyCidrs.Length == 0 || string.IsNullOrWhiteSpace(settings.TotpBase32Secret))
+            throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Self-service portal requires a trusted independent proxy and a TOTP secret."));
         Stop();
 
         try
@@ -55,16 +63,19 @@ public sealed class SelfServiceUnblockServer : IDisposable
 
             if (ip is "0.0.0.0" or "*" or "+" or "")
             {
-                listener.Prefixes.Add($"http://*:{port}/");
+                listener.Prefixes.Add($"https://*:{port}/");
             }
             else
             {
-                listener.Prefixes.Add($"http://{ip}:{port}/");
+                string host = IPAddress.TryParse(ip, out var address) && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
+                    ? $"[{address}]" : ip;
+                listener.Prefixes.Add($"https://{host}:{port}/");
             }
 
             listener.Start();
-            cts = new CancellationTokenSource();
-            listenerTask = Task.Run(() => ListenLoopAsync(cts.Token));
+            dispatcher = new BoundedHttpDispatcher(ProcessRequestAsync);
+        cts = new CancellationTokenSource();
+            listenerTask = ListenLoopAsync(cts.Token);
             WindowsLogManager.Instance.WriteEntry($"[SelfServicePortal] Server started listening on port {port}",
                 System.Diagnostics.EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         }
@@ -86,6 +97,10 @@ public sealed class SelfServiceUnblockServer : IDisposable
             listener?.Stop();
             listener?.Close();
             listener = null;
+            dispatcher?.Dispose();
+            dispatcher = null;
+            cts?.Dispose();
+            cts = null;
         }
         catch { }
     }
@@ -97,7 +112,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
             try
             {
                 HttpListenerContext context = await listener.GetContextAsync();
-                _ = Task.Run(() => ProcessRequestAsync(context), cancellationToken);
+                dispatcher?.Submit(context);
             }
             catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
             {
@@ -123,7 +138,14 @@ public sealed class SelfServiceUnblockServer : IDisposable
 
         try
         {
-            string clientIp = request.RemoteEndPoint.Address.ToString();
+            IPAddress peer = request.RemoteEndPoint.Address;
+            IPAddress source = TrustedProxyParser.ResolveClientIp(peer, request.Headers["Forwarded"], request.Headers["X-Forwarded-For"], settings.TrustedProxyCidrs);
+            if (!TrustedProxyParser.IsTrustedProxy(peer, settings.TrustedProxyCidrs) || source.Equals(peer))
+            {
+                response.StatusCode = 403;
+                return;
+            }
+            string clientIp = IpAddressCanonicalizer.Canonicalize(source.ToString());
             // Handle IPv6 loopback
             if (clientIp == "::1") clientIp = "127.0.0.1";
 
@@ -145,12 +167,14 @@ public sealed class SelfServiceUnblockServer : IDisposable
             byte[] notFound = Encoding.UTF8.GetBytes("404 Not Found");
             await response.OutputStream.WriteAsync(notFound);
         }
-        catch (Exception ex)
+        catch (RequestBodyTooLargeException) { response.StatusCode = 413; }
+        catch (JsonException) { response.StatusCode = 400; }
+        catch (Exception)
         {
             try
             {
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                byte[] err = Encoding.UTF8.GetBytes($"500 Internal Error: {ex.Message}");
+                byte[] err = Encoding.UTF8.GetBytes("500 Internal Server Error");
                 await response.OutputStream.WriteAsync(err);
             }
             catch { }
@@ -226,7 +250,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
               <h1>🛡️ IDDS Community</h1>
               <p>伺服器安全防禦系統 - 合法使用者自助解鎖門戶</p>
             </div>
-            
+
             <div style="text-align: center;">
               <span class="ip-badge">偵測到的來源 IP: {{clientIp}}</span>
             </div>
@@ -253,77 +277,51 @@ public sealed class SelfServiceUnblockServer : IDisposable
 
     private async Task HandleUnblockApiAsync(HttpListenerRequest request, HttpListenerResponse response, string clientIp)
     {
-        using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
-        string body = await reader.ReadToEndAsync();
 
-        string code = string.Empty;
-        int codeIdx = body.IndexOf("\"code\":\"", StringComparison.OrdinalIgnoreCase);
-        if (codeIdx >= 0)
-        {
-            int start = codeIdx + 8;
-            int end = body.IndexOf('"', start);
-            if (end > start) code = body[start..end];
-        }
+        string body = await BoundedHttpDispatcher.ReadBodyAsync(request);
 
-        // 檢查失敗次數防暴門檻
-        int currentFails = failedAttempts.GetOrAdd(clientIp, 0);
-        if (currentFails >= settings.MaxFailedAttempts)
-        {
-            // 直接觸發永久硬封鎖
-            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, 0, Shared.Lock.LOCK_STATUS_HARDLOCK, 0, clientIp);
-            await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, false, "超過最大驗證失敗次數，您的 IP 已被強制升級為永久硬封鎖！");
-            return;
-        }
-
-        // 驗證 TOTP
-        bool isValid = TotpAuthenticator.VerifyCode(settings.TotpBase32Secret, code);
-        if (!isValid)
-        {
-            int newFails = failedAttempts.AddOrUpdate(clientIp, 1, (_, v) => v + 1);
-            int remaining = Math.Max(0, settings.MaxFailedAttempts - newFails);
-
-            if (newFails >= settings.MaxFailedAttempts)
-            {
-                Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, 0, Shared.Lock.LOCK_STATUS_HARDLOCK, 0, clientIp);
-                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, false, "動態密碼錯誤。已超過嘗試上限，您的 IP 已被永久硬封鎖！");
-            }
-            else
-            {
-                await SendJsonResponseAsync(response, HttpStatusCode.BadRequest, false, $"動態密碼驗證錯誤，剩餘嘗試次數：{remaining} 次。");
-            }
-            return;
-        }
-
-        // 驗證成功，清除失敗計數
-        failedAttempts.TryRemove(clientIp, out _);
-
-        // 檢查是否處於軟封鎖狀態
-        var lockInfo = Locks.GetActiveLockByIp(clientIp);
-        if (lockInfo == null || lockInfo.Status != Shared.Lock.LOCK_STATUS_SOFTLOCK)
-        {
-            await SendJsonResponseAsync(response, HttpStatusCode.OK, true, "驗證成功！此 IP 目前未處於軟封鎖狀態。");
-            return;
-        }
-
-        // 執行解鎖
-        bool unblocked = Locks.UnlockIp(clientIp);
-        if (unblocked)
-        {
-            WindowsLogManager.Instance.WriteEntry($"[SelfServicePortal] IP {clientIp} successfully self-unblocked via TOTP verification.",
-                System.Diagnostics.EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
-            await SendJsonResponseAsync(response, HttpStatusCode.OK, true, "已成功解除軟封鎖！防火牆存取已放行，請於 30 秒後重新連線。");
-        }
-        else
-        {
-            await SendJsonResponseAsync(response, HttpStatusCode.InternalServerError, false, "解除封鎖操作失敗，請聯繫管理員。");
-        }
+        using JsonDocument document = JsonDocument.Parse(body);
+        string code = document.RootElement.TryGetProperty("code", out JsonElement value) && value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : string.Empty;
+        (HttpStatusCode status, bool success, string message) result;
+        lock (attemptGate) result = EvaluateUnblock(clientIp, code);
+        await SendJsonResponseAsync(response, result.status, result.success, result.message);
     }
 
+    private (HttpStatusCode, bool, string) EvaluateUnblock(string clientIp, string code)
+    {
+        DateTime now = DateTime.UtcNow;
+        if (now >= nextAttemptCleanup)
+        {
+            foreach (string expired in failedAttempts.Where(p => p.Value.Expires <= now).Select(p => p.Key).ToArray()) failedAttempts.Remove(expired);
+            nextAttemptCleanup = now.AddMinutes(1);
+        }
+        if (failedAttempts.Count >= 10000 && !failedAttempts.ContainsKey(clientIp))
+            return (HttpStatusCode.TooManyRequests, false, "驗證忙碌，請稍後重試。");
+        int maximum = Math.Clamp(settings.MaxFailedAttempts, 1, 20);
+        int count = failedAttempts.TryGetValue(clientIp, out var state) && state.Expires > now ? state.Count : 0;
+        if (count >= maximum) return (HttpStatusCode.Forbidden, false, "已超過驗證嘗試上限。");
+        if (!TotpAuthenticator.VerifyCode(settings.TotpBase32Secret, code))
+        {
+            count++;
+            failedAttempts[clientIp] = (count, now.AddMinutes(15));
+            if (count >= maximum)
+            {
+                Locks.CreateLock(now, DateTime.MaxValue, 0, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, clientIp);
+                return (HttpStatusCode.Forbidden, false, "已超過嘗試上限，已提出永久硬封鎖要求。");
+            }
+            return (HttpStatusCode.BadRequest, false, $"動態密碼驗證錯誤，剩餘嘗試次數：{maximum - count} 次。");
+        }
+        failedAttempts.Remove(clientIp);
+        bool accepted = Locks.UnlockIp(clientIp, softOnly: true);
+        return accepted
+            ? (HttpStatusCode.Accepted, true, "解除封鎖要求已接受，請稍後查詢處理結果。")
+            : (HttpStatusCode.Conflict, false, "目前沒有可供自助解除的軟封鎖；硬封鎖請聯繫管理員。");
+    }
     private static async Task SendJsonResponseAsync(HttpListenerResponse response, HttpStatusCode statusCode, bool success, string message)
     {
         response.StatusCode = (int)statusCode;
         response.ContentType = "application/json; charset=utf-8";
-        string json = $$"""{"success":{{(success ? "true" : "false")}},"message":"{{message}}"}""";
+        string json = JsonSerializer.Serialize(new { success, message });
         byte[] buffer = Encoding.UTF8.GetBytes(json);
         response.ContentLength64 = buffer.Length;
         await response.OutputStream.WriteAsync(buffer);

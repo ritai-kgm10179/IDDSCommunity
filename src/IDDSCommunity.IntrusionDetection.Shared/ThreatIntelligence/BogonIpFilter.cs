@@ -12,12 +12,12 @@ namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 /// </summary>
 public static class BogonIpFilter
 {
-    private static volatile IPNetwork[] dynamicBogons = [];
+    private static volatile IpPrefixIndex dynamicBogons = new([]);
 
     /// <summary>
     /// 取得目前已載入之動態 Bogon 網段前綴數量。
     /// </summary>
-    public static int DynamicBogonCount => dynamicBogons.Length;
+    public static int DynamicBogonCount => dynamicBogons.Count;
 
     /// <summary>
     /// 更新動態 Bogon 網段前綴快取（原子替換）。
@@ -27,17 +27,17 @@ public static class BogonIpFilter
     {
         if (networks is null)
         {
-            dynamicBogons = [];
+            dynamicBogons = new([]);
             return;
         }
 
-        dynamicBogons = networks.ToArray();
+        dynamicBogons = new(networks);
     }
 
     /// <summary>
     /// 清除所有動態載入之 Bogon 網段前綴。
     /// </summary>
-    public static void ClearDynamicBogons() => dynamicBogons = [];
+    public static void ClearDynamicBogons() => dynamicBogons = new([]);
 
     /// <summary>
     /// 解析 Team Cymru Fullbogons 或標準 CIDR 格式之 Bogon 文字清單。
@@ -94,16 +94,7 @@ public static class BogonIpFilter
         if (isStaticBogon) return true;
 
         // 2. 第二級：動態 Fullbogons 前綴比對 (隨 IANA/Team Cymru 更新)
-        IPNetwork[] dynamicSnapshot = dynamicBogons;
-        for (int i = 0; i < dynamicSnapshot.Length; i++)
-        {
-            if (dynamicSnapshot[i].Contains(address))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return dynamicBogons.Contains(address);
     }
 
     /// <summary>
@@ -120,7 +111,8 @@ public static class BogonIpFilter
 
     private static bool IsStaticBogonIPv4(IPAddress address)
     {
-        byte[] bytes = address.GetAddressBytes();
+        Span<byte> bytes = stackalloc byte[4];
+        address.TryWriteBytes(bytes, out _);
         byte b0 = bytes[0];
         byte b1 = bytes[1];
 
@@ -175,7 +167,8 @@ public static class BogonIpFilter
         if (IPAddress.IsLoopback(address) || address.IsIPv6LinkLocal || address.IsIPv6Multicast || address.IsIPv6SiteLocal)
             return true;
 
-        byte[] bytes = address.GetAddressBytes();
+        Span<byte> bytes = stackalloc byte[16];
+        address.TryWriteBytes(bytes, out _);
 
         // ::/128 - Unspecified
         bool isAllZero = true;

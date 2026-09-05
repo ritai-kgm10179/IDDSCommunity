@@ -10,39 +10,44 @@ public static class WafRuleEngine
 {
     private static readonly Regex SqlInjectionRegex = new(
         @"(?i)(\bunion\s+(all\s+)?select\b|\bselect\b.+\bfrom\b.+\bwhere\b|'\s*or\s+['""\w]+\s*=\s*['""\w]+|--|;\s*drop\s+table\b|\bexec\s*\(\s*xp_cmdshell|\bwaitfor\s+delay\b|\bsleep\s*\(\s*\d+\s*\))",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(50));
+        RegexOptions.NonBacktracking | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(200));
 
     private static readonly Regex XssRegex = new(
         @"(?i)(<\s*script\b|javascript\s*:|<\s*img\b[^>]*\bonerror\s*=|onload\s*=|document\.cookie|window\.location)",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(50));
+        RegexOptions.NonBacktracking | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(200));
 
     private static readonly Regex PathTraversalRegex = new(
         @"(?i)(\.\.[/\\]|\.\.%2f|\.\.%5c|/etc/passwd|/etc/shadow|c:[/\\]windows[/\\]win\.ini|c:[/\\]boot\.ini)",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(50));
+        RegexOptions.NonBacktracking | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(200));
 
     private static readonly Regex CriticalRceRegex = new(
         @"(?i)(\$\{jndi:(ldap|rmi|dns|nis|iiop|corba|http)://|class\.module\.classLoader|\b(cmd|powershell|bash|sh)\.exe\b|\bpassthru\s*\(|\bsystem\s*\()",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(50));
+        RegexOptions.NonBacktracking | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(200));
 
     private static readonly Regex SensitiveProbeRegex = new(
         @"(?i)(\.env$|\.git/config$|\.svn/entries$|wp-config\.php$|web\.config$|\.aws/credentials$)",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant,
-        TimeSpan.FromMilliseconds(50));
+        RegexOptions.NonBacktracking | RegexOptions.CultureInvariant,
+        TimeSpan.FromMilliseconds(200));
 
     /// <summary>
     /// 檢查傳入之 URL 或請求內容是否命中常見 Web 攻擊特徵。
     /// </summary>
     /// <param name="input">待檢測之 URL、QueryString 或 Request Body 內容。</param>
     /// <param name="matchedThreatCategory">若命中傳回威脅分類名稱；否則傳回 <see langword="null"/>。</param>
-    /// <returns>若判定為惡意攻擊請求傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    /// <returns>若命中攻擊特徵或超過檢查限制傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public static bool TryMatchThreat(string? input, out string? matchedThreatCategory)
     {
         matchedThreatCategory = null;
-        if (string.IsNullOrWhiteSpace(input)) return false;
+        if (string.IsNullOrEmpty(input)) return false;
+        if (input.Length > 65536)
+        {
+            matchedThreatCategory = "Inspection.InputLimit";
+            return true;
+        }
 
         try
         {
@@ -80,8 +85,9 @@ public static class WafRuleEngine
         }
         catch (RegexMatchTimeoutException)
         {
-            // 防範 ReDoS 攻擊，超時視為安全略過
-            return false;
+            // 無法完成檢查時回報明確分類，不得視為安全。
+            matchedThreatCategory = "Inspection.Timeout";
+            return true;
         }
     }
 }
