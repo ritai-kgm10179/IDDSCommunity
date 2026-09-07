@@ -85,6 +85,7 @@
 - **資料庫金鑰存取控制**：由於 DPAPI 本機範圍保護本身不做身分區隔，金鑰檔案的存取控制清單（ACL）才是實際的存取邊界，禁止對 `BUILTIN\Users` 等涵蓋所有本機標準使用者的群組授予讀取權限。安裝程式須建立專屬的 `IDDSCommunityOperators` 本機群組並僅將該群組（連同 SYSTEM 與系統管理員）納入 ACL，使管理主控台在非提升權限下仍可讀取金鑰，同時將存取範圍限縮至已明確獲得授權的操作人員。
 - **簽署發行標籤**：正式發行僅能由符合 `vX.Y.Z` 的 GPG 簽署 annotated tag 觸發，CI 必須驗證 GitHub 回報的 OpenPGP 簽章與標籤所指提交；已驗證的確切 commit SHA 須傳遞給後續封裝與發布 job 並用於 checkout，不得重新以標籤名稱解析，以避免驗證後標籤被移動而繞過簽章檢查。
 - **SBOM 與來源證明**：每個發行平台的安裝包必須同時產生目前規格的 SPDX 3.0 SBOM 與相容性格式 SPDX 2.2 SBOM，將兩者納入安裝包及 GitHub Release 附件，並發布 SHA-256 雜湊與 GitHub artifact attestation。
+- **原生 SQLite 與 SQLite3MC 引擎弱點稽核**：NuGet Central Package Management 與 `dotnet list package --vulnerable` 僅能掃描託管套件清單之已知弱點（GitHub Advisory Database），然而 `SQLite3MC.PCLRaw.bundle` 內部封裝原生 C 語言編譯之 SQLite 與 SQLite3MultipleCiphers 核心。發行稽核程序必須定期手動比對 upstream SQLite 官方弱點清單（`sqlite.org/cves.html`）與 SQLite3MultipleCiphers 版本異動記錄，確認目前內嵌之原生核心版本無未修補之重大 CVE 弱點。
 
 ---
 
@@ -117,3 +118,21 @@
   - **白名單最高優先權**：外部情報中若包含安全網路或 DDNS 網域名稱解析出的 IP，一律無條件跳過並記錄安全稽核。
   - **Hub 集中訂閱分發**：由 Threat Hub 統一對外訂閱情資並秒級同步至邊緣節點，防止重複對外請求。情資設定 TTL（預設 7 天）自動過期轉移。
   - **管理主控台視覺化配置**：於 [`IDDSCommunityApplicationSettings`](src/IDDSCommunity.IntrusionDetection.Admin/IDDSCommunityApplicationSettings.cs) 提供專屬 [`PanelThreatIntelligenceSettings`](src/IDDSCommunity.IntrusionDetection.Admin/PanelThreatIntelligenceSettings.cs) 面板，完整視覺化呈現拓撲角色、情資訂閱、門檻與 Fullbogons 參數。
+- **連線層 Bogon 與雲端中繼資料防禦 (Socket-Level Bogon & IMDS Defense)**：
+  - 所有對外 HTTP 請求（外部威脅情報訂閱、DDNS 解析、Webhook 派送等）均須透過統一管線（[`HttpClientHelper`](src/IDDSCommunity.IntrusionDetection.Shared/Net/HttpClientHelper.cs) 搭配自訂 `SocketsHttpHandler.ConnectCallback`）在建立 TCP Socket 連線瞬間實施 IP 檢查。
+  - 防範 DNS Rebinding 攻擊繞過 DNS 查詢時的前置檢查；嚴禁連線至私有 IP（RFC 1918）、CGNAT（RFC 6598）、迴路、廣播以及雲端主機中繼資料服務（IMDS，如 `169.254.169.254`）。
+- **ChatOps RFC 9110 安全方法約束 (ChatOps Safe Methods Enforcement)**：
+  - ChatOps 唯讀查詢操作（如 `/status`、`/whois`、`/stats` 等）一律僅允許使用 RFC 9110 定義之安全方法（Safe Methods，即 `GET`、`HEAD`、`OPTIONS`）。
+  - 主動變更防護狀態（如 IP 解鎖、手動加入封鎖清單）等狀態變更操作，必須強制使用非安全方法（`POST`、`DELETE`）並具備 CSRF 防禦、有效權杖驗證與身分鑑別。
+- **API 金鑰失敗嘗試頻率限制 (API Key Failed Attempts Rate Limiting)**：
+  - 對外開放之 API 端點必須採用以來源 IP 為基底之失敗嘗試計數器（[`FailedAttemptsRateLimiter`](src/IDDSCommunity.IntrusionDetection.Shared/Security/FailedAttemptsRateLimiter.cs)）。
+  - 當短時間內連續鑑別失敗次數達到門檻時，強制實施暫時冷卻與指數退避，阻絕分散式字典暴力探測 API Key。
+- **Prometheus 監控指標預設迴路繫結 (Loopback Metrics Binding)**：
+  - 服務監控指標端點（`/metrics`）預設僅能繫結至本機迴路位址（`127.0.0.1` / `::1`）。
+  - 若需跨主機採集指標，必須明確配置安全網路（Safe Networks）允許清單或透過反向代理實施雙向 TLS/身分驗證，嚴防未授權節點探測系統內部拓撲與防護指標。
+- **匯出 CSV 公式注入防禦 (CSV Formula Injection Defense, CWE-1236)**：
+  - 防護日誌與事件記錄匯出為 CSV 格式時，所有文字欄位開頭若包含 `=, +, -, @, \t, \r`，必須於進門端或匯出格式化時強制跳脫（前置單引號 `'`），杜絕試算表軟體（Excel / LibreOffice Calc）自動執行巨集、DDE 外部指令或動態公式注入。
+- **Webhook 全平台雙向控制字元防偽與文字截斷 (Webhook Visual Spoofing & Boundary Defense)**：
+  - 派送至 Slack、Discord、Teams、Telegram、LINE 等協同平台之 Webhook 負載，一律過濾 Unicode 雙向控制字元（`\u202A`~`\u202E`、`\u2066`~`\u2069`）以杜絕文字方向偽冒（Bidi / RLO 攻擊）。
+  - Teams 與 Discord 訊息中強制跳脫方括號以防止非預期 Markdown 釣魚超連結；各平台嚴格遵守其長度限制（如 LINE 5,000 字元截斷與接收者空白清理）。
+
