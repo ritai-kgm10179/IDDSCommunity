@@ -274,6 +274,13 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
             ValidateTrustedProxyEntries(trustedProxyCidrs);
         foreach (SafeNetworkTransfer network in package.SafeNetworks)
         {
+            if (Uri.CheckHostName(network.IpAddress) == UriHostNameType.Dns && !IPAddress.TryParse(network.IpAddress, out _))
+            {
+                if (!string.IsNullOrWhiteSpace(network.NetworkMask))
+                    throw Invalid($"DDNS safe-network hostname cannot specify a subnet mask: {network.IpAddress}");
+                continue;
+            }
+
             if (!IPAddress.TryParse(network.IpAddress, out IPAddress? address)) throw Invalid($"Invalid safe-network address: {network.IpAddress}");
             if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6) { if (!int.TryParse(network.NetworkMask, out int prefix) || prefix is < 0 or > 128) throw Invalid("Invalid IPv6 prefix length."); }
             else

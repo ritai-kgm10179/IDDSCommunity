@@ -82,7 +82,7 @@ internal sealed class DynamicDnsResolverService : IDisposable
             foreach (IddsConfig.CSafeNetwork item in snapshot)
             {
                 string host = item.IpAddress?.Trim() ?? string.Empty;
-                if (string.IsNullOrEmpty(host) || IPAddress.TryParse(host, out _))
+                if (string.IsNullOrEmpty(host) || IPAddress.TryParse(host, out _) || Uri.CheckHostName(host) != UriHostNameType.Dns)
                     continue;
 
                 try

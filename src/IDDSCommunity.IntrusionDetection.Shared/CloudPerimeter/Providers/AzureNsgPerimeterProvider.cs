@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IDDSCommunity.IntrusionDetection.Shared.Network;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
@@ -56,7 +57,7 @@ public sealed class AzureNsgPerimeterProvider : ICloudPerimeterProvider, IDispos
     public AzureNsgPerimeterProvider(HttpClient? httpClient = null)
     {
         ownsClient = httpClient is null;
-        this.httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        this.httpClient = httpClient ?? HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
     }
 
     /// <summary>

@@ -61,7 +61,24 @@ public event EventHandler? SafeNetworksChanged;
         smartLabelInvalidNetwork.Visible = false;
         try
         {
-            string ipnet = IddsConfig.ConvertStringToIpAddressNetwork(textBoxAddNetwork.Text);
+            string raw = textBoxAddNetwork.Text.Trim();
+            if (Uri.CheckHostName(raw) == UriHostNameType.Dns && !System.Net.IPAddress.TryParse(raw, out _))
+            {
+                if (EditExisting)
+                {
+                    if (listBoxSafeNetworks.SelectedItem is object selectedItem)
+                    {
+                        listBoxSafeNetworks.Items.Remove(selectedItem);
+                    }
+                }
+
+                listBoxSafeNetworks.Items.Add(new IddsConfig.CSafeNetwork(raw, string.Empty));
+                HideNetworkPanel();
+                listBoxSafeNetworks.Focus();
+                return;
+            }
+
+            string ipnet = IddsConfig.ConvertStringToIpAddressNetwork(raw);
             if (EditExisting)
             {
                 if (listBoxSafeNetworks.SelectedItem is object selectedItem)

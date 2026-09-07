@@ -54,6 +54,7 @@ public sealed class ManagementApiHttpServer : IDisposable
         try
         {
             int port = configuration.ManagementApiPort;
+            string scheme = allowLoopbackHttp ? "http" : "https";
             listener = new HttpListener();
             try
             {
@@ -64,7 +65,7 @@ public sealed class ManagementApiHttpServer : IDisposable
             {
                 listener.Close();
                 listener = new HttpListener();
-                listener.Prefixes.Add($"https://*:{port}/");
+                listener.Prefixes.Add($"{scheme}://*:{port}/");
                 try
                 {
                     listener.Start();
@@ -73,7 +74,7 @@ public sealed class ManagementApiHttpServer : IDisposable
                 {
                     listener.Close();
                     listener = new HttpListener();
-                    listener.Prefixes.Add($"https://localhost:{port}/");
+                    listener.Prefixes.Add($"{scheme}://localhost:{port}/");
                     listener.Start();
                 }
             }

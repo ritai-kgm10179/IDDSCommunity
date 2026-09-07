@@ -263,4 +263,25 @@ public sealed class ConfigurationTransferServiceTest
         Assert.AreEqual("source-secret-sentinel", database.ExecuteScalar("SELECT ConfigValue FROM AppConfig WHERE ConfigKey='ManagementApiKey'"));
         Assert.AreEqual("agent-secret-sentinel", database.ExecuteScalar("SELECT PropertyValueString FROM SecurityAgentConfig WHERE AgentId=@p0 AND PropertyName='Password'", agent));
     }
+
+    /// <summary>
+    /// 驗證安全網路支援動態 DNS (DDNS FQDN) 主機名稱之匯出與匯入驗證。
+    /// </summary>
+    [TestMethod]
+    public void ExportAndImport_SupportsDdnsSafeNetworkHostnames()
+    {
+        database.ExecuteNonQuery("INSERT INTO WhiteList(IpAddress,NetworkMask) VALUES(@p0,@p1)", "office.ddns.net", "");
+        var service = new ConfigurationTransferService(database);
+        ConfigurationTransferPackage package = service.Export();
+        Assert.IsTrue(package.SafeNetworks.Exists(n => n.IpAddress == "office.ddns.net" && string.IsNullOrEmpty(n.NetworkMask)));
+
+        string exportFile = Path.Combine(testDirectory, "ddns-test.json");
+        service.ExportToFile(exportFile);
+
+        database.ExecuteNonQuery("DELETE FROM WhiteList");
+        service.ImportFromFile(exportFile, Path.Combine(testDirectory, "backups"));
+
+        int count = Convert.ToInt32(database.ExecuteScalar("SELECT COUNT(*) FROM WhiteList WHERE IpAddress='office.ddns.net'"));
+        Assert.AreEqual(1, count);
+    }
 }

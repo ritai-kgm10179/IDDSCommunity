@@ -192,6 +192,16 @@ public sealed class CloudPerimeterAdaptersTest
         {
             Assert.IsNotNull(cloudflare);
         }
+
+        using (var azure = new AzureNsgPerimeterProvider())
+        {
+            Assert.IsNotNull(azure);
+        }
+
+        using (var gcp = new GcpCloudArmorPerimeterProvider())
+        {
+            Assert.IsNotNull(gcp);
+        }
     }
     private sealed class FakeWafClient : Amazon.WAFV2.AmazonWAFV2Client
     {
