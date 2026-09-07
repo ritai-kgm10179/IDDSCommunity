@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.Security;
 
 namespace IDDSCommunity.IntrusionDetection.Service.ManagementApi;
 
@@ -17,6 +18,7 @@ public sealed class ManagementApiHttpServer : IDisposable
     private readonly IddsConfig configuration;
     private readonly Database database;
     private readonly bool allowLoopbackHttp;
+    private readonly FailedAttemptsRateLimiter authRateLimiter = new(maxFailedAttempts: 10, windowDuration: TimeSpan.FromMinutes(15), lockDuration: TimeSpan.FromMinutes(15));
     private HttpListener? listener;
     private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
@@ -167,41 +169,71 @@ public sealed class ManagementApiHttpServer : IDisposable
                 string actionType = path.EndsWith("block") && !path.EndsWith("unblock") ? "block" : "unblock";
                 string? token = request.QueryString["token"];
 
-                // 若為 GET 且客戶端要求 HTML（瀏覽器存取），回傳安全確認頁面，杜絕郵件防護閘道（如 Defender Safe Links）預檢自動爬取執行
-                string accept = request.Headers["Accept"] ?? string.Empty;
-                if (method == "GET" && accept.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                // RFC 9110 Safe Methods: GET 請求絕對不可修改系統狀態或銷毀 Token
+                if (method == "GET")
                 {
+                    string accept = request.Headers["Accept"] ?? string.Empty;
                     if (Shared.Security.ActionTokenService.ValidateToken(token, actionType, out string previewIp, configuration.ManagementApiKey))
                     {
-                        await ServeActionConfirmationPageAsync(response, actionType, previewIp, token!);
+                        if (accept.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                        {
+                            await ServeActionConfirmationPageAsync(response, actionType, previewIp, token!);
+                            return;
+                        }
+
+                        await SendJsonResponseAsync(response, HttpStatusCode.OK, new
+                        {
+                            preview = true,
+                            action = actionType,
+                            ipAddress = previewIp,
+                            requiresConfirmation = true,
+                            confirmationMethod = "POST"
+                        });
                         return;
                     }
+
                     await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
                     return;
                 }
 
-                if (Shared.Security.ActionTokenService.ValidateAndBurnToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
+                // 實際狀態變更（封鎖/解鎖）必須且僅能透過 POST 請求執行，並單次銷毀 Token (Burn-on-use)
+                if (method == "POST")
                 {
-                    targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
-                    if (actionType == "block")
+                    if (Shared.Security.ActionTokenService.ValidateAndBurnToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
                     {
-                        if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
-                        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                        Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, action = "blockRequested", ipAddress = targetIp, message = $"IP {targetIp} block request has been accepted via ChatOps." });
+                        targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
+                        if (actionType == "block")
+                        {
+                            if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
+                            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+                            Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
+                            await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, action = "blockRequested", ipAddress = targetIp, message = $"IP {targetIp} block request has been accepted via ChatOps." });
+                        }
+                        else
+                        {
+                            bool unblocked = Locks.UnlockIp(targetIp);
+                            await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, action = "unblockRequested", ipAddress = targetIp, message = $"IP {targetIp} unblock request has been accepted via ChatOps." });
+                        }
+                        return;
                     }
-                    else
-                    {
-                        bool unblocked = Locks.UnlockIp(targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, action = "unblockRequested", ipAddress = targetIp, message = $"IP {targetIp} unblock request has been accepted via ChatOps." });
-                    }
+
+                    await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
                     return;
                 }
-                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
+            }
+
+            // 其餘管理 API 每次請求均驗證 API 金鑰與速率限制。
+            string clientIp = request.RemoteEndPoint?.Address != null
+                ? IpAddressCanonicalizer.Canonicalize(request.RemoteEndPoint.Address).ToString()
+                : "unknown";
+
+            if (authRateLimiter.IsBlocked(clientIp, out TimeSpan retryAfter))
+            {
+                response.Headers["Retry-After"] = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+                await SendJsonResponseAsync(response, HttpStatusCode.TooManyRequests, new { error = "Too Many Requests" });
                 return;
             }
 
-            // 其餘管理 API 每次請求均驗證 API 金鑰。
             string expectedKey = configuration.ManagementApiKey;
             {
                 string? providedKey = request.Headers["X-Api-Key"];
@@ -216,9 +248,12 @@ public sealed class ManagementApiHttpServer : IDisposable
 
                 if (string.IsNullOrWhiteSpace(expectedKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(expectedKey)), System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(providedKey ?? string.Empty))))
                 {
+                    authRateLimiter.RecordFailedAttempt(clientIp);
                     await SendJsonResponseAsync(response, HttpStatusCode.Unauthorized, new { error = "Unauthorized" });
                     return;
                 }
+
+                authRateLimiter.Reset(clientIp);
             }
 
             if (path is "/" or "/status" or "/health" or "/healthz" or "/api/v1/status")

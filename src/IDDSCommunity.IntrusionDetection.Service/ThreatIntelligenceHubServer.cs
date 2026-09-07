@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.Security;
 using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
@@ -18,6 +19,7 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal sealed class ThreatIntelligenceHubServer : IDisposable
 {
     private const string ApiKeyHeader = "X-IDDS-ThreatHub-ApiKey";
+    private readonly FailedAttemptsRateLimiter authRateLimiter = new(maxFailedAttempts: 10, windowDuration: TimeSpan.FromMinutes(15), lockDuration: TimeSpan.FromMinutes(15));
     private readonly IddsConfig config;
     private readonly Action<ThreatIntelligenceItem> onThreatReceived;
     private readonly Action<string> logInformation;
@@ -190,13 +192,28 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             // 2. 核心威脅情資同步端點 (/api/threat-hub/sync)
             if (path.Equals("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
             {
+                string clientIp = req.RemoteEndPoint?.Address != null
+                    ? IpAddressCanonicalizer.Canonicalize(req.RemoteEndPoint.Address).ToString()
+                    : "unknown";
+
+                if (authRateLimiter.IsBlocked(clientIp, out TimeSpan retryAfter))
+                {
+                    resp.Headers["Retry-After"] = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+                    resp.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                    await WriteJsonResponseAsync(resp, new { error = "Too Many Requests" }).ConfigureAwait(false);
+                    return;
+                }
+
                 string? apiKey = req.Headers[ApiKeyHeader];
                 if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
                 {
+                    authRateLimiter.RecordFailedAttempt(clientIp);
                     resp.StatusCode = (int)HttpStatusCode.Unauthorized;
                     await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
                     return;
                 }
+
+                authRateLimiter.Reset(clientIp);
 
                 if (method != "POST")
                 {
@@ -218,12 +235,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     return;
                 }
 
-                string nodeId = string.IsNullOrWhiteSpace(payload.NodeId) ? req.RemoteEndPoint.Address.ToString() : payload.NodeId;
+                string nodeId = string.IsNullOrWhiteSpace(payload.NodeId) ? clientIp : payload.NodeId;
                 lock (nodeGate)
                 {
                     foreach (var node in registeredNodes.Where(p => p.Value.LastSeenUtc < DateTime.UtcNow.AddHours(-1)).ToArray()) registeredNodes.TryRemove(node.Key, out _);
                     if (!registeredNodes.ContainsKey(nodeId) && registeredNodes.Count >= 1024) { resp.StatusCode = 503; return; }
-                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, req.RemoteEndPoint.Address.ToString(), DateTime.UtcNow, payload.NewThreats.Count);
+                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, clientIp, DateTime.UtcNow, payload.NewThreats.Count);
                 }
                 foreach (ThreatIntelligenceItem threat in payload.NewThreats)
                 {

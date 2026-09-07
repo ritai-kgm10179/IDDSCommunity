@@ -612,7 +612,17 @@ public sealed class PanelSystemOperationsLog : UserControl
         }
     }
 
-    private static string EscapeCsv(string text) => text.Replace("\"", "\"\"");
+    private static string EscapeCsv(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        string escaped = text.Replace("\"", "\"\"");
+        // CWE-1236: CSV Formula Injection 防禦，若以公式前綴開頭則插入前置單引號，避免試算表軟體自動執行惡意程式碼
+        if (escaped.Length > 0 && (escaped[0] is '=' or '+' or '-' or '@' or '\t' or '\r'))
+        {
+            escaped = "'" + escaped;
+        }
+        return escaped;
+    }
 
     private sealed record CategoryItem(string DisplayName, string Prefix)
     {

@@ -224,12 +224,12 @@ public sealed class MetricsHttpServer : IDisposable
 
     private bool IsIpAllowed(IPAddress remoteIp)
     {
-        string allowed = settings.MetricsAllowedNetworks;
-        if (string.IsNullOrWhiteSpace(allowed))
-            return true; // 若未設白名單則允許所有連線
-
         if (IPAddress.IsLoopback(remoteIp))
             return true;
+
+        string allowed = settings.MetricsAllowedNetworks;
+        if (string.IsNullOrWhiteSpace(allowed))
+            return false; // 安全預設值：若未設定允許網段，僅放行本機 Loopback 連線，杜絕未授權區域網路讀取內部指標
 
         string[] tokens = allowed.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries);
         foreach (string token in tokens)

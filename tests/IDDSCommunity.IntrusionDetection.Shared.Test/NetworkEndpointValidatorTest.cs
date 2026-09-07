@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDDSCommunity.IntrusionDetection.Shared.Network;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -24,6 +24,9 @@ public sealed class NetworkEndpointValidatorTest
 
         // AWS instance-data
         Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocal("http://instance-data/latest/meta-data/"));
+
+        // Alibaba Cloud ECS IMDS 100.100.100.200
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocal("http://100.100.100.200/latest/meta-data/"));
     }
 
     [TestMethod]
@@ -60,8 +63,12 @@ public sealed class NetworkEndpointValidatorTest
         Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("169.254.169.254")));
         Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("169.254.1.50")));
 
+        // Alibaba Cloud ECS IMDS 100.100.100.200
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("100.100.100.200")));
+
         // IPv4-mapped IPv6 IMDS
         Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("::ffff:169.254.169.254")));
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("::ffff:100.100.100.200")));
 
         // IPv6 Link-Local
         Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("fe80::1")));
@@ -83,5 +90,22 @@ public sealed class NetworkEndpointValidatorTest
         Assert.IsNotNull(ex.InnerException);
         Assert.IsInstanceOfType<System.InvalidOperationException>(ex.InnerException);
         StringAssert.Contains(ex.InnerException.Message, "169.254.169.254");
+    }
+
+    [TestMethod]
+    public async System.Threading.Tasks.Task HttpClientHelper_BlocksCustomFilterAtSocketLayer()
+    {
+        using var client = HttpClientHelper.CreatePooledClient(
+            timeout: System.TimeSpan.FromSeconds(5),
+            customBlockFilter: ip => System.Net.IPAddress.IsLoopback(ip));
+
+        var ex = await Assert.ThrowsExactlyAsync<System.Net.Http.HttpRequestException>(async () =>
+        {
+            await client.GetAsync("http://127.0.0.1:65530/test");
+        });
+
+        Assert.IsNotNull(ex.InnerException);
+        Assert.IsInstanceOfType<System.InvalidOperationException>(ex.InnerException);
+        StringAssert.Contains(ex.InnerException.Message, "127.0.0.1");
     }
 }

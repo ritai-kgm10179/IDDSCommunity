@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -1072,4 +1072,5 @@
   <data name="Threat Hub must use HTTPS." xml:space="preserve"><value>Threat Hub 必須使用 HTTPS。</value></data>
   <data name="HTTP content exceeds the size limit." xml:space="preserve"><value>HTTP 內容超過大小上限。</value></data>
   <data name="Connection to IMDS or link-local address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往 IMDS 雲端元數據或 Link-Local 位址 '{0}' 之連線。</value></data>
+  <data name="Connection to restricted or Bogon IP address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往受限或 Bogon IP 位址 '{0}' 之連線。</value></data>
 </root>

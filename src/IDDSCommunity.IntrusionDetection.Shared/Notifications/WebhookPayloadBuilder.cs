@@ -61,6 +61,16 @@ public static class WebhookPayloadBuilder
             .Replace(">", "&gt;");
     }
 
+    private static string SanitizeDiscordMarkdown(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input
+            .Replace("@everyone", "@\u200beveryone")
+            .Replace("@here", "@\u200bhere")
+            .Replace("[", "\\[")
+            .Replace("]", "\\]");
+    }
+
     private static string TruncateText(string? input, int maxLength)
     {
         if (string.IsNullOrEmpty(input) || input.Length <= maxLength)
@@ -303,11 +313,14 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildDiscordPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp, int colorHex = 0xDC2626)
     {
-        string safeTitle = TruncateText(eventTitle, 250);
-        string safeDetails = TruncateText(details, 4000);
+        string safeTitle = SanitizeDiscordMarkdown(TruncateText(eventTitle, 250));
+        string safeDetails = SanitizeDiscordMarkdown(TruncateText(details, 4000));
+        string safeStatus = SanitizeDiscordMarkdown(TruncateText(statusName, 100));
+        string safeAgent = SanitizeDiscordMarkdown(TruncateText(agentName, 100));
         var discordMessage = new Dictionary<string, object>
         {
             ["username"] = "IDDS Community",
+            ["allowed_mentions"] = new Dictionary<string, object> { ["parse"] = Array.Empty<string>() },
             ["embeds"] = new List<object>
             {
                 new Dictionary<string, object>
@@ -318,8 +331,8 @@ public static class WebhookPayloadBuilder
                     ["fields"] = new List<object>
                     {
                         new Dictionary<string, object> { ["name"] = "IP 位址", ["value"] = ipAddress, ["inline"] = true },
-                        new Dictionary<string, object> { ["name"] = "狀態", ["value"] = statusName, ["inline"] = true },
-                        new Dictionary<string, object> { ["name"] = "代理程式", ["value"] = agentName, ["inline"] = true }
+                        new Dictionary<string, object> { ["name"] = "狀態", ["value"] = safeStatus, ["inline"] = true },
+                        new Dictionary<string, object> { ["name"] = "代理程式", ["value"] = safeAgent, ["inline"] = true }
                     },
                     ["timestamp"] = timestamp.ToString("o")
                 }

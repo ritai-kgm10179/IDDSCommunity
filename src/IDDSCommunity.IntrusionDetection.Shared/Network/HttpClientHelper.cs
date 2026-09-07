@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -25,19 +25,21 @@ public static class HttpClientHelper
     /// <param name="pooledLifetime">連線池生命週期；若為 <see langword="null"/> 則預設為 15 分鐘。</param>
     /// <param name="userAgent">自訂 User-Agent 標頭字串。</param>
     /// <param name="blockImdsAndLinkLocal">指出是否在 Socket 連線握手前強制阻絕雲端 IMDS 與 Link-Local 位址（預設為 <see langword="true"/>）。</param>
+    /// <param name="customBlockFilter">選擇性的自訂 IP 阻絕過濾委派；若傳回 <see langword="true"/> 則拒絕連線握手。</param>
     /// <returns>已完成設定之 <see cref="HttpClient"/> 執行個體。</returns>
     public static HttpClient CreatePooledClient(
         TimeSpan? timeout = null,
         TimeSpan? pooledLifetime = null,
         string? userAgent = null,
-        bool blockImdsAndLinkLocal = true)
+        bool blockImdsAndLinkLocal = true,
+        Func<IPAddress, bool>? customBlockFilter = null)
     {
         var handler = new SocketsHttpHandler
         {
             PooledConnectionLifetime = pooledLifetime ?? DefaultPooledConnectionLifetime
         };
 
-        if (blockImdsAndLinkLocal)
+        if (blockImdsAndLinkLocal || customBlockFilter != null)
         {
             handler.ConnectCallback = async (context, cancellationToken) =>
             {
@@ -45,10 +47,17 @@ public static class HttpClientHelper
                 IPAddress[] addresses = await Dns.GetHostAddressesAsync(dnsEndPoint.Host, dnsEndPoint.AddressFamily, cancellationToken).ConfigureAwait(false);
                 foreach (IPAddress address in addresses)
                 {
-                    if (NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(address))
+                    if (blockImdsAndLinkLocal && NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(address))
                     {
                         throw new InvalidOperationException(string.Format(
                             global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Connection to IMDS or link-local address '{0}' is blocked."),
+                            address));
+                    }
+
+                    if (customBlockFilter != null && customBlockFilter(address))
+                    {
+                        throw new InvalidOperationException(string.Format(
+                            global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Connection to restricted or Bogon IP address '{0}' is blocked."),
                             address));
                     }
                 }
@@ -69,7 +78,8 @@ public static class HttpClientHelper
 
         var client = new HttpClient(handler, disposeHandler: true)
         {
-            Timeout = timeout ?? TimeSpan.FromSeconds(30)
+            Timeout = timeout ?? TimeSpan.FromSeconds(30),
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower
         };
 
         if (!string.IsNullOrWhiteSpace(userAgent))

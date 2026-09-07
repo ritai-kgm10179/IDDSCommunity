@@ -58,7 +58,10 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         }
         else
         {
-            this.httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(30), userAgent: DefaultUserAgent);
+            this.httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(
+                TimeSpan.FromSeconds(30),
+                userAgent: DefaultUserAgent,
+                customBlockFilter: BogonIpFilter.IsBogonOrReserved);
             ownClient = true;
         }
     }

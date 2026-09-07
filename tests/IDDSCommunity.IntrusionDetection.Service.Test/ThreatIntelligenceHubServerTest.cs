@@ -284,13 +284,28 @@ public sealed class ThreatIntelligenceHubServerTest
         using var invalidTokenResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token=invalid_token").ConfigureAwait(false);
         Assert.AreEqual(HttpStatusCode.Forbidden, invalidTokenResponse.StatusCode);
 
-        // 3. 生成有效 ActionToken（不帶 X-Api-Key 標頭）存取 actions/unblock 回傳 202 Accepted
+        // 3. 生成有效 ActionToken（不帶 X-Api-Key 標頭）以 GET 存取 actions/unblock 回傳 200 OK 預覽且不銷毀權杖（符合 RFC 9110 Safe Methods）
         string validToken = IDDSCommunity.IntrusionDetection.Shared.Security.ActionTokenService.GenerateToken(
             "unblock", "198.51.100.88", 15, "chatops-test-secret");
-        using var validResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}").ConfigureAwait(false);
-        Assert.AreEqual(HttpStatusCode.Accepted, validResponse.StatusCode);
-        string body = await validResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-        Assert.IsTrue(body.Contains("unblockRequested", StringComparison.OrdinalIgnoreCase));
+        using var previewResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.OK, previewResponse.StatusCode);
+        string previewBody = await previewResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+        Assert.IsTrue(previewBody.Contains("\"preview\"", StringComparison.OrdinalIgnoreCase));
+        Assert.IsTrue(previewBody.Contains("\"requiresConfirmation\"", StringComparison.OrdinalIgnoreCase));
+
+        // 4. 重複 GET 存取依然成功（證明 GET 絕未銷毀 Token）
+        using var previewRepeat = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.OK, previewRepeat.StatusCode);
+
+        // 5. 以 POST 存取執行解鎖處置，回傳 202 Accepted 並單次銷毀 Token
+        using var postResponse = await client.PostAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}", null).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Accepted, postResponse.StatusCode);
+        string postBody = await postResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+        Assert.IsTrue(postBody.Contains("unblockRequested", StringComparison.OrdinalIgnoreCase));
+
+        // 6. 再次以 POST 存取同一 Token 回傳 403 Forbidden（證明已於前次 POST 單次銷毀）
+        using var postRepeat = await client.PostAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}", null).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Forbidden, postRepeat.StatusCode);
     }
 
     /// <summary>

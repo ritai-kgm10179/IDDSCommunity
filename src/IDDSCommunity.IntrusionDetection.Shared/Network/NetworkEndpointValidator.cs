@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 
@@ -31,6 +31,12 @@ public static class NetworkEndpointValidator
             byte[] bytes = ip.GetAddressBytes();
             // 169.254.0.0/16 (Link-Local / Cloud IMDS e.g., 169.254.169.254)
             if (bytes[0] == 169 && bytes[1] == 254)
+            {
+                return true;
+            }
+
+            // Alibaba Cloud ECS IMDS (100.100.100.200)
+            if (bytes[0] == 100 && bytes[1] == 100 && bytes[2] == 100 && bytes[3] == 200)
             {
                 return true;
             }
