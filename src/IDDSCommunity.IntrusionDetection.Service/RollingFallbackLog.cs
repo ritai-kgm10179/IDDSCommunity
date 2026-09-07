@@ -24,7 +24,16 @@ internal static class RollingFallbackLog
                     "{0:O}\t{1}\tEventLogFailure={2}{3}", DateTime.UtcNow, LogSanitizer.Sanitize(message), eventLogFailure, Environment.NewLine));
                 DateTime boundary = DateTime.UtcNow.AddDays(-RetentionDays);
                 foreach (string candidate in Directory.EnumerateFiles(directory, "runtime-*.log"))
-                    if (File.GetLastWriteTimeUtc(candidate) < boundary) File.Delete(candidate);
+                {
+                    try
+                    {
+                        if (File.GetLastWriteTimeUtc(candidate) < boundary) File.Delete(candidate);
+                    }
+                    catch
+                    {
+                        // 個別日誌檔遭外部鎖定時不中斷其餘過期檔案之清除
+                    }
+                }
             }
         }
         catch

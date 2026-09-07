@@ -70,8 +70,15 @@ public static class RollingDiagnosticLog
     {
         foreach (string candidate in Directory.EnumerateFiles(directory, $"{prefix}-*.jsonl"))
         {
-            if (File.GetLastWriteTimeUtc(candidate) < boundaryUtc)
-                File.Delete(candidate);
+            try
+            {
+                if (File.GetLastWriteTimeUtc(candidate) < boundaryUtc)
+                    File.Delete(candidate);
+            }
+            catch
+            {
+                // 個別日誌檔遭外部鎖定時不中斷其餘過期檔案之清除
+            }
         }
     }
 

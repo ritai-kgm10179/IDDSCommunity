@@ -52,6 +52,22 @@ public static class WebhookPayloadBuilder
         };
     }
 
+    private static string EscapeSlackMrkdwn(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;");
+    }
+
+    private static string TruncateText(string? input, int maxLength)
+    {
+        if (string.IsNullOrEmpty(input) || input.Length <= maxLength)
+            return input ?? string.Empty;
+        return input[..maxLength] + "...";
+    }
+
     /// <summary>
     /// 建構 Microsoft Teams Adaptive Card 1.6 格式之 Webhook 酬載。
     /// </summary>
@@ -74,6 +90,7 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
+        string safeDetails = TruncateText(details, 4000);
         var cardContent = new Dictionary<string, object>
         {
             ["type"] = "AdaptiveCard",
@@ -109,7 +126,7 @@ public static class WebhookPayloadBuilder
                 new Dictionary<string, object>
                 {
                     ["type"] = "TextBlock",
-                    ["text"] = details,
+                    ["text"] = safeDetails,
                     ["wrap"] = true
                 }
             }
@@ -186,6 +203,11 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
+        string cleanTitle = EscapeSlackMrkdwn(eventTitle);
+        string cleanStatus = EscapeSlackMrkdwn(statusName);
+        string cleanAgent = EscapeSlackMrkdwn(agentName);
+        string cleanDetails = EscapeSlackMrkdwn(TruncateText(details, 3000));
+
         var blocks = new List<object>
         {
             new Dictionary<string, object>
@@ -204,8 +226,8 @@ public static class WebhookPayloadBuilder
                 ["fields"] = new List<object>
                 {
                     new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*IP 位址:*\n`{ipAddress}`" },
-                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*狀態:*\n{statusName}" },
-                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*代理程式:*\n{agentName}" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*狀態:*\n{cleanStatus}" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*代理程式:*\n{cleanAgent}" },
                     new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*時間 (UTC):*\n{timestamp:u}" }
                 }
             },
@@ -215,7 +237,7 @@ public static class WebhookPayloadBuilder
                 ["text"] = new Dictionary<string, string>
                 {
                     ["type"] = "mrkdwn",
-                    ["text"] = $"*詳細資訊:*\n{details}"
+                    ["text"] = $"*詳細資訊:*\n{cleanDetails}"
                 }
             }
         };
@@ -281,6 +303,8 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildDiscordPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp, int colorHex = 0xDC2626)
     {
+        string safeTitle = TruncateText(eventTitle, 250);
+        string safeDetails = TruncateText(details, 4000);
         var discordMessage = new Dictionary<string, object>
         {
             ["username"] = "IDDS Community",
@@ -288,8 +312,8 @@ public static class WebhookPayloadBuilder
             {
                 new Dictionary<string, object>
                 {
-                    ["title"] = $"🛡️ IDDS Community: {eventTitle}",
-                    ["description"] = details,
+                    ["title"] = $"🛡️ IDDS Community: {safeTitle}",
+                    ["description"] = safeDetails,
                     ["color"] = colorHex,
                     ["fields"] = new List<object>
                     {
@@ -310,13 +334,14 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildTelegramPayload(string chatId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
+        string safeDetails = TruncateText(details, 4000);
         string text = $"<b>🛡️ IDDS Community 警報</b>\n\n" +
                       $"<b>事件:</b> {WebUtility.HtmlEncode(eventTitle)}\n" +
                       $"<b>IP 位址:</b> <code>{WebUtility.HtmlEncode(ipAddress)}</code>\n" +
                       $"<b>狀態:</b> {WebUtility.HtmlEncode(statusName)}\n" +
                       $"<b>代理程式:</b> {WebUtility.HtmlEncode(agentName)}\n" +
                       $"<b>時間 (UTC):</b> {timestamp:u}\n\n" +
-                      $"<b>詳細資訊:</b>\n{WebUtility.HtmlEncode(details)}";
+                      $"<b>詳細資訊:</b>\n{WebUtility.HtmlEncode(safeDetails)}";
 
         var telegramMessage = new Dictionary<string, object>
         {
@@ -352,13 +377,14 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildLineMessagingPayload(string toUserIdOrGroupId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
+        string safeDetails = TruncateText(details, 4500);
         string text = $"🛡️【IDDS Community 警報】\n" +
                       $"• 事件：{eventTitle}\n" +
                       $"• 來源 IP：{ipAddress}\n" +
                       $"• 狀態：{statusName}\n" +
                       $"• 代理：{agentName}\n" +
                       $"• 時間：{timestamp:yyyy-MM-dd HH:mm:ss} UTC\n\n" +
-                      $"詳細說明：\n{details}";
+                      $"詳細說明：\n{safeDetails}";
 
         var lineMessage = new Dictionary<string, object>
         {

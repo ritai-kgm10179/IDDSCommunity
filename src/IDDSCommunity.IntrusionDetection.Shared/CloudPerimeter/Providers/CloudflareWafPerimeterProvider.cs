@@ -57,16 +57,17 @@ public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider, ID
             string url = $"https://api.cloudflare.com/client/v4/zones/{ZoneId}/firewall/access_rules/rules";
             string targetType = ipAddress.Contains(':') ? "ip6" : "ip";
 
-            string payload = $$"""
+            var ruleObj = new
             {
-              "mode": "block",
-              "configuration": {
-                "target": "{{targetType}}",
-                "value": "{{ipAddress}}"
-              },
-              "notes": "IDDS Community Auto Block: {{reason}}"
-            }
-            """;
+                mode = "block",
+                configuration = new
+                {
+                    target = targetType,
+                    value = ipAddress
+                },
+                notes = $"IDDS Community Auto Block: {reason}"
+            };
+            string payload = System.Text.Json.JsonSerializer.Serialize(ruleObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("Authorization", $"Bearer {ApiToken}");

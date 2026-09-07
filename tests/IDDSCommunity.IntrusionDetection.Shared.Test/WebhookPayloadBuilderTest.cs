@@ -203,4 +203,59 @@ public sealed class WebhookPayloadBuilderTest
         }
         Assert.IsTrue(foundActionBlock);
     }
+
+    /// <summary>
+    /// 驗證 Slack mrkdwn 區塊確實轉義 &、< 與 > 字元，防範 Markdown 注入與釣魚連結 (CWE-116)。
+    /// </summary>
+    [TestMethod]
+    public void BuildSlackPayload_EscapesMrkdwnSpecialChars()
+    {
+        string maliciousDetails = "Attacker payload: <http://evil.corp|Click here> & <!channel>";
+        string maliciousAgent = "Agent <admin>";
+
+        string json = WebhookPayloadBuilder.BuildSlackPayload(
+            "AttackDetected",
+            "198.51.100.22",
+            "Hard lock",
+            maliciousAgent,
+            maliciousDetails,
+            TestTimestamp);
+
+        Assert.IsNotNull(json);
+        Assert.IsFalse(json.Contains("<http://evil.corp", StringComparison.Ordinal));
+        using var doc = JsonDocument.Parse(json);
+        string detailsText = doc.RootElement.GetProperty("blocks")[2].GetProperty("text").GetProperty("text").GetString()!;
+        Assert.IsTrue(detailsText.Contains("&lt;http://evil.corp|Click here&gt; &amp; &lt;!channel&gt;", StringComparison.Ordinal));
+        var fields = doc.RootElement.GetProperty("blocks")[1].GetProperty("fields");
+        string agentField = fields[2].GetProperty("text").GetString()!;
+        Assert.IsTrue(agentField.Contains("Agent &lt;admin&gt;", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// 驗證過長之事件詳細內容在 Discord 與 Teams 酬載中安全截斷，防範第三方端點拒絕請求。
+    /// </summary>
+    [TestMethod]
+    public void BuildPayload_TruncatesExcessivelyLongDetails()
+    {
+        string extremelyLongDetails = new('A', 10000);
+
+        string discordJson = WebhookPayloadBuilder.BuildDiscordPayload(
+            "Long Alert", "198.51.100.22", "Hard lock", "TestAgent", extremelyLongDetails, TestTimestamp);
+        using (var doc = JsonDocument.Parse(discordJson))
+        {
+            string desc = doc.RootElement.GetProperty("embeds")[0].GetProperty("description").GetString()!;
+            Assert.IsTrue(desc.Length <= 4005);
+            Assert.IsTrue(desc.EndsWith("...", StringComparison.Ordinal));
+        }
+
+        string teamsJson = WebhookPayloadBuilder.BuildTeamsPayload(
+            "Long Alert", "198.51.100.22", "Hard lock", "TestAgent", extremelyLongDetails, TestTimestamp);
+        using (var doc = JsonDocument.Parse(teamsJson))
+        {
+            var body = doc.RootElement.GetProperty("attachments")[0].GetProperty("content").GetProperty("body");
+            string text = body[3].GetProperty("text").GetString()!;
+            Assert.IsTrue(text.Length <= 4005);
+            Assert.IsTrue(text.EndsWith("...", StringComparison.Ordinal));
+        }
+    }
 }

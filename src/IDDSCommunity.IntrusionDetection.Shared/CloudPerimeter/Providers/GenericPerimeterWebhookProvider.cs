@@ -57,15 +57,15 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
         try
         {
             string cidr = ipAddress.Contains(':') ? $"{ipAddress}/128" : $"{ipAddress}/32";
-            string payload = $$"""
+            var blockObj = new
             {
-              "action": "block",
-              "ip": "{{ipAddress}}",
-              "cidr": "{{cidr}}",
-              "reason": "{{reason}}",
-              "timestamp": "{{DateTime.UtcNow:O}}"
-            }
-            """;
+                action = "block",
+                ip = ipAddress,
+                cidr,
+                reason,
+                timestamp = DateTime.UtcNow.ToString("O")
+            };
+            string payload = System.Text.Json.JsonSerializer.Serialize(blockObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
             using var request = new HttpRequestMessage(HttpMethod.Post, WebhookUrl);
             if (!string.IsNullOrWhiteSpace(AuthHeader))
@@ -91,14 +91,14 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
         try
         {
             string cidr = ipAddress.Contains(':') ? $"{ipAddress}/128" : $"{ipAddress}/32";
-            string payload = $$"""
+            var unblockObj = new
             {
-              "action": "unblock",
-              "ip": "{{ipAddress}}",
-              "cidr": "{{cidr}}",
-              "timestamp": "{{DateTime.UtcNow:O}}"
-            }
-            """;
+                action = "unblock",
+                ip = ipAddress,
+                cidr,
+                timestamp = DateTime.UtcNow.ToString("O")
+            };
+            string payload = System.Text.Json.JsonSerializer.Serialize(unblockObj, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
             using var request = new HttpRequestMessage(HttpMethod.Post, WebhookUrl);
             if (!string.IsNullOrWhiteSpace(AuthHeader))

@@ -153,6 +153,12 @@ public sealed class CloudPerimeterAdaptersTest
         Assert.AreEqual(HttpMethod.Post, handler.LastRequest!.Method);
         Assert.IsTrue(handler.LastRequestBody!.Contains("\"action\": \"block\""));
         Assert.IsTrue(handler.LastRequestBody.Contains("198.51.100.12"));
+
+        // 驗證包含雙引號與換行之 reason 能被正確轉義為合法 JSON (CWE-138)
+        bool blockedWithQuotes = await provider.BlockIpAsync("198.51.100.13", "Attack with \"quotes\" and \n newline");
+        Assert.IsTrue(blockedWithQuotes);
+        using var doc = System.Text.Json.JsonDocument.Parse(handler.LastRequestBody);
+        Assert.AreEqual("Attack with \"quotes\" and \n newline", doc.RootElement.GetProperty("reason").GetString());
     }
 
     /// <summary>
