@@ -144,7 +144,44 @@ public sealed class ManagementApiHttpServer : IDisposable
 
         try
         {
-            // 每次請求均驗證 API 金鑰。
+            string path = request.Url?.AbsolutePath.TrimEnd('/').ToLowerInvariant() ?? string.Empty;
+            if (string.IsNullOrEmpty(path)) path = "/";
+            string method = request.HttpMethod.ToUpperInvariant();
+
+            // ChatOps 雙向互動一鍵封鎖與解鎖 (Action Token 驗證：由 URL 參數自帶 HMAC-SHA256 防偽簽章驗證，供瀏覽器與通知外鏈直接觸發)
+            if (path is "/api/v1/actions/block" or "/api/v1/actions/unblock")
+            {
+                if (method != "GET" && method != "POST")
+                {
+                    response.Headers["Allow"] = "GET, POST";
+                    await SendJsonResponseAsync(response, HttpStatusCode.MethodNotAllowed, new { error = "Method Not Allowed" });
+                    return;
+                }
+
+                string actionType = path.EndsWith("block") && !path.EndsWith("unblock") ? "block" : "unblock";
+                string? token = request.QueryString["token"];
+                if (Shared.Security.ActionTokenService.ValidateToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
+                {
+                    targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
+                    if (actionType == "block")
+                    {
+                        if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
+                        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
+                        Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
+                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, action = "blockRequested", ipAddress = targetIp, message = $"IP {targetIp} block request has been accepted via ChatOps." });
+                    }
+                    else
+                    {
+                        bool unblocked = Locks.UnlockIp(targetIp);
+                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, action = "unblockRequested", ipAddress = targetIp, message = $"IP {targetIp} unblock request has been accepted via ChatOps." });
+                    }
+                    return;
+                }
+                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
+                return;
+            }
+
+            // 其餘管理 API 每次請求均驗證 API 金鑰。
             string expectedKey = configuration.ManagementApiKey;
             {
                 string? providedKey = request.Headers["X-Api-Key"];
@@ -163,10 +200,6 @@ public sealed class ManagementApiHttpServer : IDisposable
                     return;
                 }
             }
-
-            string path = request.Url?.AbsolutePath.TrimEnd('/').ToLowerInvariant() ?? string.Empty;
-            if (string.IsNullOrEmpty(path)) path = "/";
-            string method = request.HttpMethod.ToUpperInvariant();
 
             if (path is "/" or "/status" or "/health" or "/healthz" or "/api/v1/status")
             {
@@ -260,39 +293,6 @@ public sealed class ManagementApiHttpServer : IDisposable
 
                 var safeNets = configuration.SafeNetworks;
                 await SendJsonResponseAsync(response, HttpStatusCode.OK, new { safeNetworks = safeNets });
-                return;
-            }
-
-            // ChatOps 雙向互動一鍵封鎖與解鎖 (Action Token 驗證)
-            if (path is "/api/v1/actions/block" or "/api/v1/actions/unblock")
-            {
-                if (method != "GET" && method != "POST")
-                {
-                    response.Headers["Allow"] = "GET, POST";
-                    await SendJsonResponseAsync(response, HttpStatusCode.MethodNotAllowed, new { error = "Method Not Allowed" });
-                    return;
-                }
-
-                string actionType = path.EndsWith("block") && !path.EndsWith("unblock") ? "block" : "unblock";
-                string? token = request.QueryString["token"];
-                if (Shared.Security.ActionTokenService.ValidateToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
-                {
-                    targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
-                    if (actionType == "block")
-                    {
-                        if (configuration.IsInSafeNetwork(targetIp)) { await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Safe network" }); return; }
-                        long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, IntrusionLog.GetSystemId(), targetIp, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-                        Locks.CreateLock(DateTime.UtcNow, DateTime.MaxValue, incidentId, Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = true, action = "blockRequested", ipAddress = targetIp, message = $"IP {targetIp} block request has been accepted via ChatOps." });
-                    }
-                    else
-                    {
-                        bool unblocked = Locks.UnlockIp(targetIp);
-                        await SendJsonResponseAsync(response, HttpStatusCode.Accepted, new { success = unblocked, action = "unblockRequested", ipAddress = targetIp, message = $"IP {targetIp} unblock request has been accepted via ChatOps." });
-                    }
-                    return;
-                }
-                await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
                 return;
             }
 

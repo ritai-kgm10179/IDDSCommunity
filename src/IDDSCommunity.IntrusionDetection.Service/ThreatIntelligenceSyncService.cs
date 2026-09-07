@@ -198,8 +198,16 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         {
             disposed = true;
             Stop();
-            syncGate.Wait();
-            try { client.Dispose(); } finally { syncGate.Release(); }
+            if (syncGate.Wait(TimeSpan.FromSeconds(5)))
+            {
+                try { client.Dispose(); } finally { syncGate.Release(); }
+            }
+            else
+            {
+                client.Dispose();
+            }
+            syncGate.Dispose();
+            stopping.Dispose();
         }
     }
 }

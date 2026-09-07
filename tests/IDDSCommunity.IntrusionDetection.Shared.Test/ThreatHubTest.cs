@@ -54,6 +54,29 @@ public sealed class ThreatHubTest
     }
 
     [TestMethod]
+    public void DynamicDnsCache_PruneExcept_RemovesDecommissionedHosts()
+    {
+        DynamicDnsCache.Clear();
+        string activeHost = "active.ddns.test";
+        string staleHost = "stale.ddns.test";
+        IPAddress ipActive = IPAddress.Parse("203.0.113.10");
+        IPAddress ipStale = IPAddress.Parse("203.0.113.20");
+
+        DynamicDnsCache.Update(activeHost, [ipActive]);
+        DynamicDnsCache.Update(staleHost, [ipStale]);
+
+        Assert.IsTrue(DynamicDnsCache.IsIpInDdns(ipActive, activeHost));
+        Assert.IsTrue(DynamicDnsCache.IsIpInDdns(ipStale, staleHost));
+
+        // 僅保留 activeHost
+        DynamicDnsCache.PruneExcept([activeHost]);
+
+        Assert.IsTrue(DynamicDnsCache.IsIpInDdns(ipActive, activeHost));
+        Assert.IsFalse(DynamicDnsCache.IsIpInDdns(ipStale, staleHost));
+        Assert.IsFalse(DynamicDnsCache.TryGetResolvedIps(staleHost, out _));
+    }
+
+    [TestMethod]
     public async Task ThreatHubClient_SynchronizeAsync_SendsPayloadAndReturnsResponse()
     {
         ThreatHubSyncResponse expectedResponse = new()

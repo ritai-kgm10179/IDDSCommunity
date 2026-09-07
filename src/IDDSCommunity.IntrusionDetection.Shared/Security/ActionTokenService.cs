@@ -30,8 +30,16 @@ public static class ActionTokenService
         string payload = string.Create(CultureInfo.InvariantCulture, $"v2|{action}|{address}|{expiry}");
 
         byte[] keyBytes = SHA256.HashData(Encoding.UTF8.GetBytes(secretKey));
-        using var hmac = new HMACSHA256(keyBytes);
-        byte[] hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        byte[] hash;
+        try
+        {
+            using var hmac = new HMACSHA256(keyBytes);
+            hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(keyBytes);
+        }
         string signature = Convert.ToHexString(hash).ToLowerInvariant();
 
         return $"{payload}|{signature}";
@@ -66,8 +74,16 @@ public static class ActionTokenService
 
         string payload = string.Join('|', parts.AsSpan(0, 4).ToArray());
         byte[] keyBytes = SHA256.HashData(Encoding.UTF8.GetBytes(secretKey));
-        using var hmac = new HMACSHA256(keyBytes);
-        byte[] expectedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        byte[] expectedHash;
+        try
+        {
+            using var hmac = new HMACSHA256(keyBytes);
+            expectedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(keyBytes);
+        }
         string expectedSignature = Convert.ToHexString(expectedHash).ToLowerInvariant();
 
         if (!CryptographicOperations.FixedTimeEquals(

@@ -93,9 +93,23 @@ public sealed class SyslogNotificationService : IDisposable
 
     private async Task<bool> SendRawMessageAsync(string message, CancellationToken cancellationToken)
     {
-        await sendLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (disposed) return false;
+        using CancellationTokenSource deadlineCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadlineCts.CancelAfter(TimeSpan.FromSeconds(10));
+        CancellationToken effectiveToken = deadlineCts.Token;
+
         try
         {
+            await sendLock.WaitAsync(effectiveToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        try
+        {
+            if (disposed) return false;
             byte[] data = Encoding.UTF8.GetBytes(message + "\n");
             string host = settings.SyslogHost.Trim();
             int port = settings.SyslogPort > 0 ? settings.SyslogPort : 514;
@@ -103,22 +117,22 @@ public sealed class SyslogNotificationService : IDisposable
             if (settings.SyslogProtocol == SyslogProtocol.Udp)
             {
                 using var udpClient = new UdpClient();
-                await udpClient.SendAsync(data, data.Length, host, port).ConfigureAwait(false);
+                await udpClient.SendAsync(data.AsMemory(), host, port, effectiveToken).ConfigureAwait(false);
                 return true;
             }
             else if (settings.SyslogProtocol == SyslogProtocol.Tcp)
             {
                 using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+                await tcpClient.ConnectAsync(host, port, effectiveToken).ConfigureAwait(false);
                 using var stream = tcpClient.GetStream();
-                await stream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await stream.WriteAsync(data, effectiveToken).ConfigureAwait(false);
+                await stream.FlushAsync(effectiveToken).ConfigureAwait(false);
                 return true;
             }
             else if (settings.SyslogProtocol == SyslogProtocol.Tls)
             {
                 using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+                await tcpClient.ConnectAsync(host, port, effectiveToken).ConfigureAwait(false);
                 using var sslStream = settings.SyslogAllowSelfSignedCertificate
                     ? new SslStream(tcpClient.GetStream(), false, (_, _, _, _) => true)
                     : new SslStream(tcpClient.GetStream(), false);
@@ -126,13 +140,17 @@ public sealed class SyslogNotificationService : IDisposable
                 {
                     TargetHost = host
                 };
-                await sslStream.AuthenticateAsClientAsync(authOptions, cancellationToken).ConfigureAwait(false);
-                await sslStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
-                await sslStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await sslStream.AuthenticateAsClientAsync(authOptions, effectiveToken).ConfigureAwait(false);
+                await sslStream.WriteAsync(data, effectiveToken).ConfigureAwait(false);
+                await sslStream.FlushAsync(effectiveToken).ConfigureAwait(false);
                 return true;
             }
 
             return false;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex)
         {
@@ -151,7 +169,7 @@ public sealed class SyslogNotificationService : IDisposable
     public void Dispose()
     {
         if (disposed) return;
-        sendLock.Dispose();
         disposed = true;
+        sendLock.Dispose();
     }
 }

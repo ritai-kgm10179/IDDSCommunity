@@ -18,6 +18,7 @@ internal sealed class DynamicDnsResolverService : IDisposable
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
     private readonly Action<string, string, string, string?>? recordAudit;
+    private readonly CancellationTokenSource stopping = new();
     private System.Threading.Timer? timer;
     private int resolving;
     private bool disposed;
@@ -61,13 +62,19 @@ internal sealed class DynamicDnsResolverService : IDisposable
     /// <returns>表示非同步作業完成之 Task。</returns>
     public async Task RefreshAsync()
     {
+        if (disposed || stopping.IsCancellationRequested)
+            return;
+
         if (Interlocked.Exchange(ref resolving, 1) != 0)
             return;
 
         try
         {
             if (!config.UseSafeNetworkList || config.SafeNetworks.Count == 0)
+            {
+                DynamicDnsCache.Clear();
                 return;
+            }
 
             List<IddsConfig.CSafeNetwork> snapshot;
             try
@@ -79,15 +86,21 @@ internal sealed class DynamicDnsResolverService : IDisposable
                 return;
             }
 
+            List<string> activeHosts = [];
             foreach (IddsConfig.CSafeNetwork item in snapshot)
             {
+                if (stopping.IsCancellationRequested) break;
+
                 string host = item.IpAddress?.Trim() ?? string.Empty;
                 if (string.IsNullOrEmpty(host) || IPAddress.TryParse(host, out _) || Uri.CheckHostName(host) != UriHostNameType.Dns)
                     continue;
 
+                activeHosts.Add(host);
+
                 try
                 {
-                    using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
+                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                    cts.CancelAfter(TimeSpan.FromSeconds(10));
                     IPAddress[] addresses = await Dns.GetHostAddressesAsync(host, cts.Token).ConfigureAwait(false);
                     if (addresses != null && addresses.Length > 0)
                     {
@@ -95,12 +108,18 @@ internal sealed class DynamicDnsResolverService : IDisposable
                         recordAudit?.Invoke("DynamicDns.Resolve", "Succeeded", host, $"{addresses.Length} IPs: {string.Join(", ", (IEnumerable<IPAddress>)addresses)}");
                     }
                 }
+                catch (OperationCanceledException) when (stopping.IsCancellationRequested)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     logWarning($"Failed to resolve dynamic safe-network host '{host}'", ex);
                     recordAudit?.Invoke("DynamicDns.Resolve", "Failed", host, ex.Message);
                 }
             }
+
+            DynamicDnsCache.PruneExcept(activeHosts);
         }
         catch (Exception ex)
         {
@@ -117,6 +136,7 @@ internal sealed class DynamicDnsResolverService : IDisposable
     /// </summary>
     public void Stop()
     {
+        stopping.Cancel();
         timer?.Change(Timeout.Infinite, Timeout.Infinite);
         timer?.Dispose();
         timer = null;
@@ -131,6 +151,7 @@ internal sealed class DynamicDnsResolverService : IDisposable
         {
             disposed = true;
             Stop();
+            stopping.Dispose();
         }
     }
 }

@@ -256,6 +256,44 @@ public sealed class ThreatIntelligenceHubServerTest
     }
 
     /// <summary>
+    /// 驗證 ManagementApiHttpServer 之 ChatOps 端點無需 X-Api-Key，僅需有效之 ActionToken 即可授權執行（相容 Slack/Teams/瀏覽器點擊）。
+    /// </summary>
+    /// <returns>代表非同步測試作業的 Task。</returns>
+    [TestMethod]
+    public async Task ManagementApi_ChatOpsActions_AuthenticateViaActionTokenWithoutApiKey()
+    {
+        int port = GetAvailablePort();
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.EnableManagementApi = true;
+        config.ManagementApiPort = port;
+        config.ManagementApiKey = "chatops-test-secret";
+
+        using var server = new ManagementApiHttpServer(config, new Database(), true);
+        server.Start();
+        if (!server.IsRunning)
+        {
+            Assert.Inconclusive("無法於目前環境監聽本機通訊埠。");
+        }
+
+        using var client = new HttpClient();
+        // 1. 未攜帶 Token 存取 actions/unblock 回傳 403 Forbidden
+        using var noTokenResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Forbidden, noTokenResponse.StatusCode);
+
+        // 2. 攜帶無效/偽造 Token 回傳 403 Forbidden
+        using var invalidTokenResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token=invalid_token").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Forbidden, invalidTokenResponse.StatusCode);
+
+        // 3. 生成有效 ActionToken（不帶 X-Api-Key 標頭）存取 actions/unblock 回傳 202 Accepted
+        string validToken = IDDSCommunity.IntrusionDetection.Shared.Security.ActionTokenService.GenerateToken(
+            "unblock", "198.51.100.88", 15, "chatops-test-secret");
+        using var validResponse = await client.GetAsync($"http://localhost:{port}/api/v1/actions/unblock?token={Uri.EscapeDataString(validToken)}").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.Accepted, validResponse.StatusCode);
+        string body = await validResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+        Assert.IsTrue(body.Contains("unblockRequested", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
     /// 驗證 MetricsHttpServer 根路徑支援健康探針，且非支援方法回傳 405 與 Allow 標頭。
     /// </summary>
     /// <returns>代表非同步測試作業的 Task。</returns>

@@ -76,6 +76,31 @@ public static class DynamicDnsCache
     }
 
     /// <summary>
+    /// 清理快取中未包含在指定作用中 FQDN 清單內的過期主機解析記錄。
+    /// </summary>
+    /// <param name="activeFqdns">目前仍在安全網路設定中生效的動態主機名稱清單。</param>
+    public static void PruneExcept(IEnumerable<string> activeFqdns)
+    {
+        ArgumentNullException.ThrowIfNull(activeFqdns);
+        HashSet<string> activeSet = new(StringComparer.OrdinalIgnoreCase);
+        foreach (string host in activeFqdns)
+        {
+            if (!string.IsNullOrWhiteSpace(host))
+            {
+                activeSet.Add(host.Trim());
+            }
+        }
+
+        foreach (string key in Cache.Keys)
+        {
+            if (!activeSet.Contains(key))
+            {
+                Cache.TryRemove(key, out _);
+            }
+        }
+    }
+
+    /// <summary>
     /// 清除所有動態 DNS 解析快取。
     /// </summary>
     public static void Clear()

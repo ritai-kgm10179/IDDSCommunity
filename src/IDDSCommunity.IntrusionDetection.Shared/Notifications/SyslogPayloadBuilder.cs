@@ -52,21 +52,35 @@ public static class SyslogPayloadBuilder
         };
     }
 
+    private static string SanitizeCrlf(string? input) =>
+        (input ?? string.Empty).Replace("\r", " ").Replace("\n", " ").Trim();
+
+    private static string EscapeSdParam(string? input)
+    {
+        string sanitized = SanitizeCrlf(input);
+        return sanitized.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("]", "\\]");
+    }
+
     private static string BuildRfc5424(int pri, DateTime time, string hostname, LockType lockType, string ip, string agent, string details)
     {
         string timestamp = time.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
         string eventAction = lockType.ToString();
-        string cleanDetails = details.Replace("\"", "\\\"");
+        string cleanIp = EscapeSdParam(ip);
+        string cleanAgent = EscapeSdParam(agent);
+        string cleanDetails = SanitizeCrlf(details).Replace("\"", "\\\"");
 
         // <PRI>1 TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [STRUCTURED-DATA] MSG
-        return $"<{pri}>1 {timestamp} {hostname} IDDSCommunity {Environment.ProcessId} {eventAction} [intrusion@41123 srcIp=\"{ip}\" agent=\"{agent}\" action=\"{eventAction}\"] {cleanDetails}";
+        return $"<{pri}>1 {timestamp} {hostname} IDDSCommunity {Environment.ProcessId} {eventAction} [intrusion@41123 srcIp=\"{cleanIp}\" agent=\"{cleanAgent}\" action=\"{eventAction}\"] {cleanDetails}";
     }
 
     private static string BuildRfc3164(int pri, DateTime time, string hostname, LockType lockType, string ip, string agent, string details)
     {
         // <PRI>Mmm dd hh:mm:ss HOSTNAME TAG: MSG
         string timestamp = time.ToString("MMM dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
-        return $"<{pri}>{timestamp} {hostname} IDDSCommunity[{Environment.ProcessId}]: [{agent}] {lockType} for IP {ip} - {details}";
+        string cleanIp = SanitizeCrlf(ip);
+        string cleanAgent = SanitizeCrlf(agent);
+        string cleanDetails = SanitizeCrlf(details);
+        return $"<{pri}>{timestamp} {hostname} IDDSCommunity[{Environment.ProcessId}]: [{cleanAgent}] {lockType} for IP {cleanIp} - {cleanDetails}";
     }
 
     private static string BuildCef(int pri, DateTime time, string hostname, LockType lockType, string ip, string agent, string details)
@@ -80,8 +94,10 @@ public static class SyslogPayloadBuilder
         };
 
         long rt = new DateTimeOffset(time).ToUnixTimeMilliseconds();
-        string cleanDetails = details.Replace("|", "\\|").Replace("=", "\\=");
+        string cleanIp = SanitizeCrlf(ip);
+        string cleanAgent = SanitizeCrlf(agent).Replace("\\", "\\\\").Replace("|", "\\|").Replace("=", "\\=");
+        string cleanDetails = SanitizeCrlf(details).Replace("\\", "\\\\").Replace("|", "\\|").Replace("=", "\\=");
 
-        return $"CEF:0|IDDSCommunity|IntrusionDetection|1.0|{lockType}|{lockType} Applied|{cefSeverity}|src={ip} cs1Label=Agent cs1={agent} msg={cleanDetails} rt={rt} dhost={hostname}";
+        return $"CEF:0|IDDSCommunity|IntrusionDetection|1.0|{lockType}|{lockType} Applied|{cefSeverity}|src={cleanIp} cs1Label=Agent cs1={cleanAgent} msg={cleanDetails} rt={rt} dhost={hostname}";
     }
 }
