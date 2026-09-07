@@ -127,7 +127,9 @@ public sealed class EmailNotificationService
 
             using var client = new SmtpClient();
             int port = configuration.SmtpPort == 0 ? 25 : configuration.SmtpPort;
-            SecureSocketOptions secureOption = configuration.SmtpSslRequired ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto;
+            SecureSocketOptions secureOption = port == 465
+                ? SecureSocketOptions.SslOnConnect
+                : (configuration.SmtpSslRequired ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(TimeSpan.FromSeconds(30));

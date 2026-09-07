@@ -334,6 +334,11 @@ public ReportDeliveryState MonthlyReportState
     public const string NOTIFICATION_SYSLOG_ON_UNLOCK = "Notifications.SyslogOnUnlock";
 
     /// <summary>
+    /// 定義 NOTIFICATION_SYSLOG_ALLOW_SELF_SIGNED_CERTIFICATE 之設定鍵值。
+    /// </summary>
+    public const string NOTIFICATION_SYSLOG_ALLOW_SELF_SIGNED_CERTIFICATE = "Notifications.SyslogAllowSelfSignedCertificate";
+
+    /// <summary>
     /// 定義 OBSERVABILITY_ENABLE_METRICS 之設定鍵值。
     /// </summary>
     public const string OBSERVABILITY_ENABLE_METRICS = "Observability.EnableMetrics";
@@ -423,6 +428,15 @@ public ReportDeliveryState MonthlyReportState
     {
         get => StringToBool(configuration.GetConfigValue(NOTIFICATION_SYSLOG_ON_UNLOCK));
         set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_ON_UNLOCK, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定於 Syslog TLS 傳輸時是否允許自簽憑證（預設為 <see langword="false"/>）。
+    /// </summary>
+    public bool SyslogAllowSelfSignedCertificate
+    {
+        get => StringToBool(configuration.GetConfigValue(NOTIFICATION_SYSLOG_ALLOW_SELF_SIGNED_CERTIFICATE));
+        set => configuration.SetConfigValue(NOTIFICATION_SYSLOG_ALLOW_SELF_SIGNED_CERTIFICATE, value.ToString());
     }
 
     /// <summary>

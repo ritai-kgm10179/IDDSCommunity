@@ -171,11 +171,22 @@ public sealed class MetricsHttpServer : IDisposable
                 }
                 else
                 {
-                    context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+                    string acceptHeader = context.Request.Headers["Accept"] ?? string.Empty;
+                    bool isOpenMetrics = acceptHeader.Contains("application/openmetrics-text", StringComparison.OrdinalIgnoreCase);
+
+                    if (isOpenMetrics)
+                    {
+                        context.Response.ContentType = "application/openmetrics-text; version=1.0.0; charset=utf-8";
+                    }
+                    else
+                    {
+                        context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+                    }
+
                     context.Response.StatusCode = (int)HttpStatusCode.OK;
                     if (method != "HEAD")
                     {
-                        string metricsText = BuildMetricsText();
+                        string metricsText = BuildMetricsText(isOpenMetrics);
                         byte[] buffer = Encoding.UTF8.GetBytes(metricsText);
                         await context.Response.OutputStream.WriteAsync(buffer).ConfigureAwait(false);
                     }
@@ -227,8 +238,9 @@ public sealed class MetricsHttpServer : IDisposable
     /// <summary>
     /// 建構符合 OpenMetrics / Prometheus 標準之文字指標輸出。
     /// </summary>
-    /// <returns>Prometheus 格式之指標字串。</returns>
-    public string BuildMetricsText()
+    /// <param name="isOpenMetrics">是否以 OpenMetrics 1.0.0 規範格式輸出（若為 <see langword="true"/> 結尾將包含 # EOF 標記）。</param>
+    /// <returns>格式化之指標字串。</returns>
+    public string BuildMetricsText(bool isOpenMetrics = false)
     {
         var sb = new StringBuilder();
         double uptime = (DateTime.UtcNow - startTimeUtc).TotalSeconds;
@@ -258,6 +270,11 @@ public sealed class MetricsHttpServer : IDisposable
         catch { }
         sb.AppendLine($"idds_probation_ips_total {probationCount}");
         sb.AppendLine();
+
+        if (isOpenMetrics)
+        {
+            sb.AppendLine("# EOF");
+        }
 
         return sb.ToString();
     }

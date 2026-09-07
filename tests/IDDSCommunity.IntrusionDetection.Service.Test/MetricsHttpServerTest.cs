@@ -29,5 +29,22 @@ public sealed class MetricsHttpServerTest
         Assert.IsTrue(metrics.Contains("idds_uptime_seconds", StringComparison.Ordinal));
         Assert.IsTrue(metrics.Contains("idds_active_firewall_blocks", StringComparison.Ordinal));
         Assert.IsTrue(metrics.Contains("idds_probation_ips_total", StringComparison.Ordinal));
+        Assert.IsFalse(metrics.TrimEnd().EndsWith("# EOF", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// 驗證 BuildMetricsText 於 isOpenMetrics 為 true 時結尾包含 # EOF 標記。
+    /// </summary>
+    [TestMethod]
+    public void BuildMetricsText_OpenMetrics_EndsWithEof()
+    {
+        var config = new IddsConfig(new Database());
+        var settings = new NotificationSettings(config);
+
+        using var server = new MetricsHttpServer(settings, new Database());
+        string metrics = server.BuildMetricsText(isOpenMetrics: true);
+
+        Assert.IsNotNull(metrics);
+        Assert.IsTrue(metrics.TrimEnd().EndsWith("# EOF", StringComparison.Ordinal));
     }
 }

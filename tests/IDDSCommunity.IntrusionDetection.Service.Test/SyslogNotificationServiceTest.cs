@@ -67,4 +67,20 @@ public sealed class SyslogNotificationServiceTest
         Assert.IsTrue(received.Contains("198.51.100.1", StringComparison.Ordinal));
         Assert.IsTrue(received.Contains("TestAgent", StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// 驗證 SyslogAllowSelfSignedCertificate 設定能正確持久化與讀取。
+    /// </summary>
+    [TestMethod]
+    public void SyslogAllowSelfSignedCertificate_SetAndGet_PersistsCorrectly()
+    {
+        var config = new IddsConfig(new Database());
+        var settings = new NotificationSettings(config);
+
+        Assert.IsFalse(settings.SyslogAllowSelfSignedCertificate);
+        settings.SyslogAllowSelfSignedCertificate = true;
+        Assert.IsTrue(settings.SyslogAllowSelfSignedCertificate);
+        settings.SyslogAllowSelfSignedCertificate = false;
+        Assert.IsFalse(settings.SyslogAllowSelfSignedCertificate);
+    }
 }

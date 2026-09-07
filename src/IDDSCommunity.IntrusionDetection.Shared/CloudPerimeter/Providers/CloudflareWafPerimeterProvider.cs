@@ -36,7 +36,7 @@ public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider
     /// <summary>
     /// 初始化 <see cref="CloudflareWafPerimeterProvider"/> 類別的新執行個體。
     /// </summary>
-    /// <param name="httpClient">選用的自訂 HTTP 用 boyhood 端。</param>
+    /// <param name="httpClient">選用的自訂 HTTP 用戶端。</param>
     public CloudflareWafPerimeterProvider(HttpClient? httpClient = null)
     {
         this.httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
