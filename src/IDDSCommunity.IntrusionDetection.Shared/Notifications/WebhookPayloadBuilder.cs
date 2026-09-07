@@ -26,6 +26,8 @@ public static class WebhookPayloadBuilder
     /// <param name="details">事件詳細資訊。</param>
     /// <param name="timestamp">事件發生時間（UTC）。</param>
     /// <param name="telegramChatId">Telegram Chat ID（僅 Telegram 平台需要）。</param>
+    /// <param name="managementApiBaseUrl">管理 API 對外基底 URL（選擇性，用於產生 ChatOps 處置按鈕）。</param>
+    /// <param name="managementApiKey">管理 API 簽署金鑰（選擇性，用於簽署處置權杖）。</param>
     /// <returns>傳回建構之 JSON 字串。</returns>
     public static string BuildPayload(
         WebhookPlatform platform,
@@ -35,12 +37,14 @@ public static class WebhookPayloadBuilder
         string agentName,
         string details,
         DateTime timestamp,
-        string? telegramChatId = null)
+        string? telegramChatId = null,
+        string? managementApiBaseUrl = null,
+        string? managementApiKey = null)
     {
         return platform switch
         {
-            WebhookPlatform.MicrosoftTeams => BuildTeamsPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp),
-            WebhookPlatform.Slack => BuildSlackPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp),
+            WebhookPlatform.MicrosoftTeams => BuildTeamsPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp, managementApiBaseUrl, managementApiKey),
+            WebhookPlatform.Slack => BuildSlackPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp, managementApiBaseUrl, managementApiKey),
             WebhookPlatform.Discord => BuildDiscordPayload(eventTitle, ipAddress, statusName, agentName, details, timestamp),
             WebhookPlatform.Telegram => BuildTelegramPayload(telegramChatId ?? string.Empty, eventTitle, ipAddress, statusName, agentName, details, timestamp),
             WebhookPlatform.LineMessagingApi => BuildLineMessagingPayload(telegramChatId ?? string.Empty, eventTitle, ipAddress, statusName, agentName, details, timestamp),
@@ -51,8 +55,99 @@ public static class WebhookPayloadBuilder
     /// <summary>
     /// 建構 Microsoft Teams Adaptive Card 1.6 格式之 Webhook 酬載。
     /// </summary>
-    public static string BuildTeamsPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
+    /// <param name="eventTitle">事件標題。</param>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="statusName">鎖定狀態名稱。</param>
+    /// <param name="agentName">觸發代理程式名稱。</param>
+    /// <param name="details">事件詳細資訊。</param>
+    /// <param name="timestamp">事件發生時間（UTC）。</param>
+    /// <param name="managementApiBaseUrl">管理 API 對外基底 URL（選擇性，用於產生 ChatOps 處置按鈕）。</param>
+    /// <param name="managementApiKey">管理 API 簽署金鑰（選擇性，用於簽署處置權杖）。</param>
+    /// <returns>傳回 Microsoft Teams JSON 酬載字串。</returns>
+    public static string BuildTeamsPayload(
+        string eventTitle,
+        string ipAddress,
+        string statusName,
+        string agentName,
+        string details,
+        DateTime timestamp,
+        string? managementApiBaseUrl = null,
+        string? managementApiKey = null)
     {
+        var cardContent = new Dictionary<string, object>
+        {
+            ["type"] = "AdaptiveCard",
+            ["version"] = "1.6",
+            ["body"] = new List<object>
+            {
+                new Dictionary<string, object>
+                {
+                    ["type"] = "TextBlock",
+                    ["text"] = "🛡️ IDDS Community 警報",
+                    ["weight"] = "Bolder",
+                    ["size"] = "Medium",
+                    ["color"] = "Attention"
+                },
+                new Dictionary<string, object>
+                {
+                    ["type"] = "TextBlock",
+                    ["text"] = eventTitle,
+                    ["weight"] = "Bolder",
+                    ["size"] = "Large"
+                },
+                new Dictionary<string, object>
+                {
+                    ["type"] = "FactSet",
+                    ["facts"] = new List<object>
+                    {
+                        new Dictionary<string, string> { ["title"] = "IP 位址", ["value"] = ipAddress },
+                        new Dictionary<string, string> { ["title"] = "狀態", ["value"] = statusName },
+                        new Dictionary<string, string> { ["title"] = "代理程式", ["value"] = agentName },
+                        new Dictionary<string, string> { ["title"] = "時間 (UTC)", ["value"] = timestamp.ToString("u") }
+                    }
+                },
+                new Dictionary<string, object>
+                {
+                    ["type"] = "TextBlock",
+                    ["text"] = details,
+                    ["wrap"] = true
+                }
+            }
+        };
+
+        if (!string.IsNullOrWhiteSpace(managementApiBaseUrl) && !string.IsNullOrWhiteSpace(managementApiKey) && IPAddress.TryParse(ipAddress, out _))
+        {
+            try
+            {
+                string unblockToken = Security.ActionTokenService.GenerateToken("unblock", ipAddress, 15, managementApiKey);
+                string blockToken = Security.ActionTokenService.GenerateToken("block", ipAddress, 15, managementApiKey);
+                string unblockUrl = $"{managementApiBaseUrl.TrimEnd('/')}/api/v1/actions/unblock?token={Uri.EscapeDataString(unblockToken)}";
+                string blockUrl = $"{managementApiBaseUrl.TrimEnd('/')}/api/v1/actions/block?token={Uri.EscapeDataString(blockToken)}";
+
+                cardContent["actions"] = new List<object>
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["type"] = "Action.OpenUrl",
+                        ["title"] = "🔓 一鍵解除封鎖 (Unblock)",
+                        ["url"] = unblockUrl,
+                        ["style"] = "positive"
+                    },
+                    new Dictionary<string, object>
+                    {
+                        ["type"] = "Action.OpenUrl",
+                        ["title"] = "🚫 永久封鎖 (Block)",
+                        ["url"] = blockUrl,
+                        ["style"] = "destructive"
+                    }
+                };
+            }
+            catch
+            {
+                // 若密鑰無效或權杖生成失敗，安全略過處置按鈕
+            }
+        }
+
         var card = new Dictionary<string, object>
         {
             ["type"] = "message",
@@ -61,46 +156,7 @@ public static class WebhookPayloadBuilder
                 new Dictionary<string, object>
                 {
                     ["contentType"] = "application/vnd.microsoft.card.adaptive",
-                    ["content"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "AdaptiveCard",
-                        ["version"] = "1.6",
-                        ["body"] = new List<object>
-                        {
-                            new Dictionary<string, object>
-                            {
-                                ["type"] = "TextBlock",
-                                ["text"] = "🛡️ IDDS Community 警報",
-                                ["weight"] = "Bolder",
-                                ["size"] = "Medium",
-                                ["color"] = "Attention"
-                            },
-                            new Dictionary<string, object>
-                            {
-                                ["type"] = "TextBlock",
-                                ["text"] = eventTitle,
-                                ["weight"] = "Bolder",
-                                ["size"] = "Large"
-                            },
-                            new Dictionary<string, object>
-                            {
-                                ["type"] = "FactSet",
-                                ["facts"] = new List<object>
-                                {
-                                    new Dictionary<string, string> { ["title"] = "IP 位址", ["value"] = ipAddress },
-                                    new Dictionary<string, string> { ["title"] = "狀態", ["value"] = statusName },
-                                    new Dictionary<string, string> { ["title"] = "代理程式", ["value"] = agentName },
-                                    new Dictionary<string, string> { ["title"] = "時間 (UTC)", ["value"] = timestamp.ToString("u") }
-                                }
-                            },
-                            new Dictionary<string, object>
-                            {
-                                ["type"] = "TextBlock",
-                                ["text"] = details,
-                                ["wrap"] = true
-                            }
-                        }
-                    }
+                    ["content"] = cardContent
                 }
             }
         };
@@ -111,44 +167,110 @@ public static class WebhookPayloadBuilder
     /// <summary>
     /// 建構 Slack Block Kit 格式之 Webhook 酬載。
     /// </summary>
-    public static string BuildSlackPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
+    /// <param name="eventTitle">事件標題。</param>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="statusName">鎖定狀態名稱。</param>
+    /// <param name="agentName">觸發代理程式名稱。</param>
+    /// <param name="details">事件詳細資訊。</param>
+    /// <param name="timestamp">事件發生時間（UTC）。</param>
+    /// <param name="managementApiBaseUrl">管理 API 對外基底 URL（選擇性，用於產生 ChatOps 處置按鈕）。</param>
+    /// <param name="managementApiKey">管理 API 簽署金鑰（選擇性，用於簽署處置權杖）。</param>
+    /// <returns>傳回 Slack JSON 酬載字串。</returns>
+    public static string BuildSlackPayload(
+        string eventTitle,
+        string ipAddress,
+        string statusName,
+        string agentName,
+        string details,
+        DateTime timestamp,
+        string? managementApiBaseUrl = null,
+        string? managementApiKey = null)
     {
+        var blocks = new List<object>
+        {
+            new Dictionary<string, object>
+            {
+                ["type"] = "header",
+                ["text"] = new Dictionary<string, object>
+                {
+                    ["type"] = "plain_text",
+                    ["text"] = $"🛡️ IDDS Community: {eventTitle}",
+                    ["emoji"] = true
+                }
+            },
+            new Dictionary<string, object>
+            {
+                ["type"] = "section",
+                ["fields"] = new List<object>
+                {
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*IP 位址:*\n`{ipAddress}`" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*狀態:*\n{statusName}" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*代理程式:*\n{agentName}" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*時間 (UTC):*\n{timestamp:u}" }
+                }
+            },
+            new Dictionary<string, object>
+            {
+                ["type"] = "section",
+                ["text"] = new Dictionary<string, string>
+                {
+                    ["type"] = "mrkdwn",
+                    ["text"] = $"*詳細資訊:*\n{details}"
+                }
+            }
+        };
+
+        if (!string.IsNullOrWhiteSpace(managementApiBaseUrl) && !string.IsNullOrWhiteSpace(managementApiKey) && IPAddress.TryParse(ipAddress, out _))
+        {
+            try
+            {
+                string unblockToken = Security.ActionTokenService.GenerateToken("unblock", ipAddress, 15, managementApiKey);
+                string blockToken = Security.ActionTokenService.GenerateToken("block", ipAddress, 15, managementApiKey);
+                string unblockUrl = $"{managementApiBaseUrl.TrimEnd('/')}/api/v1/actions/unblock?token={Uri.EscapeDataString(unblockToken)}";
+                string blockUrl = $"{managementApiBaseUrl.TrimEnd('/')}/api/v1/actions/block?token={Uri.EscapeDataString(blockToken)}";
+
+                blocks.Add(new Dictionary<string, object>
+                {
+                    ["type"] = "actions",
+                    ["elements"] = new List<object>
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["type"] = "button",
+                            ["text"] = new Dictionary<string, object>
+                            {
+                                ["type"] = "plain_text",
+                                ["text"] = "🔓 一鍵解除封鎖",
+                                ["emoji"] = true
+                            },
+                            ["style"] = "primary",
+                            ["url"] = unblockUrl
+                        },
+                        new Dictionary<string, object>
+                        {
+                            ["type"] = "button",
+                            ["text"] = new Dictionary<string, object>
+                            {
+                                ["type"] = "plain_text",
+                                ["text"] = "🚫 永久封鎖",
+                                ["emoji"] = true
+                            },
+                            ["style"] = "danger",
+                            ["url"] = blockUrl
+                        }
+                    }
+                });
+            }
+            catch
+            {
+                // 若密鑰無效或權杖生成失敗，安全略過處置按鈕
+            }
+        }
+
         var slackMessage = new Dictionary<string, object>
         {
             ["text"] = $"🛡️ {eventTitle}: {ipAddress}",
-            ["blocks"] = new List<object>
-            {
-                new Dictionary<string, object>
-                {
-                    ["type"] = "header",
-                    ["text"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "plain_text",
-                        ["text"] = $"🛡️ IDDS Community: {eventTitle}",
-                        ["emoji"] = true
-                    }
-                },
-                new Dictionary<string, object>
-                {
-                    ["type"] = "section",
-                    ["fields"] = new List<object>
-                    {
-                        new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*IP 位址:*\n`{ipAddress}`" },
-                        new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*狀態:*\n{statusName}" },
-                        new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*代理程式:*\n{agentName}" },
-                        new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*時間 (UTC):*\n{timestamp:u}" }
-                    }
-                },
-                new Dictionary<string, object>
-                {
-                    ["type"] = "section",
-                    ["text"] = new Dictionary<string, string>
-                    {
-                        ["type"] = "mrkdwn",
-                        ["text"] = $"*詳細資訊:*\n{details}"
-                    }
-                }
-            }
+            ["blocks"] = blocks
         };
 
         return JsonSerializer.Serialize(slackMessage, JsonOptions);

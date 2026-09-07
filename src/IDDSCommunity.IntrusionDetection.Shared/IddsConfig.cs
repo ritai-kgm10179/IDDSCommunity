@@ -1035,6 +1035,21 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
+    /// 取得或設定 RESTful Management API 對外基底 URL（供 ChatOps / Webhook 一鍵處置連結使用，例如 https://idds.example.com:8443）。若未設定則預設使用本機位址。
+    /// </summary>
+    public string ManagementApiBaseUrl
+    {
+        get
+        {
+            string url = GetConfigValue("ManagementApiBaseUrl") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(url))
+                return url.TrimEnd('/');
+            return $"http://localhost:{ManagementApiPort}";
+        }
+        set => SetConfigValue("ManagementApiBaseUrl", value ?? string.Empty);
+    }
+
+    /// <summary>
     /// 取得或設定 自訂 SOAR 處置 PowerShell / CMD 腳本路徑。
     /// </summary>
     public string SoarRemediationScriptPath

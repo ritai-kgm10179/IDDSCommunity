@@ -192,11 +192,16 @@ public static Database Instance
             return transaction.Connection!.ExecuteReader(sqlString, paramObj, transaction);
         return SqlitePipeline.Execute(() =>
         {
-            using SqliteConnection connection = OpenConnection();
-            using IDataReader reader = connection.ExecuteReader(sqlString, paramObj);
-            DataTable table = new();
-            table.Load(reader);
-            return table.CreateDataReader();
+            SqliteConnection connection = OpenConnection();
+            try
+            {
+                return connection.ExecuteReader(new CommandDefinition(sqlString, paramObj), CommandBehavior.CloseConnection);
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
         });
     }
     /// <summary>

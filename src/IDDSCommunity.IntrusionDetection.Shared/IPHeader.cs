@@ -40,8 +40,8 @@ public class IPHeader
     private byte ttl;
     private byte protocol;
     private short checksum;
-    private uint sourceIpAddress;
-    private uint destinationIpAddress;
+    private IPAddress sourceAddress = IPAddress.None;
+    private IPAddress destinationAddress = IPAddress.None;
     private byte headerLength;
     private ReadOnlyMemory<byte> payload;
     private byte[]? materializedPayload;
@@ -134,30 +134,30 @@ public Protocol ProtocolType => protocol switch
     /// </summary>
 public string Checksum => $"0x{checksum:x2}";
 
-        /// <summary>
-    /// 取得或設定 SourceAddress。
+    /// <summary>
+    /// 取得 來源 IP 位址。
     /// </summary>
-public IPAddress SourceAddress => new(sourceIpAddress);
+    public IPAddress SourceAddress => sourceAddress;
 
-        /// <summary>
-    /// 取得或設定 DestinationAddress。
+    /// <summary>
+    /// 取得 目的 IP 位址。
     /// </summary>
-public IPAddress DestinationAddress => new(destinationIpAddress);
+    public IPAddress DestinationAddress => destinationAddress;
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 TotalLength。
     /// </summary>
-public string TotalLength => totalLength.ToString();
+    public string TotalLength => totalLength.ToString();
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 Identification。
     /// </summary>
-public string Identification => identification.ToString();
+    public string Identification => identification.ToString();
 
-        /// <summary>
+    /// <summary>
     /// 取得或設定 承載資料位元組陣列。
     /// </summary>
-public byte[] Data => materializedPayload ??= payload.ToArray();
+    public byte[] Data => materializedPayload ??= payload.ToArray();
 
     internal ReadOnlyMemory<byte> Payload => payload;
 
@@ -168,23 +168,58 @@ public byte[] Data => materializedPayload ??= payload.ToArray();
         ReadOnlySpan<byte> packet = buffer.AsSpan(0, received);
         byte candidateVersionAndLength = packet[0];
         int version = candidateVersionAndLength >> 4;
-        int candidateHeaderLength = (candidateVersionAndLength & 0x0F) * 4;
-        ushort candidateTotalLength = BinaryPrimitives.ReadUInt16BigEndian(packet[2..]);
-        if (version != 4 || candidateHeaderLength < 20 || candidateHeaderLength > received || candidateTotalLength < candidateHeaderLength || candidateTotalLength > received)
-            return false;
 
+        if (version == 4)
+        {
+            int candidateHeaderLength = (candidateVersionAndLength & 0x0F) * 4;
+            ushort candidateTotalLength = BinaryPrimitives.ReadUInt16BigEndian(packet[2..]);
+            if (candidateHeaderLength < 20 || candidateHeaderLength > received || candidateTotalLength < candidateHeaderLength || candidateTotalLength > received)
+                return false;
+
+            versionAndHeaderLength = candidateVersionAndLength;
+            differentiatedServices = packet[1];
+            totalLength = candidateTotalLength;
+            identification = BinaryPrimitives.ReadUInt16BigEndian(packet[4..]);
+            flagsAndOffset = BinaryPrimitives.ReadUInt16BigEndian(packet[6..]);
+            ttl = packet[8];
+            protocol = packet[9];
+            checksum = BinaryPrimitives.ReadInt16BigEndian(packet[10..]);
+            sourceAddress = new IPAddress(packet.Slice(12, 4));
+            destinationAddress = new IPAddress(packet.Slice(16, 4));
+            headerLength = (byte)candidateHeaderLength;
+            payload = buffer.AsMemory(candidateHeaderLength, candidateTotalLength - candidateHeaderLength);
+            return true;
+        }
+        else if (version == 6)
+        {
+            if (received < 40)
+                return false;
+
+            ushort payloadLength = BinaryPrimitives.ReadUInt16BigEndian(packet[4..]);
+            int candidateTotalLength = 40 + payloadLength;
+            if (candidateTotalLength > received)
+                return false;
+
+            versionAndLengthOrHeaderLength(candidateVersionAndLength, packet, payloadLength, candidateTotalLength, buffer);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void versionAndLengthOrHeaderLength(byte candidateVersionAndLength, ReadOnlySpan<byte> packet, ushort payloadLength, int candidateTotalLength, byte[] buffer)
+    {
         versionAndHeaderLength = candidateVersionAndLength;
-        differentiatedServices = packet[1];
-        totalLength = candidateTotalLength;
-        identification = BinaryPrimitives.ReadUInt16BigEndian(packet[4..]);
-        flagsAndOffset = BinaryPrimitives.ReadUInt16BigEndian(packet[6..]);
-        ttl = packet[8];
-        protocol = packet[9];
-        checksum = BinaryPrimitives.ReadInt16BigEndian(packet[10..]);
-        sourceIpAddress = BinaryPrimitives.ReadUInt32LittleEndian(packet[12..]);
-        destinationIpAddress = BinaryPrimitives.ReadUInt32LittleEndian(packet[16..]);
-        headerLength = (byte)candidateHeaderLength;
-        payload = buffer.AsMemory(candidateHeaderLength, candidateTotalLength - candidateHeaderLength);
-        return true;
+        differentiatedServices = (byte)(((packet[0] & 0x0F) << 4) | (packet[1] >> 4));
+        totalLength = (ushort)candidateTotalLength;
+        identification = 0;
+        flagsAndOffset = 0;
+        ttl = packet[7]; // Hop Limit
+        protocol = packet[6]; // Next Header
+        checksum = 0;
+        sourceAddress = new IPAddress(packet.Slice(8, 16));
+        destinationAddress = new IPAddress(packet.Slice(24, 16));
+        headerLength = 40;
+        payload = buffer.AsMemory(40, payloadLength);
     }
 }

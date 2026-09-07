@@ -20,13 +20,18 @@ internal sealed class FirewallStateReconciler(
     {
         IReadOnlyList<Lock> desiredLocks = readDesiredLocks();
         HashSet<string> desiredAddresses = new(StringComparer.Ordinal);
+        HashSet<string> currentBlocked = new(firewallPolicy.GetBlockedAddresses(), StringComparer.OrdinalIgnoreCase);
+
         foreach (Lock desiredLock in desiredLocks)
         {
             desiredAddresses.Add(desiredLock.IpAddress);
             try
             {
-                if (!firewallPolicy.IsLocked(desiredLock.IpAddress))
+                if (!currentBlocked.Contains(desiredLock.IpAddress))
+                {
                     firewallPolicy.Block(desiredLock.IpAddress);
+                    currentBlocked.Add(desiredLock.IpAddress);
+                }
                 if (desiredLock.Status == Lock.LOCK_STATUS_SOFTLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_SOFTLOCK;
@@ -45,7 +50,7 @@ internal sealed class FirewallStateReconciler(
                 reportFailure(desiredLock.IpAddress, ex);
             }
         }
-        foreach (string actualAddress in firewallPolicy.GetBlockedAddresses())
+        foreach (string actualAddress in currentBlocked)
         {
             if (desiredAddresses.Contains(actualAddress))
                 continue;

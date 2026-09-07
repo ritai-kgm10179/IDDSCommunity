@@ -17,15 +17,18 @@ public sealed class WebhookNotificationService : IDisposable
     private readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
     private readonly NotificationSettings _settings;
+    private readonly IddsConfig _config;
 
     /// <summary>
     /// 初始化 <see cref="WebhookNotificationService"/> 類別的新執行個體。
     /// </summary>
     /// <param name="settings">通知設定執行個體。</param>
     /// <param name="httpClient">選擇性注入之 HttpClient 執行個體。</param>
-    public WebhookNotificationService(NotificationSettings settings, HttpClient? httpClient = null)
+    /// <param name="config">選擇性注入之全域設定執行個體。</param>
+    public WebhookNotificationService(NotificationSettings settings, HttpClient? httpClient = null, IddsConfig? config = null)
     {
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _config = config ?? settings.Configuration ?? IddsConfig.Instance;
         if (httpClient != null)
         {
             _httpClient = httpClient;
@@ -111,6 +114,9 @@ public sealed class WebhookNotificationService : IDisposable
             if (string.IsNullOrWhiteSpace(url))
                 return false;
 
+            string? managementBaseUrl = _config.EnableManagementApi ? _config.ManagementApiBaseUrl : null;
+            string? managementApiKey = _config.EnableManagementApi ? _config.ManagementApiKey : null;
+
             string jsonPayload = WebhookPayloadBuilder.BuildPayload(
                 _settings.WebhookPlatform,
                 eventTitle,
@@ -119,7 +125,9 @@ public sealed class WebhookNotificationService : IDisposable
                 agentName,
                 details,
                 timestamp,
-                _settings.TelegramChatId);
+                _settings.TelegramChatId,
+                managementBaseUrl,
+                managementApiKey);
 
             using var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             using var response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);

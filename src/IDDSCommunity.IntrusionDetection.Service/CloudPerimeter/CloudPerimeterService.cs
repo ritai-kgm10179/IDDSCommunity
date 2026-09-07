@@ -103,38 +103,68 @@ public sealed class CloudPerimeterService : IDisposable
         {
             while (!stopping.IsCancellationRequested)
             {
+                bool processedAny = false;
                 try
                 {
                     if (IsEnabled && database.IsConfigured)
                     {
-                        var row = database.Query<Pending>("SELECT * FROM CloudPerimeterOutbox WHERE DueTicks<=@now ORDER BY DueTicks,IpAddress LIMIT 1", new { now = DateTime.UtcNow.Ticks }).FirstOrDefault();
-                        if (row is not null)
+                        var rows = database.Query<Pending>(
+                            "SELECT * FROM CloudPerimeterOutbox WHERE DueTicks<=@now ORDER BY DueTicks,IpAddress LIMIT 20",
+                            new { now = DateTime.UtcNow.Ticks }).ToList();
+
+                        if (rows.Count > 0)
                         {
-                            await providerGate.WaitAsync(stopping.Token).ConfigureAwait(false);
-                            bool success;
-                            try
+                            processedAny = true;
+                            foreach (var row in rows)
                             {
-                                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                                deadline.CancelAfter(TimeSpan.FromSeconds(30));
-                                success = activeProvider is not null && (row.ShouldBlock
-                                    ? await activeProvider.BlockIpAsync(row.IpAddress, row.Reason, deadline.Token).ConfigureAwait(false)
-                                    : await activeProvider.UnblockIpAsync(row.IpAddress, deadline.Token).ConfigureAwait(false));
-                            }
-                            catch (Exception) when (!stopping.IsCancellationRequested) { success = false; }
-                            finally { providerGate.Release(); }
-                            if (success) database.ExecuteNonQuery("DELETE FROM CloudPerimeterOutbox WHERE IpAddress=@p0 AND Version=@p1", row.IpAddress, row.Version);
-                            else
-                            {
-                                long due = DateTime.UtcNow.AddSeconds(Math.Min(300, Math.Pow(2, Math.Min(row.Attempts + 1, 8)))).Ticks;
-                                database.ExecuteNonQuery("UPDATE CloudPerimeterOutbox SET Attempts=MIN(Attempts+1,30),DueTicks=@p0 WHERE IpAddress=@p1 AND Version=@p2", due, row.IpAddress, row.Version);
-                                System.Diagnostics.Trace.TraceWarning("Cloud perimeter delivery pending for {0}", row.IpAddress);
+                                if (stopping.IsCancellationRequested) break;
+                                await providerGate.WaitAsync(stopping.Token).ConfigureAwait(false);
+                                bool success;
+                                try
+                                {
+                                    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                                    deadline.CancelAfter(TimeSpan.FromSeconds(30));
+                                    success = activeProvider is not null && (row.ShouldBlock
+                                        ? await activeProvider.BlockIpAsync(row.IpAddress, row.Reason, deadline.Token).ConfigureAwait(false)
+                                        : await activeProvider.UnblockIpAsync(row.IpAddress, deadline.Token).ConfigureAwait(false));
+                                }
+                                catch (Exception) when (!stopping.IsCancellationRequested) { success = false; }
+                                finally { providerGate.Release(); }
+
+                                if (success)
+                                {
+                                    database.ExecuteNonQuery("DELETE FROM CloudPerimeterOutbox WHERE IpAddress=@p0 AND Version=@p1", row.IpAddress, row.Version);
+                                }
+                                else
+                                {
+                                    int nextAttempts = row.Attempts + 1;
+                                    if (nextAttempts >= 30)
+                                    {
+                                        database.ExecuteNonQuery("DELETE FROM CloudPerimeterOutbox WHERE IpAddress=@p0 AND Version=@p1", row.IpAddress, row.Version);
+                                        System.Diagnostics.Trace.TraceError("Cloud perimeter delivery failed permanently for {0} after 30 attempts. Discarded.", row.IpAddress);
+                                    }
+                                    else
+                                    {
+                                        long due = DateTime.UtcNow.AddSeconds(Math.Min(300, Math.Pow(2, Math.Min(nextAttempts, 8)))).Ticks;
+                                        database.ExecuteNonQuery("UPDATE CloudPerimeterOutbox SET Attempts=@p0,DueTicks=@p1 WHERE IpAddress=@p2 AND Version=@p3", nextAttempts, due, row.IpAddress, row.Version);
+                                        System.Diagnostics.Trace.TraceWarning("Cloud perimeter delivery pending for {0} (attempt {1}/30)", row.IpAddress, nextAttempts);
+                                    }
+                                }
                             }
                         }
                     }
                 }
                 catch (OperationCanceledException) when (stopping.IsCancellationRequested) { break; }
                 catch (Exception ex) { System.Diagnostics.Trace.TraceError("Cloud perimeter outbox: {0}", ex.GetType().Name); }
-                await Task.Delay(TimeSpan.FromSeconds(1), stopping.Token).ConfigureAwait(false);
+
+                if (!processedAny)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), stopping.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(50), stopping.Token).ConfigureAwait(false);
+                }
             }
         }
         catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }

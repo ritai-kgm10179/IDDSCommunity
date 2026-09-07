@@ -23,7 +23,8 @@ internal static class PacketCaptureHub
         ArgumentNullException.ThrowIfNull(configuredPorts);
         int[] ports = configuredPorts.OfType<int>().Distinct().Order().ToArray();
         string portFilter = ports.Length == 0 ? "tcp" : $"tcp and ({string.Join(" or ", ports.Select(port => string.Create(CultureInfo.InvariantCulture, $"port {port}")))})";
-        return string.Create(CultureInfo.InvariantCulture, $"ip and host {address} and {portFilter}");
+        string ipProto = address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? "ip6" : "ip";
+        return string.Create(CultureInfo.InvariantCulture, $"{ipProto} and host {address} and {portFilter}");
     }
 
     internal static IDisposable Subscribe(IPAddress address, int? tcpPort, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed)
@@ -245,18 +246,42 @@ internal static class PacketCaptureHub
         private static bool TryReadRoute(ReadOnlySpan<byte> packet, out PacketRoute route)
         {
             route = default;
-            if (packet.Length < 40 || packet[0] >> 4 != 4 || packet[9] != (byte)Protocol.Tcp)
+            if (packet.Length < 40)
                 return false;
-            int ipHeaderLength = (packet[0] & 0x0F) * 4;
-            ushort totalLength = BinaryPrimitives.ReadUInt16BigEndian(packet[2..]);
-            if (ipHeaderLength < 20 || totalLength < ipHeaderLength + 20 || totalLength > packet.Length)
-                return false;
-            ReadOnlySpan<byte> tcp = packet[ipHeaderLength..];
-            int tcpHeaderLength = (tcp[12] >> 4) * 4;
-            if (tcpHeaderLength < 20 || ipHeaderLength + tcpHeaderLength > totalLength)
-                return false;
-            route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
-            return true;
+
+            int version = packet[0] >> 4;
+            if (version == 4)
+            {
+                if (packet[9] != (byte)Protocol.Tcp)
+                    return false;
+                int ipHeaderLength = (packet[0] & 0x0F) * 4;
+                ushort totalLength = BinaryPrimitives.ReadUInt16BigEndian(packet[2..]);
+                if (ipHeaderLength < 20 || totalLength < ipHeaderLength + 20 || totalLength > packet.Length)
+                    return false;
+                ReadOnlySpan<byte> tcp = packet[ipHeaderLength..];
+                int tcpHeaderLength = (tcp[12] >> 4) * 4;
+                if (tcpHeaderLength < 20 || ipHeaderLength + tcpHeaderLength > totalLength)
+                    return false;
+                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
+                return true;
+            }
+            else if (version == 6)
+            {
+                if (packet[6] != (byte)Protocol.Tcp)
+                    return false;
+                ushort payloadLength = BinaryPrimitives.ReadUInt16BigEndian(packet[4..]);
+                int candidateTotalLength = 40 + payloadLength;
+                if (payloadLength < 20 || candidateTotalLength > packet.Length)
+                    return false;
+                ReadOnlySpan<byte> tcp = packet[40..];
+                int tcpHeaderLength = (tcp[12] >> 4) * 4;
+                if (tcpHeaderLength < 20 || 40 + tcpHeaderLength > candidateTotalLength)
+                    return false;
+                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
+                return true;
+            }
+
+            return false;
         }
     }
 

@@ -8,6 +8,11 @@ using System;
 public class NotificationSettings
 {
     private readonly IddsConfig configuration;
+
+    /// <summary>
+    /// 取得 關聯之全域系統組態執行個體。
+    /// </summary>
+    public IddsConfig Configuration => configuration;
         /// <summary>
     /// 定義 NOTIFICATION_ON_UNLOCK 之數值。
     /// </summary>

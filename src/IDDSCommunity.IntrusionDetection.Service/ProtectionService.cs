@@ -440,7 +440,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
         cleanupTimer.Interval = 1000;
         cleanupTimer.Elapsed += new System.Timers.ElapsedEventHandler(cleanupTimer_Elapsed);
-        maintenanceTimer.Interval = TimeSpan.FromHours(protectionOptions.MaintenanceIntervalHours).TotalMilliseconds;
+        maintenanceTimer.Interval = TimeSpan.FromHours(Math.Max(1, protectionOptions.MaintenanceIntervalHours)).TotalMilliseconds;
         maintenanceTimer.AutoReset = true;
         maintenanceTimer.Elapsed += maintenanceTimer_Elapsed;
         // restartTimer.Elapsed += new System.Timers.ElapsedEventHandler(restartTimer_Elapsed);

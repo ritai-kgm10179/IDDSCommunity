@@ -13,6 +13,8 @@ internal static class Program
     private static async System.Threading.Tasks.Task Main(string[] args)
     {
         System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         try
         {
             HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
@@ -36,6 +38,20 @@ internal static class Program
     /// <param name="e">事件資料。</param>
     private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e) =>
         WriteFatalError("Unhandled service thread exception.", e.Exception);
+
+    private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+            WriteFatalError("Unhandled AppDomain exception.", ex);
+        else
+            WriteFatalError("Unhandled AppDomain non-exception object.", new ApplicationException(e.ExceptionObject?.ToString() ?? "Unknown exception"));
+    }
+
+    private static void TaskScheduler_UnobservedTaskException(object? sender, System.Threading.Tasks.UnobservedTaskExceptionEventArgs e)
+    {
+        WriteFatalError("Unobserved task exception.", e.Exception);
+        e.SetObserved();
+    }
 
     private static void WriteFatalError(string message, Exception exception)
     {

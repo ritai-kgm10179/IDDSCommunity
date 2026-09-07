@@ -300,7 +300,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         int maximum = Math.Clamp(settings.MaxFailedAttempts, 1, 20);
         int count = failedAttempts.TryGetValue(clientIp, out var state) && state.Expires > now ? state.Count : 0;
         if (count >= maximum) return (HttpStatusCode.Forbidden, false, "已超過驗證嘗試上限。");
-        if (!TotpAuthenticator.VerifyCode(settings.TotpBase32Secret, code))
+        if (!TotpAuthenticator.VerifyCodeAndBurn(settings.TotpBase32Secret, code, clientIp))
         {
             count++;
             failedAttempts[clientIp] = (count, now.AddMinutes(15));

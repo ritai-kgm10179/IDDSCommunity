@@ -123,7 +123,9 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, "CREATE TRIGGER IF NOT EXISTS TR_IntrusionLog_AttackActivity AFTER INSERT ON IntrusionLog WHEN NEW.Action IN (100,200,210,300,310,600) BEGIN INSERT INTO IpAttackActivity(IpAddress,LastAttackTicks) VALUES(NEW.ClientIP, CAST((COALESCE(julianday(NEW.IncidentTime),julianday('now'))-1721425.5)*864000000000 AS INTEGER)) ON CONFLICT(IpAddress) DO UPDATE SET LastAttackTicks=MAX(LastAttackTicks,excluded.LastAttackTicks); END");
         if (!MigrationApplied(connection, transaction, 15) && ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
             Execute(connection, transaction, "INSERT OR IGNORE INTO IpAttackActivity(IpAddress,LastAttackTicks) SELECT DISTINCT IpAddress, CAST((julianday('now')-1721425.5)*864000000000 AS INTEGER) FROM Locks WHERE Status IN (300,310)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubCursors (Endpoint TEXT PRIMARY KEY NOT NULL, Cursor INTEGER NOT NULL, Generation TEXT NOT NULL, LocalCursor INTEGER NOT NULL, UpdatedUtc TEXT NOT NULL)");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(15,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(16,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";

@@ -138,4 +138,69 @@ public sealed class WebhookPayloadBuilderTest
         Assert.AreEqual("IDDS Community", root.GetProperty("system").GetString());
         Assert.AreEqual("198.51.100.1", root.GetProperty("ip_address").GetString());
     }
+
+    /// <summary>
+    /// 驗證 Microsoft Teams 酬載在提供 Management API 設定時，正確包含一鍵處置按鈕 (actions)。
+    /// </summary>
+    [TestMethod]
+    public void BuildTeamsPayload_WithManagementApi_IncludesActionButtons()
+    {
+        string json = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.MicrosoftTeams,
+            "硬封鎖已套用",
+            "198.51.100.42",
+            "Hard lock",
+            "Windows RDP Agent",
+            "Test alert",
+            TestTimestamp,
+            managementApiBaseUrl: "https://idds.local:8443",
+            managementApiKey: "test-secret-key-12345");
+
+        Assert.IsNotNull(json);
+        using var doc = JsonDocument.Parse(json);
+        var content = doc.RootElement.GetProperty("attachments")[0].GetProperty("content");
+
+        Assert.IsTrue(content.TryGetProperty("actions", out var actions));
+        Assert.AreEqual(2, actions.GetArrayLength());
+        Assert.AreEqual("Action.OpenUrl", actions[0].GetProperty("type").GetString());
+        Assert.IsTrue(actions[0].GetProperty("url").GetString()!.Contains("/api/v1/actions/unblock"));
+        Assert.IsTrue(actions[1].GetProperty("url").GetString()!.Contains("/api/v1/actions/block"));
+    }
+
+    /// <summary>
+    /// 驗證 Slack 酬載在提供 Management API 設定時，正確包含一鍵處置按鈕 (actions block)。
+    /// </summary>
+    [TestMethod]
+    public void BuildSlackPayload_WithManagementApi_IncludesActionButtons()
+    {
+        string json = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.Slack,
+            "硬封鎖已套用",
+            "198.51.100.42",
+            "Hard lock",
+            "Windows RDP Agent",
+            "Test alert",
+            TestTimestamp,
+            managementApiBaseUrl: "https://idds.local:8443",
+            managementApiKey: "test-secret-key-12345");
+
+        Assert.IsNotNull(json);
+        using var doc = JsonDocument.Parse(json);
+        var blocks = doc.RootElement.GetProperty("blocks");
+
+        bool foundActionBlock = false;
+        foreach (var block in blocks.EnumerateArray())
+        {
+            if (block.TryGetProperty("type", out var typeElem) && typeElem.GetString() == "actions")
+            {
+                foundActionBlock = true;
+                var elements = block.GetProperty("elements");
+                Assert.AreEqual(2, elements.GetArrayLength());
+                Assert.AreEqual("button", elements[0].GetProperty("type").GetString());
+                Assert.IsTrue(elements[0].GetProperty("url").GetString()!.Contains("/api/v1/actions/unblock"));
+                Assert.IsTrue(elements[1].GetProperty("url").GetString()!.Contains("/api/v1/actions/block"));
+            }
+        }
+        Assert.IsTrue(foundActionBlock);
+    }
 }

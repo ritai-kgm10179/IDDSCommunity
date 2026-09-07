@@ -53,7 +53,33 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.client = client ?? new ThreatHubClient();
         this.recordAudit = recordAudit;
+        this.database = database;
         localStore = new ThreatHubStore(database);
+        if (database is not null && database.IsConfigured)
+        {
+            try
+            {
+                var saved = database.Query<CursorRow>("SELECT Endpoint, Cursor, Generation, LocalCursor FROM ThreatHubCursors");
+                foreach (var row in saved)
+                {
+                    cursors[row.Endpoint] = (row.Cursor, row.Generation, row.LocalCursor);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logWarning("Failed to load ThreatHub cursors from database", ex);
+            }
+        }
+    }
+
+    private readonly Database? database;
+
+    private sealed class CursorRow
+    {
+        public string Endpoint { get; set; } = string.Empty;
+        public long Cursor { get; set; }
+        public string Generation { get; set; } = string.Empty;
+        public long LocalCursor { get; set; }
     }
 
     /// <summary>
@@ -128,6 +154,19 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                         onClusterThreatReceived(threat);
                     }
                     cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
+                    if (database is not null && database.IsConfigured)
+                    {
+                        try
+                        {
+                            database.ExecuteNonQuery(
+                                "INSERT INTO ThreatHubCursors(Endpoint, Cursor, Generation, LocalCursor, UpdatedUtc) VALUES(@p0, @p1, @p2, @p3, @p4) ON CONFLICT(Endpoint) DO UPDATE SET Cursor=excluded.Cursor, Generation=excluded.Generation, LocalCursor=excluded.LocalCursor, UpdatedUtc=excluded.UpdatedUtc",
+                                endpoint, response.NextCursor, response.Generation, localPage.NextCursor, DateTime.UtcNow.ToString("O"));
+                        }
+                        catch (Exception ex)
+                        {
+                            logWarning("Failed to persist ThreatHub cursor to database", ex);
+                        }
+                    }
                     lastSyncUtc = response.ServerTimeUtc;
                     recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pushed: {localPage.ActiveThreats.Count}, Pulled: {response.ActiveThreats.Count}");
                     return;

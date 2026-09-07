@@ -35,7 +35,10 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         this.blockMode = Enum.IsDefined(blockMode) ? blockMode : throw new ArgumentOutOfRangeException(nameof(blockMode));
         firewallPolicyManager = CreateComObject<INetFwPolicy2>("HNetCfg.FwPolicy2");
         if (blockMode == FirewallBlockMode.Inbound)
-            RemoveRuleIfPresent(GetRuleName("BlockAttackerOutbound", 0));
+        {
+            foreach (string name in GetActiveShardedRuleNames(GetRuleName("BlockAttackerOutbound", 0)))
+                RemoveRuleIfPresent(name);
+        }
     }
     /// <summary>
     /// Creates com object.
@@ -78,15 +81,37 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     {
         try
         {
-            INetFwRule? inboundRule = GetRule(GetRuleName("BlockAttacker", 0));
-            if (!IsEffectiveRule(inboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
-                || !ContainsAddress(FirewallComString.Get(inboundRule!.RemoteAddresses), ipAddress))
+            string inBase = GetRuleName("BlockAttacker", 0);
+            bool lockedIn = false;
+            foreach (string ruleName in GetActiveShardedRuleNames(inBase))
+            {
+                INetFwRule? inboundRule = GetRule(ruleName);
+                if (IsEffectiveRule(inboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
+                    && ContainsAddress(FirewallComString.Get(inboundRule!.RemoteAddresses), ipAddress))
+                {
+                    lockedIn = true;
+                    break;
+                }
+            }
+
+            if (!lockedIn)
                 return false;
+
             if (blockMode == FirewallBlockMode.Inbound)
                 return true;
-            INetFwRule? outboundRule = GetRule(GetRuleName("BlockAttackerOutbound", 0));
-            return IsEffectiveRule(outboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT)
-                && ContainsAddress(FirewallComString.Get(outboundRule!.RemoteAddresses), ipAddress);
+
+            string outBase = GetRuleName("BlockAttackerOutbound", 0);
+            foreach (string ruleName in GetActiveShardedRuleNames(outBase))
+            {
+                INetFwRule? outboundRule = GetRule(ruleName);
+                if (IsEffectiveRule(outboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT)
+                    && ContainsAddress(FirewallComString.Get(outboundRule!.RemoteAddresses), ipAddress))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         catch (Exception ex)
         {
@@ -145,7 +170,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     public void RemoveIpAddressFromBlockList(string ipAddress)
     {
         bool removed = false;
-        foreach (string ruleName in GetActiveRuleNames())
+        foreach (string ruleName in GetActiveRuleNames().ToList())
         {
             INetFwRule? rule = GetRule(ruleName);
             if (rule is null)
@@ -301,11 +326,38 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <returns>傳回 get rule name 的結果。</returns>
     private static string GetRuleName(string name, int port) => string.Format("{0}_{1}_{2}", Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME, name, port == 0 ? "AllPorts" : port.ToString());
 
+    private const int MaxAddressesPerRule = 1000;
+
+    private List<string> GetActiveShardedRuleNames(string baseName)
+    {
+        List<string> result = [];
+        foreach (INetFwRule rule in FindRules(baseName))
+        {
+            string name = FirewallComString.Get(rule.Name);
+            if (name == baseName || name.StartsWith(baseName + "_", StringComparison.Ordinal))
+            {
+                result.Add(name);
+            }
+        }
+        if (result.Count == 0)
+        {
+            result.Add(baseName);
+        }
+        return result;
+    }
+
     private IEnumerable<string> GetActiveRuleNames()
     {
-        yield return GetRuleName("BlockAttacker", 0);
+        string inBase = GetRuleName("BlockAttacker", 0);
+        foreach (string name in GetActiveShardedRuleNames(inBase))
+            yield return name;
+
         if (blockMode == FirewallBlockMode.Bidirectional)
-            yield return GetRuleName("BlockAttackerOutbound", 0);
+        {
+            string outBase = GetRuleName("BlockAttackerOutbound", 0);
+            foreach (string name in GetActiveShardedRuleNames(outBase))
+                yield return name;
+        }
     }
 
     private static bool IsEffectiveRule(INetFwRule? rule, NET_FW_RULE_DIRECTION direction) =>
@@ -320,6 +372,80 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         if (GetRule(ruleName) is not null)
             FirewallComString.Set(ruleName, firewallPolicyManager.Rules.Remove);
     }
+
+    /// <summary>
+    /// 新增分組切片阻擋規則。若既有規則已滿（達 1,000 筆 IP），自動擴展建立新切片。
+    /// </summary>
+    /// <param name="name">規則名稱前綴識別碼。</param>
+    /// <param name="port">本機連接埠。</param>
+    /// <param name="direction">規則方向（傳入或傳出）。</param>
+    /// <param name="action">規則動作（阻擋或允許）。</param>
+    /// <param name="remoteAddress">遠端 IP 位址。</param>
+    internal void AddShardedRule(string name, int port, NET_FW_RULE_DIRECTION direction,
+        NET_FW_ACTION action, string remoteAddress)
+    {
+        if (!IddsConfig.IsValidIpAddress(remoteAddress))
+        {
+            throw new ArgumentOutOfRangeException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IP address must be given in IP version 4 or IP version 6 format!"));
+        }
+
+        string baseRuleName = GetRuleName(name, port);
+        List<INetFwRule> existingShards = [];
+        foreach (INetFwRule r in FindRules(baseRuleName))
+        {
+            string rName = FirewallComString.Get(r.Name);
+            if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+            {
+                existingShards.Add(r);
+            }
+        }
+
+        foreach (INetFwRule shard in existingShards)
+        {
+            string existing = FirewallComString.Get(shard.RemoteAddresses);
+            if (ContainsAddress(existing, remoteAddress))
+            {
+                shard.Action = action;
+                shard.Direction = direction;
+                shard.Protocol = 256;
+                shard.Enabled = true;
+                return;
+            }
+        }
+
+        foreach (INetFwRule shard in existingShards)
+        {
+            string existing = FirewallComString.Get(shard.RemoteAddresses);
+            int count = existing.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length;
+            if (count < MaxAddressesPerRule)
+            {
+                shard.Action = action;
+                shard.Direction = direction;
+                shard.Protocol = 256;
+                shard.Enabled = true;
+                FirewallComString.Set(MergeRemoteAddresses(existing, remoteAddress), val => shard.RemoteAddresses = val);
+                return;
+            }
+        }
+
+        int nextShardIndex = existingShards.Count;
+        string newRuleName = nextShardIndex == 0 ? baseRuleName : $"{baseRuleName}_{nextShardIndex}";
+
+        INetFwRule newRule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
+        newRule.Action = action;
+        FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => newRule.Grouping = value);
+        newRule.Protocol = 256;
+        FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME + " rule", value => newRule.Description = value);
+        newRule.Direction = direction;
+        newRule.Enabled = true;
+
+        if (port > 0)
+            FirewallComString.Set(port.ToString(), value => newRule.LocalPorts = value);
+        FirewallComString.Set(newRuleName, value => newRule.Name = value);
+        FirewallComString.Set(remoteAddress, value => newRule.RemoteAddresses = value);
+        firewallPolicyManager.Rules.Add(newRule);
+    }
+
     /// <summary>
     /// Adds rule.
     /// </summary>
@@ -331,60 +457,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     internal void AddRule(string name, int port, NET_FW_RULE_DIRECTION direction,
         NET_FW_ACTION action, string remoteAddress)
     {
-        bool ruleExists = false;
-        string ipAddress;
-        string ruleName = GetRuleName(name, port);
-        INetFwRule? rule = GetRule(ruleName);
-        if (rule != null)
-        {
-            ruleExists = true;
-        }
-        else
-        {
-            try
-            {
-                rule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-        if (IddsConfig.IsValidIpAddress(remoteAddress))
-        {
-            ipAddress = remoteAddress;
-        }
-        else
-        {
-            throw new ArgumentOutOfRangeException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IP address must be given in IP version 4 or IP version 6 format!"));
-        }
-        // ipAddress = String.Format("{0}/255.255.255.255", ipAddress);
-
-        if (!ruleExists)
-        {
-            rule.Action = action;
-            FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => rule.Grouping = value);
-            rule.Protocol = 256;
-            FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME + " rule", value => rule.Description = value);
-            rule.Direction = direction;
-            rule.Enabled = true;
-
-            if (port > 0)
-                FirewallComString.Set(port.ToString(), value => rule.LocalPorts = value);
-            FirewallComString.Set(ruleName, value => rule.Name = value);
-            FirewallComString.Set(ipAddress, value => rule.RemoteAddresses = value);
-            //  rule.RemotePorts = "";
-            firewallPolicyManager.Rules.Add(rule);
-        }
-        else
-        {
-            rule.Action = action;
-            rule.Direction = direction;
-            rule.Protocol = 256;
-            rule.Enabled = true;
-            string existingAddresses = FirewallComString.Get(rule.RemoteAddresses);
-            FirewallComString.Set(MergeRemoteAddresses(existingAddresses, ipAddress), value => rule.RemoteAddresses = value);
-        }
+        AddShardedRule(name, port, direction, action, remoteAddress);
     }
 
     internal static string MergeRemoteAddresses(string existingAddresses, string address)
@@ -396,6 +469,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             .Contains(address, StringComparer.OrdinalIgnoreCase)) return existingAddresses;
         return string.Concat(existingAddresses, ",", address);
     }
+
     /// <summary>
     /// Clears up rules.
     /// </summary>
@@ -403,10 +477,10 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     {
         foreach (INetFwRule rule in FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME))
         {
-            //rule.RemoteAddresses = "";
             FirewallComString.Set(FirewallComString.Get(rule.Name), firewallPolicyManager.Rules.Remove);
         }
     }
+
     /// <summary>
     /// Gets rule.
     /// </summary>
@@ -414,11 +488,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <returns>傳回 get rule 的結果。</returns>
     internal INetFwRule? GetRule(string name)
     {
-        foreach (INetFwRule rule in (dynamic)firewallPolicyManager.Rules)
+        try
         {
-            if (FirewallComString.Get(rule.Name) == name) return rule;
+            return FirewallComString.Call(name, bstr => firewallPolicyManager.Rules.Item(bstr));
         }
-        return null;
+        catch (System.IO.FileNotFoundException)
+        {
+            return null;
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002 || (uint)ex.HResult == 0x80070643)
+        {
+            return null;
+        }
+        catch (Exception)
+        {
+            foreach (INetFwRule rule in (dynamic)firewallPolicyManager.Rules)
+            {
+                if (FirewallComString.Get(rule.Name) == name) return rule;
+            }
+            return null;
+        }
     }
     /// <summary>
     /// Finds rules.

@@ -265,9 +265,9 @@ public sealed class ManagementApiHttpServer : IDisposable
             // ChatOps 雙向互動一鍵封鎖與解鎖 (Action Token 驗證)
             if (path is "/api/v1/actions/block" or "/api/v1/actions/unblock")
             {
-                if (method != "POST")
+                if (method != "GET" && method != "POST")
                 {
-                    response.Headers["Allow"] = "POST";
+                    response.Headers["Allow"] = "GET, POST";
                     await SendJsonResponseAsync(response, HttpStatusCode.MethodNotAllowed, new { error = "Method Not Allowed" });
                     return;
                 }

@@ -173,14 +173,17 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
                 etherType = (ushort)((frame[offset + 2] << 8) | frame[offset + 3]);
                 offset += 4;
             }
-            if (etherType != 0x0800)
+            if (etherType is not (0x0800 or 0x86DD))
                 return false;
         }
         else
         {
             return false;
         }
-        if (frame.Length <= offset || frame[offset] >> 4 != 4)
+        if (frame.Length <= offset)
+            return false;
+        int version = frame[offset] >> 4;
+        if (version is not (4 or 6))
             return false;
         packet = frame[offset..];
         return true;

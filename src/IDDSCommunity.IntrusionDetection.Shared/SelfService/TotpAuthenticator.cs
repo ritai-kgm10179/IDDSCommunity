@@ -95,6 +95,63 @@ public static class TotpAuthenticator
         return false;
     }
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> UsedTokens = new(StringComparer.Ordinal);
+    private static DateTime nextTokenCleanup = DateTime.MinValue;
+
+    /// <summary>
+    /// 依據 RFC 6238 第 5.2 節規範驗證 6 位數動態密碼，並於驗證成功後立即銷毀該動態碼以防止重放攻擊。
+    /// </summary>
+    /// <param name="secretKey">Base32 密鑰。</param>
+    /// <param name="code">使用者輸入之 6 位數代碼。</param>
+    /// <param name="clientIp">請求來源 IP 位址。</param>
+    /// <param name="time">驗證基準時間 (預設為 UtcNow)。</param>
+    /// <param name="timeStepSeconds">時間間隔秒數 (預設 30 秒)。</param>
+    /// <param name="allowedDriftSteps">允許容許之時鐘偏移步數 (預設 1)。</param>
+    /// <returns>若代碼驗證相符且未曾使用則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool VerifyCodeAndBurn(string secretKey, string code, string clientIp, DateTime? time = null, int timeStepSeconds = 30, int allowedDriftSteps = 1)
+    {
+        if (string.IsNullOrWhiteSpace(secretKey) || string.IsNullOrWhiteSpace(code))
+            return false;
+
+        code = code.Trim();
+        if (code.Length != 6) return false;
+
+        DateTime now = time ?? DateTime.UtcNow;
+        if (now >= nextTokenCleanup)
+        {
+            foreach (var kvp in UsedTokens)
+            {
+                if (kvp.Value <= now)
+                    UsedTokens.TryRemove(kvp.Key, out _);
+            }
+            nextTokenCleanup = now.AddMinutes(1);
+        }
+
+        string tokenKey = $"{secretKey}:{code}";
+        if (UsedTokens.TryGetValue(tokenKey, out DateTime expiry) && expiry > now)
+        {
+            return false;
+        }
+
+        if (!VerifyCode(secretKey, code, now, timeStepSeconds, allowedDriftSteps))
+        {
+            return false;
+        }
+
+        DateTime validUntil = now.AddSeconds((allowedDriftSteps * 2 + 1) * timeStepSeconds + 30);
+        UsedTokens[tokenKey] = validUntil;
+        return true;
+    }
+
+    /// <summary>
+    /// 清除已使用動態密碼紀錄（僅供單元測試環境重置狀態使用）。
+    /// </summary>
+    internal static void ClearUsedTokensForTest()
+    {
+        UsedTokens.Clear();
+        nextTokenCleanup = DateTime.MinValue;
+    }
+
     private static string ToBase32String(byte[] data)
     {
         if (data.Length == 0) return string.Empty;
