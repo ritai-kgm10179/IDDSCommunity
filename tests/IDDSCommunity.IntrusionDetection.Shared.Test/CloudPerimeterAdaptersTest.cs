@@ -154,6 +154,45 @@ public sealed class CloudPerimeterAdaptersTest
         Assert.IsTrue(handler.LastRequestBody!.Contains("\"action\": \"block\""));
         Assert.IsTrue(handler.LastRequestBody.Contains("198.51.100.12"));
     }
+
+    /// <summary>
+    /// 驗證通用 Webhook 阻絕 Link-Local 與雲端 IMDS 元數據端點。
+    /// </summary>
+    [TestMethod]
+    public async Task GenericPerimeterWebhookProvider_BlocksImdsAndLinkLocalEndpoints()
+    {
+        var handler = new MockHttpMessageHandler();
+        var client = new HttpClient(handler);
+        var provider = new GenericPerimeterWebhookProvider(client)
+        {
+            WebhookUrl = "http://169.254.169.254/latest/meta-data/"
+        };
+
+        bool blocked = await provider.BlockIpAsync("198.51.100.12", "Testing");
+        Assert.IsFalse(blocked);
+        Assert.IsNull(handler.LastRequest);
+
+        var (success, message) = await provider.TestConnectionAsync();
+        Assert.IsFalse(success);
+        Assert.IsTrue(message.Contains("Cloud IMDS or Link-Local addresses is prohibited"));
+    }
+
+    /// <summary>
+    /// 驗證邊界提供者 Dispose 正確釋放自身所擁有之資源。
+    /// </summary>
+    [TestMethod]
+    public void PerimeterProviders_Dispose_DisposesOwnedResourcesWithoutThrowing()
+    {
+        using (var webhook = new GenericPerimeterWebhookProvider())
+        {
+            Assert.IsNotNull(webhook);
+        }
+
+        using (var cloudflare = new CloudflareWafPerimeterProvider())
+        {
+            Assert.IsNotNull(cloudflare);
+        }
+    }
     private sealed class FakeWafClient : Amazon.WAFV2.AmazonWAFV2Client
     {
         internal System.Collections.Generic.List<string> Addresses { get; private set; } = ["8.8.8.8/32"];

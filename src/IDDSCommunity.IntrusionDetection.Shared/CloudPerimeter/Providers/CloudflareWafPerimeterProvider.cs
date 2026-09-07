@@ -3,15 +3,17 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IDDSCommunity.IntrusionDetection.Shared.Network;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
 /// <summary>
 /// 提供 Cloudflare WAF IP Access Rules 邊界防禦整合。
 /// </summary>
-public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider
+public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider, IDisposable
 {
     private readonly HttpClient httpClient;
+    private readonly bool ownsClient;
 
     /// <summary>
     /// 取得提供者類型。
@@ -39,7 +41,8 @@ public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider
     /// <param name="httpClient">選用的自訂 HTTP 用戶端。</param>
     public CloudflareWafPerimeterProvider(HttpClient? httpClient = null)
     {
-        this.httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        ownsClient = httpClient is null;
+        this.httpClient = httpClient ?? HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
     }
 
     /// <summary>
@@ -141,6 +144,17 @@ public sealed class CloudflareWafPerimeterProvider : ICloudPerimeterProvider
         catch (Exception ex)
         {
             return (false, $"Cloudflare connection error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 釋放由 <see cref="CloudflareWafPerimeterProvider"/> 使用的未受控與受控資源。
+    /// </summary>
+    public void Dispose()
+    {
+        if (ownsClient)
+        {
+            httpClient.Dispose();
         }
     }
 }

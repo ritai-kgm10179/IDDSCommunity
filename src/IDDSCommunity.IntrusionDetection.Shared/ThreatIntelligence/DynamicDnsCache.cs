@@ -45,7 +45,14 @@ public static class DynamicDnsCache
             return false;
         }
 
-        return Cache.TryGetValue(fqdn.Trim(), out addresses!);
+        if (Cache.TryGetValue(fqdn.Trim(), out HashSet<IPAddress>? set) && set != null)
+        {
+            addresses = [.. set];
+            return true;
+        }
+
+        addresses = [];
+        return false;
     }
 
     /// <summary>

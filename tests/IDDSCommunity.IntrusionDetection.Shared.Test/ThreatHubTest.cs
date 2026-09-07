@@ -34,6 +34,26 @@ public sealed class ThreatHubTest
     }
 
     [TestMethod]
+    public void DynamicDnsCache_TryGetResolvedIps_ReturnsDefensiveCopy()
+    {
+        DynamicDnsCache.Clear();
+        string fqdn = "isolated.ddns.test";
+        IPAddress ip1 = IPAddress.Parse("203.0.113.100");
+        DynamicDnsCache.Update(fqdn, [ip1]);
+
+        Assert.IsTrue(DynamicDnsCache.TryGetResolvedIps(fqdn, out HashSet<IPAddress> addresses));
+        Assert.AreEqual(1, addresses.Count);
+
+        // 修改取出的集合
+        addresses.Clear();
+
+        // 快取內部不受影響
+        Assert.IsTrue(DynamicDnsCache.TryGetResolvedIps(fqdn, out HashSet<IPAddress> addressesAfter));
+        Assert.AreEqual(1, addressesAfter.Count);
+        Assert.IsTrue(DynamicDnsCache.IsIpInDdns(ip1, fqdn));
+    }
+
+    [TestMethod]
     public async Task ThreatHubClient_SynchronizeAsync_SendsPayloadAndReturnsResponse()
     {
         ThreatHubSyncResponse expectedResponse = new()

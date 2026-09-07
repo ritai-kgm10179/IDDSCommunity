@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using IDDSCommunity.IntrusionDetection.Shared.Network;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 
 /// <summary>
 /// 提供通用邊界硬體防火牆 / 自建閘道控制器 Webhook 整合 (FortiGate, Palo Alto, OPNsense 等)。
 /// </summary>
-public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
+public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, IDisposable
 {
     private readonly HttpClient httpClient;
+    private readonly bool ownsClient;
 
     /// <summary>
     /// 取得提供者類型。
@@ -39,7 +43,8 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
     /// <param name="httpClient">選用的自訂 HTTP 用戶端。</param>
     public GenericPerimeterWebhookProvider(HttpClient? httpClient = null)
     {
-        this.httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        ownsClient = httpClient is null;
+        this.httpClient = httpClient ?? HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
     }
 
     /// <summary>
@@ -47,7 +52,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
     /// </summary>
     public async Task<bool> BlockIpAsync(string ipAddress, string reason, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl)) return false;
+        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
 
         try
         {
@@ -81,7 +86,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
     /// </summary>
     public async Task<bool> UnblockIpAsync(string ipAddress, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl)) return false;
+        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
 
         try
         {
@@ -117,6 +122,9 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
         if (string.IsNullOrWhiteSpace(WebhookUrl))
             return (false, "Webhook URL is required.");
 
+        if (IsBlockedImdsOrLinkLocal(WebhookUrl))
+            return (false, "Webhook URL targeting Cloud IMDS or Link-Local addresses is prohibited.");
+
         try
         {
             string payload = $$"""
@@ -142,5 +150,64 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider
         {
             return (false, $"Webhook connection error: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// 釋放由 <see cref="GenericPerimeterWebhookProvider"/> 使用的未受控與受控資源。
+    /// </summary>
+    public void Dispose()
+    {
+        if (ownsClient)
+        {
+            httpClient.Dispose();
+        }
+    }
+
+    private static bool IsBlockedImdsOrLinkLocal(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+        {
+            return false;
+        }
+
+        string host = uri.Host;
+        if (IPAddress.TryParse(host, out var ip))
+        {
+            if (ip.IsIPv4MappedToIPv6)
+            {
+                ip = ip.MapToIPv4();
+            }
+
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                byte[] bytes = ip.GetAddressBytes();
+                // 169.254.0.0/16 (Link-Local / Cloud IMDS e.g., 169.254.169.254)
+                if (bytes[0] == 169 && bytes[1] == 254)
+                {
+                    return true;
+                }
+            }
+            else if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                if (ip.IsIPv6LinkLocal)
+                {
+                    return true;
+                }
+
+                // AWS IPv6 IMDS fd00:ec2::254
+                byte[] bytes = ip.GetAddressBytes();
+                if (bytes[0] == 0xfd && bytes[1] == 0x00 && bytes[2] == 0x0e && bytes[3] == 0xc2)
+                {
+                    return true;
+                }
+            }
+        }
+        else if (string.Equals(host, "instance-data", StringComparison.OrdinalIgnoreCase))
+        {
+            // AWS instance-data hostname
+            return true;
+        }
+
+        return false;
     }
 }
