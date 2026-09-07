@@ -58,6 +58,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         try
         {
             listener = new HttpListener();
+            ConfigureHttpTimeouts(listener);
             string ip = settings.PortalListenIp?.Trim() ?? "0.0.0.0";
             int port = Math.Clamp(settings.PortalPort, 1, 65535);
 
@@ -272,12 +273,27 @@ public sealed class SelfServiceUnblockServer : IDisposable
 
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
-        response.Headers["Referrer-Policy"] = "no-referrer";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+        response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
         response.Headers["Content-Security-Policy"] = "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline';";
         response.ContentType = "text/html; charset=utf-8";
         byte[] buffer = Encoding.UTF8.GetBytes(html);
         response.ContentLength64 = buffer.Length;
         await response.OutputStream.WriteAsync(buffer);
+    }
+
+    private static void ConfigureHttpTimeouts(HttpListener listener)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            try
+            {
+                listener.TimeoutManager.HeaderWait = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.EntityBody = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.DrainEntityBody = TimeSpan.FromSeconds(15);
+            }
+            catch (Exception) { }
+        }
     }
 
     private async Task HandleUnblockApiAsync(HttpListenerRequest request, HttpListenerResponse response, string clientIp)
@@ -327,6 +343,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         response.StatusCode = (int)statusCode;
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.ContentType = "application/json; charset=utf-8";
         string json = JsonSerializer.Serialize(new { success, message });
         byte[] buffer = Encoding.UTF8.GetBytes(json);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -40,6 +40,37 @@ public static class ThreatFeedParser
         };
     }
 
+    private static bool TryNormalizeThreatEntry(string candidate, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(candidate)) return false;
+
+        string trimmed = candidate.Trim();
+        if (trimmed.Contains('/'))
+        {
+            if (IPNetwork.TryParse(trimmed, out IPNetwork network))
+            {
+                bool isV4 = network.BaseAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork;
+                int minBits = isV4 ? 16 : 32;
+                int maxBits = isV4 ? 32 : 128;
+                if (network.PrefixLength >= minBits && network.PrefixLength <= maxBits && !BogonIpFilter.IsBogonOrReserved(network.BaseAddress))
+                {
+                    normalized = IpAddressCanonicalizer.Canonicalize(trimmed);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (IPAddress.TryParse(trimmed, out IPAddress? address) && !BogonIpFilter.IsBogonOrReserved(address))
+        {
+            normalized = IpAddressCanonicalizer.Canonicalize(address).ToString();
+            return true;
+        }
+
+        return false;
+    }
+
     private static List<string> ParsePlainTextLines(string content, int maxEntries)
     {
         HashSet<string> results = new(StringComparer.OrdinalIgnoreCase);
@@ -56,16 +87,9 @@ public static class ThreatFeedParser
             int commentIndex = line.IndexOfAny([';', '#', ' ', '\t']);
             string candidate = commentIndex > 0 ? line[..commentIndex].Trim() : line;
 
-            // 處理 CIDR (例如: 198.51.100.0/24 取 198.51.100.0)
-            int slashIndex = candidate.IndexOf('/');
-            if (slashIndex > 0)
+            if (TryNormalizeThreatEntry(candidate, out string normalized))
             {
-                candidate = candidate[..slashIndex].Trim();
-            }
-
-            if (IPAddress.TryParse(candidate, out IPAddress? address) && !BogonIpFilter.IsBogonOrReserved(address))
-            {
-                results.Add(IpAddressCanonicalizer.Canonicalize(address).ToString());
+                results.Add(normalized);
             }
         }
 
@@ -91,9 +115,9 @@ public static class ThreatFeedParser
             if (!int.TryParse(parts[1].Trim(), out int level) || level < minLevel)
                 continue;
 
-            if (IPAddress.TryParse(ipCandidate, out IPAddress? address) && !BogonIpFilter.IsBogonOrReserved(address))
+            if (TryNormalizeThreatEntry(ipCandidate, out string normalized))
             {
-                results.Add(IpAddressCanonicalizer.Canonicalize(address).ToString());
+                results.Add(normalized);
             }
         }
 
@@ -120,9 +144,9 @@ public static class ThreatFeedParser
                     if (string.IsNullOrWhiteSpace(ip) || score < minConfidence)
                         continue;
 
-                    if (IPAddress.TryParse(ip.Trim(), out IPAddress? address) && !BogonIpFilter.IsBogonOrReserved(address))
+                    if (TryNormalizeThreatEntry(ip, out string normalized))
                     {
-                        results.Add(IpAddressCanonicalizer.Canonicalize(address).ToString());
+                        results.Add(normalized);
                     }
                 }
             }

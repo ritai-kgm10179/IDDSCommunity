@@ -56,6 +56,7 @@ public sealed class ManagementApiHttpServer : IDisposable
             int port = configuration.ManagementApiPort;
             string scheme = allowLoopbackHttp ? "http" : "https";
             listener = new HttpListener();
+            ConfigureHttpTimeouts(listener);
             try
             {
                 listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
@@ -65,6 +66,7 @@ public sealed class ManagementApiHttpServer : IDisposable
             {
                 listener.Close();
                 listener = new HttpListener();
+                ConfigureHttpTimeouts(listener);
                 listener.Prefixes.Add($"{scheme}://*:{port}/");
                 try
                 {
@@ -74,6 +76,7 @@ public sealed class ManagementApiHttpServer : IDisposable
                 {
                     listener.Close();
                     listener = new HttpListener();
+                    ConfigureHttpTimeouts(listener);
                     listener.Prefixes.Add($"{scheme}://localhost:{port}/");
                     listener.Start();
                 }
@@ -163,7 +166,21 @@ public sealed class ManagementApiHttpServer : IDisposable
 
                 string actionType = path.EndsWith("block") && !path.EndsWith("unblock") ? "block" : "unblock";
                 string? token = request.QueryString["token"];
-                if (Shared.Security.ActionTokenService.ValidateToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
+
+                // 若為 GET 且客戶端要求 HTML（瀏覽器存取），回傳安全確認頁面，杜絕郵件防護閘道（如 Defender Safe Links）預檢自動爬取執行
+                string accept = request.Headers["Accept"] ?? string.Empty;
+                if (method == "GET" && accept.Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Shared.Security.ActionTokenService.ValidateToken(token, actionType, out string previewIp, configuration.ManagementApiKey))
+                    {
+                        await ServeActionConfirmationPageAsync(response, actionType, previewIp, token!);
+                        return;
+                    }
+                    await SendJsonResponseAsync(response, HttpStatusCode.Forbidden, new { error = "Invalid or expired Action Token" });
+                    return;
+                }
+
+                if (Shared.Security.ActionTokenService.ValidateAndBurnToken(token, actionType, out string targetIp, configuration.ManagementApiKey))
                 {
                     targetIp = IpAddressCanonicalizer.Canonicalize(targetIp);
                     if (actionType == "block")
@@ -316,11 +333,81 @@ public sealed class ManagementApiHttpServer : IDisposable
         }
     }
 
+    private static void ConfigureHttpTimeouts(HttpListener listener)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            try
+            {
+                listener.TimeoutManager.HeaderWait = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.EntityBody = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.DrainEntityBody = TimeSpan.FromSeconds(15);
+            }
+            catch (Exception) { }
+        }
+    }
+
+    private static async Task ServeActionConfirmationPageAsync(HttpListenerResponse response, string actionType, string targetIp, string token)
+    {
+        response.StatusCode = (int)HttpStatusCode.OK;
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+        response.Headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline';";
+        response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        response.ContentType = "text/html; charset=utf-8";
+
+        string actionText = actionType == "block" ? "永久硬封鎖" : "立即解除封鎖";
+        string buttonColor = actionType == "block" ? "#ef4444" : "#10b981";
+        string encodedIp = WebUtility.HtmlEncode(targetIp);
+        string actionUrl = $"/api/v1/actions/{actionType}?token={Uri.EscapeDataString(token)}";
+
+        string html = $$"""
+        <!DOCTYPE html>
+        <html lang="zh-TW">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>IDDS Community - ChatOps 安全操作確認</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+            body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+            .card { background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; max-width: 480px; width: 100%; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); text-align: center; }
+            h1 { font-size: 20px; font-weight: 700; color: #14b8a6; margin-bottom: 12px; }
+            p { font-size: 14px; color: #cbd5e1; line-height: 1.6; margin-bottom: 16px; }
+            .ip-badge { background: #0f172a; color: #38bdf8; padding: 6px 14px; border-radius: 6px; font-family: monospace; font-size: 16px; display: inline-block; margin-bottom: 20px; border: 1px solid #334155; }
+            .warning-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid {{buttonColor}}; padding: 12px; border-radius: 6px; margin-bottom: 24px; font-size: 13px; text-align: left; color: #94a3b8; }
+            button { width: 100%; padding: 14px; background: {{buttonColor}}; color: #fff; font-weight: 700; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: opacity 0.2s; }
+            button:hover { opacity: 0.9; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>🛡️ IDDS Community 操作確認</h1>
+            <p>您即將透過 SecOps / ChatOps 快速通道對來源位址實施【<strong>{{actionText}}</strong>】處置：</p>
+            <div class="ip-badge">{{encodedIp}}</div>
+            <div class="warning-box">
+              ⚠️ 注意：此操作權杖具備單次時效性（Burn-on-use）。點擊確認按鈕後，權杖將立即銷毀且不可重複執行。
+            </div>
+            <form method="POST" action="{{actionUrl}}">
+              <button type="submit">確認執行【{{actionText}}】</button>
+            </form>
+          </div>
+        </body>
+        </html>
+        """;
+
+        byte[] buffer = Encoding.UTF8.GetBytes(html);
+        response.ContentLength64 = buffer.Length;
+        await response.OutputStream.WriteAsync(buffer);
+    }
+
     private static async Task SendJsonResponseAsync(HttpListenerResponse response, HttpStatusCode statusCode, object data)
     {
         response.StatusCode = (int)statusCode;
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.ContentType = "application/json; charset=utf-8";
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         byte[] buffer = Encoding.UTF8.GetBytes(json);

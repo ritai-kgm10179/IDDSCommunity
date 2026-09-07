@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -33,6 +33,25 @@ public sealed class RemediationRegressionTest
         Assert.IsFalse(ActionTokenService.ValidateToken(token, "unblock", out _));
         Assert.ThrowsExactly<ArgumentNullException>(() => ActionTokenService.GenerateToken("block", "8.8.8.8"));
         Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => ActionTokenService.GenerateToken("block", "8.8.8.8", 16, secret));
+    }
+
+    /// <summary>
+    /// 驗證 ActionToken 經 ValidateAndBurnToken 驗證成功後立即銷毀，無法被重複執行（Burn-on-use）。
+    /// </summary>
+    [TestMethod]
+    public void ActionToken_ValidateAndBurn_CannotBeReplayed()
+    {
+        ActionTokenService.ResetConsumedTokensForTesting();
+        const string secret = "unit-test-burn-secret-key-12345";
+        string token = ActionTokenService.GenerateToken("unblock", "140.112.1.1", ttlMinutes: 10, secretKey: secret);
+
+        // 第一次驗證並消耗應成功
+        Assert.IsTrue(ActionTokenService.ValidateAndBurnToken(token, "unblock", out string ip, secret));
+        Assert.AreEqual("140.112.1.1", ip);
+
+        // 第二次重放調用應被拒絕（已消耗）
+        Assert.IsFalse(ActionTokenService.ValidateAndBurnToken(token, "unblock", out string replayedIp, secret));
+        Assert.IsTrue(string.IsNullOrEmpty(replayedIp));
     }
 
     /// <summary>

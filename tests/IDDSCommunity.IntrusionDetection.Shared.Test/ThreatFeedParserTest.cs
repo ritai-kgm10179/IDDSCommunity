@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -78,5 +78,27 @@ public sealed class ThreatFeedParserTest
         Assert.IsTrue(result.Contains("140.112.2.2"));
         Assert.IsFalse(result.Contains("8.8.4.4")); // score 50 < 90
         Assert.IsFalse(result.Contains("10.1.2.3")); // RFC 1918 Bogon
+    }
+
+    [TestMethod]
+    public void ParseFeed_PublicCidr_ExtractsAndPreservesSubnetWithinSafeLimits()
+    {
+        string rawContent = @"
+# Spamhaus DROP list
+140.112.0.0/24 ; Valid public subnet
+140.112.1.1/32 ; Single host CIDR
+140.0.0.0/8 ; Overly broad network (should be dropped)
+0.0.0.0/0 ; Default route (should be dropped)
+198.51.100.0/24 ; RFC 5737 Test-Net Bogon (should be dropped)
+";
+
+        List<string> result = ThreatFeedParser.ParseFeed(rawContent, ThreatFeedFormat.PlainTextLines);
+
+        Assert.AreEqual(2, result.Count);
+        Assert.IsTrue(result.Contains("140.112.0.0/24"));
+        Assert.IsTrue(result.Contains("140.112.1.1"));
+        Assert.IsFalse(result.Contains("140.0.0.0/8"));
+        Assert.IsFalse(result.Contains("0.0.0.0/0"));
+        Assert.IsFalse(result.Contains("198.51.100.0/24"));
     }
 }

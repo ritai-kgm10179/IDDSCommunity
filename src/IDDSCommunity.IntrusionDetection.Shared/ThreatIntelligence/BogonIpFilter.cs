@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -105,7 +105,17 @@ public static class BogonIpFilter
     public static bool IsBogonOrReserved(string? ipString)
     {
         if (string.IsNullOrWhiteSpace(ipString)) return true;
-        if (!IPAddress.TryParse(ipString.Trim(), out IPAddress? address)) return true;
+        string trimmed = ipString.Trim();
+        if (trimmed.Contains('/'))
+        {
+            if (IPNetwork.TryParse(trimmed, out IPNetwork network))
+            {
+                return IsBogonOrReserved(network.BaseAddress);
+            }
+            return true;
+        }
+
+        if (!IPAddress.TryParse(trimmed, out IPAddress? address)) return true;
         return IsBogonOrReserved(address);
     }
 

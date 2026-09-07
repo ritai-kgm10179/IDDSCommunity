@@ -101,6 +101,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub requires an API key."));
         int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
         listener = new HttpListener();
+        ConfigureHttpTimeouts(listener);
         listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
         try { listener.Start(); }
         catch (Exception ex)
@@ -300,10 +301,25 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         return store.Upsert(normalized);
     }
 
+    private static void ConfigureHttpTimeouts(HttpListener listener)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            try
+            {
+                listener.TimeoutManager.HeaderWait = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.EntityBody = TimeSpan.FromSeconds(15);
+                listener.TimeoutManager.DrainEntityBody = TimeSpan.FromSeconds(15);
+            }
+            catch (Exception) { }
+        }
+    }
+
     private static async Task WriteJsonResponseAsync(HttpListenerResponse response, object data)
     {
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.ContentType = "application/json; charset=utf-8";
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(data, JsonOptions);
         response.ContentLength64 = bytes.Length;

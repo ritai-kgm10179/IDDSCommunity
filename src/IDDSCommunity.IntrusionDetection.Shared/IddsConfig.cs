@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -1299,7 +1299,18 @@ public string Language
         bool result = false;
         try
         {
-            IPAddress address = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(ipAddress));
+            string trimmed = ipAddress.Trim();
+            IPAddress address;
+            if (trimmed.Contains('/'))
+            {
+                if (!IPNetwork.TryParse(trimmed, out IPNetwork network))
+                    return false;
+                address = IpAddressCanonicalizer.Canonicalize(network.BaseAddress);
+            }
+            else
+            {
+                address = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(trimmed));
+            }
             foreach (CSafeNetwork net in SafeNetworks)
             {
                 try
@@ -1472,7 +1483,23 @@ public string Language
     /// </summary>
     /// <param name="ipAddress">ip address參數。</param>
     /// <returns>若valid ip address傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-    public static bool IsValidIpAddress(string ipAddress) => IPAddress.TryParse(ipAddress, out IPAddress? validIpAddress);
+    public static bool IsValidIpAddress(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress)) return false;
+        string trimmed = ipAddress.Trim();
+        if (trimmed.Contains('/'))
+        {
+            if (IPNetwork.TryParse(trimmed, out IPNetwork network))
+            {
+                bool isV4 = network.BaseAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork;
+                int minBits = isV4 ? 16 : 32;
+                int maxBits = isV4 ? 32 : 128;
+                return network.PrefixLength >= minBits && network.PrefixLength <= maxBits;
+            }
+            return false;
+        }
+        return IPAddress.TryParse(trimmed, out _);
+    }
     /// <summary>
     /// Determines whether valid subnet mask.
     /// </summary>

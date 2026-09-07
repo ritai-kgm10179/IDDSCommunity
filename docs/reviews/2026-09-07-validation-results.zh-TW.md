@@ -45,6 +45,11 @@
    - 於 ManagementApi、ThreatHub 與 SelfService 伺服器監聽啟動異常日誌中注入 Windows 核心模式 `netsh http add sslcert` 診斷導引提示。
    - 於使用者指南補充 3.23 節 HTTPS TLS 憑證綁定維運小節與常見問題排查說明。
 
+8. **外部情資 CIDR 網段防護、ActionToken 單次銷毀與 HTTP.sys 核心層逾時**：
+   - 於 `ThreatFeedParser` 支援合規公網 CIDR 網段解析與保留（IPv4 `/16`~`/32`、IPv6 `/32`~`/128`），過大網段自動過濾阻擋；`IpAddressCanonicalizer` 與 `IddsConfig` 全面對齊 CIDR 正規化與安全網路比對。
+   - 於 `ActionTokenService` 實施 `ValidateAndBurnToken`（單次使用即刻銷毀，防禦 15 分鐘 TTL 內重放攻擊）；Management API 針對瀏覽器 GET 請求提供安全確認頁，杜絕郵件防護閘道（如 Microsoft Defender Safe Links）預檢自動爬取執行。
+   - 於所有嵌入式 HTTP 服務（Management API、Threat Hub、Self-Service Portal）顯式配置 Windows 核心驅動層之 `HttpListener.TimeoutManager`（HeaderWait = 15s, EntityBody = 15s），在核心層截斷慢速 HTTP / Slowloris 攻擊；並於回應標頭補齊 HSTS（`Strict-Transport-Security: max-age=31536000; includeSubDomains`）與強化 CSP。
+
 ---
 
 ## 二、 最終自動化驗證結果
@@ -52,8 +57,8 @@
 | 項目 | 結果 | 說明 |
 | :--- | :--- | :--- |
 | **完整方案建置** | **0 警告、0 錯誤** | `dotnet build IDDSCommunity.slnx` 通過 |
-| **完整方案 MSTest** | **489 通過、0 失敗、5 略過**（總計 494） | 全方案 24 個測試專案全數綠燈通過 |
-| ├─ Shared 核心庫測試 | **252 通過、0 失敗** | 涵蓋 Bogon、DDNS、Token、IMDS Socket 阻絕、加密等 |
+| **完整方案 MSTest** | **491 通過、0 失敗、5 略過**（總計 496） | 全方案 24 個測試專案全數綠燈通過 |
+| ├─ Shared 核心庫測試 | **254 通過、0 失敗** | 涵蓋 Bogon、DDNS、Token 銷毀、CIDR 解析、IMDS 阻絕、加密等 |
 | ├─ Service 服務層測試 | **97 通過、0 失敗、5 略過** | 略過項目為需提升系統管理員權限之整合測試 |
 | ├─ Setup 安裝程式測試 | **40 通過、0 失敗** | 涵蓋安裝/升級/修復/移除路徑與捷徑邏輯 |
 | └─ 18 個 Agent 專案測試 | **100 通過、0 失敗** | 涵蓋 OpenSSH、MySQL、RDP、WinRM、DNS 等 |

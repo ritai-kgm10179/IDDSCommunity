@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Net;
 using System.Globalization;
+using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Security;
 
@@ -95,5 +96,60 @@ public static class ActionTokenService
 
         ipAddress = ip;
         return true;
+    }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> _consumedTokens = new(StringComparer.Ordinal);
+    private static long _lastCleanupSeconds;
+
+    /// <summary>
+    /// 驗證安全權杖之真實性、時效性，並在驗證成功後立即將其標記為已消耗（Burn-on-use），防止重放攻擊。
+    /// </summary>
+    /// <param name="token">待驗證之權杖字串。</param>
+    /// <param name="expectedAction">預期的處置動作（如 "block" 或 "unblock"）。</param>
+    /// <param name="ipAddress">解析出之目標 IP 位址。</param>
+    /// <param name="secretKey">必要的簽署密鑰；空白時拒絕驗證。</param>
+    /// <returns>若權杖合法、未過期且尚未被消耗傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool ValidateAndBurnToken(string? token, string expectedAction, out string ipAddress, string? secretKey = null)
+    {
+        if (!ValidateToken(token, expectedAction, out ipAddress, secretKey))
+            return false;
+
+        string[] parts = token!.Split('|');
+        string signature = parts[4];
+        long expiry = long.Parse(parts[3], CultureInfo.InvariantCulture);
+
+        long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        CleanupExpiredConsumedTokens(now);
+
+        // TryAdd 傳回 false 代表先前已被消耗過（重放攻擊）
+        if (!_consumedTokens.TryAdd(signature, expiry))
+        {
+            ipAddress = string.Empty;
+            return false;
+        }
+
+        return true;
+    }
+
+    private static void CleanupExpiredConsumedTokens(long now)
+    {
+        if (now - Interlocked.Read(ref _lastCleanupSeconds) < 60)
+            return;
+
+        Interlocked.Exchange(ref _lastCleanupSeconds, now);
+        foreach (var pair in _consumedTokens)
+        {
+            if (pair.Value <= now)
+                _consumedTokens.TryRemove(pair.Key, out _);
+        }
+    }
+
+    /// <summary>
+    /// 清除已消耗之權杖快取記錄（僅供測試使用）。
+    /// </summary>
+    internal static void ResetConsumedTokensForTesting()
+    {
+        _consumedTokens.Clear();
+        Interlocked.Exchange(ref _lastCleanupSeconds, 0);
     }
 }

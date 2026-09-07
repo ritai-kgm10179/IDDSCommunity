@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -17,7 +17,28 @@ public static class IpAddressCanonicalizer
     public static bool TryCanonicalize(string? value, out string canonicalAddress)
     {
         canonicalAddress = string.Empty;
-        if (!IPAddress.TryParse(value?.Trim(), out IPAddress? address))
+        string? trimmed = value?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+            return false;
+
+        if (trimmed.Contains('/'))
+        {
+            if (IPNetwork.TryParse(trimmed, out IPNetwork network))
+            {
+                IPAddress canonicalBase = Canonicalize(network.BaseAddress);
+                int maxBits = canonicalBase.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 ? 128 : 32;
+                if (network.PrefixLength == maxBits)
+                {
+                    canonicalAddress = canonicalBase.ToString();
+                    return true;
+                }
+                canonicalAddress = $"{canonicalBase}/{network.PrefixLength}";
+                return true;
+            }
+            return false;
+        }
+
+        if (!IPAddress.TryParse(trimmed, out IPAddress? address))
             return false;
 
         canonicalAddress = Canonicalize(address).ToString();
