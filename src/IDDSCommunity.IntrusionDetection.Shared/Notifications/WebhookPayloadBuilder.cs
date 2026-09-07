@@ -62,7 +62,9 @@ public static class WebhookPayloadBuilder
         if (string.IsNullOrEmpty(input)) return string.Empty;
         if (input.IndexOfAny(BidiControlChars) < 0) return input;
 
-        Span<char> buffer = stackalloc char[input.Length];
+        Span<char> buffer = input.Length <= 1024
+            ? stackalloc char[input.Length]
+            : new char[input.Length];
         int len = 0;
         for (int i = 0; i < input.Length; i++)
         {
