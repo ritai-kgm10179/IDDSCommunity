@@ -52,6 +52,40 @@ public static class WebhookPayloadBuilder
         };
     }
 
+    private static readonly char[] BidiControlChars = ['\u202A', '\u202B', '\u202C', '\u202D', '\u202E', '\u2066', '\u2067', '\u2068', '\u2069'];
+
+    /// <summary>
+    /// 移除危險之 Unicode Bidi 方向性覆寫字元（防禦 Trojan Source / CVE-2021-42574 視覺欺騙與文字反轉）。
+    /// </summary>
+    private static string SanitizeBidiAndControlCharacters(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        if (input.IndexOfAny(BidiControlChars) < 0) return input;
+
+        Span<char> buffer = stackalloc char[input.Length];
+        int len = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            char c = input[i];
+            if (Array.IndexOf(BidiControlChars, c) < 0)
+            {
+                buffer[len++] = c;
+            }
+        }
+        return new string(buffer[..len]);
+    }
+
+    /// <summary>
+    /// 跳脫 Markdown 連結字元 [ 與 ]，防範惡意偽造超連結。
+    /// </summary>
+    private static string EscapeMarkdownLinks(string? input)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
+        return input
+            .Replace("[", "\\[")
+            .Replace("]", "\\]");
+    }
+
     private static string EscapeSlackMrkdwn(string? input)
     {
         if (string.IsNullOrEmpty(input)) return string.Empty;
@@ -64,11 +98,9 @@ public static class WebhookPayloadBuilder
     private static string SanitizeDiscordMarkdown(string? input)
     {
         if (string.IsNullOrEmpty(input)) return string.Empty;
-        return input
+        return EscapeMarkdownLinks(input)
             .Replace("@everyone", "@\u200beveryone")
-            .Replace("@here", "@\u200bhere")
-            .Replace("[", "\\[")
-            .Replace("]", "\\]");
+            .Replace("@here", "@\u200bhere");
     }
 
     private static string TruncateText(string? input, int maxLength)
@@ -100,7 +132,11 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
-        string safeDetails = TruncateText(details, 4000);
+        string safeTitle = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250)));
+        string safeDetails = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(details, 4000)));
+        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
+        string safeStatus = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(statusName, 100)));
+        string safeAgent = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(agentName, 100)));
         var cardContent = new Dictionary<string, object>
         {
             ["type"] = "AdaptiveCard",
@@ -118,7 +154,7 @@ public static class WebhookPayloadBuilder
                 new Dictionary<string, object>
                 {
                     ["type"] = "TextBlock",
-                    ["text"] = eventTitle,
+                    ["text"] = safeTitle,
                     ["weight"] = "Bolder",
                     ["size"] = "Large"
                 },
@@ -127,9 +163,9 @@ public static class WebhookPayloadBuilder
                     ["type"] = "FactSet",
                     ["facts"] = new List<object>
                     {
-                        new Dictionary<string, string> { ["title"] = "IP 位址", ["value"] = ipAddress },
-                        new Dictionary<string, string> { ["title"] = "狀態", ["value"] = statusName },
-                        new Dictionary<string, string> { ["title"] = "代理程式", ["value"] = agentName },
+                        new Dictionary<string, string> { ["title"] = "IP 位址", ["value"] = safeIp },
+                        new Dictionary<string, string> { ["title"] = "狀態", ["value"] = safeStatus },
+                        new Dictionary<string, string> { ["title"] = "代理程式", ["value"] = safeAgent },
                         new Dictionary<string, string> { ["title"] = "時間 (UTC)", ["value"] = timestamp.ToString("u") }
                     }
                 },
@@ -213,10 +249,11 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
-        string cleanTitle = EscapeSlackMrkdwn(eventTitle);
-        string cleanStatus = EscapeSlackMrkdwn(statusName);
-        string cleanAgent = EscapeSlackMrkdwn(agentName);
-        string cleanDetails = EscapeSlackMrkdwn(TruncateText(details, 3000));
+        string cleanTitle = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(eventTitle));
+        string cleanStatus = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(statusName));
+        string cleanAgent = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(agentName));
+        string cleanDetails = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(TruncateText(details, 3000)));
+        string cleanIp = SanitizeBidiAndControlCharacters(ipAddress);
 
         var blocks = new List<object>
         {
@@ -226,7 +263,7 @@ public static class WebhookPayloadBuilder
                 ["text"] = new Dictionary<string, object>
                 {
                     ["type"] = "plain_text",
-                    ["text"] = $"🛡️ IDDS Community: {eventTitle}",
+                    ["text"] = $"🛡️ IDDS Community: {cleanTitle}",
                     ["emoji"] = true
                 }
             },
@@ -235,7 +272,7 @@ public static class WebhookPayloadBuilder
                 ["type"] = "section",
                 ["fields"] = new List<object>
                 {
-                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*IP 位址:*\n`{ipAddress}`" },
+                    new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*IP 位址:*\n`{cleanIp}`" },
                     new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*狀態:*\n{cleanStatus}" },
                     new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*代理程式:*\n{cleanAgent}" },
                     new Dictionary<string, string> { ["type"] = "mrkdwn", ["text"] = $"*時間 (UTC):*\n{timestamp:u}" }
@@ -301,7 +338,7 @@ public static class WebhookPayloadBuilder
 
         var slackMessage = new Dictionary<string, object>
         {
-            ["text"] = $"🛡️ {eventTitle}: {ipAddress}",
+            ["text"] = $"🛡️ {cleanTitle}: {cleanIp}",
             ["blocks"] = blocks
         };
 
@@ -313,10 +350,11 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildDiscordPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp, int colorHex = 0xDC2626)
     {
-        string safeTitle = SanitizeDiscordMarkdown(TruncateText(eventTitle, 250));
-        string safeDetails = SanitizeDiscordMarkdown(TruncateText(details, 4000));
-        string safeStatus = SanitizeDiscordMarkdown(TruncateText(statusName, 100));
-        string safeAgent = SanitizeDiscordMarkdown(TruncateText(agentName, 100));
+        string safeTitle = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250)));
+        string safeDetails = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(details, 4000)));
+        string safeStatus = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(statusName, 100)));
+        string safeAgent = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(agentName, 100)));
+        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
         var discordMessage = new Dictionary<string, object>
         {
             ["username"] = "IDDS Community",
@@ -330,7 +368,7 @@ public static class WebhookPayloadBuilder
                     ["color"] = colorHex,
                     ["fields"] = new List<object>
                     {
-                        new Dictionary<string, object> { ["name"] = "IP 位址", ["value"] = ipAddress, ["inline"] = true },
+                        new Dictionary<string, object> { ["name"] = "IP 位址", ["value"] = safeIp, ["inline"] = true },
                         new Dictionary<string, object> { ["name"] = "狀態", ["value"] = safeStatus, ["inline"] = true },
                         new Dictionary<string, object> { ["name"] = "代理程式", ["value"] = safeAgent, ["inline"] = true }
                     },
@@ -347,18 +385,22 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildTelegramPayload(string chatId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
-        string safeDetails = TruncateText(details, 4000);
+        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(details, 4000));
+        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250));
+        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
+        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(statusName, 100));
+        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(agentName, 100));
         string text = $"<b>🛡️ IDDS Community 警報</b>\n\n" +
-                      $"<b>事件:</b> {WebUtility.HtmlEncode(eventTitle)}\n" +
-                      $"<b>IP 位址:</b> <code>{WebUtility.HtmlEncode(ipAddress)}</code>\n" +
-                      $"<b>狀態:</b> {WebUtility.HtmlEncode(statusName)}\n" +
-                      $"<b>代理程式:</b> {WebUtility.HtmlEncode(agentName)}\n" +
+                      $"<b>事件:</b> {WebUtility.HtmlEncode(safeTitle)}\n" +
+                      $"<b>IP 位址:</b> <code>{WebUtility.HtmlEncode(safeIp)}</code>\n" +
+                      $"<b>狀態:</b> {WebUtility.HtmlEncode(safeStatus)}\n" +
+                      $"<b>代理程式:</b> {WebUtility.HtmlEncode(safeAgent)}\n" +
                       $"<b>時間 (UTC):</b> {timestamp:u}\n\n" +
                       $"<b>詳細資訊:</b>\n{WebUtility.HtmlEncode(safeDetails)}";
 
         var telegramMessage = new Dictionary<string, object>
         {
-            ["chat_id"] = chatId,
+            ["chat_id"] = chatId?.Trim() ?? string.Empty,
             ["parse_mode"] = "HTML",
             ["text"] = text
         };
@@ -374,11 +416,11 @@ public static class WebhookPayloadBuilder
         var genericMessage = new Dictionary<string, object>
         {
             ["system"] = "IDDS Community",
-            ["event_title"] = eventTitle,
-            ["ip_address"] = ipAddress,
-            ["status"] = statusName,
-            ["agent"] = agentName,
-            ["details"] = details,
+            ["event_title"] = SanitizeBidiAndControlCharacters(eventTitle),
+            ["ip_address"] = SanitizeBidiAndControlCharacters(ipAddress),
+            ["status"] = SanitizeBidiAndControlCharacters(statusName),
+            ["agent"] = SanitizeBidiAndControlCharacters(agentName),
+            ["details"] = SanitizeBidiAndControlCharacters(details),
             ["timestamp_utc"] = timestamp.ToString("o")
         };
 
@@ -390,18 +432,26 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildLineMessagingPayload(string toUserIdOrGroupId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
-        string safeDetails = TruncateText(details, 4500);
+        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(details, 4000));
+        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 200));
+        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
+        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(statusName, 100));
+        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(agentName, 100));
+
         string text = $"🛡️【IDDS Community 警報】\n" +
-                      $"• 事件：{eventTitle}\n" +
-                      $"• 來源 IP：{ipAddress}\n" +
-                      $"• 狀態：{statusName}\n" +
-                      $"• 代理：{agentName}\n" +
+                      $"• 事件：{safeTitle}\n" +
+                      $"• 來源 IP：{safeIp}\n" +
+                      $"• 狀態：{safeStatus}\n" +
+                      $"• 代理：{safeAgent}\n" +
                       $"• 時間：{timestamp:yyyy-MM-dd HH:mm:ss} UTC\n\n" +
                       $"詳細說明：\n{safeDetails}";
 
+        // LINE Messaging API 規範單則文字訊息長度上限為 5,000 字元，超過將被 API 拒絕 (400 Bad Request)
+        text = TruncateText(text, 5000);
+
         var lineMessage = new Dictionary<string, object>
         {
-            ["to"] = toUserIdOrGroupId,
+            ["to"] = toUserIdOrGroupId?.Trim() ?? string.Empty,
             ["messages"] = new List<object>
             {
                 new Dictionary<string, string>

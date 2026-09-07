@@ -258,4 +258,89 @@ public sealed class WebhookPayloadBuilderTest
             Assert.IsTrue(text.EndsWith("...", StringComparison.Ordinal));
         }
     }
+
+    /// <summary>
+    /// 驗證 Teams AdaptiveCard 與 Discord 酬載確實跳脫 Markdown 連結字元 [ 與 ]，防範釣魚連結注入。
+    /// </summary>
+    [TestMethod]
+    public void BuildTeamsAndDiscordPayload_EscapesMarkdownLinks()
+    {
+        string maliciousDetails = "Fake link: [Click here to login](https://phishing.example.com)";
+        string maliciousTitle = "[Alert] System compromised";
+
+        string teamsJson = WebhookPayloadBuilder.BuildTeamsPayload(
+            maliciousTitle, "198.51.100.33", "Hard lock", "Agent[Admin]", maliciousDetails, TestTimestamp);
+        Assert.IsNotNull(teamsJson);
+        Assert.IsFalse(teamsJson.Contains("[Click here to login](https://phishing.example.com)", StringComparison.Ordinal));
+        using (var teamsDoc = JsonDocument.Parse(teamsJson))
+        {
+            var body = teamsDoc.RootElement.GetProperty("attachments")[0].GetProperty("content").GetProperty("body");
+            string titleText = body[1].GetProperty("text").GetString()!;
+            string detailsText = body[3].GetProperty("text").GetString()!;
+            Assert.IsTrue(titleText.Contains("\\[Alert\\]", StringComparison.Ordinal));
+            Assert.IsTrue(detailsText.Contains("\\[Click here to login\\](https://phishing.example.com)", StringComparison.Ordinal));
+        }
+
+        string discordJson = WebhookPayloadBuilder.BuildDiscordPayload(
+            maliciousTitle, "198.51.100.33", "Hard lock", "Agent[Admin]", maliciousDetails, TestTimestamp);
+        Assert.IsNotNull(discordJson);
+        Assert.IsFalse(discordJson.Contains("[Click here to login](https://phishing.example.com)", StringComparison.Ordinal));
+        using (var discordDoc = JsonDocument.Parse(discordJson))
+        {
+            var embed = discordDoc.RootElement.GetProperty("embeds")[0];
+            string discordTitle = embed.GetProperty("title").GetString()!;
+            string discordDesc = embed.GetProperty("description").GetString()!;
+            Assert.IsTrue(discordTitle.Contains("\\[Alert\\]", StringComparison.Ordinal));
+            Assert.IsTrue(discordDesc.Contains("\\[Click here to login\\]", StringComparison.Ordinal));
+        }
+    }
+
+    /// <summary>
+    /// 驗證全平台通知自動剔除 Unicode Bidi / RLO 方向性覆寫字元，防範 Trojan Source 視覺欺騙。
+    /// </summary>
+    [TestMethod]
+    public void BuildPayload_SanitizesUnicodeBidiControlCharacters()
+    {
+        // 包含 \u202E (RLO) 試圖將 IP 視覺反轉
+        string bidiIp = "192.168.1.\u202E100";
+        string bidiDetails = "Suspicious file: invoice\u202Eexe.pdf detected.";
+
+        string lineJson = WebhookPayloadBuilder.BuildLineMessagingPayload(
+            "U12345678", "Bidi Test", bidiIp, "Hard lock", "Agent", bidiDetails, TestTimestamp);
+        Assert.IsFalse(lineJson.Contains('\u202E'));
+        Assert.IsTrue(lineJson.Contains("192.168.1.100", StringComparison.Ordinal));
+        Assert.IsTrue(lineJson.Contains("invoiceexe.pdf", StringComparison.Ordinal));
+
+        string teamsJson = WebhookPayloadBuilder.BuildTeamsPayload(
+            "Bidi Test", bidiIp, "Hard lock", "Agent", bidiDetails, TestTimestamp);
+        Assert.IsFalse(teamsJson.Contains('\u202E'));
+
+        string slackJson = WebhookPayloadBuilder.BuildSlackPayload(
+            "Bidi Test", bidiIp, "Hard lock", "Agent", bidiDetails, TestTimestamp);
+        Assert.IsFalse(slackJson.Contains('\u202E'));
+
+        string discordJson = WebhookPayloadBuilder.BuildDiscordPayload(
+            "Bidi Test", bidiIp, "Hard lock", "Agent", bidiDetails, TestTimestamp);
+        Assert.IsFalse(discordJson.Contains('\u202E'));
+    }
+
+    /// <summary>
+    /// 驗證 LINE Messaging API 訊息在超長文字時嚴格限制於 5000 字元以內，並修剪接收者 ID 前後空白。
+    /// </summary>
+    [TestMethod]
+    public void BuildLineMessagingPayload_Enforces5000CharLimitAndTrimsRecipient()
+    {
+        string extremelyLongDetails = new('X', 10000);
+        string lineJson = WebhookPayloadBuilder.BuildLineMessagingPayload(
+            "  U1234567890abcdef  ", "Long Line Alert", "198.51.100.99", "Hard lock", "TestAgent", extremelyLongDetails, TestTimestamp);
+
+        Assert.IsNotNull(lineJson);
+        using var doc = JsonDocument.Parse(lineJson);
+        var root = doc.RootElement;
+        Assert.AreEqual("U1234567890abcdef", root.GetProperty("to").GetString());
+
+        string messageText = root.GetProperty("messages")[0].GetProperty("text").GetString()!;
+        Assert.IsTrue(messageText.Length <= 5000);
+        Assert.IsTrue(messageText.EndsWith("...", StringComparison.Ordinal));
+    }
 }
