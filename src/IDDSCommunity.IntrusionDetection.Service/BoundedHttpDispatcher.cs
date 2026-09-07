@@ -13,7 +13,7 @@ internal sealed class BoundedHttpDispatcher : IDisposable
     private readonly Channel<HttpListenerContext> requests = Channel.CreateBounded<HttpListenerContext>(new BoundedChannelOptions(32)
     {
         FullMode = BoundedChannelFullMode.Wait,
-        SingleWriter = true
+        SingleWriter = false
     });
     private readonly CancellationTokenSource stopping = new();
     private readonly Task[] workers;
@@ -42,8 +42,14 @@ internal sealed class BoundedHttpDispatcher : IDisposable
     internal void Submit(HttpListenerContext context)
     {
         if (requests.Writer.TryWrite(context)) return;
-        context.Response.StatusCode = 503;
-        context.Response.Close();
+        try
+        {
+            context.Response.Headers["Retry-After"] = "5";
+            context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            context.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            context.Response.Close();
+        }
+        catch { }
     }
 
     internal static async Task<string> ReadBodyAsync(HttpListenerRequest request, int maximumBytes = 65536)

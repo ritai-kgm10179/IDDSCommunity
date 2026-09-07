@@ -139,7 +139,11 @@ public sealed class NotificationDispatcher : IDisposable
         if (Interlocked.Exchange(ref disposed, 1) != 0) return;
         queue.Writer.TryComplete();
         stopping.Cancel();
-        Task.WhenAll(workers).GetAwaiter().GetResult();
+        try
+        {
+            Task.WhenAll(workers).GetAwaiter().GetResult();
+        }
+        catch { }
         stopping.Dispose();
         webhookService.Dispose();
         syslogService.Dispose();

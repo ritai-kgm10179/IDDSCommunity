@@ -74,8 +74,8 @@ public sealed class HoneyAccountDetector
         if (string.IsNullOrWhiteSpace(targetAccount)) return false;
 
         string normalized = targetAccount.Trim();
-        // 處理包含網域前綴的情況 (如 DOMAIN\admin_backup 或 admin_backup@corp.local)
-        int slashIdx = normalized.LastIndexOf('\\');
+        // 處理包含網域前綴的情況 (如 DOMAIN\admin_backup, DOMAIN/admin_backup 或 admin_backup@corp.local)
+        int slashIdx = normalized.LastIndexOfAny(['\\', '/']);
         if (slashIdx >= 0 && slashIdx < normalized.Length - 1)
         {
             normalized = normalized[(slashIdx + 1)..];

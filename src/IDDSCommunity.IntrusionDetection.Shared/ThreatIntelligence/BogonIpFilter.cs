@@ -58,8 +58,8 @@ public static class BogonIpFilter
             if (string.IsNullOrEmpty(line) || line.StartsWith('#') || line.StartsWith(';') || line.StartsWith("//", StringComparison.Ordinal))
                 continue;
 
-            int commentIndex = line.IndexOfAny([';', '#', ' ']);
-            string candidate = commentIndex > 0 ? line[..commentIndex].Trim() : line;
+            int commentIndex = line.IndexOfAny([';', '#']);
+            string candidate = commentIndex >= 0 ? line[..commentIndex].Trim() : line;
 
             if (IPNetwork.TryParse(candidate, out IPNetwork network))
             {

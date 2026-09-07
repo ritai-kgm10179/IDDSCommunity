@@ -33,16 +33,23 @@ internal static class DatabaseEncryptionKeyStore
 
         HardenAccessControl(keyPath);
         byte[] protectedKey = File.ReadAllBytes(keyPath);
-        byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
         try
         {
-            if (key.Length != KeySize)
-                throw new InvalidDataException(Localization.Strings.Get("The encrypted database key has an invalid length."));
-            return Convert.ToBase64String(key);
+            byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
+            try
+            {
+                if (key.Length != KeySize)
+                    throw new InvalidDataException(Localization.Strings.Get("The encrypted database key has an invalid length."));
+                return Convert.ToBase64String(key);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(key);
+            }
         }
         finally
         {
-            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(protectedKey);
         }
     }
 
@@ -58,16 +65,23 @@ internal static class DatabaseEncryptionKeyStore
             throw new InvalidDataException(Localization.Strings.Get("The encrypted database key is missing. Database access was refused to prevent data loss."));
 
         byte[] protectedKey = File.ReadAllBytes(keyPath);
-        byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
         try
         {
-            if (key.Length != KeySize)
-                throw new InvalidDataException(Localization.Strings.Get("The encrypted database key has an invalid length."));
-            return Convert.ToBase64String(key);
+            byte[] key = ProtectedData.Unprotect(protectedKey, OptionalEntropy, DataProtectionScope.LocalMachine);
+            try
+            {
+                if (key.Length != KeySize)
+                    throw new InvalidDataException(Localization.Strings.Get("The encrypted database key has an invalid length."));
+                return Convert.ToBase64String(key);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(key);
+            }
         }
         finally
         {
-            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(protectedKey);
         }
     }
 

@@ -93,17 +93,19 @@ public sealed class BogonIpFilterTest
 # Updated 2026-08-31
 198.19.0.0/16
 140.112.200.0/24 # dynamically unallocated test subnet
+140.112.201.0/24`t# tab separated comment
 ";
 
-        List<IPNetwork> parsed = BogonIpFilter.ParseBogonList(mockCymruBogonList);
-        Assert.AreEqual(2, parsed.Count);
+        List<IPNetwork> parsed = BogonIpFilter.ParseBogonList(mockCymruBogonList.Replace("`t", "\t"));
+        Assert.AreEqual(3, parsed.Count);
 
         BogonIpFilter.UpdateDynamicBogons(parsed);
-        Assert.AreEqual(2, BogonIpFilter.DynamicBogonCount);
+        Assert.AreEqual(3, BogonIpFilter.DynamicBogonCount);
 
         // 測試動態網段命中
         Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("140.112.200.50"));
         Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("140.112.200.254"));
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("140.112.201.10"));
 
         // 測試未在動態網段中的其他 IP
         Assert.IsFalse(BogonIpFilter.IsBogonOrReserved("140.112.1.1"));

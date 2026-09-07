@@ -22,6 +22,8 @@ public sealed class HoneyAccountDetectorTest
         Assert.IsTrue(detector.IsHoneyAccount("admin_backup"));
         Assert.IsTrue(detector.IsHoneyAccount("ADMIN_BACKUP"));
         Assert.IsTrue(detector.IsHoneyAccount("CORP\\root_trap"));
+        Assert.IsTrue(detector.IsHoneyAccount("CORP/root_trap"));
+        Assert.IsTrue(detector.IsHoneyAccount("AzureAD/admin_backup"));
         Assert.IsTrue(detector.IsHoneyAccount("canary_user@corp.local"));
         Assert.IsFalse(detector.IsHoneyAccount("legitimate_user"));
         Assert.IsFalse(detector.IsHoneyAccount(null));
