@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -87,7 +87,10 @@ public sealed class ManagementApiHttpServer : IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry($"[ManagementAPI] Failed to start server: {ex.Message}",
+            string hint = !allowLoopbackHttp
+                ? $" If using HTTPS, ensure a TLS certificate is bound to port {configuration.ManagementApiPort} (e.g. 'netsh http add sslcert ipport=0.0.0.0:{configuration.ManagementApiPort} certhash=<THUMBPRINT> appid={Guid.NewGuid():B}')."
+                : string.Empty;
+            WindowsLogManager.Instance.WriteEntry($"[ManagementAPI] Failed to start server: {ex.Message}.{hint}",
                 System.Diagnostics.EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         }
     }

@@ -210,12 +210,29 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 - **即時合規評分與改善建議**：一鍵執行完整 CIS 安全掃描，即時計算合規百分比，並針對未通過項目提供詳細之改善處置指引。
 - **取證報告匯出**：支援將評估結果匯出為 JSON 取證檔案，利於資安稽核存檔與合規追蹤。
 
+### 3.23 🔐 Windows HTTP.sys 核心監聽之 HTTPS TLS 憑證綁定指引
+本系統之內嵌 HTTP 伺服器（安全 RESTful 管理 API、威脅情資中繼中心 Threat Hub、合法使用者 TOTP 自助解鎖門戶）底層直接使用 Windows 核心 `HTTP.sys` 實作高效能監聽。在正式生產環境啟用 HTTPS 前綴時，Windows 要求必須為該連接埠綁定有效且關聯私密金鑰之 TLS 伺服器憑證：
+
+1. **取得憑證指紋 (Thumbprint / Hash)**：
+   - 開啟 `certlm.msc`（本機電腦憑證存放區），至「個人 (Personal) > 憑證 (Certificates)」找到已匯入之伺服器憑證，確認圖示具有金色鑰匙（代表包含私密金鑰）。
+   - 複製其「指紋 (Thumbprint)」，去除空格（例如 `585947f104b5bce53239f02d1c6fed06832f47dc`）。
+
+2. **透過 `netsh` 進行核心模式 SSL 憑證綁定**：
+   - 以**系統管理員身分**開啟命令提示字元或 PowerShell，依據設定的監聽連接埠（以 Management API 預設 8444 為例）執行：
+     ```cmd
+     netsh http add sslcert ipport=0.0.0.0:8444 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
+     ```
+   - 若為 Threat Hub（預設 8443）或自助門戶（預設 8445），請將 `ipport` 替換為對應連接埠號。
+   - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8444`。
+
 ---
 
 ## 4. 常見問題與故障排除 (FAQ)
 
 - **Q: 誤封鎖自己的管理主機 IP 該如何處置？**
   - **A**: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。若已啟用 TOTP 自助解鎖門戶，亦可直接以手機 App 驗證解除。
+- **Q: 啟用 HTTPS 服務（Management API / Threat Hub / 自助解鎖門戶）後，Windows 事件日誌出現啟動失敗？**
+  - **A**: Windows 核心 `HTTP.sys` 在啟動 HTTPS 前綴時，若該連接埠未綁定伺服器憑證，會回報「找不到檔案」或「參數錯誤」。請參閱本手冊 3.23 節，使用 `netsh http add sslcert` 為該連接埠綁定電腦存放區中具有私鑰的 SSL 憑證即可正常啟動。
 - **Q: 為什麼防火牆封鎖規則沒有生效？**
   - **A**: 請確認 `IDDSCommunityProtection` Windows 服務正常運作，且執行帳戶具備管理 Windows 防火牆之權限。
 - **Q: 節點設定為 Threat Hub（威脅情資中繼中心）時，需要填寫「Threat Hub 端點網址」嗎？**

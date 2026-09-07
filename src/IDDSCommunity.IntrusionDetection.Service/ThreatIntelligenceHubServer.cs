@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -103,7 +103,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         listener = new HttpListener();
         listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
         try { listener.Start(); }
-        catch { listener.Close(); listener = null; throw; }
+        catch (Exception ex)
+        {
+            listener.Close();
+            listener = null;
+            if (!allowLoopbackHttp)
+            {
+                logError($"Threat Hub failed to start HTTPS listener on port {port}. Ensure a TLS certificate is bound using 'netsh http add sslcert ipport=0.0.0.0:{port} certhash=<THUMBPRINT> appid={Guid.NewGuid():B}'.", ex);
+            }
+            throw;
+        }
         dispatcher = new BoundedHttpDispatcher(HandleRequestAsync);
         cts = new CancellationTokenSource();
         listenTask = ListenLoopAsync(listener, cts.Token);

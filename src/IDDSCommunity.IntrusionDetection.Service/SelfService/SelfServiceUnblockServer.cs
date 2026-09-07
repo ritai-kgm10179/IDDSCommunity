@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -81,7 +81,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         }
         catch (Exception ex)
         {
-            WindowsLogManager.Instance.WriteEntry($"[SelfServicePortal] Failed to start HTTP server: {ex.Message}",
+            WindowsLogManager.Instance.WriteEntry($"[SelfServicePortal] Failed to start HTTPS server: {ex.Message}. Ensure a TLS certificate is bound to port {settings.PortalPort} (e.g. 'netsh http add sslcert ipport=0.0.0.0:{settings.PortalPort} certhash=<THUMBPRINT> appid={Guid.NewGuid():B}').",
                 System.Diagnostics.EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
         }
     }

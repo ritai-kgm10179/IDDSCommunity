@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -1071,5 +1071,6 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Invalid target IP address." xml:space="preserve"><value>Invalid target IP address.</value></data>
   <data name="Threat Hub must use HTTPS." xml:space="preserve"><value>Threat Hub must use HTTPS.</value></data>
   <data name="HTTP content exceeds the size limit." xml:space="preserve"><value>HTTP content exceeds the size limit.</value></data>
+  <data name="Connection to IMDS or link-local address '{0}' is blocked." xml:space="preserve"><value>Connection to IMDS or link-local address '{0}' is blocked.</value></data>
 </root>
 

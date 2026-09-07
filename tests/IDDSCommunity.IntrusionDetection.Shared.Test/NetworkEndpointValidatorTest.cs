@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDDSCommunity.IntrusionDetection.Shared.Network;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -43,5 +43,45 @@ public sealed class NetworkEndpointValidatorTest
         Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(string.Empty));
         Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocal("   "));
         Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocal("not a valid url"));
+    }
+
+    [TestMethod]
+    public void IsBlockedImdsOrLinkLocalAddress_DetectsAndBlocksCorrectly()
+    {
+        // Null
+        Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(null));
+
+        // Normal IPs
+        Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("1.1.1.1")));
+        Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("8.8.8.8")));
+        Assert.IsFalse(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("2606:4700:4700::1111")));
+
+        // IPv4 IMDS & Link-Local
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("169.254.169.254")));
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("169.254.1.50")));
+
+        // IPv4-mapped IPv6 IMDS
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("::ffff:169.254.169.254")));
+
+        // IPv6 Link-Local
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("fe80::1")));
+
+        // AWS IPv6 IMDS
+        Assert.IsTrue(NetworkEndpointValidator.IsBlockedImdsOrLinkLocalAddress(System.Net.IPAddress.Parse("fd00:ec2::254")));
+    }
+
+    [TestMethod]
+    public async System.Threading.Tasks.Task HttpClientHelper_BlocksImdsConnectionAtSocketLayer()
+    {
+        using var client = HttpClientHelper.CreatePooledClient(timeout: System.TimeSpan.FromSeconds(5));
+
+        var ex = await Assert.ThrowsExactlyAsync<System.Net.Http.HttpRequestException>(async () =>
+        {
+            await client.GetAsync("http://169.254.169.254/latest/meta-data/");
+        });
+
+        Assert.IsNotNull(ex.InnerException);
+        Assert.IsInstanceOfType<System.InvalidOperationException>(ex.InnerException);
+        StringAssert.Contains(ex.InnerException.Message, "169.254.169.254");
     }
 }

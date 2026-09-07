@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -164,23 +164,30 @@ public sealed class GeoIpUpdateService : IDisposable
             string v4Url = config.GeoIpDatabaseIpv4Url;
             if (!string.IsNullOrWhiteSpace(v4Url))
             {
-                try
+                if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(v4Url))
                 {
-                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(60));
-                    using HttpResponseMessage response = await httpClient.GetAsync(v4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        v4Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        logWarning($"IPv4 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                    }
+                    logWarning($"Blocked unsafe or IMDS-suspect IPv4 GeoIP URL: '{v4Url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
                 }
-                catch (Exception ex)
+                else
                 {
-                    logWarning("Failed to download IPv4 GeoIP database", ex);
+                    try
+                    {
+                        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                        cts.CancelAfter(TimeSpan.FromSeconds(60));
+                        using HttpResponseMessage response = await httpClient.GetAsync(v4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            v4Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            logWarning($"IPv4 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logWarning("Failed to download IPv4 GeoIP database", ex);
+                    }
                 }
             }
 
@@ -188,23 +195,30 @@ public sealed class GeoIpUpdateService : IDisposable
             string v6Url = config.GeoIpDatabaseIpv6Url;
             if (!string.IsNullOrWhiteSpace(v6Url))
             {
-                try
+                if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(v6Url))
                 {
-                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(60));
-                    using HttpResponseMessage response = await httpClient.GetAsync(v6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        v6Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        logWarning($"IPv6 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                    }
+                    logWarning($"Blocked unsafe or IMDS-suspect IPv6 GeoIP URL: '{v6Url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
                 }
-                catch (Exception ex)
+                else
                 {
-                    logWarning("Failed to download IPv6 GeoIP database", ex);
+                    try
+                    {
+                        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                        cts.CancelAfter(TimeSpan.FromSeconds(60));
+                        using HttpResponseMessage response = await httpClient.GetAsync(v6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            v6Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            logWarning($"IPv6 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logWarning("Failed to download IPv6 GeoIP database", ex);
+                    }
                 }
             }
 

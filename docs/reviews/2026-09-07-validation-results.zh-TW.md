@@ -39,6 +39,12 @@
    - 於 Service 與 Admin 啟動進入點注入微軟官方建議之全域 `REGEX_DEFAULT_MATCH_TIMEOUT`（1 秒）。
    - 於 SelfService、ManagementApi、ThreatHub 與 Metrics 所有 HTTP 伺服端點配置 OWASP 安全標頭（`X-Content-Type-Options: nosniff`、`X-Frame-Options: DENY`、`Content-Security-Policy`）。
 
+7. **Socket 連線層 SSRF/IMDS 攔截與 HTTPS 憑證診斷導引**：
+   - 於 `HttpClientHelper` 之 `SocketsHttpHandler` 配置 `ConnectCallback`，於 TCP 握手前直接校驗解析之 IP 位址，阻斷指向雲端 IMDS（`169.254.169.254`、`fd00:ec2::254`）與 Link-Local 之連線，杜絕 DNS Rebinding 與 HTTP 3xx 轉址繞過。
+   - 於 `GeoIpUpdateService` 補齊 IPv4 與 IPv6 自訂下載 URL 之 IMDS 預先防護檢查。
+   - 於 ManagementApi、ThreatHub 與 SelfService 伺服器監聽啟動異常日誌中注入 Windows 核心模式 `netsh http add sslcert` 診斷導引提示。
+   - 於使用者指南補充 3.23 節 HTTPS TLS 憑證綁定維運小節與常見問題排查說明。
+
 ---
 
 ## 二、 最終自動化驗證結果
@@ -46,8 +52,8 @@
 | 項目 | 結果 | 說明 |
 | :--- | :--- | :--- |
 | **完整方案建置** | **0 警告、0 錯誤** | `dotnet build IDDSCommunity.slnx` 通過 |
-| **完整方案 MSTest** | **487 通過、0 失敗、5 略過**（總計 492） | 全方案 24 個測試專案全數綠燈通過 |
-| ├─ Shared 核心庫測試 | **250 通過、0 失敗** | 涵蓋 Bogon、DDNS、Token、IMDS、加密等 |
+| **完整方案 MSTest** | **489 通過、0 失敗、5 略過**（總計 494） | 全方案 24 個測試專案全數綠燈通過 |
+| ├─ Shared 核心庫測試 | **252 通過、0 失敗** | 涵蓋 Bogon、DDNS、Token、IMDS Socket 阻絕、加密等 |
 | ├─ Service 服務層測試 | **97 通過、0 失敗、5 略過** | 略過項目為需提升系統管理員權限之整合測試 |
 | ├─ Setup 安裝程式測試 | **40 通過、0 失敗** | 涵蓋安裝/升級/修復/移除路徑與捷徑邏輯 |
 | └─ 18 個 Agent 專案測試 | **100 通過、0 失敗** | 涵蓋 OpenSSH、MySQL、RDP、WinRM、DNS 等 |
