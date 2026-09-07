@@ -122,7 +122,11 @@ public sealed class SyslogNotificationService : IDisposable
                 using var sslStream = settings.SyslogAllowSelfSignedCertificate
                     ? new SslStream(tcpClient.GetStream(), false, (_, _, _, _) => true)
                     : new SslStream(tcpClient.GetStream(), false);
-                await sslStream.AuthenticateAsClientAsync(host).ConfigureAwait(false);
+                var authOptions = new SslClientAuthenticationOptions
+                {
+                    TargetHost = host
+                };
+                await sslStream.AuthenticateAsClientAsync(authOptions, cancellationToken).ConfigureAwait(false);
                 await sslStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
                 await sslStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 return true;

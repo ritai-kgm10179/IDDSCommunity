@@ -715,7 +715,7 @@ public partial class PanelNotificationSettings : UserControl
                 ? $"https://api.telegram.org/bot{textBoxTelegramToken.Text.Trim()}/sendMessage"
                 : textBoxWebhookUrl.Text.Trim();
 
-            if (string.IsNullOrWhiteSpace(targetUrl))
+            if (string.IsNullOrWhiteSpace(targetUrl) || IDDSCommunity.IntrusionDetection.Shared.Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(targetUrl))
             {
                 MessageBox.Show(
                     Strings.Get("Webhook test failed. Please verify the URL and network connectivity."),

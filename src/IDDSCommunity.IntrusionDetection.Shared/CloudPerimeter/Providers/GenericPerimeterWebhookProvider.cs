@@ -52,7 +52,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
     /// </summary>
     public async Task<bool> BlockIpAsync(string ipAddress, string reason, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
+        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
 
         try
         {
@@ -86,7 +86,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
     /// </summary>
     public async Task<bool> UnblockIpAsync(string ipAddress, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
+        if (string.IsNullOrWhiteSpace(ipAddress) || string.IsNullOrWhiteSpace(WebhookUrl) || NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(WebhookUrl)) return false;
 
         try
         {
@@ -122,7 +122,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
         if (string.IsNullOrWhiteSpace(WebhookUrl))
             return (false, "Webhook URL is required.");
 
-        if (IsBlockedImdsOrLinkLocal(WebhookUrl))
+        if (NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(WebhookUrl))
             return (false, "Webhook URL targeting Cloud IMDS or Link-Local addresses is prohibited.");
 
         try
@@ -161,53 +161,5 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
         {
             httpClient.Dispose();
         }
-    }
-
-    private static bool IsBlockedImdsOrLinkLocal(string url)
-    {
-        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
-        {
-            return false;
-        }
-
-        string host = uri.Host;
-        if (IPAddress.TryParse(host, out var ip))
-        {
-            if (ip.IsIPv4MappedToIPv6)
-            {
-                ip = ip.MapToIPv4();
-            }
-
-            if (ip.AddressFamily == AddressFamily.InterNetwork)
-            {
-                byte[] bytes = ip.GetAddressBytes();
-                // 169.254.0.0/16 (Link-Local / Cloud IMDS e.g., 169.254.169.254)
-                if (bytes[0] == 169 && bytes[1] == 254)
-                {
-                    return true;
-                }
-            }
-            else if (ip.AddressFamily == AddressFamily.InterNetworkV6)
-            {
-                if (ip.IsIPv6LinkLocal)
-                {
-                    return true;
-                }
-
-                // AWS IPv6 IMDS fd00:ec2::254
-                byte[] bytes = ip.GetAddressBytes();
-                if (bytes[0] == 0xfd && bytes[1] == 0x00 && bytes[2] == 0x0e && bytes[3] == 0xc2)
-                {
-                    return true;
-                }
-            }
-        }
-        else if (string.Equals(host, "instance-data", StringComparison.OrdinalIgnoreCase))
-        {
-            // AWS instance-data hostname
-            return true;
-        }
-
-        return false;
     }
 }

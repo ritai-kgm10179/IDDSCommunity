@@ -52,8 +52,8 @@ public static class ThreatFeedParser
             if (string.IsNullOrEmpty(line) || line.StartsWith('#') || line.StartsWith(';') || line.StartsWith("//", StringComparison.Ordinal))
                 continue;
 
-            // 處理含有註解或附屬欄位之行 (例如: 198.51.100.1 ; Description)
-            int commentIndex = line.IndexOfAny([';', '#', ' ']);
+            // 處理含有註解或附屬欄位之行 (例如: 198.51.100.1 ; Description 或 198.51.100.1\t# Description)
+            int commentIndex = line.IndexOfAny([';', '#', ' ', '\t']);
             string candidate = commentIndex > 0 ? line[..commentIndex].Trim() : line;
 
             // 處理 CIDR (例如: 198.51.100.0/24 取 198.51.100.0)

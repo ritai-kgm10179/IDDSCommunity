@@ -19,6 +19,7 @@ public sealed class MetricsHttpServer : IDisposable
     private readonly Database database;
     private readonly DateTime startTimeUtc = DateTime.UtcNow;
     private HttpListener? listener;
+    private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
     private bool disposed;
 
@@ -63,6 +64,7 @@ public sealed class MetricsHttpServer : IDisposable
             listener.Prefixes.Add(prefix);
             listener.Start();
 
+            dispatcher = new BoundedHttpDispatcher(ProcessRequestAsync);
             _ = ListenAsync(listener, cts.Token);
             System.Diagnostics.Trace.TraceInformation("MetricsHttpServer started on {0}", prefix);
         }
@@ -80,6 +82,9 @@ public sealed class MetricsHttpServer : IDisposable
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
+
+        dispatcher?.Dispose();
+        dispatcher = null;
 
         if (listener != null)
         {
@@ -100,7 +105,7 @@ public sealed class MetricsHttpServer : IDisposable
             try
             {
                 HttpListenerContext context = await httpListener.GetContextAsync().ConfigureAwait(false);
-                _ = ProcessRequestAsync(context);
+                dispatcher?.Submit(context);
             }
             catch (HttpListenerException) { break; }
             catch (ObjectDisposedException) { break; }

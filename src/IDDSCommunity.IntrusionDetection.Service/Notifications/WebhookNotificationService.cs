@@ -111,7 +111,7 @@ public sealed class WebhookNotificationService : IDisposable
         try
         {
             string url = GetTargetUrl();
-            if (string.IsNullOrWhiteSpace(url))
+            if (string.IsNullOrWhiteSpace(url) || IDDSCommunity.IntrusionDetection.Shared.Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(url))
                 return false;
 
             string? managementBaseUrl = _config.EnableManagementApi ? _config.ManagementApiBaseUrl : null;
