@@ -214,6 +214,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         }
 
         string unblockFormHtml = canUnblock ? GetUnblockFormHtml() : string.Empty;
+        string encodedClientIp = System.Net.WebUtility.HtmlEncode(clientIp);
 
         string html = $$"""
         <!DOCTYPE html>
@@ -252,7 +253,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
             </div>
 
             <div style="text-align: center;">
-              <span class="ip-badge">偵測到的來源 IP: {{clientIp}}</span>
+              <span class="ip-badge">偵測到的來源 IP: {{encodedClientIp}}</span>
             </div>
 
             <div class="status-box">
@@ -269,6 +270,10 @@ public sealed class SelfServiceUnblockServer : IDisposable
         </html>
         """;
 
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Referrer-Policy"] = "no-referrer";
+        response.Headers["Content-Security-Policy"] = "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline';";
         response.ContentType = "text/html; charset=utf-8";
         byte[] buffer = Encoding.UTF8.GetBytes(html);
         response.ContentLength64 = buffer.Length;
@@ -320,6 +325,8 @@ public sealed class SelfServiceUnblockServer : IDisposable
     private static async Task SendJsonResponseAsync(HttpListenerResponse response, HttpStatusCode statusCode, bool success, string message)
     {
         response.StatusCode = (int)statusCode;
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
         response.ContentType = "application/json; charset=utf-8";
         string json = JsonSerializer.Serialize(new { success, message });
         byte[] buffer = Encoding.UTF8.GetBytes(json);

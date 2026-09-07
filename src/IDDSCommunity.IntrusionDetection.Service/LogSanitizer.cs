@@ -26,6 +26,6 @@ internal static partial class LogSanitizer
         return SecretPattern().Replace(builder.ToString(), "$1=[REDACTED]");
     }
 
-    [GeneratedRegex("(?i)\\b(password|token|secret|authorization)\\s*[:=]\\s*[^\\s,;]+", RegexOptions.CultureInvariant)]
+    [GeneratedRegex("(?i)\\b(password|token|secret|authorization)\\s*[:=]\\s*[^\\s,;]+", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)]
     private static partial Regex SecretPattern();
 }

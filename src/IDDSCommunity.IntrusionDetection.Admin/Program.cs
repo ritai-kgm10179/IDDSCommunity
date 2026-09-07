@@ -13,6 +13,7 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(1));
         if (ElevatedServiceCommand.TryExecute(args, out int exitCode))
         {
             Environment.ExitCode = exitCode;

@@ -12,6 +12,7 @@ internal static class Program
     /// <param name="args">The event data.</param>
     private static async System.Threading.Tasks.Task Main(string[] args)
     {
+        AppDomain.CurrentDomain.SetData("REGEX_DEFAULT_MATCH_TIMEOUT", TimeSpan.FromSeconds(1));
         System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         System.Threading.Tasks.TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;

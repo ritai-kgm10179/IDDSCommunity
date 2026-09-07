@@ -67,8 +67,18 @@ public sealed class CloudPerimeterService : IDisposable
     /// <param name="reason">封鎖原因。</param>
     /// <param name="cancellationToken">取消權杖。</param>
     /// <returns>是否成功排入待送匣；不代表遠端已完成封鎖。</returns>
-    public Task<bool> NotifyBlockAsync(string ipAddress, string reason, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Enqueue(ipAddress, true, reason, cancellationToken));
+    public Task<bool> NotifyBlockAsync(string ipAddress, string reason, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Task.FromResult(Enqueue(ipAddress, true, reason, cancellationToken));
+        }
+        catch (Exception ex)
+        {
+            Shared.RollingDiagnosticLog.Write("CloudPerimeterService", $"Failed to enqueue block for {ipAddress}: {ex.Message}", ex);
+            return Task.FromResult(false);
+        }
+    }
 
     /// <summary>
     /// 將解鎖要求持久化，依序覆蓋較舊的封鎖要求。
@@ -76,8 +86,18 @@ public sealed class CloudPerimeterService : IDisposable
     /// <param name="ipAddress">來源 IP。</param>
     /// <param name="cancellationToken">取消權杖。</param>
     /// <returns>是否成功排入待送匣；不代表遠端已完成解鎖。</returns>
-    public Task<bool> NotifyUnblockAsync(string ipAddress, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Enqueue(ipAddress, false, string.Empty, cancellationToken));
+    public Task<bool> NotifyUnblockAsync(string ipAddress, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Task.FromResult(Enqueue(ipAddress, false, string.Empty, cancellationToken));
+        }
+        catch (Exception ex)
+        {
+            Shared.RollingDiagnosticLog.Write("CloudPerimeterService", $"Failed to enqueue unblock for {ipAddress}: {ex.Message}", ex);
+            return Task.FromResult(false);
+        }
+    }
 
     private bool Enqueue(string ipAddress, bool block, string reason, CancellationToken token)
     {

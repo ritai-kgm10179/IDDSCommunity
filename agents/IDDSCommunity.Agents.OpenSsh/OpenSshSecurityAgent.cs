@@ -45,7 +45,7 @@ public sealed partial class OpenSshSecurityAgent : AuthenticationAgentBase<OpenS
         return new AuthenticationFailureEvent(occurredAt, address, eventId, "OpenSSH", match.Groups["user"].Value, "Password authentication failed");
     }
 
-    [GeneratedRegex(@"Failed password for (?:invalid user )?(?<user>\S+) from (?<ip>\[?[0-9A-Fa-f:.]+\]?)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"Failed password for (?:invalid user )?(?<user>\S+) from (?<ip>\[?[0-9A-Fa-f:.]+\]?)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)]
     private static partial Regex FailedPassword();
 
     private static IAuthenticationEventSource CreateSource(OpenSshConfiguration configuration)

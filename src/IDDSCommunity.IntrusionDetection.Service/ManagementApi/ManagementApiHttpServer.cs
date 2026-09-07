@@ -316,6 +316,8 @@ public sealed class ManagementApiHttpServer : IDisposable
     private static async Task SendJsonResponseAsync(HttpListenerResponse response, HttpStatusCode statusCode, object data)
     {
         response.StatusCode = (int)statusCode;
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
         response.ContentType = "application/json; charset=utf-8";
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         byte[] buffer = Encoding.UTF8.GetBytes(json);

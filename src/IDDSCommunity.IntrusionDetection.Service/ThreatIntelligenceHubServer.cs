@@ -293,6 +293,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
     private static async Task WriteJsonResponseAsync(HttpListenerResponse response, object data)
     {
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
         response.ContentType = "application/json; charset=utf-8";
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(data, JsonOptions);
         response.ContentLength64 = bytes.Length;

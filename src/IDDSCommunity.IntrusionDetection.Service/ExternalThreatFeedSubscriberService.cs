@@ -441,8 +441,17 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             disposed = true;
             Stop();
-            refreshGate.Wait();
-            refreshGate.Release();
+            try
+            {
+                if (refreshGate.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    refreshGate.Release();
+                }
+            }
+            catch { }
+
+            refreshGate.Dispose();
+            stopping.Dispose();
             if (ownClient)
             {
                 httpClient.Dispose();

@@ -68,6 +68,6 @@ public sealed partial class PostgreSqlSecurityAgent : AuthenticationAgentBase<Po
 
     private static string GetString(JsonElement root, string propertyName) => root.TryGetProperty(propertyName, out JsonElement value) ? value.GetString() ?? string.Empty : string.Empty;
 
-    [GeneratedRegex(@"(?:host=|client=|remote=|\[)(?<ip>\[?[0-9A-Fa-f:.]+\]?)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)] private static partial Regex IpAddressPattern();
-    [GeneratedRegex("password authentication failed for user [\"'](?<user>[^\"']+)[\"']", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)] private static partial Regex UserPattern();
+    [GeneratedRegex(@"(?:host=|client=|remote=|\[)(?<ip>\[?[0-9A-Fa-f:.]+\]?)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)] private static partial Regex IpAddressPattern();
+    [GeneratedRegex("password authentication failed for user [\"'](?<user>[^\"']+)[\"']", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)] private static partial Regex UserPattern();
 }

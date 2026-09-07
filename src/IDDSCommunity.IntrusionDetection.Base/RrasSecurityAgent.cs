@@ -120,6 +120,6 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
     /// 取得匹配 IP 位址的規則運算式。
     /// </summary>
     /// <returns>傳回 <see cref="Regex"/> 執行個體。</returns>
-    [GeneratedRegex("(?:[0-9]{1,3}.){3}[0-9]{1,3}")]
+    [GeneratedRegex(@"(?:[0-9]{1,3}\.){3}[0-9]{1,3}", RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)]
     private static partial Regex MyRegex();
 }

@@ -121,6 +121,9 @@ public sealed class MetricsHttpServer : IDisposable
     {
         try
         {
+            context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+            context.Response.Headers["X-Frame-Options"] = "DENY";
+
             IPAddress? remoteIp = context.Request.RemoteEndPoint.Address;
             if (remoteIp.IsIPv4MappedToIPv6)
                 remoteIp = remoteIp.MapToIPv4();

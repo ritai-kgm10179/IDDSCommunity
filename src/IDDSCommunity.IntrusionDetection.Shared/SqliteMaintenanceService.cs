@@ -164,8 +164,15 @@ public sealed class SqliteMaintenanceService(Database database)
         for (int index = 0; index < backups.Length; index++)
         {
             if (index < maximumCount && backups[index].CreatedUtc >= boundary) continue;
-            File.Delete(backups[index].FilePath);
-            deleted++;
+            try
+            {
+                File.Delete(backups[index].FilePath);
+                deleted++;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                System.Diagnostics.Trace.TraceWarning("Failed to prune backup file {0}: {1}", backups[index].FilePath, ex.Message);
+            }
         }
         RecordAudit("Database.BackupRetention", backupDirectory, deleted.ToString(CultureInfo.InvariantCulture));
         return deleted;

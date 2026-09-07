@@ -31,6 +31,6 @@ internal static partial class MySqlMariaDbAuthenticationParser
         string.Equals(providerName, "MySQL", StringComparison.OrdinalIgnoreCase)
         || string.Equals(providerName, "MariaDB", StringComparison.OrdinalIgnoreCase);
 
-    [GeneratedRegex("Access denied for user\\s+'[^']*'@'(?<host>[^']+)'", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex("Access denied for user\\s+'[^']*'@'(?<host>[^']+)'", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, matchTimeoutMilliseconds: 250)]
     private static partial Regex AccessDeniedPattern();
 }

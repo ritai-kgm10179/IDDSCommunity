@@ -131,4 +131,28 @@ public sealed class SqliteMaintenanceServiceTest
         Assert.AreEqual("ok", maintenance.RunIntegrityCheck(true), true);
         Assert.IsGreaterThanOrEqualTo(2, maintenance.GetHistory().Count);
     }
+
+    /// <summary>
+    /// 驗證當個別過期備份檔案被外部鎖定時，PruneBackups 能容錯跳過並繼續清理其餘過期檔案。
+    /// </summary>
+    [TestMethod]
+    public void PruneBackups_WhenFileIsLocked_SkipsLockedFileAndContinuesPruning()
+    {
+        SqliteMaintenanceService maintenance = new(database);
+        string directory = Path.Combine(testDirectory, "prunelock_test");
+        DatabaseBackupResult first = maintenance.CreateVerifiedBackup(directory);
+        File.SetCreationTimeUtc(first.FilePath, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        DatabaseBackupResult second = maintenance.CreateVerifiedBackup(directory);
+        File.SetCreationTimeUtc(second.FilePath, new DateTime(2025, 1, 2, 0, 0, 0, DateTimeKind.Utc));
+        DatabaseBackupResult third = maintenance.CreateVerifiedBackup(directory);
+
+        using (FileStream lockStream = new(second.FilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+        {
+            int deleted = maintenance.PruneBackups(directory, 30, 1, new DateTimeOffset(2026, 8, 5, 0, 0, 0, TimeSpan.Zero));
+
+            Assert.AreEqual(1, deleted);
+            Assert.IsFalse(File.Exists(first.FilePath));
+            Assert.IsTrue(File.Exists(second.FilePath));
+        }
+    }
 }
