@@ -67,6 +67,19 @@ public sealed class BogonIpFilterTest
         // Documentation
         Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("2001:db8::1"));
 
+        // RFC 6666 Discard-Only prefix (100::/64)
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("100::1"));
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("100::dead:beef"));
+        // 100:1::1 is outside 100::/64 and must NOT be considered static bogon
+        Assert.IsFalse(BogonIpFilter.IsBogonOrReserved("100:1::1"));
+
+        // RFC 3056 6to4
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("2002:c000:0201::1"));
+
+        // RFC 6052 / RFC 8215 IPv4/IPv6 translation prefixes
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("64:ff9b::192.0.2.1"));
+        Assert.IsTrue(BogonIpFilter.IsBogonOrReserved("64:ff9b:1::1"));
+
         // Valid Public IPv6 (Global Unicast)
         Assert.IsFalse(BogonIpFilter.IsBogonOrReserved("2606:4700:4700::1111"));
         Assert.IsFalse(BogonIpFilter.IsBogonOrReserved("2001:4860:4860::8888"));

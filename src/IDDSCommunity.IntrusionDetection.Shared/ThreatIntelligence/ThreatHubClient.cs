@@ -30,10 +30,7 @@ public sealed class ThreatHubClient : IDisposable
     {
         if (httpClient is null)
         {
-            this.httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(15)
-            };
+            this.httpClient = Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(15));
             disposeHttpClient = true;
         }
         else

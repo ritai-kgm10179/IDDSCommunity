@@ -18,6 +18,7 @@ public partial class PanelNotificationSettings : UserControl
     private const string DefaultMetricsListenIp = "0.0.0.0";
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
+    private static readonly HttpClient SharedWebhookTestClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
 
     // Webhook UI Controls
     private readonly SmartLabel smartLabelWebhookHeader;
@@ -724,9 +725,8 @@ public partial class PanelNotificationSettings : UserControl
                 return;
             }
 
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var response = await client.PostAsync(targetUrl, content);
+            using var response = await SharedWebhookTestClient.PostAsync(targetUrl, content);
 
             if (response.IsSuccessStatusCode)
             {

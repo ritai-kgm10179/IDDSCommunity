@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,11 +58,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         }
         else
         {
-            this.httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(30)
-            };
-            this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            this.httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(30), userAgent: DefaultUserAgent);
             ownClient = true;
         }
     }
@@ -158,6 +155,13 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
                     string trimmedUrl = url.Trim();
                     if (string.IsNullOrEmpty(trimmedUrl) || !trimmedUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                         continue;
+
+                    if (!await IsSafeExternalUrlAsync(trimmedUrl, stopping.Token).ConfigureAwait(false))
+                    {
+                        logWarning($"Blocked unsafe or SSRF-suspect custom threat feed URL: '{trimmedUrl}'", new InvalidOperationException("SSRF validation failed"));
+                        recordAudit?.Invoke("ThreatFeed.Download", "Blocked", $"CustomFeed ({trimmedUrl})", "Blocked by SSRF filter (private/bogon/IMDS destination)");
+                        continue;
+                    }
 
                     try
                     {
@@ -368,6 +372,53 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
         onThreatDiscovered(item);
         return true;
+    }
+
+    /// <summary>
+    /// 驗證外部自訂情資 URL 是否安全，杜絕連往本機迴路、私有網段或雲端 IMDS 元數據端點之 SSRF 攻擊。
+    /// </summary>
+    /// <param name="url">待驗證之外部 URL 字串。</param>
+    /// <param name="cancellationToken">取消權杖。</param>
+    /// <returns>若為安全的外部公網端點傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    internal static async Task<bool> IsSafeExternalUrlAsync(string url, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+            return false;
+
+        if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            return false;
+
+        string host = uri.DnsSafeHost;
+        if (string.IsNullOrWhiteSpace(host))
+            return false;
+
+        // 若主機直接為 IP 位址
+        if (IPAddress.TryParse(host, out IPAddress? directIp))
+        {
+            return !BogonIpFilter.IsBogonOrReserved(directIp);
+        }
+
+        // 若為網域名稱，解析目標 IP 清單進行 Bogon / 私有網段 / 雲端 IMDS 檢查
+        try
+        {
+            using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            dnsCts.CancelAfter(TimeSpan.FromSeconds(5));
+            IPAddress[] resolved = await Dns.GetHostAddressesAsync(host, dnsCts.Token).ConfigureAwait(false);
+            if (resolved.Length == 0)
+                return false;
+
+            foreach (IPAddress ip in resolved)
+            {
+                if (BogonIpFilter.IsBogonOrReserved(ip))
+                    return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>

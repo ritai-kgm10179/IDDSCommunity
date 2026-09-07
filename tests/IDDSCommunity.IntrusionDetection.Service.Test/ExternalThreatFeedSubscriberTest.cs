@@ -121,6 +121,26 @@ public sealed class ExternalThreatFeedSubscriberTest
         Assert.AreEqual(0, discoveredThreats.Count);
     }
 
+    [TestMethod]
+    public async Task IsSafeExternalUrlAsync_BlocksPrivateLoopbackAndImdsUrls()
+    {
+        // 迴路位址
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://127.0.0.1/feed.txt"));
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://localhost/feed.txt"));
+
+        // 雲端 IMDS 元數據端點 (169.254.169.254)
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://169.254.169.254/latest/meta-data/"));
+
+        // RFC 1918 私有網段
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://10.0.0.1/malicious.txt"));
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://192.168.1.1/feed.txt"));
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("http://172.16.5.10/feed.txt"));
+
+        // 非 HTTP(S) 協定
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("ftp://evil.com/feed.txt"));
+        Assert.IsFalse(await ExternalThreatFeedSubscriberService.IsSafeExternalUrlAsync("file:///c:/windows/win.ini"));
+    }
+
     private sealed class MockHttpMessageHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

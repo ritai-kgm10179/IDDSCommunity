@@ -192,7 +192,18 @@ public static class BogonIpFilter
         if (bytes[0] == 0x20 && bytes[1] == 0x01 && bytes[2] == 0x00 && bytes[3] == 0x02) return true;
 
         // 100::/64 - Discard-Only Address Block (RFC 6666)
-        if (bytes[0] == 0x01 && bytes[1] == 0x00) return true;
+        if (bytes[0] == 0x01 && bytes[1] == 0x00 && bytes[2] == 0 && bytes[3] == 0 && bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0) return true;
+
+        // 2002::/16 - 6to4 Relay Anycast (RFC 3056 / RFC 7526)
+        if (bytes[0] == 0x20 && bytes[1] == 0x02) return true;
+
+        // 64:ff9b:1::/48 - Local-Use IPv4/IPv6 Translation (RFC 8215)
+        if (bytes[0] == 0x00 && bytes[1] == 0x64 && bytes[2] == 0xFF && bytes[3] == 0x9B && bytes[4] == 0x00 && bytes[5] == 0x01) return true;
+
+        // 64:ff9b::/96 - IPv4/IPv6 Translation (RFC 6052)
+        if (bytes[0] == 0x00 && bytes[1] == 0x64 && bytes[2] == 0xFF && bytes[3] == 0x9B
+            && bytes[4] == 0 && bytes[5] == 0 && bytes[6] == 0 && bytes[7] == 0
+            && bytes[8] == 0 && bytes[9] == 0 && bytes[10] == 0 && bytes[11] == 0) return true;
 
         return false;
     }

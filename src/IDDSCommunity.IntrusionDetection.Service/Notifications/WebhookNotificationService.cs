@@ -36,7 +36,7 @@ public sealed class WebhookNotificationService : IDisposable
         }
         else
         {
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            _httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
             _ownsHttpClient = true;
         }
     }

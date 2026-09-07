@@ -51,11 +51,7 @@ public sealed class GeoIpUpdateService : IDisposable
         }
         else
         {
-            this.httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(45)
-            };
-            this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(DefaultUserAgent);
+            this.httpClient = Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(45), userAgent: DefaultUserAgent);
             ownClient = true;
         }
     }
