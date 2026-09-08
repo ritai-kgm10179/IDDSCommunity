@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -780,6 +780,8 @@ public bool LimitMailSent { get; set; }
             geoIpUpdateService.Start();
 
             // 啟動 Prometheus Metrics HTTP 服務
+            // 若本節點為 Threat Hub，注入 Hub 參考以額外輸出節點數與活動威脅指標
+            metricsHttpServer.SetHubServer(threatHubServer);
             metricsHttpServer.Start();
 
             // 啟動合法用戶自助驗證解鎖門戶 (Self-Service Unblock Portal)

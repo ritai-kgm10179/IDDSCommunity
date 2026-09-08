@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -169,7 +169,23 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             if (string.IsNullOrEmpty(path)) path = "/";
             string method = req.HttpMethod.ToUpperInvariant();
 
-            // 1. 輕量公開健康探針 (Health Probe per RFC 9110 & CNCF Liveness / Readiness Standards)
+            // 1. 輕量儀表板端點 (GET /dashboard)：免驗證，頁面本身不包含敏感資料
+            if (path.Equals("/dashboard", StringComparison.OrdinalIgnoreCase))
+            {
+                if (method != "GET" && method != "HEAD")
+                {
+                    resp.Headers["Allow"] = "GET, HEAD";
+                    resp.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    await WriteJsonResponseAsync(resp, new { error = "Method Not Allowed" }).ConfigureAwait(false);
+                    return;
+                }
+
+                resp.StatusCode = (int)HttpStatusCode.OK;
+                await WriteDashboardHtmlAsync(resp, method).ConfigureAwait(false);
+                return;
+            }
+
+            // 2. 輕量公開健康探針 (Health Probe per RFC 9110 & CNCF Liveness / Readiness Standards)
             if (path is "/" or "/health" or "/healthz")
             {
                 if (method != "GET" && method != "HEAD")
@@ -189,7 +205,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 return;
             }
 
-            // 2. 核心威脅情資同步端點 (/api/threat-hub/sync)
+            // 3. 核心威脅情資同步端點 (/api/threat-hub/sync)
             if (path.Equals("/api/threat-hub/sync", StringComparison.OrdinalIgnoreCase))
             {
                 string clientIp = req.RemoteEndPoint?.Address != null
@@ -257,7 +273,60 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 return;
             }
 
-            // 3. 惡意路徑探測檢測與資安記錄 (Scan-to-Ban 防禦陷阱)
+            // 4. Hub 節點狀態 API 端點 (GET /api/threat-hub/nodes)
+            if (path.Equals("/api/threat-hub/nodes", StringComparison.OrdinalIgnoreCase))
+            {
+                string clientIp = req.RemoteEndPoint?.Address != null
+                    ? IpAddressCanonicalizer.Canonicalize(req.RemoteEndPoint.Address).ToString()
+                    : "unknown";
+
+                if (authRateLimiter.IsBlocked(clientIp, out TimeSpan retryAfter))
+                {
+                    resp.Headers["Retry-After"] = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+                    resp.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                    await WriteJsonResponseAsync(resp, new { error = "Too Many Requests" }).ConfigureAwait(false);
+                    return;
+                }
+
+                string? apiKey = req.Headers[ApiKeyHeader];
+                if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
+                {
+                    authRateLimiter.RecordFailedAttempt(clientIp);
+                    resp.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
+                    return;
+                }
+
+                authRateLimiter.Reset(clientIp);
+
+                if (method != "GET" && method != "HEAD")
+                {
+                    resp.Headers["Allow"] = "GET, HEAD";
+                    resp.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    await WriteJsonResponseAsync(resp, new { error = "Method Not Allowed" }).ConfigureAwait(false);
+                    return;
+                }
+
+                IReadOnlyList<EdgeNodeState> nodes = RegisteredNodes;
+                int activeThreatCount = store.ReadPage(0, string.Empty).ActiveThreats.Count;
+                resp.StatusCode = (int)HttpStatusCode.OK;
+                await WriteJsonResponseAsync(resp, new
+                {
+                    generatedUtc = DateTime.UtcNow,
+                    totalActiveThreatCount = activeThreatCount,
+                    nodes = nodes.Select(n => new
+                    {
+                        nodeId = n.NodeId,
+                        nodeName = n.NodeName,
+                        nodeIp = n.NodeIp,
+                        lastSeenUtc = n.LastSeenUtc,
+                        reportedThreatCount = n.ReportedThreatCount
+                    }).ToList()
+                }).ConfigureAwait(false);
+                return;
+            }
+
+            // 5. 惡意路徑探測檢測與資安記錄 (Scan-to-Ban 防禦陷阱)
             if (IsSuspiciousProbePath(path))
             {
                 logInformation($"Threat Hub probe detected from {req.RemoteEndPoint.Address}: {path}");
@@ -272,7 +341,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 catch { }
             }
 
-            // 4. 其他未定義端點
+            // 6. 其他未定義端點
             resp.StatusCode = (int)HttpStatusCode.NotFound;
             await WriteJsonResponseAsync(resp, new { error = "Not Found" }).ConfigureAwait(false);
         }
@@ -342,6 +411,216 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         response.ContentLength64 = bytes.Length;
         await response.OutputStream.WriteAsync(bytes).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// 將內嵌單頁儀表板 HTML 寫入 HTTP 回應，並設定完整安全標頭。
+    /// </summary>
+    /// <param name="response">HTTP 回應物件。</param>
+    /// <param name="method">HTTP 方法字串（HEAD 方法不回傳主體）。</param>
+    private static async Task WriteDashboardHtmlAsync(HttpListenerResponse response, string method)
+    {
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(DashboardHtml);
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+        response.Headers["Referrer-Policy"] = "no-referrer";
+        response.Headers["Cache-Control"] = "no-store";
+        response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';";
+        response.ContentType = "text/html; charset=utf-8";
+        response.ContentLength64 = bytes.Length;
+        if (method != "HEAD")
+        {
+            await response.OutputStream.WriteAsync(bytes).ConfigureAwait(false);
+        }
+    }
+
+    private const string DashboardHtml = """
+        <!DOCTYPE html>
+        <html lang="zh-TW">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>IDDS Community - Threat Hub 儀表板</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+            body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 24px; }
+            h1 { font-size: 22px; font-weight: 700; color: #14b8a6; }
+            h2 { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+            .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+            .top-bar-left { display: flex; align-items: center; gap: 14px; }
+            .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+            .badge-online { background: #064e3b; color: #6ee7b7; }
+            .badge-offline { background: #7f1d1d; color: #fca5a5; }
+            .key-row { display: flex; gap: 8px; align-items: center; }
+            .key-row input { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 300px; font-family: monospace; }
+            .key-row input:focus { outline: none; border-color: #14b8a6; }
+            .key-row button { background: #14b8a6; color: #0f172a; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+            .key-row button:hover { background: #0d9488; }
+            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+            .card { background: #1e293b; border-radius: 10px; border: 1px solid #334155; padding: 20px; }
+            .stat-value { font-size: 36px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
+            .stat-label { font-size: 13px; color: #64748b; }
+            table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            th { text-align: left; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid #334155; }
+            td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
+            tr:last-child td { border-bottom: none; }
+            tr:hover td { background: #1e293b44; }
+            .node-id { font-family: monospace; color: #38bdf8; font-size: 12px; }
+            .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+            .dot-green { background: #22c55e; }
+            .dot-yellow { background: #eab308; }
+            .dot-gray { background: #475569; }
+            .empty { color: #475569; text-align: center; padding: 32px; font-size: 13px; }
+            .error-bar { background: #7f1d1d22; border: 1px solid #7f1d1d; border-radius: 6px; color: #fca5a5; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+            .refresh-info { font-size: 11px; color: #475569; text-align: right; margin-top: 8px; }
+            .table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow: hidden; }
+          </style>
+        </head>
+        <body>
+          <div class="top-bar">
+            <div class="top-bar-left">
+              <h1>&#x1F6E1;&#xFE0F; IDDS Community</h1>
+              <span id="hub-status" class="badge badge-offline">離線</span>
+            </div>
+            <div class="key-row">
+              <input type="password" id="api-key" placeholder="輸入 API Key..." autocomplete="off" />
+              <button onclick="applyKey()">套用</button>
+            </div>
+          </div>
+
+          <div id="error-bar" class="error-bar"></div>
+
+          <div class="cards">
+            <div class="card">
+              <div class="stat-value" id="stat-nodes">—</div>
+              <div class="stat-label">連線節點數</div>
+            </div>
+            <div class="card">
+              <div class="stat-value" id="stat-threats">—</div>
+              <div class="stat-label">全網活動威脅情資</div>
+            </div>
+            <div class="card">
+              <div class="stat-value" id="stat-updated" style="font-size:18px;padding-top:8px;">—</div>
+              <div class="stat-label">最後更新時間</div>
+            </div>
+          </div>
+
+          <h2>邊緣節點清單</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>狀態</th>
+                  <th>節點 ID</th>
+                  <th>節點名稱</th>
+                  <th>來源 IP</th>
+                  <th>最後心跳</th>
+                  <th>回報情資數</th>
+                </tr>
+              </thead>
+              <tbody id="node-tbody">
+                <tr><td colspan="6" class="empty">請輸入 API Key 後載入資料</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="refresh-info" id="refresh-info"></div>
+
+          <script>
+            var currentKey = sessionStorage.getItem('idds_hub_key') || '';
+            var refreshTimer = null;
+
+            document.getElementById('api-key').value = currentKey ? '••••••••' : '';
+
+            function applyKey() {
+              var input = document.getElementById('api-key').value.trim();
+              if (input && input !== '••••••••') {
+                currentKey = input;
+                sessionStorage.setItem('idds_hub_key', currentKey);
+              }
+              fetchData();
+            }
+
+            function statusClass(lastSeen) {
+              var diff = (Date.now() - new Date(lastSeen).getTime()) / 1000;
+              if (diff <= 90) return 'dot-green';
+              if (diff <= 300) return 'dot-yellow';
+              return 'dot-gray';
+            }
+
+            function fmtLocal(iso) {
+              try { return new Date(iso).toLocaleString('zh-TW', { hour12: false }); } catch(e) { return iso; }
+            }
+
+            function showError(msg) {
+              var bar = document.getElementById('error-bar');
+              bar.textContent = msg;
+              bar.style.display = 'block';
+            }
+
+            function hideError() {
+              document.getElementById('error-bar').style.display = 'none';
+            }
+
+            function fetchData() {
+              if (!currentKey) { return; }
+              fetch('/api/threat-hub/nodes', {
+                method: 'GET',
+                headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
+              })
+              .then(function(r) {
+                if (r.status === 429) { showError('請求頻率過高，請稍後再試。'); return null; }
+                if (r.status === 401) { showError('API Key 驗證失敗，請確認後重新輸入。'); return null; }
+                if (!r.ok) { showError('伺服器回傳錯誤：HTTP ' + r.status); return null; }
+                return r.json();
+              })
+              .then(function(data) {
+                if (!data) return;
+                hideError();
+                document.getElementById('hub-status').textContent = '線上';
+                document.getElementById('hub-status').className = 'badge badge-online';
+                document.getElementById('stat-nodes').textContent = data.nodes ? data.nodes.length : 0;
+                document.getElementById('stat-threats').textContent = data.totalActiveThreatCount ?? '—';
+                document.getElementById('stat-updated').textContent = fmtLocal(data.generatedUtc);
+                document.getElementById('refresh-info').textContent = '自動每 30 秒更新 · 最後更新：' + fmtLocal(data.generatedUtc);
+
+                var tbody = document.getElementById('node-tbody');
+                if (!data.nodes || data.nodes.length === 0) {
+                  tbody.innerHTML = '<tr><td colspan="6" class="empty">目前沒有已連線的邊緣節點</td></tr>';
+                  return;
+                }
+                tbody.innerHTML = data.nodes.map(function(n) {
+                  var sc = statusClass(n.lastSeenUtc);
+                  var shortId = (n.nodeId || '').substring(0, 8);
+                  var name = (n.nodeName || '').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '（未命名）';
+                  var ip = (n.nodeIp || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                  return '<tr>' +
+                    '<td><span class="status-dot ' + sc + '"></span>' + (sc === 'dot-green' ? '在線' : sc === 'dot-yellow' ? '延遲' : '離線') + '</td>' +
+                    '<td class="node-id">' + shortId + '</td>' +
+                    '<td>' + name + '</td>' +
+                    '<td class="node-id">' + ip + '</td>' +
+                    '<td>' + fmtLocal(n.lastSeenUtc) + '</td>' +
+                    '<td>' + (n.reportedThreatCount ?? 0) + '</td>' +
+                    '</tr>';
+                }).join('');
+              })
+              .catch(function(err) {
+                document.getElementById('hub-status').textContent = '離線';
+                document.getElementById('hub-status').className = 'badge badge-offline';
+                showError('無法連線至 Threat Hub：' + err.message);
+              });
+            }
+
+            function scheduleRefresh() {
+              if (refreshTimer) clearInterval(refreshTimer);
+              refreshTimer = setInterval(fetchData, 30000);
+            }
+
+            if (currentKey) { fetchData(); }
+            scheduleRefresh();
+          </script>
+        </body>
+        </html>
+        """;
 
     /// <summary>
     /// 停止 HTTP 監聽服務並關閉連線。

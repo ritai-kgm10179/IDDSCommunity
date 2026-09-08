@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -17,6 +17,7 @@ public sealed class MetricsHttpServer : IDisposable
 {
     private readonly NotificationSettings settings;
     private readonly Database database;
+    private ThreatIntelligenceHubServer? hubServer;
     private readonly DateTime startTimeUtc = DateTime.UtcNow;
     private HttpListener? listener;
     private BoundedHttpDispatcher? dispatcher;
@@ -29,11 +30,31 @@ public sealed class MetricsHttpServer : IDisposable
     /// <param name="settings">通知與觀測性設定模型。</param>
     /// <param name="database">主資料庫執行個體。</param>
     public MetricsHttpServer(NotificationSettings settings, Database database)
+        : this(settings, database, null) { }
+
+    /// <summary>
+    /// 初始化 <see cref="MetricsHttpServer"/> 類別的新執行個體，並關聯威脅情資中繼中心伺服器。
+    /// </summary>
+    /// <param name="settings">通知與觀測性設定模型。</param>
+    /// <param name="database">主資料庫執行個體。</param>
+    /// <param name="hubServer">選用之威脅情資中繼中心伺服器；傳入時將額外輸出 Hub 節點數指標。</param>
+    internal MetricsHttpServer(NotificationSettings settings, Database database, ThreatIntelligenceHubServer? hubServer)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(database);
         this.settings = settings;
         this.database = database;
+        this.hubServer = hubServer;
+    }
+
+    /// <summary>
+    /// 設定關聯的威脅情資中繼中心伺服器，用於輸出 Hub 節點數指標。
+    /// 必須在 <see cref="Start"/> 之前呼叫。
+    /// </summary>
+    /// <param name="server">威脅情資中繼中心伺服器執行個體。</param>
+    internal void SetHubServer(ThreatIntelligenceHubServer? server)
+    {
+        hubServer = server;
     }
 
     /// <summary>
@@ -278,6 +299,25 @@ public sealed class MetricsHttpServer : IDisposable
         catch { }
         sb.AppendLine($"idds_probation_ips_total {probationCount}");
         sb.AppendLine();
+
+        if (hubServer != null)
+        {
+            sb.AppendLine("# HELP idds_threathub_connected_nodes Number of edge nodes currently registered in the Threat Hub.");
+            sb.AppendLine("# TYPE idds_threathub_connected_nodes gauge");
+            int connectedNodes = 0;
+            try { connectedNodes = hubServer.RegisteredNodes.Count; }
+            catch { }
+            sb.AppendLine($"idds_threathub_connected_nodes {connectedNodes}");
+            sb.AppendLine();
+
+            sb.AppendLine("# HELP idds_threathub_active_threats Total active threat intelligence entries in the Threat Hub store.");
+            sb.AppendLine("# TYPE idds_threathub_active_threats gauge");
+            int hubThreats = 0;
+            try { hubThreats = hubServer.ActiveThreats.Count; }
+            catch { }
+            sb.AppendLine($"idds_threathub_active_threats {hubThreats}");
+            sb.AppendLine();
+        }
 
         if (isOpenMetrics)
         {
