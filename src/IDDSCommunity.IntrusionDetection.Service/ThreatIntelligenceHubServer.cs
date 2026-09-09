@@ -571,18 +571,18 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
             .badge-online { background: #064e3b; color: #6ee7b7; }
             .badge-offline { background: #7f1d1d; color: #fca5a5; }
-            .key-row { display: flex; gap: 8px; align-items: center; }
+            .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
             .language-select { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-            .key-row input { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 300px; font-family: monospace; }
-            .key-row input:focus { outline: none; border-color: #14b8a6; }
+            .key-row input { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
+            .key-row input:focus { outline: none; border-color: #14b8a6; box-shadow: 0 0 0 3px #14b8a680; }
             .key-row button { background: #14b8a6; color: #0f172a; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
             .key-row button:hover { background: #0d9488; }
             .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
             .card { background: #1e293b; border-radius: 10px; border: 1px solid #334155; padding: 20px; }
             .stat-value { font-size: 36px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
-            .stat-label { font-size: 13px; color: #64748b; }
+            .stat-label { font-size: 13px; color: #94a3b8; }
             table { width: 100%; border-collapse: collapse; font-size: 13px; }
-            th { text-align: left; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid #334155; }
+            th { text-align: left; color: #94a3b8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid #334155; }
             td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
             tr:last-child td { border-bottom: none; }
             tr:hover td { background: #1e293b44; }
@@ -591,29 +591,29 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .dot-green { background: #22c55e; }
             .dot-yellow { background: #eab308; }
             .dot-gray { background: #475569; }
-            .empty { color: #475569; text-align: center; padding: 32px; font-size: 13px; }
+            .empty { color: #94a3b8; text-align: center; padding: 32px; font-size: 13px; }
             .error-bar { background: #7f1d1d22; border: 1px solid #7f1d1d; border-radius: 6px; color: #fca5a5; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-            .refresh-info { font-size: 11px; color: #475569; text-align: right; margin-top: 8px; }
-            .table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow: hidden; }
+            .refresh-info { font-size: 11px; color: #94a3b8; text-align: right; margin-top: 8px; }
+            .table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow-x: auto; overflow-y: hidden; }
           </style>
         </head>
         <body>
           <div class="top-bar">
             <div class="top-bar-left">
-              <h1>&#x1F6E1;&#xFE0F; IDDS Community</h1>
-              <span id="hub-status" class="badge badge-offline">{{OFFLINE}}</span>
+              <h1><span aria-hidden="true">&#x1F6E1;&#xFE0F;</span> IDDS Community</h1>
+              <span id="hub-status" class="badge badge-offline" role="status">{{OFFLINE}}</span>
             </div>
             <div class="key-row">
               <select id="language-select" class="language-select" aria-label="Language">
                 <option value="zh-Hant-TW">繁體中文</option>
                 <option value="en-US">English</option>
               </select>
-              <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
+              <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
               <button onclick="applyKey()">{{APPLY}}</button>
             </div>
           </div>
 
-          <div id="error-bar" class="error-bar"></div>
+          <div id="error-bar" class="error-bar" role="status" aria-live="polite"></div>
 
           <div class="cards">
             <div class="card">
