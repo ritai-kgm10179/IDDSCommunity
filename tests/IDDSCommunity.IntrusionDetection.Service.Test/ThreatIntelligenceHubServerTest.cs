@@ -29,6 +29,36 @@ public sealed class ThreatIntelligenceHubServerTest
     }
 
     /// <summary>
+    /// 驗證儀表板語言依查詢參數、Accept-Language 與英文回退規則選擇。
+    /// </summary>
+    [TestMethod]
+    public void DashboardLanguage_UsesQueryThenAcceptLanguageThenEnglishFallback()
+    {
+        Assert.AreEqual("zh-Hant-TW", ThreatIntelligenceHubServer.ResolveDashboardLanguage("zh-TW", "en-US"));
+        Assert.AreEqual("en-US", ThreatIntelligenceHubServer.ResolveDashboardLanguage("en", "zh-TW"));
+        Assert.AreEqual("zh-Hant-TW", ThreatIntelligenceHubServer.ResolveDashboardLanguage(null, "fr-FR, zh-Hant;q=0.9, en;q=0.8"));
+        Assert.AreEqual("zh-Hant-TW", ThreatIntelligenceHubServer.ResolveDashboardLanguage(null, "en-US;q=0.2, zh-TW;q=0.9"));
+        Assert.AreEqual("en-US", ThreatIntelligenceHubServer.ResolveDashboardLanguage(null, "ja-JP"));
+    }
+
+    /// <summary>
+    /// 驗證儀表板產生正確的 HTML 語言標籤與完整中英文字串。
+    /// </summary>
+    [TestMethod]
+    public void DashboardHtml_UsesCanonicalLanguageTagsAndLocalizedText()
+    {
+        string chinese = ThreatIntelligenceHubServer.BuildDashboardHtml("zh-Hant-TW");
+        StringAssert.Contains(chinese, "<html lang=\"zh-Hant-TW\">");
+        StringAssert.Contains(chinese, "邊緣節點清單");
+        Assert.IsFalse(chinese.Contains("{{", StringComparison.Ordinal));
+
+        string english = ThreatIntelligenceHubServer.BuildDashboardHtml("en-US");
+        StringAssert.Contains(english, "<html lang=\"en-US\">");
+        StringAssert.Contains(english, "Edge nodes");
+        Assert.IsFalse(english.Contains("{{", StringComparison.Ordinal));
+    }
+
+    /// <summary>
     /// 驗證對 ThreatHubServer 根路徑 GET 請求回傳 200 OK 與在線狀態。
     /// </summary>
     /// <returns>代表非同步測試作業的 Task。</returns>

@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
@@ -181,7 +182,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 }
 
                 resp.StatusCode = (int)HttpStatusCode.OK;
-                await WriteDashboardHtmlAsync(resp, method).ConfigureAwait(false);
+                string language = ResolveDashboardLanguage(req.QueryString["lang"], req.Headers["Accept-Language"]);
+                await WriteDashboardHtmlAsync(resp, method, language).ConfigureAwait(false);
                 return;
             }
 
@@ -417,15 +419,17 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// </summary>
     /// <param name="response">HTTP 回應物件。</param>
     /// <param name="method">HTTP 方法字串（HEAD 方法不回傳主體）。</param>
-    private static async Task WriteDashboardHtmlAsync(HttpListenerResponse response, string method)
+    /// <param name="language">已正規化的儀表板語言標籤。</param>
+    private static async Task WriteDashboardHtmlAsync(HttpListenerResponse response, string method, string language)
     {
-        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(DashboardHtml);
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(BuildDashboardHtml(language));
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
         response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.Headers["Referrer-Policy"] = "no-referrer";
         response.Headers["Cache-Control"] = "no-store";
         response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';";
+        response.Headers["Content-Language"] = language;
         response.ContentType = "text/html; charset=utf-8";
         response.ContentLength64 = bytes.Length;
         if (method != "HEAD")
@@ -434,13 +438,123 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         }
     }
 
+    /// <summary>
+    /// 依查詢參數與 Accept-Language 標頭選擇儀表板支援的語言。
+    /// </summary>
+    /// <param name="requestedLanguage">查詢參數指定的語言。</param>
+    /// <param name="acceptLanguage">瀏覽器傳入的 Accept-Language 標頭。</param>
+    /// <returns>正規化為 zh-Hant-TW 或 en-US 的語言標籤。</returns>
+    internal static string ResolveDashboardLanguage(string? requestedLanguage, string? acceptLanguage)
+    {
+        string? requested = NormalizeDashboardLanguage(requestedLanguage);
+        if (requested is not null)
+            return requested;
+
+        if (!string.IsNullOrWhiteSpace(acceptLanguage))
+        {
+            IEnumerable<(string Tag, double Quality, int Index)> candidates = acceptLanguage.Split(',')
+                .Select((item, index) =>
+                {
+                    string[] parts = item.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    double quality = 1D;
+                    foreach (string parameter in parts.Skip(1))
+                    {
+                        if (parameter.StartsWith("q=", StringComparison.OrdinalIgnoreCase) &&
+                            double.TryParse(parameter.AsSpan(2), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double parsed))
+                        {
+                            quality = Math.Clamp(parsed, 0D, 1D);
+                        }
+                    }
+                    return (Tag: parts.Length > 0 ? parts[0] : string.Empty, Quality: quality, Index: index);
+                })
+                .Where(candidate => candidate.Quality > 0D)
+                .OrderByDescending(candidate => candidate.Quality)
+                .ThenBy(candidate => candidate.Index);
+
+            foreach ((string Tag, double Quality, int Index) candidate in candidates)
+            {
+                string? normalized = NormalizeDashboardLanguage(candidate.Tag);
+                if (normalized is not null)
+                    return normalized;
+            }
+        }
+
+        return "en-US";
+    }
+
+    private static string? NormalizeDashboardLanguage(string? language)
+    {
+        if (string.IsNullOrWhiteSpace(language))
+            return null;
+        if (language.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
+            return "zh-Hant-TW";
+        if (language.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+            return "en-US";
+        return null;
+    }
+
+    /// <summary>
+    /// 建立指定語言的 Threat Hub 儀表板 HTML。
+    /// </summary>
+    /// <param name="language">正規化的語言標籤。</param>
+    /// <returns>完整的儀表板 HTML。</returns>
+    internal static string BuildDashboardHtml(string language)
+    {
+        DashboardText text = string.Equals(language, "zh-Hant-TW", StringComparison.OrdinalIgnoreCase)
+            ? DashboardText.TraditionalChinese
+            : DashboardText.English;
+        string html = DashboardHtml.Replace("{{LANG}}", text.Language, StringComparison.Ordinal);
+        foreach ((string token, string value) in text.Replacements)
+            html = html.Replace("{{" + token + "}}", value, StringComparison.Ordinal);
+        return html;
+    }
+
+    private sealed record DashboardText(string Language, IReadOnlyList<(string Token, string Value)> Replacements)
+    {
+        internal static DashboardText TraditionalChinese { get; } = new("zh-Hant-TW",
+        [
+            ("TITLE", "IDDS Community - Threat Hub 儀表板"), ("OFFLINE", "離線"),
+            ("API_KEY_PLACEHOLDER", "輸入 API Key..."), ("APPLY", "套用"),
+            ("CONNECTED_NODES", "連線節點數"), ("ACTIVE_THREATS", "全網活動威脅情資"),
+            ("LAST_UPDATED", "最後更新時間"), ("EDGE_NODES", "邊緣節點清單"),
+            ("STATUS", "狀態"), ("NODE_ID", "節點 ID"), ("NODE_NAME", "節點名稱"),
+            ("SOURCE_IP", "來源 IP"), ("LAST_HEARTBEAT", "最後心跳"),
+            ("REPORTED_THREATS", "回報情資數"), ("ENTER_KEY", "請輸入 API Key 後載入資料"),
+            ("TOO_MANY_REQUESTS", "請求頻率過高，請稍後再試。"),
+            ("INVALID_KEY", "API Key 驗證失敗，請確認後重新輸入。"),
+            ("SERVER_ERROR", "伺服器回傳錯誤：HTTP "), ("ONLINE", "線上"),
+            ("REFRESH_PREFIX", "自動每 30 秒更新 · 最後更新："),
+            ("NO_NODES", "目前沒有已連線的邊緣節點"), ("DELAYED", "延遲"),
+            ("UNNAMED", "（未命名）"), ("UNKNOWN_ERROR", "未知錯誤"),
+            ("CONNECTION_ERROR", "無法連線至 Threat Hub：")
+        ]);
+
+        internal static DashboardText English { get; } = new("en-US",
+        [
+            ("TITLE", "IDDS Community - Threat Hub Dashboard"), ("OFFLINE", "Offline"),
+            ("API_KEY_PLACEHOLDER", "Enter API Key..."), ("APPLY", "Apply"),
+            ("CONNECTED_NODES", "Connected nodes"), ("ACTIVE_THREATS", "Active global threats"),
+            ("LAST_UPDATED", "Last updated"), ("EDGE_NODES", "Edge nodes"),
+            ("STATUS", "Status"), ("NODE_ID", "Node ID"), ("NODE_NAME", "Node name"),
+            ("SOURCE_IP", "Source IP"), ("LAST_HEARTBEAT", "Last heartbeat"),
+            ("REPORTED_THREATS", "Reported threats"), ("ENTER_KEY", "Enter an API Key to load data"),
+            ("TOO_MANY_REQUESTS", "Too many requests. Try again later."),
+            ("INVALID_KEY", "API Key authentication failed. Check the key and try again."),
+            ("SERVER_ERROR", "Server returned an error: HTTP "), ("ONLINE", "Online"),
+            ("REFRESH_PREFIX", "Refreshes every 30 seconds · Last updated: "),
+            ("NO_NODES", "No edge nodes are connected"), ("DELAYED", "Delayed"),
+            ("UNNAMED", "(unnamed)"), ("UNKNOWN_ERROR", "Unknown error"),
+            ("CONNECTION_ERROR", "Unable to connect to Threat Hub: ")
+        ]);
+    }
+
     private const string DashboardHtml = """
         <!DOCTYPE html>
-        <html lang="zh-TW">
+        <html lang="{{LANG}}">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>IDDS Community - Threat Hub 儀表板</title>
+          <title>{{TITLE}}</title>
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 24px; }
@@ -452,6 +566,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .badge-online { background: #064e3b; color: #6ee7b7; }
             .badge-offline { background: #7f1d1d; color: #fca5a5; }
             .key-row { display: flex; gap: 8px; align-items: center; }
+            .language-select { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 10px; border-radius: 6px; font-size: 13px; }
             .key-row input { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 300px; font-family: monospace; }
             .key-row input:focus { outline: none; border-color: #14b8a6; }
             .key-row button { background: #14b8a6; color: #0f172a; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
@@ -480,11 +595,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <div class="top-bar">
             <div class="top-bar-left">
               <h1>&#x1F6E1;&#xFE0F; IDDS Community</h1>
-              <span id="hub-status" class="badge badge-offline">離線</span>
+              <span id="hub-status" class="badge badge-offline">{{OFFLINE}}</span>
             </div>
             <div class="key-row">
-              <input type="password" id="api-key" placeholder="輸入 API Key..." autocomplete="off" />
-              <button onclick="applyKey()">套用</button>
+              <select id="language-select" class="language-select" aria-label="Language">
+                <option value="zh-Hant-TW">繁體中文</option>
+                <option value="en-US">English</option>
+              </select>
+              <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
+              <button onclick="applyKey()">{{APPLY}}</button>
             </div>
           </div>
 
@@ -493,33 +612,33 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <div class="cards">
             <div class="card">
               <div class="stat-value" id="stat-nodes">—</div>
-              <div class="stat-label">連線節點數</div>
+              <div class="stat-label">{{CONNECTED_NODES}}</div>
             </div>
             <div class="card">
               <div class="stat-value" id="stat-threats">—</div>
-              <div class="stat-label">全網活動威脅情資</div>
+              <div class="stat-label">{{ACTIVE_THREATS}}</div>
             </div>
             <div class="card">
               <div class="stat-value" id="stat-updated" style="font-size:18px;padding-top:8px;">—</div>
-              <div class="stat-label">最後更新時間</div>
+              <div class="stat-label">{{LAST_UPDATED}}</div>
             </div>
           </div>
 
-          <h2>邊緣節點清單</h2>
+          <h2>{{EDGE_NODES}}</h2>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>狀態</th>
-                  <th>節點 ID</th>
-                  <th>節點名稱</th>
-                  <th>來源 IP</th>
-                  <th>最後心跳</th>
-                  <th>回報情資數</th>
+                  <th>{{STATUS}}</th>
+                  <th>{{NODE_ID}}</th>
+                  <th>{{NODE_NAME}}</th>
+                  <th>{{SOURCE_IP}}</th>
+                  <th>{{LAST_HEARTBEAT}}</th>
+                  <th>{{REPORTED_THREATS}}</th>
                 </tr>
               </thead>
               <tbody id="node-tbody">
-                <tr><td colspan="6" class="empty">請輸入 API Key 後載入資料</td></tr>
+                <tr><td colspan="6" class="empty">{{ENTER_KEY}}</td></tr>
               </tbody>
             </table>
           </div>
@@ -528,8 +647,24 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <script>
             var currentKey = sessionStorage.getItem('idds_hub_key') || '';
             var refreshTimer = null;
+            var currentLanguage = '{{LANG}}';
+            var savedLanguage = sessionStorage.getItem('idds_hub_language');
+
+            if (!new URL(window.location.href).searchParams.has('lang') && savedLanguage && savedLanguage !== currentLanguage) {
+              var savedUrl = new URL(window.location.href);
+              savedUrl.searchParams.set('lang', savedLanguage);
+              window.location.replace(savedUrl.toString());
+            }
 
             document.getElementById('api-key').value = currentKey ? '••••••••' : '';
+            document.getElementById('language-select').value = currentLanguage;
+            document.getElementById('language-select').addEventListener('change', function(event) {
+              var selected = event.target.value;
+              sessionStorage.setItem('idds_hub_language', selected);
+              var url = new URL(window.location.href);
+              url.searchParams.set('lang', selected);
+              window.location.assign(url.toString());
+            });
 
             function applyKey() {
               var input = document.getElementById('api-key').value.trim();
@@ -548,7 +683,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             }
 
             function fmtLocal(iso) {
-              try { return new Date(iso).toLocaleString('zh-TW', { hour12: false }); } catch(e) { return iso; }
+              try { return new Date(iso).toLocaleString('{{LANG}}', { hour12: false }); } catch(e) { return iso; }
             }
 
             function showError(msg) {
@@ -568,20 +703,20 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
               })
               .then(function(r) {
-                if (r.status === 429) { showError('請求頻率過高，請稍後再試。'); return null; }
-                if (r.status === 401) { showError('API Key 驗證失敗，請確認後重新輸入。'); return null; }
-                if (!r.ok) { showError('伺服器回傳錯誤：HTTP ' + r.status); return null; }
+                if (r.status === 429) { showError('{{TOO_MANY_REQUESTS}}'); return null; }
+                if (r.status === 401) { showError('{{INVALID_KEY}}'); return null; }
+                if (!r.ok) { showError('{{SERVER_ERROR}}' + r.status); return null; }
                 return r.json();
               })
               .then(function(data) {
                 if (!data) return;
                 hideError();
-                document.getElementById('hub-status').textContent = '線上';
+                document.getElementById('hub-status').textContent = '{{ONLINE}}';
                 document.getElementById('hub-status').className = 'badge badge-online';
                 document.getElementById('stat-nodes').textContent = data.nodes ? data.nodes.length : 0;
                 document.getElementById('stat-threats').textContent = data.totalActiveThreatCount ?? '—';
                 document.getElementById('stat-updated').textContent = fmtLocal(data.generatedUtc);
-                document.getElementById('refresh-info').textContent = '自動每 30 秒更新 · 最後更新：' + fmtLocal(data.generatedUtc);
+                document.getElementById('refresh-info').textContent = '{{REFRESH_PREFIX}}' + fmtLocal(data.generatedUtc);
 
                 var tbody = document.getElementById('node-tbody');
                 tbody.replaceChildren();
@@ -590,7 +725,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                   var emptyTd = document.createElement('td');
                   emptyTd.colSpan = 6;
                   emptyTd.className = 'empty';
-                  emptyTd.textContent = '目前沒有已連線的邊緣節點';
+                  emptyTd.textContent = '{{NO_NODES}}';
                   emptyTr.appendChild(emptyTd);
                   tbody.appendChild(emptyTr);
                   return;
@@ -605,7 +740,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                   dot.className = 'status-dot ' + sc;
                   tdStatus.appendChild(dot);
                   tdStatus.appendChild(document.createTextNode(
-                    sc === 'dot-green' ? '在線' : sc === 'dot-yellow' ? '延遲' : '離線'
+                    sc === 'dot-green' ? '{{ONLINE}}' : sc === 'dot-yellow' ? '{{DELAYED}}' : '{{OFFLINE}}'
                   ));
 
                   // 節點 ID（前 8 碼）
@@ -615,7 +750,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
                   // 節點名稱
                   var tdName = document.createElement('td');
-                  tdName.textContent = (n.nodeName || '') || '（未命名）';
+                  tdName.textContent = (n.nodeName || '') || '{{UNNAMED}}';
 
                   // 來源 IP
                   var tdIp = document.createElement('td');
@@ -640,12 +775,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 });
               })
               .catch(function(err) {
-                document.getElementById('hub-status').textContent = '離線';
+                document.getElementById('hub-status').textContent = '{{OFFLINE}}';
                 document.getElementById('hub-status').className = 'badge badge-offline';
                 var errMsg = document.createElement('span');
-                errMsg.textContent = err.message || '未知錯誤';
+                errMsg.textContent = err.message || '{{UNKNOWN_ERROR}}';
                 var bar = document.getElementById('error-bar');
-                bar.replaceChildren(document.createTextNode('無法連線至 Threat Hub：'), errMsg);
+                bar.replaceChildren(document.createTextNode('{{CONNECTION_ERROR}}'), errMsg);
                 bar.style.display = 'block';
               });
             }

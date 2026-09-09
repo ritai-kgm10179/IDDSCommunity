@@ -15,6 +15,7 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 - Windows 服務型防護核心與 WinForms 管理介面（含「威脅情報與叢集聯防」專屬視覺化設定面板）。
 - 硬封鎖、軟封鎖、安全網路允許清單（支援 IPv4、IPv6、CIDR 與動態 DNS FQDN 解析）與自動解除封鎖。
 - 分散式跨主機威脅情資聯防（Edge / Hub 節點拓撲）與動態 IP 智慧假釋／一擊立即硬封鎖機制（Probation & One-Strike Relock）。
+- Threat Hub 提供內建 `/dashboard` 節點戰情頁面，支援正體中文（`zh-Hant-TW`）與英文（`en-US`）、瀏覽器語言自動判斷及手動切換。
 - 主動式外部威脅情報自動訂閱（支援 IPsum 分級清單、AbuseIPDB API、Spamhaus DROP 與自訂黑名單 URL）及情資 TTL 生命週期淘汰機制。
 - 雙層雙軌 Bogon 防禦體系（RFC 1918 靜態極速硬過濾 + Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步），杜絕誤封與自鎖。
 - Windows 防火牆規則管理（支援 Inbound 與 Bidirectional 雙向阻絕）、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。

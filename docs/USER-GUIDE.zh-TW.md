@@ -128,6 +128,8 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。
   - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
   - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。
+  - Threat Hub 啟動後可開啟 `https://<Hub 主機>:<連接埠>/dashboard` 檢視節點狀態、活動情資數與最後心跳。頁面本身可公開載入，但查詢資料前仍須輸入叢集 API Key；金鑰只保存在目前瀏覽器分頁的 `sessionStorage`。
+  - 儀表板支援正體中文 `zh-Hant-TW` 與英文 `en-US`。系統先採用 `?lang=zh-Hant-TW` 或 `?lang=en-US`，未指定時依瀏覽器 `Accept-Language` 自動判斷，不支援的語言回退英文；頁面右上角亦可手動切換語言。
 - **動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)**：
   - 永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。
   - 處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖。
