@@ -584,29 +584,69 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 document.getElementById('refresh-info').textContent = '自動每 30 秒更新 · 最後更新：' + fmtLocal(data.generatedUtc);
 
                 var tbody = document.getElementById('node-tbody');
+                tbody.replaceChildren();
                 if (!data.nodes || data.nodes.length === 0) {
-                  tbody.innerHTML = '<tr><td colspan="6" class="empty">目前沒有已連線的邊緣節點</td></tr>';
+                  var emptyTr = document.createElement('tr');
+                  var emptyTd = document.createElement('td');
+                  emptyTd.colSpan = 6;
+                  emptyTd.className = 'empty';
+                  emptyTd.textContent = '目前沒有已連線的邊緣節點';
+                  emptyTr.appendChild(emptyTd);
+                  tbody.appendChild(emptyTr);
                   return;
                 }
-                tbody.innerHTML = data.nodes.map(function(n) {
+                data.nodes.forEach(function(n) {
                   var sc = statusClass(n.lastSeenUtc);
-                  var shortId = (n.nodeId || '').substring(0, 8);
-                  var name = (n.nodeName || '').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '（未命名）';
-                  var ip = (n.nodeIp || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                  return '<tr>' +
-                    '<td><span class="status-dot ' + sc + '"></span>' + (sc === 'dot-green' ? '在線' : sc === 'dot-yellow' ? '延遲' : '離線') + '</td>' +
-                    '<td class="node-id">' + shortId + '</td>' +
-                    '<td>' + name + '</td>' +
-                    '<td class="node-id">' + ip + '</td>' +
-                    '<td>' + fmtLocal(n.lastSeenUtc) + '</td>' +
-                    '<td>' + (n.reportedThreatCount ?? 0) + '</td>' +
-                    '</tr>';
-                }).join('');
+                  var tr = document.createElement('tr');
+
+                  // 狀態欄
+                  var tdStatus = document.createElement('td');
+                  var dot = document.createElement('span');
+                  dot.className = 'status-dot ' + sc;
+                  tdStatus.appendChild(dot);
+                  tdStatus.appendChild(document.createTextNode(
+                    sc === 'dot-green' ? '在線' : sc === 'dot-yellow' ? '延遲' : '離線'
+                  ));
+
+                  // 節點 ID（前 8 碼）
+                  var tdId = document.createElement('td');
+                  tdId.className = 'node-id';
+                  tdId.textContent = (n.nodeId || '').substring(0, 8);
+
+                  // 節點名稱
+                  var tdName = document.createElement('td');
+                  tdName.textContent = (n.nodeName || '') || '（未命名）';
+
+                  // 來源 IP
+                  var tdIp = document.createElement('td');
+                  tdIp.className = 'node-id';
+                  tdIp.textContent = n.nodeIp || '';
+
+                  // 最後心跳
+                  var tdSeen = document.createElement('td');
+                  tdSeen.textContent = fmtLocal(n.lastSeenUtc);
+
+                  // 回報情資數
+                  var tdCount = document.createElement('td');
+                  tdCount.textContent = n.reportedThreatCount ?? 0;
+
+                  tr.appendChild(tdStatus);
+                  tr.appendChild(tdId);
+                  tr.appendChild(tdName);
+                  tr.appendChild(tdIp);
+                  tr.appendChild(tdSeen);
+                  tr.appendChild(tdCount);
+                  tbody.appendChild(tr);
+                });
               })
               .catch(function(err) {
                 document.getElementById('hub-status').textContent = '離線';
                 document.getElementById('hub-status').className = 'badge badge-offline';
-                showError('無法連線至 Threat Hub：' + err.message);
+                var errMsg = document.createElement('span');
+                errMsg.textContent = err.message || '未知錯誤';
+                var bar = document.getElementById('error-bar');
+                bar.replaceChildren(document.createTextNode('無法連線至 Threat Hub：'), errMsg);
+                bar.style.display = 'block';
               });
             }
 
