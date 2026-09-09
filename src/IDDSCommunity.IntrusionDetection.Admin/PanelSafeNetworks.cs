@@ -28,6 +28,13 @@ public event EventHandler? SafeNetworksChanged;
         listBoxSafeNetworks.DisplayMember = "DisplayName";
         Load += new EventHandler(PanelSafeNetworks_Load);
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
+        SizeChanged += (_, _) => PositionSaveButton();
+        PositionSaveButton();
+    }
+
+    private void PositionSaveButton()
+    {
+        buttonSave.Left = Math.Max(0, (ClientSize.Width - buttonSave.Width) / 2);
     }
     /// <summary>
     /// 處理 load 事件。

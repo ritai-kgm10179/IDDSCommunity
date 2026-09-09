@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Data;
@@ -78,16 +78,16 @@ public DataView IntrusionLogView
 public IDDSCommunitySecurityLog()
     {
         InitializeComponent();
+        ConfigureGrid();
         pictureBox2.Image = InterfaceIcons.CreateSecurityLog(Math.Min(pictureBox2.ClientSize.Width, pictureBox2.ClientSize.Height));
         comboBoxAgentSelection.DisplayMember = "DisplayName";
         comboBoxAgentSelection.ValueMember = "Id";
         comboBoxAgentSelection.DropDownStyle = ComboBoxStyle.DropDownList;
-        comboBoxAgentSelection.DropDownWidth = 320;
+        comboBoxAgentSelection.DropDownWidth = 480;
         comboBoxAgentSelection.Items.Add(new AgentFilter(new Guid(ALL_AGENTS), Strings.Get("All Agents")));
         comboBoxAgentSelection.SelectedIndex = 0;
         comboBoxAgentSelection.SelectionChangeCommitted += new EventHandler(comboBoxAgentSelection_SelectionChangeCommitted);
         dataGridViewIntrusionLog.AutoGenerateColumns = false;
-        EnableDoubleBuffering(dataGridViewIntrusionLog);
         dataGridViewIntrusionLog.DataSource = IntrusionLogView;
         //dataGridViewIntrusionLog.DataMember = "IntrusionLog";
         dataGridViewIntrusionLog.Columns["LogIcon"]!.DataPropertyName = "LogIcon";
@@ -104,13 +104,46 @@ public IDDSCommunitySecurityLog()
             ExecuteAdvancedFilter(pendingSearchQuery);
         };
 
-        PositionLabels();
+        panelSecurityLogActionBar.Resize += (_, _) => LayoutSecurityFilters();
+        LayoutSecurityFilters();
+
     }
 
-    private static void EnableDoubleBuffering(Control control)
+    private void LayoutSecurityFilters()
     {
-        System.Reflection.PropertyInfo? property = typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        property?.SetValue(control, true, null);
+        comboBoxAgentSelection.Location = new Point(10, 7);
+        CheckBox[] filters = [checkBoxFailedLogins, checkBoxSoftLocks, checkBoxHardLocks, checkBoxSystemMessages];
+        int filtersWidth = filters.Sum(filter => filter.PreferredSize.Width) + (filters.Length - 1) * 12;
+        int availableComboWidth = panelSecurityLogActionBar.ClientSize.Width - 10 - 18 - filtersWidth - 10;
+        comboBoxAgentSelection.Width = Math.Min(400, Math.Max(240, availableComboWidth));
+
+        int x = comboBoxAgentSelection.Right + 18;
+        foreach (CheckBox filter in filters)
+        {
+            filter.Location = new Point(x, 9);
+            x = filter.Right + 12;
+        }
+    }
+
+    private void ConfigureGrid()
+    {
+        smartLabelType.Visible = false;
+        smartLabelLatestEntry.Visible = false;
+        smartLabelNumberOfEvents.Visible = false;
+        smartLabelpAddress.Visible = false;
+        smartLabelMessage.Visible = false;
+        panelSecurityLogGridPanel.AutoScroll = false;
+        panelSecurityLogGridPanel.Padding = new Padding(1);
+        dataGridViewIntrusionLog.Dock = DockStyle.Fill;
+        AdminGridChrome.Apply(dataGridViewIntrusionLog);
+
+        LogType.SortMode = DataGridViewColumnSortMode.Automatic;
+        LatestEntry.SortMode = DataGridViewColumnSortMode.Automatic;
+        NumberOfEvents.SortMode = DataGridViewColumnSortMode.Automatic;
+        IpAddress.SortMode = DataGridViewColumnSortMode.Automatic;
+        Agent.SortMode = DataGridViewColumnSortMode.Automatic;
+        Agent.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        Agent.MinimumWidth = 220;
     }
     /// <summary>
     /// 處理 filter selection changed 事件。
@@ -309,25 +342,4 @@ public int MaxLogId { get; set; }
             // not found
         }
     }
-    /// <summary>
-    /// 處理 resize 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void dataGridViewIntrusionLog_Resize(object? sender, EventArgs? e) => PositionLabels();
-    /// <summary>
-    /// 執行 position labels 作業。
-    /// </summary>
-    private void PositionLabels()
-    {
-        smartLabelType.Left = 3;
-        smartLabelLatestEntry.Left = smartLabelType.Left + dataGridViewIntrusionLog.Columns[0].Width + dataGridViewIntrusionLog.Columns[1].Width;
-        smartLabelNumberOfEvents.Left = smartLabelLatestEntry.Left + dataGridViewIntrusionLog.Columns[2].Width;
-        smartLabelpAddress.Left = smartLabelNumberOfEvents.Left + dataGridViewIntrusionLog.Columns[3].Width;
-        smartLabelMessage.Left = smartLabelpAddress.Left + dataGridViewIntrusionLog.Columns[4].Width;
-    }
-
-
-
-
 }

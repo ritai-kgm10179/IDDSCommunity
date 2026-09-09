@@ -14,6 +14,7 @@ public sealed partial class PanelSelfServiceSettings : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
+    private const string AnyIpv4Address = "0.0.0.0";
 
     /// <summary>
     /// 當自助門戶設定變更並儲存時引發之事件。
@@ -27,7 +28,7 @@ public sealed partial class PanelSelfServiceSettings : UserControl
     {
         InitializeComponent();
 
-        txtListenIp.Text = "0.0.0.0";
+        txtListenIp.Text = AnyIpv4Address;
 
         btnGenerate.Click += (s, e) => GenerateNewSecret();
         btnVerify.Click += (s, e) => VerifyCode();

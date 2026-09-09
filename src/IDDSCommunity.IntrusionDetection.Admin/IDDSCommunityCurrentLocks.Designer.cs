@@ -244,10 +244,10 @@
             //
             this.pictureBoxActionMenuUnlock.Enabled = false;
             this.pictureBoxActionMenuUnlock.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button_unlock;
-            this.pictureBoxActionMenuUnlock.Location = new System.Drawing.Point(5, 4);
+            this.pictureBoxActionMenuUnlock.Location = new System.Drawing.Point(3, 3);
             this.pictureBoxActionMenuUnlock.Name = "pictureBoxActionMenuUnlock";
-            this.pictureBoxActionMenuUnlock.Size = new System.Drawing.Size(20, 20);
-            this.pictureBoxActionMenuUnlock.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.pictureBoxActionMenuUnlock.Size = new System.Drawing.Size(24, 24);
+            this.pictureBoxActionMenuUnlock.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxActionMenuUnlock.TabIndex = 1;
             this.pictureBoxActionMenuUnlock.TabStop = false;
             this.pictureBoxActionMenuUnlock.Click += new System.EventHandler(this.actionMenuUnlock_Click);
@@ -364,7 +364,7 @@
             this.dataGridViewSelectItem.Name = "dataGridViewSelectItem";
             this.dataGridViewSelectItem.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewSelectItem.TrueValue = "1";
-            this.dataGridViewSelectItem.Width = 20;
+            this.dataGridViewSelectItem.Width = 32;
             //
             // dataGridViewColumnTypeIcon
             //

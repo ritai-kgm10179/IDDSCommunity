@@ -33,14 +33,14 @@ internal static class SettingsResetButtonFactory
         Button button = new()
         {
             Anchor = AnchorStyles.Top | AnchorStyles.Left,
-            AutoSize = fixedLocation is null,
+            AutoSize = false,
             BackColor = Color.White,
             FlatStyle = FlatStyle.Flat,
             Font = new Font("Segoe UI", 9F),
             ForeColor = Color.FromArgb(102, 102, 102),
             Location = fixedLocation ?? new Point(12, 6),
-            MinimumSize = fixedLocation is null ? new Size(112, 26) : new Size(120, 30),
-            Size = fixedLocation is null ? new Size(112, 26) : new Size(120, 30),
+            MinimumSize = new Size(120, 32),
+            Size = new Size(120, 32),
             Name = "buttonResetDefaults",
             TabIndex = 90,
             Text = Strings.Get("Restore defaults"),
@@ -60,13 +60,37 @@ internal static class SettingsResetButtonFactory
             // 容器是不會捲動的標頭 Panel，靠 WinForms 原生 Anchor 靠右對齊即可，
             // 不需要像下方「浮動於可捲動內容上方」的作法一樣手動監聽版面事件重新計算位置。
             button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            Control? observedParent = null;
             void PositionInContainer()
             {
-                button.Left = System.Math.Max(0, container.ClientSize.Width - button.Width - RightMargin);
+                int visibleWidth = container.ClientSize.Width;
+                if (owner.Parent is Control parent)
+                {
+                    int containerOffset = owner.Left + container.Left;
+                    visibleWidth = System.Math.Min(visibleWidth, System.Math.Max(0, parent.ClientSize.Width - containerOffset));
+                }
+                button.Left = System.Math.Max(0, visibleWidth - button.Width - RightMargin);
                 button.Top = System.Math.Max(0, (container.ClientSize.Height - button.Height) / 2);
             }
+            void ParentSizeChanged(object? sender, System.EventArgs eventArgs) => PositionInContainer();
+            void ParentChanged(object? sender, System.EventArgs eventArgs)
+            {
+                if (observedParent is not null)
+                    observedParent.SizeChanged -= ParentSizeChanged;
+                observedParent = owner.Parent;
+                if (observedParent is not null)
+                    observedParent.SizeChanged += ParentSizeChanged;
+                PositionInContainer();
+            }
             container.Layout += (_, _) => PositionInContainer();
-            PositionInContainer();
+            button.SizeChanged += (_, _) => PositionInContainer();
+            owner.ParentChanged += ParentChanged;
+            owner.Disposed += (_, _) =>
+            {
+                if (observedParent is not null)
+                    observedParent.SizeChanged -= ParentSizeChanged;
+            };
+            ParentChanged(owner, System.EventArgs.Empty);
         }
         else if (fixedLocation is null)
         {
@@ -92,6 +116,8 @@ internal static class SettingsResetButtonFactory
             }
 
             owner.Layout += (_, _) => PositionButton();
+            owner.SizeChanged += (_, _) => PositionButton();
+            button.SizeChanged += (_, _) => PositionButton();
             owner.ParentChanged += ParentChanged;
             owner.Disposed += (_, _) =>
             {

@@ -5,6 +5,7 @@ using IDDSCommunity.IntrusionDetection.Shared;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
+using System.Windows.Forms.VisualStyles;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
@@ -19,15 +20,66 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     public IDDSCommunityCurrentLocks()
     {
         InitializeComponent();
-        EnableDoubleBuffering(dataGridViewLocks);
+        ConfigureGrid();
         pictureBox3.Image = InterfaceIcons.CreateLock(Math.Min(pictureBox3.ClientSize.Width, pictureBox3.ClientSize.Height));
-        pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(Math.Min(pictureBoxActionMenuUnlock.ClientSize.Width, pictureBoxActionMenuUnlock.ClientSize.Height), true);
+        pictureBoxActionMenuUnlock.Image = InterfaceIcons.CreateLock(22, true);
     }
 
-    private static void EnableDoubleBuffering(Control control)
+    private void ConfigureGrid()
     {
-        System.Reflection.PropertyInfo? property = typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        property?.SetValue(control, true, null);
+        smartLabel2.Visible = false;
+        smartLabel4.Visible = false;
+        smartLabel5.Visible = false;
+        smartLabel6.Visible = false;
+        smartLabel7.Visible = false;
+        panelCurrentLocksGrid.AutoScroll = false;
+        panelCurrentLocksGrid.Padding = new Padding(1);
+        dataGridViewLocks.Dock = DockStyle.Fill;
+        AdminGridChrome.Apply(dataGridViewLocks);
+
+        dataGridViewColumnTypeName.SortMode = DataGridViewColumnSortMode.Automatic;
+        dataGridViewColumnIpAddress.SortMode = DataGridViewColumnSortMode.Automatic;
+        dataGridViewColumnAgent.SortMode = DataGridViewColumnSortMode.Automatic;
+        dataGridViewColumnLockDate.SortMode = DataGridViewColumnSortMode.Automatic;
+        dataGridViewColumnUnlockDate.SortMode = DataGridViewColumnSortMode.Automatic;
+        dataGridViewColumnUnlockDate.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        dataGridViewColumnUnlockDate.MinimumWidth = 160;
+
+        checkBoxSelectAllLocks.Visible = false;
+        dataGridViewLocks.CellPainting += DataGridViewLocks_CellPainting;
+        dataGridViewLocks.ColumnHeaderMouseClick += DataGridViewLocks_ColumnHeaderMouseClick;
+        dataGridViewLocks.Sort(dataGridViewColumnLockDate, System.ComponentModel.ListSortDirection.Descending);
+    }
+
+    private void DataGridViewLocks_CellPainting(object? sender, DataGridViewCellPaintingEventArgs e)
+    {
+        if (e.RowIndex != -1 || e.ColumnIndex != dataGridViewSelectItem.Index)
+            return;
+
+        if (e.Graphics is null)
+            return;
+
+        e.Paint(e.CellBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
+        CheckBoxState state = checkBoxSelectAllLocks.Checked
+            ? CheckBoxState.CheckedNormal
+            : CheckBoxState.UncheckedNormal;
+        Size glyphSize = CheckBoxRenderer.GetGlyphSize(e.Graphics, state);
+        Rectangle glyphBounds = new(
+            e.CellBounds.Left + (e.CellBounds.Width - glyphSize.Width) / 2,
+            e.CellBounds.Top + (e.CellBounds.Height - glyphSize.Height) / 2,
+            glyphSize.Width,
+            glyphSize.Height);
+        CheckBoxRenderer.DrawCheckBox(e.Graphics, glyphBounds.Location, state);
+        e.Handled = true;
+    }
+
+    private void DataGridViewLocks_ColumnHeaderMouseClick(object? sender, DataGridViewCellMouseEventArgs e)
+    {
+        if (e.ColumnIndex != dataGridViewSelectItem.Index)
+            return;
+
+        checkBoxSelectAllLocks.Checked = !checkBoxSelectAllLocks.Checked;
+        dataGridViewLocks.InvalidateCell(dataGridViewSelectItem.Index, -1);
     }
 
     /// <summary>

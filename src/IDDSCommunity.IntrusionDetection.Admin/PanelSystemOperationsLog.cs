@@ -180,28 +180,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             ScrollBars = ScrollBars.Both
         };
 
-        typeof(DataGridView).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(dataGridViewLogs, true, null);
-
-        dataGridViewLogs.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-        {
-            BackColor = Color.FromArgb(243, 246, 248),
-            ForeColor = Color.FromArgb(70, 70, 70),
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point),
-            Alignment = DataGridViewContentAlignment.MiddleLeft,
-            Padding = new Padding(6, 0, 0, 0)
-        };
-
-        dataGridViewLogs.DefaultCellStyle = new DataGridViewCellStyle
-        {
-            ForeColor = Color.FromArgb(40, 40, 40),
-            SelectionBackColor = Color.FromArgb(232, 242, 252),
-            SelectionForeColor = Color.FromArgb(20, 20, 20),
-            Font = new Font("Segoe UI", 8.75F, FontStyle.Regular, GraphicsUnit.Point),
-            Padding = new Padding(4, 2, 4, 2)
-        };
-
-        dataGridViewLogs.RowTemplate.Height = 26;
+        AdminGridChrome.Apply(dataGridViewLogs);
 
         BuildGridColumns();
         dataGridViewLogs.CellFormatting += DataGridViewLogs_CellFormatting;
@@ -339,7 +318,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Time"),
             Width = 145,
             MinimumWidth = 135,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
 
         dataGridViewLogs.Columns.Add(new DataGridViewTextBoxColumn
@@ -348,7 +327,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Event category:").TrimEnd('：', ':'),
             Width = 145,
             MinimumWidth = 120,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
 
         dataGridViewLogs.Columns.Add(new DataGridViewTextBoxColumn
@@ -357,7 +336,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Outcome:").TrimEnd('：', ':'),
             Width = 90,
             MinimumWidth = 80,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
 
         dataGridViewLogs.Columns.Add(new DataGridViewTextBoxColumn
@@ -366,7 +345,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Actor"),
             Width = 130,
             MinimumWidth = 110,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
 
         dataGridViewLogs.Columns.Add(new DataGridViewTextBoxColumn
@@ -375,7 +354,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Target / Subject"),
             Width = 180,
             MinimumWidth = 140,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
 
         dataGridViewLogs.Columns.Add(new DataGridViewTextBoxColumn
@@ -384,7 +363,7 @@ public sealed class PanelSystemOperationsLog : UserControl
             HeaderText = Strings.Get("Details"),
             AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
             MinimumWidth = 160,
-            SortMode = DataGridViewColumnSortMode.NotSortable
+            SortMode = DataGridViewColumnSortMode.Automatic
         });
     }
 

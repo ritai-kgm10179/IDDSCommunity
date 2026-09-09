@@ -218,9 +218,10 @@
             //
             this.pictureBoxAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxAdd.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_add;
-            this.pictureBoxAdd.Location = new System.Drawing.Point(313, 2);
+            this.pictureBoxAdd.Location = new System.Drawing.Point(320, 5);
             this.pictureBoxAdd.Name = "pictureBoxAdd";
-            this.pictureBoxAdd.Size = new System.Drawing.Size(25, 25);
+            this.pictureBoxAdd.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxAdd.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxAdd.TabIndex = 0;
             this.pictureBoxAdd.TabStop = false;
             this.pictureBoxAdd.Click += new System.EventHandler(this.pictureBoxAdd_Click);
@@ -231,9 +232,10 @@
             //
             this.pictureBoxDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxDelete.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
-            this.pictureBoxDelete.Location = new System.Drawing.Point(344, 2);
+            this.pictureBoxDelete.Location = new System.Drawing.Point(346, 5);
             this.pictureBoxDelete.Name = "pictureBoxDelete";
-            this.pictureBoxDelete.Size = new System.Drawing.Size(25, 25);
+            this.pictureBoxDelete.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxDelete.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxDelete.TabIndex = 0;
             this.pictureBoxDelete.TabStop = false;
             this.pictureBoxDelete.Click += new System.EventHandler(this.pictureBoxDelete_Click);

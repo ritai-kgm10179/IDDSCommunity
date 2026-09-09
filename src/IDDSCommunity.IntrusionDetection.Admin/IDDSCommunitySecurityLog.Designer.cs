@@ -244,7 +244,6 @@
             this.dataGridViewIntrusionLog.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewIntrusionLog.Size = new System.Drawing.Size(808, 300);
             this.dataGridViewIntrusionLog.TabIndex = 0;
-            this.dataGridViewIntrusionLog.Resize += new System.EventHandler(this.dataGridViewIntrusionLog_Resize);
             //
             // panelSecurityLogActionBar
             //
