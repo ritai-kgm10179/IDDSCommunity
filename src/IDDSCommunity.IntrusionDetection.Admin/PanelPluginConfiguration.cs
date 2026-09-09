@@ -38,7 +38,7 @@ public event EventHandler? AgentConfigurationChanged;
         InitializeComponent();
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
-        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt, container: headerPanel);
     }
     /// <summary>
     /// 處理 agent changed 事件。
@@ -50,6 +50,11 @@ public event EventHandler? AgentConfigurationChanged;
         LoadData();
         smartLabelAgentName.Text = Agent.DisplayName;
         ClearErrors();
+        AutoScrollPosition = Point.Empty;
+        if (Parent is System.Windows.Forms.ScrollableControl scrollableParent)
+        {
+            scrollableParent.AutoScrollPosition = Point.Empty;
+        }
     }
     /// <summary>
     /// 處理 mouse down 事件。
@@ -242,10 +247,17 @@ public bool IsInEditMode { get; set; }
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
         if (_agent is null) return;
-        SaveAgentChanges(_agent);
+        if (SaveAgentChanges(_agent))
+        {
+            MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 
-    private void SaveAgentChanges(SecurityAgent agent)
+    /// <summary>
+    /// 儲存目前代理程式的異動並回傳是否確實寫入。呼叫端可依此決定是否顯示成功提示——
+    /// <see cref="FlushUnsavedChanges"/> 在切換代理程式時會靜默呼叫，不應跳出提示。
+    /// </summary>
+    private bool SaveAgentChanges(SecurityAgent agent)
     {
         bool hasError = false;
         ClearErrors();
@@ -269,6 +281,7 @@ public bool IsInEditMode { get; set; }
             errSoftLocks.Visible = true;
             hasError = true;
         }
+        bool saved = false;
         if (!hasError)
         {
             agent.LockForever = checkBoxLockForever.Checked;
@@ -282,12 +295,14 @@ public bool IsInEditMode { get; set; }
             if (!ValidateCustomConfiguration())
             {
                 SetEditMode(true);
-                return;
+                return false;
             }
             agent.Save();
             OnAgentConfigurationChanged();
+            saved = true;
         }
         SetEditMode(false);
+        return saved;
     }
 
     private bool ValidateCustomConfiguration()
@@ -362,17 +377,11 @@ public SecurityAgent Agent
     /// </summary>
     public void FlushUnsavedChanges()
     {
-        if (_agent != null && buttonSave.Visible)
+        if (_agent != null && _hasUnsavedChanges)
         {
             SaveAgentChanges(_agent);
         }
     }
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     /// <summary>
     /// 將目前 Agent 的設定載入原廠預設值，等待使用者儲存或取消。
     /// </summary>
@@ -408,14 +417,14 @@ public SecurityAgent Agent
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
+    private bool _hasUnsavedChanges;
     /// <summary>
     /// Sets edit mode.
     /// </summary>
     /// <param name="hasChanges">A value indicating whether s changes.</param>
     private void SetEditMode(bool hasChanges)
     {
-        buttonSave.Visible = hasChanges;
-        buttonDiscard.Visible = hasChanges;
+        _hasUnsavedChanges = hasChanges;
     }
     /// <summary>
     /// 處理 checked changed 事件。

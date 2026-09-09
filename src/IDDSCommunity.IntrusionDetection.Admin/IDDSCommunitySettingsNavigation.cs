@@ -27,6 +27,7 @@ public event EventHandler? PluginsChanged;
         flowLayoutPanelNavigationItems.WrapContents = false;
         flowLayoutPanelNavigationItems.HorizontalScroll.Enabled = false;
         flowLayoutPanelNavigationItems.HorizontalScroll.Visible = false;
+        UpdateTopMenuLayout();
     }
 
     /// <summary>
@@ -49,12 +50,33 @@ public event EventHandler? PluginsChanged;
     /// </summary>
     public bool ShowTopMenu { get; set; }
     /// <summary>
-    /// 處理 on paint 事件。
+    /// 處理 on paint 事件。僅負責繪製，不得在此變更子控制項版面——否則會觸發
+    /// Invalidate → Layout → Paint 的重入迴圈（表現為閃爍或版面計算失敗）。
+    /// 子控制項的定位改由 <see cref="OnLayout"/> 處理。
     /// </summary>
     /// <param name="e">事件資料。</param>
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
+        if (ShowSeparator)
+        {
+            using Pen separatorPen = new(SeparatorColor, 1);
+            int separatorX = Math.Max(0, ClientSize.Width - 1);
+            e.Graphics.DrawLine(separatorPen, separatorX, 0, separatorX, ClientSize.Height);
+        }
+    }
+
+    /// <summary>
+    /// 依據 <see cref="ShowTopMenu"/> 重新定位導覽項目清單與動作列。
+    /// </summary>
+    private void UpdateTopMenuLayout()
+    {
+        // flowLayoutPanelNavigationItems 設有 Anchor = Top|Bottom|Left|Right，理論上應會隨父容器
+        // （本控制項）縮放自動調整寬度。但 AutoScaleMode.Font 在放大本控制項的 Size 時，並未經過
+        // 會觸發 Anchor 重新計算的一般 Resize 流程，導致寬度殘留放大前的舊值。在此手動同步寬度，
+        // 不再單靠 Anchor 機制。
+        int separatorGutterWidth = ShowSeparator ? LogicalToDeviceUnits(5) : 0;
+        flowLayoutPanelNavigationItems.Width = Math.Max(0, ClientSize.Width - separatorGutterWidth);
         if (!ShowTopMenu)
         {
             flowLayoutPanelNavigationItems.Top = 0;
@@ -66,10 +88,6 @@ public event EventHandler? PluginsChanged;
             flowLayoutPanelNavigationItems.Top = 33;
             flowLayoutPanelNavigationItems.Height = Height - 34;
             smartPanelActionBar.Show();
-        }
-        if (ShowSeparator)
-        {
-            e.Graphics.DrawLine(new Pen(SeparatorColor, 1), Width - 5, 0, Width - 5, Height);
         }
     }
     /// <summary>
@@ -132,6 +150,7 @@ public event EventHandler? PluginsChanged;
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
+        UpdateTopMenuLayout();
         UpdateItemWidths();
     }
 
@@ -139,6 +158,7 @@ public event EventHandler? PluginsChanged;
     protected override void OnLayout(LayoutEventArgs e)
     {
         base.OnLayout(e);
+        UpdateTopMenuLayout();
         UpdateItemWidths();
     }
 

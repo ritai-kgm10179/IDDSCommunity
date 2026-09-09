@@ -33,6 +33,27 @@ public event EventHandler? AgentSettingsChanged;
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     void iddscommunitySettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
+    /// <summary>
+    /// 手動排列導覽清單與設定內容面板。AutoScaleMode.Font 會依實際字型度量放大
+    /// iddscommunitySettingsNavigation 這種顯式設定 Size 的 Dock=Left 子控制項，但 Dock=Fill 的
+    /// configurationPanel 並未跟著扣除放大後的寬度，因此改為手動依 iddscommunitySettingsNavigation
+    /// 目前的實際寬度計算 configurationPanel 的 Bounds，不再依賴 Dock=Fill 的自動計算。
+    /// </summary>
+    /// <param name="levent">版面配置事件資料。</param>
+    protected override void OnLayout(LayoutEventArgs levent)
+    {
+        base.OnLayout(levent);
+        // 「設定」分頁（IDDSCommunityApplicationSettings）用 Anchor + 固定座標排列導覽清單與內容面板，
+        // 兩者之間設計時就留了 8px 的呼吸空間（Location 280 - (Location 12 + Size 260) = 8）。
+        // 這裡改用 LogicalToDeviceUnits 讓同樣的 8px 間距隨 DPI/AutoScale 縮放，維持與「設定」分頁一致的視覺風格。
+        int gap = LogicalToDeviceUnits(8);
+        int navRight = iddscommunitySettingsNavigation.Right + gap;
+        configurationPanel.Bounds = new Rectangle(
+            navRight,
+            Padding.Top,
+            Math.Max(0, ClientSize.Width - Padding.Right - navRight),
+            Math.Max(0, ClientSize.Height - Padding.Vertical));
+    }
 
     private PanelPluginConfiguration? _pluginConfigPanel;
 
@@ -45,11 +66,13 @@ public PanelPluginConfiguration PluginConfigPanel
         {
             if (_pluginConfigPanel == null)
             {
-                _pluginConfigPanel = new PanelPluginConfiguration();
-                configurationPanel.Controls.Add(_pluginConfigPanel);
-                _pluginConfigPanel.Dock = DockStyle.Fill;
+                _pluginConfigPanel = new PanelPluginConfiguration
+                {
+                    Dock = DockStyle.Fill
+                };
                 _pluginConfigPanel.AgentChanged += new EventHandler(_pluginConfigPanel_AgentChanged);
                 _pluginConfigPanel.AgentConfigurationChanged += new EventHandler(_pluginConfigPanel_AgentConfigurationChanged);
+                configurationPanel.Controls.Add(_pluginConfigPanel);
             }
             return _pluginConfigPanel;
         }

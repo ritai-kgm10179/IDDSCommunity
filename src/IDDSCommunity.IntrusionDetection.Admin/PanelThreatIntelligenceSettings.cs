@@ -10,44 +10,10 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// 提供分散式威脅情資中繼 (Threat Hub)、外部威脅名單訂閱 (IPsum, AbuseIPDB) 與 Bogon 動態過濾配置面板。
 /// </summary>
-public sealed class PanelThreatIntelligenceSettings : UserControl
+public sealed partial class PanelThreatIntelligenceSettings : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
-
-    // Section 1: Topology
-    private readonly ComboBox comboClusterRole;
-    private readonly TextBox txtHubEndpoint;
-    private readonly TextBox txtHubApiKey;
-    private readonly NumericUpDown numHubPort;
-    private readonly NumericUpDown numSyncInterval;
-
-    // Section 2: Threat Feeds
-    private readonly CheckBox chkEnableFeeds;
-    private readonly NumericUpDown numFeedInterval;
-    private readonly NumericUpDown numIpsumLevel;
-    private readonly NumericUpDown numFeedTtlDays;
-    private readonly TextBox txtAbuseApiKey;
-    private readonly NumericUpDown numAbuseMinConfidence;
-    private readonly TextBox txtCustomUrls;
-
-    // Section 3: Bogon & Probation
-    private readonly CheckBox chkEnableDynamicBogon;
-    private readonly TextBox txtBogonIpv4Url;
-    private readonly TextBox txtBogonIpv6Url;
-    private readonly NumericUpDown numProbationDays;
-
-    // Section 4: GeoIP
-    private readonly CheckBox chkEnableGeoBlocking;
-    private readonly TextBox txtBlockedCountries;
-    private readonly CheckBox chkEnableGeoIpAutoUpdate;
-    private readonly TextBox txtGeoIpDatabaseIpv4Url;
-    private readonly TextBox txtGeoIpDatabaseIpv6Url;
-    private readonly TextBox txtGeoIpLocalFilePath;
-    private readonly Button btnBrowseGeoIpFile;
-    private readonly NumericUpDown numGeoIpUpdateDays;
-    private readonly Button btnUpdateGeoIpNow;
-    private readonly Label lblGeoIpStatus;
 
     /// <summary>
     /// 當威脅情報與叢集聯防設定變更並儲存時引發之事件。
@@ -59,332 +25,15 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
     /// </summary>
     public PanelThreatIntelligenceSettings()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
-        AutoScroll = true;
+        InitializeComponent();
 
-        Font defaultFont = new("Segoe UI", 9F);
-        Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
-
-        int leftMargin = 15;
-        int controlWidth = 380;
-        int currentY = 10;
-
-        // Page Header
-        SmartLabel pageTitle = CreateHeaderLabel(Strings.Get("Threat intelligence and cluster"), 11F, AccentColor, new Point(11, currentY));
-        Controls.Add(pageTitle);
-        currentY += 32;
-
-        // === Section 1: Cluster Topology ===
-        Label lblSectionCluster = CreateHeaderLabel(Strings.Get("Cluster topology & Threat Hub"), 10F, AccentColor, new Point(leftMargin, currentY));
-        Controls.Add(lblSectionCluster);
-        currentY += 24;
-
-        Label lblRole = CreateFieldLabel(Strings.Get("Cluster node role"), new Point(leftMargin, currentY));
-        comboClusterRole = new ComboBox
-        {
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 22),
-            Size = new Size(controlWidth, 23)
-        };
         comboClusterRole.Items.AddRange([
             Strings.Get("Standalone"),
             Strings.Get("Edge Node"),
             Strings.Get("Threat Hub")
         ]);
         comboClusterRole.SelectedIndexChanged += (_, _) => UpdateClusterControlsState();
-        Controls.Add(lblRole);
-        Controls.Add(comboClusterRole);
-        currentY += 52;
 
-        Label lblEndpoint = CreateFieldLabel(Strings.Get("Threat Hub endpoint URL"), new Point(leftMargin, currentY));
-        txtHubEndpoint = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 22),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblEndpoint);
-        Controls.Add(txtHubEndpoint);
-        currentY += 52;
-
-        Label lblApiKey = CreateFieldLabel(Strings.Get("Cluster API key"), new Point(leftMargin, currentY));
-        txtHubApiKey = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 22),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblApiKey);
-        Controls.Add(txtHubApiKey);
-        currentY += 52;
-
-        Label lblPort = CreateFieldLabel(Strings.Get("Threat Hub port"), new Point(leftMargin, currentY));
-        numHubPort = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 22),
-            Size = new Size(180, 23),
-            Minimum = 1,
-            Maximum = 65535,
-            Value = 8443
-        };
-        Controls.Add(lblPort);
-        Controls.Add(numHubPort);
-
-        Label lblSync = CreateFieldLabel(Strings.Get("Cluster sync interval (seconds)"), new Point(leftMargin + 195, currentY));
-        numSyncInterval = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin + 195, currentY + 22),
-            Size = new Size(185, 23),
-            Minimum = 5,
-            Maximum = 3600,
-            Value = 60
-        };
-        Controls.Add(lblSync);
-        Controls.Add(numSyncInterval);
-        currentY += 56;
-
-        // === Section 2: External Threat Feeds ===
-        Label lblSectionFeeds = CreateHeaderLabel(Strings.Get("External threat feeds subscription"), 10F, AccentColor, new Point(leftMargin, currentY));
-        Controls.Add(lblSectionFeeds);
-        currentY += 24;
-
-        chkEnableFeeds = new CheckBox
-        {
-            Text = Strings.Get("Enable automated threat feed subscription"),
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY),
-            AutoSize = true
-        };
-        Controls.Add(chkEnableFeeds);
-        currentY += 26;
-
-        Label lblFeedInterval = CreateFieldLabel(Strings.Get("Feed update interval (hours)"), new Point(leftMargin, currentY));
-        numFeedInterval = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(180, 23),
-            Minimum = 1,
-            Maximum = 168,
-            Value = 24
-        };
-        Controls.Add(lblFeedInterval);
-        Controls.Add(numFeedInterval);
-
-        Label lblIpsumLevel = CreateFieldLabel(Strings.Get("IPsum minimum severity level (1-8)"), new Point(leftMargin + 195, currentY));
-        numIpsumLevel = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin + 195, currentY + 18),
-            Size = new Size(185, 23),
-            Minimum = 1,
-            Maximum = 8,
-            Value = 3
-        };
-        Controls.Add(lblIpsumLevel);
-        Controls.Add(numIpsumLevel);
-        currentY += 46;
-
-        Label lblFeedTtl = CreateFieldLabel(Strings.Get("Threat intelligence TTL (days)"), new Point(leftMargin, currentY));
-        numFeedTtlDays = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(180, 23),
-            Minimum = 1,
-            Maximum = 365,
-            Value = 7
-        };
-        Controls.Add(lblFeedTtl);
-        Controls.Add(numFeedTtlDays);
-
-        Label lblAbuseMin = CreateFieldLabel(Strings.Get("AbuseIPDB minimum confidence (%)"), new Point(leftMargin + 195, currentY));
-        numAbuseMinConfidence = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin + 195, currentY + 18),
-            Size = new Size(185, 23),
-            Minimum = 25,
-            Maximum = 100,
-            Value = 90
-        };
-        Controls.Add(lblAbuseMin);
-        Controls.Add(numAbuseMinConfidence);
-        currentY += 46;
-
-        Label lblAbuseKey = CreateFieldLabel(Strings.Get("AbuseIPDB API key"), new Point(leftMargin, currentY));
-        txtAbuseApiKey = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblAbuseKey);
-        Controls.Add(txtAbuseApiKey);
-        currentY += 46;
-
-        Label lblCustomUrls = CreateFieldLabel(Strings.Get("Custom threat feed URLs (one per line)"), new Point(leftMargin, currentY));
-        txtCustomUrls = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 48),
-            Multiline = true,
-            ScrollBars = ScrollBars.Vertical
-        };
-        Controls.Add(lblCustomUrls);
-        Controls.Add(txtCustomUrls);
-        currentY += 74;
-
-        // === Section 3: Bogon & Probation ===
-        Label lblSectionBogon = CreateHeaderLabel(Strings.Get("Bogon & probation guardrails"), 10F, AccentColor, new Point(leftMargin, currentY));
-        Controls.Add(lblSectionBogon);
-        currentY += 24;
-
-        chkEnableDynamicBogon = new CheckBox
-        {
-            Text = Strings.Get("Enable Team Cymru Fullbogons dynamic updates"),
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY),
-            AutoSize = true
-        };
-        Controls.Add(chkEnableDynamicBogon);
-        currentY += 26;
-
-        Label lblProbationDays = CreateFieldLabel(Strings.Get("Probation decay period (days)"), new Point(leftMargin, currentY));
-        numProbationDays = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(180, 23),
-            Minimum = 1,
-            Maximum = 365,
-            Value = 90
-        };
-        Controls.Add(lblProbationDays);
-        Controls.Add(numProbationDays);
-        currentY += 46;
-
-        Label lblBogonV4 = CreateFieldLabel(Strings.Get("Dynamic Bogon IPv4 list URL"), new Point(leftMargin, currentY));
-        txtBogonIpv4Url = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblBogonV4);
-        Controls.Add(txtBogonIpv4Url);
-        currentY += 46;
-
-        Label lblBogonV6 = CreateFieldLabel(Strings.Get("Dynamic Bogon IPv6 list URL"), new Point(leftMargin, currentY));
-        txtBogonIpv6Url = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblBogonV6);
-        Controls.Add(txtBogonIpv6Url);
-        currentY += 52;
-
-        // === Section 4: GeoIP & Geo-fencing ===
-        Label lblSectionGeo = CreateHeaderLabel(Strings.Get("GeoIP & Country-level Blocking (Geo-fencing)"), 10F, AccentColor, new Point(leftMargin, currentY));
-        Controls.Add(lblSectionGeo);
-        currentY += 24;
-
-        chkEnableGeoBlocking = new CheckBox
-        {
-            Text = Strings.Get("Enable country-level Geo-blocking"),
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY),
-            AutoSize = true
-        };
-        Controls.Add(chkEnableGeoBlocking);
-        currentY += 26;
-
-        Label lblBlockedCountries = CreateFieldLabel(Strings.Get("Blocked country codes (ISO 3166-1 alpha-2, e.g. CN, RU)"), new Point(leftMargin, currentY));
-        txtBlockedCountries = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblBlockedCountries);
-        Controls.Add(txtBlockedCountries);
-        currentY += 46;
-
-        chkEnableGeoIpAutoUpdate = new CheckBox
-        {
-            Text = Strings.Get("Enable GeoIP automatic database update"),
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY),
-            AutoSize = true
-        };
-        Controls.Add(chkEnableGeoIpAutoUpdate);
-        currentY += 26;
-
-        Label lblGeoV4 = CreateFieldLabel(Strings.Get("GeoIP IPv4 Database URL:"), new Point(leftMargin, currentY));
-        txtGeoIpDatabaseIpv4Url = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblGeoV4);
-        Controls.Add(txtGeoIpDatabaseIpv4Url);
-        currentY += 46;
-
-        Label lblGeoV6 = CreateFieldLabel(Strings.Get("GeoIP IPv6 Database URL:"), new Point(leftMargin, currentY));
-        txtGeoIpDatabaseIpv6Url = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth, 23)
-        };
-        Controls.Add(lblGeoV6);
-        Controls.Add(txtGeoIpDatabaseIpv6Url);
-        currentY += 46;
-
-        Label lblGeoLocal = CreateFieldLabel(Strings.Get("Local GeoIP CSV file path (optional)"), new Point(leftMargin, currentY));
-        txtGeoIpLocalFilePath = new TextBox
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(controlWidth - 85, 23)
-        };
-        btnBrowseGeoIpFile = new Button
-        {
-            Font = defaultFont,
-            Location = new Point(leftMargin + controlWidth - 80, currentY + 17),
-            Size = new Size(80, 25),
-            Text = Strings.Get("Browse...")
-        };
         btnBrowseGeoIpFile.Click += (_, _) =>
         {
             using OpenFileDialog dialog = new()
@@ -397,44 +46,7 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
                 txtGeoIpLocalFilePath.Text = dialog.FileName;
             }
         };
-        Controls.Add(lblGeoLocal);
-        Controls.Add(txtGeoIpLocalFilePath);
-        Controls.Add(btnBrowseGeoIpFile);
-        currentY += 46;
 
-        Label lblGeoDays = CreateFieldLabel(Strings.Get("GeoIP update interval (days)"), new Point(leftMargin, currentY));
-        numGeoIpUpdateDays = new NumericUpDown
-        {
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 18),
-            Size = new Size(120, 23),
-            Minimum = 1,
-            Maximum = 365,
-            Value = 7
-        };
-        Controls.Add(lblGeoDays);
-        Controls.Add(numGeoIpUpdateDays);
-        currentY += 48;
-
-        btnUpdateGeoIpNow = new Button
-        {
-            BackColor = AccentColor,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-            Location = new Point(leftMargin, currentY),
-            Size = new Size(200, 30),
-            Text = Strings.Get("Update GeoIP Database Now")
-        };
-        lblGeoIpStatus = new Label
-        {
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Location = new Point(leftMargin, currentY + 36),
-            MaximumSize = new Size(controlWidth, 0)
-        };
         btnUpdateGeoIpNow.Click += async (_, _) =>
         {
             btnUpdateGeoIpNow.Enabled = false;
@@ -474,29 +86,10 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
                 btnUpdateGeoIpNow.Enabled = true;
             }
         };
-        Controls.Add(btnUpdateGeoIpNow);
-        Controls.Add(lblGeoIpStatus);
-        currentY += 80;
 
-        // Action Buttons
-        Button btnSave = new()
-        {
-            BackColor = AccentColor,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-            Location = new Point(leftMargin, currentY),
-            Size = new Size(120, 30),
-            Text = Strings.Get("&Save")
-        };
         btnSave.Click += SaveSettings;
-        Controls.Add(btnSave);
 
-        SettingsResetButtonFactory.AddTo(
-            this,
-            (_, _) => ResetToDefaults(),
-            new Point(leftMargin + 130, currentY));
-        currentY += 45;
+        SettingsResetButtonFactory.AddTo(this, (_, _) => ResetToDefaults(), container: headerPanel);
 
         LoadData();
     }
@@ -651,24 +244,4 @@ public sealed class PanelThreatIntelligenceSettings : UserControl
         chkEnableGeoBlocking.Checked = false;
         txtBlockedCountries.Text = string.Empty;
     }
-
-    private static SmartLabel CreateHeaderLabel(string text, float fontSize, Color color, Point location) =>
-        new()
-        {
-            AutoSize = true,
-            Font = new Font("Segoe UI", fontSize, FontStyle.Bold),
-            ForeColor = color,
-            Location = location,
-            Text = text
-        };
-
-    private static Label CreateFieldLabel(string text, Point location) =>
-        new()
-        {
-            AutoSize = true,
-            Font = new Font("Segoe UI", 9F),
-            ForeColor = BodyTextColor,
-            Location = location,
-            Text = text
-        };
 }

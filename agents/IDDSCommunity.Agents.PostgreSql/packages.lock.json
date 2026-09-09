@@ -5,14 +5,35 @@
       "IDDSCommunity.Authentication.Common": {
         "type": "Project",
         "dependencies": {
-          "IDDSCommunity.IntrusionDetection.Api": "[3.0.0, )"
+          "IDDSCommunity.IntrusionDetection.Api": "[3.0.0, )",
+          "System.Diagnostics.EventLog": "[10.0.11, )"
         }
       },
       "iddscommunity.intrusiondetection.api": {
         "type": "Project"
+      },
+      "System.Diagnostics.EventLog": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "QTXEoQBzz00SFWbo7nAg1Ogd4f99lwqcO9uAJ7MYSLEUR28f6As32QktrqG2Fr9cfAfd1GjLyGYspE7Ipj7P6w=="
       }
     },
-    "net10.0-windows7.0/win-arm64": {},
-    "net10.0-windows7.0/win-x64": {}
+    "net10.0-windows7.0/win-arm64": {
+      "System.Diagnostics.EventLog": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "QTXEoQBzz00SFWbo7nAg1Ogd4f99lwqcO9uAJ7MYSLEUR28f6As32QktrqG2Fr9cfAfd1GjLyGYspE7Ipj7P6w=="
+      }
+    },
+    "net10.0-windows7.0/win-x64": {
+      "System.Diagnostics.EventLog": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.11, )",
+        "resolved": "10.0.11",
+        "contentHash": "QTXEoQBzz00SFWbo7nAg1Ogd4f99lwqcO9uAJ7MYSLEUR28f6As32QktrqG2Fr9cfAfd1GjLyGYspE7Ipj7P6w=="
+      }
+    }
   }
 }

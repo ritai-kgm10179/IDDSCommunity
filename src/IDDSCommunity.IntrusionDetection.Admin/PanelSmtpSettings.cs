@@ -24,9 +24,8 @@ public event EventHandler? SmtpSettingsChanged;
     public PanelSmtpSettings()
     {
         InitializeComponent();
-        BackColor = Color.White;
         Load += new EventHandler(PanelSmtpSettings_Load);
-        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click);
+        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, container: headerPanel);
     }
     /// <summary>
     /// 處理 load 事件。
@@ -89,7 +88,6 @@ public bool IsInEditMode { get; set; }
         checkBoxAuthentication.Checked = IddsConfig.Instance.SmtpRequiresAuthentication;
         textBoxUsername.Text = IddsConfig.Instance.SmtpUsername;
         textBoxPassword.Text = IddsConfig.Instance.GetSmtpPassword();
-        SetEditMode(false);
     }
     /// <summary>
     /// 處理 click 事件。
@@ -210,15 +208,9 @@ public bool IsInEditMode { get; set; }
             IddsConfig.Instance.Save();
 
             OnSmtpSettingsChanged();
+            MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        SetEditMode(false);
     }
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     private void ResetDefaults_Click(object? sender, EventArgs e)
     {
         IddsConfig defaults = IddsConfig.GetDefaultConfiguration();
@@ -230,28 +222,5 @@ public bool IsInEditMode { get; set; }
         checkBoxAuthentication.Checked = false;
         textBoxUsername.Clear();
         textBoxPassword.Clear();
-        SetEditMode(true);
     }
-    /// <summary>
-    /// 處理 key press 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-    /// <summary>
-    /// Sets edit mode.
-    /// </summary>
-    /// <param name="hasChanges">A value indicating whether s changes.</param>
-    private void SetEditMode(bool hasChanges)
-    {
-        buttonSave.Visible = hasChanges;
-        buttonDiscard.Visible = hasChanges;
-    }
-    /// <summary>
-    /// 處理 checked changed 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
-
 }

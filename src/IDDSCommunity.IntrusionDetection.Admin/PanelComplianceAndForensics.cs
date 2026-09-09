@@ -13,15 +13,10 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// 提供 CIS Windows Server 安全基準合規掃描與取證評估面板。
 /// </summary>
-public sealed class PanelComplianceAndForensics : UserControl
+public sealed partial class PanelComplianceAndForensics : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
-
-    private readonly Button btnRunScan;
-    private readonly Label lblScore;
-    private readonly ListView listChecks;
-    private readonly Button btnExportReport;
 
     private CisBenchmarkResult? latestResult;
 
@@ -30,77 +25,8 @@ public sealed class PanelComplianceAndForensics : UserControl
     /// </summary>
     public PanelComplianceAndForensics()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
+        InitializeComponent();
 
-        Font defaultFont = new("Segoe UI", 9F);
-        Font headerFont = new("Segoe UI", 11F, FontStyle.Bold);
-
-        // Top Control Panel
-        Panel topPanel = new()
-        {
-            Dock = DockStyle.Top,
-            Height = 130,
-            Padding = new Padding(20, 15, 20, 10)
-        };
-        Controls.Add(topPanel);
-
-        Label title = new()
-        {
-            Text = Strings.Get("CIS Windows Server Benchmark & Forensics"),
-            Font = headerFont,
-            ForeColor = AccentColor,
-            Location = new Point(20, 15),
-            AutoSize = true
-        };
-        topPanel.Controls.Add(title);
-
-        btnRunScan = new Button
-        {
-            Text = Strings.Get("Run CIS Benchmark Scan"),
-            Location = new Point(20, 48),
-            Size = new Size(160, 32),
-            BackColor = AccentColor,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = defaultFont
-        };
-        btnRunScan.Click += (_, _) => RunCisScan();
-        topPanel.Controls.Add(btnRunScan);
-
-        btnExportReport = new Button
-        {
-            Text = Strings.Get("Export Report"),
-            Location = new Point(190, 48),
-            Size = new Size(160, 32),
-            BackColor = Color.White,
-            ForeColor = BodyTextColor,
-            FlatStyle = FlatStyle.Flat,
-            Font = defaultFont,
-            Enabled = false
-        };
-        btnExportReport.Click += (_, _) => ExportReport();
-        topPanel.Controls.Add(btnExportReport);
-
-        lblScore = new Label
-        {
-            Text = Strings.Get("Scan not executed"),
-            Location = new Point(20, 92),
-            AutoSize = true,
-            Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-            ForeColor = BodyTextColor
-        };
-        topPanel.Controls.Add(lblScore);
-
-        // ListView
-        listChecks = new ListView
-        {
-            Dock = DockStyle.Fill,
-            View = View.Details,
-            FullRowSelect = true,
-            GridLines = true,
-            Font = defaultFont
-        };
         listChecks.Columns.Add(Strings.Get("status"), 100);
         listChecks.Columns.Add(Strings.Get("Check ID"), 80);
         listChecks.Columns.Add(Strings.Get("Category"), 140);
@@ -108,8 +34,8 @@ public sealed class PanelComplianceAndForensics : UserControl
         listChecks.Columns.Add(Strings.Get("Current Value"), 200);
         listChecks.Columns.Add(Strings.Get("Remediation Advice"), 300);
 
-        Controls.Add(listChecks);
-        listChecks.BringToFront();
+        btnRunScan.Click += (_, _) => RunCisScan();
+        btnExportReport.Click += (_, _) => ExportReport();
         listChecks.Resize += (_, _) => AutoResizeListViewColumns();
         AutoResizeListViewColumns();
     }

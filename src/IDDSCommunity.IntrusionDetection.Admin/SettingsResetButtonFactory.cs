@@ -14,17 +14,22 @@ internal static class SettingsResetButtonFactory
     /// <summary>
     /// 建立靠右上方配置的恢復預設值按鈕。
     /// </summary>
-    /// <param name="owner">擁有按鈕的設定頁。</param>
+    /// <param name="owner">擁有按鈕的設定頁（用於確認提示視窗的父視窗）。</param>
     /// <param name="click">按鈕點擊處理常式。</param>
     /// <param name="fixedLocation">固定按鈕位置座標；若為 null 則自動靠右上排列。</param>
     /// <param name="confirmationPrompt">自訂確認提示回呼函式。</param>
+    /// <param name="container">按鈕實際加入的容器；若為 null 則加入 <paramref name="owner"/>。
+    /// 用於可捲動（AutoScroll）的設定頁：將按鈕交給一個不會捲動的標頭 <see cref="Panel"/>
+    /// 容納，避免按鈕位置隨內容捲動而跑版。</param>
     /// <returns>建立完成的按鈕。</returns>
     internal static Button AddTo(
         Control owner,
         System.EventHandler click,
         Point? fixedLocation = null,
-        System.Func<IWin32Window, DialogResult>? confirmationPrompt = null)
+        System.Func<IWin32Window, DialogResult>? confirmationPrompt = null,
+        Control? container = null)
     {
+        Control target = container ?? owner;
         Button button = new()
         {
             Anchor = AnchorStyles.Top | AnchorStyles.Left,
@@ -47,10 +52,23 @@ internal static class SettingsResetButtonFactory
             if (ConfirmRestoreDefaults(owner, confirmationPrompt))
                 click(sender, eventArgs);
         };
-        owner.Controls.Add(button);
+        target.Controls.Add(button);
         button.BringToFront();
 
-        if (fixedLocation is null)
+        if (container is not null)
+        {
+            // 容器是不會捲動的標頭 Panel，靠 WinForms 原生 Anchor 靠右對齊即可，
+            // 不需要像下方「浮動於可捲動內容上方」的作法一樣手動監聽版面事件重新計算位置。
+            button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            void PositionInContainer()
+            {
+                button.Left = System.Math.Max(0, container.ClientSize.Width - button.Width - RightMargin);
+                button.Top = System.Math.Max(0, (container.ClientSize.Height - button.Height) / 2);
+            }
+            container.Layout += (_, _) => PositionInContainer();
+            PositionInContainer();
+        }
+        else if (fixedLocation is null)
         {
             Control? observedParent = null;
             void PositionButton()

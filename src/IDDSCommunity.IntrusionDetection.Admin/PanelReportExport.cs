@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,15 +11,8 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// Exports a localized security report for an administrator-selected interval.
 /// </summary>
-public sealed class PanelReportExport : UserControl
+public sealed partial class PanelReportExport : UserControl
 {
-    private readonly DateTimePicker start = new() { Format = DateTimePickerFormat.Short, Width = 140 };
-    private readonly DateTimePicker end = new() { Format = DateTimePickerFormat.Short, Width = 140 };
-    private readonly Button export = new();
-    private readonly Button exportIso = new();
-    private readonly Button exportStix = new();
-    private readonly Label status = new();
-
     private System.Threading.CancellationTokenSource? statusCts;
 
     /// <summary>
@@ -28,47 +20,14 @@ public sealed class PanelReportExport : UserControl
     /// </summary>
     public PanelReportExport()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
-        AutoScroll = true;
+        InitializeComponent();
         start.Value = DateTime.Today.AddDays(-30);
         end.Value = DateTime.Today;
-        Controls.Add(CreateLabel(Strings.Get("Report export"), 11F, Color.FromArgb(19, 184, 166), 11, 8));
-        Controls.Add(CreateLabel(Strings.Get("Export a localized HTML security report for the selected date range."), 9F, Color.FromArgb(102, 102, 102), 15, 43));
-        Controls.Add(CreateLabel(Strings.Get("Start date"), 9F, Color.FromArgb(102, 102, 102), 15, 84));
-        start.Location = new Point(130, 80);
-        Controls.Add(start);
-        Controls.Add(CreateLabel(Strings.Get("End date"), 9F, Color.FromArgb(102, 102, 102), 15, 120));
-        end.Location = new Point(130, 116);
-        Controls.Add(end);
 
-        export.Text = Strings.Get("Export HTML report");
-        export.Font = new Font("Segoe UI", 9F);
-        export.Location = new Point(15, 160);
-        export.Size = new Size(180, 30);
         export.Click += Export;
-        Controls.Add(export);
-
-        exportIso.Text = Strings.Get("Export ISO 27001 report");
-        exportIso.Font = new Font("Segoe UI", 9F);
-        exportIso.Location = new Point(205, 160);
-        exportIso.Size = new Size(180, 30);
         exportIso.Click += ExportIso;
-        Controls.Add(exportIso);
-
-        exportStix.Text = Strings.Get("Export STIX 2.1 bundle");
-        exportStix.Font = new Font("Segoe UI", 9F);
-        exportStix.Location = new Point(15, 200);
-        exportStix.Size = new Size(180, 30);
         exportStix.Click += ExportStix;
-        Controls.Add(exportStix);
 
-        status.AutoSize = false;
-        status.Font = new Font("Segoe UI", 9F);
-        status.ForeColor = Color.FromArgb(102, 102, 102);
-        status.Location = new Point(15, 245);
-        status.Size = new Size(420, 80);
-        Controls.Add(status);
         VisibleChanged += (_, _) => ResetStatus();
     }
 
@@ -229,13 +188,4 @@ public sealed class PanelReportExport : UserControl
         }
         finally { exportStix.Enabled = true; }
     }
-
-    private static Label CreateLabel(string text, float size, Color color, int x, int y) => new()
-    {
-        AutoSize = true,
-        Font = new Font("Segoe UI", size),
-        ForeColor = color,
-        Location = new Point(x, y),
-        Text = text
-    };
 }

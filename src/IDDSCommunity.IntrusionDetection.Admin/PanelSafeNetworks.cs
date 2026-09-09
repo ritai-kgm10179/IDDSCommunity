@@ -122,7 +122,6 @@ public event EventHandler? SafeNetworksChanged;
     private void pictureBoxAdd_Click(object sender, EventArgs e)
     {
         ShowAddNetworkPanel();
-        SetEditMode(true);
     }
     /// <summary>
     /// 處理 double click 事件。
@@ -154,7 +153,6 @@ public event EventHandler? SafeNetworksChanged;
         {
             listBoxSafeNetworks.Items.Remove(net);
         }
-        SetEditMode(true);
     }
     /// <summary>
     /// 處理 click 事件。
@@ -237,7 +235,6 @@ public bool EditExisting { get; set; }
         {
             listBoxSafeNetworks.Items.Add(net);
         }
-        SetEditMode(false);
     }
     /// <summary>
     /// 處理 click 事件。
@@ -280,13 +277,11 @@ public bool IsInEditMode { get; set; }
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void buttonDiscard_Click(object sender, EventArgs e) => LoadData();
     private void ResetDefaults_Click(object? sender, EventArgs e)
     {
         HideNetworkPanel();
         listBoxSafeNetworks.Items.Clear();
         checkBoxConfigureSafeNetworks.Checked = false;
-        SetEditMode(true);
     }
     /// <summary>
     /// 處理 click 事件。
@@ -309,29 +304,6 @@ public bool IsInEditMode { get; set; }
         IddsConfig.Instance.Save();
 
         OnSafeNetworksChanged();
-        SetEditMode(false);
+        MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
-    /// <summary>
-    /// 處理 key press 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void textBox_KeyPress(object sender, KeyPressEventArgs e) => SetEditMode(true);
-    /// <summary>
-    /// Sets edit mode.
-    /// </summary>
-    /// <param name="hasChanges">A value indicating whether s changes.</param>
-    private void SetEditMode(bool hasChanges)
-    {
-        buttonSave.Visible = hasChanges;
-        buttonDiscard.Visible = hasChanges;
-    }
-    /// <summary>
-    /// 處理 checked changed 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void checkBox_CheckedChanged(object sender, EventArgs e) => SetEditMode(true);
-
-
 }

@@ -37,23 +37,21 @@ public sealed class PluginPackagingContractTest
     }
 
     /// <summary>
-    /// 驗證封鎖設定的儲存與放棄按鈕使用版面容器維持明確間距。
+    /// 驗證封鎖設定採用全應用程式一致的永遠顯示儲存按鈕，且不再提供放棄按鈕。
     /// </summary>
     [TestMethod]
-    public void LockoutConfiguration_UsesLayoutManagedActionButtonSpacing()
+    public void LockoutConfiguration_UsesAlwaysVisibleSaveAction()
     {
         string repositoryRoot = FindRepositoryRoot();
         string source = File.ReadAllText(Path.Combine(
             repositoryRoot,
             "src",
             "IDDSCommunity.IntrusionDetection.Admin",
-            "PanelLockoutConfiguration.cs"));
+            "PanelLockoutConfiguration.Designer.cs"));
 
-        StringAssert.Contains(source, "actionButtonsLayout.Controls.Add(buttonSave)");
-        StringAssert.Contains(source, "actionButtonsLayout.Controls.Add(buttonDiscard)");
-        StringAssert.Contains(source, "buttonDiscard.Margin = new Padding(12, 0, 0, 0)");
-        StringAssert.Contains(source, "actionButtonsLayout.AutoSize = true");
-        StringAssert.Contains(source, "actionButtonsLayout.Padding = new Padding(0, 0, 1, 1)");
+        StringAssert.Contains(source, "tableLayoutMain.Controls.Add(this.buttonSave, 0, 24)");
+        StringAssert.Contains(source, "buttonSave.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get(\"&Save\")");
+        Assert.IsFalse(source.Contains("buttonDiscard", StringComparison.Ordinal));
     }
 
     /// <summary>

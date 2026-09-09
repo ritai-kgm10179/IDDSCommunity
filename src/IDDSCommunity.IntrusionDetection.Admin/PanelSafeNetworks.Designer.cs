@@ -36,7 +36,6 @@
             this.pictureBoxAdd = new System.Windows.Forms.PictureBox();
             this.pictureBoxDelete = new System.Windows.Forms.PictureBox();
             this.smartLabel5 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-            this.buttonDiscard = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).BeginInit();
@@ -57,7 +56,6 @@
             this.checkBoxConfigureSafeNetworks.TabIndex = 19;
             this.checkBoxConfigureSafeNetworks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Configure safe networks (white list)");
             this.checkBoxConfigureSafeNetworks.UseVisualStyleBackColor = true;
-            this.checkBoxConfigureSafeNetworks.CheckedChanged += new System.EventHandler(this.checkBox_CheckedChanged);
             //
             // pictureBoxEdit
             //
@@ -257,31 +255,16 @@
             this.smartLabel5.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Safe networks (white list)");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
-            // buttonDiscard
-            //
-            this.buttonDiscard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonDiscard.BackColor = System.Drawing.Color.White;
-            this.buttonDiscard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonDiscard.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonDiscard.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
-            this.buttonDiscard.Location = new System.Drawing.Point(217, 356);
-            this.buttonDiscard.Name = "buttonDiscard";
-            this.buttonDiscard.Size = new System.Drawing.Size(102, 26);
-            this.buttonDiscard.TabIndex = 30;
-            this.buttonDiscard.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Discard");
-            this.buttonDiscard.UseVisualStyleBackColor = false;
-            this.buttonDiscard.Click += new System.EventHandler(this.buttonDiscard_Click);
-            //
             // buttonSave
             //
             this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonSave.BackColor = System.Drawing.Color.White;
+            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(19, 184, 166);
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSave.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(102)))), ((int)(((byte)(102)))), ((int)(((byte)(102)))));
+            this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSave.ForeColor = System.Drawing.Color.White;
             this.buttonSave.Location = new System.Drawing.Point(109, 356);
             this.buttonSave.Name = "buttonSave";
-            this.buttonSave.Size = new System.Drawing.Size(102, 26);
+            this.buttonSave.Size = new System.Drawing.Size(120, 32);
             this.buttonSave.TabIndex = 29;
             this.buttonSave.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
@@ -292,7 +275,6 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.Controls.Add(this.buttonDiscard);
             this.Controls.Add(this.buttonSave);
             this.Controls.Add(this.pictureBoxSave);
             this.Controls.Add(this.smartPanelAdd);
@@ -333,7 +315,6 @@
         private SmartLabel smartLabel2;
         private System.Windows.Forms.PictureBox pictureBoxSave;
         private SmartLabel smartLabelInvalidNetwork;
-        private System.Windows.Forms.Button buttonDiscard;
         private System.Windows.Forms.Button buttonSave;
     }
 }

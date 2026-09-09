@@ -43,12 +43,11 @@ public sealed class SettingsResetUiTest
         CheckBox enabled = Assert.IsInstanceOfType<CheckBox>(panel.Controls.Find("checkBoxEnableSecurityAgent", true)[0]);
         CheckBox overwrite = Assert.IsInstanceOfType<CheckBox>(panel.Controls.Find("checkBoxOverrideConfiguration", true)[0]);
         Button save = Assert.IsInstanceOfType<Button>(panel.Controls.Find("buttonSave", true)[0]);
-        Button discard = Assert.IsInstanceOfType<Button>(panel.Controls.Find("buttonDiscard", true)[0]);
         Assert.AreEqual(IddsConfig.DefaultHardLockAttempts.ToString(), hardLocks.Text);
         Assert.IsTrue(enabled.Checked);
         Assert.IsFalse(overwrite.Checked);
         Assert.IsTrue(save.Visible);
-        Assert.IsTrue(discard.Visible);
+        Assert.HasCount(0, panel.Controls.Find("buttonDiscard", true));
     }
 
     /// <summary>
@@ -72,7 +71,7 @@ public sealed class SettingsResetUiTest
         TextBox hardLocks = Assert.IsInstanceOfType<TextBox>(panel.Controls.Find("textBoxHardLocks", true)[0]);
         Button save = Assert.IsInstanceOfType<Button>(panel.Controls.Find("buttonSave", true)[0]);
         Assert.AreEqual("99", hardLocks.Text);
-        Assert.IsFalse(save.Visible);
+        Assert.IsTrue(save.Visible);
     }
 
     /// <summary>

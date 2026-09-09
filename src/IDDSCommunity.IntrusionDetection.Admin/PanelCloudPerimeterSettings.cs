@@ -11,20 +11,10 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// 提供多雲邊界安全聯防（AWS WAFv2、Azure NSG、GCP Cloud Armor、Cloudflare、中華電信 HiCloud）視覺化配置面板。
 /// </summary>
-public sealed class PanelCloudPerimeterSettings : UserControl
+public sealed partial class PanelCloudPerimeterSettings : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
-
-    private readonly CheckBox chkEnableCloudPerimeter;
-    private readonly ComboBox comboProviderType;
-    private readonly TextBox txtApiKey;
-    private readonly TextBox txtEndpointUrl;
-    private readonly TextBox txtResourceId;
-    private readonly TextBox txtSecondaryId;
-    private readonly TextBox txtTertiaryId;
-    private readonly Button btnTestConnection;
-    private readonly Label lblStatus;
 
     /// <summary>
     /// 當雲端邊界安全設定變更並儲存時引發之事件。
@@ -36,58 +26,8 @@ public sealed class PanelCloudPerimeterSettings : UserControl
     /// </summary>
     public PanelCloudPerimeterSettings()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
-        AutoScroll = true;
+        InitializeComponent();
 
-        Font defaultFont = new("Segoe UI", 9F);
-        Font sectionHeaderFont = new("Segoe UI", 10F, FontStyle.Bold);
-
-        int leftMargin = 15;
-        int controlWidth = 380;
-        int y = 15;
-
-        // Title
-        Label lblTitle = new()
-        {
-            Text = Strings.Get("Cloud perimeter defense"),
-            Font = sectionHeaderFont,
-            ForeColor = AccentColor,
-            Location = new Point(leftMargin, y),
-            AutoSize = true
-        };
-        Controls.Add(lblTitle);
-        y += 30;
-
-        chkEnableCloudPerimeter = new CheckBox
-        {
-            Text = Strings.Get("Enable cloud perimeter synchronization"),
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            Font = defaultFont
-        };
-        Controls.Add(chkEnableCloudPerimeter);
-        y += 32;
-
-        // Provider ComboBox
-        Label lblProvider = new()
-        {
-            Text = Strings.Get("Cloud service provider"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblProvider);
-        y += 18;
-
-        comboProviderType = new ComboBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            DropDownStyle = ComboBoxStyle.DropDownList,
-            Font = defaultFont
-        };
         comboProviderType.Items.AddRange([
             Strings.Get("None"),
             "AWS WAFv2",
@@ -98,150 +38,9 @@ public sealed class PanelCloudPerimeterSettings : UserControl
             Strings.Get("Generic Webhook")
         ]);
         comboProviderType.SelectedIndex = 0;
-        Controls.Add(comboProviderType);
-        y += 32;
 
-        // API Key
-        Label lblApiKey = new()
-        {
-            Text = Strings.Get("API token / AWS profile (blank: default credentials)"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblApiKey);
-        y += 18;
-
-        txtApiKey = new TextBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            UseSystemPasswordChar = true,
-            Font = defaultFont
-        };
-        Controls.Add(txtApiKey);
-        y += 32;
-
-        // Endpoint
-        Label lblEndpoint = new()
-        {
-            Text = Strings.Get("Endpoint URL / Region Endpoint"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblEndpoint);
-        y += 18;
-
-        txtEndpointUrl = new TextBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            Font = defaultFont
-        };
-        Controls.Add(txtEndpointUrl);
-        y += 32;
-
-        // Resource ID
-        Label lblResource = new()
-        {
-            Text = Strings.Get("Primary resource (AWS IP set ARN / Azure NSG / GCP policy / CF zone)"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblResource);
-        y += 18;
-
-        txtResourceId = new TextBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            Font = defaultFont
-        };
-        Controls.Add(txtResourceId);
-        y += 32;
-
-        // Secondary ID
-        Label lblSecondary = new()
-        {
-            Text = Strings.Get("Secondary resource (AWS region / Azure subscription / GCP project)"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblSecondary);
-        y += 18;
-
-        txtSecondaryId = new TextBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            Font = defaultFont
-        };
-        Controls.Add(txtSecondaryId);
-        y += 32;
-
-        // Tertiary ID
-        Label lblTertiary = new()
-        {
-            Text = Strings.Get("Third resource (AWS IP set name / Azure resource group)"),
-            Location = new Point(leftMargin, y),
-            AutoSize = true,
-            Font = defaultFont,
-            ForeColor = BodyTextColor
-        };
-        Controls.Add(lblTertiary);
-        y += 18;
-
-        txtTertiaryId = new TextBox
-        {
-            Location = new Point(leftMargin, y),
-            Size = new Size(controlWidth, 24),
-            Font = defaultFont
-        };
-        Controls.Add(txtTertiaryId);
-        y += 38;
-
-        // Test button
-        btnTestConnection = new Button
-        {
-            Text = Strings.Get("Test Connection"),
-            Location = new Point(leftMargin, y),
-            Size = new Size(160, 30),
-            Font = defaultFont
-        };
         btnTestConnection.Click += async (s, e) => await TestConnectionAsync().ConfigureAwait(true);
-        Controls.Add(btnTestConnection);
-
-        lblStatus = new Label
-        {
-            Location = new Point(leftMargin + 170, y + 6),
-            Size = new Size(210, 24),
-            Font = defaultFont,
-            ForeColor = BodyTextColor,
-            Text = string.Empty
-        };
-        Controls.Add(lblStatus);
-        y += 48;
-
-        // Save button
-        Button btnSave = new()
-        {
-            Text = Strings.Get("&Save"),
-            Location = new Point(leftMargin, y),
-            Size = new Size(120, 32),
-            BackColor = AccentColor,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Font = new Font("Segoe UI", 9F, FontStyle.Bold)
-        };
         btnSave.Click += (s, e) => SaveSettings();
-        Controls.Add(btnSave);
 
         LoadSettings();
     }

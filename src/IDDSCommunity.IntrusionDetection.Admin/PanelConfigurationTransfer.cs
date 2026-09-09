@@ -1,5 +1,4 @@
-using System;
-using System.Drawing;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.ServiceProcess;
@@ -13,45 +12,22 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// 提供系統設定匯出與匯入（含機密加密）作業之面板控制項。
 /// </summary>
-public sealed class PanelConfigurationTransfer : UserControl
+public sealed partial class PanelConfigurationTransfer : UserControl
 {
     private readonly ConfigurationTransferService transfer = new(Database.Instance);
-    private readonly Label status;
-    private readonly CheckBox includeSecrets;
-    private readonly TextBox passphrase;
-    private readonly Button exportButton;
-    private readonly Button importButton;
 
     private static string DefaultStatusText => Strings.Get("Secrets are excluded by default. Selected secrets are protected with Argon2id and AES-256-GCM.");
     private System.Threading.CancellationTokenSource? statusCts;
 
-        /// <summary>
+    /// <summary>
     /// 初始化 <see cref="PanelConfigurationTransfer"/> 類別之新執行個體。
     /// </summary>
-public PanelConfigurationTransfer()
+    public PanelConfigurationTransfer()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
-        AutoScroll = true;
-        Controls.Add(Label(Strings.Get("Configuration import and export"), 11F, Color.FromArgb(19, 184, 166), 11, 8));
-        Controls.Add(Label(Strings.Get("Transfer policies, safe networks, application settings, and Agent settings using a versioned JSON package."), 9F, Color.FromArgb(102, 102, 102), 15, 43));
-        includeSecrets = new CheckBox { AutoSize = true, Font = new Font("Segoe UI", 9F), Location = new Point(15, 82), Text = Strings.Get("Include encrypted SMTP password") };
-        Controls.Add(includeSecrets);
-        Controls.Add(Label(Strings.Get("Package passphrase"), 9F, Color.FromArgb(102, 102, 102), 15, 118));
-        passphrase = new TextBox { Font = new Font("Segoe UI", 9F), Location = new Point(145, 114), PasswordChar = '●', Size = new Size(235, 24) };
-        Controls.Add(passphrase);
-        exportButton = Button(Strings.Get("Export settings"), 15, 158);
-        exportButton.Size = new Size(160, 30);
-        importButton = Button(Strings.Get("Import settings"), 185, 158);
-        importButton.Size = new Size(160, 30);
+        InitializeComponent();
+        status.Text = DefaultStatusText;
         exportButton.Click += Export;
         importButton.Click += Import;
-        Controls.Add(exportButton);
-        Controls.Add(importButton);
-        status = Label(DefaultStatusText, 9F, Color.FromArgb(102, 102, 102), 15, 205);
-        status.AutoSize = false;
-        status.Size = new Size(380, 80);
-        Controls.Add(status);
         VisibleChanged += (_, _) => ResetStatus();
     }
 
@@ -161,6 +137,4 @@ public PanelConfigurationTransfer()
         }
     }
     private static bool IsServiceStopped() { try { using ServiceController controller = new(Globals.WINDOWS_SERVICE_NAME); controller.Refresh(); return controller.Status == ServiceControllerStatus.Stopped; } catch (InvalidOperationException) { return true; } }
-    private static Label Label(string text, float size, Color color, int x, int y) => new() { AutoSize = true, Font = new Font("Segoe UI", size), ForeColor = color, Location = new Point(x, y), Text = text };
-    private static Button Button(string text, int x, int y) => new() { BackColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9F), ForeColor = Color.FromArgb(102, 102, 102), Location = new Point(x, y), Size = new Size(120, 28), Text = text, UseVisualStyleBackColor = false };
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,46 +12,20 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// <summary>
 /// 提供 SQLite 主資料庫完整性檢查、備份、最佳化與壓縮作業之維護面板。
 /// </summary>
-public sealed class PanelDatabaseMaintenance : UserControl
+public sealed partial class PanelDatabaseMaintenance : UserControl
 {
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private readonly SqliteMaintenanceService maintenance = new(Database.Instance);
-    private readonly Label statusLabel;
-    private readonly Button checkButton;
-    private readonly Button backupButton;
-    private readonly Button optimizeButton;
-    private readonly Button purgeButton;
-    private readonly Button restoreButton;
-    private readonly Button compactButton;
-    private readonly Button verifyButton;
-    private readonly ListBox backupList;
-    private readonly ListBox historyList;
 
     private System.Threading.CancellationTokenSource? statusCts;
 
-        /// <summary>
+    /// <summary>
     /// 初始化 <see cref="PanelDatabaseMaintenance"/> 類別之新執行個體。
     /// </summary>
     public PanelDatabaseMaintenance()
     {
-        BackColor = Color.White;
-        Dock = DockStyle.Fill;
-        AutoScroll = true;
-        Controls.Add(CreateLabel(Strings.Get("Database maintenance"), 11F, Color.FromArgb(19, 184, 166), new Point(11, 8)));
-        Controls.Add(CreateLabel(Strings.Get("SQLite database health, verified backups, retention cleanup, and safe optimization."), 9F, BodyTextColor, new Point(15, 43)));
+        InitializeComponent();
 
-        statusLabel = CreateLabel(Strings.Get("Reading database status..."), 9F, BodyTextColor, new Point(15, 73));
-        statusLabel.AutoSize = false;
-        statusLabel.Size = new Size(380, 85);
-        Controls.Add(statusLabel);
-
-        checkButton = CreateButton(Strings.Get("Run integrity check"), new Point(15, 168));
-        backupButton = CreateButton(Strings.Get("Create verified backup"), new Point(205, 168));
-        optimizeButton = CreateButton(Strings.Get("Optimize database"), new Point(15, 202));
-        purgeButton = CreateButton(Strings.Get("Clean expired data"), new Point(205, 202));
-        restoreButton = CreateButton(Strings.Get("Restore backup"), new Point(15, 236));
-        compactButton = CreateButton(Strings.Get("Reclaim database space"), new Point(205, 236));
-        verifyButton = CreateButton(Strings.Get("Verify selected backup"), new Point(15, 270));
         checkButton.Click += async (_, _) => await RunAsync(() => maintenance.GetStatus(true), ShowStatus);
         backupButton.Click += async (_, _) => await RunAsync(CreateBackup, result =>
         {
@@ -65,23 +39,10 @@ public sealed class PanelDatabaseMaintenance : UserControl
         restoreButton.Click += RestoreBackup;
         compactButton.Click += CompactDatabase;
         verifyButton.Click += VerifySelectedBackup;
-        Controls.Add(checkButton);
-        Controls.Add(backupButton);
-        Controls.Add(optimizeButton);
-        Controls.Add(purgeButton);
-        Controls.Add(restoreButton);
-        Controls.Add(compactButton);
-        Controls.Add(verifyButton);
 
-        Controls.Add(CreateLabel(Strings.Get("Verified backups"), 9F, BodyTextColor, new Point(15, 308)));
-        backupList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 330), Size = new Size(380, 75) };
-        Controls.Add(backupList);
-        Controls.Add(CreateLabel(Strings.Get("Maintenance history"), 9F, BodyTextColor, new Point(15, 415)));
-        historyList = new ListBox { BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9F), Location = new Point(15, 437), Size = new Size(380, 75) };
-        Controls.Add(historyList);
-        SizeChanged += (_, _) => UpdateResponsiveWidths();
+        backupList.DisplayMember = nameof(DatabaseBackupInfo.FilePath);
+
         VisibleChanged += (_, _) => { if (Visible) RefreshStatus(); };
-        UpdateResponsiveWidths();
     }
 
     private void SetTransientStatus(string text, int delaySeconds = 5)
@@ -99,14 +60,6 @@ public sealed class PanelDatabaseMaintenance : UserControl
                 else RefreshStatus();
             }
         }, TaskScheduler.Default);
-    }
-
-    private void UpdateResponsiveWidths()
-    {
-        int contentWidth = Math.Min(380, Math.Max(240, ClientSize.Width - 30));
-        statusLabel.Width = contentWidth;
-        backupList.Width = contentWidth;
-        historyList.Width = contentWidth;
     }
 
     /// <summary>
@@ -127,7 +80,6 @@ public sealed class PanelDatabaseMaintenance : UserControl
         backupList.Items.Clear();
         foreach (DatabaseBackupInfo backup in maintenance.ListBackups(BackupDirectory))
             backupList.Items.Add(backup);
-        backupList.DisplayMember = nameof(DatabaseBackupInfo.FilePath);
         historyList.Items.Clear();
         foreach (DatabaseMaintenanceHistory item in maintenance.GetHistory())
             historyList.Items.Add($"{item.OccurredUtc.LocalDateTime:g}  {Strings.Get(item.EventType)}  {Strings.Get(item.Outcome)}");
@@ -235,25 +187,4 @@ public sealed class PanelDatabaseMaintenance : UserControl
         compactButton.Enabled = enabled;
         verifyButton.Enabled = enabled;
     }
-
-    private static SmartLabel CreateLabel(string text, float size, Color color, Point location) => new()
-    {
-        AutoSize = true,
-        Font = new Font("Segoe UI", size),
-        ForeColor = color,
-        Location = location,
-        Text = text
-    };
-
-    private static Button CreateButton(string text, Point location) => new()
-    {
-        BackColor = Color.White,
-        FlatStyle = FlatStyle.Flat,
-        Font = new Font("Segoe UI", 9F),
-        ForeColor = BodyTextColor,
-        Location = location,
-        Size = new Size(180, 28),
-        Text = text,
-        UseVisualStyleBackColor = false
-    };
 }
