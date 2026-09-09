@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -42,20 +43,69 @@ public sealed class ThreatIntelligenceHubServerTest
     }
 
     /// <summary>
-    /// 驗證儀表板產生正確的 HTML 語言標籤與完整中英文字串。
+    /// 驗證儀表板產生正確的 HTML 語言標籤、完整中英文字串，以及內嵌 style/script 標籤上的 CSP nonce。
     /// </summary>
     [TestMethod]
     public void DashboardHtml_UsesCanonicalLanguageTagsAndLocalizedText()
     {
-        string chinese = ThreatIntelligenceHubServer.BuildDashboardHtml("zh-Hant-TW");
+        const string nonce = "unit-test-nonce";
+
+        string chinese = ThreatIntelligenceHubServer.BuildDashboardHtml("zh-Hant-TW", nonce);
         StringAssert.Contains(chinese, "<html lang=\"zh-Hant-TW\">");
         StringAssert.Contains(chinese, "邊緣節點清單");
+        StringAssert.Contains(chinese, $"<style nonce=\"{nonce}\">");
+        StringAssert.Contains(chinese, $"<script nonce=\"{nonce}\">");
         Assert.IsFalse(chinese.Contains("{{", StringComparison.Ordinal));
 
-        string english = ThreatIntelligenceHubServer.BuildDashboardHtml("en-US");
+        string english = ThreatIntelligenceHubServer.BuildDashboardHtml("en-US", nonce);
         StringAssert.Contains(english, "<html lang=\"en-US\">");
         StringAssert.Contains(english, "Edge nodes");
+        StringAssert.Contains(english, $"<style nonce=\"{nonce}\">");
+        StringAssert.Contains(english, $"<script nonce=\"{nonce}\">");
         Assert.IsFalse(english.Contains("{{", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// 驗證 /dashboard 端點回應之 CSP 標頭改用逐次隨機的 nonce（而非 'unsafe-inline'），
+    /// 且標頭中的 nonce 與 HTML 內嵌 style/script 標籤上的 nonce 完全一致。
+    /// </summary>
+    /// <returns>代表非同步測試作業的 Task。</returns>
+    [TestMethod]
+    public async Task ThreatHubServer_GetDashboard_UsesPerResponseCspNonceMatchingHtml()
+    {
+        int port = GetAvailablePort();
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.ThreatHubRole = ThreatHubRole.ThreatHub;
+        config.ThreatHubPort = port;
+        config.ThreatHubApiKey = "hub_test_key";
+
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
+        server.Start();
+        if (!server.IsListening)
+        {
+            Assert.Inconclusive("無法於目前環境監聽本機通訊埠。");
+        }
+
+        using var client = new HttpClient();
+        using var response = await client.GetAsync($"http://localhost:{port}/dashboard").ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+        Assert.IsTrue(response.Headers.TryGetValues("Content-Security-Policy", out var cspValues));
+        string csp = cspValues.Single();
+        Assert.IsFalse(csp.Contains("unsafe-inline", StringComparison.OrdinalIgnoreCase));
+        StringAssert.Contains(csp, "script-src 'nonce-");
+        StringAssert.Contains(csp, "style-src 'nonce-");
+
+        int noncePrefixIndex = csp.IndexOf("script-src 'nonce-", StringComparison.Ordinal) + "script-src 'nonce-".Length;
+        string headerNonce = csp[noncePrefixIndex..csp.IndexOf('\'', noncePrefixIndex)];
+
+        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        StringAssert.Contains(body, $"<style nonce=\"{headerNonce}\">");
+        StringAssert.Contains(body, $"<script nonce=\"{headerNonce}\">");
+
+        using var secondResponse = await client.GetAsync($"http://localhost:{port}/dashboard").ConfigureAwait(false);
+        string secondCsp = secondResponse.Headers.GetValues("Content-Security-Policy").Single();
+        Assert.AreNotEqual(csp, secondCsp, "每次回應都必須產生新的、不可預測的 nonce，不可重複使用。");
     }
 
     /// <summary>

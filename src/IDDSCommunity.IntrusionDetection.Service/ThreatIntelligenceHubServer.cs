@@ -422,13 +422,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <param name="language">已正規化的儀表板語言標籤。</param>
     private static async Task WriteDashboardHtmlAsync(HttpListenerResponse response, string method, string language)
     {
-        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(BuildDashboardHtml(language));
+        // 每次回應皆產生獨立、不可預測的 128 位元隨機值作為 CSP nonce，取代 'unsafe-inline'。
+        // nonce 絕不可重複使用於下一次回應，否則將失去其防止注入腳本被瀏覽器信任執行的效果。
+        string nonce = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16));
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(BuildDashboardHtml(language, nonce));
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = "DENY";
         response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.Headers["Referrer-Policy"] = "no-referrer";
         response.Headers["Cache-Control"] = "no-store";
-        response.Headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';";
+        response.Headers["Content-Security-Policy"] = $"default-src 'none'; style-src 'nonce-{nonce}'; script-src 'nonce-{nonce}'; connect-src 'self';";
         response.Headers["Content-Language"] = language;
         response.ContentType = "text/html; charset=utf-8";
         response.ContentLength64 = bytes.Length;
@@ -497,13 +500,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// 建立指定語言的 Threat Hub 儀表板 HTML。
     /// </summary>
     /// <param name="language">正規化的語言標籤。</param>
+    /// <param name="nonce">本次回應專屬的 CSP nonce，用於內嵌 &lt;style&gt;/&lt;script&gt; 標籤。</param>
     /// <returns>完整的儀表板 HTML。</returns>
-    internal static string BuildDashboardHtml(string language)
+    internal static string BuildDashboardHtml(string language, string nonce)
     {
         DashboardText text = string.Equals(language, "zh-Hant-TW", StringComparison.OrdinalIgnoreCase)
             ? DashboardText.TraditionalChinese
             : DashboardText.English;
-        string html = DashboardHtml.Replace("{{LANG}}", text.Language, StringComparison.Ordinal);
+        string html = DashboardHtml
+            .Replace("{{LANG}}", text.Language, StringComparison.Ordinal)
+            .Replace("{{NONCE}}", nonce, StringComparison.Ordinal);
         foreach ((string token, string value) in text.Replacements)
             html = html.Replace("{{" + token + "}}", value, StringComparison.Ordinal);
         return html;
@@ -555,7 +561,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>{{TITLE}}</title>
-          <style>
+          <style nonce="{{NONCE}}">
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 24px; }
             h1 { font-size: 22px; font-weight: 700; color: #14b8a6; }
@@ -644,7 +650,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           </div>
           <div class="refresh-info" id="refresh-info"></div>
 
-          <script>
+          <script nonce="{{NONCE}}">
             var currentKey = sessionStorage.getItem('idds_hub_key') || '';
             var refreshTimer = null;
             var currentLanguage = '{{LANG}}';
