@@ -131,7 +131,7 @@ partial class PanelLockoutConfiguration
         //
         this.smartLabel5.AutoSize = true;
         this.smartLabel5.Font = new System.Drawing.Font("Segoe UI", 11F);
-        this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.smartLabel5.Location = new System.Drawing.Point(0, 4);
         this.smartLabel5.Margin = new System.Windows.Forms.Padding(0);
         this.smartLabel5.Name = "smartLabel5";
@@ -473,7 +473,7 @@ partial class PanelLockoutConfiguration
         //
         // buttonSave
         //
-        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
         this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
         this.buttonSave.ForeColor = System.Drawing.Color.White;

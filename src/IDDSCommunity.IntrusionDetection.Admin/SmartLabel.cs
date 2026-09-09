@@ -29,13 +29,13 @@ public partial class SmartLabel : Label
         base.OnPaint(e);
         if (Selected && !SelectedColor.IsEmpty)
         {
-            using Pen pen = new(Color.FromArgb(19, 184, 166), 3F);
+            using Pen pen = new(Color.FromArgb(15, 118, 110), 3F);
             int bottom = Math.Max(1, Height - 2);
             e.Graphics.DrawLine(pen, 8, bottom, Math.Max(8, Width - 9), bottom);
         }
         if (Focused && TabStop)
         {
-            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            using Pen focusPen = new(Color.FromArgb(15, 118, 110), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
             Rectangle focusRect = new(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1));
             e.Graphics.DrawRectangle(focusPen, focusRect);
         }

@@ -35,9 +35,9 @@ internal static class AdminGridChrome
             Alignment = DataGridViewContentAlignment.MiddleLeft,
             BackColor = Color.FromArgb(243, 246, 248),
             Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
-            ForeColor = Color.FromArgb(19, 184, 166),
+            ForeColor = Color.FromArgb(15, 118, 110),
             SelectionBackColor = Color.FromArgb(243, 246, 248),
-            SelectionForeColor = Color.FromArgb(19, 184, 166),
+            SelectionForeColor = Color.FromArgb(15, 118, 110),
             WrapMode = DataGridViewTriState.False
         };
         grid.DefaultCellStyle = new DataGridViewCellStyle

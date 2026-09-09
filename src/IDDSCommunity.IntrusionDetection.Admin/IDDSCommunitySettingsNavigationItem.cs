@@ -156,7 +156,7 @@ public partial class IDDSCommunitySettingsNavigationItem : UserControl
         // 4. 繪製鍵盤焦點框線 (完整包覆無任何子控制項覆蓋)
         if (Focused)
         {
-            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            using Pen focusPen = new(Color.FromArgb(15, 118, 110), 1F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
             Rectangle focusRect = new(1, 1, Math.Max(1, Width - 3), Math.Max(1, Height - 3));
             e.Graphics.DrawRectangle(focusPen, focusRect);
         }

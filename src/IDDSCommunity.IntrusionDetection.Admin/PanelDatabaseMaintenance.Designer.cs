@@ -78,7 +78,7 @@ partial class PanelDatabaseMaintenance
         //
         this.pageTitle.AutoSize = true;
         this.pageTitle.Font = new System.Drawing.Font("Segoe UI", 11F);
-        this.pageTitle.ForeColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.pageTitle.ForeColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.pageTitle.Margin = new System.Windows.Forms.Padding(0, 0, 0, 15);
         this.pageTitle.Name = "pageTitle";
         this.pageTitle.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database maintenance");

@@ -76,10 +76,11 @@ public partial class IddsAdmin : Form
             currentLeft += menu.Width;
         }
 
+        int serviceButtonTop = Math.Max(0, (panelMenu.ClientSize.Height - pictureBoxStopService.Height) / 2);
         int right = panelMenu.ClientSize.Width - 12;
-        pictureBoxStopService.Location = new Point(right - pictureBoxStopService.Width, 14);
+        pictureBoxStopService.Location = new Point(right - pictureBoxStopService.Width, serviceButtonTop);
         right = pictureBoxStopService.Left - 7;
-        pictureBoxStartService.Location = new Point(right - pictureBoxStartService.Width, 14);
+        pictureBoxStartService.Location = new Point(right - pictureBoxStartService.Width, serviceButtonTop);
         right = pictureBoxStartService.Left - 10;
         buttonManageService.Location = new Point(right - buttonManageService.Width, 10);
         right = buttonManageService.Left - 10;
@@ -93,14 +94,15 @@ public partial class IddsAdmin : Form
     /// </summary>
     public void UpdateTitleBarPositions()
     {
+        int titleBarButtonTop = Math.Max(0, (panelWindowGrip.ClientSize.Height - pictureBoxCloseButton.Height) / 2);
         int right = panelWindowGrip.ClientSize.Width - 12;
-        pictureBoxCloseButton.Location = new Point(right - pictureBoxCloseButton.Width, 4);
+        pictureBoxCloseButton.Location = new Point(right - pictureBoxCloseButton.Width, titleBarButtonTop);
         right = pictureBoxCloseButton.Left - 11;
-        pictureBoxMaximizeButton.Location = new Point(right - pictureBoxMaximizeButton.Width, 4);
+        pictureBoxMaximizeButton.Location = new Point(right - pictureBoxMaximizeButton.Width, titleBarButtonTop);
         right = pictureBoxMaximizeButton.Left - 11;
-        pictureBoxMinimizeButton.Location = new Point(right - pictureBoxMinimizeButton.Width, 4);
+        pictureBoxMinimizeButton.Location = new Point(right - pictureBoxMinimizeButton.Width, titleBarButtonTop);
         right = pictureBoxMinimizeButton.Left - 11;
-        pictureBoxHelpButon.Location = new Point(right - pictureBoxHelpButon.Width, 4);
+        pictureBoxHelpButon.Location = new Point(right - pictureBoxHelpButon.Width, titleBarButtonTop);
 
         int availableTextWidth = pictureBoxHelpButon.Left - labelFormText.Left - 10;
         if (availableTextWidth > 50)
@@ -108,6 +110,22 @@ public partial class IddsAdmin : Form
             labelFormText.Width = availableTextWidth;
         }
     }
+    /// <summary>
+    /// 當視窗被拖曳到不同 DPI 的螢幕時，依新舊 DPI 比例重新校正 <see cref="Control.MinimumSize"/>，
+    /// 因為 WinForms 目前不會自動縮放以絕對像素設定的 MinimumSize。
+    /// </summary>
+    /// <param name="e">DPI 變更事件資料。</param>
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        if (e.DeviceDpiOld <= 0 || e.DeviceDpiOld == e.DeviceDpiNew)
+            return;
+
+        MinimumSize = new Size(
+            MinimumSize.Width * e.DeviceDpiNew / e.DeviceDpiOld,
+            MinimumSize.Height * e.DeviceDpiNew / e.DeviceDpiOld);
+    }
+
     /// <summary>
     /// Cancels pending background snapshots before WinForms destroys control handles.
     /// </summary>
@@ -525,7 +543,7 @@ public partial class IddsAdmin : Form
         {
             string notFound = Strings.Get("Service not found!");
             smartLabelServiceStatus.Text = StatusDot + " " + notFound;
-            smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68);
+            smartLabelServiceStatus.ForeColor = Color.FromArgb(185, 28, 28);
             buttonManageService.Text = Strings.Get("Install service");
             pictureBoxStartService.Image = DisabledStartServiceImage;
             pictureBoxStopService.Image = DisabledStopServiceImage;
@@ -550,7 +568,7 @@ public partial class IddsAdmin : Form
                 pictureBoxStopService.Cursor = Cursors.Hand;
                 string running = Strings.Get("Service is running");
                 smartLabelServiceStatus.Text = StatusDot + " " + running;
-                smartLabelServiceStatus.ForeColor = Color.FromArgb(16, 185, 129); // Vibrant Emerald Green
+                smartLabelServiceStatus.ForeColor = Color.FromArgb(22, 101, 52); // Dark green (WCAG AA-safe on white, ~7.1:1)
             }
             else if (status == System.ServiceProcess.ServiceControllerStatus.Stopped)
             {
@@ -563,13 +581,13 @@ public partial class IddsAdmin : Form
                 pictureBoxStopService.Cursor = Cursors.Default;
                 string stopped = Strings.Get("Service is stopped");
                 smartLabelServiceStatus.Text = StatusDot + " " + stopped;
-                smartLabelServiceStatus.ForeColor = Color.FromArgb(239, 68, 68); // Vibrant Crimson Red
+                smartLabelServiceStatus.ForeColor = Color.FromArgb(185, 28, 28); // Dark red (WCAG AA-safe on white, ~6.5:1)
             }
             else
             {
                 string reading = Strings.Get("reading status....");
                 smartLabelServiceStatus.Text = StatusDot + " " + reading;
-                smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11); // Amber Yellow
+                smartLabelServiceStatus.ForeColor = Color.FromArgb(146, 64, 14); // Dark amber (WCAG AA-safe on white, ~7.1:1)
             }
         }
         catch (Exception exception)
@@ -1537,7 +1555,7 @@ public partial class IddsAdmin : Form
             smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             string pending = Strings.Get(start ? "Starting service..." : "Stopping service...");
             smartLabelServiceStatus.Text = StatusDot + " " + pending;
-            smartLabelServiceStatus.ForeColor = Color.FromArgb(245, 158, 11);
+            smartLabelServiceStatus.ForeColor = Color.FromArgb(146, 64, 14);
             System.ServiceProcess.ServiceController? controller = serviceController;
             if (controller is null) return;
             await ElevatedServiceCommand.RunElevatedAsync(ServiceName, start ? "start" : "stop", uiRefreshCancellation.Token).ConfigureAwait(false);

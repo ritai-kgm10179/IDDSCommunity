@@ -132,7 +132,7 @@
             //
             this.smartLabelLatestEntry.AutoSize = true;
             this.smartLabelLatestEntry.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabelLatestEntry.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabelLatestEntry.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabelLatestEntry.Location = new System.Drawing.Point(116, 7);
             this.smartLabelLatestEntry.Name = "smartLabelLatestEntry";
             this.smartLabelLatestEntry.Selected = false;
@@ -145,7 +145,7 @@
             //
             this.smartLabelMessage.AutoSize = true;
             this.smartLabelMessage.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabelMessage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabelMessage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabelMessage.Location = new System.Drawing.Point(441, 8);
             this.smartLabelMessage.Name = "smartLabelMessage";
             this.smartLabelMessage.Selected = false;
@@ -158,7 +158,7 @@
             //
             this.smartLabelNumberOfEvents.AutoSize = true;
             this.smartLabelNumberOfEvents.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabelNumberOfEvents.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabelNumberOfEvents.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabelNumberOfEvents.Location = new System.Drawing.Point(235, 8);
             this.smartLabelNumberOfEvents.Name = "smartLabelNumberOfEvents";
             this.smartLabelNumberOfEvents.Selected = false;
@@ -171,7 +171,7 @@
             //
             this.smartLabelpAddress.AutoSize = true;
             this.smartLabelpAddress.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabelpAddress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabelpAddress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabelpAddress.Location = new System.Drawing.Point(341, 7);
             this.smartLabelpAddress.Name = "smartLabelpAddress";
             this.smartLabelpAddress.Selected = false;
@@ -184,7 +184,7 @@
             //
             this.smartLabelType.AutoSize = true;
             this.smartLabelType.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabelType.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabelType.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabelType.Location = new System.Drawing.Point(9, 7);
             this.smartLabelType.Name = "smartLabelType";
             this.smartLabelType.Selected = false;

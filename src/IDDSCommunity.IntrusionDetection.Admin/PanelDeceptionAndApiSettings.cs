@@ -12,7 +12,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public sealed partial class PanelDeceptionAndApiSettings : UserControl
 {
-    private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
+    private static readonly Color AccentColor = Color.FromArgb(15, 118, 110);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
 
     /// <summary>

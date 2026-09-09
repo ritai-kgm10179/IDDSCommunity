@@ -22,9 +22,9 @@
         /// </summary>
         private void InitializeComponent() {
             this.checkBoxConfigureSafeNetworks = new System.Windows.Forms.CheckBox();
-            this.pictureBoxEdit = new System.Windows.Forms.PictureBox();
+            this.pictureBoxEdit = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.listBoxSafeNetworks = new System.Windows.Forms.ListBox();
-            this.pictureBoxSave = new System.Windows.Forms.PictureBox();
+            this.pictureBoxSave = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.smartPanelAdd = new IDDSCommunity.IntrusionDetection.Admin.SmartPanel();
             this.smartLabelInvalidNetwork = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.textBoxAddNetwork = new System.Windows.Forms.TextBox();
@@ -33,8 +33,8 @@
             this.button1 = new System.Windows.Forms.Button();
             this.buttonAddNetwork = new System.Windows.Forms.Button();
             this.smartPanel1 = new IDDSCommunity.IntrusionDetection.Admin.SmartPanel();
-            this.pictureBoxAdd = new System.Windows.Forms.PictureBox();
-            this.pictureBoxDelete = new System.Windows.Forms.PictureBox();
+            this.pictureBoxAdd = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+            this.pictureBoxDelete = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.smartLabel5 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.buttonSave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
@@ -53,19 +53,19 @@
             this.checkBoxConfigureSafeNetworks.Location = new System.Drawing.Point(27, 47);
             this.checkBoxConfigureSafeNetworks.Name = "checkBoxConfigureSafeNetworks";
             this.checkBoxConfigureSafeNetworks.Size = new System.Drawing.Size(209, 17);
-            this.checkBoxConfigureSafeNetworks.TabIndex = 19;
+            this.checkBoxConfigureSafeNetworks.TabIndex = 1;
             this.checkBoxConfigureSafeNetworks.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Configure safe networks (white list)");
             this.checkBoxConfigureSafeNetworks.UseVisualStyleBackColor = true;
             //
             // pictureBoxEdit
             //
+            this.pictureBoxEdit.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Edit");
             this.pictureBoxEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxEdit.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
             this.pictureBoxEdit.Location = new System.Drawing.Point(397, 0);
             this.pictureBoxEdit.Name = "pictureBoxEdit";
             this.pictureBoxEdit.Size = new System.Drawing.Size(25, 25);
-            this.pictureBoxEdit.TabIndex = 20;
-            this.pictureBoxEdit.TabStop = false;
+            this.pictureBoxEdit.TabIndex = 2;
             this.pictureBoxEdit.Visible = false;
             this.pictureBoxEdit.Click += new System.EventHandler(this.pictureBoxEdit_Click);
             this.pictureBoxEdit.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
@@ -85,19 +85,19 @@
             this.listBoxSafeNetworks.Name = "listBoxSafeNetworks";
             this.listBoxSafeNetworks.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBoxSafeNetworks.Size = new System.Drawing.Size(370, 236);
-            this.listBoxSafeNetworks.TabIndex = 22;
+            this.listBoxSafeNetworks.TabIndex = 7;
             this.listBoxSafeNetworks.DoubleClick += new System.EventHandler(this.listBoxSafeNetworks_DoubleClick);
             this.listBoxSafeNetworks.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.listBoxSafeNetworks_KeyPress);
             //
             // pictureBoxSave
             //
+            this.pictureBoxSave.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Save");
             this.pictureBoxSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
             this.pictureBoxSave.Location = new System.Drawing.Point(366, 0);
             this.pictureBoxSave.Name = "pictureBoxSave";
             this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
-            this.pictureBoxSave.TabIndex = 25;
-            this.pictureBoxSave.TabStop = false;
+            this.pictureBoxSave.TabIndex = 3;
             this.pictureBoxSave.Visible = false;
             this.pictureBoxSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
             this.pictureBoxSave.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
@@ -118,7 +118,7 @@
             this.smartPanelAdd.Name = "smartPanelAdd";
             this.smartPanelAdd.PaintBorder = true;
             this.smartPanelAdd.Size = new System.Drawing.Size(336, 216);
-            this.smartPanelAdd.TabIndex = 24;
+            this.smartPanelAdd.TabIndex = 8;
             this.smartPanelAdd.Visible = false;
             //
             // smartLabelInvalidNetwork
@@ -142,7 +142,7 @@
             this.textBoxAddNetwork.Location = new System.Drawing.Point(17, 31);
             this.textBoxAddNetwork.Name = "textBoxAddNetwork";
             this.textBoxAddNetwork.Size = new System.Drawing.Size(263, 22);
-            this.textBoxAddNetwork.TabIndex = 11;
+            this.textBoxAddNetwork.TabIndex = 10;
             this.textBoxAddNetwork.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxAddNetwork_KeyPress);
             //
             // smartLabel2
@@ -154,7 +154,7 @@
             this.smartLabel2.Selected = false;
             this.smartLabel2.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel2.Size = new System.Drawing.Size(283, 55);
-            this.smartLabel2.TabIndex = 10;
+            this.smartLabel2.TabIndex = 11;
             this.smartLabel2.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Examples:\r\n192.168.0.17\r\n192.168.0.0/24\r\n192.168.0.0/255.255.255.0");
             //
             // smartLabel1
@@ -167,7 +167,7 @@
             this.smartLabel1.Selected = false;
             this.smartLabel1.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel1.Size = new System.Drawing.Size(119, 13);
-            this.smartLabel1.TabIndex = 10;
+            this.smartLabel1.TabIndex = 9;
             this.smartLabel1.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IP address or network");
             //
             // button1
@@ -180,7 +180,7 @@
             this.button1.Location = new System.Drawing.Point(178, 177);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(102, 26);
-            this.button1.TabIndex = 9;
+            this.button1.TabIndex = 14;
             this.button1.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Cancel");
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -195,7 +195,7 @@
             this.buttonAddNetwork.Location = new System.Drawing.Point(67, 177);
             this.buttonAddNetwork.Name = "buttonAddNetwork";
             this.buttonAddNetwork.Size = new System.Drawing.Size(102, 26);
-            this.buttonAddNetwork.TabIndex = 9;
+            this.buttonAddNetwork.TabIndex = 13;
             this.buttonAddNetwork.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Add");
             this.buttonAddNetwork.UseVisualStyleBackColor = false;
             this.buttonAddNetwork.Click += new System.EventHandler(this.buttonAddNetwork_Click);
@@ -212,32 +212,32 @@
             this.smartPanel1.Name = "smartPanel1";
             this.smartPanel1.PaintBorder = true;
             this.smartPanel1.Size = new System.Drawing.Size(370, 30);
-            this.smartPanel1.TabIndex = 23;
+            this.smartPanel1.TabIndex = 4;
             //
             // pictureBoxAdd
             //
+            this.pictureBoxAdd.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Add");
             this.pictureBoxAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxAdd.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_add;
-            this.pictureBoxAdd.Location = new System.Drawing.Point(320, 5);
+            this.pictureBoxAdd.Location = new System.Drawing.Point(312, 3);
             this.pictureBoxAdd.Name = "pictureBoxAdd";
-            this.pictureBoxAdd.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxAdd.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxAdd.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBoxAdd.TabIndex = 0;
-            this.pictureBoxAdd.TabStop = false;
+            this.pictureBoxAdd.TabIndex = 5;
             this.pictureBoxAdd.Click += new System.EventHandler(this.pictureBoxAdd_Click);
             this.pictureBoxAdd.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
             this.pictureBoxAdd.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseUp);
             //
             // pictureBoxDelete
             //
+            this.pictureBoxDelete.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Delete");
             this.pictureBoxDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxDelete.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
-            this.pictureBoxDelete.Location = new System.Drawing.Point(346, 5);
+            this.pictureBoxDelete.Location = new System.Drawing.Point(342, 3);
             this.pictureBoxDelete.Name = "pictureBoxDelete";
-            this.pictureBoxDelete.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxDelete.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxDelete.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBoxDelete.TabIndex = 0;
-            this.pictureBoxDelete.TabStop = false;
+            this.pictureBoxDelete.TabIndex = 6;
             this.pictureBoxDelete.Click += new System.EventHandler(this.pictureBoxDelete_Click);
             this.pictureBoxDelete.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
             this.pictureBoxDelete.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseUp);
@@ -246,28 +246,28 @@
             //
             this.smartLabel5.AutoSize = true;
             this.smartLabel5.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel5.Location = new System.Drawing.Point(23, 0);
             this.smartLabel5.Margin = new System.Windows.Forms.Padding(0);
             this.smartLabel5.Name = "smartLabel5";
             this.smartLabel5.Selected = false;
             this.smartLabel5.SelectedColor = System.Drawing.Color.Empty;
             this.smartLabel5.Size = new System.Drawing.Size(174, 20);
-            this.smartLabel5.TabIndex = 21;
+            this.smartLabel5.TabIndex = 0;
             this.smartLabel5.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Safe networks (white list)");
             this.smartLabel5.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
             // buttonSave
             //
             this.buttonSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(19, 184, 166);
+            this.buttonSave.BackColor = System.Drawing.Color.FromArgb(15, 118, 110);
             this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSave.ForeColor = System.Drawing.Color.White;
             this.buttonSave.Location = new System.Drawing.Point(109, 356);
             this.buttonSave.Name = "buttonSave";
             this.buttonSave.Size = new System.Drawing.Size(120, 32);
-            this.buttonSave.TabIndex = 29;
+            this.buttonSave.TabIndex = 15;
             this.buttonSave.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("&Save");
             this.buttonSave.UseVisualStyleBackColor = false;
             this.buttonSave.Click += new System.EventHandler(this.buttonSave_Click);
@@ -303,19 +303,19 @@
         #endregion
 
         private SmartLabel smartLabel5;
-        private System.Windows.Forms.PictureBox pictureBoxEdit;
+        private AccessiblePictureBoxButton pictureBoxEdit;
         private System.Windows.Forms.CheckBox checkBoxConfigureSafeNetworks;
         private System.Windows.Forms.ListBox listBoxSafeNetworks;
         private SmartPanel smartPanel1;
-        private System.Windows.Forms.PictureBox pictureBoxAdd;
-        private System.Windows.Forms.PictureBox pictureBoxDelete;
+        private AccessiblePictureBoxButton pictureBoxAdd;
+        private AccessiblePictureBoxButton pictureBoxDelete;
         private SmartPanel smartPanelAdd;
         private SmartLabel smartLabel1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button buttonAddNetwork;
         private System.Windows.Forms.TextBox textBoxAddNetwork;
         private SmartLabel smartLabel2;
-        private System.Windows.Forms.PictureBox pictureBoxSave;
+        private AccessiblePictureBoxButton pictureBoxSave;
         private SmartLabel smartLabelInvalidNetwork;
         private System.Windows.Forms.Button buttonSave;
     }

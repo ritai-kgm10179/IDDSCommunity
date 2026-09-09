@@ -40,7 +40,7 @@
             this.labelFailedLoginsValue = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelSoftLocksValue = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelHardLocksValue = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-            this.pictureBoxEnabledState = new System.Windows.Forms.PictureBox();
+            this.pictureBoxEnabledState = new AccessiblePictureBoxButton();
             this.pictureBoxAgentIcon = new System.Windows.Forms.PictureBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEnabledState)).BeginInit();
@@ -145,8 +145,8 @@
             this.pictureBoxEnabledState.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxEnabledState.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxEnabledState.TabIndex = 0;
-            this.pictureBoxEnabledState.TabStop = false;
-            this.pictureBoxEnabledState.DoubleClick += new System.EventHandler(this.pictureBoxEnabledState_DoubleClick);
+            this.pictureBoxEnabledState.Click += new System.EventHandler(this.pictureBoxEnabledState_Activate);
+            this.pictureBoxEnabledState.DoubleClick += new System.EventHandler(this.pictureBoxEnabledState_Activate);
             //
             // pictureBoxAgentIcon
             //
@@ -193,7 +193,7 @@
         private SmartLabel labelFailedLoginsValue;
         private SmartLabel labelSoftLocksValue;
         private SmartLabel labelHardLocksValue;
-        private System.Windows.Forms.PictureBox pictureBoxEnabledState;
+        private AccessiblePictureBoxButton pictureBoxEnabledState;
         private System.Windows.Forms.ToolTip toolTip1;
     }
 }

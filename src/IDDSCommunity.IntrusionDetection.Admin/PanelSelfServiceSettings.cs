@@ -12,7 +12,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public sealed partial class PanelSelfServiceSettings : UserControl
 {
-    private static readonly Color AccentColor = Color.FromArgb(19, 184, 166);
+    private static readonly Color AccentColor = Color.FromArgb(15, 118, 110);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private const string AnyIpv4Address = "0.0.0.0";
 

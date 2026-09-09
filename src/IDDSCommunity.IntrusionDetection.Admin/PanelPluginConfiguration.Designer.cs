@@ -110,7 +110,7 @@ partial class PanelPluginConfiguration
         //
         this.smartLabelAgentName.AutoSize = true;
         this.smartLabelAgentName.Font = new System.Drawing.Font("Segoe UI", 11F);
-        this.smartLabelAgentName.ForeColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.smartLabelAgentName.ForeColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.smartLabelAgentName.Location = new System.Drawing.Point(0, 4);
         this.smartLabelAgentName.Margin = new System.Windows.Forms.Padding(0);
         this.smartLabelAgentName.Name = "smartLabelAgentName";
@@ -385,7 +385,7 @@ partial class PanelPluginConfiguration
         //
         // buttonSave
         //
-        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
         this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
         this.buttonSave.ForeColor = System.Drawing.Color.White;

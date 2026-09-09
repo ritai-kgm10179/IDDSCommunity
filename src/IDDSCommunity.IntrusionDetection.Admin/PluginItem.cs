@@ -34,7 +34,7 @@ public event EventHandler? SecurityAgentConfigurationRequest;
         base.OnPaint(e);
         if (Focused)
         {
-            using Pen focusPen = new(Color.FromArgb(19, 184, 166), 1.5F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
+            using Pen focusPen = new(Color.FromArgb(15, 118, 110), 1.5F) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dot };
             Rectangle focusRect = new(1, 1, Math.Max(1, Width - 3), Math.Max(1, Height - 3));
             e.Graphics.DrawRectangle(focusPen, focusRect);
         }
@@ -145,11 +145,11 @@ public SecurityAgent SecurityAgent
         SetSoftLocks(softLocks);
     }
     /// <summary>
-    /// 處理 double click 事件。
+    /// 處理單擊、雙擊或鍵盤（Enter/Space）觸發之啟用事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void pictureBoxEnabledState_DoubleClick(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(SecurityAgent, EventArgs.Empty);
+    private void pictureBoxEnabledState_Activate(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(SecurityAgent, EventArgs.Empty);
 
 
 

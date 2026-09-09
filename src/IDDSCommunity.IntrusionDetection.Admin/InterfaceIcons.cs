@@ -7,7 +7,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 internal static class InterfaceIcons
 {
-    private static readonly Color Teal = Color.FromArgb(19, 154, 166);
+    private static readonly Color Teal = Color.FromArgb(15, 118, 110);
     private static readonly Color Navy = Color.FromArgb(13, 56, 80);
 
     internal static Bitmap CreateLock(int size, bool unlocked = false)

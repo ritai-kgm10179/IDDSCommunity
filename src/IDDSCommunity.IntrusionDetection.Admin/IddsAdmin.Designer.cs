@@ -29,10 +29,10 @@
             this.contextMenuStripControlBox = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.labelFormText = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-            this.pictureBoxMaximizeButton = new System.Windows.Forms.PictureBox();
-            this.pictureBoxHelpButon = new System.Windows.Forms.PictureBox();
-            this.pictureBoxMinimizeButton = new System.Windows.Forms.PictureBox();
-            this.pictureBoxCloseButton = new System.Windows.Forms.PictureBox();
+            this.pictureBoxMaximizeButton = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+            this.pictureBoxHelpButon = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+            this.pictureBoxMinimizeButton = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+            this.pictureBoxCloseButton = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.panelForm = new System.Windows.Forms.Panel();
             this.panelContent = new System.Windows.Forms.Panel();
             this.panelOnlineServices = new System.Windows.Forms.Panel();
@@ -47,8 +47,8 @@
             this.borderSE = new System.Windows.Forms.PictureBox();
             this.panelMenu = new System.Windows.Forms.Panel();
             this.smartLabelServiceStatus = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-            this.pictureBoxStopService = new System.Windows.Forms.PictureBox();
-            this.pictureBoxStartService = new System.Windows.Forms.PictureBox();
+            this.pictureBoxStopService = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+            this.pictureBoxStartService = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.labelMenuSettings = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuAgents = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.labelMenuCurrentLocks = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
@@ -152,15 +152,15 @@
             // 
             // pictureBoxMaximizeButton
             // 
+            this.pictureBoxMaximizeButton.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Maximize");
             this.pictureBoxMaximizeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxMaximizeButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
             this.pictureBoxMaximizeButton.InitialImage = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_maximize;
-            this.pictureBoxMaximizeButton.Location = new System.Drawing.Point(843, 2);
+            this.pictureBoxMaximizeButton.Location = new System.Drawing.Point(843, 0);
             this.pictureBoxMaximizeButton.Name = "pictureBoxMaximizeButton";
-            this.pictureBoxMaximizeButton.Size = new System.Drawing.Size(27, 20);
+            this.pictureBoxMaximizeButton.Size = new System.Drawing.Size(27, 24);
             this.pictureBoxMaximizeButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxMaximizeButton.TabIndex = 0;
-            this.pictureBoxMaximizeButton.TabStop = false;
             this.pictureBoxMaximizeButton.Click += new System.EventHandler(this.pictureBoxMaximizeButton_Click);
             this.pictureBoxMaximizeButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxButton_MouseDown);
             this.pictureBoxMaximizeButton.MouseEnter += new System.EventHandler(this.pictureBoxButton_MouseEnter);
@@ -169,14 +169,14 @@
             // 
             // pictureBoxHelpButon
             // 
+            this.pictureBoxHelpButon.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Help");
             this.pictureBoxHelpButon.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxHelpButon.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_help;
-            this.pictureBoxHelpButon.Location = new System.Drawing.Point(789, 2);
+            this.pictureBoxHelpButon.Location = new System.Drawing.Point(789, 0);
             this.pictureBoxHelpButon.Name = "pictureBoxHelpButon";
-            this.pictureBoxHelpButon.Size = new System.Drawing.Size(27, 20);
+            this.pictureBoxHelpButon.Size = new System.Drawing.Size(27, 24);
             this.pictureBoxHelpButon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxHelpButon.TabIndex = 0;
-            this.pictureBoxHelpButon.TabStop = false;
             this.pictureBoxHelpButon.Click += new System.EventHandler(this.pictureBoxHelpButon_Click);
             this.pictureBoxHelpButon.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxButton_MouseDown);
             this.pictureBoxHelpButon.MouseEnter += new System.EventHandler(this.pictureBoxButton_MouseEnter);
@@ -185,14 +185,14 @@
             // 
             // pictureBoxMinimizeButton
             // 
+            this.pictureBoxMinimizeButton.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Minimize");
             this.pictureBoxMinimizeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxMinimizeButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_minimize;
-            this.pictureBoxMinimizeButton.Location = new System.Drawing.Point(816, 2);
+            this.pictureBoxMinimizeButton.Location = new System.Drawing.Point(816, 0);
             this.pictureBoxMinimizeButton.Name = "pictureBoxMinimizeButton";
-            this.pictureBoxMinimizeButton.Size = new System.Drawing.Size(27, 20);
+            this.pictureBoxMinimizeButton.Size = new System.Drawing.Size(27, 24);
             this.pictureBoxMinimizeButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxMinimizeButton.TabIndex = 0;
-            this.pictureBoxMinimizeButton.TabStop = false;
             this.pictureBoxMinimizeButton.Click += new System.EventHandler(this.pictureBoxMinimizeButton_Click);
             this.pictureBoxMinimizeButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxButton_MouseDown);
             this.pictureBoxMinimizeButton.MouseEnter += new System.EventHandler(this.pictureBoxButton_MouseEnter);
@@ -201,14 +201,14 @@
             // 
             // pictureBoxCloseButton
             // 
+            this.pictureBoxCloseButton.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Close");
             this.pictureBoxCloseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxCloseButton.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.icon_close;
-            this.pictureBoxCloseButton.Location = new System.Drawing.Point(870, 2);
+            this.pictureBoxCloseButton.Location = new System.Drawing.Point(870, 0);
             this.pictureBoxCloseButton.Name = "pictureBoxCloseButton";
-            this.pictureBoxCloseButton.Size = new System.Drawing.Size(27, 20);
+            this.pictureBoxCloseButton.Size = new System.Drawing.Size(27, 24);
             this.pictureBoxCloseButton.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxCloseButton.TabIndex = 0;
-            this.pictureBoxCloseButton.TabStop = false;
             this.pictureBoxCloseButton.Click += new System.EventHandler(this.pictureBoxCloseButton_Click);
             this.pictureBoxCloseButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxButton_MouseDown);
             this.pictureBoxCloseButton.MouseEnter += new System.EventHandler(this.pictureBoxButton_MouseEnter);
@@ -245,7 +245,7 @@
             // 
             // panelOnlineServices
             // 
-            this.panelOnlineServices.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.panelOnlineServices.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.panelOnlineServices.Controls.Add(this.buttonLogin);
             this.panelOnlineServices.Controls.Add(this.textBox2);
             this.panelOnlineServices.Controls.Add(this.textBox1);
@@ -411,28 +411,30 @@
             // 
             // pictureBoxStopService
             // 
+            this.pictureBoxStopService.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Stop service");
             this.pictureBoxStopService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxStopService.Enabled = false;
             this.pictureBoxStopService.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.service_controller_stop_deactivated;
-            this.pictureBoxStopService.Location = new System.Drawing.Point(869, 14);
+            this.pictureBoxStopService.Location = new System.Drawing.Point(866, 12);
             this.pictureBoxStopService.Name = "pictureBoxStopService";
-            this.pictureBoxStopService.Size = new System.Drawing.Size(19, 19);
+            this.pictureBoxStopService.Size = new System.Drawing.Size(24, 24);
+            this.pictureBoxStopService.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxStopService.TabIndex = 1;
-            this.pictureBoxStopService.TabStop = false;
             this.pictureBoxStopService.Click += new System.EventHandler(this.pictureBoxStopService_Click);
             this.pictureBoxStopService.MouseDown += new System.Windows.Forms.MouseEventHandler(this.actionMenu_MouseDown);
             this.pictureBoxStopService.MouseUp += new System.Windows.Forms.MouseEventHandler(this.actionMenu_MouseUp);
             // 
             // pictureBoxStartService
             // 
+            this.pictureBoxStartService.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Start service");
             this.pictureBoxStartService.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pictureBoxStartService.Enabled = false;
             this.pictureBoxStartService.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.service_controller_start_deactivated;
-            this.pictureBoxStartService.Location = new System.Drawing.Point(844, 14);
+            this.pictureBoxStartService.Location = new System.Drawing.Point(841, 12);
             this.pictureBoxStartService.Name = "pictureBoxStartService";
-            this.pictureBoxStartService.Size = new System.Drawing.Size(19, 19);
+            this.pictureBoxStartService.Size = new System.Drawing.Size(24, 24);
+            this.pictureBoxStartService.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxStartService.TabIndex = 1;
-            this.pictureBoxStartService.TabStop = false;
             this.pictureBoxStartService.Click += new System.EventHandler(this.pictureBoxStartService_Click);
             this.pictureBoxStartService.MouseDown += new System.Windows.Forms.MouseEventHandler(this.actionMenu_MouseDown);
             this.pictureBoxStartService.MouseUp += new System.Windows.Forms.MouseEventHandler(this.actionMenu_MouseUp);
@@ -519,7 +521,7 @@
             // 
             // labelMenuOnline
             //
-            this.labelMenuOnline.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.labelMenuOnline.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.labelMenuOnline.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.labelMenuOnline.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelMenuOnline.ForeColor = System.Drawing.Color.White;
@@ -712,7 +714,7 @@
         #endregion
 
         private System.Windows.Forms.Panel panelWindowGrip;
-        private System.Windows.Forms.PictureBox pictureBoxCloseButton;
+        private AccessiblePictureBoxButton pictureBoxCloseButton;
         private System.Windows.Forms.Panel panelForm;
         private SmartLabel labelFormText;
         private System.Windows.Forms.Panel panelMenu;
@@ -725,9 +727,9 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripControlBox;
         private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
-        private System.Windows.Forms.PictureBox pictureBoxMaximizeButton;
-        private System.Windows.Forms.PictureBox pictureBoxHelpButon;
-        private System.Windows.Forms.PictureBox pictureBoxMinimizeButton;
+        private AccessiblePictureBoxButton pictureBoxMaximizeButton;
+        private AccessiblePictureBoxButton pictureBoxHelpButon;
+        private AccessiblePictureBoxButton pictureBoxMinimizeButton;
         private System.Windows.Forms.PictureBox borderN;
         private System.Windows.Forms.PictureBox borderS;
         private System.Windows.Forms.PictureBox borderSW;
@@ -747,8 +749,8 @@
         private System.Windows.Forms.Label labelUsername;
         private SmartLabel labelMenuCurrentLocks;
         private SmartLabel labelMenuSystemLog;
-        private System.Windows.Forms.PictureBox pictureBoxStopService;
-        private System.Windows.Forms.PictureBox pictureBoxStartService;
+        private AccessiblePictureBoxButton pictureBoxStopService;
+        private AccessiblePictureBoxButton pictureBoxStartService;
         private SmartLabel smartLabelServiceStatus;
         private System.Windows.Forms.Button buttonManageService;
     }

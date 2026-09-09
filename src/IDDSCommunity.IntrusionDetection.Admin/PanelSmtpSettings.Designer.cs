@@ -30,8 +30,8 @@ partial class PanelSmtpSettings
         this.tableLayoutMain = new System.Windows.Forms.TableLayoutPanel();
         this.headerPanel = new System.Windows.Forms.Panel();
         this.smartLabel5 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-        this.pictureBoxEdit = new System.Windows.Forms.PictureBox();
-        this.pictureBoxSave = new System.Windows.Forms.PictureBox();
+        this.pictureBoxEdit = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
+        this.pictureBoxSave = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
         this.smartLabel1 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
         this.textBoxSender = new System.Windows.Forms.TextBox();
         this.smartLabel2 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
@@ -107,7 +107,7 @@ partial class PanelSmtpSettings
         //
         this.smartLabel5.AutoSize = true;
         this.smartLabel5.Font = new System.Drawing.Font("Segoe UI", 11F);
-        this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.smartLabel5.Location = new System.Drawing.Point(0, 4);
         this.smartLabel5.Margin = new System.Windows.Forms.Padding(0);
         this.smartLabel5.Name = "smartLabel5";
@@ -118,12 +118,12 @@ partial class PanelSmtpSettings
         //
         // pictureBoxEdit
         //
+        this.pictureBoxEdit.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Edit");
         this.pictureBoxEdit.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
         this.pictureBoxEdit.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
         this.pictureBoxEdit.Location = new System.Drawing.Point(438, 0);
         this.pictureBoxEdit.Name = "pictureBoxEdit";
         this.pictureBoxEdit.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxEdit.TabStop = false;
         this.pictureBoxEdit.Visible = false;
         this.pictureBoxEdit.Click += new System.EventHandler(this.pictureBoxEdit_Click);
         this.pictureBoxEdit.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
@@ -131,12 +131,12 @@ partial class PanelSmtpSettings
         //
         // pictureBoxSave
         //
+        this.pictureBoxSave.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Save");
         this.pictureBoxSave.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
         this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
         this.pictureBoxSave.Location = new System.Drawing.Point(407, 0);
         this.pictureBoxSave.Name = "pictureBoxSave";
         this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxSave.TabStop = false;
         this.pictureBoxSave.Visible = false;
         this.pictureBoxSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
         this.pictureBoxSave.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox_MouseDown);
@@ -336,7 +336,7 @@ partial class PanelSmtpSettings
         //
         // buttonSave
         //
-        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(19, 184, 166);
+        this.buttonSave.BackColor = System.Drawing.Color.FromArgb(15, 118, 110);
         this.buttonSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
         this.buttonSave.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
         this.buttonSave.ForeColor = System.Drawing.Color.White;
@@ -371,8 +371,8 @@ partial class PanelSmtpSettings
     private System.Windows.Forms.TableLayoutPanel tableLayoutMain;
     private System.Windows.Forms.Panel headerPanel;
     private SmartLabel smartLabel5;
-    private System.Windows.Forms.PictureBox pictureBoxEdit;
-    private System.Windows.Forms.PictureBox pictureBoxSave;
+    private AccessiblePictureBoxButton pictureBoxEdit;
+    private AccessiblePictureBoxButton pictureBoxSave;
     private SmartLabel smartLabel1;
     private System.Windows.Forms.TextBox textBoxSender;
     private SmartLabel smartLabel2;

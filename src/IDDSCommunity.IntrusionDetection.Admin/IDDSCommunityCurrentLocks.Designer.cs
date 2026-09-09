@@ -33,7 +33,7 @@
             this.dataGridViewLocks = new System.Windows.Forms.DataGridView();
             this.panelCurrentLocksMenu = new IDDSCommunity.IntrusionDetection.Admin.SmartPanel();
             this.panel3 = new System.Windows.Forms.Panel();
-            this.pictureBoxActionMenuUnlock = new System.Windows.Forms.PictureBox();
+            this.pictureBoxActionMenuUnlock = new IDDSCommunity.IntrusionDetection.Admin.AccessiblePictureBoxButton();
             this.actionMenuUnlock = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.smartLabelHardLock = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
@@ -88,7 +88,7 @@
             //
             this.smartLabel7.AutoSize = true;
             this.smartLabel7.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabel7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel7.Location = new System.Drawing.Point(615, 8);
             this.smartLabel7.Name = "smartLabel7";
             this.smartLabel7.Selected = false;
@@ -101,7 +101,7 @@
             //
             this.smartLabel6.AutoSize = true;
             this.smartLabel6.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel6.Location = new System.Drawing.Point(455, 8);
             this.smartLabel6.Name = "smartLabel6";
             this.smartLabel6.Selected = false;
@@ -114,7 +114,7 @@
             //
             this.smartLabel5.AutoSize = true;
             this.smartLabel5.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel5.Location = new System.Drawing.Point(235, 8);
             this.smartLabel5.Name = "smartLabel5";
             this.smartLabel5.Selected = false;
@@ -127,7 +127,7 @@
             //
             this.smartLabel4.AutoSize = true;
             this.smartLabel4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel4.Location = new System.Drawing.Point(125, 8);
             this.smartLabel4.Name = "smartLabel4";
             this.smartLabel4.Selected = false;
@@ -140,7 +140,7 @@
             //
             this.smartLabel2.AutoSize = true;
             this.smartLabel2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.smartLabel2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(19)))), ((int)(((byte)(184)))), ((int)(((byte)(166)))));
+            this.smartLabel2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(15)))), ((int)(((byte)(118)))), ((int)(((byte)(110)))));
             this.smartLabel2.Location = new System.Drawing.Point(29, 7);
             this.smartLabel2.Name = "smartLabel2";
             this.smartLabel2.Selected = false;
@@ -242,6 +242,7 @@
             //
             // pictureBoxActionMenuUnlock
             //
+            this.pictureBoxActionMenuUnlock.AccessibleName = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Unlock IP address");
             this.pictureBoxActionMenuUnlock.Enabled = false;
             this.pictureBoxActionMenuUnlock.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button_unlock;
             this.pictureBoxActionMenuUnlock.Location = new System.Drawing.Point(3, 3);
@@ -249,7 +250,6 @@
             this.pictureBoxActionMenuUnlock.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxActionMenuUnlock.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxActionMenuUnlock.TabIndex = 1;
-            this.pictureBoxActionMenuUnlock.TabStop = false;
             this.pictureBoxActionMenuUnlock.Click += new System.EventHandler(this.actionMenuUnlock_Click);
             //
             // actionMenuUnlock
@@ -473,7 +473,7 @@
         private System.Windows.Forms.DataGridView dataGridViewLocks;
         private SmartPanel panelCurrentLocksMenu;
         private System.Windows.Forms.Panel panel3;
-        private System.Windows.Forms.PictureBox pictureBoxActionMenuUnlock;
+        private AccessiblePictureBoxButton pictureBoxActionMenuUnlock;
         private SmartLabel actionMenuUnlock;
         private System.Windows.Forms.Panel panel2;
         private SmartLabel smartLabelHardLock;

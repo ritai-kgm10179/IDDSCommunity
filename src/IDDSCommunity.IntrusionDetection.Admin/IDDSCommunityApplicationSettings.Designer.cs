@@ -58,6 +58,7 @@
             this.Controls.Add(this.configurationPanel);
             this.Controls.Add(this.iddscommunitySettingsNavigation);
             this.Name = "IDDSCommunityApplicationSettings";
+            this.Padding = new System.Windows.Forms.Padding(12, 16, 12, 18);
             this.Size = new System.Drawing.Size(898, 489);
             this.ResumeLayout(false);
 

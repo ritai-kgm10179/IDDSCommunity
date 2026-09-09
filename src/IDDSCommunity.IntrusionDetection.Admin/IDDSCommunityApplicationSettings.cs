@@ -77,6 +77,27 @@ public event EventHandler? ConfigurationChanged;
         BackColor = Color.White;
         Load += new EventHandler(CyberamsApplicationSettings_Load);
     }
+
+    /// <summary>
+    /// 手動排列導覽清單與設定內容面板。與 <see cref="IDDSCommunityAgentConfiguration"/> 相同結構、相同的
+    /// AutoScaleMode.Font 巢狀縮放時序問題：<c>iddscommunitySettingsNavigation</c> 是另一個自帶
+    /// AutoScaleMode.Font 的巢狀 UserControl，其縮放後的實際寬度可能跟外層對
+    /// <c>configurationPanel.Location.X</c> 所做的 Anchor 重新計算不同步，因此改為手動依
+    /// <c>iddscommunitySettingsNavigation</c> 目前的實際寬度計算 <c>configurationPanel</c> 的 Bounds，
+    /// 不再依賴 Anchor 的自動計算。
+    /// </summary>
+    /// <param name="levent">版面配置事件資料。</param>
+    protected override void OnLayout(LayoutEventArgs levent)
+    {
+        base.OnLayout(levent);
+        int gap = LogicalToDeviceUnits(8);
+        int navRight = iddscommunitySettingsNavigation.Right + gap;
+        configurationPanel.Bounds = new Rectangle(
+            navRight,
+            Padding.Top,
+            Math.Max(0, ClientSize.Width - Padding.Right - navRight),
+            Math.Max(0, ClientSize.Height - Padding.Vertical));
+    }
     /// <summary>
     /// 處理 load 事件。
     /// </summary>
