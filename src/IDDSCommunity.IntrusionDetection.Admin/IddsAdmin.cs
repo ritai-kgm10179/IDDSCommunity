@@ -1019,12 +1019,40 @@ public partial class IddsAdmin : Form
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void closeToolStripMenuItem_Click(object sender, EventArgs e) => Close();
+
+    /// <summary>
+    /// 標記下一次 Click 事件是雙擊視窗圖示的第二次 Click，需略過以避免重複顯示選單
+    /// （WinForms 對雙擊會依序引發 Click、DoubleClick、Click）。
+    /// </summary>
+    private bool suppressNextIconClick;
+
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void pictureBox1_Click(object sender, EventArgs e) => pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
+    private void pictureBox1_Click(object sender, EventArgs e)
+    {
+        if (suppressNextIconClick)
+        {
+            suppressNextIconClick = false;
+            return;
+        }
+        pictureBox1.ContextMenuStrip?.Show(PointToScreen(new Point(pictureBox1.Location.X, pictureBox1.Location.Y + pictureBox1.Height)));
+    }
+
+    /// <summary>
+    /// 處理雙擊事件：等同選取「關閉」。第一次 Click 已經顯示了選單，這裡先關閉該選單再關閉視窗，
+    /// 並標記略過雙擊隨後的第二次 Click，避免視窗關閉瞬間選單又被重新顯示。
+    /// </summary>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
+    private void pictureBox1_DoubleClick(object sender, EventArgs e)
+    {
+        suppressNextIconClick = true;
+        pictureBox1.ContextMenuStrip?.Close();
+        closeToolStripMenuItem_Click(sender, e);
+    }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>

@@ -30,8 +30,6 @@ partial class PanelPluginConfiguration
         this.tableLayoutMain = new System.Windows.Forms.TableLayoutPanel();
         this.headerPanel = new System.Windows.Forms.Panel();
         this.smartLabelAgentName = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
-        this.pictureBoxSave = new System.Windows.Forms.PictureBox();
-        this.pictureBoxEdit = new System.Windows.Forms.PictureBox();
         this.smartLabel7 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
         this.checkBoxEnableSecurityAgent = new System.Windows.Forms.CheckBox();
         this.smartLabel1 = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
@@ -57,8 +55,6 @@ partial class PanelPluginConfiguration
         this.buttonSave = new System.Windows.Forms.Button();
         this.tableLayoutMain.SuspendLayout();
         this.headerPanel.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
         this.flowSoftLocks.SuspendLayout();
         this.flowSoftLockDuration.SuspendLayout();
         this.flowHardLocks.SuspendLayout();
@@ -100,8 +96,6 @@ partial class PanelPluginConfiguration
         //
         this.headerPanel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
         this.headerPanel.Controls.Add(this.smartLabelAgentName);
-        this.headerPanel.Controls.Add(this.pictureBoxSave);
-        this.headerPanel.Controls.Add(this.pictureBoxEdit);
         this.headerPanel.Height = 34;
         this.headerPanel.Margin = new System.Windows.Forms.Padding(0, 0, 0, 10);
         this.headerPanel.Name = "headerPanel";
@@ -118,32 +112,6 @@ partial class PanelPluginConfiguration
         this.smartLabelAgentName.SelectedColor = System.Drawing.Color.Empty;
         this.smartLabelAgentName.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent configuration");
         this.smartLabelAgentName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-        //
-        // pictureBoxSave
-        //
-        this.pictureBoxSave.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-        this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
-        this.pictureBoxSave.Location = new System.Drawing.Point(407, 3);
-        this.pictureBoxSave.Name = "pictureBoxSave";
-        this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxSave.TabStop = false;
-        this.pictureBoxSave.Visible = false;
-        this.pictureBoxSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
-        this.pictureBoxSave.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
-        this.pictureBoxSave.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
-        //
-        // pictureBoxEdit
-        //
-        this.pictureBoxEdit.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-        this.pictureBoxEdit.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
-        this.pictureBoxEdit.Location = new System.Drawing.Point(438, 3);
-        this.pictureBoxEdit.Name = "pictureBoxEdit";
-        this.pictureBoxEdit.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxEdit.TabStop = false;
-        this.pictureBoxEdit.Visible = false;
-        this.pictureBoxEdit.Click += new System.EventHandler(this.pictureBoxEdit_Click);
-        this.pictureBoxEdit.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
-        this.pictureBoxEdit.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
         //
         // smartLabel7
         //
@@ -409,8 +377,6 @@ partial class PanelPluginConfiguration
         this.tableLayoutMain.ResumeLayout(false);
         this.tableLayoutMain.PerformLayout();
         this.headerPanel.ResumeLayout(false);
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).EndInit();
         this.flowSoftLocks.ResumeLayout(false);
         this.flowSoftLocks.PerformLayout();
         this.flowSoftLockDuration.ResumeLayout(false);
@@ -427,8 +393,6 @@ partial class PanelPluginConfiguration
     private System.Windows.Forms.TableLayoutPanel tableLayoutMain;
     private System.Windows.Forms.Panel headerPanel;
     private SmartLabel smartLabelAgentName;
-    private System.Windows.Forms.PictureBox pictureBoxSave;
-    private System.Windows.Forms.PictureBox pictureBoxEdit;
     private SmartLabel smartLabel7;
     private System.Windows.Forms.CheckBox checkBoxEnableSecurityAgent;
     private SmartLabel smartLabel1;

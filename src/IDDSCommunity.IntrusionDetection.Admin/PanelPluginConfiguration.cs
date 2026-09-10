@@ -57,31 +57,6 @@ public event EventHandler? AgentConfigurationChanged;
         }
     }
     /// <summary>
-    /// 處理 mouse down 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e)
-    {
-        if (sender is PictureBox pictureBox)
-            pictureBox.Location = new Point(pictureBox.Location.X + 1, pictureBox.Location.Y + 1);
-    }
-    /// <summary>
-    /// 處理 mouse up 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e)
-    {
-        if (sender is PictureBox pictureBox)
-            pictureBox.Location = new Point(pictureBox.Location.X - 1, pictureBox.Location.Y - 1);
-    }
-
-        /// <summary>
-    /// 取得或設定 IsInEditMode。
-    /// </summary>
-public bool IsInEditMode { get; set; }
-    /// <summary>
     /// Loads data.
     /// </summary>
     private bool _isLoadingData;
@@ -93,7 +68,6 @@ public bool IsInEditMode { get; set; }
         _isLoadingData = true;
         try
         {
-            if (IsInEditMode) ToggleEditMode();
             checkBoxLockForever.Checked = Agent.LockForever;
             textBoxHardLocks.Text = Agent.HardLockAttempts.ToString();
             textBoxHardLockDuration.Text = Agent.HardLockTimeHours.ToString();
@@ -199,24 +173,6 @@ public bool IsInEditMode { get; set; }
         }
     }
 
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_Click(object sender, EventArgs e)
-    {
-        if (IsInEditMode) LoadData(); else ToggleEditMode();
-        ClearErrors();
-    }
-    /// <summary>
-    /// 執行 toggle edit mode 作業。
-    /// </summary>
-    private void ToggleEditMode()
-    {
-        IsInEditMode = true;
-        return;
-    }
     /// <summary>
     /// Sets enabled mode.
     /// </summary>

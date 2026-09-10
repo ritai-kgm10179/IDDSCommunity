@@ -63,8 +63,6 @@ partial class PanelLockoutConfiguration
         this.comboBoxFirewallMode = new System.Windows.Forms.ComboBox();
         this.labelFirewallModeDescription = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
         this.buttonSave = new System.Windows.Forms.Button();
-        this.pictureBoxSave = new System.Windows.Forms.PictureBox();
-        this.pictureBoxEdit = new System.Windows.Forms.PictureBox();
         this.trustedProxyToolTip = new System.Windows.Forms.ToolTip(this.components);
         this.tableLayoutMain.SuspendLayout();
         this.flowSoftLocks.SuspendLayout();
@@ -75,8 +73,6 @@ partial class PanelLockoutConfiguration
         ((System.ComponentModel.ISupportInitialize)(this.numericSprayIpThreshold)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numericSlidingWindowMinutes)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numericSemanticDeduplicationSeconds)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).BeginInit();
         this.SuspendLayout();
         //
         // tableLayoutMain
@@ -484,40 +480,11 @@ partial class PanelLockoutConfiguration
         this.buttonSave.UseVisualStyleBackColor = false;
         this.buttonSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
         //
-        //
-        // pictureBoxSave
-        //
-        this.pictureBoxSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.pictureBoxSave.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_save;
-        this.pictureBoxSave.Location = new System.Drawing.Point(405, 0);
-        this.pictureBoxSave.Name = "pictureBoxSave";
-        this.pictureBoxSave.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxSave.TabStop = false;
-        this.pictureBoxSave.Visible = false;
-        this.pictureBoxSave.Click += new System.EventHandler(this.pictureBoxSave_Click);
-        this.pictureBoxSave.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
-        this.pictureBoxSave.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
-        //
-        // pictureBoxEdit
-        //
-        this.pictureBoxEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-        this.pictureBoxEdit.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_edit;
-        this.pictureBoxEdit.Location = new System.Drawing.Point(436, 0);
-        this.pictureBoxEdit.Name = "pictureBoxEdit";
-        this.pictureBoxEdit.Size = new System.Drawing.Size(25, 25);
-        this.pictureBoxEdit.TabStop = false;
-        this.pictureBoxEdit.Visible = false;
-        this.pictureBoxEdit.Click += new System.EventHandler(this.pictureBoxEdit_Click);
-        this.pictureBoxEdit.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseDown);
-        this.pictureBoxEdit.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxEdit_MouseUp);
-        //
         // PanelLockoutConfiguration
         //
         this.AutoScroll = true;
         this.BackColor = System.Drawing.Color.White;
         this.Controls.Add(this.tableLayoutMain);
-        this.Controls.Add(this.pictureBoxSave);
-        this.Controls.Add(this.pictureBoxEdit);
         this.Name = "PanelLockoutConfiguration";
         this.tableLayoutMain.ResumeLayout(false);
         this.tableLayoutMain.PerformLayout();
@@ -533,8 +500,6 @@ partial class PanelLockoutConfiguration
         ((System.ComponentModel.ISupportInitialize)(this.numericSprayIpThreshold)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.numericSlidingWindowMinutes)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.numericSemanticDeduplicationSeconds)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxSave)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEdit)).EndInit();
         this.ResumeLayout(false);
     }
 
@@ -575,7 +540,5 @@ partial class PanelLockoutConfiguration
     private System.Windows.Forms.ComboBox comboBoxFirewallMode;
     private SmartLabel labelFirewallModeDescription;
     private System.Windows.Forms.Button buttonSave;
-    private System.Windows.Forms.PictureBox pictureBoxSave;
-    private System.Windows.Forms.PictureBox pictureBoxEdit;
     private System.Windows.Forms.ToolTip trustedProxyToolTip;
 }

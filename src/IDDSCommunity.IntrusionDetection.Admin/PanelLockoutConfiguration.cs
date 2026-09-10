@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared;
 
@@ -31,19 +30,6 @@ public partial class PanelLockoutConfiguration : UserControl
     }
 
     /// <summary>
-    /// 處理 mouse down 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_MouseDown(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X + 1, pictureBoxEdit.Location.Y + 1);
-    /// <summary>
-    /// 處理 mouse up 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_MouseUp(object sender, MouseEventArgs e) => pictureBoxEdit.Location = new Point(pictureBoxEdit.Location.X - 1, pictureBoxEdit.Location.Y - 1);
-
-    /// <summary>
     /// Loads data.
     /// </summary>
     private void LoadData()
@@ -60,14 +46,6 @@ public partial class PanelLockoutConfiguration : UserControl
         numericSprayIpThreshold.Value = IddsConfig.Instance.CrossAgentSprayIpThreshold;
         numericSlidingWindowMinutes.Value = IddsConfig.Instance.CrossAgentSlidingWindowMinutes;
         textBoxTrustedProxyCidrs.Text = IddsConfig.Instance.TrustedProxyCidrs;
-    }
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxEdit_Click(object sender, EventArgs e)
-    {
     }
     /// <summary>
     /// Clears errors.

@@ -23,10 +23,8 @@
         private void InitializeComponent() {
             this.flowLayoutPanelNavigationItems = new System.Windows.Forms.FlowLayoutPanel();
             this.smartPanelActionBar = new IDDSCommunity.IntrusionDetection.Admin.SmartPanel();
-            this.pictureBoxRemove = new System.Windows.Forms.PictureBox();
             this.pictureBoxAdd = new System.Windows.Forms.PictureBox();
             this.smartPanelActionBar.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRemove)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxAdd)).BeginInit();
             this.SuspendLayout();
             //
@@ -47,26 +45,12 @@
             //
             this.smartPanelActionBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(243)))), ((int)(((byte)(246)))), ((int)(((byte)(248)))));
             this.smartPanelActionBar.BorderColor = System.Drawing.SystemColors.ControlText;
-            this.smartPanelActionBar.Controls.Add(this.pictureBoxRemove);
             this.smartPanelActionBar.Controls.Add(this.pictureBoxAdd);
             this.smartPanelActionBar.Location = new System.Drawing.Point(6, 1);
             this.smartPanelActionBar.Name = "smartPanelActionBar";
             this.smartPanelActionBar.PaintBorder = false;
             this.smartPanelActionBar.Size = new System.Drawing.Size(265, 34);
             this.smartPanelActionBar.TabIndex = 1;
-            //
-            // pictureBoxRemove
-            //
-            this.pictureBoxRemove.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBoxRemove.Image = global::IDDSCommunity.IntrusionDetection.Admin.Properties.Resources.button25px_delete;
-            this.pictureBoxRemove.Location = new System.Drawing.Point(229, 4);
-            this.pictureBoxRemove.Name = "pictureBoxRemove";
-            this.pictureBoxRemove.Size = new System.Drawing.Size(25, 25);
-            this.pictureBoxRemove.TabIndex = 0;
-            this.pictureBoxRemove.TabStop = false;
-            this.pictureBoxRemove.Visible = false;
-            this.pictureBoxRemove.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRemove_MouseDown);
-            this.pictureBoxRemove.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRemove_MouseUp);
             //
             // pictureBoxAdd
             //
@@ -92,7 +76,6 @@
             this.Name = "IDDSCommunitySettingsNavigation";
             this.Size = new System.Drawing.Size(286, 500);
             this.smartPanelActionBar.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRemove)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxAdd)).EndInit();
             this.ResumeLayout(false);
 
@@ -103,7 +86,6 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelNavigationItems;
         private SmartPanel smartPanelActionBar;
         private System.Windows.Forms.PictureBox pictureBoxAdd;
-        private System.Windows.Forms.PictureBox pictureBoxRemove;
 
     }
 }
