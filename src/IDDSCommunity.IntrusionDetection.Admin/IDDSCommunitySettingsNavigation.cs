@@ -20,7 +20,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
         flowLayoutPanelNavigationItems.WrapContents = false;
         flowLayoutPanelNavigationItems.HorizontalScroll.Enabled = false;
         flowLayoutPanelNavigationItems.HorizontalScroll.Visible = false;
-        UpdateTopMenuLayout();
+        UpdateNavigationListLayout();
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     /// <summary>
     /// 重新定位導覽項目清單。
     /// </summary>
-    private void UpdateTopMenuLayout()
+    private void UpdateNavigationListLayout()
     {
         // flowLayoutPanelNavigationItems 設有 Anchor = Top|Bottom|Left|Right，理論上應會隨父容器
         // （本控制項）縮放自動調整寬度。但 AutoScaleMode.Font 在放大本控制項的 Size 時，並未經過
@@ -128,7 +128,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
-        UpdateTopMenuLayout();
+        UpdateNavigationListLayout();
         UpdateItemWidths();
     }
 
@@ -136,7 +136,7 @@ public partial class IDDSCommunitySettingsNavigation : UserControl
     protected override void OnLayout(LayoutEventArgs e)
     {
         base.OnLayout(e);
-        UpdateTopMenuLayout();
+        UpdateNavigationListLayout();
         UpdateItemWidths();
     }
 

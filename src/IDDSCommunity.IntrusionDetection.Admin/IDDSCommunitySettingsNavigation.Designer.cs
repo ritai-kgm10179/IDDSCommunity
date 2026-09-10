@@ -32,9 +32,9 @@ namespace IDDSCommunity.IntrusionDetection.Admin {
             this.flowLayoutPanelNavigationItems.AutoScroll = true;
             this.flowLayoutPanelNavigationItems.WrapContents = false;
             this.flowLayoutPanelNavigationItems.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            this.flowLayoutPanelNavigationItems.Location = new System.Drawing.Point(0, 36);
+            this.flowLayoutPanelNavigationItems.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanelNavigationItems.Name = "flowLayoutPanelNavigationItems";
-            this.flowLayoutPanelNavigationItems.Size = new System.Drawing.Size(286, 463);
+            this.flowLayoutPanelNavigationItems.Size = new System.Drawing.Size(286, 499);
             this.flowLayoutPanelNavigationItems.TabIndex = 0;
             //
             // IDDSCommunitySettingsNavigation
