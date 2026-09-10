@@ -126,7 +126,7 @@
     <value>AgentName</value>
   </data>
   <data name="AGENTS" xml:space="preserve">
-    <value>AGENTS</value>
+    <value>Agents</value>
   </data>
   <data name="All Agents" xml:space="preserve">
     <value>All Agents</value>
@@ -174,7 +174,7 @@
     <value>current hard locks</value>
   </data>
   <data name="CURRENT LOCKS" xml:space="preserve">
-    <value>CURRENT LOCKS</value>
+    <value>Current Locks</value>
   </data>
   <data name="current soft locks" xml:space="preserve">
     <value>current soft locks</value>
@@ -289,7 +289,7 @@
     <value>On unlock events</value>
   </data>
   <data name="ONLINE" xml:space="preserve">
-    <value>ONLINE</value>
+    <value>Online</value>
   </data>
   <data name="Override configuration" xml:space="preserve">
     <value>Override configuration</value>
@@ -308,19 +308,13 @@
     <value>Safe networks (white list)</value>
   </data>
   <data name="SECURITY LOG" xml:space="preserve">
-    <value>SECURITY LOG</value>
+    <value>Security Log</value>
   </data>
   <data name="Sender address" xml:space="preserve">
     <value>Sender address</value>
   </data>
   <data name="SETTINGS" xml:space="preserve">
-    <value>SETTINGS</value>
-  </data>
-  <data name="SmartForm" xml:space="preserve">
-    <value>SmartForm</value>
-  </data>
-  <data name="smartLabel1" xml:space="preserve">
-    <value>smartLabel1</value>
+    <value>Settings</value>
   </data>
   <data name="SMTP server" xml:space="preserve">
     <value>SMTP server</value>
@@ -347,7 +341,7 @@
     <value>soft locks:</value>
   </data>
   <data name="START" xml:space="preserve">
-    <value>START</value>
+    <value>Start</value>
   </data>
   <data name="status" xml:space="preserve">
     <value>status</value>
@@ -1019,7 +1013,7 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Generic JSON" xml:space="preserve"><value>Generic JSON</value></data>
   <data name="Chunghwa HiCloud (deny unsupported)" xml:space="preserve"><value>Chunghwa HiCloud (deny unsupported)</value></data>
   <data name="Generic Webhook" xml:space="preserve"><value>Generic Webhook</value></data>
-  <data name="SYSTEM LOG" xml:space="preserve"><value>SYSTEM LOG</value></data>
+  <data name="SYSTEM LOG" xml:space="preserve"><value>System Log</value></data>
   <data name="Event category:" xml:space="preserve"><value>Event category:</value></data>
   <data name="Outcome:" xml:space="preserve"><value>Outcome:</value></data>
   <data name="Search keyword:" xml:space="preserve"><value>Search keyword:</value></data>

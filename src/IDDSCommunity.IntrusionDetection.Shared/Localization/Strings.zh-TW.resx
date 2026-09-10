@@ -316,12 +316,6 @@
   <data name="SETTINGS" xml:space="preserve">
     <value>設定</value>
   </data>
-  <data name="SmartForm" xml:space="preserve">
-    <value>IDDSCommunity</value>
-  </data>
-  <data name="smartLabel1" xml:space="preserve">
-    <value>標籤</value>
-  </data>
   <data name="SMTP server" xml:space="preserve">
     <value>SMTP 伺服器</value>
   </data>
