@@ -538,7 +538,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("REFRESH_PREFIX", "自動每 30 秒更新 · 最後更新："),
             ("NO_NODES", "目前沒有已連線的邊緣節點"), ("DELAYED", "延遲"),
             ("UNNAMED", "（未命名）"), ("UNKNOWN_ERROR", "未知錯誤"),
-            ("CONNECTION_ERROR", "無法連線至 Threat Hub：")
+            ("CONNECTION_ERROR", "無法連線至 Threat Hub："),
+            ("THEME_LABEL", "佈景主題"), ("THEME_AUTO", "自動"),
+            ("THEME_LIGHT", "淺色"), ("THEME_DARK", "深色")
         ]);
 
         internal static DashboardText English { get; } = new("en-US",
@@ -556,7 +558,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("REFRESH_PREFIX", "Refreshes every 30 seconds · Last updated: "),
             ("NO_NODES", "No edge nodes are connected"), ("DELAYED", "Delayed"),
             ("UNNAMED", "(unnamed)"), ("UNKNOWN_ERROR", "Unknown error"),
-            ("CONNECTION_ERROR", "Unable to connect to Threat Hub: ")
+            ("CONNECTION_ERROR", "Unable to connect to Threat Hub: "),
+            ("THEME_LABEL", "Theme"), ("THEME_AUTO", "Auto"),
+            ("THEME_LIGHT", "Light"), ("THEME_DARK", "Dark")
         ]);
     }
 
@@ -593,6 +597,28 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 --node-id-fg: #0284c7;
                 --error-bg: #fef2f2; --error-border: #fecaca; --error-fg: #b91c1c;
               }
+            }
+            :root[data-theme="dark"] {
+              --bg: #0f172a; --fg: #f8fafc; --muted: #94a3b8;
+              --accent: #14b8a6; --accent-hover: #0d9488; --accent-fg: #0f172a; --accent-shadow: rgba(20, 184, 166, 0.5);
+              --card-bg: #1e293b; --card-border: #334155;
+              --input-bg: #1e293b; --input-border: #334155; --input-fg: #f1f5f9;
+              --badge-online-bg: #064e3b; --badge-online-fg: #6ee7b7;
+              --badge-offline-bg: #7f1d1d; --badge-offline-fg: #fca5a5;
+              --td-fg: #cbd5e1; --td-border: #1e293b; --row-hover-bg: #1e293b44;
+              --node-id-fg: #38bdf8;
+              --error-bg: #7f1d1d22; --error-border: #7f1d1d; --error-fg: #fca5a5;
+            }
+            :root[data-theme="light"] {
+              --bg: #f8fafc; --fg: #0f172a; --muted: #64748b;
+              --accent: #0d9488; --accent-hover: #0f766e; --accent-fg: #ffffff; --accent-shadow: rgba(13, 148, 136, 0.35);
+              --card-bg: #ffffff; --card-border: #e2e8f0;
+              --input-bg: #ffffff; --input-border: #cbd5e1; --input-fg: #0f172a;
+              --badge-online-bg: #d1fae5; --badge-online-fg: #047857;
+              --badge-offline-bg: #fee2e2; --badge-offline-fg: #b91c1c;
+              --td-fg: #334155; --td-border: #f1f5f9; --row-hover-bg: #f1f5f9;
+              --node-id-fg: #0284c7;
+              --error-bg: #fef2f2; --error-border: #fecaca; --error-fg: #b91c1c;
             }
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: var(--bg); color: var(--fg); min-height: 100vh; padding: 24px; }
@@ -631,12 +657,25 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           </style>
         </head>
         <body>
+          <script nonce="{{NONCE}}">
+            (function() {
+              var savedTheme = sessionStorage.getItem('idds_hub_theme');
+              if (savedTheme === 'light' || savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+              }
+            })();
+          </script>
           <div class="top-bar">
             <div class="top-bar-left">
               <h1><span aria-hidden="true">&#x1F6E1;&#xFE0F;</span> IDDS Community</h1>
               <span id="hub-status" class="badge badge-offline" role="status">{{OFFLINE}}</span>
             </div>
             <div class="key-row">
+              <select id="theme-select" class="language-select" aria-label="{{THEME_LABEL}}">
+                <option value="auto">{{THEME_AUTO}}</option>
+                <option value="light">{{THEME_LIGHT}}</option>
+                <option value="dark">{{THEME_DARK}}</option>
+              </select>
               <select id="language-select" class="language-select" aria-label="Language">
                 <option value="zh-Hant-TW">繁體中文</option>
                 <option value="en-US">English</option>
@@ -697,6 +736,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
             document.getElementById('api-key').value = currentKey ? '••••••••' : '';
             document.getElementById('apply-key-btn').addEventListener('click', applyKey);
+            document.getElementById('theme-select').value = sessionStorage.getItem('idds_hub_theme') || 'auto';
+            document.getElementById('theme-select').addEventListener('change', function(event) {
+              var selected = event.target.value;
+              sessionStorage.setItem('idds_hub_theme', selected);
+              if (selected === 'light' || selected === 'dark') {
+                document.documentElement.setAttribute('data-theme', selected);
+              } else {
+                document.documentElement.removeAttribute('data-theme');
+              }
+            });
             document.getElementById('language-select').value = currentLanguage;
             document.getElementById('language-select').addEventListener('change', function(event) {
               var selected = event.target.value;
