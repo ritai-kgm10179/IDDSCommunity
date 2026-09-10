@@ -230,7 +230,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtHubEndpoint.Text = string.Empty;
         txtHubApiKey.Text = Guid.NewGuid().ToString("N");
         numHubPort.Value = 8443;
-        chkThreatHubReverseProxy.Checked = false;
+        chkThreatHubReverseProxy.Checked = true;
         chkThreatHubLoopbackOnly.Checked = false;
         numSyncInterval.Value = 60;
 

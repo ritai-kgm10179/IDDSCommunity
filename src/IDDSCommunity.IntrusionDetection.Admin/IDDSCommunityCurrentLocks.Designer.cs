@@ -163,7 +163,7 @@
             //
             this.dataGridViewLocks.AllowUserToAddRows = false;
             this.dataGridViewLocks.AllowUserToDeleteRows = false;
-            this.dataGridViewLocks.AllowUserToResizeColumns = false;
+            this.dataGridViewLocks.AllowUserToResizeColumns = true;
             this.dataGridViewLocks.AllowUserToResizeRows = false;
             this.dataGridViewLocks.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
@@ -362,7 +362,6 @@
             this.dataGridViewSelectItem.FalseValue = "0";
             this.dataGridViewSelectItem.HeaderText = "";
             this.dataGridViewSelectItem.Name = "dataGridViewSelectItem";
-            this.dataGridViewSelectItem.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewSelectItem.TrueValue = "1";
             this.dataGridViewSelectItem.Width = 32;
             //
@@ -371,7 +370,6 @@
             this.dataGridViewColumnTypeIcon.HeaderText = "";
             this.dataGridViewColumnTypeIcon.Name = "dataGridViewColumnTypeIcon";
             this.dataGridViewColumnTypeIcon.ReadOnly = true;
-            this.dataGridViewColumnTypeIcon.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnTypeIcon.Width = 20;
             //
             // dataGridViewColumnTypeName
@@ -379,7 +377,6 @@
             this.dataGridViewColumnTypeName.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             this.dataGridViewColumnTypeName.Name = "dataGridViewColumnTypeName";
             this.dataGridViewColumnTypeName.ReadOnly = true;
-            this.dataGridViewColumnTypeName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnTypeName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.dataGridViewColumnTypeName.Width = 85;
             //
@@ -388,7 +385,6 @@
             this.dataGridViewColumnIpAddress.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IP-Address");
             this.dataGridViewColumnIpAddress.Name = "dataGridViewColumnIpAddress";
             this.dataGridViewColumnIpAddress.ReadOnly = true;
-            this.dataGridViewColumnIpAddress.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnIpAddress.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.dataGridViewColumnIpAddress.Width = 110;
             //
@@ -397,7 +393,6 @@
             this.dataGridViewColumnAgent.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent / Attacked System");
             this.dataGridViewColumnAgent.Name = "dataGridViewColumnAgent";
             this.dataGridViewColumnAgent.ReadOnly = true;
-            this.dataGridViewColumnAgent.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnAgent.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.dataGridViewColumnAgent.Width = 220;
             //
@@ -406,7 +401,6 @@
             this.dataGridViewColumnLockDate.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Date of Lock");
             this.dataGridViewColumnLockDate.Name = "dataGridViewColumnLockDate";
             this.dataGridViewColumnLockDate.ReadOnly = true;
-            this.dataGridViewColumnLockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnLockDate.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.dataGridViewColumnLockDate.Width = 160;
             //
@@ -415,7 +409,6 @@
             this.dataGridViewColumnUnlockDate.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Date of planned unlock");
             this.dataGridViewColumnUnlockDate.Name = "dataGridViewColumnUnlockDate";
             this.dataGridViewColumnUnlockDate.ReadOnly = true;
-            this.dataGridViewColumnUnlockDate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewColumnUnlockDate.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.dataGridViewColumnUnlockDate.Width = 160;
             //

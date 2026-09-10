@@ -197,7 +197,7 @@
             //
             this.dataGridViewIntrusionLog.AllowUserToAddRows = false;
             this.dataGridViewIntrusionLog.AllowUserToDeleteRows = false;
-            this.dataGridViewIntrusionLog.AllowUserToResizeColumns = false;
+            this.dataGridViewIntrusionLog.AllowUserToResizeColumns = true;
             this.dataGridViewIntrusionLog.AllowUserToResizeRows = false;
             this.dataGridViewIntrusionLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)
@@ -355,7 +355,6 @@
             this.LogIcon.HeaderText = "";
             this.LogIcon.Name = "LogIcon";
             this.LogIcon.ReadOnly = true;
-            this.LogIcon.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.LogIcon.Width = 20;
             //
             // LogType
@@ -363,7 +362,6 @@
             this.LogType.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Type");
             this.LogType.Name = "LogType";
             this.LogType.ReadOnly = true;
-            this.LogType.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.LogType.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.LogType.Width = 90;
             //
@@ -372,7 +370,6 @@
             this.LatestEntry.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("LatestEntry");
             this.LatestEntry.Name = "LatestEntry";
             this.LatestEntry.ReadOnly = true;
-            this.LatestEntry.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.LatestEntry.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.LatestEntry.Width = 155;
             //
@@ -386,7 +383,6 @@
             this.IpAddress.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IP-Address");
             this.IpAddress.Name = "IpAddress";
             this.IpAddress.ReadOnly = true;
-            this.IpAddress.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.IpAddress.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             //
             // Agent
@@ -394,7 +390,6 @@
             this.Agent.HeaderText = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Agent / Attacked System");
             this.Agent.Name = "Agent";
             this.Agent.ReadOnly = true;
-            this.Agent.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.Agent.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.Agent.Width = 600;
             //

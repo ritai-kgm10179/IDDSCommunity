@@ -677,7 +677,7 @@ public CSafeNetworks SafeNetworks
     /// </summary>
     public bool ThreatHubUseReverseProxy
     {
-        get => bool.TryParse(GetConfigValue("ThreatHubUseReverseProxy"), out bool enabled) && enabled;
+        get => bool.TryParse(GetConfigValue("ThreatHubUseReverseProxy"), out bool enabled) ? enabled : true;
         set => SetConfigValue("ThreatHubUseReverseProxy", value.ToString());
     }
 

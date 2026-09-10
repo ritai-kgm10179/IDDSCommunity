@@ -437,7 +437,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
         response.Headers["Referrer-Policy"] = "no-referrer";
         response.Headers["Cache-Control"] = "no-store";
-        response.Headers["Content-Security-Policy"] = $"default-src 'none'; style-src 'nonce-{nonce}'; script-src 'nonce-{nonce}'; connect-src 'self';";
+        response.Headers["Content-Security-Policy"] = $"default-src 'none'; style-src 'nonce-{nonce}'; script-src 'nonce-{nonce}'; img-src data:; connect-src 'self';";
         response.Headers["Content-Language"] = language;
         response.ContentType = "text/html; charset=utf-8";
         response.ContentLength64 = bytes.Length;
@@ -567,6 +567,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>{{TITLE}}</title>
+          <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' d='M12 1.5 3 5v6.2c0 6.1 3.8 10.9 9 12.3 5.2-1.4 9-6.2 9-12.3V5z'/%3E%3Cpath fill='%2314b8a6' d='M12 3.3 5 6.1v5.1c0 5.1 3.1 9.1 7 10.3 3.9-1.2 7-5.2 7-10.3V6.1z'/%3E%3Cpath fill='%230f172a' d='m10.6 13.4-2-2-1.4 1.4 3.4 3.4 6-6-1.4-1.4z'/%3E%3C/svg%3E">
           <style nonce="{{NONCE}}">
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 24px; }
@@ -601,6 +602,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .error-bar { background: #7f1d1d22; border: 1px solid #7f1d1d; border-radius: 6px; color: #fca5a5; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
             .refresh-info { font-size: 11px; color: #94a3b8; text-align: right; margin-top: 8px; }
             .table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow-x: auto; overflow-y: hidden; }
+            .stat-value-compact { font-size: 18px; padding-top: 8px; }
           </style>
         </head>
         <body>
@@ -615,7 +617,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 <option value="en-US">English</option>
               </select>
               <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
-              <button onclick="applyKey()">{{APPLY}}</button>
+              <button id="apply-key-btn">{{APPLY}}</button>
             </div>
           </div>
 
@@ -631,7 +633,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               <div class="stat-label">{{ACTIVE_THREATS}}</div>
             </div>
             <div class="card">
-              <div class="stat-value" id="stat-updated" style="font-size:18px;padding-top:8px;">—</div>
+              <div class="stat-value stat-value-compact" id="stat-updated">—</div>
               <div class="stat-label">{{LAST_UPDATED}}</div>
             </div>
           </div>
@@ -669,6 +671,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             }
 
             document.getElementById('api-key').value = currentKey ? '••••••••' : '';
+            document.getElementById('apply-key-btn').addEventListener('click', applyKey);
             document.getElementById('language-select').value = currentLanguage;
             document.getElementById('language-select').addEventListener('change', function(event) {
               var selected = event.target.value;
