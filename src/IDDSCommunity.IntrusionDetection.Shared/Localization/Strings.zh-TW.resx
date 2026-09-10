@@ -391,12 +391,6 @@
   <data name="Your IDDSCommunity online account" xml:space="preserve">
     <value>您的 IDDSCommunity 線上帳號</value>
   </data>
-  <data name="This assembly already exists. Do you want to overwrite the existing?" xml:space="preserve">
-    <value>此組件已存在。是否要覆寫現有組件？</value>
-  </data>
-  <data name="Overwrite existing?" xml:space="preserve">
-    <value>覆寫現有組件？</value>
-  </data>
   <data name="Service not found!" xml:space="preserve">
     <value>找不到服務！</value>
   </data>
@@ -562,12 +556,6 @@
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS 社群版管理工具的測試郵件。</value></data>
   <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDSCommunity 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>
-  <data name="No file was selected!" xml:space="preserve"><value>尚未選取檔案！</value></data>
-  <data name="Please choose at least one assembly to load." xml:space="preserve"><value>請至少選取一個要載入的組件。</value></data>
-  <data name="Invalid directory" xml:space="preserve"><value>無效的目錄</value></data>
-  <data name="Please choose a directory other than the plugin directory. These assemblies are already loaded." xml:space="preserve"><value>請選擇外掛目錄以外的目錄；這些組件已經載入。</value></data>
-  <data name="Plugin directory not found!" xml:space="preserve"><value>找不到外掛目錄！</value></data>
-  <data name="Assembly cannot be copied." xml:space="preserve"><value>無法複製組件。</value></data>
   <data name="FTP authentication failure" xml:space="preserve"><value>FTP 驗證失敗</value></data>
   <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP 驗證失敗</value></data>
   <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 驗證失敗</value></data>
@@ -600,8 +588,6 @@
   <data name="Application startup failed" xml:space="preserve"><value>應用程式啟動失敗</value></data>
   <data name="Application startup failed: {0}" xml:space="preserve"><value>應用程式啟動失敗：{0}</value></data>
   <data name="The administration interface did not complete initialization." xml:space="preserve"><value>管理介面未完成初始化。</value></data>
-  <data name="Assemblies (*.dll)|*.dll" xml:space="preserve"><value>組件 (*.dll)|*.dll</value></data>
-  <data name="Please select plugin assembly" xml:space="preserve"><value>請選擇代理程式組件</value></data>
   <data name="None" xml:space="preserve"><value>無</value></data>
   <data name="Agent {0} is not registered." xml:space="preserve"><value>代理程式 {0} 尚未註冊。</value></data>
   <data name="Historical agent ({0})" xml:space="preserve"><value>歷史代理程式（{0}）</value></data>

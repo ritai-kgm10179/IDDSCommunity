@@ -185,7 +185,6 @@ public partial class IddsAdmin : Form
                 {
                     Dock = DockStyle.Fill
                 };
-                _panelAgentConfiguration.PluginsChanged += new EventHandler(_panelAgentConfiguration_PluginsChanged);
                 _panelAgentConfiguration.AgentSettingsChanged += new EventHandler(_panelAgentConfiguration_AgentSettingsChanged);
                 panelContent.Controls.Add(_panelAgentConfiguration);
             }
@@ -202,12 +201,6 @@ public partial class IddsAdmin : Form
         Dashboard.RefreshAgentPresentations();
         await RestartServiceAsync();
     }
-    /// <summary>
-    /// 處理 plugins changed 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    void _panelAgentConfiguration_PluginsChanged(object? sender, EventArgs e) => InitAgentSettings();//RestartService();
     /// <summary>
     /// 執行 restart service 作業。
     /// </summary>

@@ -34,7 +34,6 @@
             this.iddscommunitySettingsNavigation.Name = "iddscommunitySettingsNavigation";
             this.iddscommunitySettingsNavigation.SeparatorColor = System.Drawing.Color.FromArgb(((int)(((byte)(191)))), ((int)(((byte)(191)))), ((int)(((byte)(191)))));
             this.iddscommunitySettingsNavigation.ShowSeparator = true;
-            this.iddscommunitySettingsNavigation.ShowTopMenu = false;
             this.iddscommunitySettingsNavigation.Size = new System.Drawing.Size(260, 455);
             this.iddscommunitySettingsNavigation.TabIndex = 0;
             // 

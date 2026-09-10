@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.IO;
-using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
@@ -12,11 +10,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class IDDSCommunitySettingsNavigation : UserControl
 {
-
-        /// <summary>
-    /// 當 PluginsChanged 時引發之事件。
-    /// </summary>
-public event EventHandler? PluginsChanged;
     /// <summary>
     /// 初始化 <see cref="IDDSCommunitySettingsNavigation"/> 類別的新執行個體。
     /// </summary>
@@ -44,11 +37,6 @@ public event EventHandler? PluginsChanged;
     /// 取得或設定 ShowSeparator。
     /// </summary>
     public bool ShowSeparator { get; set; }
-
-    /// <summary>
-    /// 取得或設定 ShowTopMenu。
-    /// </summary>
-    public bool ShowTopMenu { get; set; }
     /// <summary>
     /// 處理 on paint 事件。僅負責繪製，不得在此變更子控制項版面——否則會觸發
     /// Invalidate → Layout → Paint 的重入迴圈（表現為閃爍或版面計算失敗）。
@@ -67,7 +55,7 @@ public event EventHandler? PluginsChanged;
     }
 
     /// <summary>
-    /// 依據 <see cref="ShowTopMenu"/> 重新定位導覽項目清單與動作列。
+    /// 重新定位導覽項目清單。
     /// </summary>
     private void UpdateTopMenuLayout()
     {
@@ -77,18 +65,8 @@ public event EventHandler? PluginsChanged;
         // 不再單靠 Anchor 機制。
         int separatorGutterWidth = ShowSeparator ? LogicalToDeviceUnits(5) : 0;
         flowLayoutPanelNavigationItems.Width = Math.Max(0, ClientSize.Width - separatorGutterWidth);
-        if (!ShowTopMenu)
-        {
-            flowLayoutPanelNavigationItems.Top = 0;
-            flowLayoutPanelNavigationItems.Height = Height - 1;
-            smartPanelActionBar.Hide();
-        }
-        else
-        {
-            flowLayoutPanelNavigationItems.Top = 33;
-            flowLayoutPanelNavigationItems.Height = Height - 34;
-            smartPanelActionBar.Show();
-        }
+        flowLayoutPanelNavigationItems.Top = 0;
+        flowLayoutPanelNavigationItems.Height = Height - 1;
     }
     /// <summary>
     /// 處理 click 事件。
@@ -269,92 +247,4 @@ public string SelectedName
             }
         }
     }
-
-    /// <summary>
-    /// 處理 mouse down 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxAdd_MouseDown(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X + 1, pictureBoxAdd.Location.Y + 1);
-    /// <summary>
-    /// 處理 mouse up 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxAdd_MouseUp(object sender, MouseEventArgs e) => pictureBoxAdd.Location = new Point(pictureBoxAdd.Location.X - 1, pictureBoxAdd.Location.Y - 1);
-    /// <summary>
-    /// 處理 click 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    private void pictureBoxAdd_Click(object sender, EventArgs e)
-    {
-        OpenFileDialog openFile = new()
-        {
-            CheckPathExists = true,
-            CheckFileExists = true,
-            Filter = Strings.Get("Assemblies (*.dll)|*.dll"),
-            Title = Strings.Get("Please select plugin assembly"),
-            Multiselect = true
-        };
-        if (openFile.ShowDialog() == DialogResult.OK)
-        {
-            string pluginDirectory = Shared.IddsConfig.Instance.PluginsDirectory;
-            if (openFile.FileNames.Length <= 0)
-            {
-                GenericErrorDialog error = new(Strings.Get("No file was selected!"), Strings.Get("Please choose at least one assembly to load."), false);
-                error.ShowDialog();
-                return;
-            }
-            string chosenDirectory = Path.GetDirectoryName(openFile.FileNames[0]) ?? string.Empty;
-            if (string.Equals(
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(chosenDirectory)),
-                Path.TrimEndingDirectorySeparator(Path.GetFullPath(pluginDirectory)),
-                StringComparison.OrdinalIgnoreCase))
-            {
-                GenericErrorDialog error = new(Strings.Get("Invalid directory"), Strings.Get("Please choose a directory other than the plugin directory. These assemblies are already loaded."), false);
-                error.ShowDialog();
-                return;
-            }
-            if (!Directory.Exists(pluginDirectory))
-            {
-                try
-                {
-                    Directory.CreateDirectory(pluginDirectory);
-                }
-                catch (Exception ex)
-                {
-                    GenericErrorDialog error = new(Strings.Get("Plugin directory not found!"), ex.Message, false);
-                    error.ShowDialog();
-                    return;
-                }
-            }
-            foreach (string fileName in openFile.FileNames)
-            {
-                string assemblyName = Path.GetFileName(fileName);
-                string destination = Path.Combine(pluginDirectory, assemblyName);
-                if (!File.Exists(destination) ||
-                    MessageBox.Show(Strings.Get("This assembly already exists. Do you want to overwrite the existing?"), Strings.Get("Overwrite existing?"), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
-                {
-                    try
-                    {
-                        File.Copy(fileName, destination, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        GenericErrorDialog error = new(Strings.Get("Assembly cannot be copied."), ex.Message, false);
-                        error.ShowDialog();
-                    }
-                }
-            }
-            Shared.SecurityAgents.Instance.InitializeAgents();
-            OnPluginsChanged();
-        }
-    }
-    /// <summary>
-    /// Processes the plugins changed notification.
-    /// </summary>
-    private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
-
-
 }

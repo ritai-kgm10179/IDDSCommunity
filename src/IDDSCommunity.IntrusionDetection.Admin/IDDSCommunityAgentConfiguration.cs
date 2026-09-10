@@ -11,10 +11,6 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 public partial class IDDSCommunityAgentConfiguration : UserControl
 {
         /// <summary>
-    /// 當 PluginsChanged 時引發之事件。
-    /// </summary>
-public event EventHandler? PluginsChanged;
-        /// <summary>
     /// 當 AgentSettingsChanged 時引發之事件。
     /// </summary>
 public event EventHandler? AgentSettingsChanged;
@@ -25,14 +21,7 @@ public event EventHandler? AgentSettingsChanged;
     {
         InitializeComponent();
         BackColor = Color.White;
-        iddscommunitySettingsNavigation.PluginsChanged += new EventHandler(iddscommunitySettingsNavigation_PluginsChanged);
     }
-    /// <summary>
-    /// 處理 plugins changed 事件。
-    /// </summary>
-    /// <param name="sender">事件來源物件。</param>
-    /// <param name="e">事件資料。</param>
-    void iddscommunitySettingsNavigation_PluginsChanged(object? sender, EventArgs e) => PluginsChanged?.Invoke(sender, e);
     /// <summary>
     /// 手動排列導覽清單與設定內容面板。AutoScaleMode.Font 會依實際字型度量放大
     /// iddscommunitySettingsNavigation 這種顯式設定 Size 的 Dock=Left 子控制項，但 Dock=Fill 的
@@ -96,10 +85,6 @@ public PanelPluginConfiguration PluginConfigPanel
     {
         //OnAgentSettingsChanged();
     }
-    /// <summary>
-    /// Processes the plugins changed notification.
-    /// </summary>
-    private void OnPluginsChanged() => PluginsChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
     /// </summary>

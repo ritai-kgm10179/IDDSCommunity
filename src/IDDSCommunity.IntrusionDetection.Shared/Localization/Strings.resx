@@ -391,12 +391,6 @@
   <data name="Your IDDSCommunity online account" xml:space="preserve">
     <value>Your IDDSCommunity online account</value>
   </data>
-  <data name="This assembly already exists. Do you want to overwrite the existing?" xml:space="preserve">
-    <value>This assembly already exists. Do you want to overwrite the existing?</value>
-  </data>
-  <data name="Overwrite existing?" xml:space="preserve">
-    <value>Overwrite existing?</value>
-  </data>
   <data name="Service not found!" xml:space="preserve">
     <value>Service not found!</value>
   </data>
@@ -562,12 +556,6 @@
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>This is a test message from IDDS Community.</value></data>
   <data name="Error starting application" xml:space="preserve"><value>Error starting application</value></data>
   <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application.</value></data>
-  <data name="No file was selected!" xml:space="preserve"><value>No file was selected!</value></data>
-  <data name="Please choose at least one assembly to load." xml:space="preserve"><value>Please choose at least one assembly to load.</value></data>
-  <data name="Invalid directory" xml:space="preserve"><value>Invalid directory</value></data>
-  <data name="Please choose a directory other than the plugin directory. These assemblies are already loaded." xml:space="preserve"><value>Please choose a directory other than the plugin directory. These assemblies are already loaded.</value></data>
-  <data name="Plugin directory not found!" xml:space="preserve"><value>Plugin directory not found!</value></data>
-  <data name="Assembly cannot be copied." xml:space="preserve"><value>Assembly cannot be copied.</value></data>
   <data name="FTP authentication failure" xml:space="preserve"><value>FTP authentication failure</value></data>
   <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP authentication failure</value></data>
   <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 authentication failure</value></data>
@@ -600,8 +588,6 @@
   <data name="Application startup failed" xml:space="preserve"><value>Application startup failed</value></data>
   <data name="Application startup failed: {0}" xml:space="preserve"><value>Application startup failed: {0}</value></data>
   <data name="The administration interface did not complete initialization." xml:space="preserve"><value>The administration interface did not complete initialization.</value></data>
-  <data name="Assemblies (*.dll)|*.dll" xml:space="preserve"><value>Assemblies (*.dll)|*.dll</value></data>
-  <data name="Please select plugin assembly" xml:space="preserve"><value>Please select plugin assembly</value></data>
   <data name="None" xml:space="preserve"><value>None</value></data>
   <data name="Agent {0} is not registered." xml:space="preserve"><value>Agent {0} is not registered.</value></data>
   <data name="Historical agent ({0})" xml:space="preserve"><value>Historical agent ({0})</value></data>
