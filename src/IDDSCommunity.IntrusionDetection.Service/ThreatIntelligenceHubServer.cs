@@ -105,13 +105,17 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
         listener = new HttpListener();
         ConfigureHttpTimeouts(listener);
-        listener.Prefixes.Add(allowLoopbackHttp ? $"http://localhost:{port}/" : $"https://+:{port}/");
+        bool useReverseProxy = allowLoopbackHttp || config.ThreatHubUseReverseProxy;
+        bool loopbackOnly = allowLoopbackHttp || config.ThreatHubReverseProxyLoopbackOnly;
+        listener.Prefixes.Add(useReverseProxy
+            ? loopbackOnly ? $"http://localhost:{port}/" : $"http://+:{port}/"
+            : $"https://+:{port}/");
         try { listener.Start(); }
         catch (Exception ex)
         {
             listener.Close();
             listener = null;
-            if (!allowLoopbackHttp)
+            if (!useReverseProxy)
             {
                 logError($"Threat Hub failed to start HTTPS listener on port {port}. Ensure a TLS certificate is bound using 'netsh http add sslcert ipport=0.0.0.0:{port} certhash=<THUMBPRINT> appid={Guid.NewGuid():B}'.", ex);
             }
@@ -120,7 +124,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         dispatcher = new BoundedHttpDispatcher(HandleRequestAsync);
         cts = new CancellationTokenSource();
         listenTask = ListenLoopAsync(listener, cts.Token);
-        logInformation($"Threat Intelligence Hub server started listening on port {port}.");
+        logInformation(useReverseProxy
+            ? $"Threat Intelligence Hub server started on {(loopbackOnly ? "loopback" : "all interfaces")} HTTP port {port}; TLS must be terminated by a trusted reverse proxy."
+            : $"Threat Intelligence Hub server started listening on HTTPS port {port}.");
     }
 
     private static readonly string[] SuspiciousProbePatterns =

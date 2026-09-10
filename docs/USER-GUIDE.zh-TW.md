@@ -129,6 +129,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
   - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。
   - Threat Hub 啟動後可開啟 `https://<Hub 主機>:<連接埠>/dashboard` 檢視節點狀態、活動情資數與最後心跳。頁面本身可公開載入，但查詢資料前仍須輸入叢集 API Key；金鑰只保存在目前瀏覽器分頁的 `sessionStorage`。
+  - 若由 Nginx、IIS、Caddy 或 Traefik 等反向代理終止 TLS，可啟用「由反向代理終止 Threat Hub TLS」設定。此模式預設在所有介面（`0.0.0.0:<連接埠>`）提供 HTTP，適合反向代理位於其他主機；若反向代理與 Threat Hub 同機，可再啟用「反向代理上游僅限本機（127.0.0.1）」改為 `127.0.0.1:<連接埠>`。EdgeNode 仍應使用反向代理公開的 HTTPS endpoint，不直接連線此 HTTP 上游。無論哪種模式，都不可將未受保護的內部連接埠暴露至不受信任網路。
   - 儀表板支援正體中文 `zh-Hant-TW` 與英文 `en-US`。系統先採用 `?lang=zh-Hant-TW` 或 `?lang=en-US`，未指定時依瀏覽器 `Accept-Language` 自動判斷，不支援的語言回退英文；頁面右上角亦可手動切換語言。
 - **動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)**：
   - 永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。
@@ -226,6 +227,8 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
      ```
    - 若為 Threat Hub（預設 8443）或自助門戶（預設 8445），請將 `ipport` 替換為對應連接埠號。
    - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8444`。
+
+若使用反向代理模式，Threat Hub 不需要在 Windows `HTTP.sys` 綁定憑證；跨主機模式請將反向代理的上游設定為 `http://<Threat-Hub內部IP>:8443`，同機模式則使用 `http://127.0.0.1:8443`。反向代理必須轉送原始請求方法、路徑與 `X-IDDS-ThreatHub-ApiKey` 標頭，並以防火牆限制 8443 僅接受反向代理主機。
 
 ---
 

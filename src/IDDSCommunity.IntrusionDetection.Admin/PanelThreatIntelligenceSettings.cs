@@ -14,6 +14,8 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(15, 118, 110);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
+    private readonly CheckBox chkThreatHubReverseProxy = new();
+    private readonly CheckBox chkThreatHubLoopbackOnly = new();
 
     /// <summary>
     /// 當威脅情報與叢集聯防設定變更並儲存時引發之事件。
@@ -26,6 +28,16 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
     public PanelThreatIntelligenceSettings()
     {
         InitializeComponent();
+
+        tableLayoutMain.Controls.Remove(btnSave);
+        tableLayoutMain.RowCount += 2;
+        tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        ConfigureThreatHubOption(chkThreatHubReverseProxy, "Threat Hub TLS is terminated by a reverse proxy", 14);
+        ConfigureThreatHubOption(chkThreatHubLoopbackOnly, "Restrict reverse proxy upstream to this computer (127.0.0.1)", 14);
+        tableLayoutMain.Controls.Add(chkThreatHubReverseProxy, 0, 49);
+        tableLayoutMain.Controls.Add(chkThreatHubLoopbackOnly, 0, 50);
+        tableLayoutMain.Controls.Add(btnSave, 0, 51);
 
         comboClusterRole.Items.AddRange([
             Strings.Get("Standalone"),
@@ -105,6 +117,8 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtHubEndpoint.Text = config.ThreatHubEndpoint;
         txtHubApiKey.Text = config.ThreatHubApiKey;
         numHubPort.Value = Math.Clamp(config.ThreatHubPort, 1, 65535);
+        chkThreatHubReverseProxy.Checked = config.ThreatHubUseReverseProxy;
+        chkThreatHubLoopbackOnly.Checked = config.ThreatHubReverseProxyLoopbackOnly;
         numSyncInterval.Value = Math.Clamp(config.ThreatHubSyncIntervalSeconds, 5, 3600);
 
         chkEnableFeeds.Checked = config.EnableExternalThreatFeeds;
@@ -141,6 +155,15 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         UpdateClusterControlsState();
     }
 
+    private static void ConfigureThreatHubOption(CheckBox checkBox, string text, int bottomMargin)
+    {
+        checkBox.AutoSize = true;
+        checkBox.Font = new Font("Segoe UI", 9F);
+        checkBox.ForeColor = BodyTextColor;
+        checkBox.Margin = new Padding(0, 0, 0, bottomMargin);
+        checkBox.Text = Strings.Get(text);
+    }
+
     private void UpdateClusterControlsState()
     {
         ThreatHubRole role = (ThreatHubRole)Math.Clamp(comboClusterRole.SelectedIndex, 0, 2);
@@ -150,18 +173,24 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 txtHubEndpoint.Enabled = false;
                 txtHubApiKey.Enabled = false;
                 numHubPort.Enabled = false;
+                chkThreatHubReverseProxy.Enabled = false;
+                chkThreatHubLoopbackOnly.Enabled = false;
                 numSyncInterval.Enabled = false;
                 break;
             case ThreatHubRole.EdgeNode:
                 txtHubEndpoint.Enabled = true;
                 txtHubApiKey.Enabled = true;
                 numHubPort.Enabled = false;
+                chkThreatHubReverseProxy.Enabled = false;
+                chkThreatHubLoopbackOnly.Enabled = false;
                 numSyncInterval.Enabled = true;
                 break;
             case ThreatHubRole.ThreatHub:
                 txtHubEndpoint.Enabled = false;
                 txtHubApiKey.Enabled = true;
                 numHubPort.Enabled = true;
+                chkThreatHubReverseProxy.Enabled = true;
+                chkThreatHubLoopbackOnly.Enabled = true;
                 numSyncInterval.Enabled = false;
                 break;
         }
@@ -180,6 +209,8 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         config.ThreatHubEndpoint = txtHubEndpoint.Text.Trim();
         config.ThreatHubApiKey = txtHubApiKey.Text.Trim();
         config.ThreatHubPort = (int)numHubPort.Value;
+        config.ThreatHubUseReverseProxy = chkThreatHubReverseProxy.Checked;
+        config.ThreatHubReverseProxyLoopbackOnly = chkThreatHubLoopbackOnly.Checked;
         config.ThreatHubSyncIntervalSeconds = (int)numSyncInterval.Value;
 
         config.EnableExternalThreatFeeds = chkEnableFeeds.Checked;
@@ -220,6 +251,8 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtHubEndpoint.Text = string.Empty;
         txtHubApiKey.Text = Guid.NewGuid().ToString("N");
         numHubPort.Value = 8443;
+        chkThreatHubReverseProxy.Checked = false;
+        chkThreatHubLoopbackOnly.Checked = false;
         numSyncInterval.Value = 60;
 
         chkEnableFeeds.Checked = false;

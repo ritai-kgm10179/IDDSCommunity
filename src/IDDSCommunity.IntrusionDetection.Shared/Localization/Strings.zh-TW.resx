@@ -833,6 +833,8 @@
   <data name="Source IPs per account threshold" xml:space="preserve"><value>每個帳號的來源 IP 數門檻</value></data>
   <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>跨代理程式滑動時間窗（分鐘）</value></data>
   <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>受信任的反向代理伺服器 IP／CIDR</value></data>
+  <data name="Threat Hub TLS is terminated by a reverse proxy" xml:space="preserve"><value>由反向代理終止 Threat Hub TLS</value></data>
+  <data name="Restrict reverse proxy upstream to this computer (127.0.0.1)" xml:space="preserve"><value>反向代理上游僅限本機（127.0.0.1）</value></data>
   <data name="Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist." xml:space="preserve"><value>僅用於驗證 Forwarded／X-Forwarded-For 並解析真實用戶端 IP；不會將位址加入安全網路允許清單。</value></data>
   <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>受信任的反向代理伺服器清單不得超過 250 個字元。</value></data>
   <data name="Trusted proxy entries must be IP addresses or CIDR ranges." xml:space="preserve"><value>受信任的反向代理伺服器項目必須是 IP 位址或 CIDR 範圍。</value></data>

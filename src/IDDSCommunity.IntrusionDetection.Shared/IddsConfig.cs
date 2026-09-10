@@ -673,6 +673,24 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
+    /// 取得或設定 Threat Hub 是否由反向代理終止 TLS。
+    /// </summary>
+    public bool ThreatHubUseReverseProxy
+    {
+        get => bool.TryParse(GetConfigValue("ThreatHubUseReverseProxy"), out bool enabled) && enabled;
+        set => SetConfigValue("ThreatHubUseReverseProxy", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定反向代理上游是否僅繫結本機迴路位址。
+    /// </summary>
+    public bool ThreatHubReverseProxyLoopbackOnly
+    {
+        get => bool.TryParse(GetConfigValue("ThreatHubReverseProxyLoopbackOnly"), out bool enabled) && enabled;
+        set => SetConfigValue("ThreatHubReverseProxyLoopbackOnly", value.ToString());
+    }
+
+    /// <summary>
     /// 取得或設定 邊緣節點與 Threat Hub 同步威脅情資之間隔秒數（預設 60 秒）。
     /// </summary>
     public int ThreatHubSyncIntervalSeconds
