@@ -567,41 +567,66 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>{{TITLE}}</title>
+          <meta name="color-scheme" content="dark light">
           <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230f172a' d='M12 1.5 3 5v6.2c0 6.1 3.8 10.9 9 12.3 5.2-1.4 9-6.2 9-12.3V5z'/%3E%3Cpath fill='%2314b8a6' d='M12 3.3 5 6.1v5.1c0 5.1 3.1 9.1 7 10.3 3.9-1.2 7-5.2 7-10.3V6.1z'/%3E%3Cpath fill='%230f172a' d='m10.6 13.4-2-2-1.4 1.4 3.4 3.4 6-6-1.4-1.4z'/%3E%3C/svg%3E">
           <style nonce="{{NONCE}}">
+            :root {
+              --bg: #0f172a; --fg: #f8fafc; --muted: #94a3b8;
+              --accent: #14b8a6; --accent-hover: #0d9488; --accent-fg: #0f172a; --accent-shadow: rgba(20, 184, 166, 0.5);
+              --card-bg: #1e293b; --card-border: #334155;
+              --input-bg: #1e293b; --input-border: #334155; --input-fg: #f1f5f9;
+              --badge-online-bg: #064e3b; --badge-online-fg: #6ee7b7;
+              --badge-offline-bg: #7f1d1d; --badge-offline-fg: #fca5a5;
+              --td-fg: #cbd5e1; --td-border: #1e293b; --row-hover-bg: #1e293b44;
+              --node-id-fg: #38bdf8;
+              --error-bg: #7f1d1d22; --error-border: #7f1d1d; --error-fg: #fca5a5;
+            }
+            @media (prefers-color-scheme: light) {
+              :root {
+                --bg: #f8fafc; --fg: #0f172a; --muted: #64748b;
+                --accent: #0d9488; --accent-hover: #0f766e; --accent-fg: #ffffff; --accent-shadow: rgba(13, 148, 136, 0.35);
+                --card-bg: #ffffff; --card-border: #e2e8f0;
+                --input-bg: #ffffff; --input-border: #cbd5e1; --input-fg: #0f172a;
+                --badge-online-bg: #d1fae5; --badge-online-fg: #047857;
+                --badge-offline-bg: #fee2e2; --badge-offline-fg: #b91c1c;
+                --td-fg: #334155; --td-border: #f1f5f9; --row-hover-bg: #f1f5f9;
+                --node-id-fg: #0284c7;
+                --error-bg: #fef2f2; --error-border: #fecaca; --error-fg: #b91c1c;
+              }
+            }
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-            body { background-color: #0f172a; color: #f8fafc; min-height: 100vh; padding: 24px; }
-            h1 { font-size: 22px; font-weight: 700; color: #14b8a6; }
-            h2 { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+            body { background-color: var(--bg); color: var(--fg); min-height: 100vh; padding: 24px; }
+            h1 { font-size: 22px; font-weight: 700; color: var(--accent); }
+            h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
             .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
             .top-bar-left { display: flex; align-items: center; gap: 14px; }
             .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
-            .badge-online { background: #064e3b; color: #6ee7b7; }
-            .badge-offline { background: #7f1d1d; color: #fca5a5; }
+            .badge-online { background: var(--badge-online-bg); color: var(--badge-online-fg); }
+            .badge-offline { background: var(--badge-offline-bg); color: var(--badge-offline-fg); }
             .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-            .language-select { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-            .key-row input { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
-            .key-row input:focus { outline: none; border-color: #14b8a6; box-shadow: 0 0 0 3px #14b8a680; }
-            .key-row button { background: #14b8a6; color: #0f172a; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-            .key-row button:hover { background: #0d9488; }
+            .language-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 10px; border-radius: 6px; font-size: 13px; }
+            .key-row input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
+            .key-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
+            .key-row button { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+            .key-row button:hover { background: var(--accent-hover); }
             .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-            .card { background: #1e293b; border-radius: 10px; border: 1px solid #334155; padding: 20px; }
-            .stat-value { font-size: 36px; font-weight: 800; color: #f8fafc; margin-bottom: 4px; }
-            .stat-label { font-size: 13px; color: #94a3b8; }
+            .card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 20px; }
+            .stat-value { font-size: 36px; font-weight: 800; color: var(--fg); margin-bottom: 4px; }
+            .stat-label { font-size: 13px; color: var(--muted); }
             table { width: 100%; border-collapse: collapse; font-size: 13px; }
-            th { text-align: left; color: #94a3b8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid #334155; }
-            td { padding: 10px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
+            th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid var(--card-border); }
+            td { padding: 10px 12px; border-bottom: 1px solid var(--td-border); color: var(--td-fg); vertical-align: middle; }
             tr:last-child td { border-bottom: none; }
-            tr:hover td { background: #1e293b44; }
-            .node-id { font-family: monospace; color: #38bdf8; font-size: 12px; }
+            tr:hover td { background: var(--row-hover-bg); }
+            .node-id { font-family: monospace; color: var(--node-id-fg); font-size: 12px; }
             .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
             .dot-green { background: #22c55e; }
             .dot-yellow { background: #eab308; }
             .dot-gray { background: #475569; }
-            .empty { color: #94a3b8; text-align: center; padding: 32px; font-size: 13px; }
-            .error-bar { background: #7f1d1d22; border: 1px solid #7f1d1d; border-radius: 6px; color: #fca5a5; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-            .refresh-info { font-size: 11px; color: #94a3b8; text-align: right; margin-top: 8px; }
-            .table-wrap { background: #1e293b; border-radius: 10px; border: 1px solid #334155; overflow-x: auto; overflow-y: hidden; }
+            .empty { color: var(--muted); text-align: center; padding: 32px; font-size: 13px; }
+            .error-bar { background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 6px; color: var(--error-fg); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+            .refresh-info { font-size: 11px; color: var(--muted); text-align: right; margin-top: 8px; }
+            .table-wrap { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); overflow-x: auto; overflow-y: hidden; }
             .stat-value-compact { font-size: 18px; padding-top: 8px; }
           </style>
         </head>
