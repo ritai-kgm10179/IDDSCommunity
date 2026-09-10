@@ -43,7 +43,7 @@ public sealed class ThreatHubClient : IDisposable
     /// <summary>
     /// 向指定的威脅情資中繼中心發送同步請求。
     /// </summary>
-    /// <param name="endpoint">Threat Hub 伺服器端點 URL（例如 https://hub.corp.local:8443）。</param>
+    /// <param name="endpoint">Threat Hub 伺服器端點 URL（例如 https://hub.corp.local:8443；亦接受 http:// ，但金鑰與情資將以明文傳輸，僅建議用於受信任的隔離網段）。</param>
     /// <param name="apiKey">叢集授權 API 金鑰。</param>
     /// <param name="payload">本次同步請求載體。</param>
     /// <param name="cancellationToken">取消權杖。</param>
@@ -58,7 +58,7 @@ public sealed class ThreatHubClient : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
         ArgumentNullException.ThrowIfNull(payload);
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri) || endpointUri.Scheme != "https") throw new ArgumentException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub must use HTTPS."), nameof(endpoint));
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? endpointUri) || (endpointUri.Scheme != "https" && endpointUri.Scheme != "http")) throw new ArgumentException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub endpoint must use HTTP or HTTPS."), nameof(endpoint));
         string targetUrl = endpoint.TrimEnd('/') + "/api/threat-hub/sync";
 
         using HttpRequestMessage request = new(HttpMethod.Post, targetUrl);

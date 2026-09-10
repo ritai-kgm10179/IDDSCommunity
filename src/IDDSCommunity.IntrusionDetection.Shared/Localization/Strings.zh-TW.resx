@@ -1075,7 +1075,7 @@
   <data name="AWS credential profile was not found for the service account." xml:space="preserve"><value>找不到服務帳戶的 AWS 認證設定檔。</value></data>
   <data name="Unsupported remediation action." xml:space="preserve"><value>不支援的處置。</value></data>
   <data name="Invalid target IP address." xml:space="preserve"><value>無效的 IP 位址。</value></data>
-  <data name="Threat Hub must use HTTPS." xml:space="preserve"><value>Threat Hub 必須使用 HTTPS。</value></data>
+  <data name="Threat Hub endpoint must use HTTP or HTTPS." xml:space="preserve"><value>Threat Hub 端點必須使用 HTTP 或 HTTPS。</value></data>
   <data name="HTTP content exceeds the size limit." xml:space="preserve"><value>HTTP 內容超過大小上限。</value></data>
   <data name="Connection to IMDS or link-local address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往 IMDS 雲端元數據或 Link-Local 位址 '{0}' 之連線。</value></data>
   <data name="Connection to restricted or Bogon IP address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往受限或 Bogon IP 位址 '{0}' 之連線。</value></data>
