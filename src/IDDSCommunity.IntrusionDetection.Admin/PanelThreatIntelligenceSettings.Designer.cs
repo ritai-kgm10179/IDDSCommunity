@@ -39,6 +39,8 @@ partial class PanelThreatIntelligenceSettings
         this.txtHubApiKey = new System.Windows.Forms.TextBox();
         this.lblPort = new System.Windows.Forms.Label();
         this.numHubPort = new System.Windows.Forms.NumericUpDown();
+        this.chkThreatHubReverseProxy = new System.Windows.Forms.CheckBox();
+        this.chkThreatHubLoopbackOnly = new System.Windows.Forms.CheckBox();
         this.lblSync = new System.Windows.Forms.Label();
         this.numSyncInterval = new System.Windows.Forms.NumericUpDown();
         this.lblSectionFeeds = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
@@ -108,52 +110,54 @@ partial class PanelThreatIntelligenceSettings
         this.tableLayoutMain.Controls.Add(this.txtHubApiKey, 0, 7);
         this.tableLayoutMain.Controls.Add(this.lblPort, 0, 8);
         this.tableLayoutMain.Controls.Add(this.numHubPort, 0, 9);
-        this.tableLayoutMain.Controls.Add(this.lblSync, 0, 10);
-        this.tableLayoutMain.Controls.Add(this.numSyncInterval, 0, 11);
-        this.tableLayoutMain.Controls.Add(this.lblSectionFeeds, 0, 12);
-        this.tableLayoutMain.Controls.Add(this.chkEnableFeeds, 0, 13);
-        this.tableLayoutMain.Controls.Add(this.lblFeedInterval, 0, 14);
-        this.tableLayoutMain.Controls.Add(this.numFeedInterval, 0, 15);
-        this.tableLayoutMain.Controls.Add(this.lblIpsumLevel, 0, 16);
-        this.tableLayoutMain.Controls.Add(this.numIpsumLevel, 0, 17);
-        this.tableLayoutMain.Controls.Add(this.lblFeedTtl, 0, 18);
-        this.tableLayoutMain.Controls.Add(this.numFeedTtlDays, 0, 19);
-        this.tableLayoutMain.Controls.Add(this.lblAbuseMin, 0, 20);
-        this.tableLayoutMain.Controls.Add(this.numAbuseMinConfidence, 0, 21);
-        this.tableLayoutMain.Controls.Add(this.lblAbuseKey, 0, 22);
-        this.tableLayoutMain.Controls.Add(this.txtAbuseApiKey, 0, 23);
-        this.tableLayoutMain.Controls.Add(this.lblCustomUrls, 0, 24);
-        this.tableLayoutMain.Controls.Add(this.txtCustomUrls, 0, 25);
-        this.tableLayoutMain.Controls.Add(this.lblSectionBogon, 0, 26);
-        this.tableLayoutMain.Controls.Add(this.chkEnableDynamicBogon, 0, 27);
-        this.tableLayoutMain.Controls.Add(this.lblProbationDays, 0, 28);
-        this.tableLayoutMain.Controls.Add(this.numProbationDays, 0, 29);
-        this.tableLayoutMain.Controls.Add(this.lblBogonV4, 0, 30);
-        this.tableLayoutMain.Controls.Add(this.txtBogonIpv4Url, 0, 31);
-        this.tableLayoutMain.Controls.Add(this.lblBogonV6, 0, 32);
-        this.tableLayoutMain.Controls.Add(this.txtBogonIpv6Url, 0, 33);
-        this.tableLayoutMain.Controls.Add(this.lblSectionGeo, 0, 34);
-        this.tableLayoutMain.Controls.Add(this.chkEnableGeoBlocking, 0, 35);
-        this.tableLayoutMain.Controls.Add(this.lblBlockedCountries, 0, 36);
-        this.tableLayoutMain.Controls.Add(this.txtBlockedCountries, 0, 37);
-        this.tableLayoutMain.Controls.Add(this.chkEnableGeoIpAutoUpdate, 0, 38);
-        this.tableLayoutMain.Controls.Add(this.lblGeoV4, 0, 39);
-        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv4Url, 0, 40);
-        this.tableLayoutMain.Controls.Add(this.lblGeoV6, 0, 41);
-        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv6Url, 0, 42);
-        this.tableLayoutMain.Controls.Add(this.lblGeoLocal, 0, 43);
-        this.tableLayoutMain.Controls.Add(this.flowGeoLocal, 0, 44);
-        this.tableLayoutMain.Controls.Add(this.lblGeoDays, 0, 45);
-        this.tableLayoutMain.Controls.Add(this.numGeoIpUpdateDays, 0, 46);
-        this.tableLayoutMain.Controls.Add(this.btnUpdateGeoIpNow, 0, 47);
-        this.tableLayoutMain.Controls.Add(this.lblGeoIpStatus, 0, 48);
-        this.tableLayoutMain.Controls.Add(this.btnSave, 0, 49);
+        this.tableLayoutMain.Controls.Add(this.chkThreatHubReverseProxy, 0, 10);
+        this.tableLayoutMain.Controls.Add(this.chkThreatHubLoopbackOnly, 0, 11);
+        this.tableLayoutMain.Controls.Add(this.lblSync, 0, 12);
+        this.tableLayoutMain.Controls.Add(this.numSyncInterval, 0, 13);
+        this.tableLayoutMain.Controls.Add(this.lblSectionFeeds, 0, 14);
+        this.tableLayoutMain.Controls.Add(this.chkEnableFeeds, 0, 15);
+        this.tableLayoutMain.Controls.Add(this.lblFeedInterval, 0, 16);
+        this.tableLayoutMain.Controls.Add(this.numFeedInterval, 0, 17);
+        this.tableLayoutMain.Controls.Add(this.lblIpsumLevel, 0, 18);
+        this.tableLayoutMain.Controls.Add(this.numIpsumLevel, 0, 19);
+        this.tableLayoutMain.Controls.Add(this.lblFeedTtl, 0, 20);
+        this.tableLayoutMain.Controls.Add(this.numFeedTtlDays, 0, 21);
+        this.tableLayoutMain.Controls.Add(this.lblAbuseMin, 0, 22);
+        this.tableLayoutMain.Controls.Add(this.numAbuseMinConfidence, 0, 23);
+        this.tableLayoutMain.Controls.Add(this.lblAbuseKey, 0, 24);
+        this.tableLayoutMain.Controls.Add(this.txtAbuseApiKey, 0, 25);
+        this.tableLayoutMain.Controls.Add(this.lblCustomUrls, 0, 26);
+        this.tableLayoutMain.Controls.Add(this.txtCustomUrls, 0, 27);
+        this.tableLayoutMain.Controls.Add(this.lblSectionBogon, 0, 28);
+        this.tableLayoutMain.Controls.Add(this.chkEnableDynamicBogon, 0, 29);
+        this.tableLayoutMain.Controls.Add(this.lblProbationDays, 0, 30);
+        this.tableLayoutMain.Controls.Add(this.numProbationDays, 0, 31);
+        this.tableLayoutMain.Controls.Add(this.lblBogonV4, 0, 32);
+        this.tableLayoutMain.Controls.Add(this.txtBogonIpv4Url, 0, 33);
+        this.tableLayoutMain.Controls.Add(this.lblBogonV6, 0, 34);
+        this.tableLayoutMain.Controls.Add(this.txtBogonIpv6Url, 0, 35);
+        this.tableLayoutMain.Controls.Add(this.lblSectionGeo, 0, 36);
+        this.tableLayoutMain.Controls.Add(this.chkEnableGeoBlocking, 0, 37);
+        this.tableLayoutMain.Controls.Add(this.lblBlockedCountries, 0, 38);
+        this.tableLayoutMain.Controls.Add(this.txtBlockedCountries, 0, 39);
+        this.tableLayoutMain.Controls.Add(this.chkEnableGeoIpAutoUpdate, 0, 40);
+        this.tableLayoutMain.Controls.Add(this.lblGeoV4, 0, 41);
+        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv4Url, 0, 42);
+        this.tableLayoutMain.Controls.Add(this.lblGeoV6, 0, 43);
+        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv6Url, 0, 44);
+        this.tableLayoutMain.Controls.Add(this.lblGeoLocal, 0, 45);
+        this.tableLayoutMain.Controls.Add(this.flowGeoLocal, 0, 46);
+        this.tableLayoutMain.Controls.Add(this.lblGeoDays, 0, 47);
+        this.tableLayoutMain.Controls.Add(this.numGeoIpUpdateDays, 0, 48);
+        this.tableLayoutMain.Controls.Add(this.btnUpdateGeoIpNow, 0, 49);
+        this.tableLayoutMain.Controls.Add(this.lblGeoIpStatus, 0, 50);
+        this.tableLayoutMain.Controls.Add(this.btnSave, 0, 51);
         this.tableLayoutMain.Dock = System.Windows.Forms.DockStyle.Top;
         this.tableLayoutMain.Location = new System.Drawing.Point(0, 0);
         this.tableLayoutMain.Name = "tableLayoutMain";
         this.tableLayoutMain.Padding = new System.Windows.Forms.Padding(15);
-        this.tableLayoutMain.RowCount = 50;
-        for (int i = 0; i < 50; i++)
+        this.tableLayoutMain.RowCount = 52;
+        for (int i = 0; i < 52; i++)
         {
             this.tableLayoutMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         }
@@ -262,6 +266,24 @@ partial class PanelThreatIntelligenceSettings
         this.numHubPort.Name = "numHubPort";
         this.numHubPort.Size = new System.Drawing.Size(180, 23);
         this.numHubPort.Value = new decimal(new int[] { 8443, 0, 0, 0 });
+        //
+        // chkThreatHubReverseProxy
+        //
+        this.chkThreatHubReverseProxy.AutoSize = true;
+        this.chkThreatHubReverseProxy.Font = new System.Drawing.Font("Segoe UI", 9F);
+        this.chkThreatHubReverseProxy.ForeColor = PanelThreatIntelligenceSettings.BodyTextColor;
+        this.chkThreatHubReverseProxy.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
+        this.chkThreatHubReverseProxy.Name = "chkThreatHubReverseProxy";
+        this.chkThreatHubReverseProxy.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Threat Hub TLS is terminated by a reverse proxy");
+        //
+        // chkThreatHubLoopbackOnly
+        //
+        this.chkThreatHubLoopbackOnly.AutoSize = true;
+        this.chkThreatHubLoopbackOnly.Font = new System.Drawing.Font("Segoe UI", 9F);
+        this.chkThreatHubLoopbackOnly.ForeColor = PanelThreatIntelligenceSettings.BodyTextColor;
+        this.chkThreatHubLoopbackOnly.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
+        this.chkThreatHubLoopbackOnly.Name = "chkThreatHubLoopbackOnly";
+        this.chkThreatHubLoopbackOnly.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Restrict reverse proxy upstream to this computer (127.0.0.1)");
         //
         // lblSync
         //
@@ -706,6 +728,8 @@ partial class PanelThreatIntelligenceSettings
     private System.Windows.Forms.TextBox txtHubApiKey;
     private System.Windows.Forms.Label lblPort;
     private System.Windows.Forms.NumericUpDown numHubPort;
+    private System.Windows.Forms.CheckBox chkThreatHubReverseProxy;
+    private System.Windows.Forms.CheckBox chkThreatHubLoopbackOnly;
     private System.Windows.Forms.Label lblSync;
     private System.Windows.Forms.NumericUpDown numSyncInterval;
     private SmartLabel lblSectionFeeds;
