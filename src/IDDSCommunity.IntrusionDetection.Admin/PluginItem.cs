@@ -124,7 +124,7 @@ public SecurityAgent SecurityAgent
         string localizedStatus = Strings.Get(enabled ? "enabled" : "disabled");
         AccessibleName = displayName;
         AccessibleDescription = Strings.Format(
-            "The security agent {0} is {1}. Double-click to configure this agent.",
+            "The security agent {0} is {1}. Click or press Enter to configure this agent.",
             displayName,
             localizedStatus);
         pictureBoxEnabledState.AccessibleName = $"{Strings.Get("Agent status")}: {localizedStatus}";
@@ -145,11 +145,34 @@ public SecurityAgent SecurityAgent
         SetSoftLocks(softLocks);
     }
     /// <summary>
-    /// 處理單擊、雙擊或鍵盤（Enter/Space）觸發之啟用事件。
+    /// 標記下一次 Click 事件是雙擊動作的第二次 Click（WinForms 對雙擊會依序引發
+    /// Click、DoubleClick、Click，若不攔截會讓 <see cref="SecurityAgentConfigurationRequest"/>
+    /// 被觸發三次），需略過以避免重複觸發。
+    /// </summary>
+    private bool suppressNextEnabledStateClick;
+
+    /// <summary>
+    /// 處理單擊或鍵盤（Enter/Space）觸發之啟用事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void pictureBoxEnabledState_Activate(object sender, EventArgs e) => SecurityAgentConfigurationRequest?.Invoke(SecurityAgent, EventArgs.Empty);
+    private void pictureBoxEnabledState_Click(object sender, EventArgs e)
+    {
+        if (suppressNextEnabledStateClick)
+        {
+            suppressNextEnabledStateClick = false;
+            return;
+        }
+        SecurityAgentConfigurationRequest?.Invoke(SecurityAgent, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// 處理雙擊事件：第一次 Click 已經觸發過設定事件，這裡只需要標記略過雙擊隨後的第二次 Click，
+    /// 不重複觸發 <see cref="SecurityAgentConfigurationRequest"/>。
+    /// </summary>
+    /// <param name="sender">事件來源物件。</param>
+    /// <param name="e">事件資料。</param>
+    private void pictureBoxEnabledState_DoubleClick(object sender, EventArgs e) => suppressNextEnabledStateClick = true;
 
 
 

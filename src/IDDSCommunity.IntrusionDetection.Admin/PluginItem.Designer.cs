@@ -145,8 +145,8 @@
             this.pictureBoxEnabledState.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxEnabledState.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBoxEnabledState.TabIndex = 0;
-            this.pictureBoxEnabledState.Click += new System.EventHandler(this.pictureBoxEnabledState_Activate);
-            this.pictureBoxEnabledState.DoubleClick += new System.EventHandler(this.pictureBoxEnabledState_Activate);
+            this.pictureBoxEnabledState.Click += new System.EventHandler(this.pictureBoxEnabledState_Click);
+            this.pictureBoxEnabledState.DoubleClick += new System.EventHandler(this.pictureBoxEnabledState_DoubleClick);
             //
             // pictureBoxAgentIcon
             //

@@ -111,22 +111,6 @@ public partial class IddsAdmin : Form
         }
     }
     /// <summary>
-    /// 當視窗被拖曳到不同 DPI 的螢幕時，依新舊 DPI 比例重新校正 <see cref="Control.MinimumSize"/>，
-    /// 因為 WinForms 目前不會自動縮放以絕對像素設定的 MinimumSize。
-    /// </summary>
-    /// <param name="e">DPI 變更事件資料。</param>
-    protected override void OnDpiChanged(DpiChangedEventArgs e)
-    {
-        base.OnDpiChanged(e);
-        if (e.DeviceDpiOld <= 0 || e.DeviceDpiOld == e.DeviceDpiNew)
-            return;
-
-        MinimumSize = new Size(
-            MinimumSize.Width * e.DeviceDpiNew / e.DeviceDpiOld,
-            MinimumSize.Height * e.DeviceDpiNew / e.DeviceDpiOld);
-    }
-
-    /// <summary>
     /// Cancels pending background snapshots before WinForms destroys control handles.
     /// </summary>
     /// <param name="e">The form-close event data.</param>

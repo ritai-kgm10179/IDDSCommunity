@@ -143,6 +143,30 @@
   <data name="Close" xml:space="preserve">
     <value>關閉</value>
   </data>
+  <data name="Delete" xml:space="preserve">
+    <value>刪除</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>編輯</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>說明</value>
+  </data>
+  <data name="Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>儲存</value>
+  </data>
+  <data name="Start service" xml:space="preserve">
+    <value>啟動服務</value>
+  </data>
+  <data name="Stop service" xml:space="preserve">
+    <value>停止服務</value>
+  </data>
   <data name="Configure safe networks (white list)" xml:space="preserve">
     <value>設定安全網路（允許清單）</value>
   </data>
@@ -646,7 +670,7 @@
   <data name="Agent status" xml:space="preserve"><value>代理程式狀態</value></data>
   <data name="enabled" xml:space="preserve"><value>已啟用</value></data>
   <data name="disabled" xml:space="preserve"><value>已停用</value></data>
-  <data name="The security agent {0} is {1}. Double-click to configure this agent." xml:space="preserve"><value>安全性代理程式 {0} 目前為{1}。按兩下即可設定此代理程式。</value></data>
+  <data name="The security agent {0} is {1}. Click or press Enter to configure this agent." xml:space="preserve"><value>安全性代理程式 {0} 目前為{1}。點按或按 Enter 鍵即可設定此代理程式。</value></data>
   <data name="FtpPort" xml:space="preserve"><value>FTP 連接埠</value></data>
   <data name="Pop3Port" xml:space="preserve"><value>POP3 連接埠</value></data>
   <data name="SmtpPort" xml:space="preserve"><value>SMTP 連接埠</value></data>
