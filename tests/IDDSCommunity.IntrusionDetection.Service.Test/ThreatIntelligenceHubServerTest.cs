@@ -73,6 +73,56 @@ public sealed class ThreatIntelligenceHubServerTest
     }
 
     /// <summary>
+    /// 驗證 ResolveThreatCategoryDisplayName 能正確將 Agent 識別碼、外部情報訂閱與 WAF 攻擊分類解析為中英文友善名稱。
+    /// </summary>
+    [TestMethod]
+    public void ThreatCategoryDisplayName_ResolvesAgentsFeedsAndWafCategories()
+    {
+        // 1. Agent 識別碼 (例如 SmtpAgent 與 RdpAgent)
+        Assert.AreEqual("郵件伺服器 SMTP 安全性代理程式", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("IDDSCommunity.Agents.MailServer.SmtpAgent", "zh-Hant-TW"));
+        Assert.AreEqual("Mail Server SMTP Security Agent", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("IDDSCommunity.Agents.MailServer.SmtpAgent", "en-US"));
+        Assert.AreEqual("遠端桌面安全性代理程式", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("TlsSslAgent", "zh-Hant-TW"));
+        Assert.AreEqual("Remote Desktop Security Agent", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("TlsSslAgent", "en-US"));
+
+        // 2. 外部情報訂閱與攻擊分類
+        Assert.AreEqual("外部情報訂閱", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("EXTERNAL_FEED", "zh-Hant-TW"));
+        Assert.AreEqual("External Feed", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("EXTERNAL_FEED", "en-US"));
+        Assert.AreEqual("暴力密碼嘗試", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("BRUTE_FORCE", "zh-Hant-TW"));
+        Assert.AreEqual("Brute Force", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("BRUTE_FORCE", "en-US"));
+        Assert.AreEqual("跨代理程式密碼噴灑", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("CROSS_AGENT_SPRAY", "zh-Hant-TW"));
+        Assert.AreEqual("Cross-Agent Password Spray", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("CROSS_AGENT_SPRAY", "en-US"));
+
+        // 3. WAF 規則分類
+        Assert.AreEqual("SQL 資料隱碼攻擊 (SQLi)", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("SQL.Injection", "zh-Hant-TW"));
+        Assert.AreEqual("SQL Injection (SQLi)", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("SQL.Injection", "en-US"));
+        Assert.AreEqual("跨網站指令碼攻擊 (XSS)", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("Cross.Site.Scripting", "zh-Hant-TW"));
+        Assert.AreEqual("Cross-Site Scripting (XSS)", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("Cross.Site.Scripting", "en-US"));
+
+        // 4. 未知類別與空值回退
+        Assert.AreEqual("UNKNOWN_CUSTOM_FEED", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName("UNKNOWN_CUSTOM_FEED", "zh-Hant-TW"));
+        Assert.AreEqual("—", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName(null, "zh-Hant-TW"));
+        Assert.AreEqual("—", ThreatIntelligenceHubServer.ResolveThreatCategoryDisplayName(string.Empty, "en-US"));
+    }
+
+    /// <summary>
+    /// 驗證儀表板 HTML 包含合乎 CSP nonce 規範之剪貼簿樣式類別與萬用複製相容邏輯。
+    /// </summary>
+    [TestMethod]
+    public void DashboardHtml_ContainsCspSafeClipboardHelperAndUniversalFallback()
+    {
+        const string nonce = "test-csp-nonce";
+        string html = ThreatIntelligenceHubServer.BuildDashboardHtml("zh-Hant-TW", nonce);
+
+        // 樣式類別應宣告於受 nonce 保護之 style 區塊中，避免 inline style 違反 CSP
+        StringAssert.Contains(html, ".clipboard-helper");
+        // 腳本區塊應包含非安全上下文降級複製與提示
+        StringAssert.Contains(html, "copyToClipboard");
+        StringAssert.Contains(html, "fallbackCopy");
+        StringAssert.Contains(html, "isSecureContext");
+        StringAssert.Contains(html, "請按下 Ctrl+C 複製 IP 位址：");
+    }
+
+    /// <summary>
     /// 驗證 /dashboard 端點回應之 CSP 標頭改用逐次隨機的 nonce（而非 'unsafe-inline'），
     /// 且標頭中的 nonce 與 HTML 內嵌 style/script 標籤上的 nonce 完全一致。
     /// </summary>

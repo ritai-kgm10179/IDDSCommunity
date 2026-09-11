@@ -380,6 +380,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     return;
                 }
 
+                string clientLanguage = ResolveDashboardLanguage(req.QueryString["lang"], req.Headers["Accept-Language"]);
                 IReadOnlyList<EdgeNodeState> nodes = RegisteredNodes;
                 int activeThreatCount = store.ActiveThreatCount;
                 (int localBlocks, int localProbation) = GetLocalDefenseMetrics();
@@ -428,17 +429,23 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         syncedGeneration = n.SyncedGeneration,
                         isSynced = !string.IsNullOrEmpty(n.SyncedGeneration) && string.Equals(n.SyncedGeneration, store.Generation, StringComparison.OrdinalIgnoreCase)
                     }).ToList(),
-                    recentThreats = recentThreats.Select(t => new
+                    recentThreats = recentThreats.Select(t =>
                     {
-                        sourceIp = t.SourceIp,
-                        threatCategory = t.ThreatCategory,
-                        category = t.ThreatCategory,
-                        confidenceScore = t.ConfidenceScore,
-                        confidence = t.ConfidenceScore,
-                        reporterNodeName = t.ReporterNodeName,
-                        reporterNodeId = t.ReporterNodeId,
-                        reporter = !string.IsNullOrWhiteSpace(t.ReporterNodeName) ? t.ReporterNodeName : (!string.IsNullOrWhiteSpace(t.ReporterNodeId) ? t.ReporterNodeId : "External Feed"),
-                        reportedUtc = t.ReportedUtc
+                        string categoryDisplay = ResolveThreatCategoryDisplayName(t.ThreatCategory, clientLanguage);
+                        return new
+                        {
+                            sourceIp = t.SourceIp,
+                            threatCategory = t.ThreatCategory,
+                            category = t.ThreatCategory,
+                            categoryDisplayName = categoryDisplay,
+                            threatCategoryDisplayName = categoryDisplay,
+                            confidenceScore = t.ConfidenceScore,
+                            confidence = t.ConfidenceScore,
+                            reporterNodeName = t.ReporterNodeName,
+                            reporterNodeId = t.ReporterNodeId,
+                            reporter = !string.IsNullOrWhiteSpace(t.ReporterNodeName) ? t.ReporterNodeName : (!string.IsNullOrWhiteSpace(t.ReporterNodeId) ? t.ReporterNodeId : "External Feed"),
+                            reportedUtc = t.ReportedUtc
+                        };
                     }).ToList()
                 }).ConfigureAwait(false);
                 return;
@@ -484,6 +491,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     return;
                 }
 
+                string lookupLanguage = ResolveDashboardLanguage(req.QueryString["lang"], req.Headers["Accept-Language"]);
                 string canonicalIp = IpAddressCanonicalizer.Canonicalize(parsedIp).ToString();
                 bool isBogon = BogonIpFilter.IsBogonOrReserved(parsedIp);
                 bool isSafeNetwork = config.UseSafeNetworkList && config.IsInSafeNetwork(canonicalIp);
@@ -503,6 +511,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 else
                 {
                     string reporter = !string.IsNullOrWhiteSpace(threatItem.ReporterNodeName) ? threatItem.ReporterNodeName : (!string.IsNullOrWhiteSpace(threatItem.ReporterNodeId) ? threatItem.ReporterNodeId : "External Feed");
+                    string categoryDisplay = ResolveThreatCategoryDisplayName(threatItem.ThreatCategory, lookupLanguage);
                     await WriteJsonResponseAsync(resp, new
                     {
                         found = true,
@@ -512,6 +521,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         isThreat = true,
                         threatCategory = threatItem.ThreatCategory,
                         category = threatItem.ThreatCategory,
+                        categoryDisplayName = categoryDisplay,
+                        threatCategoryDisplayName = categoryDisplay,
                         confidenceScore = threatItem.ConfidenceScore,
                         confidence = threatItem.ConfidenceScore,
                         reporterNodeName = threatItem.ReporterNodeName,
@@ -524,6 +535,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         {
                             threatCategory = threatItem.ThreatCategory,
                             category = threatItem.ThreatCategory,
+                            categoryDisplayName = categoryDisplay,
+                            threatCategoryDisplayName = categoryDisplay,
                             confidenceScore = threatItem.ConfidenceScore,
                             confidence = threatItem.ConfidenceScore,
                             reporter = reporter,
@@ -648,6 +661,110 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         }
     }
 
+    private static readonly Dictionary<Guid, string> WellKnownAgentEnglishNames = new()
+    {
+        [WellKnownAgentIds.WindowsBase] = "Windows Base Security Agent",
+        [WellKnownAgentIds.WindowsNetworkLogon] = "Windows Network Logon Security Agent",
+        [WellKnownAgentIds.TerminalServer] = "Remote Desktop Security Agent",
+        [WellKnownAgentIds.RemoteDesktopGateway] = "Remote Desktop Gateway Security Agent",
+        [WellKnownAgentIds.WinRm] = "Windows Remote Management (WinRM/WAC) Security Agent",
+        [WellKnownAgentIds.OpenSsh] = "Windows OpenSSH Security Agent",
+        [WellKnownAgentIds.AdCredentialValidation] = "AD Credential Validation Security Agent",
+        [WellKnownAgentIds.Kerberos] = "Kerberos Pre-authentication Security Agent",
+        [WellKnownAgentIds.Rras] = "RRAS Security Agent",
+        [WellKnownAgentIds.Radius] = "NPS RADIUS Security Agent",
+        [WellKnownAgentIds.WebSecurity] = "Web Security Agent",
+        [WellKnownAgentIds.IisAuthentication] = "IIS Authentication Security Agent",
+        [WellKnownAgentIds.WindowsDns] = "Windows DNS Security Agent",
+        [WellKnownAgentIds.TechnitiumDns] = "Technitium DNS Security Agent",
+        [WellKnownAgentIds.SqlServer] = "SQL Server Security Agent",
+        [WellKnownAgentIds.MySql] = "MySQL and MariaDB Security Agent",
+        [WellKnownAgentIds.PostgreSql] = "PostgreSQL Security Agent",
+        [WellKnownAgentIds.FileMaker] = "FileMaker Security Agent",
+        [WellKnownAgentIds.Smtp] = "Mail Server SMTP Security Agent",
+        [WellKnownAgentIds.Pop3] = "POP3 Security Agent",
+        [WellKnownAgentIds.Imap] = "IMAP Security Agent",
+        [WellKnownAgentIds.Ftp] = "FTP Security Agent",
+        [WellKnownAgentIds.FileZilla] = "FileZilla Security Agent",
+        [WellKnownAgentIds.ClusterThreatHub] = "Cluster Threat Hub",
+        [WellKnownAgentIds.ExternalThreatFeed] = "External Threat Feeds",
+        [WellKnownAgentIds.Honeypot] = "Honeypot Decoy Security Agent",
+        [WellKnownAgentIds.System] = "System Core"
+    };
+
+    /// <summary>
+    /// 將機器識別之威脅分類或安全性代理程式名稱解析為符合指定語言的易讀顯示名稱。
+    /// </summary>
+    /// <param name="category">原始威脅分類或安全性代理程式識別碼。</param>
+    /// <param name="language">目標語言標籤（例如 zh-Hant-TW 或 en-US）。</param>
+    /// <returns>符合指定語言的友善威脅分類顯示名稱；若無對照則傳回原始數值。</returns>
+    internal static string ResolveThreatCategoryDisplayName(string? category, string? language = "zh-Hant-TW")
+    {
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            return "—";
+        }
+
+        string trimmed = category.Trim();
+        bool isZh = language?.StartsWith("zh", StringComparison.OrdinalIgnoreCase) == true;
+
+        // 1. 常見情報來源與攻擊類型
+        string normalizedKey = trimmed.Replace("-", "_").Replace(" ", "_").ToUpperInvariant();
+        switch (normalizedKey)
+        {
+            case "EXTERNAL_FEED":
+            case "EXTERNALFEED":
+                return isZh ? "外部情報訂閱" : "External Feed";
+            case "BRUTE_FORCE":
+            case "BRUTEFORCE":
+                return isZh ? "暴力密碼嘗試" : "Brute Force";
+            case "CROSS_AGENT_SPRAY":
+            case "CROSSAGENTSPRAY":
+                return isZh ? "跨代理程式密碼噴灑" : "Cross-Agent Password Spray";
+            case "RDP_BRUTE_FORCE":
+            case "RDPBRUTEFORCE":
+                return isZh ? "遠端桌面暴力破解" : "RDP Brute Force";
+            case "SSH_SPRAY":
+            case "SSHSPRAY":
+                return isZh ? "SSH 密碼噴灑探測" : "SSH Password Spray";
+        }
+
+        // 2. WAF 與應用層防護規則
+        if (trimmed.Equals("SQL.Injection", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("SQL_INJECTION", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "SQL 資料隱碼攻擊 (SQLi)" : "SQL Injection (SQLi)";
+        if (trimmed.Equals("Cross.Site.Scripting", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("CROSS_SITE_SCRIPTING", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("XSS", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "跨網站指令碼攻擊 (XSS)" : "Cross-Site Scripting (XSS)";
+        if (trimmed.Equals("Path.Traversal", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("PATH_TRAVERSAL", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "目錄路徑遍歷攻擊" : "Path Traversal";
+        if (trimmed.Equals("RCE.Log4Shell.Or.Spring4Shell", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("RCE_LOG4SHELL_OR_SPRING4SHELL", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "遠端程式碼執行 (Log4Shell/Spring)" : "Remote Code Execution (Log4Shell/Spring)";
+        if (trimmed.Equals("Sensitive.File.Probe", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("SENSITIVE_FILE_PROBE", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "敏感檔案與組態探測" : "Sensitive File Probe";
+        if (trimmed.Equals("Inspection.InputLimit", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("INSPECTION_INPUT_LIMIT", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "請求酬載過長防禦" : "Payload Limit Exceeded";
+        if (trimmed.Equals("Inspection.Timeout", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("INSPECTION_TIMEOUT", StringComparison.OrdinalIgnoreCase))
+            return isZh ? "深度檢查超時" : "Inspection Timeout";
+
+        // 3. 內建 Security Agent 識別碼（GUID 或類別名稱，如 IDDSCommunity.Agents.MailServer.SmtpAgent）
+        if (WellKnownAgentIds.TryResolveCanonicalGuid(trimmed, out Guid canonicalGuid))
+        {
+            if (isZh)
+            {
+                if (WellKnownAgentIds.TryGetDisplayName(canonicalGuid, out string? zhName))
+                    return zhName;
+            }
+            else
+            {
+                if (WellKnownAgentEnglishNames.TryGetValue(canonicalGuid, out string? enName))
+                    return enName;
+                if (WellKnownAgentIds.TryGetDisplayName(canonicalGuid, out string? fallbackName))
+                    return fallbackName;
+            }
+        }
+
+        return trimmed;
+    }
+
     /// <summary>
     /// 依查詢參數與 Accept-Language 標頭選擇儀表板支援的語言。
     /// </summary>
@@ -766,7 +883,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("BOGON_PREFIXES", "個 Bogon 前綴"),
             ("LOOKUP_SAFE", "該 IP 屬於全域安全網路白名單（合法放行）"),
             ("LOOKUP_BOGON", "該 IP 屬於保留／私有特殊網段（Bogon，非公網威脅）"),
-            ("LOOKUP_COPY_IP", "複製 IP"), ("LOOKUP_COPIED", "已複製！")
+            ("LOOKUP_COPY_IP", "複製 IP"), ("LOOKUP_COPIED", "已複製！"),
+            ("LOOKUP_COPY_PROMPT", "請按下 Ctrl+C 複製 IP 位址：")
         ]);
 
         internal static DashboardText English { get; } = new("en-US",
@@ -811,7 +929,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("BOGON_PREFIXES", "Bogon prefixes"),
             ("LOOKUP_SAFE", "This IP is in the global Safe Networks whitelist (allowlisted)."),
             ("LOOKUP_BOGON", "This IP is in a Bogon or reserved range (not a public threat)."),
-            ("LOOKUP_COPY_IP", "Copy IP"), ("LOOKUP_COPIED", "Copied!")
+            ("LOOKUP_COPY_IP", "Copy IP"), ("LOOKUP_COPIED", "Copied!"),
+            ("LOOKUP_COPY_PROMPT", "Press Ctrl+C to copy IP address:")
         ]);
     }
 
@@ -931,6 +1050,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .refresh-info { font-size: 11px; color: var(--muted); text-align: right; margin-top: -12px; margin-bottom: 20px; }
             .table-wrap { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); overflow-x: auto; overflow-y: hidden; margin-bottom: 28px; }
             .hidden { display: none !important; }
+            .clipboard-helper { position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
           </style>
         </head>
         <body>
@@ -1082,15 +1202,63 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             document.getElementById('lookup-copy-btn').addEventListener('click', function() {
               if (!lastLookupIp) return;
               var copyBtn = document.getElementById('lookup-copy-btn');
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(lastLookupIp).then(function() {
-                  copyBtn.textContent = '{{LOOKUP_COPIED}}';
-                  setTimeout(function() { copyBtn.textContent = '{{LOOKUP_COPY_IP}}'; }, 1500);
-                }).catch(function() {
-                  copyBtn.textContent = lastLookupIp;
-                });
-              }
+              copyToClipboard(lastLookupIp, copyBtn);
             });
+
+            function showCopied(btn) {
+              if (!btn) return;
+              btn.textContent = '{{LOOKUP_COPIED}}';
+              setTimeout(function() {
+                if (btn) btn.textContent = '{{LOOKUP_COPY_IP}}';
+              }, 1500);
+            }
+
+            function copyToClipboard(text, btn) {
+              if (!text) return;
+              if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                  showCopied(btn);
+                }).catch(function() {
+                  fallbackCopy(text, btn);
+                });
+              } else {
+                fallbackCopy(text, btn);
+              }
+            }
+
+            function fallbackCopy(text, btn) {
+              try {
+                var ta = document.createElement('textarea');
+                ta.className = 'clipboard-helper';
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, text.length);
+                var ok = false;
+                try {
+                  ok = document.execCommand('copy');
+                } catch (e) {
+                  ok = false;
+                }
+                document.body.removeChild(ta);
+                if (ok) {
+                  showCopied(btn);
+                } else {
+                  promptCopy(text, btn);
+                }
+              } catch (e) {
+                promptCopy(text, btn);
+              }
+            }
+
+            function promptCopy(text, btn) {
+              try {
+                window.prompt('{{LOOKUP_COPY_PROMPT}}', text);
+                showCopied(btn);
+              } catch (e) {}
+            }
 
             document.getElementById('theme-select').value = sessionStorage.getItem('idds_hub_theme') || 'auto';
             document.getElementById('theme-select').addEventListener('change', function(event) {
@@ -1208,7 +1376,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               resText.textContent = '...';
               copyBtn.classList.add('hidden');
 
-              fetch('/api/threat-hub/lookup?ip=' + encodeURIComponent(ipInput), {
+              fetch('/api/threat-hub/lookup?ip=' + encodeURIComponent(ipInput) + '&lang=' + encodeURIComponent(currentLanguage), {
                 method: 'GET',
                 headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
               })
@@ -1227,13 +1395,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                   copyBtn.classList.remove('hidden');
                 } else if (d.found) {
                   resDiv.className = 'lookup-result result-found';
-                  var cat = (d.item && d.item.threatCategory) || d.threatCategory || d.category || '';
+                  var cat = (d.item && (d.item.categoryDisplayName || d.item.threatCategoryDisplayName || d.item.threatCategory)) || d.categoryDisplayName || d.threatCategoryDisplayName || d.threatCategory || d.category || '';
                   var rep = (d.item && d.item.reporter) || d.reporter || '';
                   var details = [];
                   if (cat) { details.push(cat); }
                   if (rep) { details.push(rep); }
                   var detailStr = details.length > 0 ? (' · ' + details.join(' / ')) : '';
                   resText.textContent = '⚠️ {{LOOKUP_FOUND}}' + detailStr;
+                  if (d.threatCategory && cat !== d.threatCategory) {
+                    resText.title = d.threatCategory;
+                  }
                   copyBtn.classList.remove('hidden');
                 } else {
                   resDiv.className = 'lookup-result result-clean';
@@ -1305,7 +1476,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
             function fetchData() {
               if (!currentKey) { return; }
-              fetch('/api/threat-hub/nodes', {
+              fetch('/api/threat-hub/nodes?lang=' + encodeURIComponent(currentLanguage), {
                 method: 'GET',
                 headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
               })
@@ -1442,7 +1613,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     tdIp.textContent = t.sourceIp || '';
 
                     var tdCat = document.createElement('td');
-                    tdCat.textContent = t.threatCategory || t.category || '—';
+                    var displayCat = t.categoryDisplayName || t.threatCategoryDisplayName || t.threatCategory || t.category || '—';
+                    tdCat.textContent = displayCat;
+                    if (t.threatCategory && t.threatCategory !== displayCat) {
+                      tdCat.title = t.threatCategory;
+                    }
 
                     var tdConf = document.createElement('td');
                     var conf = t.confidenceScore ?? t.confidence;
