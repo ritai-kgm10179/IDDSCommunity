@@ -24,7 +24,7 @@ public static class Iso27001ComplianceReportGenerator
         sb.AppendLine("<html lang=\"zh-TW\">");
         sb.AppendLine("<head>");
         sb.AppendLine("  <meta charset=\"utf-8\">");
-        sb.AppendLine("  <title>ISO/IEC 27001:2022 資安合規稽核報告 - IDDS Community</title>");
+        sb.AppendLine("  <title>ISO/IEC 27001:2022 資安合規稽核報告 - IDDS 社群版</title>");
         sb.AppendLine("  <style>");
         sb.AppendLine("    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; color: #333; background-color: #f8fafc; }");
         sb.AppendLine("    .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 24px; border-radius: 8px; margin-bottom: 24px; }");
@@ -47,7 +47,7 @@ public static class Iso27001ComplianceReportGenerator
         // Header
         sb.AppendLine("  <div class=\"header\">");
         sb.AppendLine("    <h1>ISO/IEC 27001:2022 控制措施符合性稽核報告</h1>");
-        sb.AppendLine($"    <p>產製時間：{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC ｜ 系統名稱：IDDS Community Intrusion Detection System</p>");
+        sb.AppendLine($"    <p>產製時間：{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC ｜ 系統名稱：IDDS 社群版入侵防禦系統</p>");
         sb.AppendLine("  </div>");
 
         // Stat cards
@@ -61,7 +61,7 @@ public static class Iso27001ComplianceReportGenerator
         // Controls Table
         sb.AppendLine("  <div class=\"section-title\">Annex A 資訊安全控制措施符合性矩陣</div>");
         sb.AppendLine("  <table>");
-        sb.AppendLine("    <thead><tr><th>控制條款</th><th>控制名稱 (ISO 27001:2022)</th><th>IDDS Community 實作機制</th><th>合規狀態</th></tr></thead>");
+        sb.AppendLine("    <thead><tr><th>控制條款</th><th>控制名稱 (ISO 27001:2022)</th><th>IDDS 社群版實作機制</th><th>合規狀態</th></tr></thead>");
         sb.AppendLine("    <tbody>");
 
         sb.AppendLine("      <tr><td><strong>A.5.7</strong></td><td>威脅情報 (Threat Intelligence)</td><td>開源與社群情報訂閱、雙層 Bogon 硬過濾、跨主機叢集聯防、STIX 2.1 格式交換</td><td><span class=\"badge-pass\">符合 (Compliant)</span></td></tr>");

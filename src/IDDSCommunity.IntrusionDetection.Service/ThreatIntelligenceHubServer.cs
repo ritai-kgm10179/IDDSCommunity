@@ -587,14 +587,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     {
         internal static DashboardText TraditionalChinese { get; } = new("zh-Hant-TW",
         [
-            ("TITLE", "IDDS Community - Threat Hub 儀表板"), ("OFFLINE", "離線"),
+            ("BRAND_NAME", "IDDS 社群版"),
+            ("TITLE", "IDDS 社群版 - 威脅情資中繼中心儀表板"), ("OFFLINE", "離線"),
             ("ONLINE", "線上"), ("DELAYED", "延遲"),
             ("API_KEY_PLACEHOLDER", "輸入 API Key..."), ("APPLY", "套用"),
             ("AUTHENTICATED", "已認證"), ("LOGOUT", "登出"),
             ("CONNECTED_NODES", "連線節點數"), ("ACTIVE_THREATS", "全網活動威脅情資"),
             ("HUB_DEFENSE", "Hub 本機防護"), ("HUB_UPTIME", "Hub 運行時間"),
             ("LAST_UPDATED", "最後更新時間"),
-            ("HUB_OVERVIEW", "Threat Hub 系統運作概況"),
+            ("HUB_OVERVIEW", "威脅情資中繼中心系統運作概況"),
             ("HUB_HOST", "主機名稱"), ("HUB_VERSION", "軟體版本"),
             ("HUB_ENDPOINT", "監聽端點"), ("HUB_GENERATION", "情資世代"),
             ("HUB_TTL", "情資保留天數"),
@@ -608,7 +609,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("REFRESH_PREFIX", "自動每 30 秒更新 · 最後更新："),
             ("NO_NODES", "目前沒有已連線的邊緣節點"),
             ("UNNAMED", "（未命名）"), ("UNKNOWN_ERROR", "未知錯誤"),
-            ("CONNECTION_ERROR", "無法連線至 Threat Hub："),
+            ("CONNECTION_ERROR", "無法連線至威脅情資中繼中心："),
             ("THEME_LABEL", "佈景主題"), ("THEME_AUTO", "自動"),
             ("THEME_LIGHT", "淺色"), ("THEME_DARK", "深色"),
             ("DAYS", "天"), ("HOURS", "小時"),
@@ -618,6 +619,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
         internal static DashboardText English { get; } = new("en-US",
         [
+            ("BRAND_NAME", "IDDS Community"),
             ("TITLE", "IDDS Community - Threat Hub Dashboard"), ("OFFLINE", "Offline"),
             ("ONLINE", "Online"), ("DELAYED", "Delayed"),
             ("API_KEY_PLACEHOLDER", "Enter API Key..."), ("APPLY", "Apply"),
@@ -763,7 +765,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           </script>
           <div class="top-bar">
             <div class="top-bar-left">
-              <h1><span aria-hidden="true">&#x1F6E1;&#xFE0F;</span> IDDS Community</h1>
+              <h1><span aria-hidden="true">&#x1F6E1;&#xFE0F;</span> {{BRAND_NAME}}</h1>
               <span id="hub-status" class="badge badge-offline" role="status">{{OFFLINE}}</span>
             </div>
             <div class="key-row">

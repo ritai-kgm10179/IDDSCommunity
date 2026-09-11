@@ -14,7 +14,7 @@ using IDDSCommunity.IntrusionDetection.Shared.SelfService;
 namespace IDDSCommunity.IntrusionDetection.Service.SelfService;
 
 /// <summary>
-/// 提供合法使用者自助驗證解鎖門戶之嵌入式 HTTP 服務伺服器。
+/// 提供合法使用者自助驗證解鎖入口網站之嵌入式 HTTP 服務伺服器。
 /// </summary>
 public sealed class SelfServiceUnblockServer : IDisposable
 {
@@ -37,7 +37,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
     /// <summary>
     /// 初始化 <see cref="SelfServiceUnblockServer"/> 類別的新執行個體。
     /// </summary>
-    /// <param name="settings">門戶設定。</param>
+    /// <param name="settings">入口網站設定。</param>
     /// <param name="database">資料庫執行個體。</param>
     public SelfServiceUnblockServer(SelfServicePortalSettings settings, Database database)
     {
@@ -46,7 +46,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
     }
 
     /// <summary>
-    /// 啟動自助解鎖門戶 HTTP 伺服器。
+    /// 啟動自助解鎖入口網站 HTTP 伺服器。
     /// </summary>
     public void Start()
     {
@@ -88,7 +88,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
     }
 
     /// <summary>
-    /// 停止自助解鎖門戶 HTTP 伺服器。
+    /// 停止自助解鎖入口網站 HTTP 伺服器。
     /// </summary>
     public void Stop()
     {
@@ -203,7 +203,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         }
         else if (lockStatus == Shared.Lock.LOCK_STATUS_HARDLOCK || lockStatus == Shared.Lock.LOCK_STATUS_HARDLOCK_REQUESTED)
         {
-            statusMessage = "⛔ 您的來源 IP 處於「永久硬封鎖」狀態，無法透過自助門戶解鎖，請聯繫系統管理員。";
+            statusMessage = "⛔ 您的來源 IP 處於「永久硬封鎖」狀態，無法透過自助解鎖服務解鎖，請聯繫系統管理員。";
             statusColor = "#ef4444"; // red
             canUnblock = false;
         }
@@ -223,7 +223,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>IDDS Community - 自助驗證解鎖門戶</title>
+          <title>IDDS 社群版 - 自助驗證解鎖入口網站</title>
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -249,8 +249,8 @@ public sealed class SelfServiceUnblockServer : IDisposable
         <body>
           <div class="card">
             <div class="header">
-              <h1>🛡️ IDDS Community</h1>
-              <p>伺服器安全防禦系統 - 合法使用者自助解鎖門戶</p>
+              <h1>🛡️ IDDS 社群版</h1>
+              <p>伺服器安全防禦系統 - 合法使用者自助解鎖入口網站</p>
             </div>
 
             <div style="text-align: center;">
@@ -264,7 +264,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
             {{unblockFormHtml}}
 
             <div class="footer">
-              IDDS Community &copy; 2026 Enterprise Perimeter Defense. All rights reserved.
+              IDDS 社群版 &copy; 2026 Enterprise Perimeter Defense. All rights reserved.
             </div>
           </div>
         </body>

@@ -403,7 +403,7 @@ public sealed class ManagementApiHttpServer : IDisposable
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>IDDS Community - ChatOps 安全操作確認</title>
+          <title>IDDS 社群版 - ChatOps 安全操作確認</title>
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
             body { background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -418,7 +418,7 @@ public sealed class ManagementApiHttpServer : IDisposable
         </head>
         <body>
           <div class="card">
-            <h1>🛡️ IDDS Community 操作確認</h1>
+            <h1>🛡️ IDDS 社群版 操作確認</h1>
             <p>您即將透過 SecOps / ChatOps 快速通道對來源位址實施【<strong>{{actionText}}</strong>】處置：</p>
             <div class="ip-badge">{{encodedIp}}</div>
             <div class="warning-box">

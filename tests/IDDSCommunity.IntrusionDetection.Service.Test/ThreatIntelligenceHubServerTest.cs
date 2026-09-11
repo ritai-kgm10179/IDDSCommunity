@@ -54,6 +54,8 @@ public sealed class ThreatIntelligenceHubServerTest
         string chinese = ThreatIntelligenceHubServer.BuildDashboardHtml("zh-Hant-TW", nonce);
         StringAssert.Contains(chinese, "<html lang=\"zh-Hant-TW\">");
         StringAssert.Contains(chinese, "邊緣節點清單");
+        StringAssert.Contains(chinese, "IDDS 社群版");
+        StringAssert.Contains(chinese, "威脅情資中繼中心");
         StringAssert.Contains(chinese, $"<style nonce=\"{nonce}\">");
         StringAssert.Contains(chinese, $"<script nonce=\"{nonce}\">");
         Assert.IsFalse(chinese.Contains("{{", StringComparison.Ordinal));
@@ -61,6 +63,8 @@ public sealed class ThreatIntelligenceHubServerTest
         string english = ThreatIntelligenceHubServer.BuildDashboardHtml("en-US", nonce);
         StringAssert.Contains(english, "<html lang=\"en-US\">");
         StringAssert.Contains(english, "Edge nodes");
+        StringAssert.Contains(english, "IDDS Community");
+        StringAssert.Contains(english, "Threat Hub");
         StringAssert.Contains(english, $"<style nonce=\"{nonce}\">");
         StringAssert.Contains(english, $"<script nonce=\"{nonce}\">");
         Assert.IsFalse(english.Contains("{{", StringComparison.Ordinal));

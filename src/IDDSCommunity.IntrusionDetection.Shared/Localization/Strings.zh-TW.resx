@@ -481,12 +481,12 @@
   <data name="EventSource &apos;IDDSCommunity Intrusion Detection&apos; was not found on this computer" xml:space="preserve"><value>此電腦上找不到事件來源 &apos;IDDSCommunity Intrusion Detection&apos;</value></data>
   <data name="iddsadmin command [parameters]" xml:space="preserve"><value>iddsadmin 命令 [參數]</value></data>
   <data name="One or some invalid parameters were passed" xml:space="preserve"><value>傳入了一個或多個無效參數</value></data>
-  <data name="Please be sure to use this utility ONLY when advised by IDDSCommunity support personel." xml:space="preserve"><value>請務必只在 IDDSCommunity 支援人員指示時使用此工具。</value></data>
+  <data name="Please be sure to use this utility ONLY when advised by IDDSCommunity support personel." xml:space="preserve"><value>請務必只在 IDDS 社群版支援人員指示時使用此工具。</value></data>
   <data name="Please enter last sequence number as parameter." xml:space="preserve"><value>請輸入最後序號作為參數。</value></data>
   <data name="Please enter output filename as parameter." xml:space="preserve"><value>請輸入輸出檔名作為參數。</value></data>
   <data name="Sorry, we have a problem. Details:&#xD;&#xA;{0}" xml:space="preserve"><value>發生問題。詳細資料：&#xD;&#xA;{0}</value></data>
   <data name="The command has executed successfully" xml:space="preserve"><value>命令已成功執行</value></data>
-  <data name="This program will remove the IDDSCommunity EventLog. This can not be undone." xml:space="preserve"><value>此程式將移除 IDDSCommunity 事件記錄，而且無法復原。</value></data>
+  <data name="This program will remove the IDDSCommunity EventLog. This can not be undone." xml:space="preserve"><value>此程式將移除 IDDS 社群版事件記錄，而且無法復原。</value></data>
   <data name="Usage:" xml:space="preserve"><value>用法：</value></data>
   <data name="Do you really want to remove the selected addresses from your blocking list? These addresses will have access to your server immediately." xml:space="preserve"><value>確定要從封鎖清單移除選取的位址嗎？這些位址將立即能夠存取您的伺服器。</value></data>
   <data name="Unlock selected IP Addresses" xml:space="preserve"><value>解除封鎖選取的 IP 位址</value></data>
@@ -519,7 +519,7 @@
   <data name="Agent plugin identifiers must be unique." xml:space="preserve"><value>代理程式外掛識別碼不可重複。</value></data>
   <data name="The runtime database is not configured." xml:space="preserve"><value>執行期資料庫尚未設定。</value></data>
   <data name="The report scheduler is not running." xml:space="preserve"><value>報表排程器尚未執行。</value></data>
-  <data name="IDDSCommunity runtime is operational." xml:space="preserve"><value>IDDSCommunity 執行期運作正常。</value></data>
+  <data name="IDDSCommunity runtime is operational." xml:space="preserve"><value>IDDS 社群版執行期運作正常。</value></data>
   <data name="Daily report for {0}" xml:space="preserve"><value>{0} 的每日報表</value></data>
   <data name="Weekly report for {0}" xml:space="preserve"><value>{0} 的每週報表</value></data>
   <data name="Monthly report for {0}" xml:space="preserve"><value>{0} 的每月報表</value></data>
@@ -549,7 +549,7 @@
   <data name="Intrusion detection test email" xml:space="preserve"><value>IDDS 社群版入侵偵測測試郵件</value></data>
   <data name="This is a test message from IDDS Community." xml:space="preserve"><value>這是來自 IDDS 社群版管理工具的測試郵件。</value></data>
   <data name="Error starting application" xml:space="preserve"><value>應用程式啟動錯誤</value></data>
-  <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDSCommunity 服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>
+  <data name="The IDDSCommunity service is not installed or is unavailable. Install or repair the service, then restart the application." xml:space="preserve"><value>IDDS 社群版服務尚未安裝或目前無法使用。請安裝或修復服務，然後重新啟動應用程式。</value></data>
   <data name="FTP authentication failure" xml:space="preserve"><value>FTP 驗證失敗</value></data>
   <data name="SMTP authentication failure" xml:space="preserve"><value>SMTP 驗證失敗</value></data>
   <data name="POP3 authentication failure" xml:space="preserve"><value>POP3 驗證失敗</value></data>
@@ -634,12 +634,12 @@
   <data name="IMAP authentication failure" xml:space="preserve"><value>IMAP 驗證失敗</value></data>
   <data name="Install service" xml:space="preserve"><value>安裝服務</value></data>
   <data name="Uninstall service" xml:space="preserve"><value>解除安裝服務</value></data>
-  <data name="Install the IDDSCommunity protection service on this computer?" xml:space="preserve"><value>要在這部電腦上安裝 IDDSCommunity 防護服務嗎？</value></data>
-  <data name="Uninstall the IDDSCommunity protection service? Active protection will stop." xml:space="preserve"><value>要解除安裝 IDDSCommunity 防護服務嗎？目前的主動防護將會停止。</value></data>
+  <data name="Install the IDDSCommunity protection service on this computer?" xml:space="preserve"><value>要在這部電腦上安裝 IDDS 社群版防護服務嗎？</value></data>
+  <data name="Uninstall the IDDSCommunity protection service? Active protection will stop." xml:space="preserve"><value>要解除安裝 IDDS 社群版防護服務嗎？目前的主動防護將會停止。</value></data>
   <data name="Confirm service change" xml:space="preserve"><value>確認服務變更</value></data>
   <data name="The service change could not be completed." xml:space="preserve"><value>無法完成服務變更。</value></data>
   <data name="Service operation failed" xml:space="preserve"><value>服務操作失敗</value></data>
-  <data name="The IDDSCommunity service executable could not be found." xml:space="preserve"><value>找不到 IDDSCommunity 服務執行檔。</value></data>
+  <data name="The IDDSCommunity service executable could not be found." xml:space="preserve"><value>找不到 IDDS 社群版服務執行檔。</value></data>
   <data name="The Windows service management command could not be started." xml:space="preserve"><value>無法啟動 Windows 服務管理命令。</value></data>
   <data name="The Windows service management command failed with exit code {0}." xml:space="preserve"><value>Windows 服務管理命令失敗，結束代碼為 {0}。</value></data>
   <data name="Unsupported service name." xml:space="preserve"><value>不支援的服務名稱。</value></data>
@@ -833,7 +833,7 @@
   <data name="Source IPs per account threshold" xml:space="preserve"><value>每個帳號的來源 IP 數門檻</value></data>
   <data name="Cross-agent sliding window (minutes)" xml:space="preserve"><value>跨代理程式滑動時間窗（分鐘）</value></data>
   <data name="Trusted proxy IP/CIDR list" xml:space="preserve"><value>受信任的反向代理伺服器 IP／CIDR</value></data>
-  <data name="Threat Hub TLS is terminated by a reverse proxy" xml:space="preserve"><value>由反向代理終止 Threat Hub TLS</value></data>
+  <data name="Threat Hub TLS is terminated by a reverse proxy" xml:space="preserve"><value>由反向代理終止威脅情資中繼中心 TLS</value></data>
   <data name="Restrict reverse proxy upstream to this computer (127.0.0.1)" xml:space="preserve"><value>反向代理上游僅限本機（127.0.0.1）</value></data>
   <data name="Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist." xml:space="preserve"><value>僅用於驗證 Forwarded／X-Forwarded-For 並解析真實用戶端 IP；不會將位址加入安全網路允許清單。</value></data>
   <data name="Trusted proxy list must not exceed 250 characters." xml:space="preserve"><value>受信任的反向代理伺服器清單不得超過 250 個字元。</value></data>
@@ -862,11 +862,11 @@
   <data name="Error while trying to soft lock client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試軟封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
   <data name="Error while unlocking client with IP address {0}:&#xD;&#xA;{1}" xml:space="preserve"><value>嘗試解除封鎖 IP 位址為 {0} 之用戶端時發生錯誤：&#xD;&#xA;{1}</value></data>
   <data name="Threat intelligence and cluster" xml:space="preserve"><value>威脅情報與叢集聯防</value></data>
-  <data name="Cluster topology &amp; Threat Hub" xml:space="preserve"><value>跨主機叢集聯防與 Threat Hub</value></data>
+  <data name="Cluster topology &amp; Threat Hub" xml:space="preserve"><value>跨主機叢集聯防與威脅情資中繼中心</value></data>
   <data name="Cluster node role" xml:space="preserve"><value>叢集節點角色</value></data>
-  <data name="Threat Hub endpoint URL" xml:space="preserve"><value>Threat Hub 端點 URL</value></data>
+  <data name="Threat Hub endpoint URL" xml:space="preserve"><value>威脅情資中繼中心端點 URL</value></data>
   <data name="Cluster API key" xml:space="preserve"><value>叢集 API 金鑰</value></data>
-  <data name="Threat Hub port" xml:space="preserve"><value>Threat Hub 監聽連接埠</value></data>
+  <data name="Threat Hub port" xml:space="preserve"><value>威脅情資中繼中心監聽連接埠</value></data>
   <data name="Cluster sync interval (seconds)" xml:space="preserve"><value>叢集同步週期（秒）</value></data>
   <data name="External threat feeds subscription" xml:space="preserve"><value>外部威脅情報訂閱</value></data>
   <data name="Enable automated threat feed subscription" xml:space="preserve"><value>啟用外部威脅情報自動訂閱</value></data>
@@ -930,7 +930,7 @@
   <data name="Active Directory &amp; Kerberos Security Agent" xml:space="preserve"><value>Active Directory 與 Kerberos 安全性代理程式</value></data>
   <data name="Error while sending notification alert.&#xD;&#xA;" xml:space="preserve"><value>傳送通知警報時發生錯誤。&#xD;&#xA;</value></data>
   <data name="Cloud perimeter defense" xml:space="preserve"><value>多雲邊界安全聯防</value></data>
-  <data name="Self-service unblock portal" xml:space="preserve"><value>自助解鎖門戶與 TOTP</value></data>
+  <data name="Self-service unblock portal" xml:space="preserve"><value>自助解鎖入口網站與 TOTP</value></data>
   <data name="Deception and Management API" xml:space="preserve"><value>動態欺敵與管理 API</value></data>
   <data name="Compliance and forensics" xml:space="preserve"><value>CIS 安全基準與取證</value></data>
   <data name="Enable cloud perimeter synchronization" xml:space="preserve"><value>啟用雲端邊界安全同步（AWS、Azure、GCP、Cloudflare、HiCloud）</value></data>
@@ -941,9 +941,9 @@
   <data name="Secondary resource (AWS region / Azure subscription / GCP project)" xml:space="preserve"><value>次要資源（AWS 區域／Azure 訂用帳戶／GCP 專案）</value></data>
   <data name="Third resource (AWS IP set name / Azure resource group)" xml:space="preserve"><value>第三資源（AWS IP 集合名稱／Azure 資源群組）</value></data>
   <data name="Test Connection" xml:space="preserve"><value>測試連線與驗證</value></data>
-  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖門戶（Self-Service Portal）</value></data>
-  <data name="Portal listening port" xml:space="preserve"><value>門戶監聽通訊埠（預設 8444）</value></data>
-  <data name="Portal listening IP address" xml:space="preserve"><value>門戶監聽位址（例如 0.0.0.0 或 127.0.0.1）</value></data>
+  <data name="Enable self-service unblock portal" xml:space="preserve"><value>啟用合法使用者自助網頁解鎖入口網站（Self-Service Portal）</value></data>
+  <data name="Portal listening port" xml:space="preserve"><value>入口網站監聽通訊埠（預設 8444）</value></data>
+  <data name="Portal listening IP address" xml:space="preserve"><value>入口網站監聽位址（例如 0.0.0.0 或 127.0.0.1）</value></data>
   <data name="RFC 6238 TOTP Secret Key (Base32)" xml:space="preserve"><value>RFC 6238 TOTP 認證金鑰（Base32 Authenticator Key）</value></data>
   <data name="Generate Secret" xml:space="preserve"><value>隨機產生金鑰</value></data>
   <data name="Test Verification Code" xml:space="preserve"><value>驗證碼測試（輸入 Authenticator App 上的 6 位數代碼）</value></data>
@@ -983,8 +983,8 @@
   <data name="Audit Kerberos Authentication Failures" xml:space="preserve"><value>稽核 Kerberos 驗證失敗事件</value></data>
   <data name="Disable Guest Account Status" xml:space="preserve"><value>停用 Guest 訪客帳戶狀態</value></data>
   <data name="Digitally Sign Server Communication (SMB)" xml:space="preserve"><value>數位簽署伺服器通訊（SMB 通訊協定簽章）</value></data>
-  <data name="IDDS Community: DPAPI + ChaCha20 Database Encryption" xml:space="preserve"><value>IDDS Community：DPAPI + ChaCha20-Poly1305 資料庫靜態加密</value></data>
-  <data name="IDDS Community: Core Protection Service State" xml:space="preserve"><value>IDDS Community：核心主動防禦服務執行狀態</value></data>
+  <data name="IDDS Community: DPAPI + ChaCha20 Database Encryption" xml:space="preserve"><value>IDDS 社群版：DPAPI + ChaCha20-Poly1305 資料庫靜態加密</value></data>
+  <data name="IDDS Community: Core Protection Service State" xml:space="preserve"><value>IDDS 社群版：核心主動防禦服務執行狀態</value></data>
   <data name="Enable Windows Firewall for this profile via GPO or netsh advfirewall." xml:space="preserve"><value>透過群組原則（GPO）或 netsh advfirewall 為此設定檔啟用 Windows 防火牆。</value></data>
   <data name="Configure Security Log Max Size to >= 196608 KB (192 MB) via GPO." xml:space="preserve"><value>透過群組原則（GPO）將安全性日誌最大大小設定為 &gt;= 196608 KB (192 MB)。</value></data>
   <data name="Ensure Audit Logon is set to Success and Failure in Local Security Policy." xml:space="preserve"><value>確保本機安全性原則中的「稽核登入事件」已設定為記錄成功與失敗。</value></data>
@@ -992,7 +992,7 @@
   <data name="Set registry value requiresecuritysignature at HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters to 1." xml:space="preserve"><value>將登錄機碼 requiresecuritysignature 設定為 1 以強制要求 SMB 伺服器通訊簽章。</value></data>
   <data name="Set registry value F at HKEY_LOCAL_MACHINE\SAM\SAM\Domains\Account\Users\000001F5 to 0." xml:space="preserve"><value>停用本機 Guest 訪客帳戶登入權限。</value></data>
   <data name="Ensure SQLite database file is encrypted with ChaCha20-Poly1305." xml:space="preserve"><value>確保 SQLite 資料庫檔案已啟用 ChaCha20-Poly1305 靜態加密。</value></data>
-  <data name="Ensure IDDS Community Windows Service is installed and actively running." xml:space="preserve"><value>確保 IDDS Community Windows 服務已安裝且正常運作中。</value></data>
+  <data name="Ensure IDDS Community Windows Service is installed and actively running." xml:space="preserve"><value>確保 IDDS 社群版 Windows 服務已安裝且正常運作中。</value></data>
   <data name="Success and Failure Enabled" xml:space="preserve"><value>成功與失敗稽核均已啟用</value></data>
   <data name="Encrypted (ChaCha20-Poly1305)" xml:space="preserve"><value>已加密（ChaCha20-Poly1305）</value></data>
   <data name="Unencrypted (Plaintext)" xml:space="preserve"><value>未加密（明文）</value></data>
@@ -1011,7 +1011,7 @@
   <data name="last 30 days" xml:space="preserve"><value>最近 30 天</value></data>
   <data name="Standalone" xml:space="preserve"><value>獨立單機（Standalone）</value></data>
   <data name="Edge Node" xml:space="preserve"><value>邊緣防禦節點（Edge Node）</value></data>
-  <data name="Threat Hub" xml:space="preserve"><value>威脅情資中繼中心（Threat Hub）</value></data>
+  <data name="Threat Hub" xml:space="preserve"><value>威脅情資中繼中心</value></data>
   <data name="Generic JSON" xml:space="preserve"><value>通用 JSON（Generic JSON）</value></data>
   <data name="Chunghwa HiCloud (deny unsupported)" xml:space="preserve"><value>中華電信 HiCloud（不支援封鎖）</value></data>
   <data name="Generic Webhook" xml:space="preserve"><value>通用 Webhook</value></data>
@@ -1063,9 +1063,9 @@
   <data name="Cloud perimeter outbox capacity has been reached." xml:space="preserve"><value>雲端待送匣容量已滿。</value></data>
   <data name="Management API requires an API key." xml:space="preserve"><value>管理 API 必須設定金鑰。</value></data>
   <data name="Unsupported batch script path." xml:space="preserve"><value>不支援的批次檔路徑。</value></data>
-  <data name="Self-service portal requires a trusted independent proxy and a TOTP secret." xml:space="preserve"><value>自助門戶需要獨立可信代理入口與 TOTP 密鑰。</value></data>
+  <data name="Self-service portal requires a trusted independent proxy and a TOTP secret." xml:space="preserve"><value>自助解鎖入口網站需要獨立受信任反向代理與 TOTP 金鑰。</value></data>
   <data name="The threat is invalid or the hub capacity has been reached." xml:space="preserve"><value>威脅無效或中繼容量已滿。</value></data>
-  <data name="Threat Hub requires an API key." xml:space="preserve"><value>Threat Hub 必須設定金鑰。</value></data>
+  <data name="Threat Hub requires an API key." xml:space="preserve"><value>威脅情資中繼中心必須設定金鑰。</value></data>
   <data name="Pending threat capacity has been reached." xml:space="preserve"><value>待同步威脅容量已滿。</value></data>
   <data name="At most eight Threat Hub endpoints are supported." xml:space="preserve"><value>最多支援八個中繼端點。</value></data>
   <data name="Invalid Threat Hub page response." xml:space="preserve"><value>無效的中繼分頁回應。</value></data>
@@ -1075,8 +1075,12 @@
   <data name="AWS credential profile was not found for the service account." xml:space="preserve"><value>找不到服務帳戶的 AWS 認證設定檔。</value></data>
   <data name="Unsupported remediation action." xml:space="preserve"><value>不支援的處置。</value></data>
   <data name="Invalid target IP address." xml:space="preserve"><value>無效的 IP 位址。</value></data>
-  <data name="Threat Hub endpoint must use HTTP or HTTPS." xml:space="preserve"><value>Threat Hub 端點必須使用 HTTP 或 HTTPS。</value></data>
+  <data name="Threat Hub endpoint must use HTTP or HTTPS." xml:space="preserve"><value>威脅情資中繼中心端點必須使用 HTTP 或 HTTPS。</value></data>
   <data name="HTTP content exceeds the size limit." xml:space="preserve"><value>HTTP 內容超過大小上限。</value></data>
   <data name="Connection to IMDS or link-local address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往 IMDS 雲端元數據或 Link-Local 位址 '{0}' 之連線。</value></data>
   <data name="Connection to restricted or Bogon IP address '{0}' is blocked." xml:space="preserve"><value>已阻絕前往受限或 Bogon IP 位址 '{0}' 之連線。</value></data>
+  <data name="EmailNotification.Footer" xml:space="preserve"><value>本電子郵件由 {0}入侵防禦系統自動發出，請勿直接回覆。</value></data>
+  <data name="Source IP address:" xml:space="preserve"><value>來源 IP 位址：</value></data>
+  <data name="Security agent:" xml:space="preserve"><value>安全性代理程式：</value></data>
+  <data name="Event time (UTC):" xml:space="preserve"><value>事件發生時間（UTC）：</value></data>
 </root>

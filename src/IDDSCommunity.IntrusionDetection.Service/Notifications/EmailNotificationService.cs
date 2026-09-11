@@ -66,36 +66,61 @@ public sealed class EmailNotificationService
         if (string.IsNullOrEmpty(subject))
             return false;
 
+        string htmlBody = BuildAlertHtmlBody(subject, ipAddress, agentName, message);
+
+        return await SendMailAsync(subject, htmlBody, isHtml: true, cancellationToken: cancellationToken, rethrowOnFailure: false).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// 依據主旨、來源 IP、代理程式與訊息格式化警報電子郵件 HTML 內文。
+    /// </summary>
+    /// <param name="subject">郵件主旨。</param>
+    /// <param name="ipAddress">來源 IP 位址。</param>
+    /// <param name="agentName">觸發之安全性代理程式名稱。</param>
+    /// <param name="message">詳細事件說明。</param>
+    /// <param name="timestampUtc">事件發生之 UTC 時間，若為 <see langword="null"/> 則使用目前時間。</param>
+    /// <returns>格式化後之 HTML 電子郵件內文。</returns>
+    internal static string BuildAlertHtmlBody(
+        string subject,
+        string ipAddress,
+        string agentName,
+        string message,
+        DateTime? timestampUtc = null)
+    {
         string encodedSubject = System.Net.WebUtility.HtmlEncode(subject);
         string encodedIp = System.Net.WebUtility.HtmlEncode(ipAddress);
         string encodedAgent = System.Net.WebUtility.HtmlEncode(agentName);
         string encodedMessage = System.Net.WebUtility.HtmlEncode(message);
+        string encodedSourceIpLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Source IP address:"));
+        string encodedAgentLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Security agent:"));
+        string encodedTimeLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Event time (UTC):"));
+        string footerText = Strings.Format(Strings.Get("EmailNotification.Footer"), Strings.AppTitle);
+        string encodedFooter = System.Net.WebUtility.HtmlEncode(footerText);
+        DateTime time = timestampUtc ?? DateTime.UtcNow;
 
-        string htmlBody = $$"""
+        return $$"""
         <!DOCTYPE html>
         <html>
         <head><meta charset="utf-8"/></head>
         <body style="font-family:Segoe UI,Roboto,sans-serif;background-color:#f8fafc;color:#1e293b;padding:20px;">
           <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:24px;box-shadow:0 4px 6px rgba(0,0,0,0.05);">
             <div style="border-bottom:2px solid #0ea5e9;padding-bottom:12px;margin-bottom:16px;">
-              <h2 style="margin:0;color:#0f172a;font-size:18px;">🛡️ IDDS Community - {{encodedSubject}}</h2>
+              <h2 style="margin:0;color:#0f172a;font-size:18px;">🛡️ {{encodedSubject}}</h2>
             </div>
-            <p><strong>來源 IP 位址：</strong> <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;color:#0284c7;">{{encodedIp}}</code></p>
-            <p><strong>安全代理程式：</strong> {{encodedAgent}}</p>
-            <p><strong>事件發生時間 (UTC)：</strong> {{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}}</p>
+            <p><strong>{{encodedSourceIpLabel}}</strong> <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;color:#0284c7;">{{encodedIp}}</code></p>
+            <p><strong>{{encodedAgentLabel}}</strong> {{encodedAgent}}</p>
+            <p><strong>{{encodedTimeLabel}}</strong> {{time:yyyy-MM-dd HH:mm:ss}}</p>
             <div style="background:#f8fafc;border-left:4px solid #0ea5e9;padding:12px;margin:16px 0;font-size:14px;color:#334155;">
               {{encodedMessage}}
             </div>
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
             <p style="font-size:12px;color:#94a3b8;margin:0;text-align:center;">
-              本郵件由 IDDS Community 入侵防禦系統自動發出，請勿直接回覆。
+              {{encodedFooter}}
             </p>
           </div>
         </body>
         </html>
         """;
-
-        return await SendMailAsync(subject, htmlBody, isHtml: true, cancellationToken: cancellationToken, rethrowOnFailure: false).ConfigureAwait(false);
     }
 
     /// <summary>
