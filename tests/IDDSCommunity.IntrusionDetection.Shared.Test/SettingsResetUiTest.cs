@@ -122,4 +122,36 @@ public sealed class SettingsResetUiTest
         settings.PerformLayout();
         Assert.IsTrue(reset.Right <= viewport.ClientSize.Width);
     }
+
+    /// <summary>
+    /// 驗證長代理程式名稱於中英文介面下自動折行，且標題區域絕不與恢復預設值按鈕重疊。
+    /// </summary>
+    /// <param name="agentDisplayName">待測試之代理程式顯示名稱。</param>
+    [STATestMethod]
+    [DataRow("Windows 遠端管理 ( WinRM / WAC ) 安全性代理程式")]
+    [DataRow("Windows Remote Management (WinRM / WAC) Security Agent")]
+    public void PanelPluginConfiguration_LongAgentTitle_WrapsAndDoesNotOverlapWithResetButton(string agentDisplayName)
+    {
+        SecurityAgent agent = new()
+        {
+            DisplayName = agentDisplayName
+        };
+        using Panel viewport = new() { ClientSize = new System.Drawing.Size(480, 500) };
+        using PanelPluginConfiguration panel = new(_ => DialogResult.No)
+        {
+            Size = new System.Drawing.Size(480, 500),
+            Agent = agent
+        };
+        viewport.Controls.Add(panel);
+        viewport.PerformLayout();
+        panel.PerformLayout();
+
+        Button reset = Assert.IsInstanceOfType<Button>(panel.Controls.Find("buttonResetDefaults", true)[0]);
+        SmartLabel title = Assert.IsInstanceOfType<SmartLabel>(panel.Controls.Find("smartLabelAgentName", true)[0]);
+
+        Assert.IsFalse(title.Bounds.IntersectsWith(reset.Bounds),
+            $"標題邊界 ({title.Bounds}) 不得與恢復預設值按鈕邊界 ({reset.Bounds}) 重疊。");
+        Assert.IsTrue(title.Right <= reset.Left,
+            $"標題右邊緣 ({title.Right}) 必須位於恢復預設值按鈕左邊緣 ({reset.Left}) 之前。");
+    }
 }

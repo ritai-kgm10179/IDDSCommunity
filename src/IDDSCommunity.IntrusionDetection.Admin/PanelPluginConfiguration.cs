@@ -29,6 +29,9 @@ public event EventHandler? AgentConfigurationChanged;
     {
     }
 
+    private readonly Button _buttonResetDefaults;
+    private bool _isUpdatingHeaderLayout;
+
     /// <summary>
     /// 初始化可指定恢復預設值確認提示的設定面板。
     /// </summary>
@@ -38,7 +41,10 @@ public event EventHandler? AgentConfigurationChanged;
         InitializeComponent();
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
-        SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt, container: headerPanel);
+        _buttonResetDefaults = SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt, container: headerPanel);
+        headerPanel.ClientSizeChanged += (_, _) => UpdateHeaderLayout();
+        headerPanel.Layout += (_, _) => UpdateHeaderLayout();
+        UpdateHeaderLayout();
     }
     /// <summary>
     /// 處理 agent changed 事件。
@@ -49,6 +55,7 @@ public event EventHandler? AgentConfigurationChanged;
     {
         LoadData();
         smartLabelAgentName.Text = Agent.DisplayName;
+        UpdateHeaderLayout();
         ClearErrors();
         AutoScrollPosition = Point.Empty;
         if (Parent is System.Windows.Forms.ScrollableControl scrollableParent)
@@ -144,6 +151,38 @@ public event EventHandler? AgentConfigurationChanged;
                 label.MaximumSize = new Size(availableWidth, 0);
             }
             control.Width = availableWidth;
+        }
+    }
+
+    /// <summary>
+    /// 動態計算標題寬度上限與容器高度，避免長代理程式名稱與恢復預設值按鈕重疊。
+    /// </summary>
+    private void UpdateHeaderLayout()
+    {
+        if (_isUpdatingHeaderLayout || headerPanel is null || smartLabelAgentName is null) return;
+        _isUpdatingHeaderLayout = true;
+        try
+        {
+            int buttonLeft = _buttonResetDefaults is not null && _buttonResetDefaults.Left > 0
+                ? _buttonResetDefaults.Left
+                : (headerPanel.ClientSize.Width - 120 - 20);
+
+            int maxTitleWidth = Math.Max(80, buttonLeft - smartLabelAgentName.Left - 12);
+            if (smartLabelAgentName.MaximumSize.Width != maxTitleWidth)
+            {
+                smartLabelAgentName.MaximumSize = new Size(maxTitleWidth, 0);
+            }
+
+            Size preferred = smartLabelAgentName.GetPreferredSize(new Size(maxTitleWidth, 0));
+            int requiredHeight = Math.Max(34, smartLabelAgentName.Top + preferred.Height + 4);
+            if (headerPanel.Height != requiredHeight)
+            {
+                headerPanel.Height = requiredHeight;
+            }
+        }
+        finally
+        {
+            _isUpdatingHeaderLayout = false;
         }
     }
     /// <summary>
