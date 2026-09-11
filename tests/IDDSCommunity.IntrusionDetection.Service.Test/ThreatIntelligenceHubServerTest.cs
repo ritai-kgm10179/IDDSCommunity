@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Service.ManagementApi;
 using IDDSCommunity.IntrusionDetection.Service.Observability;
@@ -427,5 +428,88 @@ public sealed class ThreatIntelligenceHubServerTest
         Assert.IsNotNull(postResponse.Content.Headers.Allow);
         string allowPost = string.Join(",", postResponse.Content.Headers.Allow);
         Assert.IsTrue(allowPost.Contains("GET", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// 驗證對 ThreatHubServer /api/threat-hub/nodes GET 請求回傳包含 Hub 自身營運與防護指標之 JSON 資料。
+    /// </summary>
+    /// <returns>代表非同步測試作業的 Task。</returns>
+    [TestMethod]
+    public async Task ThreatHubServer_GetNodes_ReturnsHubTelemetryAndEdgeNodes()
+    {
+        int port = GetAvailablePort();
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.ThreatHubRole = ThreatHubRole.ThreatHub;
+        config.ThreatHubPort = port;
+        config.ThreatHubApiKey = "valid_hub_key_123";
+
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
+        server.Start();
+        if (!server.IsListening)
+        {
+            Assert.Inconclusive("無法於目前環境監聽本機通訊埠。");
+        }
+
+        using var client = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{port}/api/threat-hub/nodes");
+        request.Headers.Add("X-IDDS-ThreatHub-ApiKey", "valid_hub_key_123");
+
+        using var response = await client.SendAsync(request).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+
+        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        using var doc = JsonDocument.Parse(body);
+        JsonElement root = doc.RootElement;
+
+        Assert.IsTrue(root.TryGetProperty("hub", out JsonElement hub));
+        Assert.IsTrue(hub.TryGetProperty("hostName", out JsonElement hostName));
+        Assert.IsFalse(string.IsNullOrEmpty(hostName.GetString()));
+        Assert.IsTrue(hub.TryGetProperty("uptimeSeconds", out JsonElement uptime));
+        Assert.IsTrue(uptime.GetDouble() >= 0);
+        Assert.IsTrue(hub.TryGetProperty("generation", out JsonElement generation));
+        Assert.IsFalse(string.IsNullOrEmpty(generation.GetString()));
+        Assert.IsTrue(hub.TryGetProperty("maxThreatCapacity", out JsonElement capacity));
+        Assert.AreEqual(100000, capacity.GetInt32());
+        Assert.IsTrue(root.TryGetProperty("nodes", out JsonElement nodes));
+        Assert.AreEqual(JsonValueKind.Array, nodes.ValueKind);
+    }
+
+    /// <summary>
+    /// 驗證對 ThreatHubServer 連續輸入無效 API Key 觸發速率限制並回傳 HTTP 429 與 Retry-After 標頭。
+    /// </summary>
+    /// <returns>代表非同步測試作業的 Task。</returns>
+    [TestMethod]
+    public async Task ThreatHubServer_InvalidApiKey_TriggersRateLimiterAndReturns429()
+    {
+        int port = GetAvailablePort();
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.ThreatHubRole = ThreatHubRole.ThreatHub;
+        config.ThreatHubPort = port;
+        config.ThreatHubApiKey = "correct_secret_key";
+
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
+        server.Start();
+        if (!server.IsListening)
+        {
+            Assert.Inconclusive("無法於目前環境監聽本機通訊埠。");
+        }
+
+        using var client = new HttpClient();
+
+        // 連續發送 10 次錯誤 API Key
+        for (int i = 0; i < 10; i++)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{port}/api/threat-hub/nodes");
+            req.Headers.Add("X-IDDS-ThreatHub-ApiKey", $"wrong_key_{i}");
+            using var res = await client.SendAsync(req).ConfigureAwait(false);
+            Assert.AreEqual(HttpStatusCode.Unauthorized, res.StatusCode);
+        }
+
+        // 第 11 次請求應觸發 429 Too Many Requests
+        using var blockedReq = new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{port}/api/threat-hub/nodes");
+        blockedReq.Headers.Add("X-IDDS-ThreatHub-ApiKey", "wrong_key_11");
+        using var blockedRes = await client.SendAsync(blockedReq).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.TooManyRequests, blockedRes.StatusCode);
+        Assert.IsNotNull(blockedRes.Headers.RetryAfter);
     }
 }

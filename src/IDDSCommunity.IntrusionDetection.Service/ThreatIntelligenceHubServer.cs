@@ -21,6 +21,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 {
     private const string ApiKeyHeader = "X-IDDS-ThreatHub-ApiKey";
     private readonly FailedAttemptsRateLimiter authRateLimiter = new(maxFailedAttempts: 10, windowDuration: TimeSpan.FromMinutes(15), lockDuration: TimeSpan.FromMinutes(15));
+    private readonly DateTime serverStartTimeUtc = DateTime.UtcNow;
+    private readonly Database? database;
     private readonly IddsConfig config;
     private readonly Action<ThreatIntelligenceItem> onThreatReceived;
     private readonly Action<string> logInformation;
@@ -63,11 +65,56 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         Action<string, Exception>? logError = null, Database? database = null, bool allowLoopbackHttp = false)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
+        this.database = database;
         store = new ThreatHubStore(database);
         this.allowLoopbackHttp = allowLoopbackHttp;
         this.onThreatReceived = onThreatReceived ?? throw new ArgumentNullException(nameof(onThreatReceived));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logError = logError ?? ((msg, ex) => System.Diagnostics.Trace.TraceError("{0}: {1}", msg, ex.Message));
+    }
+
+    private (int activeBlocks, int probationCount) GetLocalDefenseMetrics()
+    {
+        int activeBlocks = 0;
+        try { activeBlocks = Locks.GetActiveLocks().Count; }
+        catch { }
+
+        int probationCount = 0;
+        try
+        {
+            if (database != null)
+            {
+                object? res = database.ExecuteScalar("select count(*) from Locks where status = @p0", Shared.Lock.LOCK_STATUS_PROBATION);
+                if (res != null && int.TryParse(res.ToString(), out int cnt))
+                    probationCount = cnt;
+            }
+        }
+        catch { }
+
+        return (activeBlocks, probationCount);
+    }
+
+    private async Task HandleAuthFailureAsync(HttpListenerRequest req, HttpListenerResponse resp, string clientIp)
+    {
+        int failures = authRateLimiter.RecordFailedAttempt(clientIp);
+        if (failures >= 3)
+        {
+            int delayMs = Math.Min(500 * (1 << Math.Min(failures - 3, 3)), 3000);
+            await Task.Delay(delayMs).ConfigureAwait(false);
+        }
+        if (failures >= 10)
+        {
+            try
+            {
+                if (req.RemoteEndPoint?.Address != null && !IPAddress.IsLoopback(req.RemoteEndPoint.Address))
+                {
+                    IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, clientIp, IntrusionLog.STATUS_INTRUSION_ATTEMPT, false);
+                }
+            }
+            catch { }
+        }
+        resp.StatusCode = (int)HttpStatusCode.Unauthorized;
+        await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -231,9 +278,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 string? apiKey = req.Headers[ApiKeyHeader];
                 if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
                 {
-                    authRateLimiter.RecordFailedAttempt(clientIp);
-                    resp.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
+                    await HandleAuthFailureAsync(req, resp, clientIp).ConfigureAwait(false);
                     return;
                 }
 
@@ -299,9 +344,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 string? apiKey = req.Headers[ApiKeyHeader];
                 if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
                 {
-                    authRateLimiter.RecordFailedAttempt(clientIp);
-                    resp.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await WriteJsonResponseAsync(resp, new { error = "Unauthorized" }).ConfigureAwait(false);
+                    await HandleAuthFailureAsync(req, resp, clientIp).ConfigureAwait(false);
                     return;
                 }
 
@@ -317,11 +360,30 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
 
                 IReadOnlyList<EdgeNodeState> nodes = RegisteredNodes;
                 int activeThreatCount = store.ReadPage(0, string.Empty).ActiveThreats.Count;
+                (int localBlocks, int localProbation) = GetLocalDefenseMetrics();
+                int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
+                bool useReverseProxy = allowLoopbackHttp || config.ThreatHubUseReverseProxy;
+                string listenMode = useReverseProxy ? $"HTTP (Proxy):{port}" : $"HTTPS:{port}";
+                double uptimeSeconds = (DateTime.UtcNow - serverStartTimeUtc).TotalSeconds;
+
                 resp.StatusCode = (int)HttpStatusCode.OK;
                 await WriteJsonResponseAsync(resp, new
                 {
                     generatedUtc = DateTime.UtcNow,
                     totalActiveThreatCount = activeThreatCount,
+                    hub = new
+                    {
+                        hostName = Environment.MachineName,
+                        version = typeof(ThreatIntelligenceHubServer).Assembly.GetName().Version?.ToString(3) ?? "1.0.0",
+                        uptimeSeconds = Math.Round(uptimeSeconds, 0),
+                        listenMode = listenMode,
+                        activeThreatCount = activeThreatCount,
+                        maxThreatCapacity = ThreatHubStore.MaximumEntries,
+                        generation = store.Generation,
+                        threatTtlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365),
+                        localActiveBlocks = localBlocks,
+                        localProbationCount = localProbation
+                    },
                     nodes = nodes.Select(n => new
                     {
                         nodeId = n.NodeId,
@@ -526,41 +588,63 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         internal static DashboardText TraditionalChinese { get; } = new("zh-Hant-TW",
         [
             ("TITLE", "IDDS Community - Threat Hub 儀表板"), ("OFFLINE", "離線"),
+            ("ONLINE", "線上"), ("DELAYED", "延遲"),
             ("API_KEY_PLACEHOLDER", "輸入 API Key..."), ("APPLY", "套用"),
+            ("AUTHENTICATED", "已認證"), ("LOGOUT", "登出"),
             ("CONNECTED_NODES", "連線節點數"), ("ACTIVE_THREATS", "全網活動威脅情資"),
-            ("LAST_UPDATED", "最後更新時間"), ("EDGE_NODES", "邊緣節點清單"),
+            ("HUB_DEFENSE", "Hub 本機防護"), ("HUB_UPTIME", "Hub 運行時間"),
+            ("LAST_UPDATED", "最後更新時間"),
+            ("HUB_OVERVIEW", "Threat Hub 系統運作概況"),
+            ("HUB_HOST", "主機名稱"), ("HUB_VERSION", "軟體版本"),
+            ("HUB_ENDPOINT", "監聽端點"), ("HUB_GENERATION", "情資世代"),
+            ("HUB_TTL", "情資保留天數"),
+            ("EDGE_NODES", "邊緣節點清單"),
             ("STATUS", "狀態"), ("NODE_ID", "節點 ID"), ("NODE_NAME", "節點名稱"),
             ("SOURCE_IP", "來源 IP"), ("LAST_HEARTBEAT", "最後心跳"),
             ("REPORTED_THREATS", "回報情資數"), ("ENTER_KEY", "請輸入 API Key 後載入資料"),
-            ("TOO_MANY_REQUESTS", "請求頻率過高，請稍後再試。"),
-            ("INVALID_KEY", "API Key 驗證失敗，請確認後重新輸入。"),
-            ("SERVER_ERROR", "伺服器回傳錯誤：HTTP "), ("ONLINE", "線上"),
+            ("TOO_MANY_REQUESTS", "請求頻率過高，請稍候重試："),
+            ("INVALID_KEY", "API Key 驗證失敗或已過期，請重新輸入。"),
+            ("SERVER_ERROR", "伺服器回傳錯誤：HTTP "),
             ("REFRESH_PREFIX", "自動每 30 秒更新 · 最後更新："),
-            ("NO_NODES", "目前沒有已連線的邊緣節點"), ("DELAYED", "延遲"),
+            ("NO_NODES", "目前沒有已連線的邊緣節點"),
             ("UNNAMED", "（未命名）"), ("UNKNOWN_ERROR", "未知錯誤"),
             ("CONNECTION_ERROR", "無法連線至 Threat Hub："),
             ("THEME_LABEL", "佈景主題"), ("THEME_AUTO", "自動"),
-            ("THEME_LIGHT", "淺色"), ("THEME_DARK", "深色")
+            ("THEME_LIGHT", "淺色"), ("THEME_DARK", "深色"),
+            ("DAYS", "天"), ("HOURS", "小時"),
+            ("MINUTES", "分"), ("SECONDS", "秒"),
+            ("BLOCKS", "項封鎖"), ("PROBATION", "個假釋中")
         ]);
 
         internal static DashboardText English { get; } = new("en-US",
         [
             ("TITLE", "IDDS Community - Threat Hub Dashboard"), ("OFFLINE", "Offline"),
+            ("ONLINE", "Online"), ("DELAYED", "Delayed"),
             ("API_KEY_PLACEHOLDER", "Enter API Key..."), ("APPLY", "Apply"),
+            ("AUTHENTICATED", "Authenticated"), ("LOGOUT", "Logout"),
             ("CONNECTED_NODES", "Connected nodes"), ("ACTIVE_THREATS", "Active global threats"),
-            ("LAST_UPDATED", "Last updated"), ("EDGE_NODES", "Edge nodes"),
+            ("HUB_DEFENSE", "Hub local defense"), ("HUB_UPTIME", "Hub uptime"),
+            ("LAST_UPDATED", "Last updated"),
+            ("HUB_OVERVIEW", "Threat Hub system overview"),
+            ("HUB_HOST", "Host name"), ("HUB_VERSION", "Version"),
+            ("HUB_ENDPOINT", "Listen endpoint"), ("HUB_GENERATION", "Store generation"),
+            ("HUB_TTL", "Threat TTL"),
+            ("EDGE_NODES", "Edge nodes"),
             ("STATUS", "Status"), ("NODE_ID", "Node ID"), ("NODE_NAME", "Node name"),
             ("SOURCE_IP", "Source IP"), ("LAST_HEARTBEAT", "Last heartbeat"),
             ("REPORTED_THREATS", "Reported threats"), ("ENTER_KEY", "Enter an API Key to load data"),
-            ("TOO_MANY_REQUESTS", "Too many requests. Try again later."),
-            ("INVALID_KEY", "API Key authentication failed. Check the key and try again."),
-            ("SERVER_ERROR", "Server returned an error: HTTP "), ("ONLINE", "Online"),
+            ("TOO_MANY_REQUESTS", "Too many requests. Please wait: "),
+            ("INVALID_KEY", "API Key authentication failed or expired. Please re-enter."),
+            ("SERVER_ERROR", "Server returned an error: HTTP "),
             ("REFRESH_PREFIX", "Refreshes every 30 seconds · Last updated: "),
-            ("NO_NODES", "No edge nodes are connected"), ("DELAYED", "Delayed"),
+            ("NO_NODES", "No edge nodes are connected"),
             ("UNNAMED", "(unnamed)"), ("UNKNOWN_ERROR", "Unknown error"),
             ("CONNECTION_ERROR", "Unable to connect to Threat Hub: "),
             ("THEME_LABEL", "Theme"), ("THEME_AUTO", "Auto"),
-            ("THEME_LIGHT", "Light"), ("THEME_DARK", "Dark")
+            ("THEME_LIGHT", "Light"), ("THEME_DARK", "Dark"),
+            ("DAYS", "d"), ("HOURS", "h"),
+            ("MINUTES", "m"), ("SECONDS", "s"),
+            ("BLOCKS", "blocks"), ("PROBATION", "in probation")
         ]);
     }
 
@@ -629,16 +713,29 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
             .badge-online { background: var(--badge-online-bg); color: var(--badge-online-fg); }
             .badge-offline { background: var(--badge-offline-bg); color: var(--badge-offline-fg); }
+            .badge-authenticated { background: var(--badge-online-bg); color: var(--badge-online-fg); }
             .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+            .key-group { display: flex; gap: 8px; align-items: center; }
             .language-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-            .key-row input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
-            .key-row input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
-            .key-row button { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
-            .key-row button:hover { background: var(--accent-hover); }
-            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+            .key-group input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
+            .key-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
+            .key-group button { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+            .key-group button:hover:not(:disabled) { background: var(--accent-hover); }
+            .key-group button:disabled { opacity: 0.6; cursor: not-allowed; }
+            .btn-logout { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--muted); border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+            .btn-logout:hover { color: var(--fg); border-color: var(--accent); background: var(--input-bg); }
+            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
             .card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 20px; }
-            .stat-value { font-size: 36px; font-weight: 800; color: var(--fg); margin-bottom: 4px; }
+            .stat-value { font-size: 32px; font-weight: 800; color: var(--fg); margin-bottom: 4px; }
             .stat-label { font-size: 13px; color: var(--muted); }
+            .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+            .hub-overview { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 16px 20px; margin-bottom: 24px; }
+            .hub-overview-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+            .hub-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 20px; font-size: 13px; }
+            .hub-prop { display: flex; flex-direction: column; gap: 2px; }
+            .hub-prop-k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+            .hub-prop-v { font-weight: 600; color: var(--fg); word-break: break-all; }
+            .monospace { font-family: monospace; font-size: 12px; }
             table { width: 100%; border-collapse: collapse; font-size: 13px; }
             th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid var(--card-border); }
             td { padding: 10px 12px; border-bottom: 1px solid var(--td-border); color: var(--td-fg); vertical-align: middle; }
@@ -653,7 +750,6 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .error-bar { background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 6px; color: var(--error-fg); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
             .refresh-info { font-size: 11px; color: var(--muted); text-align: right; margin-top: 8px; }
             .table-wrap { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); overflow-x: auto; overflow-y: hidden; }
-            .stat-value-compact { font-size: 18px; padding-top: 8px; }
           </style>
         </head>
         <body>
@@ -680,8 +776,14 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 <option value="zh-Hant-TW">繁體中文</option>
                 <option value="en-US">English</option>
               </select>
-              <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
-              <button id="apply-key-btn">{{APPLY}}</button>
+              <div id="key-input-group" class="key-group">
+                <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
+                <button id="apply-key-btn">{{APPLY}}</button>
+              </div>
+              <div id="key-auth-group" class="key-group" style="display: none;">
+                <span class="badge badge-authenticated">{{AUTHENTICATED}}</span>
+                <button id="logout-btn" class="btn-logout">{{LOGOUT}}</button>
+              </div>
             </div>
           </div>
 
@@ -695,10 +797,28 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             <div class="card">
               <div class="stat-value" id="stat-threats">—</div>
               <div class="stat-label">{{ACTIVE_THREATS}}</div>
+              <div class="stat-sub" id="stat-threats-cap">—</div>
             </div>
             <div class="card">
-              <div class="stat-value stat-value-compact" id="stat-updated">—</div>
-              <div class="stat-label">{{LAST_UPDATED}}</div>
+              <div class="stat-value" id="stat-defense">—</div>
+              <div class="stat-label">{{HUB_DEFENSE}}</div>
+              <div class="stat-sub" id="stat-defense-sub">—</div>
+            </div>
+            <div class="card">
+              <div class="stat-value" id="stat-uptime">—</div>
+              <div class="stat-label">{{HUB_UPTIME}}</div>
+            </div>
+          </div>
+
+          <div class="hub-overview">
+            <div class="hub-overview-title">{{HUB_OVERVIEW}}</div>
+            <div class="hub-overview-grid">
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_HOST}}</span><span id="hub-host" class="hub-prop-v">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_VERSION}}</span><span id="hub-ver" class="hub-prop-v">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_ENDPOINT}}</span><span id="hub-endpoint" class="hub-prop-v">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_GENERATION}}</span><span id="hub-generation" class="hub-prop-v monospace">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_TTL}}</span><span id="hub-ttl" class="hub-prop-v">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{LAST_UPDATED}}</span><span id="stat-updated" class="hub-prop-v">—</span></div>
             </div>
           </div>
 
@@ -725,6 +845,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
           <script nonce="{{NONCE}}">
             var currentKey = sessionStorage.getItem('idds_hub_key') || '';
             var refreshTimer = null;
+            var cooldownTimer = null;
             var currentLanguage = '{{LANG}}';
             var savedLanguage = sessionStorage.getItem('idds_hub_language');
 
@@ -734,8 +855,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               window.location.replace(savedUrl.toString());
             }
 
-            document.getElementById('api-key').value = currentKey ? '••••••••' : '';
             document.getElementById('apply-key-btn').addEventListener('click', applyKey);
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('api-key').addEventListener('keydown', function(e) {
+              if (e.key === 'Enter') { applyKey(); }
+            });
+
             document.getElementById('theme-select').value = sessionStorage.getItem('idds_hub_theme') || 'auto';
             document.getElementById('theme-select').addEventListener('change', function(event) {
               var selected = event.target.value;
@@ -755,13 +880,70 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               window.location.assign(url.toString());
             });
 
+            function setAuthState(authenticated) {
+              var inputGroup = document.getElementById('key-input-group');
+              var authGroup = document.getElementById('key-auth-group');
+              if (authenticated) {
+                inputGroup.style.display = 'none';
+                authGroup.style.display = 'flex';
+              } else {
+                inputGroup.style.display = 'flex';
+                authGroup.style.display = 'none';
+                document.getElementById('api-key').value = '';
+              }
+            }
+
             function applyKey() {
               var input = document.getElementById('api-key').value.trim();
-              if (input && input !== '••••••••') {
+              if (input) {
                 currentKey = input;
                 sessionStorage.setItem('idds_hub_key', currentKey);
               }
               fetchData();
+            }
+
+            function logout() {
+              currentKey = '';
+              sessionStorage.removeItem('idds_hub_key');
+              if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+              }
+              if (cooldownTimer) {
+                clearInterval(cooldownTimer);
+                cooldownTimer = null;
+              }
+              setAuthState(false);
+              resetView();
+              hideError();
+              document.getElementById('api-key').focus();
+            }
+
+            function resetView() {
+              document.getElementById('hub-status').textContent = '{{OFFLINE}}';
+              document.getElementById('hub-status').className = 'badge badge-offline';
+              document.getElementById('stat-nodes').textContent = '—';
+              document.getElementById('stat-threats').textContent = '—';
+              document.getElementById('stat-threats-cap').textContent = '—';
+              document.getElementById('stat-defense').textContent = '—';
+              document.getElementById('stat-defense-sub').textContent = '—';
+              document.getElementById('stat-uptime').textContent = '—';
+              document.getElementById('stat-updated').textContent = '—';
+              document.getElementById('hub-host').textContent = '—';
+              document.getElementById('hub-ver').textContent = '—';
+              document.getElementById('hub-endpoint').textContent = '—';
+              document.getElementById('hub-generation').textContent = '—';
+              document.getElementById('hub-ttl').textContent = '—';
+              document.getElementById('refresh-info').textContent = '';
+              var tbody = document.getElementById('node-tbody');
+              tbody.replaceChildren();
+              var emptyTr = document.createElement('tr');
+              var emptyTd = document.createElement('td');
+              emptyTd.colSpan = 6;
+              emptyTd.className = 'empty';
+              emptyTd.textContent = '{{ENTER_KEY}}';
+              emptyTr.appendChild(emptyTd);
+              tbody.appendChild(emptyTr);
             }
 
             function statusClass(lastSeen) {
@@ -775,6 +957,18 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               try { return new Date(iso).toLocaleString('{{LANG}}', { hour12: false }); } catch(e) { return iso; }
             }
 
+            function fmtUptime(seconds) {
+              if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) return '—';
+              var d = Math.floor(seconds / 86400);
+              var h = Math.floor((seconds % 86400) / 3600);
+              var m = Math.floor((seconds % 3600) / 60);
+              var s = Math.floor(seconds % 60);
+              if (d > 0) return d + ' {{DAYS}} ' + h + ' {{HOURS}} ' + m + ' {{MINUTES}}';
+              if (h > 0) return h + ' {{HOURS}} ' + m + ' {{MINUTES}}';
+              if (m > 0) return m + ' {{MINUTES}} ' + s + ' {{SECONDS}}';
+              return s + ' {{SECONDS}}';
+            }
+
             function showError(msg) {
               var bar = document.getElementById('error-bar');
               bar.textContent = msg;
@@ -785,6 +979,28 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               document.getElementById('error-bar').style.display = 'none';
             }
 
+            function startCooldown(seconds) {
+              if (cooldownTimer) clearInterval(cooldownTimer);
+              var applyBtn = document.getElementById('apply-key-btn');
+              applyBtn.disabled = true;
+              var remaining = seconds;
+              function updateCooldownMsg() {
+                showError('{{TOO_MANY_REQUESTS}} ' + remaining + ' {{SECONDS}}');
+              }
+              updateCooldownMsg();
+              cooldownTimer = setInterval(function() {
+                remaining--;
+                if (remaining <= 0) {
+                  clearInterval(cooldownTimer);
+                  cooldownTimer = null;
+                  applyBtn.disabled = false;
+                  hideError();
+                } else {
+                  updateCooldownMsg();
+                }
+              }, 1000);
+            }
+
             function fetchData() {
               if (!currentKey) { return; }
               fetch('/api/threat-hub/nodes', {
@@ -792,18 +1008,43 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
               })
               .then(function(r) {
-                if (r.status === 429) { showError('{{TOO_MANY_REQUESTS}}'); return null; }
-                if (r.status === 401) { showError('{{INVALID_KEY}}'); return null; }
+                if (r.status === 429) {
+                  var retrySec = parseInt(r.headers.get('Retry-After'), 10) || 60;
+                  startCooldown(retrySec);
+                  return null;
+                }
+                if (r.status === 401) {
+                  logout();
+                  showError('{{INVALID_KEY}}');
+                  return null;
+                }
                 if (!r.ok) { showError('{{SERVER_ERROR}}' + r.status); return null; }
                 return r.json();
               })
               .then(function(data) {
                 if (!data) return;
                 hideError();
+                setAuthState(true);
                 document.getElementById('hub-status').textContent = '{{ONLINE}}';
                 document.getElementById('hub-status').className = 'badge badge-online';
                 document.getElementById('stat-nodes').textContent = data.nodes ? data.nodes.length : 0;
-                document.getElementById('stat-threats').textContent = data.totalActiveThreatCount ?? '—';
+                var threats = data.totalActiveThreatCount ?? 0;
+                document.getElementById('stat-threats').textContent = threats;
+                if (data.hub) {
+                  var cap = data.hub.maxThreatCapacity || 100000;
+                  var pct = ((threats / cap) * 100).toFixed(2);
+                  document.getElementById('stat-threats-cap').textContent = threats + ' / ' + cap + ' (' + pct + '%)';
+                  var blocks = data.hub.localActiveBlocks ?? 0;
+                  var probation = data.hub.localProbationCount ?? 0;
+                  document.getElementById('stat-defense').textContent = blocks + ' {{BLOCKS}}';
+                  document.getElementById('stat-defense-sub').textContent = probation + ' {{PROBATION}}';
+                  document.getElementById('stat-uptime').textContent = fmtUptime(data.hub.uptimeSeconds);
+                  document.getElementById('hub-host').textContent = data.hub.hostName || '—';
+                  document.getElementById('hub-ver').textContent = data.hub.version ? ('v' + data.hub.version) : '—';
+                  document.getElementById('hub-endpoint').textContent = data.hub.listenMode || '—';
+                  document.getElementById('hub-generation').textContent = data.hub.generation || '—';
+                  document.getElementById('hub-ttl').textContent = (data.hub.threatTtlDays ?? '—') + ' {{DAYS}}';
+                }
                 document.getElementById('stat-updated').textContent = fmtLocal(data.generatedUtc);
                 document.getElementById('refresh-info').textContent = '{{REFRESH_PREFIX}}' + fmtLocal(data.generatedUtc);
 
@@ -879,7 +1120,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               refreshTimer = setInterval(fetchData, 30000);
             }
 
-            if (currentKey) { fetchData(); }
+            if (currentKey) {
+              setAuthState(true);
+              fetchData();
+            } else {
+              setAuthState(false);
+            }
             scheduleRefresh();
           </script>
         </body>

@@ -75,9 +75,10 @@ public sealed class FailedAttemptsRateLimiter
     /// 記錄指定用戶端 IP 發生一次身分驗證失敗，並在超過門檻時自動實施暫時阻絕。
     /// </summary>
     /// <param name="ipAddress">用戶端 IP 位址字串。</param>
-    public void RecordFailedAttempt(string? ipAddress)
+    /// <returns>該用戶端 IP 目前累計之失敗次數。</returns>
+    public int RecordFailedAttempt(string? ipAddress)
     {
-        if (string.IsNullOrWhiteSpace(ipAddress)) return;
+        if (string.IsNullOrWhiteSpace(ipAddress)) return 0;
 
         DateTime now = DateTime.UtcNow;
         AttemptRecord record = records.GetOrAdd(ipAddress, _ => new AttemptRecord
@@ -86,6 +87,7 @@ public sealed class FailedAttemptsRateLimiter
             FailureCount = 0
         });
 
+        int currentCount;
         lock (record)
         {
             if (now - record.FirstFailureUtc > windowDuration)
@@ -102,9 +104,32 @@ public sealed class FailedAttemptsRateLimiter
                     record.LockedUntilUtc = now + lockDuration;
                 }
             }
+            currentCount = record.FailureCount;
         }
 
         CleanupExpiredRecordsIfNeeded(now);
+        return currentCount;
+    }
+
+    /// <summary>
+    /// 取得指定用戶端 IP 目前於有效視窗內之失敗次數。
+    /// </summary>
+    /// <param name="ipAddress">用戶端 IP 位址字串。</param>
+    /// <returns>若存在則傳回有效失敗次數；否則傳回 0。</returns>
+    public int GetFailureCount(string? ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress)) return 0;
+        if (records.TryGetValue(ipAddress, out AttemptRecord? record))
+        {
+            lock (record)
+            {
+                if (DateTime.UtcNow - record.FirstFailureUtc <= windowDuration)
+                {
+                    return record.FailureCount;
+                }
+            }
+        }
+        return 0;
     }
 
     /// <summary>
