@@ -57,6 +57,8 @@ public sealed class ThreatIntelligenceHubServerTest
         StringAssert.Contains(chinese, "IDDS 社群版");
         StringAssert.Contains(chinese, "威脅情資中繼中心");
         StringAssert.Contains(chinese, $"<style nonce=\"{nonce}\">");
+        StringAssert.Contains(chinese, "white-space: nowrap;");
+        StringAssert.Contains(chinese, "flex-shrink: 0;");
         StringAssert.Contains(chinese, $"<script nonce=\"{nonce}\">");
         Assert.IsFalse(chinese.Contains("{{", StringComparison.Ordinal));
 

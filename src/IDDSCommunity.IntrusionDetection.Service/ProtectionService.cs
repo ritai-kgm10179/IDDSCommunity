@@ -1230,12 +1230,14 @@ public bool LimitMailSent { get; set; }
                                         reportingAgent);
 
                                     // 主動將本機永久硬封鎖威脅推播至叢集 (Hub / Edge)
+                                    int ttlDays = Math.Clamp(configuration.ThreatFeedTtlDays, 1, 365);
                                     Shared.ThreatIntelligence.ThreatIntelligenceItem threatItem = new()
                                     {
                                         SourceIp = notificationEventArgs.IpAddress,
                                         ThreatCategory = reportingAgent.Name ?? "BRUTE_FORCE",
                                         ConfidenceScore = 1.0,
                                         ReportedUtc = DateTime.UtcNow,
+                                        ExpiresUtc = DateTime.UtcNow.AddDays(ttlDays),
                                         ReporterNodeName = Environment.MachineName
                                     };
                                     threatHubServer?.IngestLocalThreat(threatItem);

@@ -33,6 +33,8 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
             Strings.Get("Threat Hub")
         ]);
         comboClusterRole.SelectedIndexChanged += (_, _) => UpdateClusterControlsState();
+        chkEnableFeeds.CheckedChanged += (_, _) => UpdateExternalFeedsControlsState();
+        chkEnableDynamicBogon.CheckedChanged += (_, _) => UpdateExternalFeedsControlsState();
 
         btnBrowseGeoIpFile.Click += (_, _) =>
         {
@@ -173,6 +175,29 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 numSyncInterval.Enabled = false;
                 break;
         }
+
+        UpdateExternalFeedsControlsState();
+    }
+
+    private void UpdateExternalFeedsControlsState()
+    {
+        ThreatHubRole role = (ThreatHubRole)Math.Clamp(comboClusterRole.SelectedIndex, 0, 2);
+        bool isEdge = role == ThreatHubRole.EdgeNode;
+        bool feedsAllowed = !isEdge;
+
+        chkEnableFeeds.Enabled = feedsAllowed;
+        bool feedsActive = feedsAllowed && chkEnableFeeds.Checked;
+        numFeedInterval.Enabled = feedsActive;
+        numIpsumLevel.Enabled = feedsActive;
+        numFeedTtlDays.Enabled = feedsActive;
+        txtAbuseApiKey.Enabled = feedsActive;
+        numAbuseMinConfidence.Enabled = feedsActive;
+        txtCustomUrls.Enabled = feedsActive;
+
+        chkEnableDynamicBogon.Enabled = feedsAllowed;
+        bool bogonActive = feedsAllowed && chkEnableDynamicBogon.Checked;
+        txtBogonIpv4Url.Enabled = bogonActive;
+        txtBogonIpv6Url.Enabled = bogonActive;
     }
 
     private const string DefaultBogonV4 = "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt";

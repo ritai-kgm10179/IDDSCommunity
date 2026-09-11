@@ -359,7 +359,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 }
 
                 IReadOnlyList<EdgeNodeState> nodes = RegisteredNodes;
-                int activeThreatCount = store.ReadPage(0, string.Empty).ActiveThreats.Count;
+                int activeThreatCount = store.ActiveThreatCount;
                 (int localBlocks, int localProbation) = GetLocalDefenseMetrics();
                 int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
                 bool useReverseProxy = allowLoopbackHttp || config.ThreatHubUseReverseProxy;
@@ -719,13 +719,13 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
             .key-group { display: flex; gap: 8px; align-items: center; }
             .language-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-            .key-group input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: min(300px, 100%); font-family: monospace; }
+            .key-group input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 280px; max-width: 100%; min-width: 140px; flex: 1 1 auto; font-family: monospace; }
             .key-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
-            .key-group button { background: var(--accent); color: var(--accent-fg); border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+            .key-group button { background: var(--accent); color: var(--accent-fg); border: 1px solid transparent; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
             .key-group button:hover:not(:disabled) { background: var(--accent-hover); }
             .key-group button:disabled { opacity: 0.6; cursor: not-allowed; }
-            .btn-logout { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--muted); border-radius: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-            .btn-logout:hover { color: var(--fg); border-color: var(--accent); background: var(--input-bg); }
+            .key-group .btn-logout { background: var(--accent); border: 1px solid transparent; color: var(--accent-fg); border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
+            .key-group .btn-logout:hover { background: var(--accent-hover); }
             .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
             .card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 20px; }
             .stat-value { font-size: 32px; font-weight: 800; color: var(--fg); margin-bottom: 4px; }

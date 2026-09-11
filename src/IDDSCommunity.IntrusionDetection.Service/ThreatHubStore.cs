@@ -18,6 +18,24 @@ internal sealed class ThreatHubStore(Database? database = null)
     private readonly string memoryGeneration = Guid.NewGuid().ToString("N");
     internal string Generation => database is null ? memoryGeneration : Convert.ToString(database.ExecuteScalar("SELECT Generation FROM ThreatHubIdentity WHERE Id=1"))!;
 
+    /// <summary>
+    /// 取得目前情資庫中尚未過期之活躍威脅情資總筆數。
+    /// </summary>
+    internal int ActiveThreatCount
+    {
+        get
+        {
+            long now = DateTime.UtcNow.Ticks;
+            lock (gate)
+            {
+                if (database is null)
+                    return memory.Values.Count(e => e.ExpiresTicks > now);
+                object? countObj = database.ExecuteScalar("SELECT COUNT(*) FROM ThreatHubEntries WHERE ExpiresTicks > @p0", now);
+                return countObj != null && int.TryParse(countObj.ToString(), out int c) ? c : 0;
+            }
+        }
+    }
+
     internal bool Upsert(ThreatIntelligenceItem item)
     {
         string json = JsonSerializer.Serialize(item);

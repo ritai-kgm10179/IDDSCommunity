@@ -89,10 +89,14 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     public void EnqueueLocalThreat(ThreatIntelligenceItem item)
     {
         if (item is null || !IPAddress.TryParse(item.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
-            || config.IsInSafeNetwork(ip.ToString()) || item.ExpiresUtc <= DateTime.UtcNow) return;
+            || config.IsInSafeNetwork(ip.ToString())) return;
         var copy = System.Text.Json.JsonSerializer.Deserialize<ThreatIntelligenceItem>(System.Text.Json.JsonSerializer.Serialize(item))!;
         copy.SourceIp = IpAddressCanonicalizer.Canonicalize(ip).ToString();
-        if (copy.ExpiresUtc == DateTime.MaxValue) copy.ExpiresUtc = copy.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+        int ttlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365);
+        if (copy.ExpiresUtc == default || copy.ExpiresUtc <= DateTime.UtcNow || copy.ExpiresUtc == DateTime.MaxValue)
+        {
+            copy.ExpiresUtc = (copy.ReportedUtc > DateTime.MinValue ? copy.ReportedUtc : DateTime.UtcNow).AddDays(ttlDays);
+        }
         if (!localStore.Upsert(copy)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Pending threat capacity has been reached."));
     }
 

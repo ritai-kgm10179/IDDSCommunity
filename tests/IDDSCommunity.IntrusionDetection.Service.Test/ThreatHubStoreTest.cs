@@ -28,10 +28,12 @@ public sealed class ThreatHubStoreTest
             var store = new ThreatHubStore(database);
             for (int i = 0; i < 300; i++)
                 Assert.IsTrue(store.Upsert(new ThreatIntelligenceItem { SourceIp = $"8.8.{i / 256}.{i % 256}", ExpiresUtc = DateTime.UtcNow.AddHours(1) }));
+            Assert.AreEqual(300, store.ActiveThreatCount);
             var first = store.ReadPage(0, string.Empty);
             Assert.AreEqual(256, first.ActiveThreats.Count);
             Assert.IsTrue(first.HasMore);
             var restarted = new ThreatHubStore(database);
+            Assert.AreEqual(300, restarted.ActiveThreatCount);
             var second = restarted.ReadPage(first.NextCursor, first.Generation);
             Assert.AreEqual(44, second.ActiveThreats.Count);
             Assert.IsFalse(second.HasMore);
