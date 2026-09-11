@@ -1090,4 +1090,24 @@
   <data name="Threat intelligence feeds updated successfully: {0} threat IPs ingested." xml:space="preserve"><value>外部威脅情資更新成功：已評估並匯入 {0} 筆威脅 IP。</value></data>
   <data name="Failed to update threat intelligence feeds: {0}" xml:space="preserve"><value>外部威脅情資更新失敗：{0}</value></data>
   <data name="Windows Service is not running. Please start the service to update threat feeds." xml:space="preserve"><value>Windows 服務未處於執行狀態，請先啟動服務以套用威脅情資阻絕。</value></data>
+  <data name="Firewall.ClusterLock" xml:space="preserve"><value>叢集聯防主動封鎖</value></data>
+  <data name="Firewall.ExternalThreatFeedLock" xml:space="preserve"><value>外部情報主動封鎖</value></data>
+  <data name="Firewall.Request" xml:space="preserve"><value>防火牆封鎖請求</value></data>
+  <data name="Firewall.Reconcile" xml:space="preserve"><value>防火牆狀態對齊</value></data>
+  <data name="Firewall.SlowAndLowLock" xml:space="preserve"><value>慢速字典攻擊封鎖</value></data>
+  <data name="Firewall.HoneyAccountTrap" xml:space="preserve"><value>蜜罐帳號誘捕封鎖</value></data>
+  <data name="Firewall.ManualUnlockRequested" xml:space="preserve"><value>手動解除封鎖請求</value></data>
+  <data name="External Threat Feed Subscription" xml:space="preserve"><value>外部威脅情報訂閱</value></data>
+  <data name="Cluster Threat Synchronization" xml:space="preserve"><value>叢集聯防同步</value></data>
+  <data name="Hard Lock (Feed TTL)" xml:space="preserve"><value>情資硬封鎖 (TTL)</value></data>
+  <data name="Pushed: {0}, Pulled: {1}" xml:space="preserve"><value>推送：{0}，拉取：{1}</value></data>
+  <data name="Ingested: {0}, Evaluated: {1}" xml:space="preserve"><value>已匯入：{0}，已評估：{1}</value></data>
+  <data name="AddOrVerify" xml:space="preserve"><value>新增或確認規則</value></data>
+  <data name="RemoveStale" xml:space="preserve"><value>移除過期條目</value></data>
+  <data name="Score: {0}, UniqueAccounts: {1}" xml:space="preserve"><value>風險評分：{0}，相異帳號數：{1}</value></data>
+  <data name="Account: {0}, Agent: {1}" xml:space="preserve"><value>目標帳號：{0}，代理程式：{1}</value></data>
+  <data name="Blocked by SSRF filter (private/bogon/IMDS destination)" xml:space="preserve"><value>已被 SSRF 防禦機制阻絕（私有/Bogon/IMDS 目標）</value></data>
+  <data name="No endpoint accepted the pending page" xml:space="preserve"><value>沒有任何中繼端點接受待同步頁面</value></data>
+  <data name="{0} prefixes updated" xml:space="preserve"><value>已更新 {0} 個前綴網段</value></data>
+  <data name="{0} IPs: {1}" xml:space="preserve"><value>{0} 個 IP 位址：{1}</value></data>
 </root>

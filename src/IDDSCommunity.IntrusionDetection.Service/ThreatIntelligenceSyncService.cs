@@ -15,7 +15,8 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal sealed class ThreatIntelligenceSyncService : IDisposable
 {
     private readonly IddsConfig config;
-    private readonly Action<ThreatIntelligenceItem> onClusterThreatReceived;
+    private readonly Action<ThreatIntelligenceItem>? onClusterThreatReceived;
+    private readonly Action<IReadOnlyList<ThreatIntelligenceItem>>? onClusterThreatsBatchReceived;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
     private readonly Action<string, string, string, string?>? recordAudit;
@@ -41,14 +42,14 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// <param name="database">持久化資料庫；測試可省略以使用有限記憶體儲存。</param>
     public ThreatIntelligenceSyncService(
         IddsConfig config,
-        Action<ThreatIntelligenceItem> onClusterThreatReceived,
+        Action<ThreatIntelligenceItem>? onClusterThreatReceived,
         Action<string>? logInformation = null,
         Action<string, Exception>? logWarning = null,
         ThreatHubClient? client = null,
         Action<string, string, string, string?>? recordAudit = null, Database? database = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
-        this.onClusterThreatReceived = onClusterThreatReceived ?? throw new ArgumentNullException(nameof(onClusterThreatReceived));
+        this.onClusterThreatReceived = onClusterThreatReceived;
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.client = client ?? new ThreatHubClient();
@@ -70,6 +71,28 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                 this.logWarning("Failed to load ThreatHub cursors from database", ex);
             }
         }
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="ThreatIntelligenceSyncService"/> 類別之新執行個體（支援批次威脅回呼）。
+    /// </summary>
+    /// <param name="config">全域設定執行個體。</param>
+    /// <param name="onClusterThreatsBatchReceived">當自 Hub 收到叢集威脅批次時執行之回呼委派。</param>
+    /// <param name="logInformation">資訊日誌委派。</param>
+    /// <param name="logWarning">警告日誌委派。</param>
+    /// <param name="client">可選之 ThreatHubClient 執行個體。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
+    /// <param name="database">持久化資料庫；測試可省略以使用有限記憶體儲存。</param>
+    public ThreatIntelligenceSyncService(
+        IddsConfig config,
+        Action<IReadOnlyList<ThreatIntelligenceItem>> onClusterThreatsBatchReceived,
+        Action<string>? logInformation = null,
+        Action<string, Exception>? logWarning = null,
+        ThreatHubClient? client = null,
+        Action<string, string, string, string?>? recordAudit = null, Database? database = null)
+        : this(config, (Action<ThreatIntelligenceItem>?)null, logInformation, logWarning, client, recordAudit, database)
+    {
+        this.onClusterThreatsBatchReceived = onClusterThreatsBatchReceived ?? throw new ArgumentNullException(nameof(onClusterThreatsBatchReceived));
     }
 
     private readonly Database? database;
@@ -149,13 +172,26 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                     if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
                         || response.Generation.Length > 128 || response.NextCursor < 0
                         || (response.Generation == previous.Item2 && response.NextCursor < previous.Item1)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
+                    List<ThreatIntelligenceItem> validThreats = [];
                     foreach (ThreatIntelligenceItem threat in response.ActiveThreats)
                     {
                         if (threat is null || !IPAddress.TryParse(threat.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
                             || config.IsInSafeNetwork(ip.ToString()) || threat.ExpiresUtc <= DateTime.UtcNow
                             || threat.ExpiresUtc > DateTime.UtcNow.AddDays(365) || !double.IsFinite(threat.ConfidenceScore)
                             || threat.ConfidenceScore < 0.8 || threat.ConfidenceScore > 1) continue;
-                        onClusterThreatReceived(threat);
+                        validThreats.Add(threat);
+                    }
+                    if (validThreats.Count > 0)
+                    {
+                        if (onClusterThreatsBatchReceived != null)
+                        {
+                            onClusterThreatsBatchReceived(validThreats);
+                        }
+                        else if (onClusterThreatReceived != null)
+                        {
+                            foreach (var threat in validThreats)
+                                onClusterThreatReceived(threat);
+                        }
                     }
                     cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
                     if (database is not null && database.IsConfigured)

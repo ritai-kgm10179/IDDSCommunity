@@ -92,12 +92,11 @@ public sealed class GeoIpUpdateService : IDisposable
     {
         try
         {
-            // 檢查自訂本機檔案
+            // 檢查自訂本機檔案（使用串流讀取，杜絕記憶體 LOH 大物件配置）
             string localPath = config.GeoIpLocalFilePath;
             if (!string.IsNullOrWhiteSpace(localPath) && File.Exists(localPath))
             {
-                string content = File.ReadAllText(localPath);
-                int loaded = GeoIpLookupService.LoadFromCsv(content);
+                int loaded = GeoIpLookupService.LoadFromFile(localPath);
                 logInformation($"Loaded {loaded} GeoIP records from local file: {localPath}");
                 return loaded > 0;
             }
@@ -107,12 +106,9 @@ public sealed class GeoIpUpdateService : IDisposable
             string v4CachePath = Path.Combine(dataDir, "geoip_v4_cache.csv");
             string v6CachePath = Path.Combine(dataDir, "geoip_v6_cache.csv");
 
-            string? v4Content = File.Exists(v4CachePath) ? File.ReadAllText(v4CachePath) : null;
-            string? v6Content = File.Exists(v6CachePath) ? File.ReadAllText(v6CachePath) : null;
-
-            if (!string.IsNullOrWhiteSpace(v4Content) || !string.IsNullOrWhiteSpace(v6Content))
+            if (File.Exists(v4CachePath) || File.Exists(v6CachePath))
             {
-                int loaded = GeoIpLookupService.LoadFromCsv(v4Content, v6Content);
+                int loaded = GeoIpLookupService.LoadFromFiles(v4CachePath, v6CachePath);
                 logInformation($"Loaded {loaded} GeoIP records from local cache files.");
                 return loaded > 0;
             }
@@ -144,12 +140,11 @@ public sealed class GeoIpUpdateService : IDisposable
                 return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Auto-update is disabled.");
             }
 
-            // 若配置了本機檔案，優先以本機檔案為準
+            // 若配置了本機檔案，優先以本機檔案為準（串流載入）
             string localPath = config.GeoIpLocalFilePath;
             if (!string.IsNullOrWhiteSpace(localPath) && File.Exists(localPath))
             {
-                string content = await File.ReadAllTextAsync(localPath, stopping.Token).ConfigureAwait(false);
-                int loaded = GeoIpLookupService.LoadFromCsv(content);
+                int loaded = GeoIpLookupService.LoadFromFile(localPath);
                 int countries = GeoIpLookupService.TotalLoadedCountries;
                 logInformation($"GeoIP database refreshed from local file: {loaded} records across {countries} countries.");
                 return (true, loaded, countries, string.Empty);
@@ -157,70 +152,17 @@ public sealed class GeoIpUpdateService : IDisposable
 
             logInformation("Starting GeoIP database download and update cycle...");
 
-            string? v4Content = null;
-            string? v6Content = null;
-
-            // 下載 IPv4 GeoIP 數據
             string v4Url = config.GeoIpDatabaseIpv4Url;
-            if (!string.IsNullOrWhiteSpace(v4Url))
-            {
-                if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(v4Url))
-                {
-                    logWarning($"Blocked unsafe or IMDS-suspect IPv4 GeoIP URL: '{v4Url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
-                }
-                else
-                {
-                    try
-                    {
-                        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                        cts.CancelAfter(TimeSpan.FromSeconds(60));
-                        using HttpResponseMessage response = await httpClient.GetAsync(v4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            v4Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            logWarning($"IPv4 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logWarning("Failed to download IPv4 GeoIP database", ex);
-                    }
-                }
-            }
-
-            // 下載 IPv6 GeoIP 數據
             string v6Url = config.GeoIpDatabaseIpv6Url;
-            if (!string.IsNullOrWhiteSpace(v6Url))
-            {
-                if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(v6Url))
-                {
-                    logWarning($"Blocked unsafe or IMDS-suspect IPv6 GeoIP URL: '{v6Url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
-                }
-                else
-                {
-                    try
-                    {
-                        using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                        cts.CancelAfter(TimeSpan.FromSeconds(60));
-                        using HttpResponseMessage response = await httpClient.GetAsync(v6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            v6Content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            logWarning($"IPv6 GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logWarning("Failed to download IPv6 GeoIP database", ex);
-                    }
-                }
-            }
+
+            // 並行下載 IPv4 與 IPv6 GeoIP 數據
+            Task<string?> v4Task = DownloadGeoIpFeedAsync(v4Url, "IPv4");
+            Task<string?> v6Task = DownloadGeoIpFeedAsync(v6Url, "IPv6");
+
+            await Task.WhenAll(v4Task, v6Task).ConfigureAwait(false);
+
+            string? v4Content = await v4Task.ConfigureAwait(false);
+            string? v6Content = await v6Task.ConfigureAwait(false);
 
             if ((!string.IsNullOrWhiteSpace(v4Url) && string.IsNullOrWhiteSpace(v4Content)) ||
                 (!string.IsNullOrWhiteSpace(v6Url) && string.IsNullOrWhiteSpace(v6Content)) ||
@@ -275,6 +217,37 @@ public sealed class GeoIpUpdateService : IDisposable
         finally
         {
             refreshGate.Release();
+        }
+    }
+
+    private async Task<string?> DownloadGeoIpFeedAsync(string? url, string label)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+        if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(url))
+        {
+            logWarning($"Blocked unsafe or IMDS-suspect {label} GeoIP URL: '{url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
+            return null;
+        }
+
+        try
+        {
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+            cts.CancelAfter(TimeSpan.FromSeconds(60));
+            using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                return await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+            }
+            else
+            {
+                logWarning($"{label} GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            logWarning($"Failed to download {label} GeoIP database", ex);
+            return null;
         }
     }
 

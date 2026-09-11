@@ -96,27 +96,16 @@ internal sealed class DynamicDnsResolverService : IDisposable
                     continue;
 
                 activeHosts.Add(host);
+            }
 
-                try
+            if (activeHosts.Count > 0)
+            {
+                List<Task> resolveTasks = [];
+                foreach (string host in activeHosts)
                 {
-                    using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(10));
-                    IPAddress[] addresses = await Dns.GetHostAddressesAsync(host, cts.Token).ConfigureAwait(false);
-                    if (addresses != null && addresses.Length > 0)
-                    {
-                        DynamicDnsCache.Update(host, addresses);
-                        recordAudit?.Invoke("DynamicDns.Resolve", "Succeeded", host, $"{addresses.Length} IPs: {string.Join(", ", (IEnumerable<IPAddress>)addresses)}");
-                    }
+                    resolveTasks.Add(ResolveHostAsync(host));
                 }
-                catch (OperationCanceledException) when (stopping.IsCancellationRequested)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    logWarning($"Failed to resolve dynamic safe-network host '{host}'", ex);
-                    recordAudit?.Invoke("DynamicDns.Resolve", "Failed", host, ex.Message);
-                }
+                await Task.WhenAll(resolveTasks).ConfigureAwait(false);
             }
 
             DynamicDnsCache.PruneExcept(activeHosts);
@@ -128,6 +117,37 @@ internal sealed class DynamicDnsResolverService : IDisposable
         finally
         {
             Interlocked.Exchange(ref resolving, 0);
+        }
+    }
+
+    private async Task ResolveHostAsync(string host)
+    {
+        try
+        {
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+            IPAddress[] addresses = await Dns.GetHostAddressesAsync(host, cts.Token).ConfigureAwait(false);
+            if (addresses != null && addresses.Length > 0)
+            {
+                bool hasPrior = DynamicDnsCache.TryGetResolvedIps(host, out HashSet<IPAddress> priorIps);
+                bool changed = !hasPrior || !priorIps.SetEquals(addresses);
+
+                DynamicDnsCache.Update(host, addresses);
+
+                if (changed)
+                {
+                    recordAudit?.Invoke("DynamicDns.Resolve", "Succeeded", host, $"{addresses.Length} IPs: {string.Join(", ", (IEnumerable<IPAddress>)addresses)}");
+                }
+            }
+        }
+        catch (OperationCanceledException) when (stopping.IsCancellationRequested)
+        {
+            // 系統關閉中，略過
+        }
+        catch (Exception ex)
+        {
+            logWarning($"Failed to resolve dynamic safe-network host '{host}'", ex);
+            recordAudit?.Invoke("DynamicDns.Resolve", "Failed", host, ex.Message);
         }
     }
 

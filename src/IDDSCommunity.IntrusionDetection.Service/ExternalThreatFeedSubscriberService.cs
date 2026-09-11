@@ -16,7 +16,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 {
     private const string DefaultUserAgent = "IDDSCommunity-ThreatFeed-Subscriber/3.0 (+https://github.com/ritai-kgm10179/IDDSCommunity)";
     private readonly IddsConfig config;
-    private readonly Action<ThreatIntelligenceItem> onThreatDiscovered;
+    private readonly Action<IReadOnlyList<ThreatIntelligenceItem>> onThreatsBatchDiscovered;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
     private readonly Action<string, string, string, string?>? recordAudit;
@@ -29,10 +29,10 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     private volatile bool disposed;
 
     /// <summary>
-    /// 初始化 <see cref="ExternalThreatFeedSubscriberService"/> 類別之新執行個體。
+    /// 初始化 <see cref="ExternalThreatFeedSubscriberService"/> 類別之新執行個體（單筆回呼相容多載）。
     /// </summary>
     /// <param name="config">全域設定執行個體。</param>
-    /// <param name="onThreatDiscovered">當解析出通過安全過濾之新威脅 IP 時引發之回呼委派。</param>
+    /// <param name="onThreatDiscovered">當解析出通過安全過濾之新威脅 IP 時引發之單筆回呼委派。</param>
     /// <param name="logInformation">資訊日誌回報委派。</param>
     /// <param name="logWarning">警告日誌回報委派。</param>
     /// <param name="httpClient">可選之自訂 HttpClient 執行個體（用於單元測試隔離）。</param>
@@ -44,9 +44,42 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         Action<string, Exception>? logWarning = null,
         HttpClient? httpClient = null,
         Action<string, string, string, string?>? recordAudit = null)
+        : this(
+            config,
+            items =>
+            {
+                if (onThreatDiscovered == null) return;
+                foreach (ThreatIntelligenceItem item in items)
+                {
+                    onThreatDiscovered(item);
+                }
+            },
+            logInformation,
+            logWarning,
+            httpClient,
+            recordAudit)
+    {
+    }
+
+    /// <summary>
+    /// 初始化 <see cref="ExternalThreatFeedSubscriberService"/> 類別之新執行個體（批次回呼高效多載）。
+    /// </summary>
+    /// <param name="config">全域設定執行個體。</param>
+    /// <param name="onThreatsBatchDiscovered">當解析出通過安全過濾之新威脅 IP 清單時引發之批次回呼委派。</param>
+    /// <param name="logInformation">資訊日誌回報委派。</param>
+    /// <param name="logWarning">警告日誌回報委派。</param>
+    /// <param name="httpClient">可選之自訂 HttpClient 執行個體（用於單元測試隔離）。</param>
+    /// <param name="recordAudit">可選之稽核日誌回報委派。</param>
+    public ExternalThreatFeedSubscriberService(
+        IddsConfig config,
+        Action<IReadOnlyList<ThreatIntelligenceItem>> onThreatsBatchDiscovered,
+        Action<string>? logInformation = null,
+        Action<string, Exception>? logWarning = null,
+        HttpClient? httpClient = null,
+        Action<string, string, string, string?>? recordAudit = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
-        this.onThreatDiscovered = onThreatDiscovered ?? throw new ArgumentNullException(nameof(onThreatDiscovered));
+        this.onThreatsBatchDiscovered = onThreatsBatchDiscovered ?? throw new ArgumentNullException(nameof(onThreatsBatchDiscovered));
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.recordAudit = recordAudit;
@@ -208,7 +241,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(30));
             using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -220,16 +253,23 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
             List<string> ips = ThreatFeedParser.ParseFeed(content, format, minConfidenceOrLevel, ThreatFeedParser.DefaultMaxEntriesPerFeed);
 
-            int count = 0;
+            List<ThreatIntelligenceItem> validItems = [];
             foreach (string ip in ips)
             {
-                if (EvaluateAndIngest(ip, feedName, expiresUtc))
+                stopping.Token.ThrowIfCancellationRequested();
+                if (TryCreateThreatItem(ip, feedName, expiresUtc, out ThreatIntelligenceItem? item) && item is not null)
                 {
-                    count++;
+                    validItems.Add(item);
                 }
             }
-            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", feedName, $"Ingested: {count}, Evaluated: {ips.Count}");
-            return count;
+
+            if (validItems.Count > 0)
+            {
+                onThreatsBatchDiscovered(validItems);
+            }
+
+            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", feedName, $"Ingested: {validItems.Count}, Evaluated: {ips.Count}");
+            return validItems.Count;
         }
         catch (Exception ex)
         {
@@ -247,7 +287,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(30));
             using HttpRequestMessage request = new(HttpMethod.Get, url);
             request.Headers.Add("Key", apiKey);
             request.Headers.Add("Accept", "application/json");
@@ -263,16 +303,23 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
             List<string> ips = ThreatFeedParser.ParseFeed(content, ThreatFeedFormat.AbuseIpDbJson, minConfidence, ThreatFeedParser.DefaultMaxEntriesPerFeed);
 
-            int count = 0;
+            List<ThreatIntelligenceItem> validItems = [];
             foreach (string ip in ips)
             {
-                if (EvaluateAndIngest(ip, "AbuseIPDB Blacklist", expiresUtc))
+                stopping.Token.ThrowIfCancellationRequested();
+                if (TryCreateThreatItem(ip, "AbuseIPDB Blacklist", expiresUtc, out ThreatIntelligenceItem? item) && item is not null)
                 {
-                    count++;
+                    validItems.Add(item);
                 }
             }
-            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", "AbuseIPDB Blacklist", $"Ingested: {count}, Evaluated: {ips.Count}");
-            return count;
+
+            if (validItems.Count > 0)
+            {
+                onThreatsBatchDiscovered(validItems);
+            }
+
+            recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", "AbuseIPDB Blacklist", $"Ingested: {validItems.Count}, Evaluated: {ips.Count}");
+            return validItems.Count;
         }
         catch (Exception ex)
         {
@@ -283,68 +330,22 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
     private async Task RefreshDynamicBogonsAsync()
     {
+        Task<(bool Success, List<System.Net.IPNetwork>? Networks)> v4Task = DownloadBogonFeedAsync(config.DynamicBogonIpv4Url, "IPv4");
+        Task<(bool Success, List<System.Net.IPNetwork>? Networks)> v6Task = DownloadBogonFeedAsync(config.DynamicBogonIpv6Url, "IPv6");
+
+        await Task.WhenAll(v4Task, v6Task).ConfigureAwait(false);
+
+        var (v4Success, v4Networks) = await v4Task.ConfigureAwait(false);
+        var (v6Success, v6Networks) = await v6Task.ConfigureAwait(false);
+
+        if (!v4Success || !v6Success || stopping.IsCancellationRequested)
+            return;
+
         List<System.Net.IPNetwork> aggregatedNetworks = [];
-        bool complete = true;
+        if (v4Networks != null) aggregatedNetworks.AddRange(v4Networks);
+        if (v6Networks != null) aggregatedNetworks.AddRange(v6Networks);
 
-        // 抓取 IPv4 Fullbogons
-        string ipv4Url = config.DynamicBogonIpv4Url;
-        if (!string.IsNullOrWhiteSpace(ipv4Url))
-        {
-            try
-            {
-                using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(30));
-                using HttpResponseMessage response = await httpClient.GetAsync(ipv4Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                    var parsed = BogonIpFilter.ParseBogonList(content);
-                    if (parsed.Count == 0) complete = false;
-                    aggregatedNetworks.AddRange(parsed);
-                }
-                else
-                {
-                    complete = false;
-                    logWarning($"Dynamic IPv4 Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                }
-            }
-            catch (Exception ex)
-            {
-                complete = false;
-                logWarning("Failed to download dynamic IPv4 Bogon feed", ex);
-            }
-        }
-
-        // 抓取 IPv6 Fullbogons
-        string ipv6Url = config.DynamicBogonIpv6Url;
-        if (!string.IsNullOrWhiteSpace(ipv6Url))
-        {
-            try
-            {
-                using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    cts.CancelAfter(TimeSpan.FromSeconds(30));
-                using HttpResponseMessage response = await httpClient.GetAsync(ipv6Url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
-                    var parsed = BogonIpFilter.ParseBogonList(content);
-                    if (parsed.Count == 0) complete = false;
-                    aggregatedNetworks.AddRange(parsed);
-                }
-                else
-                {
-                    complete = false;
-                    logWarning($"Dynamic IPv6 Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                }
-            }
-            catch (Exception ex)
-            {
-                complete = false;
-                logWarning("Failed to download dynamic IPv6 Bogon feed", ex);
-            }
-        }
-
-        if (complete && !stopping.IsCancellationRequested && aggregatedNetworks.Count > 0)
+        if (aggregatedNetworks.Count > 0)
         {
             BogonIpFilter.UpdateDynamicBogons(aggregatedNetworks);
             logInformation($"Dynamic Bogon prefix list updated successfully ({aggregatedNetworks.Count} total IPv4/IPv6 prefixes loaded).");
@@ -352,9 +353,38 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         }
     }
 
-    private bool EvaluateAndIngest(string ip, string sourceFeedName, DateTime expiresUtc)
+    private async Task<(bool Success, List<System.Net.IPNetwork>? Networks)> DownloadBogonFeedAsync(string? url, string label)
     {
-        stopping.Token.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(url)) return (true, null);
+
+        try
+        {
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                var parsed = BogonIpFilter.ParseBogonList(content);
+                if (parsed.Count == 0) return (false, null);
+                return (true, parsed);
+            }
+            else
+            {
+                logWarning($"Dynamic {label} Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
+                return (false, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            logWarning($"Failed to download dynamic {label} Bogon feed", ex);
+            return (false, null);
+        }
+    }
+
+    private bool TryCreateThreatItem(string ip, string sourceFeedName, DateTime expiresUtc, out ThreatIntelligenceItem? item)
+    {
+        item = null;
         if (string.IsNullOrWhiteSpace(ip)) return false;
 
         // 1. Bogon & Reserved 硬過濾
@@ -363,11 +393,10 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         // 2. 安全網路白名單（含 DDNS FQDN）過濾
         if (config.UseSafeNetworkList && config.IsInSafeNetwork(ip))
         {
-            logInformation($"Threat feed IP '{ip}' matches SafeNetwork whitelist. Safely skipped.");
             return false;
         }
 
-        ThreatIntelligenceItem item = new()
+        item = new()
         {
             SourceIp = ip,
             ThreatCategory = "EXTERNAL_FEED",
@@ -377,7 +406,6 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             ReporterNodeName = sourceFeedName
         };
 
-        onThreatDiscovered(item);
         return true;
     }
 

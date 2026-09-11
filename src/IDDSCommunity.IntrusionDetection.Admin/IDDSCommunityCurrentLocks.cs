@@ -119,6 +119,44 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         return null;
     }
     /// <summary>
+    /// 以批次方式更新或重設目前所有封鎖記錄，杜絕大量資料時的 UI 卡頓。
+    /// </summary>
+    /// <param name="items">封鎖資料列集合。</param>
+    public void SetLocks(IReadOnlyList<AdminLockGridItem> items)
+    {
+        dataGridViewLocks.SuspendLayout();
+        try
+        {
+            dataGridViewLocks.Rows.Clear();
+            if (items == null || items.Count == 0)
+                return;
+
+            DataGridViewRow[] rows = new DataGridViewRow[items.Count];
+            for (int i = 0; i < items.Count; i++)
+            {
+                AdminLockGridItem item = items[i];
+                DataGridViewRow row = (DataGridViewRow)dataGridViewLocks.RowTemplate.Clone();
+                row.CreateCells(dataGridViewLocks);
+                row.Cells[0].Value = false;
+                if (row.Cells[1] is DataGridViewImageCell imageCell) imageCell.Value = item.Icon;
+                row.Cells[2].Value = item.StatusName;
+                row.Cells[3].Value = item.ClientIp;
+                row.Cells[4].Value = item.DisplayName;
+                row.Cells[5].Value = item.LockDate;
+                row.Cells[6].Value = item.UnlockDate;
+                row.Cells[7].Value = item.Id.ToString();
+                row.Cells[8].Value = item.Status;
+                rows[i] = row;
+            }
+            dataGridViewLocks.Rows.AddRange(rows);
+        }
+        finally
+        {
+            dataGridViewLocks.ResumeLayout();
+        }
+    }
+
+    /// <summary>
     /// Clears requested operation.
     /// </summary>
     public void Clear() => dataGridViewLocks.Rows.Clear();
@@ -258,10 +296,17 @@ public partial class IDDSCommunityCurrentLocks : UserControl
         }
         return completed;
     }
-
-
-
-
-
-
 }
+
+/// <summary>
+/// 表示管理介面目前封鎖清單表格之資料列項目。
+/// </summary>
+/// <param name="Id">封鎖記錄唯一識別碼。</param>
+/// <param name="Icon">狀態圖示。</param>
+/// <param name="StatusName">狀態文字顯示名稱。</param>
+/// <param name="ClientIp">來源客戶端 IP 位址。</param>
+/// <param name="DisplayName">觸發封鎖之安全性代理程式顯示名稱。</param>
+/// <param name="LockDate">封鎖生效時間。</param>
+/// <param name="UnlockDate">預計解鎖時間。</param>
+/// <param name="Status">狀態碼。</param>
+public sealed record AdminLockGridItem(int Id, Image Icon, string StatusName, string ClientIp, string DisplayName, DateTime LockDate, DateTime UnlockDate, int Status);

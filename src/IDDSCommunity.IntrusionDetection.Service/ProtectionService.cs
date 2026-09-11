@@ -752,7 +752,7 @@ public bool LimitMailSent { get; set; }
             {
                 threatSyncService = new ThreatIntelligenceSyncService(
                     configuration,
-                    HandleClusterThreatReceived,
+                    HandleClusterThreatsReceived,
                     msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                     (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                     null,
@@ -763,7 +763,7 @@ public bool LimitMailSent { get; set; }
             // 啟動外部威脅情資自動訂閱與主動防護服務
             externalThreatFeedSubscriberService = new ExternalThreatFeedSubscriberService(
                 configuration,
-                HandleExternalThreatFeedDiscovered,
+                HandleExternalThreatFeedsDiscovered,
                 msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                 (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
                 null,
@@ -1283,80 +1283,230 @@ public bool LimitMailSent { get; set; }
     }
 
     /// <summary>
-    /// 處理自 Threat Hub 或邊緣節點接收到之跨主機聯防威脅情資。
+    /// 處理自 Threat Hub 或邊緣節點接收到之跨主機聯防威脅情資（單筆相容多載）。
     /// </summary>
     /// <param name="item">威脅情資項目。</param>
     private void HandleClusterThreatReceived(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
     {
-        lock (firewallMutationGate) HandleClusterThreatReceivedCore(item);
+        if (item != null)
+        {
+            HandleClusterThreatsReceived([item]);
+        }
     }
 
-    private void HandleClusterThreatReceivedCore(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    /// <summary>
+    /// 批次處理自 Threat Hub 或邊緣節點接收到之跨主機聯防威脅情資清單。
+    /// </summary>
+    /// <param name="items">威脅情資項目清單。</param>
+    private void HandleClusterThreatsReceived(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
     {
-        if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
-        if (item.ExpiresUtc <= DateTime.UtcNow || !double.IsFinite(item.ConfidenceScore) || item.ConfidenceScore < 0.8
-            || BogonIpFilter.IsBogonOrReserved(item.SourceIp)) return;
-        string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
-        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
-        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+        lock (firewallMutationGate) HandleClusterThreatsReceivedCore(items);
+    }
+
+    private void HandleClusterThreatsReceivedCore(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
+    {
+        if (items == null || items.Count == 0) return;
+
+        Dictionary<string, Shared.ThreatIntelligence.ThreatIntelligenceItem> validThreats = new(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in items)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) continue;
+            if (item.ExpiresUtc <= DateTime.UtcNow || !double.IsFinite(item.ConfidenceScore) || item.ConfidenceScore < 0.8
+                || BogonIpFilter.IsBogonOrReserved(item.SourceIp)) continue;
+            string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+            if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) continue;
+            validThreats.TryAdd(ip, item);
+        }
+
+        if (validThreats.Count == 0) return;
+
+        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
+        foreach (var (ip, item) in validThreats)
+        {
+            if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) continue;
+            toLock.Add((ip, item));
+        }
+
+        if (toLock.Count == 0) return;
+
+        string sourceNode = toLock[0].Item.ReporterNodeName ?? "Cluster Threat Hub";
 
         try
         {
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ClusterThreatHub, ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-            Lock requested = Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
-            firewallPolicy.Block(ip);
-            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
-            requested.Save();
-            TryRecordAudit("Firewall.ClusterLock", "Succeeded", ip);
+            DateTime nowUtc = DateTime.UtcNow;
+
+            database.ExecuteInTransaction((connection, transaction) =>
+            {
+                using var insertLogCmd = connection.CreateCommand();
+                insertLogCmd.Transaction = transaction;
+                insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
+                var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+                using var insertLockCmd = connection.CreateCommand();
+                insertLockCmd.Transaction = transaction;
+                insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
+                var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
+
+                foreach (var (ip, item) in toLock)
+                {
+                    pLogTime.Value = nowUtc;
+                    pLogAgent.Value = WellKnownAgentIds.ClusterThreatHub.ToString();
+                    pLogIp.Value = ip;
+                    pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
+                    pLogUser.Value = 0;
+
+                    object? incidentIdObj = insertLogCmd.ExecuteScalar();
+                    long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
+
+                    pLockDate.Value = nowUtc;
+                    pUnlockDate.Value = item.ExpiresUtc;
+                    pTrigger.Value = incidentId;
+                    pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                    pPort.Value = 0;
+                    pIp.Value = ip;
+                    pLastUpdate.Value = nowUtc;
+
+                    insertLockCmd.ExecuteNonQuery();
+                }
+            });
+
+            List<string> ipList = toLock.ConvertAll(t => t.Ip);
+            firewallPolicy.BatchBlock(ipList);
+
+            TryRecordAudit("Firewall.ClusterLock", "Succeeded", sourceNode, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
 
             logManager.WriteEntry(
-                string.Format("IP address {0} was locked via Threat Intelligence Cluster sync (reported by {1}).", ip, item.ReporterNodeName),
+                string.Format("{0} IP addresses were locked via Threat Intelligence Cluster sync (reported by {1}).", toLock.Count, sourceNode),
                 EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
         }
         catch (Exception ex)
         {
-            TryRecordAudit("Firewall.ClusterLock", "Failed", ip, ex.GetType().Name);
+            TryRecordAudit("Firewall.ClusterLock", "Failed", sourceNode, ex.GetType().Name);
             throw;
         }
     }
 
     /// <summary>
-    /// 處理自外部威脅情報（Threat Feeds）訂閱來源發現之惡意 IP。
+    /// 處理自外部威脅情報（Threat Feeds）訂閱來源發現之惡意 IP（單筆相容多載）。
     /// </summary>
     /// <param name="item">外部威脅情報項目。</param>
     private void HandleExternalThreatFeedDiscovered(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
     {
-        lock (firewallMutationGate) HandleExternalThreatFeedDiscoveredCore(item);
+        if (item != null)
+        {
+            HandleExternalThreatFeedsDiscovered([item]);
+        }
     }
 
-    private void HandleExternalThreatFeedDiscoveredCore(Shared.ThreatIntelligence.ThreatIntelligenceItem item)
+    /// <summary>
+    /// 批次處理自外部威脅情報（Threat Feeds）訂閱來源發現之惡意 IP 清單。
+    /// </summary>
+    /// <param name="items">外部威脅情報項目清單。</param>
+    private void HandleExternalThreatFeedsDiscovered(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
     {
-        if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) return;
-        string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
-        if (Shared.ThreatIntelligence.BogonIpFilter.IsBogonOrReserved(ip)) return;
-        if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) return;
+        lock (firewallMutationGate) HandleExternalThreatFeedsDiscoveredCore(items);
+    }
 
-        // 若本主機為 Threat Hub，主動將外部情報注入 Hub 威脅庫以廣播給邊緣節點
-        threatHubServer?.IngestLocalThreat(item);
+    private void HandleExternalThreatFeedsDiscoveredCore(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
+    {
+        if (items == null || items.Count == 0) return;
 
-        if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) return;
+        Dictionary<string, Shared.ThreatIntelligence.ThreatIntelligenceItem> validThreats = new(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in items)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) continue;
+            string ip = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+            if (Shared.ThreatIntelligence.BogonIpFilter.IsBogonOrReserved(ip)) continue;
+            if (configuration.UseSafeNetworkList && configuration.IsInSafeNetwork(ip)) continue;
+            validThreats.TryAdd(ip, item);
+        }
+
+        if (validThreats.Count == 0) return;
+
+        threatHubServer?.IngestLocalThreatsBatch(validThreats.Values);
+
+        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
+        foreach (var (ip, item) in validThreats)
+        {
+            if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) continue;
+            toLock.Add((ip, item));
+        }
+
+        if (toLock.Count == 0) return;
+
+        string sourceFeedName = toLock[0].Item.ReporterNodeName ?? "External Threat Feed";
 
         try
         {
-            long incidentId = IntrusionLog.AddEntry(DateTime.UtcNow, WellKnownAgentIds.ExternalThreatFeed, ip, IntrusionLog.STATUS_HARD_LOCK_REQUESTED, false);
-            Lock requested = Locks.CreateLock(DateTime.UtcNow, item.ExpiresUtc, incidentId, Lock.LOCK_STATUS_HARDLOCK_REQUESTED, 0, ip);
-            firewallPolicy.Block(ip);
-            requested.Status = Lock.LOCK_STATUS_HARDLOCK;
-            requested.Save();
-            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", ip);
+            DateTime nowUtc = DateTime.UtcNow;
+
+            database.ExecuteInTransaction((connection, transaction) =>
+            {
+                using var insertLogCmd = connection.CreateCommand();
+                insertLogCmd.Transaction = transaction;
+                insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
+                var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+                using var insertLockCmd = connection.CreateCommand();
+                insertLockCmd.Transaction = transaction;
+                insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
+                var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+                var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
+
+                foreach (var (ip, item) in toLock)
+                {
+                    pLogTime.Value = nowUtc;
+                    pLogAgent.Value = WellKnownAgentIds.ExternalThreatFeed.ToString();
+                    pLogIp.Value = ip;
+                    pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
+                    pLogUser.Value = 0;
+
+                    object? incidentIdObj = insertLogCmd.ExecuteScalar();
+                    long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
+
+                    pLockDate.Value = nowUtc;
+                    pUnlockDate.Value = item.ExpiresUtc;
+                    pTrigger.Value = incidentId;
+                    pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                    pPort.Value = 0;
+                    pIp.Value = ip;
+                    pLastUpdate.Value = nowUtc;
+
+                    insertLockCmd.ExecuteNonQuery();
+                }
+            });
+
+            List<string> ipList = toLock.ConvertAll(t => t.Ip);
+            firewallPolicy.BatchBlock(ipList);
+
+            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", sourceFeedName, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
 
             logManager.WriteEntry(
-                string.Format("IP address {0} was preemptively locked via External Threat Feed subscription ({1}).", ip, item.ReporterNodeName),
+                string.Format("{0} IP addresses were preemptively locked via External Threat Feed subscription ({1}).", toLock.Count, sourceFeedName),
                 EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
         }
         catch (Exception ex)
         {
-            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", ip, ex.GetType().Name);
+            TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", sourceFeedName, ex.GetType().Name);
             throw;
         }
     }

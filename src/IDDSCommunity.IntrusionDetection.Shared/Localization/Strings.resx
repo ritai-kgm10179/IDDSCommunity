@@ -1090,4 +1090,24 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Threat intelligence feeds updated successfully: {0} threat IPs ingested." xml:space="preserve"><value>Threat intelligence feeds updated successfully: {0} threat IPs ingested.</value></data>
   <data name="Failed to update threat intelligence feeds: {0}" xml:space="preserve"><value>Failed to update threat intelligence feeds: {0}</value></data>
   <data name="Windows Service is not running. Please start the service to update threat feeds." xml:space="preserve"><value>Windows Service is not running. Please start the service to update threat feeds.</value></data>
+  <data name="Firewall.ClusterLock" xml:space="preserve"><value>Cluster Threat Lock</value></data>
+  <data name="Firewall.ExternalThreatFeedLock" xml:space="preserve"><value>External Threat Feed Lock</value></data>
+  <data name="Firewall.Request" xml:space="preserve"><value>Firewall Block Request</value></data>
+  <data name="Firewall.Reconcile" xml:space="preserve"><value>Firewall State Reconcile</value></data>
+  <data name="Firewall.SlowAndLowLock" xml:space="preserve"><value>Slow-and-Low Attack Lock</value></data>
+  <data name="Firewall.HoneyAccountTrap" xml:space="preserve"><value>Honey Account Trap Lock</value></data>
+  <data name="Firewall.ManualUnlockRequested" xml:space="preserve"><value>Manual Unlock Requested</value></data>
+  <data name="External Threat Feed Subscription" xml:space="preserve"><value>External Threat Feed Subscription</value></data>
+  <data name="Cluster Threat Synchronization" xml:space="preserve"><value>Cluster Threat Synchronization</value></data>
+  <data name="Hard Lock (Feed TTL)" xml:space="preserve"><value>Hard Lock (Feed TTL)</value></data>
+  <data name="Pushed: {0}, Pulled: {1}" xml:space="preserve"><value>Pushed: {0}, Pulled: {1}</value></data>
+  <data name="Ingested: {0}, Evaluated: {1}" xml:space="preserve"><value>Ingested: {0}, Evaluated: {1}</value></data>
+  <data name="AddOrVerify" xml:space="preserve"><value>Add or verify rule</value></data>
+  <data name="RemoveStale" xml:space="preserve"><value>Remove stale entry</value></data>
+  <data name="Score: {0}, UniqueAccounts: {1}" xml:space="preserve"><value>Score: {0}, Unique Accounts: {1}</value></data>
+  <data name="Account: {0}, Agent: {1}" xml:space="preserve"><value>Account: {0}, Agent: {1}</value></data>
+  <data name="Blocked by SSRF filter (private/bogon/IMDS destination)" xml:space="preserve"><value>Blocked by SSRF filter (private/bogon/IMDS destination)</value></data>
+  <data name="No endpoint accepted the pending page" xml:space="preserve"><value>No endpoint accepted the pending page</value></data>
+  <data name="{0} prefixes updated" xml:space="preserve"><value>{0} prefixes updated</value></data>
+  <data name="{0} IPs: {1}" xml:space="preserve"><value>{0} IPs: {1}</value></data>
 </root>

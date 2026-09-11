@@ -776,9 +776,34 @@ public partial class IddsAdmin : Form
         if (snapshot.NewLockUpdate is DateTime lockUpdate)
         {
             LastLockUpdate = lockUpdate;
-            PanelCurrentLocks.Clear();
+            List<AdminLockGridItem> gridItems = new(snapshot.Locks.Count);
             foreach (AdminLockRow row in snapshot.Locks)
-                PanelCurrentLocks.Add(row.Id, Properties.Resources.logIcon_softLock, LockStatusAdapter.GetLockStatusName(row.Status), row.ClientIp, row.DisplayName, row.LockDate, row.UnlockDate, row.Status);
+            {
+                Image icon = row.Status == Lock.LOCK_STATUS_HARDLOCK
+                    ? Properties.Resources.logIcon_hardLock
+                    : Properties.Resources.logIcon_softLock;
+
+                string statusName;
+                if (row.Status == Lock.LOCK_STATUS_HARDLOCK && row.UnlockDate < DateTime.MaxValue.AddDays(-1))
+                {
+                    statusName = Shared.Localization.Strings.Get("Hard Lock (Feed TTL)");
+                }
+                else
+                {
+                    statusName = LockStatusAdapter.GetLockStatusName(row.Status);
+                }
+
+                gridItems.Add(new AdminLockGridItem(
+                    row.Id,
+                    icon,
+                    statusName,
+                    row.ClientIp,
+                    row.DisplayName,
+                    row.LockDate,
+                    row.UnlockDate,
+                    row.Status));
+            }
+            PanelCurrentLocks.SetLocks(gridItems);
         }
         if (snapshot.NewDashboardRefresh is DateTime dashboardRefresh)
         {

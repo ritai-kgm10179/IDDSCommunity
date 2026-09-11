@@ -66,6 +66,14 @@ public sealed class RuntimeDependencyInjectionTest
         public void Block(string ipAddress)
         {
         }
+
+        /// <summary>
+        /// 於相依性插入測試中模擬批次封鎖位址。
+        /// </summary>
+        /// <param name="ipAddresses">待阻擋的位址集合。</param>
+        public void BatchBlock(System.Collections.Generic.IReadOnlyCollection<string> ipAddresses)
+        {
+        }
         /// <summary>
         /// Reports that no address is blocked in dependency-registration tests.
         /// </summary>

@@ -4,6 +4,12 @@ internal interface IFirewallPolicy
 {
     void Block(string ipAddress);
 
+    /// <summary>
+    /// 批次將多個 IP 位址加入 Windows 防火牆阻擋規則（支援 CIDR 聚合與切片批次寫入）。
+    /// </summary>
+    /// <param name="ipAddresses">要批次阻擋之 IP 位址清單。</param>
+    void BatchBlock(System.Collections.Generic.IReadOnlyCollection<string> ipAddresses);
+
     bool IsLocked(string ipAddress);
 
     System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses();

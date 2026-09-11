@@ -36,6 +36,9 @@ internal sealed class ThreatHubStore(Database? database = null)
         }
     }
 
+    private long lastExpiredCleanupTicks;
+    private const long CleanupIntervalTicks = TimeSpan.TicksPerMinute * 10;
+
     internal bool Upsert(ThreatIntelligenceItem item)
     {
         string json = JsonSerializer.Serialize(item);
@@ -44,7 +47,11 @@ internal sealed class ThreatHubStore(Database? database = null)
         {
             if (database is null)
             {
-                foreach (string key in memory.Where(p => p.Value.ExpiresTicks <= now).Select(p => p.Key).ToArray()) memory.Remove(key);
+                if (now - lastExpiredCleanupTicks > CleanupIntervalTicks)
+                {
+                    foreach (string key in memory.Where(p => p.Value.ExpiresTicks <= now).Select(p => p.Key).ToArray()) memory.Remove(key);
+                    lastExpiredCleanupTicks = now;
+                }
                 if (memory.TryGetValue(item.SourceIp, out Entry? previous) && previous.Payload == json) return true;
                 if (!memory.ContainsKey(item.SourceIp) && memory.Count >= MaximumEntries) return false;
                 memory[item.SourceIp] = new Entry { Sequence = ++sequence, Payload = json, ExpiresTicks = item.ExpiresUtc.Ticks };
@@ -53,7 +60,11 @@ internal sealed class ThreatHubStore(Database? database = null)
             bool accepted = false;
             database.ExecuteInTransaction((connection, transaction) =>
             {
-                connection.Execute("DELETE FROM ThreatHubEntries WHERE ExpiresTicks<=@now", new { now }, transaction);
+                if (now - lastExpiredCleanupTicks > CleanupIntervalTicks)
+                {
+                    connection.Execute("DELETE FROM ThreatHubEntries WHERE ExpiresTicks<=@now", new { now }, transaction);
+                    lastExpiredCleanupTicks = now;
+                }
                 string? previous = connection.ExecuteScalar<string>("SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip", new { ip = item.SourceIp }, transaction);
                 if (previous == json) { accepted = true; return; }
                 if (previous is null && connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ThreatHubEntries", transaction: transaction) >= MaximumEntries) return;
@@ -62,6 +73,66 @@ internal sealed class ThreatHubStore(Database? database = null)
                 accepted = true;
             });
             return accepted;
+        }
+    }
+
+    /// <summary>
+    /// 在單一資料庫交易中批次新增或更新威脅情報，大幅降低磁碟 I/O。
+    /// </summary>
+    /// <param name="items">威脅項目清單。</param>
+    /// <returns>成功寫入之情資筆數。</returns>
+    internal int UpsertBatch(IEnumerable<ThreatIntelligenceItem> items)
+    {
+        if (items == null) return 0;
+        long now = DateTime.UtcNow.Ticks;
+        int count = 0;
+        lock (gate)
+        {
+            if (database is null)
+            {
+                if (now - lastExpiredCleanupTicks > CleanupIntervalTicks)
+                {
+                    foreach (string key in memory.Where(p => p.Value.ExpiresTicks <= now).Select(p => p.Key).ToArray()) memory.Remove(key);
+                    lastExpiredCleanupTicks = now;
+                }
+                foreach (var item in items)
+                {
+                    string json = JsonSerializer.Serialize(item);
+                    if (memory.TryGetValue(item.SourceIp, out Entry? previous) && previous.Payload == json) continue;
+                    if (!memory.ContainsKey(item.SourceIp) && memory.Count >= MaximumEntries) break;
+                    memory[item.SourceIp] = new Entry { Sequence = ++sequence, Payload = json, ExpiresTicks = item.ExpiresUtc.Ticks };
+                    count++;
+                }
+                return count;
+            }
+
+            database.ExecuteInTransaction((connection, transaction) =>
+            {
+                if (now - lastExpiredCleanupTicks > CleanupIntervalTicks)
+                {
+                    connection.Execute("DELETE FROM ThreatHubEntries WHERE ExpiresTicks<=@now", new { now }, transaction);
+                    lastExpiredCleanupTicks = now;
+                }
+                int currentCount = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ThreatHubEntries", transaction: transaction);
+                foreach (var item in items)
+                {
+                    string json = JsonSerializer.Serialize(item);
+                    string? previous = connection.ExecuteScalar<string>("SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip", new { ip = item.SourceIp }, transaction);
+                    if (previous == json) continue;
+                    if (previous is null && currentCount >= MaximumEntries) break;
+                    if (previous is not null)
+                    {
+                        connection.Execute("UPDATE ThreatHubEntries SET Payload=@json, ExpiresTicks=@expires WHERE SourceIp=@ip", new { ip = item.SourceIp, json, expires = item.ExpiresUtc.Ticks }, transaction);
+                    }
+                    else
+                    {
+                        connection.Execute("INSERT INTO ThreatHubEntries(SourceIp,Payload,ExpiresTicks) VALUES(@ip,@json,@expires)", new { ip = item.SourceIp, json, expires = item.ExpiresUtc.Ticks }, transaction);
+                        currentCount++;
+                    }
+                    count++;
+                }
+            });
+            return count;
         }
     }
 

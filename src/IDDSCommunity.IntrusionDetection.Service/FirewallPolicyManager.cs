@@ -79,6 +79,51 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             }
         }
     }
+
+    /// <summary>
+    /// 批次將多個 IP 位址加入 Windows 防火牆阻擋規則（支援 CIDR 聚合與切片批次寫入）。
+    /// </summary>
+    /// <param name="ipAddresses">要批次阻擋之 IP 位址清單。</param>
+    public void BatchBlock(IReadOnlyCollection<string> ipAddresses)
+    {
+        if (ipAddresses == null || ipAddresses.Count == 0) return;
+
+        List<string> validIps = [];
+        foreach (string raw in ipAddresses)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) continue;
+            string trimmed = raw.Trim();
+            if (IddsConfig.IsValidIpAddress(trimmed) || System.Net.IPNetwork.TryParse(trimmed, out _))
+            {
+                validIps.Add(trimmed);
+            }
+        }
+        if (validIps.Count == 0) return;
+
+        List<string> aggregated = AggregateIpAddresses(
+            validIps,
+            IddsConfig.Instance.UseSafeNetworkList ? IddsConfig.Instance.SafeNetworks.ConvertAll(s => s.IpAddress) : null);
+
+        lock (_firewallLock)
+        {
+            try
+            {
+                AddShardedRulesBatch("BlockAttacker", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN,
+                    NET_FW_ACTION.NET_FW_ACTION_BLOCK, aggregated);
+                if (blockMode == FirewallBlockMode.Bidirectional)
+                {
+                    AddShardedRulesBatch("BlockAttackerOutbound", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT,
+                        NET_FW_ACTION.NET_FW_ACTION_BLOCK, aggregated);
+                }
+            }
+            catch (Exception ex)
+            {
+                logManager.WriteEntry("Batch Create Firewall Rules: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
+                    Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                throw;
+            }
+        }
+    }
     /// <summary>
     /// Determines whether locked.
     /// </summary>
@@ -474,6 +519,98 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         NET_FW_ACTION action, string remoteAddress)
     {
         AddShardedRule(name, port, direction, action, remoteAddress);
+    }
+
+    /// <summary>
+    /// 批次新增分組切片阻擋規則。先補滿既有未滿 1,000 筆之切片，其餘按 1,000 筆/切片一次性建立新規則。
+    /// </summary>
+    /// <param name="name">規則名稱前綴識別碼。</param>
+    /// <param name="port">本機連接埠。</param>
+    /// <param name="direction">規則方向（傳入或傳出）。</param>
+    /// <param name="action">規則動作（阻擋或允許）。</param>
+    /// <param name="remoteAddresses">遠端 IP 位址或 CIDR 集合。</param>
+    internal void AddShardedRulesBatch(string name, int port, NET_FW_RULE_DIRECTION direction,
+        NET_FW_ACTION action, IReadOnlyList<string> remoteAddresses)
+    {
+        if (remoteAddresses == null || remoteAddresses.Count == 0) return;
+
+        string baseRuleName = GetRuleName(name, port);
+        List<INetFwRule> existingShards = [];
+        foreach (INetFwRule r in FindRules(baseRuleName))
+        {
+            string rName = FirewallComString.Get(r.Name);
+            if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+            {
+                existingShards.Add(r);
+            }
+        }
+
+        HashSet<string> existingAddresses = new(StringComparer.OrdinalIgnoreCase);
+        List<(INetFwRule Shard, List<string> Addresses)> shardLists = [];
+        foreach (INetFwRule shard in existingShards)
+        {
+            string existing = FirewallComString.Get(shard.RemoteAddresses);
+            List<string> list = existing.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+            foreach (string a in list)
+            {
+                existingAddresses.Add(a);
+            }
+            shardLists.Add((shard, list));
+        }
+
+        List<string> pendingToAdd = [];
+        foreach (string candidate in remoteAddresses)
+        {
+            if (!existingAddresses.Contains(candidate))
+            {
+                pendingToAdd.Add(candidate);
+                existingAddresses.Add(candidate);
+            }
+        }
+        if (pendingToAdd.Count == 0) return;
+
+        int pendingIndex = 0;
+        foreach (var (shard, list) in shardLists)
+        {
+            int capacity = MaxAddressesPerRule - list.Count;
+            if (capacity > 0 && pendingIndex < pendingToAdd.Count)
+            {
+                int take = Math.Min(capacity, pendingToAdd.Count - pendingIndex);
+                list.AddRange(pendingToAdd.GetRange(pendingIndex, take));
+                pendingIndex += take;
+
+                shard.Action = action;
+                shard.Direction = direction;
+                shard.Protocol = 256;
+                shard.Enabled = true;
+                FirewallComString.Set(string.Join(",", list), val => shard.RemoteAddresses = val);
+            }
+        }
+
+        int shardIndex = existingShards.Count;
+        while (pendingIndex < pendingToAdd.Count)
+        {
+            int count = Math.Min(MaxAddressesPerRule, pendingToAdd.Count - pendingIndex);
+            List<string> chunk = pendingToAdd.GetRange(pendingIndex, count);
+            pendingIndex += count;
+
+            string newRuleName = shardIndex == 0 ? baseRuleName : $"{baseRuleName}_{shardIndex}";
+            shardIndex++;
+
+            INetFwRule newRule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
+            newRule.Action = action;
+            FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => newRule.Grouping = value);
+            newRule.Protocol = 256;
+            FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME + " rule", value => newRule.Description = value);
+            newRule.Direction = direction;
+            newRule.Enabled = true;
+
+            if (port > 0)
+                FirewallComString.Set(port.ToString(), value => newRule.LocalPorts = value);
+            FirewallComString.Set(newRuleName, value => newRule.Name = value);
+            FirewallComString.Set(string.Join(",", chunk), value => newRule.RemoteAddresses = value);
+            firewallPolicyManager.Rules.Add(newRule);
+        }
     }
 
     internal static string MergeRemoteAddresses(string existingAddresses, string address)

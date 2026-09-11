@@ -154,6 +154,57 @@ public static class GeoIpLookupService
     }
 
     /// <summary>
+    /// 自單一 CSV 檔案路徑串流載入 GeoIP 網段對照表，杜絕記憶體中超大字串之 LOH 配置。
+    /// </summary>
+    /// <param name="filePath">本機 CSV 檔案路徑。</param>
+    /// <returns>成功載入之記錄總數。</returns>
+    public static int LoadFromFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            Clear();
+            return 0;
+        }
+
+        List<GeoIpEntry> v4 = [];
+        List<GeoIpEntry> v6 = [];
+        using (StreamReader reader = new(filePath))
+        {
+            ParseCsvContent(reader, v4, v6);
+        }
+
+        snapshot = new(v4, v6);
+        return v4.Count + v6.Count;
+    }
+
+    /// <summary>
+    /// 分別自 IPv4 與 IPv6 之本機 CSV 檔案路徑串流載入 GeoIP 網段對照表（原子熱替換）。
+    /// </summary>
+    /// <param name="v4FilePath">IPv4 本機 CSV 檔案路徑。</param>
+    /// <param name="v6FilePath">IPv6 本機 CSV 檔案路徑。</param>
+    /// <returns>成功載入之記錄總數。</returns>
+    public static int LoadFromFiles(string? v4FilePath, string? v6FilePath)
+    {
+        List<GeoIpEntry> v4 = [];
+        List<GeoIpEntry> v6 = [];
+
+        if (!string.IsNullOrWhiteSpace(v4FilePath) && File.Exists(v4FilePath))
+        {
+            using StreamReader reader = new(v4FilePath);
+            ParseCsvContent(reader, v4, v6);
+        }
+
+        if (!string.IsNullOrWhiteSpace(v6FilePath) && File.Exists(v6FilePath))
+        {
+            using StreamReader reader = new(v6FilePath);
+            ParseCsvContent(reader, v4, v6);
+        }
+
+        snapshot = new(v4, v6);
+        return v4.Count + v6.Count;
+    }
+
+    /// <summary>
     /// 自單一 CSV 格式字串（格式：CIDR,CountryCode,CountryName 或 StartIP,EndIP,CountryCode,CountryName）載入 GeoIP 網段對照表。
     /// </summary>
     /// <param name="csvContent">CSV 文字內容。</param>
@@ -168,7 +219,10 @@ public static class GeoIpLookupService
 
         List<GeoIpEntry> v4 = [];
         List<GeoIpEntry> v6 = [];
-        ParseCsvContent(csvContent, v4, v6);
+        using (StringReader reader = new(csvContent))
+        {
+            ParseCsvContent(reader, v4, v6);
+        }
 
         snapshot = new(v4, v6);
         return v4.Count + v6.Count;
@@ -187,12 +241,14 @@ public static class GeoIpLookupService
 
         if (!string.IsNullOrWhiteSpace(ipv4CsvContent))
         {
-            ParseCsvContent(ipv4CsvContent, v4, v6);
+            using StringReader reader = new(ipv4CsvContent);
+            ParseCsvContent(reader, v4, v6);
         }
 
         if (!string.IsNullOrWhiteSpace(ipv6CsvContent))
         {
-            ParseCsvContent(ipv6CsvContent, v4, v6);
+            using StringReader reader = new(ipv6CsvContent);
+            ParseCsvContent(reader, v4, v6);
         }
 
         snapshot = new(v4, v6);
@@ -207,7 +263,8 @@ public static class GeoIpLookupService
         {
             if (content == null) continue;
             int before = v4.Count + v6.Count;
-            ParseCsvContent(content, v4, v6);
+            using StringReader reader = new(content);
+            ParseCsvContent(reader, v4, v6);
             if (v4.Count + v6.Count == before) return 0;
         }
         if (v4.Count + v6.Count == 0) return 0;
@@ -215,9 +272,8 @@ public static class GeoIpLookupService
         return v4.Count + v6.Count;
     }
 
-    private static void ParseCsvContent(string csvContent, List<GeoIpEntry> v4List, List<GeoIpEntry> v6List)
+    private static void ParseCsvContent(TextReader reader, List<GeoIpEntry> v4List, List<GeoIpEntry> v6List)
     {
-        using StringReader reader = new(csvContent);
         string? line;
         while ((line = reader.ReadLine()) != null)
         {

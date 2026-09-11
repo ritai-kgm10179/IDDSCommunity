@@ -67,6 +67,14 @@ public sealed class FirewallStateReconcilerTest
             addresses.Add(ipAddress);
         }
 
+        public void BatchBlock(IReadOnlyCollection<string> ipAddresses)
+        {
+            if (FailBlock)
+                throw new InvalidOperationException("expected");
+            foreach (string ip in ipAddresses)
+                addresses.Add(ip);
+        }
+
         public bool IsLocked(string ipAddress) => addresses.Contains(ipAddress);
         public IReadOnlyCollection<string> GetBlockedAddresses() => addresses;
         public void RemoveIpAddressFromBlockList(string ipAddress) => addresses.Remove(ipAddress);

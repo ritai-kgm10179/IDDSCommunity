@@ -420,6 +420,93 @@ public sealed class PanelSystemOperationsLog : UserControl
         return subject;
     }
 
+    private static string FormatDetails(string rawDetails)
+    {
+        if (string.IsNullOrWhiteSpace(rawDetails)) return string.Empty;
+
+        // Pushed: {pushed}, Pulled: {pulled}
+        if (rawDetails.StartsWith("Pushed: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int pulledIndex = rawDetails.IndexOf(", Pulled: ", StringComparison.OrdinalIgnoreCase);
+            if (pulledIndex > 0)
+            {
+                string pushed = rawDetails["Pushed: ".Length..pulledIndex].Trim();
+                string pulled = rawDetails[(pulledIndex + ", Pulled: ".Length)..].Trim();
+                return string.Format(Strings.Get("Pushed: {0}, Pulled: {1}"), pushed, pulled);
+            }
+        }
+
+        // Ingested: {ingested}, Evaluated: {evaluated}
+        if (rawDetails.StartsWith("Ingested: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int evalIndex = rawDetails.IndexOf(", Evaluated: ", StringComparison.OrdinalIgnoreCase);
+            if (evalIndex > 0)
+            {
+                string ingested = rawDetails["Ingested: ".Length..evalIndex].Trim();
+                string eval = rawDetails[(evalIndex + ", Evaluated: ".Length)..].Trim();
+                return string.Format(Strings.Get("Ingested: {0}, Evaluated: {1}"), ingested, eval);
+            }
+        }
+
+        // AddOrVerify
+        if (string.Equals(rawDetails, "AddOrVerify", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("AddOrVerify");
+
+        // RemoveStale
+        if (string.Equals(rawDetails, "RemoveStale", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("RemoveStale");
+
+        // Score: {score}, UniqueAccounts: {accounts}
+        if (rawDetails.StartsWith("Score: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int uniqueIndex = rawDetails.IndexOf(", UniqueAccounts: ", StringComparison.OrdinalIgnoreCase);
+            if (uniqueIndex > 0)
+            {
+                string score = rawDetails["Score: ".Length..uniqueIndex].Trim();
+                string accounts = rawDetails[(uniqueIndex + ", UniqueAccounts: ".Length)..].Trim();
+                return string.Format(Strings.Get("Score: {0}, UniqueAccounts: {1}"), score, accounts);
+            }
+        }
+
+        // Account: {account}, Agent: {agent}
+        if (rawDetails.StartsWith("Account: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int agentIndex = rawDetails.IndexOf(", Agent: ", StringComparison.OrdinalIgnoreCase);
+            if (agentIndex > 0)
+            {
+                string account = rawDetails["Account: ".Length..agentIndex].Trim();
+                string agent = rawDetails[(agentIndex + ", Agent: ".Length)..].Trim();
+                return string.Format(Strings.Get("Account: {0}, Agent: {1}"), account, agent);
+            }
+        }
+
+        // Blocked by SSRF filter (private/bogon/IMDS destination)
+        if (string.Equals(rawDetails, "Blocked by SSRF filter (private/bogon/IMDS destination)", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Blocked by SSRF filter (private/bogon/IMDS destination)");
+
+        // No endpoint accepted the pending page
+        if (string.Equals(rawDetails, "No endpoint accepted the pending page", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("No endpoint accepted the pending page");
+
+        // {n} prefixes updated
+        if (rawDetails.EndsWith(" prefixes updated", StringComparison.OrdinalIgnoreCase))
+        {
+            string countPart = rawDetails[..^" prefixes updated".Length].Trim();
+            return string.Format(Strings.Get("{0} prefixes updated"), countPart);
+        }
+
+        // {n} IPs: {list}
+        int ipsIdx = rawDetails.IndexOf(" IPs: ", StringComparison.OrdinalIgnoreCase);
+        if (ipsIdx > 0 && int.TryParse(rawDetails[..ipsIdx].Trim(), out int ipCount))
+        {
+            string list = rawDetails[(ipsIdx + " IPs: ".Length)..].Trim();
+            return string.Format(Strings.Get("{0} IPs: {1}"), ipCount, list);
+        }
+
+        string localized = Strings.Get(rawDetails);
+        return !string.IsNullOrEmpty(localized) && localized != rawDetails ? localized : rawDetails;
+    }
+
     /// <summary>
     /// 以非同步方式依據目前選取條件載入並顯示系統作業稽核日誌。
     /// </summary>
@@ -502,7 +589,7 @@ public sealed class PanelSystemOperationsLog : UserControl
                         FormatOutcome(rawOutcome),
                         FormatActor(rawActor),
                         FormatSubject(rawSubject),
-                        rawDetails,
+                        FormatDetails(rawDetails),
                         rawEventType,
                         rawOutcome,
                         rawActor,

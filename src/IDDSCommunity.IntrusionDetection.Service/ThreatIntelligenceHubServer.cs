@@ -137,6 +137,28 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     }
 
     /// <summary>
+    /// 將本機產生或訂閱之多筆硬封鎖威脅批次注入至 Hub 威脅庫中。
+    /// </summary>
+    /// <param name="items">威脅情資項目集合。</param>
+    /// <returns>成功注入之情資數量。</returns>
+    public int IngestLocalThreatsBatch(IEnumerable<ThreatIntelligenceItem> items)
+    {
+        if (items == null) return 0;
+        List<ThreatIntelligenceItem> valid = [];
+        foreach (var item in items)
+        {
+            if (!IsValidThreat(item)) continue;
+            ThreatIntelligenceItem normalized = JsonSerializer.Deserialize<ThreatIntelligenceItem>(JsonSerializer.Serialize(item))!;
+            normalized.SourceIp = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
+            DateTime maximumExpiry = item.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+            if (normalized.ExpiresUtc > maximumExpiry) normalized.ExpiresUtc = maximumExpiry;
+            if (normalized.ExpiresUtc <= DateTime.UtcNow) continue;
+            valid.Add(normalized);
+        }
+        return store.UpsertBatch(valid);
+    }
+
+    /// <summary>
     /// 取得伺服器目前是否處於監聽狀態。
     /// </summary>
     public bool IsListening => listener != null && listener.IsListening;
