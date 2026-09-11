@@ -93,6 +93,20 @@ public sealed class RuntimeDependencyInjectionTest
         {
         }
         /// <summary>
+        /// 於相依性插入測試中模擬批次自防火牆移除 IP 位址。
+        /// </summary>
+        /// <param name="ipAddresses">要移除的 IP 位址清單。</param>
+        public void BatchRemove(System.Collections.Generic.IReadOnlyCollection<string> ipAddresses)
+        {
+        }
+        /// <summary>
+        /// 於相依性插入測試中模擬重整並壓縮防火牆規則。
+        /// </summary>
+        /// <param name="safeNetworks">安全網路清單。</param>
+        public void CompactBlockRules(System.Collections.Generic.IEnumerable<string>? safeNetworks = null)
+        {
+        }
+        /// <summary>
         /// 於相依性插入測試中模擬對齊傳入放行規則。
         /// </summary>
         /// <param name="targetRules">目標規則集合。</param>

@@ -514,6 +514,10 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
             // 定期校準 Windows 防火牆傳入放行規則以防外部異動
             ReconcileFirewallInboundRules();
+            lock (firewallMutationGate)
+            {
+                firewallPolicy.CompactBlockRules();
+            }
         }
         catch (Exception ex)
         {
@@ -566,22 +570,43 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                 }
             }
             List<Lock> timedOutLocks = Locks.GetUnlockList();
-            foreach (Lock l in timedOutLocks)
+            if (timedOutLocks.Count > 0)
             {
-                try
+                List<string> ipsToUnblock = [];
+                Dictionary<long, bool> otherLockMap = [];
+                DateTime now = DateTime.UtcNow;
+
+                foreach (Lock l in timedOutLocks)
                 {
-                    bool otherLock = Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND LockId<>@p1 AND Status IN (200,210,300,310) AND UnlockDate>@p2)", l.IpAddress, l.Id, DateTime.UtcNow)) != 0;
-                    if (!otherLock) firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
-                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3 AND UnlockDate=@p4",
-                        Lock.LOCK_STATUS_UNLOCKED, DateTime.UtcNow, l.Id, l.Status, l.UnlockDate);
-                    TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
-                    if (!otherLock) OnClientIpAddressUnlocked(l, null);
+                    bool otherLock = Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND LockId<>@p1 AND Status IN (200,210,300,310) AND UnlockDate>@p2)", l.IpAddress, l.Id, now)) != 0;
+                    otherLockMap[l.Id] = otherLock;
+                    if (!otherLock && !ipsToUnblock.Contains(l.IpAddress))
+                    {
+                        ipsToUnblock.Add(l.IpAddress);
+                    }
                 }
-                catch (Exception ex)
+
+                if (ipsToUnblock.Count > 0)
                 {
-                    TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
-                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3",
-                        Lock.LOCK_STATUS_UNLOCK_REQUESTED, DateTime.UtcNow, l.Id, l.Status);
+                    firewallPolicy.BatchRemove(ipsToUnblock);
+                }
+
+                foreach (Lock l in timedOutLocks)
+                {
+                    try
+                    {
+                        bool otherLock = otherLockMap.TryGetValue(l.Id, out bool o) && o;
+                        database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3 AND UnlockDate=@p4",
+                            Lock.LOCK_STATUS_UNLOCKED, DateTime.UtcNow, l.Id, l.Status, l.UnlockDate);
+                        TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
+                        if (!otherLock) OnClientIpAddressUnlocked(l, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
+                        database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3",
+                            Lock.LOCK_STATUS_UNLOCK_REQUESTED, DateTime.UtcNow, l.Id, l.Status);
+                    }
                 }
             }
         }
@@ -1644,6 +1669,7 @@ public bool LimitMailSent { get; set; }
                 Globals.IDDSCOMMUNITY_EVENT_ID_CONFIGURATION_ERROR,
                 Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
         reconciler.Reconcile();
+        firewallPolicy.CompactBlockRules();
     }
 
 

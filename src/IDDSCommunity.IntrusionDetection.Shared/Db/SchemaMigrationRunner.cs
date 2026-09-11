@@ -112,7 +112,10 @@ internal static class SchemaMigrationRunner
             CanonicalizeAgentIdentities(connection, transaction);
 
         if (ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
+        {
             Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_Ip_Status_Expiry ON Locks(IpAddress,Status,UnlockDate)");
+            Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_Status_UnlockDate ON Locks(Status,UnlockDate)");
+        }
         Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubEntries (Sequence INTEGER PRIMARY KEY AUTOINCREMENT, SourceIp TEXT NOT NULL UNIQUE, Payload TEXT NOT NULL, ExpiresTicks INTEGER NOT NULL)");
         Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ThreatHubEntries_Expires ON ThreatHubEntries(ExpiresTicks)");
         Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubIdentity (Id INTEGER PRIMARY KEY CHECK(Id=1), Generation TEXT NOT NULL)");

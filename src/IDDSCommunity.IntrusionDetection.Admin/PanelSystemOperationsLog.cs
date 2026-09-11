@@ -604,11 +604,22 @@ public sealed class PanelSystemOperationsLog : UserControl
                 if (IsDisposed) return;
                 dataGridViewLogs.SuspendLayout();
                 dataGridViewLogs.Rows.Clear();
-                foreach (AuditDisplayRow r in rows)
+                DataGridViewRow[] rowArray = new DataGridViewRow[rows.Count];
+                for (int i = 0; i < rows.Count; i++)
                 {
-                    int rowIdx = dataGridViewLogs.Rows.Add(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
-                    dataGridViewLogs.Rows[rowIdx].Tag = r;
+                    AuditDisplayRow r = rows[i];
+                    DataGridViewRow row = (DataGridViewRow)dataGridViewLogs.RowTemplate.Clone();
+                    row.CreateCells(dataGridViewLogs);
+                    row.Cells[0].Value = r.Time;
+                    row.Cells[1].Value = r.EventType;
+                    row.Cells[2].Value = r.Outcome;
+                    row.Cells[3].Value = r.Actor;
+                    row.Cells[4].Value = r.Subject;
+                    row.Cells[5].Value = r.Details;
+                    row.Tag = r;
+                    rowArray[i] = row;
                 }
+                dataGridViewLogs.Rows.AddRange(rowArray);
                 dataGridViewLogs.ResumeLayout();
                 labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
                 buttonRefresh.Enabled = true;

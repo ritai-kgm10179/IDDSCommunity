@@ -238,7 +238,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
                 if (!ContainsAddress(remoteAddresses, ipAddress))
                     continue;
-                string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, ipAddress);
+                string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ipAddress.Trim() });
                 if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
                 {
                     RemoveRuleIfPresent(ruleName);
@@ -254,39 +254,179 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                     "The IP address {0} is not blocked and might have been automatically removed by schedule. Please refresh the list to view current locks.", ipAddress), nameof(ipAddress));
         }
     }
+
+    /// <summary>
+    /// 批次自 Windows 防火牆阻擋規則中移除多個 IP 位址，以單一 Pass 更新分片規則以杜絕 COM 昂貴耗時。
+    /// </summary>
+    /// <param name="ipAddresses">要批次移除之 IP 位址清單。</param>
+    public void BatchRemove(IReadOnlyCollection<string> ipAddresses)
+    {
+        if (ipAddresses == null || ipAddresses.Count == 0) return;
+        HashSet<string> removeSet = new(ipAddresses.Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => ip.Trim()), StringComparer.OrdinalIgnoreCase);
+        if (removeSet.Count == 0) return;
+
+        lock (_firewallLock)
+        {
+            foreach (string ruleName in GetActiveRuleNames().ToList())
+            {
+                INetFwRule? rule = GetRule(ruleName);
+                if (rule is null)
+                    continue;
+                string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
+                bool hasMatch = false;
+                foreach (string entry in remoteAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    string baseIp = entry.Contains('/') ? entry.Split('/')[0].Trim() : entry;
+                    if (removeSet.Contains(baseIp) || removeSet.Contains(entry))
+                    {
+                        hasMatch = true;
+                        break;
+                    }
+                }
+                if (!hasMatch)
+                    continue;
+
+                string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, removeSet);
+                if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+                {
+                    RemoveRuleIfPresent(ruleName);
+                }
+                else
+                {
+                    FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 重整並壓縮既有 Windows 防火牆分片規則，重新進行 CIDR 網段聚合並清除破碎或空洞分片。
+    /// </summary>
+    /// <param name="safeNetworks">選擇性的安全網路全域白名單集合。</param>
+    public void CompactBlockRules(IEnumerable<string>? safeNetworks = null)
+    {
+        lock (_firewallLock)
+        {
+            try
+            {
+                IReadOnlyCollection<string> current = GetBlockedAddresses();
+                if (current.Count == 0)
+                {
+                    CleanUpRules();
+                    return;
+                }
+
+                safeNetworks ??= IddsConfig.Instance.UseSafeNetworkList
+                    ? IddsConfig.Instance.SafeNetworks.ConvertAll(s => s.IpAddress)
+                    : null;
+
+                List<string> aggregated = AggregateIpAddresses(current, safeNetworks, subnetThreshold: 5);
+
+                ApplyCompactedShards("BlockAttacker", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN,
+                    NET_FW_ACTION.NET_FW_ACTION_BLOCK, aggregated);
+
+                if (blockMode == FirewallBlockMode.Bidirectional)
+                {
+                    ApplyCompactedShards("BlockAttackerOutbound", 0, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT,
+                        NET_FW_ACTION.NET_FW_ACTION_BLOCK, aggregated);
+                }
+                else
+                {
+                    string outBase = GetRuleName("BlockAttackerOutbound", 0);
+                    foreach (string name in GetActiveShardedRuleNames(outBase))
+                    {
+                        RemoveRuleIfPresent(name);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logManager.WriteEntry("CompactBlockRules failed: " + ex.Message,
+                    System.Diagnostics.EventLogEntryType.Warning,
+                    Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL,
+                    Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+            }
+        }
+    }
+
+    private void ApplyCompactedShards(string name, int port, NET_FW_RULE_DIRECTION direction,
+        NET_FW_ACTION action, IReadOnlyList<string> addresses)
+    {
+        string baseRuleName = GetRuleName(name, port);
+        List<INetFwRule> existingShards = [];
+        foreach (INetFwRule r in FindRules(baseRuleName))
+        {
+            string rName = FirewallComString.Get(r.Name);
+            if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+            {
+                existingShards.Add(r);
+            }
+        }
+
+        int chunkCount = addresses.Count == 0 ? 0 : (addresses.Count + MaxAddressesPerRule - 1) / MaxAddressesPerRule;
+
+        for (int i = 0; i < chunkCount; i++)
+        {
+            int start = i * MaxAddressesPerRule;
+            int count = Math.Min(MaxAddressesPerRule, addresses.Count - start);
+            List<string> chunk = addresses.Skip(start).Take(count).ToList();
+            string chunkAddresses = string.Join(",", chunk);
+            string shardName = i == 0 ? baseRuleName : $"{baseRuleName}_{i}";
+
+            if (i < existingShards.Count)
+            {
+                INetFwRule shard = existingShards[i];
+                shard.Action = action;
+                shard.Direction = direction;
+                shard.Protocol = 256;
+                shard.Enabled = true;
+                FirewallComString.Set(chunkAddresses, val => shard.RemoteAddresses = val);
+            }
+            else
+            {
+                INetFwRule newRule = CreateComObject<INetFwRule>("HNetCfg.FWRule");
+                newRule.Action = action;
+                FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => newRule.Grouping = value);
+                newRule.Protocol = 256;
+                FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME + " rule", value => newRule.Description = value);
+                newRule.Direction = direction;
+                newRule.Enabled = true;
+                if (port > 0)
+                    FirewallComString.Set(port.ToString(), value => newRule.LocalPorts = value);
+                FirewallComString.Set(shardName, value => newRule.Name = value);
+                FirewallComString.Set(chunkAddresses, value => newRule.RemoteAddresses = value);
+                firewallPolicyManager.Rules.Add(newRule);
+            }
+        }
+
+        for (int i = chunkCount; i < existingShards.Count; i++)
+        {
+            string excessName = FirewallComString.Get(existingShards[i].Name);
+            RemoveRuleIfPresent(excessName);
+        }
+    }
+
     /// <summary>
     /// Gets cleaned remote addresses.
     /// </summary>
     /// <param name="addresses">addresses 的值。</param>
     /// <param name="removeAddress">remove address 的值。</param>
     /// <returns>傳回 get cleaned remote addresses 的結果。</returns>
-    private static string GetCleanedRemoteAddresses(string addresses, string removeAddress)
+    private static string GetCleanedRemoteAddresses(string addresses, string removeAddress) =>
+        GetCleanedRemoteAddresses(addresses, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { removeAddress.Trim() });
+
+    private static string GetCleanedRemoteAddresses(string addresses, HashSet<string> removeSet)
     {
         StringBuilder result = new();
-        string[] addressList;
-        if (addresses.Contains(','))
-        {
-            addressList = addresses.Split(',');
-        }
-        else
-        {
-            addressList = new string[1];
-            addressList[0] = addresses;
-        }
+        string[] addressList = addresses.Contains(',') ? addresses.Split(',') : [addresses];
         foreach (string address in addressList)
         {
-            string part1;
-            if (address.Contains('/'))
+            string trimmed = address.Trim();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            string part1 = trimmed.Contains('/') ? trimmed.Split('/')[0].Trim() : trimmed;
+            if (!removeSet.Contains(part1) && !removeSet.Contains(trimmed))
             {
-                part1 = address.Split('/')[0];
-            }
-            else
-            {
-                part1 = address;
-            }
-            if (!part1.Trim().Equals(removeAddress.Trim()) && !address.Trim().Equals(removeAddress.Trim()))
-            {
-                result.Append(address + ",");
+                result.Append(trimmed).Append(',');
             }
         }
         return result.ToString();

@@ -17,6 +17,18 @@ internal interface IFirewallPolicy
     void RemoveIpAddressFromBlockList(string ipAddress);
 
     /// <summary>
+    /// 批次自 Windows 防火牆阻擋規則中移除多個 IP 位址，以單一 Pass 更新分片規則以杜絕 COM 昂貴耗時。
+    /// </summary>
+    /// <param name="ipAddresses">要批次移除之 IP 位址清單。</param>
+    void BatchRemove(System.Collections.Generic.IReadOnlyCollection<string> ipAddresses);
+
+    /// <summary>
+    /// 重整並壓縮既有 Windows 防火牆分片規則，重新進行 CIDR 網段聚合並清除破碎或空洞分片。
+    /// </summary>
+    /// <param name="safeNetworks">選擇性的安全網路全域白名單集合。</param>
+    void CompactBlockRules(System.Collections.Generic.IEnumerable<string>? safeNetworks = null);
+
+    /// <summary>
     /// 宣告式比對並對齊 Windows 防火牆傳入放行規則，自動新增缺漏項目並移除過期舊規則。
     /// </summary>
     /// <param name="targetRules">目標期望開放之通訊埠規則規格清單。</param>

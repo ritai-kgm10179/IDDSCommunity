@@ -278,11 +278,17 @@ public IDDSCommunitySecurityLog()
     private int CountEvents()
     {
         int result = 0;
-        foreach (DataGridViewRow row in dataGridViewIntrusionLog.Rows)
+        DataView view = IntrusionLogView;
+        for (int i = 0; i < view.Count; i++)
         {
-            if (int.TryParse(row.Cells["NumberOfEvents"]?.Value?.ToString(), out int c))
+            object val = view[i]["NumberOfEvents"];
+            if (val is int count)
             {
-                result += c;
+                result += count;
+            }
+            else if (int.TryParse(val?.ToString(), out int parsed))
+            {
+                result += parsed;
             }
         }
         return result;
@@ -297,6 +303,56 @@ public IDDSCommunitySecurityLog()
         MaxLogId = 0;
         labelEventsCount.Text = "0";
     }
+
+    /// <summary>
+    /// 以批次方式更新或重設目前所有安全性事件記錄，杜絕大量資料時的 UI 卡頓。
+    /// </summary>
+    /// <param name="items">安全性記錄項目集合。</param>
+    public void SetLogEntries(IReadOnlyList<AdminSecurityLogGridItem> items)
+    {
+        DataTable table = DataSetIntrusionLog.Tables["IntrusionLog"]
+            ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("IntrusionLog table is not initialized."));
+
+        int maxId = 0;
+        int totalEvents = 0;
+
+        table.BeginLoadData();
+        try
+        {
+            table.Clear();
+            if (items != null)
+            {
+                for (int i = 0; i < items.Count; i++)
+                {
+                    AdminSecurityLogGridItem item = items[i];
+                    if (maxId < item.Id) maxId = item.Id;
+                    totalEvents += item.NumberOfEvents;
+
+                    table.Rows.Add(
+                        item.Id,
+                        item.Action,
+                        SecurityAgents.Instance.GetDisplayName(item.AgentId),
+                        item.LogIcon,
+                        item.LogType,
+                        item.EventDate,
+                        item.IpAddress,
+                        item.Message,
+                        item.AgentId,
+                        item.NumberOfEvents);
+                }
+            }
+        }
+        finally
+        {
+            table.EndLoadData();
+        }
+
+        MaxLogId = maxId;
+        labelEventsCount.Text = string.IsNullOrEmpty(IntrusionLogView.RowFilter)
+            ? totalEvents.ToString()
+            : CountEvents().ToString();
+    }
+
     /// <summary>
     /// 執行 fill log entry 作業。
     /// </summary>
@@ -343,3 +399,27 @@ public int MaxLogId { get; set; }
         }
     }
 }
+
+/// <summary>
+/// 表示安全性事件日誌清單的快照項目資料。
+/// </summary>
+/// <param name="Id">日誌識別碼。</param>
+/// <param name="Action">事件動作識別碼。</param>
+/// <param name="AgentId">安全代理模組識別碼。</param>
+/// <param name="LogIcon">日誌狀態圖示。</param>
+/// <param name="LogType">日誌狀態類型文字。</param>
+/// <param name="EventDate">事件發生時間。</param>
+/// <param name="IpAddress">來源 IP 位址。</param>
+/// <param name="Message">事件訊息描述。</param>
+/// <param name="NumberOfEvents">事件累積發生次數。</param>
+public sealed record AdminSecurityLogGridItem(
+    int Id,
+    int Action,
+    string AgentId,
+    Image LogIcon,
+    string LogType,
+    DateTime EventDate,
+    string IpAddress,
+    string Message,
+    int NumberOfEvents);
+

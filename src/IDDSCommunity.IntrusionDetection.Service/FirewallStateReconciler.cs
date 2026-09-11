@@ -22,16 +22,43 @@ internal sealed class FirewallStateReconciler(
         HashSet<string> desiredAddresses = new(StringComparer.Ordinal);
         HashSet<string> currentBlocked = new(firewallPolicy.GetBlockedAddresses(), StringComparer.OrdinalIgnoreCase);
 
+        List<Lock> missingLocks = [];
         foreach (Lock desiredLock in desiredLocks)
         {
             desiredAddresses.Add(desiredLock.IpAddress);
+            if (!currentBlocked.Contains(desiredLock.IpAddress))
+            {
+                missingLocks.Add(desiredLock);
+            }
+        }
+
+        if (missingLocks.Count > 0)
+        {
             try
             {
-                if (!currentBlocked.Contains(desiredLock.IpAddress))
+                firewallPolicy.BatchBlock(missingLocks.ConvertAll(l => l.IpAddress));
+                foreach (Lock missing in missingLocks)
                 {
-                    firewallPolicy.Block(desiredLock.IpAddress);
-                    currentBlocked.Add(desiredLock.IpAddress);
+                    currentBlocked.Add(missing.IpAddress);
                 }
+            }
+            catch (Exception ex)
+            {
+                foreach (Lock missing in missingLocks)
+                {
+                    recordAudit("Firewall.Reconcile", "Failed", missing.IpAddress, ex.GetType().Name);
+                    reportFailure(missing.IpAddress, ex);
+                }
+            }
+        }
+
+        foreach (Lock desiredLock in desiredLocks)
+        {
+            if (!currentBlocked.Contains(desiredLock.IpAddress))
+                continue;
+
+            try
+            {
                 if (desiredLock.Status == Lock.LOCK_STATUS_SOFTLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_SOFTLOCK;
@@ -50,19 +77,33 @@ internal sealed class FirewallStateReconciler(
                 reportFailure(desiredLock.IpAddress, ex);
             }
         }
+
+        List<string> staleAddresses = [];
         foreach (string actualAddress in currentBlocked)
         {
-            if (desiredAddresses.Contains(actualAddress))
-                continue;
+            if (!desiredAddresses.Contains(actualAddress))
+            {
+                staleAddresses.Add(actualAddress);
+            }
+        }
+
+        if (staleAddresses.Count > 0)
+        {
             try
             {
-                firewallPolicy.RemoveIpAddressFromBlockList(actualAddress);
-                recordAudit("Firewall.Reconcile", "Succeeded", actualAddress, "RemoveStale");
+                firewallPolicy.BatchRemove(staleAddresses);
+                foreach (string actualAddress in staleAddresses)
+                {
+                    recordAudit("Firewall.Reconcile", "Succeeded", actualAddress, "RemoveStale");
+                }
             }
             catch (Exception ex)
             {
-                recordAudit("Firewall.Reconcile", "Failed", actualAddress, ex.GetType().Name);
-                reportFailure(actualAddress, ex);
+                foreach (string actualAddress in staleAddresses)
+                {
+                    recordAudit("Firewall.Reconcile", "Failed", actualAddress, ex.GetType().Name);
+                    reportFailure(actualAddress, ex);
+                }
             }
         }
     }

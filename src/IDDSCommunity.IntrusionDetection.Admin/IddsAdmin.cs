@@ -762,11 +762,21 @@ public partial class IddsAdmin : Form
     {
         if (snapshot.ReplaceSecurityLog)
         {
-            PanelSecurityLog.ClearEntries();
+            List<AdminSecurityLogGridItem> logItems = new(snapshot.Logs.Count);
             foreach (AdminLogRow row in snapshot.Logs)
             {
-                PanelSecurityLog.FillLogEntry(row.Id, row.Action, row.AgentId, IntrusionLog.GetStatusIcon(row.Action), IntrusionLog.GetStatusClass(row.Action), row.IncidentTime, row.ClientIp, row.Message, row.NumberOfEvents);
+                logItems.Add(new AdminSecurityLogGridItem(
+                    row.Id,
+                    row.Action,
+                    row.AgentId,
+                    IntrusionLog.GetStatusIcon(row.Action),
+                    IntrusionLog.GetStatusClass(row.Action),
+                    row.IncidentTime,
+                    row.ClientIp,
+                    row.Message,
+                    row.NumberOfEvents));
             }
+            PanelSecurityLog.SetLogEntries(logItems);
         }
         if (snapshot.NewSecurityLogRefresh is DateTime securityLogRefresh)
             lastSecurityLogRefresh = securityLogRefresh;
