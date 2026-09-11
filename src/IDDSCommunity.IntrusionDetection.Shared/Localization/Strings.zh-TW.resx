@@ -603,6 +603,8 @@
   <data name="Hard lock" xml:space="preserve"><value>硬封鎖</value></data>
   <data name="Unlock" xml:space="preserve"><value>解除封鎖</value></data>
   <data name="System" xml:space="preserve"><value>系統</value></data>
+  <data name="System Core" xml:space="preserve"><value>系統核心</value></data>
+  <data name="系統核心" xml:space="preserve"><value>系統核心</value></data>
   <data name="New" xml:space="preserve"><value>新增</value></data>
   <data name="Soft lock requested" xml:space="preserve"><value>已要求軟封鎖</value></data>
   <data name="Soft lock expired" xml:space="preserve"><value>軟封鎖已到期</value></data>

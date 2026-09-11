@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
@@ -138,6 +139,11 @@ public static class WellKnownAgentIds
     /// </summary>
     public static readonly Guid Honeypot = new("{E88DA514-9985-4D14-9A4B-391D3C5C384B}");
 
+    /// <summary>
+    /// 系統核心防護引擎（System Core Protection Engine）。
+    /// </summary>
+    public static readonly Guid System = new(IntrusionLog.SYSTEM_ID);
+
     private sealed record AgentDescriptor(Guid Id, string PrimaryName, string AssemblyName, string DisplayName, string[] Aliases);
 
     private static readonly AgentDescriptor[] KnownAgents =
@@ -193,7 +199,9 @@ public static class WellKnownAgentIds
         new(ExternalThreatFeed, "ExternalThreatFeedSubscriber", "IDDSCommunity.IntrusionDetection.Service.dll", "外部威脅情報訂閱",
             ["External Threat Feeds", "ExternalThreatFeed", "威脅情報訂閱", "ThreatFeeds", "IDDSCommunity.ThreatIntelligence.ExternalFeeds"]),
         new(Honeypot, "HoneypotSecurityAgent", "IDDSCommunity.Agents.Honeypot.dll", "誘餌蜜罐主動防禦代理程式",
-            ["Honeypot Decoy Security Agent", "Honeypot", "蜜罐", "誘餌蜜罐", "IDDSCommunity.Agents.Honeypot"])
+            ["Honeypot Decoy Security Agent", "Honeypot", "蜜罐", "誘餌蜜罐", "IDDSCommunity.Agents.Honeypot"]),
+        new(System, "System", "IDDSCommunity.IntrusionDetection.Service.dll", "系統核心",
+            ["System", "系統", "System Core", "系統核心", "System Protection Engine", "IDDSCommunity.System"])
     ];
 
     /// <summary>
@@ -294,10 +302,30 @@ public static class WellKnownAgentIds
         return false;
     }
 
+    /// <summary>
+    /// 嘗試自確定性識別碼取得已知的預設顯示名稱。
+    /// </summary>
+    /// <param name="agentId">欲查詢的代理程式識別碼。</param>
+    /// <param name="displayName">若成功取得則為對應的顯示名稱；否則為 <see langword="null"/>。</param>
+    /// <returns>若成功取得顯示名稱則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    public static bool TryGetDisplayName(Guid agentId, [NotNullWhen(true)] out string? displayName)
+    {
+        foreach (AgentDescriptor descriptor in KnownAgents)
+        {
+            if (descriptor.Id == agentId)
+            {
+                displayName = descriptor.DisplayName;
+                return true;
+            }
+        }
+        displayName = null;
+        return false;
+    }
+
     private static string GetShortName(string fullName)
     {
         if (string.IsNullOrEmpty(fullName)) return string.Empty;
-        string nameWithoutExt = System.IO.Path.GetFileNameWithoutExtension(fullName);
+        string nameWithoutExt = global::System.IO.Path.GetFileNameWithoutExtension(fullName);
         int idx = nameWithoutExt.LastIndexOf('.');
         return idx >= 0 ? nameWithoutExt[(idx + 1)..] : nameWithoutExt;
     }

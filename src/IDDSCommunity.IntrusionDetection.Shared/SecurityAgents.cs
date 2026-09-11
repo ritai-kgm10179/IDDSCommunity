@@ -221,7 +221,19 @@ public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
         }
 
         if (isGuid)
+        {
+            if (WellKnownAgentIds.TryGetDisplayName(targetGuid, out string? knownDisplayName))
+            {
+                return Localization.Strings.Get(knownDisplayName);
+            }
             return Localization.Strings.Format("Historical agent ({0})", agentId);
+        }
+
+        if (WellKnownAgentIds.TryResolveCanonicalGuid(agentId, out Guid canonicalGuid) &&
+            WellKnownAgentIds.TryGetDisplayName(canonicalGuid, out string? resolvedDisplayName))
+        {
+            return Localization.Strings.Get(resolvedDisplayName);
+        }
 
         return Localization.Strings.Format("Agent {0} is not registered.", agentId);
     }

@@ -386,6 +386,16 @@ public sealed class DashboardStatisticsTest
         Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("遠端桌面安全性代理程式", out Guid rdp));
         Assert.AreEqual(WellKnownAgentIds.TerminalServer, rdp);
 
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("System", out Guid systemGuid));
+        Assert.AreEqual(WellKnownAgentIds.System, systemGuid);
+
+        Assert.IsTrue(WellKnownAgentIds.TryResolveCanonicalGuid("系統核心", out Guid systemCoreGuid));
+        Assert.AreEqual(WellKnownAgentIds.System, systemCoreGuid);
+
+        Assert.IsTrue(WellKnownAgentIds.IsWellKnown(WellKnownAgentIds.System));
+        Assert.IsTrue(WellKnownAgentIds.TryGetDisplayName(WellKnownAgentIds.System, out string? systemDisplayName));
+        Assert.AreEqual("系統核心", systemDisplayName);
+
         Assert.IsFalse(WellKnownAgentIds.IsWellKnown(Guid.NewGuid()));
         Assert.IsTrue(WellKnownAgentIds.IsWellKnown(WellKnownAgentIds.TerminalServer));
 
@@ -393,6 +403,33 @@ public sealed class DashboardStatisticsTest
             "ED541DED-E7B0-4796-8939-F2A66AAC4154",
             out Guid unknownGuid));
         Assert.AreEqual(Guid.Empty, unknownGuid);
+    }
+
+    /// <summary>
+    /// 驗證 SecurityAgents 能將 SYSTEM_ID 正確解析為系統核心顯示名稱，而非歷史代理程式。
+    /// </summary>
+    [TestMethod]
+    public void SecurityAgents_ResolvesSystemIdAsSystemCoreDisplayName()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "idds-system-core-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            SecurityAgents securityAgents = new(database, new IddsConfig(database));
+
+            string displayName = securityAgents.GetDisplayName(IntrusionLog.SYSTEM_ID);
+
+            Assert.AreEqual(Localization.Strings.Get("System Core"), displayName);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
     }
 
     [TestMethod]

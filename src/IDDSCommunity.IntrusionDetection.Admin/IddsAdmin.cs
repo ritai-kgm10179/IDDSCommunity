@@ -721,7 +721,7 @@ public partial class IddsAdmin : Form
                 }
                 else if (string.IsNullOrWhiteSpace(displayName))
                 {
-                    displayName = Shared.Localization.Strings.Get("System");
+                    displayName = Shared.Localization.Strings.Get("System Core");
                 }
                 locks.Add(new AdminLockRow(Shared.Db.DbValueConverter.ToInt(reader["LockId"]), status, Shared.Db.DbValueConverter.ToString(reader["ClientIp"]), displayName, lockDate, unlockDate));
             }
