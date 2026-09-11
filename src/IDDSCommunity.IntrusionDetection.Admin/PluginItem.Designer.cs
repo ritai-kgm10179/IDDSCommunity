@@ -140,7 +140,8 @@
             //
             // pictureBoxEnabledState
             //
-            this.pictureBoxEnabledState.Location = new System.Drawing.Point(324, 9);
+            this.pictureBoxEnabledState.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBoxEnabledState.Location = new System.Drawing.Point(320, 9);
             this.pictureBoxEnabledState.Name = "pictureBoxEnabledState";
             this.pictureBoxEnabledState.Size = new System.Drawing.Size(24, 24);
             this.pictureBoxEnabledState.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
@@ -175,7 +176,7 @@
             this.Controls.Add(this.pictureBoxEnabledState);
             this.Controls.Add(this.pictureBoxAgentIcon);
             this.Name = "PluginItem";
-            this.Size = new System.Drawing.Size(343, 41);
+            this.Size = new System.Drawing.Size(352, 41);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxEnabledState)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxAgentIcon)).EndInit();
             this.ResumeLayout(false);

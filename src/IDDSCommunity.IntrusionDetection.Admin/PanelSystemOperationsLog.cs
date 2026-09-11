@@ -424,6 +424,21 @@ public sealed class PanelSystemOperationsLog : UserControl
     {
         if (string.IsNullOrWhiteSpace(rawDetails)) return string.Empty;
 
+        // GUID 逆向解析為代理程式在地化顯示名稱（兼顧歷史資料相容性）
+        if (Guid.TryParse(rawDetails, out Guid _))
+        {
+            try
+            {
+                string agentDisplay = SecurityAgents.Instance.GetDisplayName(rawDetails);
+                if (!string.IsNullOrWhiteSpace(agentDisplay) && agentDisplay != Strings.Get("None"))
+                    return agentDisplay;
+            }
+            catch
+            {
+                // 若 SecurityAgents 尚未初始化，安全略過
+            }
+        }
+
         // Pushed: {pushed}, Pulled: {pulled}
         if (rawDetails.StartsWith("Pushed: ", StringComparison.OrdinalIgnoreCase))
         {
@@ -447,6 +462,50 @@ public sealed class PanelSystemOperationsLog : UserControl
                 return string.Format(Strings.Get("Ingested: {0}, Evaluated: {1}"), ingested, eval);
             }
         }
+
+        // Locked: {locked}, Evaluated: {evaluated}
+        if (rawDetails.StartsWith("Locked: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int evalIndex = rawDetails.IndexOf(", Evaluated: ", StringComparison.OrdinalIgnoreCase);
+            if (evalIndex > 0)
+            {
+                string locked = rawDetails["Locked: ".Length..evalIndex].Trim();
+                string eval = rawDetails[(evalIndex + ", Evaluated: ".Length)..].Trim();
+                return string.Format(Strings.Get("Locked: {0}, Evaluated: {1}"), locked, eval);
+            }
+        }
+
+        // {totalLoaded} prefixes across {totalCountries} countries loaded
+        int acrossIdx = rawDetails.IndexOf(" prefixes across ", StringComparison.OrdinalIgnoreCase);
+        int loadedIdx = rawDetails.IndexOf(" countries loaded", StringComparison.OrdinalIgnoreCase);
+        if (acrossIdx > 0 && loadedIdx > acrossIdx)
+        {
+            string loadedPart = rawDetails[..acrossIdx].Trim();
+            string countriesPart = rawDetails[(acrossIdx + " prefixes across ".Length)..loadedIdx].Trim();
+            if (long.TryParse(loadedPart, out long loadedCount) && int.TryParse(countriesPart, out int countryCount))
+            {
+                return string.Format(Strings.Get("Loaded {0} prefixes across {1} countries"), loadedCount.ToString("N0"), countryCount);
+            }
+        }
+
+        // Created inbound allow rule: {ruleName}
+        if (rawDetails.StartsWith("Created inbound allow rule: ", StringComparison.OrdinalIgnoreCase))
+        {
+            string ruleName = rawDetails["Created inbound allow rule: ".Length..].Trim();
+            return string.Format(Strings.Get("Created inbound allow rule: {0}"), ruleName);
+        }
+
+        // Removed obsolete inbound allow rule
+        if (string.Equals(rawDetails, "Removed obsolete inbound allow rule", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Removed obsolete inbound allow rule");
+
+        // Cleaned up inbound allow rule on service shutdown
+        if (string.Equals(rawDetails, "Cleaned up inbound allow rule on service shutdown", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Cleaned up inbound allow rule on service shutdown");
+
+        // Failed to download GeoIP feeds from configured URLs.
+        if (string.Equals(rawDetails, "Failed to download GeoIP feeds from configured URLs.", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Failed to download GeoIP feeds from configured URLs.");
 
         // AddOrVerify
         if (string.Equals(rawDetails, "AddOrVerify", StringComparison.OrdinalIgnoreCase))

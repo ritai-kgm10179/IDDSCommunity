@@ -47,7 +47,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <summary>
     /// 代表已註冊邊緣節點之即時狀態。
     /// </summary>
-    public sealed record EdgeNodeState(string NodeId, string NodeName, string NodeIp, DateTime LastSeenUtc, int ReportedThreatCount);
+    public sealed record EdgeNodeState(string NodeId, string NodeName, string NodeIp, DateTime LastSeenUtc, int ReportedThreatCount, string SyncedGeneration = "");
 
     /// <summary>
     /// 初始化 <see cref="ThreatIntelligenceHubServer"/> 類別之新執行個體。
@@ -331,7 +331,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 {
                     foreach (var node in registeredNodes.Where(p => p.Value.LastSeenUtc < DateTime.UtcNow.AddHours(-1)).ToArray()) registeredNodes.TryRemove(node.Key, out _);
                     if (!registeredNodes.ContainsKey(nodeId) && registeredNodes.Count >= 1024) { resp.StatusCode = 503; return; }
-                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, clientIp, DateTime.UtcNow, payload.NewThreats.Count);
+                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, clientIp, DateTime.UtcNow, payload.NewThreats.Count, payload.Generation ?? string.Empty);
                 }
                 foreach (ThreatIntelligenceItem threat in payload.NewThreats)
                 {
@@ -383,6 +383,8 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 IReadOnlyList<EdgeNodeState> nodes = RegisteredNodes;
                 int activeThreatCount = store.ActiveThreatCount;
                 (int localBlocks, int localProbation) = GetLocalDefenseMetrics();
+                (int externalCount, int clusterCount) = store.GetFeedComposition();
+                var recentThreats = store.GetRecentThreats(8);
                 int port = config.ThreatHubPort > 0 ? config.ThreatHubPort : 8443;
                 bool useReverseProxy = allowLoopbackHttp || config.ThreatHubUseReverseProxy;
                 string listenMode = useReverseProxy ? $"HTTP (Proxy):{port}" : $"HTTPS:{port}";
@@ -404,7 +406,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         generation = store.Generation,
                         threatTtlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365),
                         localActiveBlocks = localBlocks,
-                        localProbationCount = localProbation
+                        localProbationCount = localProbation,
+                        externalFeedCount = externalCount,
+                        clusterNodeThreatCount = clusterCount
                     },
                     nodes = nodes.Select(n => new
                     {
@@ -412,9 +416,83 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         nodeName = n.NodeName,
                         nodeIp = n.NodeIp,
                         lastSeenUtc = n.LastSeenUtc,
-                        reportedThreatCount = n.ReportedThreatCount
+                        reportedThreatCount = n.ReportedThreatCount,
+                        syncedGeneration = n.SyncedGeneration,
+                        isSynced = !string.IsNullOrEmpty(n.SyncedGeneration) && string.Equals(n.SyncedGeneration, store.Generation, StringComparison.OrdinalIgnoreCase)
+                    }).ToList(),
+                    recentThreats = recentThreats.Select(t => new
+                    {
+                        sourceIp = t.SourceIp,
+                        category = t.ThreatCategory,
+                        confidence = t.ConfidenceScore,
+                        reporter = !string.IsNullOrWhiteSpace(t.ReporterNodeName) ? t.ReporterNodeName : (!string.IsNullOrWhiteSpace(t.ReporterNodeId) ? t.ReporterNodeId : "External Feed"),
+                        reportedUtc = t.ReportedUtc
                     }).ToList()
                 }).ConfigureAwait(false);
+                return;
+            }
+
+            // 5. 即時 IP 威脅快查端點 (GET /api/threat-hub/lookup?ip=...)
+            if (path.Equals("/api/threat-hub/lookup", StringComparison.OrdinalIgnoreCase))
+            {
+                string clientIp = req.RemoteEndPoint?.Address != null
+                    ? IpAddressCanonicalizer.Canonicalize(req.RemoteEndPoint.Address).ToString()
+                    : "unknown";
+
+                if (authRateLimiter.IsBlocked(clientIp, out TimeSpan retryAfter))
+                {
+                    resp.Headers["Retry-After"] = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
+                    resp.StatusCode = (int)HttpStatusCode.TooManyRequests;
+                    await WriteJsonResponseAsync(resp, new { error = "Too Many Requests" }).ConfigureAwait(false);
+                    return;
+                }
+
+                string? apiKey = req.Headers[ApiKeyHeader];
+                if (string.IsNullOrWhiteSpace(config.ThreatHubApiKey) || string.IsNullOrEmpty(apiKey) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(apiKey)), System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(config.ThreatHubApiKey))))
+                {
+                    await HandleAuthFailureAsync(req, resp, clientIp).ConfigureAwait(false);
+                    return;
+                }
+
+                authRateLimiter.Reset(clientIp);
+
+                if (method != "GET" && method != "HEAD")
+                {
+                    resp.Headers["Allow"] = "GET, HEAD";
+                    resp.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                    await WriteJsonResponseAsync(resp, new { error = "Method Not Allowed" }).ConfigureAwait(false);
+                    return;
+                }
+
+                string queryIp = req.QueryString["ip"]?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(queryIp) || !IPAddress.TryParse(queryIp, out IPAddress? parsedIp))
+                {
+                    resp.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await WriteJsonResponseAsync(resp, new { error = "Valid IP address required" }).ConfigureAwait(false);
+                    return;
+                }
+
+                string canonicalIp = IpAddressCanonicalizer.Canonicalize(parsedIp).ToString();
+                var threatItem = store.LookupThreat(canonicalIp);
+                resp.StatusCode = (int)HttpStatusCode.OK;
+                if (threatItem is null)
+                {
+                    await WriteJsonResponseAsync(resp, new { found = false, ip = canonicalIp }).ConfigureAwait(false);
+                }
+                else
+                {
+                    await WriteJsonResponseAsync(resp, new
+                    {
+                        found = true,
+                        ip = threatItem.SourceIp,
+                        category = threatItem.ThreatCategory,
+                        confidence = threatItem.ConfidenceScore,
+                        reporter = !string.IsNullOrWhiteSpace(threatItem.ReporterNodeName) ? threatItem.ReporterNodeName : (!string.IsNullOrWhiteSpace(threatItem.ReporterNodeId) ? threatItem.ReporterNodeId : "External Feed"),
+                        reportedUtc = threatItem.ReportedUtc,
+                        expiresUtc = threatItem.ExpiresUtc,
+                        notes = threatItem.Notes
+                    }).ConfigureAwait(false);
+                }
                 return;
             }
 
@@ -636,7 +714,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("THEME_LIGHT", "淺色"), ("THEME_DARK", "深色"),
             ("DAYS", "天"), ("HOURS", "小時"),
             ("MINUTES", "分"), ("SECONDS", "秒"),
-            ("BLOCKS", "項封鎖"), ("PROBATION", "個假釋中")
+            ("BLOCKS", "項封鎖"), ("PROBATION", "個假釋中"),
+            ("SYNC_STATUS", "同步狀態"), ("SYNCED", "已同步最新世代"), ("SYNCING", "同步中"),
+            ("RECENT_THREATS", "最新威脅動態"), ("THREAT_CATEGORY", "威脅分類"),
+            ("CONFIDENCE", "置信度"), ("REPORTER", "回報來源"), ("OCCURRED_TIME", "時間"),
+            ("LOOKUP_TITLE", "IP 威脅快查"), ("LOOKUP_PLACEHOLDER", "輸入欲查詢之 IP 位址..."),
+            ("LOOKUP_BTN", "立即查詢"), ("LOOKUP_FOUND", "該 IP 目前已被列入全網威脅黑名單！"),
+            ("LOOKUP_NOT_FOUND", "該 IP 目前未列入威脅名單（安全無紀錄）"),
+            ("FEED_EXTERNAL", "外部情報訂閱"), ("FEED_CLUSTER", "節點即時回報"),
+            ("NO_THREATS", "目前無最近威脅紀錄")
         ]);
 
         internal static DashboardText English { get; } = new("en-US",
@@ -668,7 +754,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("THEME_LIGHT", "Light"), ("THEME_DARK", "Dark"),
             ("DAYS", "d"), ("HOURS", "h"),
             ("MINUTES", "m"), ("SECONDS", "s"),
-            ("BLOCKS", "blocks"), ("PROBATION", "in probation")
+            ("BLOCKS", "blocks"), ("PROBATION", "in probation"),
+            ("SYNC_STATUS", "Sync Status"), ("SYNCED", "Synced"), ("SYNCING", "Syncing"),
+            ("RECENT_THREATS", "Recent Threat Events"), ("THREAT_CATEGORY", "Category"),
+            ("CONFIDENCE", "Confidence"), ("REPORTER", "Reporter"), ("OCCURRED_TIME", "Time"),
+            ("LOOKUP_TITLE", "Threat IP Quick Lookup"), ("LOOKUP_PLACEHOLDER", "Enter IP address to lookup..."),
+            ("LOOKUP_BTN", "Lookup"), ("LOOKUP_FOUND", "This IP is listed in active threat intelligence!"),
+            ("LOOKUP_NOT_FOUND", "This IP is not found in threat intelligence (clean)."),
+            ("FEED_EXTERNAL", "External feeds"), ("FEED_CLUSTER", "Node reports"),
+            ("NO_THREATS", "No recent threat events recorded")
         ]);
     }
 
@@ -822,6 +916,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               <div class="stat-value" id="stat-threats">—</div>
               <div class="stat-label">{{ACTIVE_THREATS}}</div>
               <div class="stat-sub" id="stat-threats-cap">—</div>
+              <div class="stat-sub" id="stat-threats-feed">—</div>
             </div>
             <div class="card">
               <div class="stat-value" id="stat-defense">—</div>
@@ -846,6 +941,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             </div>
           </div>
 
+          <div class="hub-overview" style="margin-bottom: 24px;">
+            <div class="hub-overview-title">{{LOOKUP_TITLE}}</div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="lookup-ip" placeholder="{{LOOKUP_PLACEHOLDER}}" aria-label="{{LOOKUP_PLACEHOLDER}}" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 280px; max-width: 100%; font-family: monospace;" />
+              <button id="lookup-btn" style="background: var(--accent); color: var(--accent-fg); border: 1px solid transparent; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;">{{LOOKUP_BTN}}</button>
+              <div id="lookup-result" style="font-size: 13px; display: none; padding: 6px 12px; border-radius: 6px;"></div>
+            </div>
+          </div>
+
           <h2>{{EDGE_NODES}}</h2>
           <div class="table-wrap">
             <table>
@@ -855,12 +959,31 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                   <th>{{NODE_ID}}</th>
                   <th>{{NODE_NAME}}</th>
                   <th>{{SOURCE_IP}}</th>
+                  <th>{{SYNC_STATUS}}</th>
                   <th>{{LAST_HEARTBEAT}}</th>
                   <th>{{REPORTED_THREATS}}</th>
                 </tr>
               </thead>
               <tbody id="node-tbody">
-                <tr><td colspan="6" class="empty">{{ENTER_KEY}}</td></tr>
+                <tr><td colspan="7" class="empty">{{ENTER_KEY}}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 style="margin-top: 28px;">{{RECENT_THREATS}}</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{SOURCE_IP}}</th>
+                  <th>{{THREAT_CATEGORY}}</th>
+                  <th>{{CONFIDENCE}}</th>
+                  <th>{{REPORTER}}</th>
+                  <th>{{OCCURRED_TIME}}</th>
+                </tr>
+              </thead>
+              <tbody id="threat-tbody">
+                <tr><td colspan="5" class="empty">{{ENTER_KEY}}</td></tr>
               </tbody>
             </table>
           </div>
@@ -883,6 +1006,10 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             document.getElementById('logout-btn').addEventListener('click', logout);
             document.getElementById('api-key').addEventListener('keydown', function(e) {
               if (e.key === 'Enter') { applyKey(); }
+            });
+            document.getElementById('lookup-btn').addEventListener('click', runLookup);
+            document.getElementById('lookup-ip').addEventListener('keydown', function(e) {
+              if (e.key === 'Enter') { runLookup(); }
             });
 
             document.getElementById('theme-select').value = sessionStorage.getItem('idds_hub_theme') || 'auto';
@@ -949,6 +1076,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               document.getElementById('stat-nodes').textContent = '—';
               document.getElementById('stat-threats').textContent = '—';
               document.getElementById('stat-threats-cap').textContent = '—';
+              document.getElementById('stat-threats-feed').textContent = '—';
               document.getElementById('stat-defense').textContent = '—';
               document.getElementById('stat-defense-sub').textContent = '—';
               document.getElementById('stat-uptime').textContent = '—';
@@ -959,15 +1087,70 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               document.getElementById('hub-generation').textContent = '—';
               document.getElementById('hub-ttl').textContent = '—';
               document.getElementById('refresh-info').textContent = '';
+
+              var lr = document.getElementById('lookup-result');
+              lr.style.display = 'none';
+              document.getElementById('lookup-ip').value = '';
+
               var tbody = document.getElementById('node-tbody');
               tbody.replaceChildren();
               var emptyTr = document.createElement('tr');
               var emptyTd = document.createElement('td');
-              emptyTd.colSpan = 6;
+              emptyTd.colSpan = 7;
               emptyTd.className = 'empty';
               emptyTd.textContent = '{{ENTER_KEY}}';
               emptyTr.appendChild(emptyTd);
               tbody.appendChild(emptyTr);
+
+              var threatTbody = document.getElementById('threat-tbody');
+              threatTbody.replaceChildren();
+              var emptyTr2 = document.createElement('tr');
+              var emptyTd2 = document.createElement('td');
+              emptyTd2.colSpan = 5;
+              emptyTd2.className = 'empty';
+              emptyTd2.textContent = '{{ENTER_KEY}}';
+              emptyTr2.appendChild(emptyTd2);
+              threatTbody.appendChild(emptyTr2);
+            }
+
+            function runLookup() {
+              var ipInput = document.getElementById('lookup-ip').value.trim();
+              var resDiv = document.getElementById('lookup-result');
+              if (!ipInput || !currentKey) { return; }
+              resDiv.style.display = 'inline-block';
+              resDiv.textContent = '...';
+              resDiv.style.background = 'var(--card-bg)';
+              resDiv.style.color = 'var(--muted)';
+              resDiv.style.border = '1px solid var(--card-border)';
+
+              fetch('/api/threat-hub/lookup?ip=' + encodeURIComponent(ipInput), {
+                method: 'GET',
+                headers: { 'X-IDDS-ThreatHub-ApiKey': currentKey }
+              })
+              .then(function(r) {
+                if (!r.ok) { throw new Error('HTTP ' + r.status); }
+                return r.json();
+              })
+              .then(function(d) {
+                if (d.found) {
+                  resDiv.style.background = 'var(--badge-offline-bg)';
+                  resDiv.style.color = 'var(--badge-offline-fg)';
+                  resDiv.style.border = '1px solid var(--badge-offline-fg)';
+                  var cat = d.item && d.item.threatCategory ? (' (' + d.item.threatCategory + ')') : '';
+                  resDiv.textContent = '⚠️ {{LOOKUP_FOUND}}' + cat;
+                } else {
+                  resDiv.style.background = 'var(--badge-online-bg)';
+                  resDiv.style.color = 'var(--badge-online-fg)';
+                  resDiv.style.border = '1px solid var(--badge-online-fg)';
+                  resDiv.textContent = '✅ {{LOOKUP_NOT_FOUND}}';
+                }
+              })
+              .catch(function(err) {
+                resDiv.style.background = 'var(--error-bg)';
+                resDiv.style.color = 'var(--error-fg)';
+                resDiv.style.border = '1px solid var(--error-border)';
+                resDiv.textContent = err.message || 'Error';
+              });
             }
 
             function statusClass(lastSeen) {
@@ -1054,6 +1237,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 document.getElementById('stat-nodes').textContent = data.nodes ? data.nodes.length : 0;
                 var threats = data.totalActiveThreatCount ?? 0;
                 document.getElementById('stat-threats').textContent = threats;
+                if (data.feedStats) {
+                  document.getElementById('stat-threats-feed').textContent = '{{FEED_EXTERNAL}}: ' + (data.feedStats.externalFeeds ?? 0) + ' · {{FEED_CLUSTER}}: ' + (data.feedStats.clusterNodes ?? 0);
+                }
                 if (data.hub) {
                   var cap = data.hub.maxThreatCapacity || 100000;
                   var pct = ((threats / cap) * 100).toFixed(2);
@@ -1077,56 +1263,104 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 if (!data.nodes || data.nodes.length === 0) {
                   var emptyTr = document.createElement('tr');
                   var emptyTd = document.createElement('td');
-                  emptyTd.colSpan = 6;
+                  emptyTd.colSpan = 7;
                   emptyTd.className = 'empty';
                   emptyTd.textContent = '{{NO_NODES}}';
                   emptyTr.appendChild(emptyTd);
                   tbody.appendChild(emptyTr);
-                  return;
+                } else {
+                  data.nodes.forEach(function(n) {
+                    var sc = statusClass(n.lastSeenUtc);
+                    var tr = document.createElement('tr');
+
+                    // 狀態欄
+                    var tdStatus = document.createElement('td');
+                    var dot = document.createElement('span');
+                    dot.className = 'status-dot ' + sc;
+                    tdStatus.appendChild(dot);
+                    tdStatus.appendChild(document.createTextNode(
+                      sc === 'dot-green' ? '{{ONLINE}}' : sc === 'dot-yellow' ? '{{DELAYED}}' : '{{OFFLINE}}'
+                    ));
+
+                    // 節點 ID（前 8 碼）
+                    var tdId = document.createElement('td');
+                    tdId.className = 'node-id';
+                    tdId.textContent = (n.nodeId || '').substring(0, 8);
+
+                    // 節點名稱
+                    var tdName = document.createElement('td');
+                    tdName.textContent = (n.nodeName || '') || '{{UNNAMED}}';
+
+                    // 來源 IP
+                    var tdIp = document.createElement('td');
+                    tdIp.className = 'node-id';
+                    tdIp.textContent = n.nodeIp || '';
+
+                    // 同步狀態
+                    var tdSync = document.createElement('td');
+                    var syncDot = document.createElement('span');
+                    syncDot.className = 'status-dot ' + (n.isSynced ? 'dot-green' : 'dot-yellow');
+                    tdSync.appendChild(syncDot);
+                    tdSync.appendChild(document.createTextNode(n.isSynced ? '{{SYNCED}}' : '{{SYNCING}}'));
+
+                    // 最後心跳
+                    var tdSeen = document.createElement('td');
+                    tdSeen.textContent = fmtLocal(n.lastSeenUtc);
+
+                    // 回報情資數
+                    var tdCount = document.createElement('td');
+                    tdCount.textContent = n.reportedThreatCount ?? 0;
+
+                    tr.appendChild(tdStatus);
+                    tr.appendChild(tdId);
+                    tr.appendChild(tdName);
+                    tr.appendChild(tdIp);
+                    tr.appendChild(tdSync);
+                    tr.appendChild(tdSeen);
+                    tr.appendChild(tdCount);
+                    tbody.appendChild(tr);
+                  });
                 }
-                data.nodes.forEach(function(n) {
-                  var sc = statusClass(n.lastSeenUtc);
-                  var tr = document.createElement('tr');
 
-                  // 狀態欄
-                  var tdStatus = document.createElement('td');
-                  var dot = document.createElement('span');
-                  dot.className = 'status-dot ' + sc;
-                  tdStatus.appendChild(dot);
-                  tdStatus.appendChild(document.createTextNode(
-                    sc === 'dot-green' ? '{{ONLINE}}' : sc === 'dot-yellow' ? '{{DELAYED}}' : '{{OFFLINE}}'
-                  ));
+                var threatTbody = document.getElementById('threat-tbody');
+                threatTbody.replaceChildren();
+                if (!data.recentThreats || data.recentThreats.length === 0) {
+                  var emptyTrThreat = document.createElement('tr');
+                  var emptyTdThreat = document.createElement('td');
+                  emptyTdThreat.colSpan = 5;
+                  emptyTdThreat.className = 'empty';
+                  emptyTdThreat.textContent = '{{NO_THREATS}}';
+                  emptyTrThreat.appendChild(emptyTdThreat);
+                  threatTbody.appendChild(emptyTrThreat);
+                } else {
+                  data.recentThreats.forEach(function(t) {
+                    var rTr = document.createElement('tr');
 
-                  // 節點 ID（前 8 碼）
-                  var tdId = document.createElement('td');
-                  tdId.className = 'node-id';
-                  tdId.textContent = (n.nodeId || '').substring(0, 8);
+                    var tdIp = document.createElement('td');
+                    tdIp.className = 'node-id';
+                    tdIp.textContent = t.sourceIp || '';
 
-                  // 節點名稱
-                  var tdName = document.createElement('td');
-                  tdName.textContent = (n.nodeName || '') || '{{UNNAMED}}';
+                    var tdCat = document.createElement('td');
+                    tdCat.textContent = t.threatCategory || '—';
 
-                  // 來源 IP
-                  var tdIp = document.createElement('td');
-                  tdIp.className = 'node-id';
-                  tdIp.textContent = n.nodeIp || '';
+                    var tdConf = document.createElement('td');
+                    var pct = typeof t.confidenceScore === 'number' ? Math.round(t.confidenceScore * 100) + '%' : '—';
+                    tdConf.textContent = pct;
 
-                  // 最後心跳
-                  var tdSeen = document.createElement('td');
-                  tdSeen.textContent = fmtLocal(n.lastSeenUtc);
+                    var tdRep = document.createElement('td');
+                    tdRep.textContent = (t.reporterNodeName || '') || (t.reporterNodeId ? t.reporterNodeId.substring(0, 8) : '—');
 
-                  // 回報情資數
-                  var tdCount = document.createElement('td');
-                  tdCount.textContent = n.reportedThreatCount ?? 0;
+                    var tdTime = document.createElement('td');
+                    tdTime.textContent = fmtLocal(t.reportedUtc);
 
-                  tr.appendChild(tdStatus);
-                  tr.appendChild(tdId);
-                  tr.appendChild(tdName);
-                  tr.appendChild(tdIp);
-                  tr.appendChild(tdSeen);
-                  tr.appendChild(tdCount);
-                  tbody.appendChild(tr);
-                });
+                    rTr.appendChild(tdIp);
+                    rTr.appendChild(tdCat);
+                    rTr.appendChild(tdConf);
+                    rTr.appendChild(tdRep);
+                    rTr.appendChild(tdTime);
+                    threatTbody.appendChild(rTr);
+                  });
+                }
               })
               .catch(function(err) {
                 document.getElementById('hub-status').textContent = '{{OFFLINE}}';

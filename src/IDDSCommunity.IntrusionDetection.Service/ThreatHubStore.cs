@@ -158,6 +158,98 @@ internal sealed class ThreatHubStore(Database? database = null)
         }
     }
 
+    /// <summary>
+    /// 取得最新入庫之活動威脅情資清單。
+    /// </summary>
+    /// <param name="count">最多取得筆數。</param>
+    /// <returns>最新威脅清單。</returns>
+    internal IReadOnlyList<ThreatIntelligenceItem> GetRecentThreats(int count = 10)
+    {
+        long now = DateTime.UtcNow.Ticks;
+        lock (gate)
+        {
+            if (database is null)
+            {
+                return memory.Values
+                    .Where(e => e.ExpiresTicks > now)
+                    .OrderByDescending(e => e.Sequence)
+                    .Take(count)
+                    .Select(e => JsonSerializer.Deserialize<ThreatIntelligenceItem>(e.Payload))
+                    .Where(t => t != null)!
+                    .ToList()!;
+            }
+            var rows = database.Query<Entry>("SELECT Sequence,Payload,ExpiresTicks FROM ThreatHubEntries WHERE ExpiresTicks>@now ORDER BY Sequence DESC LIMIT @count", new { now, count });
+            List<ThreatIntelligenceItem> list = [];
+            foreach (var r in rows)
+            {
+                try
+                {
+                    var item = JsonSerializer.Deserialize<ThreatIntelligenceItem>(r.Payload);
+                    if (item != null) list.Add(item);
+                }
+                catch { }
+            }
+            return list;
+        }
+    }
+
+    /// <summary>
+    /// 快速查詢特定 IP 是否存在於活動威脅情資庫中。
+    /// </summary>
+    /// <param name="ip">欲查詢之 IP 位址。</param>
+    /// <returns>若存在傳回威脅項目；否則傳回 <see langword="null"/>。</returns>
+    internal ThreatIntelligenceItem? LookupThreat(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return null;
+        long now = DateTime.UtcNow.Ticks;
+        lock (gate)
+        {
+            if (database is null)
+            {
+                if (memory.TryGetValue(ip, out Entry? entry) && entry.ExpiresTicks > now)
+                    return JsonSerializer.Deserialize<ThreatIntelligenceItem>(entry.Payload);
+                return null;
+            }
+            string? payload = database.QueryFirstOrDefault<string>("SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip AND ExpiresTicks>@now", new { ip, now });
+            return !string.IsNullOrEmpty(payload) ? JsonSerializer.Deserialize<ThreatIntelligenceItem>(payload) : null;
+        }
+    }
+
+    /// <summary>
+    /// 統計威脅情資來源組成（外部訂閱情報 vs 叢集邊緣節點回報）。
+    /// </summary>
+    /// <returns>外部訂閱數與叢集回報數之元組。</returns>
+    internal (int ExternalFeedCount, int ClusterNodeCount) GetFeedComposition()
+    {
+        long now = DateTime.UtcNow.Ticks;
+        lock (gate)
+        {
+            if (database is null)
+            {
+                int ext = 0;
+                int cluster = 0;
+                foreach (var e in memory.Values.Where(e => e.ExpiresTicks > now))
+                {
+                    try
+                    {
+                        var item = JsonSerializer.Deserialize<ThreatIntelligenceItem>(e.Payload);
+                        if (item == null || string.IsNullOrWhiteSpace(item.ReporterNodeId)) ext++;
+                        else cluster++;
+                    }
+                    catch { ext++; }
+                }
+                return (ext, cluster);
+            }
+            object? extObj = database.ExecuteScalar(
+                "SELECT COUNT(*) FROM ThreatHubEntries WHERE ExpiresTicks>@p0 AND (Payload LIKE '%\"ReporterNodeId\":\"\"%' OR Payload LIKE '%\"ReporterNodeId\":null%')",
+                now);
+            int externalCount = extObj != null && int.TryParse(extObj.ToString(), out int parsedExt) ? parsedExt : 0;
+            int total = ActiveThreatCount;
+            int clusterCount = Math.Max(0, total - externalCount);
+            return (externalCount, clusterCount);
+        }
+    }
+
     private sealed class Entry
     {
         public long Sequence { get; set; }

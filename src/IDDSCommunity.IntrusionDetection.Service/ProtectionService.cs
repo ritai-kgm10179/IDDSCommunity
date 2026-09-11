@@ -706,7 +706,7 @@ public bool LimitMailSent { get; set; }
             lockType == LockType.HardLock ? "Firewall.HardLock" : "Firewall.SoftLock",
             firewallApplied ? "Succeeded" : "Failed",
             lockItem.IpAddress,
-            reportingAgent.Id.ToString());
+            reportingAgent.DisplayName ?? reportingAgent.Name ?? reportingAgent.Id.ToString());
 
 
     }

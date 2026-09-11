@@ -1110,4 +1110,10 @@
   <data name="No endpoint accepted the pending page" xml:space="preserve"><value>沒有任何中繼端點接受待同步頁面</value></data>
   <data name="{0} prefixes updated" xml:space="preserve"><value>已更新 {0} 個前綴網段</value></data>
   <data name="{0} IPs: {1}" xml:space="preserve"><value>{0} 個 IP 位址：{1}</value></data>
+  <data name="Loaded {0} prefixes across {1} countries" xml:space="preserve"><value>已載入 {0} 條網段，涵蓋 {1} 個國家</value></data>
+  <data name="Created inbound allow rule: {0}" xml:space="preserve"><value>已建立輸入允許規則：{0}</value></data>
+  <data name="Removed obsolete inbound allow rule" xml:space="preserve"><value>已移除過期的輸入允許規則</value></data>
+  <data name="Cleaned up inbound allow rule on service shutdown" xml:space="preserve"><value>服務關閉時清除輸入允許規則</value></data>
+  <data name="Locked: {0}, Evaluated: {1}" xml:space="preserve"><value>已封鎖：{0}，已評估：{1}</value></data>
+  <data name="Failed to download GeoIP feeds from configured URLs." xml:space="preserve"><value>無法自已設定的 URL 下載 GeoIP 資料來源。</value></data>
 </root>

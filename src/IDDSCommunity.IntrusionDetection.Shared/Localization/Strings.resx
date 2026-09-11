@@ -1110,4 +1110,10 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="No endpoint accepted the pending page" xml:space="preserve"><value>No endpoint accepted the pending page</value></data>
   <data name="{0} prefixes updated" xml:space="preserve"><value>{0} prefixes updated</value></data>
   <data name="{0} IPs: {1}" xml:space="preserve"><value>{0} IPs: {1}</value></data>
+  <data name="Loaded {0} prefixes across {1} countries" xml:space="preserve"><value>Loaded {0} prefixes across {1} countries</value></data>
+  <data name="Created inbound allow rule: {0}" xml:space="preserve"><value>Created inbound allow rule: {0}</value></data>
+  <data name="Removed obsolete inbound allow rule" xml:space="preserve"><value>Removed obsolete inbound allow rule</value></data>
+  <data name="Cleaned up inbound allow rule on service shutdown" xml:space="preserve"><value>Cleaned up inbound allow rule on service shutdown</value></data>
+  <data name="Locked: {0}, Evaluated: {1}" xml:space="preserve"><value>Locked: {0}, Evaluated: {1}</value></data>
+  <data name="Failed to download GeoIP feeds from configured URLs." xml:space="preserve"><value>Failed to download GeoIP feeds from configured URLs.</value></data>
 </root>
