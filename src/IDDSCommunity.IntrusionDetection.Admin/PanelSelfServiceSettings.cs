@@ -8,7 +8,7 @@ using IDDSCommunity.IntrusionDetection.Shared.SelfService;
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
 /// <summary>
-/// 提供合法使用者自助解除誤封鎖門戶（Self-Service Unblock Portal 與 RFC 6238 TOTP 認證）視覺化設定面板。
+/// 提供合法使用者自助解除誤封鎖入口網站（Self-Service Unblock Portal 與 RFC 6238 TOTP 認證）視覺化設定面板。
 /// </summary>
 public sealed partial class PanelSelfServiceSettings : UserControl
 {
@@ -17,7 +17,7 @@ public sealed partial class PanelSelfServiceSettings : UserControl
     private const string AnyIpv4Address = "0.0.0.0";
 
     /// <summary>
-    /// 當自助門戶設定變更並儲存時引發之事件。
+    /// 當自助解鎖入口網站設定變更並儲存時引發之事件。
     /// </summary>
     public event EventHandler? SelfServiceSettingsChanged;
 

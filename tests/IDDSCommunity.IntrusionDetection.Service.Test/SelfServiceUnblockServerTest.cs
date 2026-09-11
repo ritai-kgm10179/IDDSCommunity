@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace IDDSCommunity.IntrusionDetection.Service.Test;
 
 /// <summary>
-/// 驗證 SelfServiceUnblockServer 自助解鎖門戶之 HTTP 頁面回傳與 TOTP 解鎖邏輯。
+/// 驗證 SelfServiceUnblockServer 自助解鎖入口網站之 HTTP 頁面回傳與 TOTP 解鎖邏輯。
 /// </summary>
 [TestClass]
 public sealed class SelfServiceUnblockServerTest

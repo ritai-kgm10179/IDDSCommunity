@@ -784,7 +784,7 @@ public bool LimitMailSent { get; set; }
             metricsHttpServer.SetHubServer(threatHubServer);
             metricsHttpServer.Start();
 
-            // 啟動合法用戶自助驗證解鎖門戶 (Self-Service Unblock Portal)
+            // 啟動合法用戶自助驗證解鎖入口網站 (Self-Service Unblock Portal)
             selfServiceUnblockServer.Start();
 
             // 啟動安全 RESTful Management API 伺服器
@@ -933,7 +933,7 @@ public bool LimitMailSent { get; set; }
         {
             List<FirewallInboundRuleDefinition> targetRules = [];
 
-            // 1. 自助解鎖網頁門戶 (Self-Service Unblock Portal)
+            // 1. 自助解鎖網頁入口網站 (Self-Service Unblock Portal)
             if (configuration.EnableSelfServicePortal && configuration.SelfServicePortalPort > 0)
             {
                 targetRules.Add(new FirewallInboundRuleDefinition(

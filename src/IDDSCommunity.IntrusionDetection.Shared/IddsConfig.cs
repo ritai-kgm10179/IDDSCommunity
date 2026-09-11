@@ -950,7 +950,7 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
-    /// 取得或設定 是否啟用合法使用者自助驗證解鎖門戶。
+    /// 取得或設定 是否啟用合法使用者自助驗證解鎖入口網站。
     /// </summary>
     public bool EnableSelfServicePortal
     {
@@ -959,7 +959,7 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
-    /// 取得或設定 自助解鎖門戶 HTTP 監聽連接埠 (預設 8444)。
+    /// 取得或設定 自助解鎖入口網站 HTTP 監聽連接埠 (預設 8444)。
     /// </summary>
     public int SelfServicePortalPort
     {
@@ -968,7 +968,7 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
-    /// 取得或設定 自助解鎖門戶監聽 IP 位址 (預設 "0.0.0.0")。
+    /// 取得或設定 自助解鎖入口網站監聽 IP 位址 (預設 "0.0.0.0")。
     /// </summary>
     public string SelfServicePortalListenIp
     {
@@ -981,7 +981,7 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
-    /// 取得或設定 自助門戶 RFC 6238 TOTP 共享 Base32 密鑰。
+    /// 取得或設定 自助入口網站 RFC 6238 TOTP 共享 Base32 密鑰。
     /// </summary>
     public string SelfServiceTotpSecret
     {

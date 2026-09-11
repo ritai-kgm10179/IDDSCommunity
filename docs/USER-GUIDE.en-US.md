@@ -128,11 +128,14 @@ Local backups are intended for rapid recovery on the local machine and do not re
 ### 3.10 🌐 Threat Intelligence & Distributed Cluster Defense
 - **Distributed Cluster Defense Topology (Edge / Hub)**:
   - `Standalone`: Single-host independent defense and threat subscription without cluster synchronization.
-  - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443` or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub.
+  - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443`, reverse proxy `http://hub.internal:8080`, or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub.
   - `ThreatHub`: **Does NOT require specifying an endpoint URL (ignored if provided)**; only requires configuring the listening "Threat Hub Port" (default TCP 8443) and Cluster API Key; centrally fetches external feeds and broadcasts intelligence to connected edge nodes.
-  - After the Threat Hub starts, open `https://<hub-host>:<port>/dashboard` to view node status, active threat counts, and last heartbeat times. The page shell is public, but the Cluster API Key is still required before data is queried; the key is retained only in the current tab's `sessionStorage`.
+  - After the Threat Hub starts, open `https://<hub-host>:<port>/dashboard` to view node status, active threat counts, and last heartbeat times. The page shell is public, but the Cluster API Key is required before querying data; upon key entry, an "Authenticated" badge is displayed alongside a "Logout" button to clear the key from `sessionStorage`.
+  - The War Room Dashboard supports:
+    - **Theme Toggle**: Switch between automatic OS preference (Auto), Light mode, or Dark mode.
+    - **Language Selector**: Supports Traditional Chinese (`zh-Hant-TW`) and English (`en-US`). `?lang=zh-Hant-TW` or `?lang=en-US` takes precedence; otherwise the server detects the browser's `Accept-Language` header and falls back to English.
+    - **Telemetry & Defense Overview**: Displays connected Hub host, version, internal endpoint, threat generation ID, feed TTL, last sync time, and Hub operational defense status (Standard or Graduated defense).
   - When a reverse proxy such as Nginx, IIS, Caddy, or Traefik terminates TLS, enable the "Threat Hub TLS is terminated by a reverse proxy" setting. By default, the service exposes HTTP on all interfaces (`0.0.0.0:<port>`) for a proxy on another host; when the proxy is colocated, also enable "Restrict reverse proxy upstream to this computer (127.0.0.1)". Edge nodes should continue using the proxy's public HTTPS endpoint rather than connecting directly to this HTTP upstream. In either mode, do not expose the unprotected internal port to untrusted networks.
-  - The dashboard supports Traditional Chinese (`zh-Hant-TW`) and English (`en-US`). `?lang=zh-Hant-TW` or `?lang=en-US` takes precedence; otherwise the server uses the browser's `Accept-Language` header and falls back to English. A language selector is also available in the page header.
 - **Intelligent Probation & One-Strike Relock**:
   - Automatically transitions permanent hard locks with no malicious activity after a configurable period (default 90 days) to a probation observation status, releasing them from the Windows Firewall to prevent stale IP reuse issues from telecom dynamic pools.
   - If an IP under probation triggers any violation again (1 attempt), it is immediately escalated back to a permanent hard lock without waiting for soft lock accumulation.
@@ -190,7 +193,7 @@ Located at [`tools/IDDSCommunity.PowerShell/`](file:///d:/Dev/Project/Applicatio
 - `Test-IddsNotification`: Batch test notification endpoints.
 
 ### 3.18 🔑 Self-Service TOTP Unblock Portal
-Dedicated lightweight web portal on a separate port (default TCP 8088) allowing legitimate administrators or users to unblock themselves:
+Dedicated lightweight web portal on a separate port (default TCP 8444) allowing legitimate administrators or users to unblock themselves:
 - **TOTP Two-Factor Authentication (RFC 6238)**: Compatible with Google Authenticator, Microsoft Authenticator, and standard TOTP apps.
 - **Instant Automatic Relief**: Instantly removes the user's IP from the Windows Firewall upon successful code verification.
 
@@ -203,7 +206,7 @@ Dedicated lightweight web portal on a separate port (default TCP 8088) allowing 
 - **SOAR Script Execution**: Executes custom PowerShell or Batch scripts upon critical security events with event parameters for incident workflow orchestration.
 
 ### 3.21 🔌 RESTful Management API
-Secure lightweight HTTP/HTTPS REST API server (default TCP 8444) protected by API Keys and Bearer Tokens:
+Secure lightweight HTTP/HTTPS REST API server (default TCP 8443, configurable) protected by API Keys and Bearer Tokens:
 - `GET /api/v1/status`: Query service operational status and security metrics.
 - `GET /api/v1/locks`: Retrieve active locked IP list.
 - `POST /api/v1/locks/release`: Instantly unblock a specified IP.
@@ -215,12 +218,31 @@ Secure lightweight HTTP/HTTPS REST API server (default TCP 8444) protected by AP
 - **Instant Score & Remediation Advice**: One-click benchmark scan calculating compliance percentage with detailed remediation guidelines for failed checks.
 - **Forensic Report Export**: Exports compliance audit findings to JSON forensic evidence files.
 
+### 3.23 🔐 Windows HTTP.sys Kernel Listener HTTPS TLS Certificate Binding Guide
+The embedded HTTP listeners (RESTful Management API, Threat Hub, and Self-Service TOTP Unblock Portal) directly utilize the Windows kernel `HTTP.sys` driver for maximum performance. When enabling HTTPS prefixes in production, Windows requires binding an active TLS server certificate with a private key to each designated port:
+
+1. **Obtain Certificate Thumbprint (Hash)**:
+   - Open `certlm.msc` (Local Computer Certificate Store), navigate to "Personal > Certificates", and locate the imported certificate (ensure the icon contains a gold key indicating an available private key).
+   - Copy the thumbprint and remove spaces (e.g. `585947f104b5bce53239f02d1c6fed06832f47dc`).
+
+2. **Bind the Certificate via `netsh`**:
+   - Open Command Prompt or PowerShell **as Administrator**, and run the command matching your listening port (using Management API default 8443 as an example):
+     ```cmd
+     netsh http add sslcert ipport=0.0.0.0:8443 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
+     ```
+   - If configuring the Threat Hub (default 8443) or Self-Service Portal (default 8444), replace `ipport` with the respective port number.
+   - Verify the binding: `netsh http show sslcert ipport=0.0.0.0:8443`.
+
+When operating behind a reverse proxy, the Threat Hub does not require an `HTTP.sys` certificate binding. For cross-host proxies, point the upstream to `http://<Threat-Hub-Internal-IP>:8443`, or `http://127.0.0.1:8443` for colocated proxies. The reverse proxy must forward the original HTTP method, URI, and `X-IDDS-ThreatHub-ApiKey` header, and firewall rules should restrict port 8443 access solely to the reverse proxy host.
+
 ---
 
 ## 4. Frequently Asked Questions (FAQ)
 
 - **Q: I accidentally blocked my own management host's IP address. What should I do?**
   - **A**: Open the Admin Console, go to "Current Locks", find the target IP, and click "Remove Lock". Afterward, be sure to add that IP or its CIDR subnet to the allow list on the "Safe Networks" page. If the TOTP Unblock Portal is enabled, you can also unblock yourself directly via your mobile authenticator.
+- **Q: Failed to start service in Windows Event Log after enabling HTTPS (Management API / Threat Hub / Self-Service Portal)?**
+  - **A**: The Windows kernel `HTTP.sys` driver returns "The system cannot find the file specified" or "The parameter is incorrect" if an HTTPS prefix is started without an SSL certificate bound to the specified port. Refer to Section 3.23 of this guide and use `netsh http add sslcert` to bind a valid certificate containing a private key from the Computer Certificate Store.
 - **Q: Why isn't a firewall block rule taking effect?**
   - **A**: Confirm that the `IDDSCommunityProtection` Windows service is running normally, and that the account it runs as has permission to manage the Windows Firewall.
 - **Q: When a node is configured as a Threat Hub, do I need to fill in the "Threat Hub Endpoint URL"?**

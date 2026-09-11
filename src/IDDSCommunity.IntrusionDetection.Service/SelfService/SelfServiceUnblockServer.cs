@@ -254,7 +254,7 @@ public sealed class SelfServiceUnblockServer : IDisposable
             </div>
 
             <div style="text-align: center;">
-              <span class="ip-badge">偵測到的來源 IP: {{encodedClientIp}}</span>
+              <span class="ip-badge">偵測到的來源 IP 位址：{{encodedClientIp}}</span>
             </div>
 
             <div class="status-box">

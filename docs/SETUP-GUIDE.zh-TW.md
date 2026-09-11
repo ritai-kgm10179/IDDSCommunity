@@ -28,7 +28,7 @@
 3. 於安裝精靈介面中檢視授權協議與版本資訊。
 4. 勾選所需之捷徑建立選項：
    - **建立桌面捷徑**：於公用桌面（C:\Users\Public\Desktop）建立管理主控台捷徑，讓所有登入該主機之管理員皆可存取。
-   - **建立開始功能表捷徑**：於系統開始功能表（IDDS Community 資料夾）建立「IDDS Community Admin Console」與「解除安裝 IDDS Community」捷徑。
+   - **建立開始功能表捷徑**：於系統開始功能表（IDDS Community 資料夾）建立「IDDS Community Admin Console」捷徑。
 5. 點擊 **「安裝」** 按鈕。
 6. 安裝程式將依序執行下列作業：
    - 自動將核心程式檔、管理主控台、代理程式擴充元件與預設設定檔部署至 %ProgramFiles%\IDDS Community。
@@ -58,7 +58,6 @@
 1. 透過下列任一方式啟動解除安裝程序：
    - 至 Windows「設定 → 應用程式 → 已安裝的應用程式」或控制台「程式和功能」選擇「IDDS Community」點擊解除安裝。
    - 執行安裝快取檔 `%ProgramData%\IDDS Community\Setup.exe` 或原安裝檔並點擊 **「解除安裝」**。
-   - 點擊開始功能表之「解除安裝 IDDS Community」捷徑。
    - 透過管理員命令列執行無人值守解除安裝：`.\Setup.exe /uninstall /quiet`。
 2. 解除安裝程式將執行下列清理作業：
    - 安全停止並移除 IDDSCommunityProtection Windows 服務。

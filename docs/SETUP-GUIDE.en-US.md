@@ -28,7 +28,7 @@ Welcome to the **IDDS Community** Installer Guide! This document provides comple
 3. Review the license agreement and version information.
 4. Select shortcut preferences:
    - **Create Desktop Shortcut**: Deploys a shortcut to Public Desktop (C:\Users\Public\Desktop) accessible to all administrators.
-   - **Create Start Menu Shortcut**: Installs shortcuts under the IDDS Community Start Menu folder.
+   - **Create Start Menu Shortcut**: Installs Admin Console shortcut under the IDDS Community Start Menu folder.
 5. Click **"Install"**.
 6. The installer executes the following operations:
    - Deploys core service binaries, Admin Console, security agent plugins, and assets to %ProgramFiles%\IDDS Community.
@@ -57,7 +57,6 @@ Welcome to the **IDDS Community** Installer Guide! This document provides comple
 1. Trigger uninstallation through any of the following methods:
    - Windows "Settings -> Apps -> Installed apps" or Control Panel "Programs and Features", select "IDDS Community" and click Uninstall.
    - Run the cached installer `%ProgramData%\IDDS Community\Setup.exe` or original setup executable and click **"Uninstall"**.
-   - Click the Start Menu shortcut "Uninstall IDDS Community".
    - Execute an unattended silent uninstallation from an elevated command prompt: `.\Setup.exe /uninstall /quiet`.
 2. The uninstallation process performs the following cleanup operations:
    - Gracefully halts and removes the IDDSCommunityProtection Windows service.

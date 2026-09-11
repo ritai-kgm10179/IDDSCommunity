@@ -79,7 +79,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - **動態 DNS FQDN 解析 (DynamicDns.Resolve)**：記錄各設定網域名稱之解析狀態與最新動態 IP 清單。
   - **跨主機叢集情報同步 (Cluster.Sync)**：記錄 Edge 邊緣節點向 Threat Hub 推播與拉取之威脅情報筆數。
 - **維護與防禦事件**：
-  - **傳入放行規則對齊 (`Firewall.RuleAdd` / `Firewall.RuleRemove`)**：自動追蹤內部監聽服務（合法使用者自助解鎖網頁門戶、安全 RESTful 管理 API、威脅情資中繼中心 Hub、蜜罐誘捕 Decoy 通訊埠）在 Windows 防火牆中的傳入允許規則生命週期；隨服務啟用、連接埠變更或服務停止時自動執行宣告式對齊與清理。
+  - **傳入放行規則對齊 (`Firewall.RuleAdd` / `Firewall.RuleRemove`)**：自動追蹤內部監聽服務（合法使用者自助解鎖入口網站、安全 RESTful 管理 API、威脅情資中繼中心 Hub、蜜罐誘捕 Decoy 通訊埠）在 Windows 防火牆中的傳入允許規則生命週期；隨服務啟用、連接埠變更或服務停止時自動執行宣告式對齊與清理。
   - 記錄智慧假釋移轉 (`Firewall.Probation`)、防火牆解鎖 (`Firewall.Unlock`)、資料庫自動清理備份 (`Database.Maintenance`) 與服務啟動停止 (`Runtime.Start` / `Runtime.Stop`)。
 - **多維度篩選與匯出**：
   - 支援依「事件類別」、「執行結果（成功/失敗）」與「關鍵字」進行快速交叉過濾。
@@ -126,11 +126,14 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 ### 3.10 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence & Cluster Defense)
 - **分散式叢集聯防架構 (Edge / Hub Topology)**：
   - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。
-  - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
+  - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443`、反代 `http://hub.internal:8080` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
   - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。
-  - Threat Hub 啟動後可開啟 `https://<Hub 主機>:<連接埠>/dashboard` 檢視節點狀態、活動情資數與最後心跳。頁面本身可公開載入，但查詢資料前仍須輸入叢集 API Key；金鑰只保存在目前瀏覽器分頁的 `sessionStorage`。
+  - Threat Hub 啟動後可開啟 `https://<Hub 主機>:<連接埠>/dashboard` 檢視節點狀態、活動情資數與最後心跳。頁面本身可公開載入，但查詢資料前仍須輸入叢集 API Key；套用金鑰後頁面會即時顯示「已認證」標章並提供「登出」按鈕，金鑰僅安全保存在目前瀏覽器分頁的 `sessionStorage`。
+  - 戰情儀表板支援：
+    - **亮暗主題切換**：可選擇自動跟隨作業系統偏好（Auto），或手動強制切換淺色（Light）與深色（Dark）佈景主題。
+    - **多語系切換**：支援正體中文 `zh-Hant-TW` 與英文 `en-US`。系統先採用 `?lang=zh-Hant-TW` 或 `?lang=en-US`，未指定時依瀏覽器 `Accept-Language` 自動判斷，不支援的語言回退英文；頁面右上角亦可手動切換語言。
+    - **自身遙測與防禦指標總覽**：呈現 Hub 連線主機、版本、端點、情資世代 Generation、TTL、最後更新時間，以及 Hub 當前防禦運作狀態（標準或階梯式防禦）。
   - 若由 Nginx、IIS、Caddy 或 Traefik 等反向代理終止 TLS，可啟用「由反向代理終止 Threat Hub TLS」設定。此模式預設在所有介面（`0.0.0.0:<連接埠>`）提供 HTTP，適合反向代理位於其他主機；若反向代理與 Threat Hub 同機，可再啟用「反向代理上游僅限本機（127.0.0.1）」改為 `127.0.0.1:<連接埠>`。EdgeNode 仍應使用反向代理公開的 HTTPS endpoint，不直接連線此 HTTP 上游。無論哪種模式，都不可將未受保護的內部連接埠暴露至不受信任網路。
-  - 儀表板支援正體中文 `zh-Hant-TW` 與英文 `en-US`。系統先採用 `?lang=zh-Hant-TW` 或 `?lang=en-US`，未指定時依瀏覽器 `Accept-Language` 自動判斷，不支援的語言回退英文；頁面右上角亦可手動切換語言。
 - **動態 IP 智慧假釋與一擊再鎖機制 (Intelligent Probation & One-Strike Relock)**：
   - 永久硬封鎖記錄經過設定週期（預設 90 天）無任何攻擊活動後，排程自動轉移至假釋觀察狀態並自 Windows 防火牆放行，預防電信商動態浮動 IP 重新指派給正常使用者之長期誤封問題。
   - 處於假釋觀察期之 IP 若再次發生任何入侵違規（1 次即觸發），立即無條件升級為永久硬封鎖。
@@ -187,8 +190,8 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - `Export-IddsIso27001Report`：命令列一鍵產製 ISO 27001 合規稽核報告。
   - `Test-IddsNotification`：批次測試通知端點連通性。
 
-### 3.18 🔑 合法使用者自助驗證解鎖門戶 (Self-Service TOTP Unblock Portal)
-當合法管理者或內部同仁因多次密碼輸入錯誤遭到防火牆封鎖時，可透過獨立專屬連接埠（預設 TCP 8088）存取內建 Web 解鎖門戶：
+### 3.18 🔑 合法使用者自助驗證解鎖入口網站 (Self-Service TOTP Unblock Portal)
+當合法管理者或內部同仁因多次密碼輸入錯誤遭到防火牆封鎖時，可透過獨立專屬連接埠（預設 TCP 8444）存取內建網頁解鎖入口網站：
 - **TOTP 雙因素動態驗證 (RFC 6238)**：支援搭配 Google Authenticator、Microsoft Authenticator 等標準 TOTP 應用程式。
 - **即時自動解除封鎖**：驗證成功後系統立即自 Windows 防火牆放行該 IP，免除必須登入伺服器後台手動解鎖之負擔。
 
@@ -201,7 +204,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 - **SOAR 自訂自動化指令碼聯動 (SOAR Script Execution)**：當系統觸發重大硬封鎖或特定威脅事件時，自動呼叫管理者預先撰寫之 PowerShell 或 Batch 腳本（傳入事件來源 IP、代理程式名稱、威脅等級等參數），無縫對接企業現有資安自動化處置流程。
 
 ### 3.21 🔌 安全 RESTful 管理 API (RESTful Management API)
-內建輕量化 HTTP/HTTPS REST API 伺服器（預設 TCP 8444），提供 API Key 認證與 Bearer Token 保護：
+內建輕量化 HTTP/HTTPS REST API 伺服器（預設 TCP 8443，可自訂），提供 API Key 認證與 Bearer Token 保護：
 - `GET /api/v1/status`：查詢服務運行狀態與系統統計指標。
 - `GET /api/v1/locks`：列出目前所有鎖定 IP 清單。
 - `POST /api/v1/locks/release`：傳入 IP 參數即時解除特定 IP 之防火牆封鎖。
@@ -214,19 +217,19 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 - **取證報告匯出**：支援將評估結果匯出為 JSON 取證檔案，利於資安稽核存檔與合規追蹤。
 
 ### 3.23 🔐 Windows HTTP.sys 核心監聽之 HTTPS TLS 憑證綁定指引
-本系統之內嵌 HTTP 伺服器（安全 RESTful 管理 API、威脅情資中繼中心 Threat Hub、合法使用者 TOTP 自助解鎖門戶）底層直接使用 Windows 核心 `HTTP.sys` 實作高效能監聽。在正式生產環境啟用 HTTPS 前綴時，Windows 要求必須為該連接埠綁定有效且關聯私密金鑰之 TLS 伺服器憑證：
+本系統之內嵌 HTTP 伺服器（安全 RESTful 管理 API、威脅情資中繼中心 Threat Hub、合法使用者 TOTP 自助解鎖入口網站）底層直接使用 Windows 核心 `HTTP.sys` 實作高效能監聽。在正式生產環境啟用 HTTPS 前綴時，Windows 要求必須為該連接埠綁定有效且關聯私密金鑰之 TLS 伺服器憑證：
 
 1. **取得憑證指紋 (Thumbprint / Hash)**：
    - 開啟 `certlm.msc`（本機電腦憑證存放區），至「個人 (Personal) > 憑證 (Certificates)」找到已匯入之伺服器憑證，確認圖示具有金色鑰匙（代表包含私密金鑰）。
    - 複製其「指紋 (Thumbprint)」，去除空格（例如 `585947f104b5bce53239f02d1c6fed06832f47dc`）。
 
 2. **透過 `netsh` 進行核心模式 SSL 憑證綁定**：
-   - 以**系統管理員身分**開啟命令提示字元或 PowerShell，依據設定的監聽連接埠（以 Management API 預設 8444 為例）執行：
+   - 以**系統管理員身分**開啟命令提示字元或 PowerShell，依據設定的監聽連接埠（以 Management API 預設 8443 為例）執行：
      ```cmd
-     netsh http add sslcert ipport=0.0.0.0:8444 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
+     netsh http add sslcert ipport=0.0.0.0:8443 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
      ```
-   - 若為 Threat Hub（預設 8443）或自助門戶（預設 8445），請將 `ipport` 替換為對應連接埠號。
-   - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8444`。
+   - 若為 Threat Hub（預設 8443）或自助解鎖入口網站（預設 8444），請將 `ipport` 替換為對應連接埠號。
+   - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8443`。
 
 若使用反向代理模式，Threat Hub 不需要在 Windows `HTTP.sys` 綁定憑證；跨主機模式請將反向代理的上游設定為 `http://<Threat-Hub內部IP>:8443`，同機模式則使用 `http://127.0.0.1:8443`。反向代理必須轉送原始請求方法、路徑與 `X-IDDS-ThreatHub-ApiKey` 標頭，並以防火牆限制 8443 僅接受反向代理主機。
 
@@ -235,8 +238,8 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 ## 4. 常見問題與故障排除 (FAQ)
 
 - **Q: 誤封鎖自己的管理主機 IP 該如何處置？**
-  - **A**: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。若已啟用 TOTP 自助解鎖門戶，亦可直接以手機 App 驗證解除。
-- **Q: 啟用 HTTPS 服務（Management API / Threat Hub / 自助解鎖門戶）後，Windows 事件日誌出現啟動失敗？**
+  - **A**: 啟動控制台進入「目前封鎖」，找到目標 IP 點擊「解除封鎖」；隨後請務必至「安全網路」頁面將該 IP 或 CIDR 網段納入允許清單。若已啟用 TOTP 自助解鎖入口網站，亦可直接以手機 App 驗證解除。
+- **Q: 啟用 HTTPS 服務（Management API / Threat Hub / 自助解鎖入口網站）後，Windows 事件日誌出現啟動失敗？**
   - **A**: Windows 核心 `HTTP.sys` 在啟動 HTTPS 前綴時，若該連接埠未綁定伺服器憑證，會回報「找不到檔案」或「參數錯誤」。請參閱本手冊 3.23 節，使用 `netsh http add sslcert` 為該連接埠綁定電腦存放區中具有私鑰的 SSL 憑證即可正常啟動。
 - **Q: 為什麼防火牆封鎖規則沒有生效？**
   - **A**: 請確認 `IDDSCommunityProtection` Windows 服務正常運作，且執行帳戶具備管理 Windows 防火牆之權限。

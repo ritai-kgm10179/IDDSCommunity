@@ -1,7 +1,7 @@
 ﻿namespace IDDSCommunity.IntrusionDetection.Shared.SelfService;
 
 /// <summary>
-/// 定義自助解鎖門戶之驗證方式。
+/// 定義自助解鎖入口網站之驗證方式。
 /// </summary>
 public enum SelfServiceVerificationMethod
 {
@@ -22,27 +22,27 @@ public enum SelfServiceVerificationMethod
 }
 
 /// <summary>
-/// 自助驗證解鎖門戶之組態設定模型。
+/// 自助驗證解鎖入口網站之組態設定模型。
 /// </summary>
 public sealed class SelfServicePortalSettings
 {
     /// <summary>
-    /// 取得或設定是否啟用合法使用者自助驗證解鎖門戶。
+    /// 取得或設定是否啟用合法使用者自助驗證解鎖入口網站。
     /// </summary>
     public bool EnableSelfServicePortal { get; set; } = false;
 
     /// <summary>
-    /// 取得或設定門戶 HTTP 監聽連接埠 (預設 8444)。
+    /// 取得或設定入口網站 HTTP 監聽連接埠 (預設 8444)。
     /// </summary>
     public int PortalPort { get; set; } = 8444;
 
     /// <summary>
-    /// 取得或設定門戶監聽 IP 位址 (預設 "0.0.0.0")。
+    /// 取得或設定入口網站監聽 IP 位址 (預設 "0.0.0.0")。
     /// </summary>
     public string PortalListenIp { get; set; } = "0.0.0.0";
 
     /// <summary>
-    /// 取得或設定可信代理來源的 IP／CIDR；門戶只接受這些代理轉送的原始來源。
+    /// 取得或設定可信代理來源的 IP／CIDR；入口網站只接受這些代理轉送的原始來源。
     /// </summary>
     public string[] TrustedProxyCidrs { get; set; } = [];
 
