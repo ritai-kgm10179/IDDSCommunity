@@ -18,7 +18,7 @@ public sealed class ThreatIntelligenceItem
     public string ThreatCategory { get; set; } = "BRUTE_FORCE";
 
     /// <summary>
-    /// 取得或設定 威脅置信度評分（介於 0.0 至 1.0 之間）。
+    /// 取得或設定 威脅信心度評分（介於 0.0 至 1.0 之間）。
     /// </summary>
     public double ConfidenceScore { get; set; } = 1.0;
 

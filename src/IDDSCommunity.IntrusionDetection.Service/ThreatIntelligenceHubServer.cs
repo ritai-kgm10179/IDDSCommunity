@@ -408,7 +408,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                         localActiveBlocks = localBlocks,
                         localProbationCount = localProbation,
                         externalFeedCount = externalCount,
-                        clusterNodeThreatCount = clusterCount
+                        clusterNodeThreatCount = clusterCount,
+                        safeNetworkRuleCount = config.SafeNetworks?.Count ?? 0,
+                        dynamicDnsCachedHostCount = DynamicDnsCache.CachedHostCount,
+                        dynamicBogonPrefixCount = BogonIpFilter.DynamicBogonCount
+                    },
+                    feedStats = new
+                    {
+                        externalFeeds = externalCount,
+                        clusterNodes = clusterCount
                     },
                     nodes = nodes.Select(n => new
                     {
@@ -423,8 +431,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     recentThreats = recentThreats.Select(t => new
                     {
                         sourceIp = t.SourceIp,
+                        threatCategory = t.ThreatCategory,
                         category = t.ThreatCategory,
+                        confidenceScore = t.ConfidenceScore,
                         confidence = t.ConfidenceScore,
+                        reporterNodeName = t.ReporterNodeName,
+                        reporterNodeId = t.ReporterNodeId,
                         reporter = !string.IsNullOrWhiteSpace(t.ReporterNodeName) ? t.ReporterNodeName : (!string.IsNullOrWhiteSpace(t.ReporterNodeId) ? t.ReporterNodeId : "External Feed"),
                         reportedUtc = t.ReportedUtc
                     }).ToList()
@@ -473,24 +485,51 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 }
 
                 string canonicalIp = IpAddressCanonicalizer.Canonicalize(parsedIp).ToString();
+                bool isBogon = BogonIpFilter.IsBogonOrReserved(parsedIp);
+                bool isSafeNetwork = config.UseSafeNetworkList && config.IsInSafeNetwork(canonicalIp);
                 var threatItem = store.LookupThreat(canonicalIp);
                 resp.StatusCode = (int)HttpStatusCode.OK;
                 if (threatItem is null)
                 {
-                    await WriteJsonResponseAsync(resp, new { found = false, ip = canonicalIp }).ConfigureAwait(false);
+                    await WriteJsonResponseAsync(resp, new
+                    {
+                        found = false,
+                        ip = canonicalIp,
+                        isSafeNetwork = isSafeNetwork,
+                        isBogon = isBogon,
+                        isThreat = false
+                    }).ConfigureAwait(false);
                 }
                 else
                 {
+                    string reporter = !string.IsNullOrWhiteSpace(threatItem.ReporterNodeName) ? threatItem.ReporterNodeName : (!string.IsNullOrWhiteSpace(threatItem.ReporterNodeId) ? threatItem.ReporterNodeId : "External Feed");
                     await WriteJsonResponseAsync(resp, new
                     {
                         found = true,
                         ip = threatItem.SourceIp,
+                        isSafeNetwork = isSafeNetwork,
+                        isBogon = isBogon,
+                        isThreat = true,
+                        threatCategory = threatItem.ThreatCategory,
                         category = threatItem.ThreatCategory,
+                        confidenceScore = threatItem.ConfidenceScore,
                         confidence = threatItem.ConfidenceScore,
-                        reporter = !string.IsNullOrWhiteSpace(threatItem.ReporterNodeName) ? threatItem.ReporterNodeName : (!string.IsNullOrWhiteSpace(threatItem.ReporterNodeId) ? threatItem.ReporterNodeId : "External Feed"),
+                        reporterNodeName = threatItem.ReporterNodeName,
+                        reporterNodeId = threatItem.ReporterNodeId,
+                        reporter = reporter,
                         reportedUtc = threatItem.ReportedUtc,
                         expiresUtc = threatItem.ExpiresUtc,
-                        notes = threatItem.Notes
+                        notes = threatItem.Notes,
+                        item = new
+                        {
+                            threatCategory = threatItem.ThreatCategory,
+                            category = threatItem.ThreatCategory,
+                            confidenceScore = threatItem.ConfidenceScore,
+                            confidence = threatItem.ConfidenceScore,
+                            reporter = reporter,
+                            reportedUtc = threatItem.ReportedUtc,
+                            notes = threatItem.Notes
+                        }
                     }).ConfigureAwait(false);
                 }
                 return;
@@ -691,9 +730,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("TITLE", "IDDS 社群版 - 威脅情資中繼中心儀表板"), ("OFFLINE", "離線"),
             ("ONLINE", "線上"), ("DELAYED", "延遲"),
             ("API_KEY_PLACEHOLDER", "輸入 API Key..."), ("APPLY", "套用"),
-            ("AUTHENTICATED", "已認證"), ("LOGOUT", "登出"),
-            ("CONNECTED_NODES", "連線節點數"), ("ACTIVE_THREATS", "全網活動威脅情資"),
-            ("HUB_DEFENSE", "Hub 本機防護"), ("HUB_UPTIME", "Hub 運行時間"),
+            ("AUTHENTICATED", "已驗證"), ("LOGOUT", "登出"),
+            ("CONNECTED_NODES", "連線節點數"), ("ACTIVE_THREATS", "全網現行威脅情資"),
+            ("HUB_DEFENSE", "Hub 本機防護"), ("HUB_UPTIME", "Hub 運作時間"),
             ("LAST_UPDATED", "最後更新時間"),
             ("HUB_OVERVIEW", "威脅情資中繼中心系統運作概況"),
             ("HUB_HOST", "主機名稱"), ("HUB_VERSION", "軟體版本"),
@@ -701,12 +740,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("HUB_TTL", "情資保留天數"),
             ("EDGE_NODES", "邊緣節點清單"),
             ("STATUS", "狀態"), ("NODE_ID", "節點 ID"), ("NODE_NAME", "節點名稱"),
-            ("SOURCE_IP", "來源 IP"), ("LAST_HEARTBEAT", "最後心跳"),
+            ("SOURCE_IP", "來源 IP"), ("LAST_HEARTBEAT", "最後活動訊號"),
             ("REPORTED_THREATS", "回報情資數"), ("ENTER_KEY", "請輸入 API Key 後載入資料"),
             ("TOO_MANY_REQUESTS", "請求頻率過高，請稍候重試："),
             ("INVALID_KEY", "API Key 驗證失敗或已過期，請重新輸入。"),
             ("SERVER_ERROR", "伺服器回傳錯誤：HTTP "),
-            ("REFRESH_PREFIX", "自動每 30 秒更新 · 最後更新："),
+            ("REFRESH_PREFIX", "每 30 秒自動更新 · 最後更新："),
             ("NO_NODES", "目前沒有已連線的邊緣節點"),
             ("UNNAMED", "（未命名）"), ("UNKNOWN_ERROR", "未知錯誤"),
             ("CONNECTION_ERROR", "無法連線至威脅情資中繼中心："),
@@ -717,12 +756,17 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("BLOCKS", "項封鎖"), ("PROBATION", "個假釋中"),
             ("SYNC_STATUS", "同步狀態"), ("SYNCED", "已同步最新世代"), ("SYNCING", "同步中"),
             ("RECENT_THREATS", "最新威脅動態"), ("THREAT_CATEGORY", "威脅分類"),
-            ("CONFIDENCE", "置信度"), ("REPORTER", "回報來源"), ("OCCURRED_TIME", "時間"),
+            ("CONFIDENCE", "信心度"), ("REPORTER", "回報來源"), ("OCCURRED_TIME", "時間"),
             ("LOOKUP_TITLE", "IP 威脅快查"), ("LOOKUP_PLACEHOLDER", "輸入欲查詢之 IP 位址..."),
             ("LOOKUP_BTN", "立即查詢"), ("LOOKUP_FOUND", "該 IP 目前已被列入全網威脅黑名單！"),
             ("LOOKUP_NOT_FOUND", "該 IP 目前未列入威脅名單（安全無紀錄）"),
             ("FEED_EXTERNAL", "外部情報訂閱"), ("FEED_CLUSTER", "節點即時回報"),
-            ("NO_THREATS", "目前無最近威脅紀錄")
+            ("NO_THREATS", "目前無最近威脅紀錄"),
+            ("HUB_DEFENSE_CONFIG", "全網防護設定"), ("RULES", "條規則"),
+            ("BOGON_PREFIXES", "個 Bogon 前綴"),
+            ("LOOKUP_SAFE", "該 IP 屬於全域安全網路白名單（合法放行）"),
+            ("LOOKUP_BOGON", "該 IP 屬於保留／私有特殊網段（Bogon，非公網威脅）"),
+            ("LOOKUP_COPY_IP", "複製 IP"), ("LOOKUP_COPIED", "已複製！")
         ]);
 
         internal static DashboardText English { get; } = new("en-US",
@@ -762,7 +806,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             ("LOOKUP_BTN", "Lookup"), ("LOOKUP_FOUND", "This IP is listed in active threat intelligence!"),
             ("LOOKUP_NOT_FOUND", "This IP is not found in threat intelligence (clean)."),
             ("FEED_EXTERNAL", "External feeds"), ("FEED_CLUSTER", "Node reports"),
-            ("NO_THREATS", "No recent threat events recorded")
+            ("NO_THREATS", "No recent threat events recorded"),
+            ("HUB_DEFENSE_CONFIG", "Defense Config"), ("RULES", "rules"),
+            ("BOGON_PREFIXES", "Bogon prefixes"),
+            ("LOOKUP_SAFE", "This IP is in the global Safe Networks whitelist (allowlisted)."),
+            ("LOOKUP_BOGON", "This IP is in a Bogon or reserved range (not a public threat)."),
+            ("LOOKUP_COPY_IP", "Copy IP"), ("LOOKUP_COPIED", "Copied!")
         ]);
     }
 
@@ -826,7 +875,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             body { background-color: var(--bg); color: var(--fg); min-height: 100vh; padding: 24px; }
             h1 { font-size: 22px; font-weight: 700; color: var(--accent); }
             h2 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-            .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+            .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
             .top-bar-left { display: flex; align-items: center; gap: 14px; }
             .badge { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; }
             .badge-online { background: var(--badge-online-bg); color: var(--badge-online-fg); }
@@ -834,40 +883,54 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             .badge-authenticated { background: var(--badge-online-bg); color: var(--badge-online-fg); }
             .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
             .key-group { display: flex; gap: 8px; align-items: center; }
-            .language-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-            .key-group input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 280px; max-width: 100%; min-width: 140px; flex: 1 1 auto; font-family: monospace; }
-            .key-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
-            .key-group button { background: var(--accent); color: var(--accent-fg); border: 1px solid transparent; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
-            .key-group button:hover:not(:disabled) { background: var(--accent-hover); }
-            .key-group button:disabled { opacity: 0.6; cursor: not-allowed; }
-            .key-group .btn-logout { background: var(--accent); border: 1px solid transparent; color: var(--accent-fg); border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
-            .key-group .btn-logout:hover { background: var(--accent-hover); }
-            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+            .form-input { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 8px 12px; border-radius: 6px; font-size: 13px; line-height: 1.4; height: 36px; font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+            .form-input.monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+            .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
+            .form-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 8px 12px; border-radius: 6px; font-size: 13px; height: 36px; line-height: 1.4; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+            .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
+            .language-select { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 8px 12px; border-radius: 6px; font-size: 13px; height: 36px; line-height: 1.4; cursor: pointer; }
+            .language-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-shadow); }
+            .btn { background: var(--accent); color: var(--accent-fg); border: 1px solid transparent; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, opacity 0.15s; }
+            .btn:hover:not(:disabled) { background: var(--accent-hover); }
+            .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+            .btn-sm { height: 28px; padding: 4px 10px; font-size: 12px; margin-left: 10px; border-radius: 4px; }
+            .btn-logout { background: var(--accent); border: 1px solid transparent; color: var(--accent-fg); border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; line-height: 1.25; height: 36px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
+            .btn-logout:hover { background: var(--accent-hover); }
+            .key-group input { width: 280px; max-width: 100%; min-width: 140px; flex: 1 1 auto; }
+            .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
             .card { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 20px; }
             .stat-value { font-size: 32px; font-weight: 800; color: var(--fg); margin-bottom: 4px; }
             .stat-label { font-size: 13px; color: var(--muted); }
-            .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 500; }
-            .hub-overview { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 16px 20px; margin-bottom: 24px; }
+            .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; line-height: 1.4; }
+            .hub-overview { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); padding: 18px 20px; margin-bottom: 24px; }
             .hub-overview-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
             .hub-overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 20px; font-size: 13px; }
             .hub-prop { display: flex; flex-direction: column; gap: 2px; }
             .hub-prop-k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
             .hub-prop-v { font-weight: 600; color: var(--fg); word-break: break-all; }
-            .monospace { font-family: monospace; font-size: 12px; }
+            .monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
+            .lookup-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+            .lookup-input { width: 280px; max-width: 100%; min-width: 140px; }
+            .lookup-result { font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; height: 36px; display: inline-flex; align-items: center; border: 1px solid transparent; }
+            .lookup-result.result-loading { background: var(--card-bg); color: var(--muted); border-color: var(--card-border); }
+            .lookup-result.result-found { background: var(--badge-offline-bg); color: var(--badge-offline-fg); border-color: var(--badge-offline-fg); }
+            .lookup-result.result-clean { background: var(--badge-online-bg); color: var(--badge-online-fg); border-color: var(--badge-online-fg); }
+            .lookup-result.result-error { background: var(--error-bg); color: var(--error-fg); border-color: var(--error-border); }
             table { width: 100%; border-collapse: collapse; font-size: 13px; }
-            th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 12px; border-bottom: 1px solid var(--card-border); }
-            td { padding: 10px 12px; border-bottom: 1px solid var(--td-border); color: var(--td-fg); vertical-align: middle; }
+            th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 10px 14px; border-bottom: 1px solid var(--card-border); }
+            td { padding: 12px 14px; border-bottom: 1px solid var(--td-border); color: var(--td-fg); vertical-align: middle; }
             tr:last-child td { border-bottom: none; }
             tr:hover td { background: var(--row-hover-bg); }
-            .node-id { font-family: monospace; color: var(--node-id-fg); font-size: 12px; }
+            .node-id { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: var(--node-id-fg); font-size: 12px; }
             .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
             .dot-green { background: #22c55e; }
             .dot-yellow { background: #eab308; }
             .dot-gray { background: #475569; }
             .empty { color: var(--muted); text-align: center; padding: 32px; font-size: 13px; }
-            .error-bar { background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 6px; color: var(--error-fg); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-            .refresh-info { font-size: 11px; color: var(--muted); text-align: right; margin-top: 8px; }
-            .table-wrap { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); overflow-x: auto; overflow-y: hidden; }
+            .error-bar { background: var(--error-bg); border: 1px solid var(--error-border); border-radius: 6px; color: var(--error-fg); padding: 10px 14px; font-size: 13px; margin-bottom: 20px; }
+            .refresh-info { font-size: 11px; color: var(--muted); text-align: right; margin-top: -12px; margin-bottom: 20px; }
+            .table-wrap { background: var(--card-bg); border-radius: 10px; border: 1px solid var(--card-border); overflow-x: auto; overflow-y: hidden; margin-bottom: 28px; }
+            .hidden { display: none !important; }
           </style>
         </head>
         <body>
@@ -885,27 +948,27 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               <span id="hub-status" class="badge badge-offline" role="status">{{OFFLINE}}</span>
             </div>
             <div class="key-row">
-              <select id="theme-select" class="language-select" aria-label="{{THEME_LABEL}}">
+              <select id="theme-select" class="form-select" aria-label="{{THEME_LABEL}}">
                 <option value="auto">{{THEME_AUTO}}</option>
                 <option value="light">{{THEME_LIGHT}}</option>
                 <option value="dark">{{THEME_DARK}}</option>
               </select>
-              <select id="language-select" class="language-select" aria-label="Language">
+              <select id="language-select" class="form-select" aria-label="Language">
                 <option value="zh-Hant-TW">繁體中文</option>
                 <option value="en-US">English</option>
               </select>
               <div id="key-input-group" class="key-group">
-                <input type="password" id="api-key" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
-                <button id="apply-key-btn">{{APPLY}}</button>
+                <input type="password" id="api-key" class="form-input monospace" placeholder="{{API_KEY_PLACEHOLDER}}" aria-label="{{API_KEY_PLACEHOLDER}}" autocomplete="off" />
+                <button id="apply-key-btn" class="btn">{{APPLY}}</button>
               </div>
-              <div id="key-auth-group" class="key-group" style="display: none;">
+              <div id="key-auth-group" class="key-group hidden">
                 <span class="badge badge-authenticated">{{AUTHENTICATED}}</span>
-                <button id="logout-btn" class="btn-logout">{{LOGOUT}}</button>
+                <button id="logout-btn" class="btn btn-logout">{{LOGOUT}}</button>
               </div>
             </div>
           </div>
 
-          <div id="error-bar" class="error-bar" role="status" aria-live="polite"></div>
+          <div id="error-bar" class="error-bar hidden" role="status" aria-live="polite"></div>
 
           <div class="cards">
             <div class="card">
@@ -937,16 +1000,20 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               <div class="hub-prop"><span class="hub-prop-k">{{HUB_ENDPOINT}}</span><span id="hub-endpoint" class="hub-prop-v">—</span></div>
               <div class="hub-prop"><span class="hub-prop-k">{{HUB_GENERATION}}</span><span id="hub-generation" class="hub-prop-v monospace">—</span></div>
               <div class="hub-prop"><span class="hub-prop-k">{{HUB_TTL}}</span><span id="hub-ttl" class="hub-prop-v">—</span></div>
+              <div class="hub-prop"><span class="hub-prop-k">{{HUB_DEFENSE_CONFIG}}</span><span id="hub-defense-status" class="hub-prop-v">—</span></div>
               <div class="hub-prop"><span class="hub-prop-k">{{LAST_UPDATED}}</span><span id="stat-updated" class="hub-prop-v">—</span></div>
             </div>
           </div>
 
-          <div class="hub-overview" style="margin-bottom: 24px;">
+          <div class="hub-overview">
             <div class="hub-overview-title">{{LOOKUP_TITLE}}</div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <input type="text" id="lookup-ip" placeholder="{{LOOKUP_PLACEHOLDER}}" aria-label="{{LOOKUP_PLACEHOLDER}}" style="background: var(--input-bg); border: 1px solid var(--input-border); color: var(--input-fg); padding: 7px 12px; border-radius: 6px; font-size: 13px; width: 280px; max-width: 100%; font-family: monospace;" />
-              <button id="lookup-btn" style="background: var(--accent); color: var(--accent-fg); border: 1px solid transparent; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;">{{LOOKUP_BTN}}</button>
-              <div id="lookup-result" style="font-size: 13px; display: none; padding: 6px 12px; border-radius: 6px;"></div>
+            <div class="lookup-form">
+              <input type="text" id="lookup-ip" class="form-input monospace lookup-input" placeholder="{{LOOKUP_PLACEHOLDER}}" aria-label="{{LOOKUP_PLACEHOLDER}}" />
+              <button id="lookup-btn" class="btn">{{LOOKUP_BTN}}</button>
+              <div id="lookup-result" class="lookup-result hidden" role="status" aria-live="polite">
+                <span id="lookup-result-text"></span>
+                <button id="lookup-copy-btn" class="btn btn-sm hidden" type="button">{{LOOKUP_COPY_IP}}</button>
+              </div>
             </div>
           </div>
 
@@ -970,7 +1037,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             </table>
           </div>
 
-          <h2 style="margin-top: 28px;">{{RECENT_THREATS}}</h2>
+          <h2>{{RECENT_THREATS}}</h2>
           <div class="table-wrap">
             <table>
               <thead>
@@ -995,6 +1062,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             var cooldownTimer = null;
             var currentLanguage = '{{LANG}}';
             var savedLanguage = sessionStorage.getItem('idds_hub_language');
+            var lastLookupIp = '';
 
             if (!new URL(window.location.href).searchParams.has('lang') && savedLanguage && savedLanguage !== currentLanguage) {
               var savedUrl = new URL(window.location.href);
@@ -1010,6 +1078,18 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             document.getElementById('lookup-btn').addEventListener('click', runLookup);
             document.getElementById('lookup-ip').addEventListener('keydown', function(e) {
               if (e.key === 'Enter') { runLookup(); }
+            });
+            document.getElementById('lookup-copy-btn').addEventListener('click', function() {
+              if (!lastLookupIp) return;
+              var copyBtn = document.getElementById('lookup-copy-btn');
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(lastLookupIp).then(function() {
+                  copyBtn.textContent = '{{LOOKUP_COPIED}}';
+                  setTimeout(function() { copyBtn.textContent = '{{LOOKUP_COPY_IP}}'; }, 1500);
+                }).catch(function() {
+                  copyBtn.textContent = lastLookupIp;
+                });
+              }
             });
 
             document.getElementById('theme-select').value = sessionStorage.getItem('idds_hub_theme') || 'auto';
@@ -1035,11 +1115,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               var inputGroup = document.getElementById('key-input-group');
               var authGroup = document.getElementById('key-auth-group');
               if (authenticated) {
-                inputGroup.style.display = 'none';
-                authGroup.style.display = 'flex';
+                inputGroup.classList.add('hidden');
+                authGroup.classList.remove('hidden');
               } else {
-                inputGroup.style.display = 'flex';
-                authGroup.style.display = 'none';
+                inputGroup.classList.remove('hidden');
+                authGroup.classList.add('hidden');
                 document.getElementById('api-key').value = '';
               }
             }
@@ -1086,10 +1166,14 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
               document.getElementById('hub-endpoint').textContent = '—';
               document.getElementById('hub-generation').textContent = '—';
               document.getElementById('hub-ttl').textContent = '—';
+              document.getElementById('hub-defense-status').textContent = '—';
               document.getElementById('refresh-info').textContent = '';
 
+              lastLookupIp = '';
               var lr = document.getElementById('lookup-result');
-              lr.style.display = 'none';
+              lr.className = 'lookup-result hidden';
+              document.getElementById('lookup-result-text').textContent = '';
+              document.getElementById('lookup-copy-btn').classList.add('hidden');
               document.getElementById('lookup-ip').value = '';
 
               var tbody = document.getElementById('node-tbody');
@@ -1116,12 +1200,13 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             function runLookup() {
               var ipInput = document.getElementById('lookup-ip').value.trim();
               var resDiv = document.getElementById('lookup-result');
+              var resText = document.getElementById('lookup-result-text');
+              var copyBtn = document.getElementById('lookup-copy-btn');
               if (!ipInput || !currentKey) { return; }
-              resDiv.style.display = 'inline-block';
-              resDiv.textContent = '...';
-              resDiv.style.background = 'var(--card-bg)';
-              resDiv.style.color = 'var(--muted)';
-              resDiv.style.border = '1px solid var(--card-border)';
+              lastLookupIp = ipInput;
+              resDiv.className = 'lookup-result result-loading';
+              resText.textContent = '...';
+              copyBtn.classList.add('hidden');
 
               fetch('/api/threat-hub/lookup?ip=' + encodeURIComponent(ipInput), {
                 method: 'GET',
@@ -1132,24 +1217,34 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 return r.json();
               })
               .then(function(d) {
-                if (d.found) {
-                  resDiv.style.background = 'var(--badge-offline-bg)';
-                  resDiv.style.color = 'var(--badge-offline-fg)';
-                  resDiv.style.border = '1px solid var(--badge-offline-fg)';
-                  var cat = d.item && d.item.threatCategory ? (' (' + d.item.threatCategory + ')') : '';
-                  resDiv.textContent = '⚠️ {{LOOKUP_FOUND}}' + cat;
+                if (d.isSafeNetwork) {
+                  resDiv.className = 'lookup-result result-clean';
+                  resText.textContent = '🛡️ {{LOOKUP_SAFE}}';
+                  copyBtn.classList.remove('hidden');
+                } else if (d.isBogon) {
+                  resDiv.className = 'lookup-result result-loading';
+                  resText.textContent = '🌐 {{LOOKUP_BOGON}}';
+                  copyBtn.classList.remove('hidden');
+                } else if (d.found) {
+                  resDiv.className = 'lookup-result result-found';
+                  var cat = (d.item && d.item.threatCategory) || d.threatCategory || d.category || '';
+                  var rep = (d.item && d.item.reporter) || d.reporter || '';
+                  var details = [];
+                  if (cat) { details.push(cat); }
+                  if (rep) { details.push(rep); }
+                  var detailStr = details.length > 0 ? (' · ' + details.join(' / ')) : '';
+                  resText.textContent = '⚠️ {{LOOKUP_FOUND}}' + detailStr;
+                  copyBtn.classList.remove('hidden');
                 } else {
-                  resDiv.style.background = 'var(--badge-online-bg)';
-                  resDiv.style.color = 'var(--badge-online-fg)';
-                  resDiv.style.border = '1px solid var(--badge-online-fg)';
-                  resDiv.textContent = '✅ {{LOOKUP_NOT_FOUND}}';
+                  resDiv.className = 'lookup-result result-clean';
+                  resText.textContent = '✅ {{LOOKUP_NOT_FOUND}}';
+                  copyBtn.classList.remove('hidden');
                 }
               })
               .catch(function(err) {
-                resDiv.style.background = 'var(--error-bg)';
-                resDiv.style.color = 'var(--error-fg)';
-                resDiv.style.border = '1px solid var(--error-border)';
-                resDiv.textContent = err.message || 'Error';
+                resDiv.className = 'lookup-result result-error';
+                resText.textContent = err.message || 'Error';
+                copyBtn.classList.add('hidden');
               });
             }
 
@@ -1179,11 +1274,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             function showError(msg) {
               var bar = document.getElementById('error-bar');
               bar.textContent = msg;
-              bar.style.display = 'block';
+              bar.classList.remove('hidden');
             }
 
             function hideError() {
-              document.getElementById('error-bar').style.display = 'none';
+              document.getElementById('error-bar').classList.add('hidden');
             }
 
             function startCooldown(seconds) {
@@ -1237,8 +1332,9 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 document.getElementById('stat-nodes').textContent = data.nodes ? data.nodes.length : 0;
                 var threats = data.totalActiveThreatCount ?? 0;
                 document.getElementById('stat-threats').textContent = threats;
-                if (data.feedStats) {
-                  document.getElementById('stat-threats-feed').textContent = '{{FEED_EXTERNAL}}: ' + (data.feedStats.externalFeeds ?? 0) + ' · {{FEED_CLUSTER}}: ' + (data.feedStats.clusterNodes ?? 0);
+                var feedStats = data.feedStats || (data.hub ? { externalFeeds: data.hub.externalFeedCount, clusterNodes: data.hub.clusterNodeThreatCount } : null);
+                if (feedStats) {
+                  document.getElementById('stat-threats-feed').textContent = '{{FEED_EXTERNAL}}: ' + (feedStats.externalFeeds ?? 0) + ' · {{FEED_CLUSTER}}: ' + (feedStats.clusterNodes ?? 0);
                 }
                 if (data.hub) {
                   var cap = data.hub.maxThreatCapacity || 100000;
@@ -1254,6 +1350,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                   document.getElementById('hub-endpoint').textContent = data.hub.listenMode || '—';
                   document.getElementById('hub-generation').textContent = data.hub.generation || '—';
                   document.getElementById('hub-ttl').textContent = (data.hub.threatTtlDays ?? '—') + ' {{DAYS}}';
+                  var safeRules = data.hub.safeNetworkRuleCount ?? 0;
+                  var bogonPrefixes = data.hub.dynamicBogonPrefixCount ?? 0;
+                  var ddnsHosts = data.hub.dynamicDnsCachedHostCount ?? 0;
+                  var ddnsStr = ddnsHosts > 0 ? (' (' + ddnsHosts + ' DDNS)') : '';
+                  document.getElementById('hub-defense-status').textContent = safeRules + ' {{RULES}}' + ddnsStr + ' · ' + bogonPrefixes + ' {{BOGON_PREFIXES}}';
                 }
                 document.getElementById('stat-updated').textContent = fmtLocal(data.generatedUtc);
                 document.getElementById('refresh-info').textContent = '{{REFRESH_PREFIX}}' + fmtLocal(data.generatedUtc);
@@ -1341,14 +1442,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     tdIp.textContent = t.sourceIp || '';
 
                     var tdCat = document.createElement('td');
-                    tdCat.textContent = t.threatCategory || '—';
+                    tdCat.textContent = t.threatCategory || t.category || '—';
 
                     var tdConf = document.createElement('td');
-                    var pct = typeof t.confidenceScore === 'number' ? Math.round(t.confidenceScore * 100) + '%' : '—';
+                    var conf = t.confidenceScore ?? t.confidence;
+                    var pct = typeof conf === 'number' ? Math.round(conf * 100) + '%' : '—';
                     tdConf.textContent = pct;
 
                     var tdRep = document.createElement('td');
-                    tdRep.textContent = (t.reporterNodeName || '') || (t.reporterNodeId ? t.reporterNodeId.substring(0, 8) : '—');
+                    tdRep.textContent = (t.reporterNodeName || '') || t.reporter || (t.reporterNodeId ? t.reporterNodeId.substring(0, 8) : '—');
 
                     var tdTime = document.createElement('td');
                     tdTime.textContent = fmtLocal(t.reportedUtc);
@@ -1369,7 +1471,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 errMsg.textContent = err.message || '{{UNKNOWN_ERROR}}';
                 var bar = document.getElementById('error-bar');
                 bar.replaceChildren(document.createTextNode('{{CONNECTION_ERROR}}'), errMsg);
-                bar.style.display = 'block';
+                bar.classList.remove('hidden');
               });
             }
 

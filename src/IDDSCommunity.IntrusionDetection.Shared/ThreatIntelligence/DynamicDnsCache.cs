@@ -13,6 +13,11 @@ public static class DynamicDnsCache
     private static readonly ConcurrentDictionary<string, HashSet<IPAddress>> Cache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// 取得目前快取中已解析之動態主機名稱（FQDN）總數量。
+    /// </summary>
+    public static int CachedHostCount => Cache.Count;
+
+    /// <summary>
     /// 更新指定 FQDN 主機名稱所解析出之 IP 位址集合。
     /// </summary>
     /// <param name="fqdn">動態主機名稱（例如 office.ddns.net）。</param>
