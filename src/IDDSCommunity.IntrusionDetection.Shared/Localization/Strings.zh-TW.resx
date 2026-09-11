@@ -1083,4 +1083,9 @@
   <data name="Source IP address:" xml:space="preserve"><value>來源 IP 位址：</value></data>
   <data name="Security agent:" xml:space="preserve"><value>安全性代理程式：</value></data>
   <data name="Event time (UTC):" xml:space="preserve"><value>事件發生時間（UTC）：</value></data>
+  <data name="Update Threat Feeds Now" xml:space="preserve"><value>立即更新威脅情資</value></data>
+  <data name="Updating threat intelligence feeds..." xml:space="preserve"><value>正在更新外部威脅情資...</value></data>
+  <data name="Threat intelligence feeds updated successfully: {0} threat IPs ingested." xml:space="preserve"><value>外部威脅情資更新成功：已評估並匯入 {0} 筆威脅 IP。</value></data>
+  <data name="Failed to update threat intelligence feeds: {0}" xml:space="preserve"><value>外部威脅情資更新失敗：{0}</value></data>
+  <data name="Windows Service is not running. Please start the service to update threat feeds." xml:space="preserve"><value>Windows 服務未處於執行狀態，請先啟動服務以套用威脅情資阻絕。</value></data>
 </root>

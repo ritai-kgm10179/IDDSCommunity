@@ -89,6 +89,70 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
             }
         };
 
+        btnUpdateThreatFeedsNow.Click += async (_, _) =>
+        {
+            btnUpdateThreatFeedsNow.Enabled = false;
+            lblThreatFeedStatus.Text = Strings.Get("Updating threat intelligence feeds...");
+            try
+            {
+                // 先行同步當前介面設定至全域組態
+                IddsConfig cfg = IddsConfig.Instance;
+                cfg.EnableExternalThreatFeeds = chkEnableFeeds.Checked;
+                cfg.ThreatFeedUpdateIntervalHours = (int)numFeedInterval.Value;
+                cfg.ThreatFeedMinLevel = (int)numIpsumLevel.Value;
+                cfg.ThreatFeedTtlDays = (int)numFeedTtlDays.Value;
+                cfg.AbuseIpDbApiKey = txtAbuseApiKey.Text.Trim();
+                cfg.AbuseIpDbMinConfidence = (int)numAbuseMinConfidence.Value;
+                cfg.ThreatFeedCustomUrls = txtCustomUrls.Text.Trim();
+                cfg.SaveAppConfig();
+
+                // 檢查 Windows 服務是否處於執行狀態 (模式 B)
+                bool isRunning = false;
+                try
+                {
+                    using System.ServiceProcess.ServiceController sc = new(Globals.WINDOWS_SERVICE_NAME);
+                    isRunning = sc.Status == System.ServiceProcess.ServiceControllerStatus.Running;
+                }
+                catch
+                {
+                    isRunning = false;
+                }
+
+                if (!isRunning)
+                {
+                    lblThreatFeedStatus.Text = Strings.Get("Windows Service is not running. Please start the service to update threat feeds.");
+                    return;
+                }
+
+                // 透過安全本機命令通道向服務發送更新請求
+                using System.Threading.CancellationTokenSource cts = new(TimeSpan.FromSeconds(60));
+                var result = await ThreatFeedCommandChannel.SendRefreshRequestAsync(TimeSpan.FromSeconds(45), cts.Token).ConfigureAwait(true);
+
+                if (result.Success)
+                {
+                    lblThreatFeedStatus.Text = string.Format(
+                        Strings.Get("Threat intelligence feeds updated successfully: {0} threat IPs ingested."),
+                        result.IngestedCount);
+                }
+                else
+                {
+                    lblThreatFeedStatus.Text = string.Format(
+                        Strings.Get("Failed to update threat intelligence feeds: {0}"),
+                        result.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblThreatFeedStatus.Text = string.Format(
+                    Strings.Get("Failed to update threat intelligence feeds: {0}"),
+                    ex.Message);
+            }
+            finally
+            {
+                UpdateExternalFeedsControlsState();
+            }
+        };
+
         btnSave.Click += SaveSettings;
 
         SettingsResetButtonFactory.AddTo(this, (_, _) => ResetToDefaults(), container: headerPanel);
@@ -193,6 +257,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtAbuseApiKey.Enabled = feedsActive;
         numAbuseMinConfidence.Enabled = feedsActive;
         txtCustomUrls.Enabled = feedsActive;
+        btnUpdateThreatFeedsNow.Enabled = feedsActive;
 
         chkEnableDynamicBogon.Enabled = feedsAllowed;
         bool bogonActive = feedsAllowed && chkEnableDynamicBogon.Checked;

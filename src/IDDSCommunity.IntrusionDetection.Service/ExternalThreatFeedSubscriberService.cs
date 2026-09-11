@@ -67,7 +67,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     }
 
     /// <summary>
-    /// 啟動外部威脅情報定期訂閱與更新排程。
+    /// 啟動外部威脅情報定期訂閱與更新排程，並開始監聽管理端之即時更新指令。
     /// </summary>
     public void Start()
     {
@@ -78,25 +78,27 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             null,
             TimeSpan.FromSeconds(5),
             TimeSpan.FromHours(intervalHours));
+
+        _ = ThreatFeedCommandChannel.StartCommandListenerAsync(RefreshFeedsAsync, stopping.Token);
     }
 
     /// <summary>
     /// 立即非同步執行一次外部威脅情資下載、解析與過濾同步。
     /// </summary>
-    /// <returns>表示非同步作業完成之 Task。</returns>
-    public async Task RefreshFeedsAsync()
+    /// <returns>表示非同步作業完成之 Task，其結果為成功匯入之威脅情資總筆數。</returns>
+    public async Task<int> RefreshFeedsAsync()
     {
         if (disposed || stopping.IsCancellationRequested || !await refreshGate.WaitAsync(0).ConfigureAwait(false))
-            return;
+            return 0;
 
         try
         {
             if (!config.EnableExternalThreatFeeds)
-                return;
+                return 0;
 
             // 邊緣節點（EdgeNode）一律由 ThreatHub 集中同步，不重複對外下載 Feed
             if (config.ThreatHubRole == ThreatHubRole.EdgeNode)
-                return;
+                return 0;
 
             logInformation("Starting external threat intelligence feed update cycle...");
             int totalIngested = 0;
@@ -183,10 +185,12 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             }
 
             logInformation($"External threat intelligence feed update completed. Ingested/Evaluated {totalIngested} threat IPs.");
+            return totalIngested;
         }
         catch (Exception ex)
         {
             logWarning("Error occurred during external threat feed refresh cycle", ex);
+            return 0;
         }
         finally
         {

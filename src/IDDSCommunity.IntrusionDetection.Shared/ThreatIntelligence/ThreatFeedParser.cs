@@ -105,15 +105,24 @@ public static class ThreatFeedParser
         while ((line = reader.ReadLine()) != null && results.Count < maxEntries)
         {
             line = line.Trim();
-            if (string.IsNullOrEmpty(line) || line.StartsWith('#') || line.StartsWith(';'))
+            if (string.IsNullOrEmpty(line) || line.StartsWith('#') || line.StartsWith(';') || line.StartsWith("//", StringComparison.Ordinal))
                 continue;
 
-            string[] parts = line.Split(['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
+            int inlineCommentIndex = line.IndexOfAny([';', '#']);
+            string effectiveLine = inlineCommentIndex >= 0 ? line[..inlineCommentIndex].Trim() : line;
+            if (string.IsNullOrEmpty(effectiveLine)) continue;
+
+            string[] parts = effectiveLine.Split(['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) continue;
 
             string ipCandidate = parts[0].Trim();
-            if (!int.TryParse(parts[1].Trim(), out int level) || level < minLevel)
+
+            // 若提供評分欄位（如根目錄 ipsum.txt: IP\tLevel），則比對評分門檻；
+            // 若為預分級清單（如 levels/{N}.txt），每行僅有單一 IP，直接視為已符合門檻。
+            if (parts.Length >= 2 && int.TryParse(parts[1].Trim(), out int level) && level < minLevel)
+            {
                 continue;
+            }
 
             if (TryNormalizeThreatEntry(ipCandidate, out string normalized))
             {

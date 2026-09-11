@@ -1362,6 +1362,19 @@ public bool LimitMailSent { get; set; }
     }
 
     /// <summary>
+    /// 立即非同步請求執行外部威脅情資下載、解析與主動防護同步。
+    /// </summary>
+    /// <returns>表示非同步作業完成之 Task，其結果為成功匯入之威脅情資總筆數。</returns>
+    public async Task<int> RefreshExternalThreatFeedsAsync()
+    {
+        if (externalThreatFeedSubscriberService is not null)
+        {
+            return await externalThreatFeedSubscriberService.RefreshFeedsAsync().ConfigureAwait(false);
+        }
+        return 0;
+    }
+
+    /// <summary>
     /// 處理長週期慢速隱蔽探測 (Slow &amp; Low) 機器學習異常偵測觸發之自動硬封鎖。
     /// </summary>
     /// <param name="ipAddress">來源 IP 位址。</param>

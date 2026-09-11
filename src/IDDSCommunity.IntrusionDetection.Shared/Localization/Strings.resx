@@ -1083,4 +1083,9 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Source IP address:" xml:space="preserve"><value>Source IP address:</value></data>
   <data name="Security agent:" xml:space="preserve"><value>Security agent:</value></data>
   <data name="Event time (UTC):" xml:space="preserve"><value>Event time (UTC):</value></data>
+  <data name="Update Threat Feeds Now" xml:space="preserve"><value>Update Threat Feeds Now</value></data>
+  <data name="Updating threat intelligence feeds..." xml:space="preserve"><value>Updating threat intelligence feeds...</value></data>
+  <data name="Threat intelligence feeds updated successfully: {0} threat IPs ingested." xml:space="preserve"><value>Threat intelligence feeds updated successfully: {0} threat IPs ingested.</value></data>
+  <data name="Failed to update threat intelligence feeds: {0}" xml:space="preserve"><value>Failed to update threat intelligence feeds: {0}</value></data>
+  <data name="Windows Service is not running. Please start the service to update threat feeds." xml:space="preserve"><value>Windows Service is not running. Please start the service to update threat feeds.</value></data>
 </root>

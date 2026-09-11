@@ -57,6 +57,8 @@ partial class PanelThreatIntelligenceSettings
         this.txtAbuseApiKey = new System.Windows.Forms.TextBox();
         this.lblCustomUrls = new System.Windows.Forms.Label();
         this.txtCustomUrls = new System.Windows.Forms.TextBox();
+        this.btnUpdateThreatFeedsNow = new System.Windows.Forms.Button();
+        this.lblThreatFeedStatus = new System.Windows.Forms.Label();
         this.lblSectionBogon = new IDDSCommunity.IntrusionDetection.Admin.SmartLabel();
         this.chkEnableDynamicBogon = new System.Windows.Forms.CheckBox();
         this.lblProbationDays = new System.Windows.Forms.Label();
@@ -128,36 +130,38 @@ partial class PanelThreatIntelligenceSettings
         this.tableLayoutMain.Controls.Add(this.txtAbuseApiKey, 0, 25);
         this.tableLayoutMain.Controls.Add(this.lblCustomUrls, 0, 26);
         this.tableLayoutMain.Controls.Add(this.txtCustomUrls, 0, 27);
-        this.tableLayoutMain.Controls.Add(this.lblSectionBogon, 0, 28);
-        this.tableLayoutMain.Controls.Add(this.chkEnableDynamicBogon, 0, 29);
-        this.tableLayoutMain.Controls.Add(this.lblProbationDays, 0, 30);
-        this.tableLayoutMain.Controls.Add(this.numProbationDays, 0, 31);
-        this.tableLayoutMain.Controls.Add(this.lblBogonV4, 0, 32);
-        this.tableLayoutMain.Controls.Add(this.txtBogonIpv4Url, 0, 33);
-        this.tableLayoutMain.Controls.Add(this.lblBogonV6, 0, 34);
-        this.tableLayoutMain.Controls.Add(this.txtBogonIpv6Url, 0, 35);
-        this.tableLayoutMain.Controls.Add(this.lblSectionGeo, 0, 36);
-        this.tableLayoutMain.Controls.Add(this.chkEnableGeoBlocking, 0, 37);
-        this.tableLayoutMain.Controls.Add(this.lblBlockedCountries, 0, 38);
-        this.tableLayoutMain.Controls.Add(this.txtBlockedCountries, 0, 39);
-        this.tableLayoutMain.Controls.Add(this.chkEnableGeoIpAutoUpdate, 0, 40);
-        this.tableLayoutMain.Controls.Add(this.lblGeoV4, 0, 41);
-        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv4Url, 0, 42);
-        this.tableLayoutMain.Controls.Add(this.lblGeoV6, 0, 43);
-        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv6Url, 0, 44);
-        this.tableLayoutMain.Controls.Add(this.lblGeoLocal, 0, 45);
-        this.tableLayoutMain.Controls.Add(this.flowGeoLocal, 0, 46);
-        this.tableLayoutMain.Controls.Add(this.lblGeoDays, 0, 47);
-        this.tableLayoutMain.Controls.Add(this.numGeoIpUpdateDays, 0, 48);
-        this.tableLayoutMain.Controls.Add(this.btnUpdateGeoIpNow, 0, 49);
-        this.tableLayoutMain.Controls.Add(this.lblGeoIpStatus, 0, 50);
-        this.tableLayoutMain.Controls.Add(this.btnSave, 0, 51);
+        this.tableLayoutMain.Controls.Add(this.btnUpdateThreatFeedsNow, 0, 28);
+        this.tableLayoutMain.Controls.Add(this.lblThreatFeedStatus, 0, 29);
+        this.tableLayoutMain.Controls.Add(this.lblSectionBogon, 0, 30);
+        this.tableLayoutMain.Controls.Add(this.chkEnableDynamicBogon, 0, 31);
+        this.tableLayoutMain.Controls.Add(this.lblProbationDays, 0, 32);
+        this.tableLayoutMain.Controls.Add(this.numProbationDays, 0, 33);
+        this.tableLayoutMain.Controls.Add(this.lblBogonV4, 0, 34);
+        this.tableLayoutMain.Controls.Add(this.txtBogonIpv4Url, 0, 35);
+        this.tableLayoutMain.Controls.Add(this.lblBogonV6, 0, 36);
+        this.tableLayoutMain.Controls.Add(this.txtBogonIpv6Url, 0, 37);
+        this.tableLayoutMain.Controls.Add(this.lblSectionGeo, 0, 38);
+        this.tableLayoutMain.Controls.Add(this.chkEnableGeoBlocking, 0, 39);
+        this.tableLayoutMain.Controls.Add(this.lblBlockedCountries, 0, 40);
+        this.tableLayoutMain.Controls.Add(this.txtBlockedCountries, 0, 41);
+        this.tableLayoutMain.Controls.Add(this.chkEnableGeoIpAutoUpdate, 0, 42);
+        this.tableLayoutMain.Controls.Add(this.lblGeoV4, 0, 43);
+        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv4Url, 0, 44);
+        this.tableLayoutMain.Controls.Add(this.lblGeoV6, 0, 45);
+        this.tableLayoutMain.Controls.Add(this.txtGeoIpDatabaseIpv6Url, 0, 46);
+        this.tableLayoutMain.Controls.Add(this.lblGeoLocal, 0, 47);
+        this.tableLayoutMain.Controls.Add(this.flowGeoLocal, 0, 48);
+        this.tableLayoutMain.Controls.Add(this.lblGeoDays, 0, 49);
+        this.tableLayoutMain.Controls.Add(this.numGeoIpUpdateDays, 0, 50);
+        this.tableLayoutMain.Controls.Add(this.btnUpdateGeoIpNow, 0, 51);
+        this.tableLayoutMain.Controls.Add(this.lblGeoIpStatus, 0, 52);
+        this.tableLayoutMain.Controls.Add(this.btnSave, 0, 53);
         this.tableLayoutMain.Dock = System.Windows.Forms.DockStyle.Top;
         this.tableLayoutMain.Location = new System.Drawing.Point(0, 0);
         this.tableLayoutMain.Name = "tableLayoutMain";
         this.tableLayoutMain.Padding = new System.Windows.Forms.Padding(15);
-        this.tableLayoutMain.RowCount = 52;
-        for (int i = 0; i < 52; i++)
+        this.tableLayoutMain.RowCount = 54;
+        for (int i = 0; i < 54; i++)
         {
             this.tableLayoutMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
         }
@@ -441,11 +445,32 @@ partial class PanelThreatIntelligenceSettings
         this.txtCustomUrls.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
         this.txtCustomUrls.Font = new System.Drawing.Font("Segoe UI", 9F);
         this.txtCustomUrls.ForeColor = PanelThreatIntelligenceSettings.BodyTextColor;
-        this.txtCustomUrls.Margin = new System.Windows.Forms.Padding(0, 0, 0, 20);
+        this.txtCustomUrls.Margin = new System.Windows.Forms.Padding(0, 0, 0, 10);
         this.txtCustomUrls.Multiline = true;
         this.txtCustomUrls.Name = "txtCustomUrls";
         this.txtCustomUrls.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
         this.txtCustomUrls.Size = new System.Drawing.Size(400, 48);
+        //
+        // btnUpdateThreatFeedsNow
+        //
+        this.btnUpdateThreatFeedsNow.AutoSize = true;
+        this.btnUpdateThreatFeedsNow.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly;
+        this.btnUpdateThreatFeedsNow.BackColor = PanelThreatIntelligenceSettings.AccentColor;
+        this.btnUpdateThreatFeedsNow.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+        this.btnUpdateThreatFeedsNow.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+        this.btnUpdateThreatFeedsNow.ForeColor = System.Drawing.Color.White;
+        this.btnUpdateThreatFeedsNow.Margin = new System.Windows.Forms.Padding(0, 0, 0, 10);
+        this.btnUpdateThreatFeedsNow.MinimumSize = new System.Drawing.Size(220, 32);
+        this.btnUpdateThreatFeedsNow.Name = "btnUpdateThreatFeedsNow";
+        this.btnUpdateThreatFeedsNow.Text = global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Update Threat Feeds Now");
+        //
+        // lblThreatFeedStatus
+        //
+        this.lblThreatFeedStatus.AutoSize = true;
+        this.lblThreatFeedStatus.Font = new System.Drawing.Font("Segoe UI", 9F);
+        this.lblThreatFeedStatus.ForeColor = PanelThreatIntelligenceSettings.BodyTextColor;
+        this.lblThreatFeedStatus.Margin = new System.Windows.Forms.Padding(0, 0, 0, 20);
+        this.lblThreatFeedStatus.Name = "lblThreatFeedStatus";
         //
         // lblSectionBogon
         //
@@ -746,6 +771,8 @@ partial class PanelThreatIntelligenceSettings
     private System.Windows.Forms.TextBox txtAbuseApiKey;
     private System.Windows.Forms.Label lblCustomUrls;
     private System.Windows.Forms.TextBox txtCustomUrls;
+    internal System.Windows.Forms.Button btnUpdateThreatFeedsNow;
+    internal System.Windows.Forms.Label lblThreatFeedStatus;
     private SmartLabel lblSectionBogon;
     private System.Windows.Forms.CheckBox chkEnableDynamicBogon;
     private System.Windows.Forms.Label lblProbationDays;

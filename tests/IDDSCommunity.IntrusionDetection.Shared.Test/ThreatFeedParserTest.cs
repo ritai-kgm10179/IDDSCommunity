@@ -51,6 +51,30 @@ public sealed class ThreatFeedParserTest
     }
 
     [TestMethod]
+    public void ParseFeed_IPsumSingleColumnPreFiltered_ParsesAllEntries()
+    {
+        string rawContent = @"
+# IPsum level 3 pre-filtered list
+85.239.149.72
+138.226.239.233
+138.226.239.234
+193.47.62.69
+10.0.0.1
+192.168.1.1 # Bogon comment
+";
+
+        List<string> result = ThreatFeedParser.ParseFeed(rawContent, ThreatFeedFormat.IPsumTabDelimited, minConfidenceOrLevel: 3);
+
+        Assert.AreEqual(4, result.Count);
+        Assert.IsTrue(result.Contains("85.239.149.72"));
+        Assert.IsTrue(result.Contains("138.226.239.233"));
+        Assert.IsTrue(result.Contains("138.226.239.234"));
+        Assert.IsTrue(result.Contains("193.47.62.69"));
+        Assert.IsFalse(result.Contains("10.0.0.1"));
+        Assert.IsFalse(result.Contains("192.168.1.1"));
+    }
+
+    [TestMethod]
     public void ParseFeed_AbuseIpDbJson_FiltersByConfidenceAndBogon()
     {
         string json = @"
