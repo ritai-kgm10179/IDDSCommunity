@@ -397,6 +397,39 @@ public class Locks
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
     }
+
+    /// <summary>
+    /// 批次檢查指定的 IP 位址清單中，哪些位址已存在於有效鎖定記錄中。
+    /// </summary>
+    /// <param name="ipAddresses">欲檢查之 IP 位址清單。</param>
+    /// <returns>已存在有效鎖定記錄之標準化 IP 位址集合。</returns>
+    public static HashSet<string> GetExistingLockedIps(IEnumerable<string> ipAddresses)
+    {
+        HashSet<string> lockedIps = new(StringComparer.OrdinalIgnoreCase);
+        if (ipAddresses is null || !Database.Instance.IsConfigured) return lockedIps;
+
+        string[] distinctIps = System.Linq.Enumerable.ToArray(
+            System.Linq.Enumerable.Distinct(
+                System.Linq.Enumerable.Select(
+                    System.Linq.Enumerable.Where(ipAddresses, ip => !string.IsNullOrWhiteSpace(ip)),
+                    IpAddressCanonicalizer.Canonicalize),
+                StringComparer.OrdinalIgnoreCase));
+
+        if (distinctIps.Length == 0) return lockedIps;
+
+        foreach (string[] chunk in System.Linq.Enumerable.Chunk(distinctIps, 500))
+        {
+            var results = Database.Instance.Query<string>(
+                "SELECT IpAddress FROM Locks WHERE Status IN (200, 210, 300, 310) AND IpAddress IN @ips",
+                new { ips = chunk });
+            foreach (string ip in results)
+            {
+                lockedIps.Add(IpAddressCanonicalizer.Canonicalize(ip));
+            }
+        }
+        return lockedIps;
+    }
+
     /// <summary>
     /// 建立鎖定記錄。
     /// </summary>

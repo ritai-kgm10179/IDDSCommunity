@@ -114,22 +114,74 @@ internal sealed class ThreatHubStore(Database? database = null)
                     lastExpiredCleanupTicks = now;
                 }
                 int currentCount = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ThreatHubEntries", transaction: transaction);
+                int remainingCapacity = Math.Max(0, MaximumEntries - currentCount);
+
+                using var upsertCmd = connection.CreateCommand();
+                upsertCmd.Transaction = transaction;
+                upsertCmd.CommandText = @"
+                    INSERT INTO ThreatHubEntries(SourceIp, Payload, ExpiresTicks)
+                    VALUES(@ip, @json, @expires)
+                    ON CONFLICT(SourceIp) DO UPDATE SET
+                        Payload = excluded.Payload,
+                        ExpiresTicks = excluded.ExpiresTicks
+                    WHERE ThreatHubEntries.Payload <> excluded.Payload;";
+                var pIp = upsertCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pJson = upsertCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pExpires = upsertCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+                using var updateOnlyCmd = connection.CreateCommand();
+                updateOnlyCmd.Transaction = transaction;
+                updateOnlyCmd.CommandText = @"
+                    UPDATE ThreatHubEntries
+                    SET Payload = @json, ExpiresTicks = @expires
+                    WHERE SourceIp = @ip AND Payload <> @json;";
+                var pUpdIp = updateOnlyCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pUpdJson = updateOnlyCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pUpdExpires = updateOnlyCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+                using var existsCmd = connection.CreateCommand();
+                existsCmd.Transaction = transaction;
+                existsCmd.CommandText = "SELECT EXISTS(SELECT 1 FROM ThreatHubEntries WHERE SourceIp=@ip);";
+                var pExistsIp = existsCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+
                 foreach (var item in items)
                 {
+                    if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) continue;
                     string json = JsonSerializer.Serialize(item);
-                    string? previous = connection.ExecuteScalar<string>("SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip", new { ip = item.SourceIp }, transaction);
-                    if (previous == json) continue;
-                    if (previous is null && currentCount >= MaximumEntries) break;
-                    if (previous is not null)
+                    long expires = item.ExpiresUtc.Ticks;
+
+                    if (remainingCapacity > 1000)
                     {
-                        connection.Execute("UPDATE ThreatHubEntries SET Payload=@json, ExpiresTicks=@expires WHERE SourceIp=@ip", new { ip = item.SourceIp, json, expires = item.ExpiresUtc.Ticks }, transaction);
+                        pIp.Value = item.SourceIp;
+                        pJson.Value = json;
+                        pExpires.Value = expires;
+                        if (upsertCmd.ExecuteNonQuery() > 0) count++;
+                    }
+                    else if (remainingCapacity > 0)
+                    {
+                        pExistsIp.Value = item.SourceIp;
+                        bool alreadyExists = Convert.ToInt64(existsCmd.ExecuteScalar()) != 0;
+
+                        pIp.Value = item.SourceIp;
+                        pJson.Value = json;
+                        pExpires.Value = expires;
+                        int affected = upsertCmd.ExecuteNonQuery();
+                        if (affected > 0)
+                        {
+                            count++;
+                            if (!alreadyExists)
+                            {
+                                remainingCapacity--;
+                            }
+                        }
                     }
                     else
                     {
-                        connection.Execute("INSERT INTO ThreatHubEntries(SourceIp,Payload,ExpiresTicks) VALUES(@ip,@json,@expires)", new { ip = item.SourceIp, json, expires = item.ExpiresUtc.Ticks }, transaction);
-                        currentCount++;
+                        pUpdIp.Value = item.SourceIp;
+                        pUpdJson.Value = json;
+                        pUpdExpires.Value = expires;
+                        if (updateOnlyCmd.ExecuteNonQuery() > 0) count++;
                     }
-                    count++;
                 }
             });
             return count;

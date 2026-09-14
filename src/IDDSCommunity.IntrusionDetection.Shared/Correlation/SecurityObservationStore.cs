@@ -34,9 +34,8 @@ public static class SecurityObservationStore
         string eventTimeUtc = observation.EventTimeUtc.ToString("O", CultureInfo.InvariantCulture);
         string receivedTimeUtc = observation.ReceivedTimeUtc.ToString("O", CultureInfo.InvariantCulture);
 
-        SqliteConnection conn = database.Connection;
-        using SqliteTransaction tx = conn.BeginTransaction();
-        try
+        (bool IsDuplicate, bool AlreadyAlerted) result = (false, false);
+        database.ExecuteInTransaction((conn, tx) =>
         {
             // 檢查資料庫是否已存在該確定性冪等鍵
             using (SqliteCommand checkCmd = conn.CreateCommand())
@@ -48,9 +47,9 @@ public static class SecurityObservationStore
 
                 if (existingAlertEmitted != null && existingAlertEmitted != DBNull.Value)
                 {
-                    tx.Commit();
                     bool alerted = Convert.ToInt32(existingAlertEmitted, CultureInfo.InvariantCulture) == 1;
-                    return (IsDuplicate: true, AlreadyAlerted: alerted);
+                    result = (IsDuplicate: true, AlreadyAlerted: alerted);
+                    return;
                 }
             }
 
@@ -127,14 +126,9 @@ public static class SecurityObservationStore
                 watermarkCmd.ExecuteNonQuery();
             }
 
-            tx.Commit();
-            return (IsDuplicate: false, AlreadyAlerted: false);
-        }
-        catch
-        {
-            tx.Rollback();
-            throw;
-        }
+            result = (IsDuplicate: false, AlreadyAlerted: false);
+        });
+        return result;
     }
 
     /// <summary>
@@ -180,9 +174,8 @@ public static class SecurityObservationStore
         ArgumentException.ThrowIfNullOrWhiteSpace(alertId);
         ArgumentNullException.ThrowIfNull(database);
 
-        SqliteConnection connection = database.Connection;
-        using SqliteTransaction transaction = connection.BeginTransaction();
-        try
+        bool success = false;
+        database.ExecuteInTransaction((connection, transaction) =>
         {
             using (SqliteCommand completionCommand = CreateCorrelationCompletionCommand(observation, connection, transaction))
             {
@@ -223,14 +216,9 @@ public static class SecurityObservationStore
                 alertStateCommand.ExecuteNonQuery();
             }
 
-            transaction.Commit();
-            return inserted == 1;
-        }
-        catch
-        {
-            transaction.Rollback();
-            throw;
-        }
+            success = inserted == 1;
+        });
+        return success;
     }
 
     /// <summary>
@@ -411,9 +399,8 @@ public static class SecurityObservationStore
         string nowUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
         string occurredStr = occurredUtc.ToString("O", CultureInfo.InvariantCulture);
 
-        SqliteConnection conn = database.Connection;
-        using SqliteTransaction tx = conn.BeginTransaction();
-        try
+        bool success = false;
+        database.ExecuteInTransaction((conn, tx) =>
         {
             using (SqliteCommand checkCmd = conn.CreateCommand())
             {
@@ -424,8 +411,8 @@ public static class SecurityObservationStore
 
                 if (existing != null && existing != DBNull.Value)
                 {
-                    tx.Commit();
-                    return false;
+                    success = false;
+                    return;
                 }
             }
 
@@ -458,14 +445,9 @@ public static class SecurityObservationStore
                 updateCmd.ExecuteNonQuery();
             }
 
-            tx.Commit();
-            return true;
-        }
-        catch
-        {
-            tx.Rollback();
-            throw;
-        }
+            success = true;
+        });
+        return success;
     }
 
     /// <summary>
@@ -510,8 +492,7 @@ public static class SecurityObservationStore
 
         foreach (AlertOutboxRow row in pending)
         {
-            using SqliteTransaction tx = conn.BeginTransaction();
-            try
+            database.ExecuteInTransaction((conn, tx) =>
             {
                 using (SqliteCommand auditCmd = conn.CreateCommand())
                 {
@@ -545,14 +526,7 @@ public static class SecurityObservationStore
                         dispatchedCount++;
                     }
                 }
-
-                tx.Commit();
-            }
-            catch
-            {
-                tx.Rollback();
-                throw;
-            }
+            });
         }
 
         return dispatchedCount;

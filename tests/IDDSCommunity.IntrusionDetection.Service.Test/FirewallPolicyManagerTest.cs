@@ -102,4 +102,37 @@ public sealed class FirewallPolicyManagerTest
         string hubName = FirewallPolicyManager.GetInboundAllowRuleName("ThreatHub", "TCP", 8443);
         Assert.AreEqual("IDDSCommunity_Allow_ThreatHub_TCP_8443", hubName);
     }
+
+    /// <summary>
+    /// 驗證 ParsedRuleAddresses 能正確且高效解析單一 IP、CIDR 網段、子網路遮罩與萬用字元，並完成批次比對。
+    /// </summary>
+    [TestMethod]
+    public void ParsedRuleAddresses_BatchMatching_AccurateAndFast()
+    {
+        var parser = new FirewallPolicyManager.ParsedRuleAddresses();
+        parser.AddRange("192.0.2.1, 198.51.100.0/24, 203.0.113.10/255.255.255.255, 2001:db8::/32");
+
+        // 單一精確 IP
+        Assert.IsTrue(parser.Contains(System.Net.IPAddress.Parse("192.0.2.1")));
+        Assert.IsFalse(parser.Contains(System.Net.IPAddress.Parse("192.0.2.2")));
+
+        // CIDR 前綴網段
+        Assert.IsTrue(parser.Contains(System.Net.IPAddress.Parse("198.51.100.42")));
+        Assert.IsFalse(parser.Contains(System.Net.IPAddress.Parse("198.51.101.42")));
+
+        // 點分十進位主機遮罩
+        Assert.IsTrue(parser.Contains(System.Net.IPAddress.Parse("203.0.113.10")));
+        Assert.IsFalse(parser.Contains(System.Net.IPAddress.Parse("203.0.113.11")));
+
+        // IPv6 網段
+        Assert.IsTrue(parser.Contains(System.Net.IPAddress.Parse("2001:db8::1234")));
+        Assert.IsFalse(parser.Contains(System.Net.IPAddress.Parse("2001:db9::1")));
+
+        // 萬用字元
+        var wildcardParser = new FirewallPolicyManager.ParsedRuleAddresses();
+        wildcardParser.AddRange("*");
+        Assert.IsTrue(wildcardParser.Contains(System.Net.IPAddress.Parse("1.2.3.4")));
+        Assert.IsTrue(wildcardParser.Contains(System.Net.IPAddress.Parse("2001:db8::1")));
+    }
 }
+

@@ -81,6 +81,12 @@ public sealed class RuntimeDependencyInjectionTest
         /// <returns>恆傳回 <see langword="false"/>。</returns>
         public bool IsLocked(string ipAddress) => false;
         /// <summary>
+        /// 於相依性插入測試中模擬批次篩選已阻擋位址。
+        /// </summary>
+        /// <param name="ipAddresses">欲檢驗之位址清單。</param>
+        /// <returns>恆傳回空白集合。</returns>
+        public System.Collections.Generic.HashSet<string> FilterLockedIps(System.Collections.Generic.IEnumerable<string> ipAddresses) => [];
+        /// <summary>
         /// Returns an empty firewall snapshot for dependency-registration tests.
         /// </summary>
         /// <returns>空白的位址集合。</returns>

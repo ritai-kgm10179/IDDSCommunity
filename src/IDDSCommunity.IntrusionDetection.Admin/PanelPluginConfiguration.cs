@@ -301,14 +301,29 @@ public event EventHandler? AgentConfigurationChanged;
                 SetEditMode(true);
                 return false;
             }
-            agent.Save();
-            if (notify)
+            try
             {
-                OnAgentConfigurationChanged();
+                agent.Save();
+                if (notify)
+                {
+                    OnAgentConfigurationChanged();
+                }
+                saved = true;
+                SetEditMode(false);
             }
-            saved = true;
+            catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode is 5 or 6)
+            {
+                SetEditMode(true);
+                MessageBox.Show(this,
+                    Strings.Get("Database is currently busy. Please wait a moment and try saving again."),
+                    Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
         }
-        SetEditMode(false);
+        else
+        {
+            SetEditMode(false);
+        }
         return saved;
     }
 

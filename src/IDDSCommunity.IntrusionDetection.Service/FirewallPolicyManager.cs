@@ -175,6 +175,120 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             }
         }
     }
+
+    /// <summary>
+    /// 批次篩選給定之 IP 位址清單中，哪些位址已處於 Windows 防火牆阻擋規則中。
+    /// </summary>
+    /// <param name="ipAddresses">欲檢驗之 IP 位址清單。</param>
+    /// <returns>已被防火牆阻擋之 IP 位址集合。</returns>
+    public HashSet<string> FilterLockedIps(IEnumerable<string> ipAddresses)
+    {
+        if (ipAddresses is null) return [];
+
+        lock (_firewallLock)
+        {
+            try
+            {
+                ParsedRuleAddresses inboundParsed = new();
+                string inBase = GetRuleName("BlockAttacker", 0);
+                foreach (string ruleName in GetActiveShardedRuleNames(inBase))
+                {
+                    INetFwRule? inboundRule = GetRule(ruleName);
+                    if (IsEffectiveRule(inboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN))
+                    {
+                        inboundParsed.AddRange(FirewallComString.Get(inboundRule!.RemoteAddresses));
+                    }
+                }
+
+                ParsedRuleAddresses? outboundParsed = null;
+                if (blockMode == FirewallBlockMode.Bidirectional)
+                {
+                    outboundParsed = new();
+                    string outBase = GetRuleName("BlockAttackerOutbound", 0);
+                    foreach (string ruleName in GetActiveShardedRuleNames(outBase))
+                    {
+                        INetFwRule? outboundRule = GetRule(ruleName);
+                        if (IsEffectiveRule(outboundRule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT))
+                        {
+                            outboundParsed.AddRange(FirewallComString.Get(outboundRule!.RemoteAddresses));
+                        }
+                    }
+                }
+
+                HashSet<string> lockedIps = new(StringComparer.OrdinalIgnoreCase);
+                foreach (string rawIp in ipAddresses)
+                {
+                    if (string.IsNullOrWhiteSpace(rawIp)) continue;
+                    string candidate = rawIp.Trim();
+                    if (!System.Net.IPAddress.TryParse(candidate, out System.Net.IPAddress? parsedIp))
+                        continue;
+
+                    if (!inboundParsed.Contains(parsedIp))
+                        continue;
+
+                    if (outboundParsed is not null && !outboundParsed.Contains(parsedIp))
+                        continue;
+
+                    lockedIps.Add(candidate);
+                }
+
+                return lockedIps;
+            }
+            catch (Exception ex)
+            {
+                logManager.WriteEntry("FilterLockedIps encountered an error: " + ex.Message, System.Diagnostics.EventLogEntryType.Error,
+                    Globals.IDDSCOMMUNITY_EVENT_ID_INVALID_FUNCTION_CALL, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME);
+                throw;
+            }
+        }
+    }
+
+    internal sealed class ParsedRuleAddresses
+    {
+        public bool Wildcard { get; set; }
+        public HashSet<System.Net.IPAddress> ExactAddresses { get; } = [];
+        public List<(System.Net.IPAddress Network, int PrefixLength)> Subnets { get; } = [];
+
+        public void AddRange(string remoteAddresses)
+        {
+            if (string.IsNullOrWhiteSpace(remoteAddresses)) return;
+            foreach (string entry in remoteAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (entry == "*")
+                {
+                    Wildcard = true;
+                    continue;
+                }
+                string[] cidr = entry.Split('/', 2, StringSplitOptions.TrimEntries);
+                if (!System.Net.IPAddress.TryParse(cidr[0], out System.Net.IPAddress? network))
+                    continue;
+                if (cidr.Length == 1)
+                {
+                    ExactAddresses.Add(network);
+                }
+                else if (cidr.Length == 2)
+                {
+                    if (int.TryParse(cidr[1], out int prefixLength)
+                        || TryConvertSubnetMaskToPrefixLength(cidr[1], out prefixLength))
+                    {
+                        Subnets.Add((network, prefixLength));
+                    }
+                }
+            }
+        }
+
+        public bool Contains(System.Net.IPAddress address)
+        {
+            if (Wildcard) return true;
+            if (ExactAddresses.Contains(address)) return true;
+            foreach (var (network, prefixLength) in Subnets)
+            {
+                if (network.AddressFamily == address.AddressFamily && IsInSubnet(address, network, prefixLength))
+                    return true;
+            }
+            return false;
+        }
+    }
     /// <summary>
     /// Returns the exact addresses currently present in the IDDSCommunity block rule.
     /// </summary>

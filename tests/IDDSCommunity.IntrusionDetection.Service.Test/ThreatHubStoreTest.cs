@@ -66,4 +66,59 @@ public sealed class ThreatHubStoreTest
         Assert.AreEqual(1, server.ActiveThreats.Count);
         Assert.IsTrue(server.ActiveThreats[0].ExpiresUtc <= DateTime.UtcNow.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365)));
     }
-}
+
+    /// <summary>
+    /// 驗證 UpsertBatch 能正確批次處理新增、更新與重複資料之情資項目。
+    /// </summary>
+    [TestMethod]
+    public void UpsertBatch_HandlesInsertAndUpdate_Efficiently()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDS-Hub-BatchTest-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var database = new Database();
+        try
+        {
+            database.Configure(directory, "hub_batch.db");
+            var store = new ThreatHubStore(database);
+
+            var batch1 = Enumerable.Range(1, 100).Select(i => new ThreatIntelligenceItem
+            {
+                SourceIp = $"198.51.100.{i}",
+                ThreatCategory = "SCANNER",
+                ConfidenceScore = 0.9,
+                ExpiresUtc = DateTime.UtcNow.AddHours(2)
+            }).ToList();
+
+            int inserted = store.UpsertBatch(batch1);
+            Assert.AreEqual(100, inserted);
+            Assert.AreEqual(100, store.ActiveThreatCount);
+
+            // 重複送出相同資料應被跳過（不觸發無效寫入）
+            int skipped = store.UpsertBatch(batch1);
+            Assert.AreEqual(0, skipped);
+            Assert.AreEqual(100, store.ActiveThreatCount);
+
+            // 包含 50 筆更新 + 50 筆全新項目
+            var batch2 = Enumerable.Range(51, 100).Select(i => new ThreatIntelligenceItem
+            {
+                SourceIp = $"198.51.100.{i}",
+                ThreatCategory = "BRUTE_FORCE",
+                ConfidenceScore = 1.0,
+                ExpiresUtc = DateTime.UtcNow.AddHours(4)
+            }).ToList();
+
+            int updatedAndInserted = store.UpsertBatch(batch2);
+            Assert.AreEqual(100, updatedAndInserted);
+            Assert.AreEqual(150, store.ActiveThreatCount);
+
+            var updatedItem = store.LookupThreat("198.51.100.60");
+            Assert.IsNotNull(updatedItem);
+            Assert.AreEqual("BRUTE_FORCE", updatedItem.ThreatCategory);
+        }
+        finally
+        {
+            database.Close();
+            Directory.Delete(directory, true);
+        }
+    }
+}

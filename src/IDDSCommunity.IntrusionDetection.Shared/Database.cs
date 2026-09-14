@@ -22,13 +22,13 @@ public class Database : Storage.IDatabaseBackend
     /// </summary>
     public Storage.DatabaseBackendType BackendType => Storage.DatabaseBackendType.SQLite;
 
-    private const int MaximumRetryCount = 5;
+    private const int MaximumRetryCount = 6;
     private static readonly ResiliencePipeline SqlitePipeline = new ResiliencePipelineBuilder()
         .AddRetry(new RetryStrategyOptions
         {
             ShouldHandle = new PredicateBuilder().Handle<SqliteException>(IsTransient),
             MaxRetryAttempts = MaximumRetryCount,
-            Delay = TimeSpan.FromMilliseconds(100),
+            Delay = TimeSpan.FromMilliseconds(200),
             BackoffType = DelayBackoffType.Exponential,
             UseJitter = true
         })
@@ -91,7 +91,7 @@ public bool IsConfigured => _isConfigured;
         connBuilder.Mode = SqliteOpenMode.ReadWriteCreate;
         connBuilder.Cache = SqliteCacheMode.Private;
         connBuilder.Pooling = true;
-        connBuilder.DefaultTimeout = 5;
+        connBuilder.DefaultTimeout = 30;
 
         string? dbDir = System.IO.Path.GetDirectoryName(connBuilder.DataSource);
         if (!string.IsNullOrEmpty(dbDir) && !System.IO.Directory.Exists(dbDir))
@@ -307,18 +307,28 @@ public static Database Instance
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        await using SqliteConnection connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        await using SqliteTransaction transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await SqlitePipeline.ExecuteAsync(async token =>
         {
-            await operation(connection, transaction, cancellationToken).ConfigureAwait(false);
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
+            await using SqliteConnection connection = await OpenConnectionAsync(token).ConfigureAwait(false);
+            await using SqliteTransaction transaction = connection.BeginTransaction(deferred: false);
+            try
+            {
+                await operation(connection, transaction, token).ConfigureAwait(false);
+                await transaction.CommitAsync(token).ConfigureAwait(false);
+            }
+            catch
+            {
+                try
+                {
+                    await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception rollbackEx)
+                {
+                    System.Diagnostics.Trace.TraceWarning("Failed to rollback async SQLite transaction: {0}", rollbackEx.Message);
+                }
+                throw;
+            }
+        }, cancellationToken).ConfigureAwait(false);
     }
     /// <summary>
     /// Executes a synchronous unit of work inside an independently owned SQLite transaction.
@@ -330,7 +340,7 @@ public static Database Instance
         SqlitePipeline.Execute(() =>
         {
             using SqliteConnection connection = OpenConnection();
-            using SqliteTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+            using SqliteTransaction transaction = connection.BeginTransaction(deferred: false);
             try
             {
                 operation(connection, transaction);
@@ -338,7 +348,14 @@ public static Database Instance
             }
             catch
             {
-                transaction.Rollback();
+                try
+                {
+                    transaction.Rollback();
+                }
+                catch (Exception rollbackEx)
+                {
+                    System.Diagnostics.Trace.TraceWarning("Failed to rollback SQLite transaction: {0}", rollbackEx.Message);
+                }
                 throw;
             }
         });
@@ -417,7 +434,7 @@ public static Database Instance
     private static void ConfigureConnection(SqliteConnection connection)
     {
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; PRAGMA memory_security=ON;";
+        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=30000; PRAGMA memory_security=ON;";
         command.ExecuteNonQuery();
     }
 

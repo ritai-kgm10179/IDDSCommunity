@@ -591,22 +591,34 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                     firewallPolicy.BatchRemove(ipsToUnblock);
                 }
 
+                DateTime nowUtc = DateTime.UtcNow;
+                database.ExecuteInTransaction((connection, transaction) =>
+                {
+                    using var updateCmd = connection.CreateCommand();
+                    updateCmd.Transaction = transaction;
+                    updateCmd.CommandText = "UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3 AND UnlockDate=@p4";
+                    var pStatus = updateCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pLastUpdate = updateCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pId = updateCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pCurStatus = updateCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pUnlockDate = updateCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Text);
+
+                    foreach (Lock l in timedOutLocks)
+                    {
+                        pStatus.Value = Lock.LOCK_STATUS_UNLOCKED;
+                        pLastUpdate.Value = nowUtc;
+                        pId.Value = l.Id;
+                        pCurStatus.Value = l.Status;
+                        pUnlockDate.Value = l.UnlockDate;
+                        updateCmd.ExecuteNonQuery();
+                    }
+                });
+
                 foreach (Lock l in timedOutLocks)
                 {
-                    try
-                    {
-                        bool otherLock = otherLockMap.TryGetValue(l.Id, out bool o) && o;
-                        database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3 AND UnlockDate=@p4",
-                            Lock.LOCK_STATUS_UNLOCKED, DateTime.UtcNow, l.Id, l.Status, l.UnlockDate);
-                        TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
-                        if (!otherLock) OnClientIpAddressUnlocked(l, null);
-                    }
-                    catch (Exception ex)
-                    {
-                        TryRecordAudit("Firewall.Unlock", "Failed", l.IpAddress, ex.GetType().Name);
-                        database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3",
-                            Lock.LOCK_STATUS_UNLOCK_REQUESTED, DateTime.UtcNow, l.Id, l.Status);
-                    }
+                    bool otherLock = otherLockMap.TryGetValue(l.Id, out bool o) && o;
+                    TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
+                    if (!otherLock) OnClientIpAddressUnlocked(l, null);
                 }
             }
         }
@@ -1345,11 +1357,27 @@ public bool LimitMailSent { get; set; }
 
         if (validThreats.Count == 0) return;
 
-        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
-        foreach (var (ip, item) in validThreats)
+        HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
+        List<string> candidateIps = [];
+        foreach (string ip in validThreats.Keys)
         {
-            if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) continue;
-            toLock.Add((ip, item));
+            if (!existingDbLocked.Contains(ip))
+            {
+                candidateIps.Add(ip);
+            }
+        }
+
+        if (candidateIps.Count == 0) return;
+
+        HashSet<string> existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+
+        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
+        foreach (string ip in candidateIps)
+        {
+            if (!existingFwLocked.Contains(ip) && validThreats.TryGetValue(ip, out var item))
+            {
+                toLock.Add((ip, item));
+            }
         }
 
         if (toLock.Count == 0) return;
@@ -1360,53 +1388,56 @@ public bool LimitMailSent { get; set; }
         {
             DateTime nowUtc = DateTime.UtcNow;
 
-            database.ExecuteInTransaction((connection, transaction) =>
+            foreach (var chunk in System.Linq.Enumerable.Chunk(toLock, 500))
             {
-                using var insertLogCmd = connection.CreateCommand();
-                insertLogCmd.Transaction = transaction;
-                insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
-                var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
-
-                using var insertLockCmd = connection.CreateCommand();
-                insertLockCmd.Transaction = transaction;
-                insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
-                var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
-
-                foreach (var (ip, item) in toLock)
+                database.ExecuteInTransaction((connection, transaction) =>
                 {
-                    pLogTime.Value = nowUtc;
-                    pLogAgent.Value = WellKnownAgentIds.ClusterThreatHub.ToString();
-                    pLogIp.Value = ip;
-                    pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
-                    pLogUser.Value = 0;
+                    using var insertLogCmd = connection.CreateCommand();
+                    insertLogCmd.Transaction = transaction;
+                    insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
+                    var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
 
-                    object? incidentIdObj = insertLogCmd.ExecuteScalar();
-                    long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
+                    using var insertLockCmd = connection.CreateCommand();
+                    insertLockCmd.Transaction = transaction;
+                    insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
+                    var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
 
-                    pLockDate.Value = nowUtc;
-                    pUnlockDate.Value = item.ExpiresUtc;
-                    pTrigger.Value = incidentId;
-                    pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
-                    pPort.Value = 0;
-                    pIp.Value = ip;
-                    pLastUpdate.Value = nowUtc;
+                    foreach (var (ip, item) in chunk)
+                    {
+                        pLogTime.Value = nowUtc;
+                        pLogAgent.Value = WellKnownAgentIds.ClusterThreatHub.ToString();
+                        pLogIp.Value = ip;
+                        pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
+                        pLogUser.Value = 0;
 
-                    insertLockCmd.ExecuteNonQuery();
-                }
-            });
+                        object? incidentIdObj = insertLogCmd.ExecuteScalar();
+                        long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
 
-            List<string> ipList = toLock.ConvertAll(t => t.Ip);
-            firewallPolicy.BatchBlock(ipList);
+                        pLockDate.Value = nowUtc;
+                        pUnlockDate.Value = item.ExpiresUtc;
+                        pTrigger.Value = incidentId;
+                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                        pPort.Value = 0;
+                        pIp.Value = ip;
+                        pLastUpdate.Value = nowUtc;
+
+                        insertLockCmd.ExecuteNonQuery();
+                    }
+                });
+
+                List<string> chunkIps = chunk.Select(t => t.Ip).ToList();
+                firewallPolicy.BatchBlock(chunkIps);
+            }
 
             TryRecordAudit("Firewall.ClusterLock", "Succeeded", sourceNode, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
 
@@ -1460,11 +1491,27 @@ public bool LimitMailSent { get; set; }
 
         threatHubServer?.IngestLocalThreatsBatch(validThreats.Values);
 
-        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
-        foreach (var (ip, item) in validThreats)
+        HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
+        List<string> candidateIps = [];
+        foreach (string ip in validThreats.Keys)
         {
-            if (Locks.LockExists(ip) || firewallPolicy.IsLocked(ip)) continue;
-            toLock.Add((ip, item));
+            if (!existingDbLocked.Contains(ip))
+            {
+                candidateIps.Add(ip);
+            }
+        }
+
+        if (candidateIps.Count == 0) return;
+
+        HashSet<string> existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+
+        List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
+        foreach (string ip in candidateIps)
+        {
+            if (!existingFwLocked.Contains(ip) && validThreats.TryGetValue(ip, out var item))
+            {
+                toLock.Add((ip, item));
+            }
         }
 
         if (toLock.Count == 0) return;
@@ -1475,53 +1522,56 @@ public bool LimitMailSent { get; set; }
         {
             DateTime nowUtc = DateTime.UtcNow;
 
-            database.ExecuteInTransaction((connection, transaction) =>
+            foreach (var chunk in System.Linq.Enumerable.Chunk(toLock, 500))
             {
-                using var insertLogCmd = connection.CreateCommand();
-                insertLogCmd.Transaction = transaction;
-                insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
-                var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
-
-                using var insertLockCmd = connection.CreateCommand();
-                insertLockCmd.Transaction = transaction;
-                insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
-                var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
-                var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
-
-                foreach (var (ip, item) in toLock)
+                database.ExecuteInTransaction((connection, transaction) =>
                 {
-                    pLogTime.Value = nowUtc;
-                    pLogAgent.Value = WellKnownAgentIds.ExternalThreatFeed.ToString();
-                    pLogIp.Value = ip;
-                    pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
-                    pLogUser.Value = 0;
+                    using var insertLogCmd = connection.CreateCommand();
+                    insertLogCmd.Transaction = transaction;
+                    insertLogCmd.CommandText = @"insert into IntrusionLog(IncidentTime, AgentId, ClientIP, Action, ActionTriggeredByUser) values (@p0,@p1,@p2,@p3,@p4) RETURNING Id";
+                    var pLogTime = insertLogCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogAgent = insertLogCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogIp = insertLogCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLogAction = insertLogCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pLogUser = insertLogCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
 
-                    object? incidentIdObj = insertLogCmd.ExecuteScalar();
-                    long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
+                    using var insertLockCmd = connection.CreateCommand();
+                    insertLockCmd.Transaction = transaction;
+                    insertLockCmd.CommandText = @"insert into Locks(LockDate, UnlockDate, TriggerIncident, Status, Port, IpAddress, LastUpdate) values (@p0,@p1,@p2,@p3,@p4,@p5,@p6)";
+                    var pLockDate = insertLockCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pUnlockDate = insertLockCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pTrigger = insertLockCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pStatus = insertLockCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pPort = insertLockCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    var pIp = insertLockCmd.Parameters.Add("@p5", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pLastUpdate = insertLockCmd.Parameters.Add("@p6", Microsoft.Data.Sqlite.SqliteType.Text);
 
-                    pLockDate.Value = nowUtc;
-                    pUnlockDate.Value = item.ExpiresUtc;
-                    pTrigger.Value = incidentId;
-                    pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
-                    pPort.Value = 0;
-                    pIp.Value = ip;
-                    pLastUpdate.Value = nowUtc;
+                    foreach (var (ip, item) in chunk)
+                    {
+                        pLogTime.Value = nowUtc;
+                        pLogAgent.Value = WellKnownAgentIds.ExternalThreatFeed.ToString();
+                        pLogIp.Value = ip;
+                        pLogAction.Value = IntrusionLog.STATUS_HARD_LOCK_REQUESTED;
+                        pLogUser.Value = 0;
 
-                    insertLockCmd.ExecuteNonQuery();
-                }
-            });
+                        object? incidentIdObj = insertLogCmd.ExecuteScalar();
+                        long incidentId = Shared.Db.DbValueConverter.ToInt64(incidentIdObj);
 
-            List<string> ipList = toLock.ConvertAll(t => t.Ip);
-            firewallPolicy.BatchBlock(ipList);
+                        pLockDate.Value = nowUtc;
+                        pUnlockDate.Value = item.ExpiresUtc;
+                        pTrigger.Value = incidentId;
+                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                        pPort.Value = 0;
+                        pIp.Value = ip;
+                        pLastUpdate.Value = nowUtc;
+
+                        insertLockCmd.ExecuteNonQuery();
+                    }
+                });
+
+                List<string> chunkIps = chunk.Select(t => t.Ip).ToList();
+                firewallPolicy.BatchBlock(chunkIps);
+            }
 
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", sourceFeedName, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
 

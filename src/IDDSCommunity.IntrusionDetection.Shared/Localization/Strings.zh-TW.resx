@@ -1124,4 +1124,5 @@
   <data name="Cleaned up inbound allow rule on service shutdown" xml:space="preserve"><value>服務關閉時清除輸入允許規則</value></data>
   <data name="Locked: {0}, Evaluated: {1}" xml:space="preserve"><value>已封鎖：{0}，已評估：{1}</value></data>
   <data name="Failed to download GeoIP feeds from configured URLs." xml:space="preserve"><value>無法自已設定的 URL 下載 GeoIP 資料來源。</value></data>
+  <data name="Database is currently busy. Please wait a moment and try saving again." xml:space="preserve"><value>資料庫目前繁忙或正在進行同步，請稍候再重新儲存。</value></data>
 </root>

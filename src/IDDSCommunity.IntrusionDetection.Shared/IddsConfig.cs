@@ -291,21 +291,26 @@ public Dictionary<string, string> AppConfig
         if (!database.IsConfigured) configureDatabase();
         lock (_configLock)
         {
-            database.ExecuteInTransaction((_, trans) =>
+            database.ExecuteInTransaction((connection, trans) =>
             {
-                database.ExecuteNonQuery("delete from AppConfig", trans);
+                using var deleteCmd = connection.CreateCommand();
+                deleteCmd.Transaction = trans;
+                deleteCmd.CommandText = "DELETE FROM AppConfig";
+                deleteCmd.ExecuteNonQuery();
+
+                using var insertCmd = connection.CreateCommand();
+                insertCmd.Transaction = trans;
+                insertCmd.CommandText = "INSERT INTO AppConfig(ConfigKey, ConfigValue) VALUES(@p0, @p1)";
+                var pKey = insertCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                var pVal = insertCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+
                 foreach (string key in AppConfig.Keys)
                 {
-                    object? exists = database.ExecuteScalar("select count(*) from AppConfig where ConfigKey=@p0", trans, key);
-                    if (exists != null && int.TryParse(exists.ToString(), out int count) && count > 0)
-                    {
-                        database.ExecuteNonQuery("UPDATE AppConfig SET ConfigValue = @p1 WHERE ConfigKey = @p0", trans, key, AppConfig[key]);
-                    }
-                    else
-                    {
-                        database.ExecuteNonQuery("insert into AppConfig(ConfigKey, ConfigValue) Values(@p0, @p1)", trans, key, AppConfig[key]);
-                    }
+                    pKey.Value = key;
+                    pVal.Value = AppConfig[key] ?? string.Empty;
+                    insertCmd.ExecuteNonQuery();
                 }
+
                 foreach (string key in changedAppConfigKeys)
                     RecordConfigurationAudit(trans, key);
             });
@@ -355,12 +360,24 @@ public Dictionary<string, string> AppConfig
     public void SaveSafeNetworks()
     {
         if (!database.IsConfigured) configureDatabase();
-        database.ExecuteInTransaction((_, trans) =>
+        database.ExecuteInTransaction((connection, trans) =>
         {
-            database.ExecuteNonQuery("delete from WhiteList", trans);
+            using var deleteCmd = connection.CreateCommand();
+            deleteCmd.Transaction = trans;
+            deleteCmd.CommandText = "DELETE FROM WhiteList";
+            deleteCmd.ExecuteNonQuery();
+
+            using var insertCmd = connection.CreateCommand();
+            insertCmd.Transaction = trans;
+            insertCmd.CommandText = "INSERT INTO WhiteList(IpAddress, NetworkMask) VALUES (@p0, @p1)";
+            var pIp = insertCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+            var pMask = insertCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+
             foreach (CSafeNetwork net in SafeNetworks)
             {
-                database.ExecuteNonQuery("insert into WhiteList(IpAddress, NetworkMask) values (@p0, @p1)", trans, net.IpAddress, net.SubnetMask);
+                pIp.Value = net.IpAddress ?? string.Empty;
+                pMask.Value = net.SubnetMask ?? string.Empty;
+                insertCmd.ExecuteNonQuery();
             }
             RecordConfigurationAudit(trans, "SafeNetworks");
         });

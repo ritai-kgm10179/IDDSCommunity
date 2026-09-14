@@ -76,6 +76,16 @@ public sealed class FirewallStateReconcilerTest
         }
 
         public bool IsLocked(string ipAddress) => addresses.Contains(ipAddress);
+        public HashSet<string> FilterLockedIps(IEnumerable<string> ipAddresses)
+        {
+            HashSet<string> result = [];
+            foreach (string ip in ipAddresses)
+            {
+                if (addresses.Contains(ip))
+                    result.Add(ip);
+            }
+            return result;
+        }
         public IReadOnlyCollection<string> GetBlockedAddresses() => addresses;
         public void RemoveIpAddressFromBlockList(string ipAddress) => addresses.Remove(ipAddress);
         public void BatchRemove(IReadOnlyCollection<string> ipAddresses)

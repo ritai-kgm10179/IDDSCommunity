@@ -440,6 +440,7 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
                 agent.DefaultCustomConfiguration = new Dictionary<string, string>(a.DefaultCustomConfiguration, StringComparer.Ordinal);
                 agent.CustomConfigurationTypes = a.CustomConfigurationTypes;
                 agent.LoadCustomConfig();
+                bool requiresSave = false;
                 if (oldId != a.Id && oldId != Guid.Empty && database != null && database.IsConfigured)
                 {
                     try
@@ -451,8 +452,16 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
                     {
                         System.Diagnostics.Trace.TraceWarning("Failed to update legacy agent ID in database: {0}", ex.Message);
                     }
+                    requiresSave = true;
                 }
-                agent.Save();
+                if (database != null && database.IsConfigured && !SecurityAgent.DoesExistInDb(agent.Id))
+                {
+                    requiresSave = true;
+                }
+                if (requiresSave)
+                {
+                    agent.Save();
+                }
                 result.Remove(a);
             }
             else

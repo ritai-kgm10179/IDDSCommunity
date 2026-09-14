@@ -12,6 +12,13 @@ internal interface IFirewallPolicy
 
     bool IsLocked(string ipAddress);
 
+    /// <summary>
+    /// 批次篩選給定之 IP 位址清單中，哪些位址已處於 Windows 防火牆阻擋規則中。
+    /// </summary>
+    /// <param name="ipAddresses">欲檢驗之 IP 位址清單。</param>
+    /// <returns>已被防火牆阻擋之 IP 位址集合。</returns>
+    System.Collections.Generic.HashSet<string> FilterLockedIps(System.Collections.Generic.IEnumerable<string> ipAddresses);
+
     System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses();
 
     void RemoveIpAddressFromBlockList(string ipAddress);

@@ -154,62 +154,83 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
             {
                 try
                 {
-                    var previous = cursors.GetValueOrDefault(endpoint, (0L, string.Empty, 0L));
-                    ThreatHubSyncResponse localPage = localStore.ReadPage(previous.Item3, localStore.Generation);
-                    using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-                    deadline.CancelAfter(TimeSpan.FromSeconds(15));
-                    var payload = new ThreatHubSyncPayload
+                    const int maxPagesPerSync = 8;
+                    int pagesSynced = 0;
+                    int totalPushed = 0;
+                    int totalPulled = 0;
+
+                    while (pagesSynced < maxPagesPerSync && !stopping.IsCancellationRequested)
                     {
-                        NodeId = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Environment.MachineName))),
-                        NodeName = Environment.MachineName,
-                        LastSyncUtc = lastSyncUtc,
-                        Cursor = previous.Item1,
-                        Generation = previous.Item2,
-                        NewThreats = localPage.ActiveThreats
-                    };
-                    ThreatHubSyncResponse response = await client.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
-                    if (!response.Success) continue;
-                    if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
-                        || response.Generation.Length > 128 || response.NextCursor < 0
-                        || (response.Generation == previous.Item2 && response.NextCursor < previous.Item1)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
-                    List<ThreatIntelligenceItem> validThreats = [];
-                    foreach (ThreatIntelligenceItem threat in response.ActiveThreats)
-                    {
-                        if (threat is null || !IPAddress.TryParse(threat.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
-                            || config.IsInSafeNetwork(ip.ToString()) || threat.ExpiresUtc <= DateTime.UtcNow
-                            || threat.ExpiresUtc > DateTime.UtcNow.AddDays(365) || !double.IsFinite(threat.ConfidenceScore)
-                            || threat.ConfidenceScore < 0.8 || threat.ConfidenceScore > 1) continue;
-                        validThreats.Add(threat);
+                        var previous = cursors.GetValueOrDefault(endpoint, (0L, string.Empty, 0L));
+                        ThreatHubSyncResponse localPage = localStore.ReadPage(previous.Item3, localStore.Generation);
+                        using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
+                        deadline.CancelAfter(TimeSpan.FromSeconds(15));
+                        var payload = new ThreatHubSyncPayload
+                        {
+                            NodeId = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Environment.MachineName))),
+                            NodeName = Environment.MachineName,
+                            LastSyncUtc = lastSyncUtc,
+                            Cursor = previous.Item1,
+                            Generation = previous.Item2,
+                            NewThreats = localPage.ActiveThreats
+                        };
+                        ThreatHubSyncResponse response = await client.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
+                        if (!response.Success) break;
+                        if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
+                            || response.Generation.Length > 128 || response.NextCursor < 0
+                            || (response.Generation == previous.Item2 && response.NextCursor < previous.Item1)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
+                        List<ThreatIntelligenceItem> validThreats = [];
+                        foreach (ThreatIntelligenceItem threat in response.ActiveThreats)
+                        {
+                            if (threat is null || !IPAddress.TryParse(threat.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
+                                || config.IsInSafeNetwork(ip.ToString()) || threat.ExpiresUtc <= DateTime.UtcNow
+                                || threat.ExpiresUtc > DateTime.UtcNow.AddDays(365) || !double.IsFinite(threat.ConfidenceScore)
+                                || threat.ConfidenceScore < 0.8 || threat.ConfidenceScore > 1) continue;
+                            validThreats.Add(threat);
+                        }
+                        if (validThreats.Count > 0)
+                        {
+                            if (onClusterThreatsBatchReceived != null)
+                            {
+                                onClusterThreatsBatchReceived(validThreats);
+                            }
+                            else if (onClusterThreatReceived != null)
+                            {
+                                foreach (var threat in validThreats)
+                                    onClusterThreatReceived(threat);
+                            }
+                        }
+                        cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
+                        if (database is not null && database.IsConfigured)
+                        {
+                            try
+                            {
+                                database.ExecuteNonQuery(
+                                    "INSERT INTO ThreatHubCursors(Endpoint, Cursor, Generation, LocalCursor, UpdatedUtc) VALUES(@p0, @p1, @p2, @p3, @p4) ON CONFLICT(Endpoint) DO UPDATE SET Cursor=excluded.Cursor, Generation=excluded.Generation, LocalCursor=excluded.LocalCursor, UpdatedUtc=excluded.UpdatedUtc",
+                                    endpoint, response.NextCursor, response.Generation, localPage.NextCursor, DateTime.UtcNow.ToString("O"));
+                            }
+                            catch (Exception ex)
+                            {
+                                logWarning("Failed to persist ThreatHub cursor to database", ex);
+                            }
+                        }
+                        lastSyncUtc = response.ServerTimeUtc;
+                        totalPushed += localPage.ActiveThreats.Count;
+                        totalPulled += response.ActiveThreats.Count;
+                        pagesSynced++;
+
+                        // 若兩端皆無更多分頁資料，則跳出快速追趕迴圈
+                        if (!response.HasMore && !localPage.HasMore)
+                        {
+                            break;
+                        }
                     }
-                    if (validThreats.Count > 0)
+
+                    if (pagesSynced > 0)
                     {
-                        if (onClusterThreatsBatchReceived != null)
-                        {
-                            onClusterThreatsBatchReceived(validThreats);
-                        }
-                        else if (onClusterThreatReceived != null)
-                        {
-                            foreach (var threat in validThreats)
-                                onClusterThreatReceived(threat);
-                        }
+                        recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pages: {pagesSynced}, Pushed: {totalPushed}, Pulled: {totalPulled}");
+                        return;
                     }
-                    cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
-                    if (database is not null && database.IsConfigured)
-                    {
-                        try
-                        {
-                            database.ExecuteNonQuery(
-                                "INSERT INTO ThreatHubCursors(Endpoint, Cursor, Generation, LocalCursor, UpdatedUtc) VALUES(@p0, @p1, @p2, @p3, @p4) ON CONFLICT(Endpoint) DO UPDATE SET Cursor=excluded.Cursor, Generation=excluded.Generation, LocalCursor=excluded.LocalCursor, UpdatedUtc=excluded.UpdatedUtc",
-                                endpoint, response.NextCursor, response.Generation, localPage.NextCursor, DateTime.UtcNow.ToString("O"));
-                        }
-                        catch (Exception ex)
-                        {
-                            logWarning("Failed to persist ThreatHub cursor to database", ex);
-                        }
-                    }
-                    lastSyncUtc = response.ServerTimeUtc;
-                    recordAudit?.Invoke("Cluster.Sync", "Succeeded", endpoint, $"Pushed: {localPage.ActiveThreats.Count}, Pulled: {response.ActiveThreats.Count}");
-                    return;
                 }
                 catch (OperationCanceledException) when (stopping.IsCancellationRequested) { return; }
                 catch (Exception ex) { logWarning($"Threat Hub endpoint '{endpoint}' unavailable.", ex); }
@@ -219,7 +240,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         finally { syncGate.Release(); }
     }
     /// <summary>
-    /// 停止同步排程。
+    /// 停止同步排程並等待進行中的同步作業結束。
     /// </summary>
     public void Stop()
     {
@@ -227,6 +248,14 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         syncTimer?.Change(Timeout.Infinite, Timeout.Infinite);
         syncTimer?.Dispose();
         syncTimer = null;
+        try
+        {
+            if (syncGate.Wait(TimeSpan.FromSeconds(5)))
+            {
+                syncGate.Release();
+            }
+        }
+        catch (ObjectDisposedException) { }
     }
 
     /// <summary>

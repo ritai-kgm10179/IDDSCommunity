@@ -237,4 +237,33 @@ public class LocksTest
         var probationList = Locks.GetProbationLocks();
         Assert.IsTrue(probationList.Exists(item => item.Id == l.Id));
     }
+
+    /// <summary>
+    /// 驗證批次查詢現有鎖定 IP 時，能精準過濾已鎖定與未鎖定之位址。
+    /// </summary>
+    [TestMethod]
+    public void GetExistingLockedIps_ReturnsOnlyActiveLocks()
+    {
+        string lockedIp1 = $"198.51.100.{Random.Shared.Next(10, 100)}";
+        string lockedIp2 = $"198.51.100.{Random.Shared.Next(101, 200)}";
+        string unlockedIp = $"198.51.100.{Random.Shared.Next(201, 254)}";
+
+        Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress IN (@p0, @p1, @p2)", lockedIp1, lockedIp2, unlockedIp);
+
+        try
+        {
+            Locks.CreateLock(new Lock { IpAddress = lockedIp1, LockDate = DateTime.UtcNow, UnlockDate = DateTime.UtcNow.AddHours(2), Status = Lock.LOCK_STATUS_SOFTLOCK });
+            Locks.CreateLock(new Lock { IpAddress = lockedIp2, LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK });
+
+            var result = Locks.GetExistingLockedIps([lockedIp1, lockedIp2, unlockedIp]);
+
+            Assert.IsTrue(result.Contains(lockedIp1));
+            Assert.IsTrue(result.Contains(lockedIp2));
+            Assert.IsFalse(result.Contains(unlockedIp));
+        }
+        finally
+        {
+            Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress IN (@p0, @p1, @p2)", lockedIp1, lockedIp2, unlockedIp);
+        }
+    }
 }
