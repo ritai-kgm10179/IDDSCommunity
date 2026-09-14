@@ -114,8 +114,8 @@ public partial class PanelLockoutConfiguration : UserControl
         IddsConfig.Instance.CrossAgentSlidingWindowMinutes = decimal.ToInt32(numericSlidingWindowMinutes.Value);
         IddsConfig.Instance.TrustedProxyCidrs = normalizedTrustedProxies;
         IddsConfig.Instance.SaveAppConfig();
-        OnLockoutConfigurationChanged();
         MessageBox.Show(Shared.Localization.Strings.Get("Configuration was saved successfully."), Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        OnLockoutConfigurationChanged();
     }
     /// <summary>
     /// Processes the lockout configuration changed notification.

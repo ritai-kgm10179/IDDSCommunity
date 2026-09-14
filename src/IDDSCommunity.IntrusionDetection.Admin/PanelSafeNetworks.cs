@@ -310,7 +310,7 @@ public bool IsInEditMode { get; set; }
         IddsConfig.Instance.UseSafeNetworkList = checkBoxConfigureSafeNetworks.Checked;
         IddsConfig.Instance.Save();
 
-        OnSafeNetworksChanged();
         MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        OnSafeNetworksChanged();
     }
 }

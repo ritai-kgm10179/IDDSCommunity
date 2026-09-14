@@ -207,8 +207,8 @@ public bool IsInEditMode { get; set; }
             IddsConfig.Instance.SetSmtpPassword(textBoxPassword.Text);
             IddsConfig.Instance.Save();
 
-            OnSmtpSettingsChanged();
             MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            OnSmtpSettingsChanged();
         }
     }
     private void ResetDefaults_Click(object? sender, EventArgs e)

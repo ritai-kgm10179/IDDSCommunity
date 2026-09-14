@@ -305,13 +305,14 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         config.BlockedCountryCodes = txtBlockedCountries.Text.Trim();
 
         config.SaveAppConfig();
-        ThreatIntelligenceSettingsChanged?.Invoke(this, EventArgs.Empty);
 
         MessageBox.Show(
             Strings.Get("Configuration was saved successfully."),
             Strings.AppTitle,
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
+
+        ThreatIntelligenceSettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ResetToDefaults()

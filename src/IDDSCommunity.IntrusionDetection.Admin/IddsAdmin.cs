@@ -170,7 +170,11 @@ public partial class IddsAdmin : Form
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e) => await RestartServiceAsync();
+    async void _panelApplicationSettings_ConfigurationChanged(object? sender, EventArgs e)
+    {
+        await Task.Yield();
+        await RestartServiceAsync();
+    }
 
     /// <summary>
     /// 取得或設定 PanelAgentConfiguration。
@@ -199,6 +203,7 @@ public partial class IddsAdmin : Form
     async void _panelAgentConfiguration_AgentSettingsChanged(object? sender, EventArgs e)
     {
         Dashboard.RefreshAgentPresentations();
+        await Task.Yield();
         await RestartServiceAsync();
     }
     /// <summary>

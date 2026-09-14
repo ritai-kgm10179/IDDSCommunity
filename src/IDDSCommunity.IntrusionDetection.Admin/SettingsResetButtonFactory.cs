@@ -83,6 +83,8 @@ internal static class SettingsResetButtonFactory
                 PositionInContainer();
             }
             container.Layout += (_, _) => PositionInContainer();
+            container.SizeChanged += (_, _) => PositionInContainer();
+            container.ClientSizeChanged += (_, _) => PositionInContainer();
             button.SizeChanged += (_, _) => PositionInContainer();
             owner.ParentChanged += ParentChanged;
             owner.Disposed += (_, _) =>

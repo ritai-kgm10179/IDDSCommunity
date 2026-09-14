@@ -99,7 +99,7 @@ partial class PanelSmtpSettings
         this.headerPanel.Controls.Add(this.smartLabel5);
         this.headerPanel.Controls.Add(this.pictureBoxSave);
         this.headerPanel.Controls.Add(this.pictureBoxEdit);
-        this.headerPanel.Height = 34;
+        this.headerPanel.Height = 36;
         this.headerPanel.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
         this.headerPanel.Name = "headerPanel";
         //

@@ -286,8 +286,8 @@ public partial class PanelNotificationSettings : UserControl
         settings.MetricsAllowedNetworks = textBoxMetricsAllowedNetworks.Text.Trim();
 
         IddsConfig.Instance.SaveAppConfig();
-        OnNotificationSettingsChanged();
         MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        OnNotificationSettingsChanged();
     }
 
     private void ResetDefaults_Click(object? sender, EventArgs e)

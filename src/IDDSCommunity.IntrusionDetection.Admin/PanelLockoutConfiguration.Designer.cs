@@ -119,7 +119,7 @@ partial class PanelLockoutConfiguration
         //
         this.headerPanel.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
         this.headerPanel.Controls.Add(this.smartLabel5);
-        this.headerPanel.Height = 34;
+        this.headerPanel.Height = 36;
         this.headerPanel.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
         this.headerPanel.Name = "headerPanel";
         //

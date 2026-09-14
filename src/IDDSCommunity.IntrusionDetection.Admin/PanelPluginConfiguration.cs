@@ -174,10 +174,15 @@ public event EventHandler? AgentConfigurationChanged;
             }
 
             Size preferred = smartLabelAgentName.GetPreferredSize(new Size(maxTitleWidth, 0));
-            int requiredHeight = Math.Max(34, smartLabelAgentName.Top + preferred.Height + 4);
+            int buttonHeight = _buttonResetDefaults?.Height ?? 32;
+            int requiredHeight = Math.Max(buttonHeight + 4, smartLabelAgentName.Top + preferred.Height + 4);
             if (headerPanel.Height != requiredHeight)
             {
                 headerPanel.Height = requiredHeight;
+            }
+            if (_buttonResetDefaults is not null)
+            {
+                _buttonResetDefaults.Top = Math.Max(0, (headerPanel.ClientSize.Height - _buttonResetDefaults.Height) / 2);
             }
         }
         finally
@@ -235,16 +240,17 @@ public event EventHandler? AgentConfigurationChanged;
         errSoftLocks.Visible = false;
     }
     /// <summary>
-    /// 處理 click 事件。
+    /// 處理儲存按鈕點擊事件。先顯示成功提示再發送變更通知，避免背景服務重啟延遲介面回應。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void pictureBoxSave_Click(object sender, EventArgs e)
     {
         if (_agent is null) return;
-        if (SaveAgentChanges(_agent))
+        if (SaveAgentChanges(_agent, notify: false))
         {
             MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            OnAgentConfigurationChanged();
         }
     }
 
@@ -252,7 +258,10 @@ public event EventHandler? AgentConfigurationChanged;
     /// 儲存目前代理程式的異動並回傳是否確實寫入。呼叫端可依此決定是否顯示成功提示——
     /// <see cref="FlushUnsavedChanges"/> 在切換代理程式時會靜默呼叫，不應跳出提示。
     /// </summary>
-    private bool SaveAgentChanges(SecurityAgent agent)
+    /// <param name="agent">欲儲存設定之安全性代理程式執行個體。</param>
+    /// <param name="notify">是否在儲存後立即引發 <see cref="AgentConfigurationChanged"/> 事件；預設為 <see langword="true"/>。</param>
+    /// <returns>若成功驗證並寫入設定則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    private bool SaveAgentChanges(SecurityAgent agent, bool notify = true)
     {
         bool hasError = false;
         ClearErrors();
@@ -293,7 +302,10 @@ public event EventHandler? AgentConfigurationChanged;
                 return false;
             }
             agent.Save();
-            OnAgentConfigurationChanged();
+            if (notify)
+            {
+                OnAgentConfigurationChanged();
+            }
             saved = true;
         }
         SetEditMode(false);
