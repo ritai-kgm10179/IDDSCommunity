@@ -21,6 +21,8 @@ internal interface IFirewallPolicy
 
     System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses();
 
+    FirewallBlockState GetBlockState();
+
     void RemoveIpAddressFromBlockList(string ipAddress);
 
     /// <summary>
@@ -50,3 +52,7 @@ internal interface IFirewallPolicy
     /// <param name="auditRecorder">選擇性的稽核日誌紀錄委派。</param>
     void RemoveAllInboundAllowRules(System.Action<string, string, string, string?>? auditRecorder = null);
 }
+
+internal sealed record FirewallBlockState(
+    System.Collections.Generic.IReadOnlyCollection<string> EffectiveAddresses,
+    System.Collections.Generic.IReadOnlyCollection<string> AnyDirectionAddresses);

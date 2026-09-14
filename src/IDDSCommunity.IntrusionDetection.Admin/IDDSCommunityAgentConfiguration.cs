@@ -2,6 +2,7 @@
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
@@ -88,7 +89,7 @@ public PanelPluginConfiguration PluginConfigPanel
     /// <summary>
     /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
     /// </summary>
-    public void FlushUnsavedChanges() => PluginConfigPanel.FlushUnsavedChanges();
+    public Task<bool> FlushUnsavedChangesAsync() => PluginConfigPanel.FlushUnsavedChangesAsync();
     /// <summary>
     /// Clears security agents.
     /// </summary>
@@ -102,32 +103,42 @@ public PanelPluginConfiguration PluginConfigPanel
     /// 執行 show agent config 作業。
     /// </summary>
     /// <param name="agent">agent 的值。</param>
-    public void ShowAgentConfig(SecurityAgent agent)
+    public async Task<bool> ShowAgentConfigAsync(SecurityAgent agent)
     {
-        if (agent != null)
+        ArgumentNullException.ThrowIfNull(agent);
+        if (!await PluginConfigPanel.FlushUnsavedChangesAsync()) return false;
+        await Task.Run(() =>
         {
             if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
-            iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName);
-        }
-        if (agent is not null)
-            PluginConfigPanel.Agent = agent;
+        });
+        if (!await PluginConfigPanel.SwitchAgentAsync(agent)) return false;
+        iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName);
+        return true;
+    }
+
+    /// <summary>
+    /// 同步顯示指定 Agent 設定，供初始畫面建立與不具非同步事件來源的相容呼叫使用。
+    /// </summary>
+    /// <param name="agent">要顯示的 Agent。</param>
+    public void ShowAgentConfig(SecurityAgent agent)
+    {
+        ArgumentNullException.ThrowIfNull(agent);
+        if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
+        PluginConfigPanel.Agent = agent;
+        iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName);
     }
     /// <summary>
     /// 處理 navigation changed 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void iddscommunitySettingsNavigation_NavigationChanged(object sender, EventArgs e)
+    private async void iddscommunitySettingsNavigation_NavigationChanged(object sender, EventArgs e)
     {
         if (iddscommunitySettingsNavigation.SelectedItem != null && !string.IsNullOrEmpty(iddscommunitySettingsNavigation.SelectedItem.DisplayName))
         {
             SecurityAgent? agent = SecurityAgents.Instance.FindByDisplayName(iddscommunitySettingsNavigation.SelectedItem.DisplayName);
-            if (agent != null)
-            {
-                if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
-            }
-            if (agent is not null)
-                PluginConfigPanel.Agent = agent;
+            if (agent is not null && !await ShowAgentConfigAsync(agent))
+                iddscommunitySettingsNavigation.SetSelectedItem(PluginConfigPanel.Agent.DisplayName);
         }
     }
 }

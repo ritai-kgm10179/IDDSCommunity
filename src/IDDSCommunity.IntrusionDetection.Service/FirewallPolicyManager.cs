@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Windows.Win32.NetworkManagement.WindowsFirewall;
 
@@ -294,23 +293,42 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// </summary>
     /// <returns>傳回 normalized firewall address entries 的結果。</returns>
     public IReadOnlyCollection<string> GetBlockedAddresses()
+        => GetBlockState().EffectiveAddresses;
+
+    public FirewallBlockState GetBlockState()
     {
         lock (_firewallLock)
         {
-            HashSet<string> addresses = new(StringComparer.Ordinal);
-            foreach (string ruleName in GetActiveRuleNames())
+            HashSet<string> inbound = new(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> outbound = new(StringComparer.OrdinalIgnoreCase);
+            string inboundBase = GetRuleName("BlockAttacker", 0);
+            string outboundBase = GetRuleName("BlockAttackerOutbound", 0);
+            foreach (INetFwRule rule in FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME))
             {
-                INetFwRule? rule = GetRule(ruleName);
-                if (rule is null || !rule.Enabled)
+                string ruleName = FirewallComString.Get(rule.Name);
+                HashSet<string>? target = ruleName.StartsWith(inboundBase, StringComparison.Ordinal)
+                    && IsEffectiveRule(rule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
+                    ? inbound
+                    : ruleName.StartsWith(outboundBase, StringComparison.Ordinal)
+                        && IsEffectiveRule(rule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT)
+                        ? outbound
+                        : null;
+                if (target is null)
                     continue;
                 foreach (string entry in FirewallComString.Get(rule.RemoteAddresses).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     string? normalized = NormalizeRemoteAddressEntry(entry);
                     if (normalized is not null)
-                        addresses.Add(normalized);
+                        target.Add(normalized);
                 }
             }
-            return [.. addresses];
+            HashSet<string> anyDirection = new(inbound, StringComparer.OrdinalIgnoreCase);
+            anyDirection.UnionWith(outbound);
+            if (blockMode == FirewallBlockMode.Bidirectional)
+                inbound.IntersectWith(outbound);
+            return new FirewallBlockState(
+                [.. inbound.Order(StringComparer.Ordinal)],
+                [.. anyDirection.Order(StringComparer.Ordinal)]);
         }
     }
     /// <summary>
@@ -333,7 +351,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         int maximumPrefixLength = address.GetAddressBytes().Length * 8;
         if (prefixLength < 0 || prefixLength > maximumPrefixLength)
             return null;
-        return prefixLength == maximumPrefixLength ? address.ToString() : $"{address}/{prefixLength}";
+        return FormatNetwork(MaskAddress(address, prefixLength), prefixLength);
     }
     /// <summary>
     /// Removes ip address from block list.
@@ -387,16 +405,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 if (rule is null)
                     continue;
                 string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
-                bool hasMatch = false;
-                foreach (string entry in remoteAddresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                {
-                    string baseIp = entry.Contains('/') ? entry.Split('/')[0].Trim() : entry;
-                    if (removeSet.Contains(baseIp) || removeSet.Contains(entry))
-                    {
-                        hasMatch = true;
-                        break;
-                    }
-                }
+                bool hasMatch = removeSet.Any(address => ContainsAddress(remoteAddresses, address));
                 if (!hasMatch)
                     continue;
 
@@ -476,6 +485,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 existingShards.Add(r);
             }
         }
+        existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
 
         int chunkCount = addresses.Count == 0 ? 0 : (addresses.Count + MaxAddressesPerRule - 1) / MaxAddressesPerRule;
 
@@ -529,21 +539,91 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     private static string GetCleanedRemoteAddresses(string addresses, string removeAddress) =>
         GetCleanedRemoteAddresses(addresses, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { removeAddress.Trim() });
 
-    private static string GetCleanedRemoteAddresses(string addresses, HashSet<string> removeSet)
+    internal static string GetCleanedRemoteAddresses(string addresses, HashSet<string> removeSet)
     {
-        StringBuilder result = new();
-        string[] addressList = addresses.Contains(',') ? addresses.Split(',') : [addresses];
-        foreach (string address in addressList)
+        List<string> result = [];
+        foreach (string address in addresses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             string trimmed = address.Trim();
-            if (string.IsNullOrEmpty(trimmed)) continue;
-            string part1 = trimmed.Contains('/') ? trimmed.Split('/')[0].Trim() : trimmed;
-            if (!removeSet.Contains(part1) && !removeSet.Contains(trimmed))
+            List<string> remaining = [trimmed];
+            foreach (string removal in removeSet)
             {
-                result.Append(trimmed).Append(',');
+                List<string> next = [];
+                foreach (string entry in remaining)
+                    next.AddRange(ExceptAddress(entry, removal));
+                remaining = next;
+                if (remaining.Count == 0)
+                    break;
             }
+            result.AddRange(remaining);
         }
-        return result.ToString();
+        return string.Join(',', result.Distinct(StringComparer.OrdinalIgnoreCase));
+    }
+
+    internal static IReadOnlyList<string> ExceptAddress(string entry, string removal)
+    {
+        string? normalizedEntry = NormalizeRemoteAddressEntry(entry);
+        string? normalizedRemoval = NormalizeRemoteAddressEntry(removal);
+        if (normalizedEntry is null || normalizedRemoval is null)
+            return [entry];
+
+        (System.Net.IPAddress Network, int PrefixLength) source = ParseNetwork(normalizedEntry);
+        (System.Net.IPAddress Network, int PrefixLength) excluded = ParseNetwork(normalizedRemoval);
+        if (source.Network.AddressFamily != excluded.Network.AddressFamily || !NetworksOverlap(source, excluded))
+            return [normalizedEntry];
+        if (excluded.PrefixLength <= source.PrefixLength)
+            return [];
+
+        List<string> result = [];
+        SubtractNetwork(source.Network, source.PrefixLength, excluded, result);
+        return result;
+    }
+
+    private static void SubtractNetwork(System.Net.IPAddress network, int prefixLength,
+        (System.Net.IPAddress Network, int PrefixLength) excluded, List<string> result)
+    {
+        int maximumPrefixLength = network.GetAddressBytes().Length * 8;
+        if (prefixLength == maximumPrefixLength)
+            return;
+        int childPrefix = prefixLength + 1;
+        System.Net.IPAddress first = MaskAddress(network, childPrefix);
+        byte[] secondBytes = first.GetAddressBytes();
+        secondBytes[prefixLength / 8] |= (byte)(1 << (7 - prefixLength % 8));
+        System.Net.IPAddress second = new(secondBytes);
+        foreach (System.Net.IPAddress child in new[] { first, second })
+        {
+            var childNetwork = (Network: child, PrefixLength: childPrefix);
+            if (!NetworksOverlap(childNetwork, excluded))
+                result.Add(FormatNetwork(child, childPrefix));
+            else if (excluded.PrefixLength > childPrefix)
+                SubtractNetwork(child, childPrefix, excluded, result);
+        }
+    }
+
+    private static (System.Net.IPAddress Network, int PrefixLength) ParseNetwork(string value)
+    {
+        string[] parts = value.Split('/', 2);
+        System.Net.IPAddress address = System.Net.IPAddress.Parse(parts[0]);
+        int prefixLength = parts.Length == 1 ? address.GetAddressBytes().Length * 8 : int.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+        return (MaskAddress(address, prefixLength), prefixLength);
+    }
+
+    private static bool NetworksOverlap((System.Net.IPAddress Network, int PrefixLength) left,
+        (System.Net.IPAddress Network, int PrefixLength) right) =>
+        IsInSubnet(left.Network, right.Network, Math.Min(left.PrefixLength, right.PrefixLength));
+
+    private static System.Net.IPAddress MaskAddress(System.Net.IPAddress address, int prefixLength)
+    {
+        byte[] bytes = address.GetAddressBytes();
+        for (int bit = prefixLength; bit < bytes.Length * 8; bit++)
+            bytes[bit / 8] &= (byte)~(1 << (7 - bit % 8));
+        return new System.Net.IPAddress(bytes);
+    }
+
+    private static string FormatNetwork(System.Net.IPAddress network, int prefixLength)
+    {
+        int maximumPrefixLength = network.GetAddressBytes().Length * 8;
+        return prefixLength == maximumPrefixLength ? network.ToString() : $"{network}/{prefixLength}";
     }
     /// <summary>
     /// Determines whether a firewall address list contains an exact IP address or matching host CIDR entry.
@@ -714,6 +794,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 existingShards.Add(r);
             }
         }
+        existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
 
         foreach (INetFwRule shard in existingShards)
         {
@@ -926,13 +1007,18 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         List<INetFwRule> rules = [];
         foreach (INetFwRule rule in (dynamic)firewallPolicyManager.Rules)
         {
-            if (FirewallComString.Get(rule.Name).StartsWith(name, StringComparison.Ordinal)) rules.Add(rule);
+            string candidate = FirewallComString.Get(rule.Name);
+            bool matches = candidate.Equals(name, StringComparison.Ordinal)
+                || (name.EndsWith('_')
+                    ? candidate.StartsWith(name, StringComparison.Ordinal)
+                    : candidate.StartsWith(name + "_", StringComparison.Ordinal));
+            if (matches)
+                rules.Add(rule);
         }
         return rules;
     }
     /// <summary>
-    /// 聚合 IP 位址。當同一 /24 C 段子網出現超過指定門檻個 IP 時，自動轉換為 CIDR 條目。
-    /// 若目標 C 段中含有 Safe Networks 白名單 IP，則跳過 CIDR 聚合以避免誤殺合法流量。
+    /// 正規化 IP 位址，並排除與安全網路重疊的封鎖範圍。
     /// </summary>
     /// <param name="addresses">原始 IP 位址集合。</param>
     /// <param name="safeNetworks">全域白名單 / 安全網路 IP 與 CIDR 集合。</param>
@@ -940,63 +1026,32 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <returns>傳回經過 CIDR 聚合與白名單保護後的位址清單。</returns>
     internal static List<string> AggregateIpAddresses(IEnumerable<string> addresses, IEnumerable<string>? safeNetworks = null, int subnetThreshold = 5)
     {
-        List<string> result = [];
-        Dictionary<string, List<string>> subnetGroups = new(StringComparer.Ordinal);
-        List<string> nonIpv4OrCidr = [];
-        HashSet<string> safeIpPrefixes = new(StringComparer.OrdinalIgnoreCase);
-
-        if (safeNetworks is not null)
+        _ = subnetThreshold;
+        List<string> safe = [];
+        foreach (string value in safeNetworks ?? [])
         {
-            foreach (string safe in safeNetworks)
-            {
-                string s = safe.Trim();
-                if (string.IsNullOrEmpty(s)) continue;
-                if (System.Net.IPAddress.TryParse(s.Split('/')[0], out System.Net.IPAddress? safeIp) &&
-                    safeIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
-                    byte[] bytes = safeIp.GetAddressBytes();
-                    safeIpPrefixes.Add($"{bytes[0]}.{bytes[1]}.{bytes[2]}");
-                }
-            }
+            string? normalized = NormalizeRemoteAddressEntry(value.Trim());
+            if (normalized is not null)
+                safe.Add(normalized);
         }
 
-        foreach (string addr in addresses)
+        HashSet<string> result = new(StringComparer.OrdinalIgnoreCase);
+        foreach (string value in addresses)
         {
-            string trimmed = addr.Trim();
-            if (string.IsNullOrEmpty(trimmed)) continue;
-
-            if (System.Net.IPAddress.TryParse(trimmed, out System.Net.IPAddress? ip) &&
-                ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            string? normalized = NormalizeRemoteAddressEntry(value.Trim());
+            if (normalized is null)
+                continue;
+            List<string> remaining = [normalized];
+            foreach (string safeNetwork in safe)
             {
-                byte[] bytes = ip.GetAddressBytes();
-                string prefix = $"{bytes[0]}.{bytes[1]}.{bytes[2]}";
-                if (!subnetGroups.TryGetValue(prefix, out List<string>? group))
-                {
-                    group = [];
-                    subnetGroups[prefix] = group;
-                }
-                if (!group.Contains(trimmed)) group.Add(trimmed);
+                List<string> next = [];
+                foreach (string entry in remaining)
+                    next.AddRange(ExceptAddress(entry, safeNetwork));
+                remaining = next;
             }
-            else
-            {
-                nonIpv4OrCidr.Add(trimmed);
-            }
+            result.UnionWith(remaining);
         }
-
-        foreach (var (prefix, group) in subnetGroups)
-        {
-            if (group.Count >= subnetThreshold && !safeIpPrefixes.Contains(prefix))
-            {
-                result.Add($"{prefix}.0/24");
-            }
-            else
-            {
-                result.AddRange(group);
-            }
-        }
-
-        result.AddRange(nonIpv4OrCidr);
-        return result.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return result.Order(StringComparer.Ordinal).ToList();
     }
 
     /// <summary>
@@ -1032,10 +1087,12 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 }
 
                 List<INetFwRule> existingManagedRules = FindRules(INBOUND_ALLOW_RULE_PREFIX);
+                Dictionary<string, INetFwRule> existingByName = new(StringComparer.OrdinalIgnoreCase);
 
                 foreach (INetFwRule existing in existingManagedRules)
                 {
                     string existingName = FirewallComString.Get(existing.Name);
+                    existingByName.TryAdd(existingName, existing);
                     if (!expectedRules.ContainsKey(existingName))
                     {
                         try
@@ -1062,8 +1119,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
 
                 foreach (var (ruleName, def) in expectedRules)
                 {
-                    INetFwRule? existing = GetRule(ruleName);
-                    if (existing is null)
+                    if (!existingByName.TryGetValue(ruleName, out INetFwRule? existing))
                     {
                         try
                         {
@@ -1097,9 +1153,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                             auditRecorder?.Invoke("Firewall.RuleAdd", "Failed", $"{def.FeatureKey} ({def.Protocol} {def.Port})", ex.Message);
                         }
                     }
-                    else if (!existing.Enabled)
+                    else
                     {
-                        existing.Enabled = true;
+                        int protocol = def.Protocol.Equals("UDP", StringComparison.OrdinalIgnoreCase) ? 17 : 6;
+                        string port = def.Port.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        if (!FirewallComString.Get(existing.Description).Equals(def.Description, StringComparison.Ordinal))
+                            FirewallComString.Set(def.Description, value => existing.Description = value);
+                        if (!FirewallComString.Get(existing.Grouping).Equals(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, StringComparison.Ordinal))
+                            FirewallComString.Set(Globals.IDDSCOMMUNITY_WINDOWS_IDS_GROUP_NAME, value => existing.Grouping = value);
+                        if (existing.Direction != NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
+                            existing.Direction = NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN;
+                        if (existing.Action != NET_FW_ACTION.NET_FW_ACTION_ALLOW)
+                            existing.Action = NET_FW_ACTION.NET_FW_ACTION_ALLOW;
+                        if (existing.Protocol != protocol)
+                            existing.Protocol = protocol;
+                        if (!FirewallComString.Get(existing.LocalPorts).Equals(port, StringComparison.Ordinal))
+                            FirewallComString.Set(port, value => existing.LocalPorts = value);
+                        if (existing.Profiles != (int)NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL)
+                            existing.Profiles = (int)NET_FW_PROFILE_TYPE2.NET_FW_PROFILE2_ALL;
+                        if (!existing.Enabled)
+                            existing.Enabled = true;
                     }
                 }
             }

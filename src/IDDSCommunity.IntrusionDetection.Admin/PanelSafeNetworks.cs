@@ -4,6 +4,7 @@ using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
@@ -12,6 +13,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class PanelSafeNetworks : UserControl
 {
+    private long editGeneration;
 
         /// <summary>
     /// 當 SafeNetworksChanged 時引發之事件。
@@ -23,6 +25,7 @@ public event EventHandler? SafeNetworksChanged;
     public PanelSafeNetworks()
     {
         InitializeComponent();
+        checkBoxConfigureSafeNetworks.CheckedChanged += (_, _) => editGeneration++;
         BackColor = Color.White;
         listBoxSafeNetworks.Sorted = true;
         listBoxSafeNetworks.DisplayMember = "DisplayName";
@@ -80,6 +83,7 @@ public event EventHandler? SafeNetworksChanged;
                 }
 
                 listBoxSafeNetworks.Items.Add(new IddsConfig.CSafeNetwork(raw, string.Empty));
+                editGeneration++;
                 HideNetworkPanel();
                 listBoxSafeNetworks.Focus();
                 return;
@@ -95,6 +99,7 @@ public event EventHandler? SafeNetworksChanged;
             }
 
             listBoxSafeNetworks.Items.Add(new IddsConfig.CSafeNetwork(ipnet.Split('/')[0], ipnet.Split('/')[1]));
+            editGeneration++;
             HideNetworkPanel();
             listBoxSafeNetworks.Focus();
         }
@@ -159,6 +164,7 @@ public event EventHandler? SafeNetworksChanged;
         foreach (IddsConfig.CSafeNetwork net in selected)
         {
             listBoxSafeNetworks.Items.Remove(net);
+            editGeneration++;
         }
     }
     /// <summary>
@@ -289,28 +295,44 @@ public bool IsInEditMode { get; set; }
         HideNetworkPanel();
         listBoxSafeNetworks.Items.Clear();
         checkBoxConfigureSafeNetworks.Checked = false;
+        editGeneration++;
     }
     /// <summary>
     /// 處理 click 事件。
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void buttonSave_Click(object sender, EventArgs e)
+    private async void buttonSave_Click(object sender, EventArgs e)
     {
         IddsConfig.CSafeNetworks nets = [];
         foreach (object o in listBoxSafeNetworks.Items)
         {
             if (o is IddsConfig.CSafeNetwork)
             {
-                nets.Add((IddsConfig.CSafeNetwork)o);
+                IddsConfig.CSafeNetwork network = (IddsConfig.CSafeNetwork)o;
+                nets.Add(new IddsConfig.CSafeNetwork(network.IpAddress, network.SubnetMask));
             }
         }
-        IddsConfig.Instance.SafeNetworks = nets;
-        IddsConfig.Instance.SaveSafeNetworks();
-        IddsConfig.Instance.UseSafeNetworkList = checkBoxConfigureSafeNetworks.Checked;
-        IddsConfig.Instance.Save();
-
-        MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-        OnSafeNetworksChanged();
+        bool useSafeNetworks = checkBoxConfigureSafeNetworks.Checked;
+        long generation = editGeneration;
+        buttonSave.Enabled = false;
+        try
+        {
+            await Task.Run(() =>
+            {
+                IddsConfig.Instance.SafeNetworks = nets;
+                IddsConfig.Instance.SaveSafeNetworks();
+                IddsConfig.Instance.UseSafeNetworkList = useSafeNetworks;
+                IddsConfig.Instance.Save();
+            });
+            if (generation == editGeneration)
+                MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            OnSafeNetworksChanged();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(this, exception.Message, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally { if (!IsDisposed) buttonSave.Enabled = true; }
     }
 }

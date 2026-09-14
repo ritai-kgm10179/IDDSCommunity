@@ -12,6 +12,7 @@ internal sealed class ThreatHubStore(Database? database = null)
 {
     internal const int MaximumEntries = 100000;
     internal const int PageSize = 256;
+    internal const int WriteBatchSize = 500;
     private readonly object gate = new();
     private readonly Dictionary<string, Entry> memory = new(StringComparer.Ordinal);
     private long sequence;
@@ -106,84 +107,70 @@ internal sealed class ThreatHubStore(Database? database = null)
                 return count;
             }
 
-            database.ExecuteInTransaction((connection, transaction) =>
+            foreach (ThreatIntelligenceItem[] chunk in items
+                .Where(item => item != null && !string.IsNullOrWhiteSpace(item.SourceIp))
+                .Chunk(WriteBatchSize))
             {
-                if (now - lastExpiredCleanupTicks > CleanupIntervalTicks)
+                int committedCount = 0;
+                bool cleanupCommitted = false;
+                database.ExecuteInTransaction((connection, transaction) =>
                 {
-                    connection.Execute("DELETE FROM ThreatHubEntries WHERE ExpiresTicks<=@now", new { now }, transaction);
-                    lastExpiredCleanupTicks = now;
-                }
-                int currentCount = connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ThreatHubEntries", transaction: transaction);
-                int remainingCapacity = Math.Max(0, MaximumEntries - currentCount);
-
-                using var upsertCmd = connection.CreateCommand();
-                upsertCmd.Transaction = transaction;
-                upsertCmd.CommandText = @"
-                    INSERT INTO ThreatHubEntries(SourceIp, Payload, ExpiresTicks)
-                    VALUES(@ip, @json, @expires)
-                    ON CONFLICT(SourceIp) DO UPDATE SET
-                        Payload = excluded.Payload,
-                        ExpiresTicks = excluded.ExpiresTicks
-                    WHERE ThreatHubEntries.Payload <> excluded.Payload;";
-                var pIp = upsertCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pJson = upsertCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pExpires = upsertCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
-
-                using var updateOnlyCmd = connection.CreateCommand();
-                updateOnlyCmd.Transaction = transaction;
-                updateOnlyCmd.CommandText = @"
-                    UPDATE ThreatHubEntries
-                    SET Payload = @json, ExpiresTicks = @expires
-                    WHERE SourceIp = @ip AND Payload <> @json;";
-                var pUpdIp = updateOnlyCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pUpdJson = updateOnlyCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
-                var pUpdExpires = updateOnlyCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
-
-                using var existsCmd = connection.CreateCommand();
-                existsCmd.Transaction = transaction;
-                existsCmd.CommandText = "SELECT EXISTS(SELECT 1 FROM ThreatHubEntries WHERE SourceIp=@ip);";
-                var pExistsIp = existsCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
-
-                foreach (var item in items)
-                {
-                    if (item == null || string.IsNullOrWhiteSpace(item.SourceIp)) continue;
-                    string json = JsonSerializer.Serialize(item);
-                    long expires = item.ExpiresUtc.Ticks;
-
-                    if (remainingCapacity > 1000)
+                    int attemptCount = 0;
+                    bool shouldCleanup = now - lastExpiredCleanupTicks > CleanupIntervalTicks;
+                    if (shouldCleanup)
                     {
-                        pIp.Value = item.SourceIp;
-                        pJson.Value = json;
-                        pExpires.Value = expires;
-                        if (upsertCmd.ExecuteNonQuery() > 0) count++;
+                        connection.Execute("DELETE FROM ThreatHubEntries WHERE ExpiresTicks<=@now", new { now }, transaction);
                     }
-                    else if (remainingCapacity > 0)
-                    {
-                        pExistsIp.Value = item.SourceIp;
-                        bool alreadyExists = Convert.ToInt64(existsCmd.ExecuteScalar()) != 0;
+                    int remainingCapacity = Math.Max(0, MaximumEntries - connection.ExecuteScalar<int>("SELECT COUNT(*) FROM ThreatHubEntries", transaction: transaction));
 
-                        pIp.Value = item.SourceIp;
-                        pJson.Value = json;
-                        pExpires.Value = expires;
-                        int affected = upsertCmd.ExecuteNonQuery();
-                        if (affected > 0)
+                    using var readCmd = connection.CreateCommand();
+                    readCmd.Transaction = transaction;
+                    readCmd.CommandText = "SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip;";
+                    var pReadIp = readCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+
+                    using var deleteCmd = connection.CreateCommand();
+                    deleteCmd.Transaction = transaction;
+                    deleteCmd.CommandText = "DELETE FROM ThreatHubEntries WHERE SourceIp=@ip;";
+                    var pDeleteIp = deleteCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+
+                    using var insertCmd = connection.CreateCommand();
+                    insertCmd.Transaction = transaction;
+                    insertCmd.CommandText = "INSERT INTO ThreatHubEntries(SourceIp,Payload,ExpiresTicks) VALUES(@ip,@json,@expires);";
+                    var pIp = insertCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pJson = insertCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pExpires = insertCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+                    foreach (ThreatIntelligenceItem item in chunk)
+                    {
+                        string json = JsonSerializer.Serialize(item);
+                        pReadIp.Value = item.SourceIp;
+                        string? previous = readCmd.ExecuteScalar() as string;
+                        if (previous == json) continue;
+                        if (previous is null && remainingCapacity == 0) continue;
+
+                        if (previous is not null)
                         {
-                            count++;
-                            if (!alreadyExists)
-                            {
-                                remainingCapacity--;
-                            }
+                            pDeleteIp.Value = item.SourceIp;
+                            deleteCmd.ExecuteNonQuery();
                         }
+                        else
+                        {
+                            remainingCapacity--;
+                        }
+
+                        pIp.Value = item.SourceIp;
+                        pJson.Value = json;
+                        pExpires.Value = item.ExpiresUtc.Ticks;
+                        insertCmd.ExecuteNonQuery();
+                        attemptCount++;
                     }
-                    else
-                    {
-                        pUpdIp.Value = item.SourceIp;
-                        pUpdJson.Value = json;
-                        pUpdExpires.Value = expires;
-                        if (updateOnlyCmd.ExecuteNonQuery() > 0) count++;
-                    }
-                }
-            });
+
+                    committedCount = attemptCount;
+                    cleanupCommitted = shouldCleanup;
+                });
+                count += committedCount;
+                if (cleanupCommitted) lastExpiredCleanupTicks = now;
+            }
             return count;
         }
     }

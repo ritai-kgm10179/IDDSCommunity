@@ -92,6 +92,11 @@ public sealed class RuntimeDependencyInjectionTest
         /// <returns>空白的位址集合。</returns>
         public System.Collections.Generic.IReadOnlyCollection<string> GetBlockedAddresses() => [];
         /// <summary>
+        /// 傳回空白的防火牆方向狀態快照。
+        /// </summary>
+        /// <returns>不含任何位址的快照。</returns>
+        public FirewallBlockState GetBlockState() => new([], []);
+        /// <summary>
         /// Records no external firewall state in dependency-registration tests.
         /// </summary>
         /// <param name="ipAddress">The address that would be removed.</param>

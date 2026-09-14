@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Admin;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Data.Sqlite;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 
@@ -12,6 +16,108 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [TestClass]
 public sealed class SettingsResetUiTest
 {
+    /// <summary>
+    /// 驗證操作執行期間的多次重新要求只會合併成一次後續執行。
+    /// </summary>
+    [TestMethod]
+    public async Task CoalescingAsyncOperation_BurstDuringRun_ExecutesOneFollowUp()
+    {
+        TaskCompletionSource firstRelease = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int calls = 0;
+        CoalescingAsyncOperation operation = new(async () =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+                await firstRelease.Task;
+        });
+
+        Task first = operation.RequestAsync();
+        Task second = operation.RequestAsync();
+        Task third = operation.RequestAsync();
+        firstRelease.SetResult();
+        await Task.WhenAll(first, second, third);
+
+        Assert.AreEqual(2, calls);
+    }
+
+    /// <summary>
+    /// 驗證操作失敗會傳回呼叫端，且協調器之後仍可接受新的要求。
+    /// </summary>
+    [TestMethod]
+    public async Task CoalescingAsyncOperation_FailureIsVisible_AndNextRequestCanRun()
+    {
+        int calls = 0;
+        CoalescingAsyncOperation operation = new(() =>
+        {
+            if (Interlocked.Increment(ref calls) == 1)
+                return Task.FromException(new InvalidOperationException("visible"));
+            return Task.CompletedTask;
+        });
+
+        InvalidOperationException failure = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => operation.RequestAsync());
+        Assert.AreEqual("visible", failure.Message);
+        await operation.RequestAsync();
+        Assert.AreEqual(2, calls);
+    }
+
+    /// <summary>
+    /// 驗證背景 Agent 儲存等待期間 STA 訊息迴圈仍可處理 Windows 訊息。
+    /// </summary>
+    [STATestMethod]
+    public async Task AgentSaveQueue_DelayedPersistence_KeepsStaMessagePumpResponsive()
+    {
+        TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        SecurityAgent agent = new() { Name = "test", DisplayName = "test" };
+        AgentSettingsSnapshot snapshot = new(
+            agent, 1, System.Guid.NewGuid(), "test", string.Empty, "test", 0,
+            5, 24, false, 3, 10, false, true,
+            AgentSettingsSnapshot.Freeze(new Dictionary<string, string>()));
+        AgentSettingsSaveQueue queue = new(async (value, cancellationToken) =>
+        {
+            await release.Task.WaitAsync(cancellationToken);
+            return new AgentSettingsSaveResult(value, value.Id, value.Serial + 1);
+        });
+        bool messageProcessed = false;
+        using System.Windows.Forms.Timer timer = new() { Interval = 10 };
+        timer.Tick += (_, _) => messageProcessed = true;
+        timer.Start();
+
+        Task<AgentSettingsSaveResult> pending = queue.EnqueueAsync(snapshot, CancellationToken.None);
+        System.Diagnostics.Stopwatch timeout = System.Diagnostics.Stopwatch.StartNew();
+        while (!messageProcessed && timeout.Elapsed < System.TimeSpan.FromSeconds(2))
+        {
+            Application.DoEvents();
+            Thread.Sleep(1);
+        }
+
+        Assert.IsTrue(messageProcessed, "背景儲存等待期間 STA 訊息迴圈應持續處理計時器訊息。");
+        Assert.IsFalse(pending.IsCompleted);
+        release.SetResult();
+        await pending;
+    }
+
+    /// <summary>
+    /// 驗證 SQLite busy 失敗後設定仍維持待存狀態，後續重試會再次持久化。
+    /// </summary>
+    [STATestMethod]
+    public async Task PanelPluginConfiguration_BusySaveFailure_RemainsDirtyForRetry()
+    {
+        int attempts = 0;
+        using PanelPluginConfiguration panel = new(null, (_, _) =>
+        {
+            Interlocked.Increment(ref attempts);
+            return Task.FromException<AgentSettingsSaveResult>(new SqliteException("busy", 5));
+        }, (_, _, _) => { })
+        {
+            Agent = new SecurityAgent { Name = "test", DisplayName = "test", HardLockAttempts = 5 }
+        };
+        TextBox hardLocks = Assert.IsInstanceOfType<TextBox>(panel.Controls.Find("textBoxHardLocks", true)[0]);
+        hardLocks.Text = "6";
+
+        Assert.IsFalse(await panel.FlushUnsavedChangesAsync());
+        Assert.IsFalse(await panel.FlushUnsavedChangesAsync());
+        Assert.AreEqual(2, attempts);
+    }
+
     /// <summary>
     /// 驗證 Agent 的恢復預設值操作只更新待儲存畫面，不會立即改寫執行中設定。
     /// </summary>

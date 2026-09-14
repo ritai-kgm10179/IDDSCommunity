@@ -1125,4 +1125,6 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Locked: {0}, Evaluated: {1}" xml:space="preserve"><value>Locked: {0}, Evaluated: {1}</value></data>
   <data name="Failed to download GeoIP feeds from configured URLs." xml:space="preserve"><value>Failed to download GeoIP feeds from configured URLs.</value></data>
   <data name="Database is currently busy. Please wait a moment and try saving again." xml:space="preserve"><value>The database is currently busy. Please wait a moment and try saving again.</value></data>
+  <data name="The configuration could not be saved. Please try again." xml:space="preserve"><value>The configuration could not be saved. Please try again.</value></data>
+  <data name="The interactive database operation exceeded its contention deadline." xml:space="preserve"><value>The interactive database operation exceeded its contention deadline.</value></data>
 </root>

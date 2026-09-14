@@ -1,4 +1,4 @@
-# IDDS Community - Installation and User Guide
+﻿# IDDS Community - Installation and User Guide
 
 Welcome to **IDDS Community**! This document provides a comprehensive guide for installation, Admin Console interface operations, SIEM search filtering, security agent configuration, and safe network management.
 
@@ -104,6 +104,8 @@ Configure failure thresholds and the sliding detection window per service:
   - `NPS / RADIUS Server` & `Windows DNS Server` & `Technitium DNS Security` & `FileMaker Server`
 - **Threshold Tuning**:
   - Independently configure each agent's "failure threshold" (e.g. `5 attempts`) and "detection window" (e.g. `300 seconds`).
+- **Non-blocking Saves**: Settings are serialized through background transactions. If SQLite is temporarily busy, the console remains responsive; after a maximum three-second lock wait it reports the error and keeps the settings dirty so the user can retry.
+- **Coalesced Service Restarts**: When several settings are saved in quick succession, duplicate restart requests are combined to avoid repeatedly loading agents and firewall rules.
 
 ### 3.7 🚨 Lockout Policy
 Controls the escalating defensive response after an attack is triggered:

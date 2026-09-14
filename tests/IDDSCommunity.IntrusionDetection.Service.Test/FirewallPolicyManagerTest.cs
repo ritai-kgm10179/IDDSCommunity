@@ -44,16 +44,16 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsNull(FirewallPolicyManager.NormalizeRemoteAddressEntry("LocalSubnet"));
     }
     /// <summary>
-    /// 驗證當同一個 C 段子網超過門檻時，自動聚合為 CIDR 條目。
+    /// 驗證少量主機位址不會被擴大成整個子網路。
     /// </summary>
     [TestMethod]
-    public void AggregateIpAddresses_AggregatesCSubnetWhenThresholdReached()
+    public void AggregateIpAddresses_DoesNotExpandHostsIntoSubnet()
     {
         System.Collections.Generic.List<string> ips = ["192.168.1.1", "192.168.1.2", "192.168.1.3", "192.168.1.4", "192.168.1.5", "10.0.0.1"];
         System.Collections.Generic.List<string> aggregated = FirewallPolicyManager.AggregateIpAddresses(ips, subnetThreshold: 5);
-        Assert.IsTrue(aggregated.Contains("192.168.1.0/24"));
+        Assert.IsFalse(aggregated.Contains("192.168.1.0/24"));
         Assert.IsTrue(aggregated.Contains("10.0.0.1"));
-        Assert.IsFalse(aggregated.Contains("192.168.1.1"));
+        Assert.IsTrue(aggregated.Contains("192.168.1.1"));
     }
     /// <summary>
     /// 驗證當 C 段子網中含有 Safe Networks 白名單 IP 時，取消 CIDR 聚合以避免誤殺。
@@ -67,6 +67,38 @@ public sealed class FirewallPolicyManagerTest
         Assert.IsFalse(aggregated.Contains("192.168.1.0/24"));
         Assert.IsTrue(aggregated.Contains("192.168.1.1"));
         Assert.IsTrue(aggregated.Contains("192.168.1.5"));
+    }
+
+    /// <summary>
+    /// 驗證安全網路 CIDR 與封鎖 CIDR 重疊時，不建立可能封鎖白名單的規則。
+    /// </summary>
+    [TestMethod]
+    public void AggregateIpAddresses_RejectsAnySafeNetworkOverlap()
+    {
+        System.Collections.Generic.List<string> aggregated = FirewallPolicyManager.AggregateIpAddresses(
+            ["198.51.100.0/24", "2001:db8::/32", "203.0.113.9"],
+            ["198.51.100.128/25", "2001:db8:1::/48"]);
+
+        Assert.HasCount(18, aggregated);
+        Assert.IsTrue(aggregated.Contains("198.51.100.0/25"));
+        Assert.IsTrue(aggregated.Contains("203.0.113.9"));
+        Assert.IsFalse(System.Linq.Enumerable.Any(aggregated, entry => FirewallPolicyManager.ContainsAddress(entry, "198.51.100.200")));
+        Assert.IsFalse(System.Linq.Enumerable.Any(aggregated, entry => FirewallPolicyManager.ContainsAddress(entry, "2001:db8:1::1")));
+        Assert.IsTrue(System.Linq.Enumerable.Any(aggregated, entry => FirewallPolicyManager.ContainsAddress(entry, "2001:db8:2::1")));
+    }
+
+    /// <summary>
+    /// 驗證從 CIDR 移除單一主機時會保留完整差集，不會刪除整個網段。
+    /// </summary>
+    [TestMethod]
+    public void ExceptAddress_RemovesSingleHostFromCidrWithoutWideningOrDroppingRemainder()
+    {
+        System.Collections.Generic.IReadOnlyList<string> remaining = FirewallPolicyManager.ExceptAddress("192.0.2.0/24", "192.0.2.42");
+
+        Assert.HasCount(8, remaining);
+        Assert.IsFalse(System.Linq.Enumerable.Any(remaining, entry => FirewallPolicyManager.ContainsAddress(entry, "192.0.2.42")));
+        Assert.IsTrue(System.Linq.Enumerable.Any(remaining, entry => FirewallPolicyManager.ContainsAddress(entry, "192.0.2.41")));
+        Assert.IsTrue(System.Linq.Enumerable.Any(remaining, entry => FirewallPolicyManager.ContainsAddress(entry, "192.0.2.43")));
     }
 
     /// <summary>

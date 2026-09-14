@@ -1,12 +1,85 @@
 ﻿using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
+
+internal sealed record AgentSettingsSnapshot(
+    SecurityAgent Target,
+    long EditGeneration,
+    Guid Id,
+    string Name,
+    string AssemblyName,
+    string DisplayName,
+    int Serial,
+    int HardLockAttempts,
+    int HardLockTimeHours,
+    bool LockForever,
+    int SoftLockAttempts,
+    int SoftLockTimeMinutes,
+    bool OverrideConfig,
+    bool Enabled,
+    IReadOnlyDictionary<string, string> CustomConfiguration)
+{
+    internal SecurityAgent CreatePersistenceAgent()
+    {
+        return new SecurityAgent
+        {
+            DatabaseInstance = Target.DatabaseInstance,
+            Id = Id,
+            Name = Name,
+            AssemblyName = AssemblyName,
+            DisplayName = DisplayName,
+            Serial = Serial,
+            HardLockAttempts = HardLockAttempts,
+            HardLockTimeHours = HardLockTimeHours,
+            LockForever = LockForever,
+            SoftLockAttempts = SoftLockAttempts,
+            SoftLockTimeMinutes = SoftLockTimeMinutes,
+            OverrideConfig = OverrideConfig,
+            Enabled = Enabled,
+            CustomConfiguration = new Dictionary<string, string>(CustomConfiguration, StringComparer.Ordinal),
+            CustomConfigurationTypes = new Dictionary<string, string>(Target.CustomConfigurationTypes, StringComparer.Ordinal)
+        };
+    }
+
+    internal static IReadOnlyDictionary<string, string> Freeze(IDictionary<string, string> values) =>
+        new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(values, StringComparer.Ordinal));
+}
+
+internal sealed record AgentSettingsSaveResult(AgentSettingsSnapshot Snapshot, Guid PersistedId, int PersistedSerial);
+
+internal sealed class AgentSettingsSaveQueue
+{
+    private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly Func<AgentSettingsSnapshot, CancellationToken, Task<AgentSettingsSaveResult>> saveOperation;
+
+    internal AgentSettingsSaveQueue(Func<AgentSettingsSnapshot, CancellationToken, Task<AgentSettingsSaveResult>> saveOperation)
+    {
+        this.saveOperation = saveOperation ?? throw new ArgumentNullException(nameof(saveOperation));
+    }
+
+    internal async Task<AgentSettingsSaveResult> EnqueueAsync(AgentSettingsSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await saveOperation(snapshot, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+}
 
 /// <summary>
 /// 提供擴充元件目錄與外掛模組清單設定之面板控制項。
@@ -25,11 +98,12 @@ public event EventHandler? AgentConfigurationChanged;
     /// 初始化 <see cref="PanelPluginConfiguration"/> 類別的新執行個體。
     /// </summary>
     public PanelPluginConfiguration()
-        : this(null)
+        : this(null, null)
     {
     }
 
     private readonly Button _buttonResetDefaults;
+    private readonly Action<IWin32Window, string, MessageBoxIcon>? saveErrorPresenter;
     private bool _isUpdatingHeaderLayout;
 
     /// <summary>
@@ -37,14 +111,29 @@ public event EventHandler? AgentConfigurationChanged;
     /// </summary>
     /// <param name="confirmationPrompt">確認提示委派；正式執行時傳入 <see langword="null"/>。</param>
     internal PanelPluginConfiguration(Func<IWin32Window, DialogResult>? confirmationPrompt)
+        : this(confirmationPrompt, null)
     {
+    }
+
+    internal PanelPluginConfiguration(
+        Func<IWin32Window, DialogResult>? confirmationPrompt,
+        Func<AgentSettingsSnapshot, CancellationToken, Task<AgentSettingsSaveResult>>? saveOperation,
+        Action<IWin32Window, string, MessageBoxIcon>? saveErrorPresenter = null)
+    {
+        this.saveErrorPresenter = saveErrorPresenter;
+        _saveQueue = new AgentSettingsSaveQueue(saveOperation ?? PersistSnapshotAsync);
         InitializeComponent();
+        textBoxHardLocks.TextChanged += textBox_TextChanged;
+        textBoxHardLockDuration.TextChanged += textBox_TextChanged;
+        textBoxSoftLocks.TextChanged += textBox_TextChanged;
+        textBoxSoftLockDuration.TextChanged += textBox_TextChanged;
         flowLayoutPanelCustomPluginSettings.ClientSizeChanged += (_, _) => UpdateCustomSettingsLayout();
         AgentChanged += new EventHandler(PanelPluginConfiguration_AgentChanged);
         _buttonResetDefaults = SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, confirmationPrompt: confirmationPrompt, container: headerPanel);
         headerPanel.ClientSizeChanged += (_, _) => UpdateHeaderLayout();
         headerPanel.Layout += (_, _) => UpdateHeaderLayout();
         UpdateHeaderLayout();
+        Disposed += (_, _) => _lifetimeCancellation.Cancel();
     }
     /// <summary>
     /// 處理 agent changed 事件。
@@ -206,15 +295,17 @@ public event EventHandler? AgentConfigurationChanged;
     /// <summary>
     /// Saves custom configuration.
     /// </summary>
-    private void SaveCustomConfiguration()
+    private Dictionary<string, string> CaptureCustomConfiguration()
     {
+        Dictionary<string, string> values = new(StringComparer.Ordinal);
         foreach (Control o in flowLayoutPanelCustomPluginSettings.Controls)
         {
             if (o is PluginSettingEditor setting)
             {
-                Agent.CustomConfiguration[setting.PropertyName] = setting.Value;
+                values[setting.PropertyName] = setting.Value;
             }
         }
+        return values;
     }
 
     /// <summary>
@@ -244,25 +335,36 @@ public event EventHandler? AgentConfigurationChanged;
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void pictureBoxSave_Click(object sender, EventArgs e)
+    private async void pictureBoxSave_Click(object sender, EventArgs e)
     {
         if (_agent is null) return;
-        if (SaveAgentChanges(_agent, notify: false))
+        buttonSave.Enabled = false;
+        try
         {
-            MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            OnAgentConfigurationChanged();
+            if (await SaveAgentChangesAsync(force: true))
+                MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        finally
+        {
+            if (!IsDisposed) buttonSave.Enabled = true;
         }
     }
 
     /// <summary>
     /// 儲存目前代理程式的異動並回傳是否確實寫入。呼叫端可依此決定是否顯示成功提示——
-    /// <see cref="FlushUnsavedChanges"/> 在切換代理程式時會靜默呼叫，不應跳出提示。
+    /// <see cref="FlushUnsavedChangesAsync"/> 在切換代理程式時會靜默呼叫，不應跳出成功提示。
     /// </summary>
-    /// <param name="agent">欲儲存設定之安全性代理程式執行個體。</param>
-    /// <param name="notify">是否在儲存後立即引發 <see cref="AgentConfigurationChanged"/> 事件；預設為 <see langword="true"/>。</param>
+    /// <param name="force">即使目前未標示為待儲存，也擷取並持久化畫面設定。</param>
     /// <returns>若成功驗證並寫入設定則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
-    private bool SaveAgentChanges(SecurityAgent agent, bool notify = true)
+    private async Task<bool> SaveAgentChangesAsync(bool force)
     {
+        if (_agent is null) return true;
+        if (!force && !_hasUnsavedChanges)
+        {
+            Task<bool>? pending = _pendingSaveTask;
+            return pending is null || await pending;
+        }
+
         bool hasError = false;
         ClearErrors();
         if (!int.TryParse(textBoxHardLocks.Text, out int hardLocks))
@@ -285,51 +387,98 @@ public event EventHandler? AgentConfigurationChanged;
             errSoftLocks.Visible = true;
             hasError = true;
         }
-        bool saved = false;
-        if (!hasError)
+        if (hasError) return false;
+
+        Dictionary<string, string> customConfiguration = CaptureCustomConfiguration();
+        if (!ValidateCustomConfiguration(customConfiguration)) return false;
+
+        SecurityAgent agent = _agent;
+        AgentSettingsSnapshot snapshot = new(
+            agent, _editGeneration, agent.Id, agent.Name, agent.AssemblyName, agent.DisplayName, agent.Serial,
+            hardLocks, hardLockDuration, checkBoxLockForever.Checked, softLocks, softLockDuration,
+            checkBoxOverrideConfiguration.Checked, checkBoxEnableSecurityAgent.Checked,
+            AgentSettingsSnapshot.Freeze(customConfiguration));
+
+        if (_pendingSaveTask is not null && !_pendingSaveTask.IsCompleted && _pendingSaveGeneration == snapshot.EditGeneration)
+            return await _pendingSaveTask;
+
+        _pendingSaveGeneration = snapshot.EditGeneration;
+        Task<bool> saveTask = PersistSnapshotAndApplyAsync(snapshot);
+        _pendingSaveTask = saveTask;
+        try
         {
-            agent.LockForever = checkBoxLockForever.Checked;
-            agent.HardLockAttempts = hardLocks;
-            agent.HardLockTimeHours = hardLockDuration;
-            agent.SoftLockAttempts = softLocks;
-            agent.SoftLockTimeMinutes = softLockDuration;
-            agent.Enabled = checkBoxEnableSecurityAgent.Checked;
-            agent.OverrideConfig = checkBoxOverrideConfiguration.Checked;
-            SaveCustomConfiguration();
-            if (!ValidateCustomConfiguration())
-            {
-                SetEditMode(true);
-                return false;
-            }
-            try
-            {
-                agent.Save();
-                if (notify)
-                {
-                    OnAgentConfigurationChanged();
-                }
-                saved = true;
-                SetEditMode(false);
-            }
-            catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode is 5 or 6)
-            {
-                SetEditMode(true);
-                MessageBox.Show(this,
-                    Strings.Get("Database is currently busy. Please wait a moment and try saving again."),
-                    Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
+            return await saveTask;
         }
-        else
+        finally
         {
-            SetEditMode(false);
+            if (ReferenceEquals(_pendingSaveTask, saveTask))
+                _pendingSaveTask = null;
         }
-        return saved;
     }
 
-    private bool ValidateCustomConfiguration()
+    private async Task<bool> PersistSnapshotAndApplyAsync(AgentSettingsSnapshot snapshot)
     {
-        Dictionary<string, string> values = Agent.CustomConfiguration;
+        try
+        {
+            AgentSettingsSaveResult result = await _saveQueue.EnqueueAsync(snapshot, _lifetimeCancellation.Token);
+            ApplyPersistedSnapshot(result);
+            OnAgentConfigurationChanged();
+            return true;
+        }
+        catch (OperationCanceledException) when (_lifetimeCancellation.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode is 5 or 6)
+        {
+            ShowSaveError(Strings.Get("Database is currently busy. Please wait a moment and try saving again."), MessageBoxIcon.Warning);
+            return false;
+        }
+        catch (Exception exception)
+        {
+            Trace.TraceError("Agent configuration save failed: {0}", exception);
+            ShowSaveError(Strings.Get("The configuration could not be saved. Please try again."), MessageBoxIcon.Error);
+            return false;
+        }
+    }
+
+    private void ShowSaveError(string message, MessageBoxIcon icon)
+    {
+        if (saveErrorPresenter is not null)
+            saveErrorPresenter(this, message, icon);
+        else
+            MessageBox.Show(this, message, Strings.AppTitle, MessageBoxButtons.OK, icon);
+    }
+
+    private static Task<AgentSettingsSaveResult> PersistSnapshotAsync(AgentSettingsSnapshot snapshot, CancellationToken cancellationToken) =>
+        Task.Run(() =>
+        {
+            SecurityAgent persistenceAgent = snapshot.CreatePersistenceAgent();
+            persistenceAgent.SaveInteractive(TimeSpan.FromSeconds(3), cancellationToken);
+            return new AgentSettingsSaveResult(snapshot, persistenceAgent.Id, persistenceAgent.Serial);
+        }, cancellationToken);
+
+    private void ApplyPersistedSnapshot(AgentSettingsSaveResult result)
+    {
+        AgentSettingsSnapshot snapshot = result.Snapshot;
+        SecurityAgent target = snapshot.Target;
+        target.Id = result.PersistedId;
+        target.Serial = result.PersistedSerial;
+        target.HardLockAttempts = snapshot.HardLockAttempts;
+        target.HardLockTimeHours = snapshot.HardLockTimeHours;
+        target.LockForever = snapshot.LockForever;
+        target.SoftLockAttempts = snapshot.SoftLockAttempts;
+        target.SoftLockTimeMinutes = snapshot.SoftLockTimeMinutes;
+        target.OverrideConfig = snapshot.OverrideConfig;
+        target.Enabled = snapshot.Enabled;
+        target.CustomConfiguration = new Dictionary<string, string>(snapshot.CustomConfiguration, StringComparer.Ordinal);
+
+        if (ReferenceEquals(_agent, target) && _editGeneration == snapshot.EditGeneration)
+            SetEditMode(false);
+    }
+
+    private bool ValidateCustomConfiguration(IReadOnlyDictionary<string, string> values)
+    {
         if (TryInteger(values, "WindowSeconds", out int windowSeconds)
             && TryInteger(values, "SourceStateRetentionSeconds", out int retentionSeconds)
             && retentionSeconds < windowSeconds)
@@ -380,6 +529,11 @@ public event EventHandler? AgentConfigurationChanged;
     private void OnAgentChanged() => AgentChanged?.Invoke(this, EventArgs.Empty);
 
     private SecurityAgent? _agent;
+    private readonly AgentSettingsSaveQueue _saveQueue;
+    private readonly CancellationTokenSource _lifetimeCancellation = new();
+    private Task<bool>? _pendingSaveTask;
+    private long _pendingSaveGeneration = -1;
+    private long _editGeneration;
         /// <summary>
     /// 取得或設定 Agent。
     /// </summary>
@@ -388,7 +542,6 @@ public SecurityAgent Agent
         get => _agent ?? throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Security agent has not been assigned."));
         set
         {
-            FlushUnsavedChanges();
             _agent = value;
             AgentChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -397,12 +550,24 @@ public SecurityAgent Agent
     /// <summary>
     /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
     /// </summary>
-    public void FlushUnsavedChanges()
+    public async Task<bool> FlushUnsavedChangesAsync()
     {
-        if (_agent != null && _hasUnsavedChanges)
-        {
-            SaveAgentChanges(_agent);
-        }
+        return _agent is null || await SaveAgentChangesAsync(force: false);
+    }
+
+    /// <summary>
+    /// 先非同步儲存目前 Agent 的待存異動，再切換至指定 Agent。
+    /// </summary>
+    /// <param name="agent">要顯示的 Agent。</param>
+    /// <returns>若儲存成功並完成切換則傳回 <see langword="true"/>。</returns>
+    public async Task<bool> SwitchAgentAsync(SecurityAgent agent)
+    {
+        ArgumentNullException.ThrowIfNull(agent);
+        if (ReferenceEquals(_agent, agent)) return true;
+        if (!await FlushUnsavedChangesAsync()) return false;
+        _agent = agent;
+        OnAgentChanged();
+        return true;
     }
     /// <summary>
     /// 將目前 Agent 的設定載入原廠預設值，等待使用者儲存或取消。
@@ -439,6 +604,12 @@ public SecurityAgent Agent
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
     private void textBox_KeyPress(object? sender, KeyPressEventArgs e) => SetEditMode(true);
+
+    private void textBox_TextChanged(object? sender, EventArgs e)
+    {
+        if (_isLoadingData || _agent is null) return;
+        SetEditMode(true);
+    }
     private bool _hasUnsavedChanges;
     /// <summary>
     /// Sets edit mode.
@@ -446,6 +617,7 @@ public SecurityAgent Agent
     /// <param name="hasChanges">A value indicating whether s changes.</param>
     private void SetEditMode(bool hasChanges)
     {
+        if (hasChanges) _editGeneration++;
         _hasUnsavedChanges = hasChanges;
     }
     /// <summary>

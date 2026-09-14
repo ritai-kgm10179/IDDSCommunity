@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
 
@@ -254,34 +255,58 @@ public Image Icon
     /// </summary>
     public void Save()
     {
-        if (Id == Guid.Empty) Id = GetId();
-        string agentIdStr = Id.ToString();
-        DatabaseInstance.ExecuteInTransaction((_, trans) =>
-        {
-            string updateSql = @"UPDATE SecurityAgents SET
+        Guid persistedId = Id == Guid.Empty ? GetId() : Id;
+        int persistedSerial = Serial;
+        DatabaseInstance.ExecuteInTransaction((_, transaction) => persistedSerial = Save(transaction, persistedId));
+        Id = persistedId;
+        Serial = persistedSerial;
+        OnStatisticsUpdated();
+    }
+
+    /// <summary>
+    /// 以互動式資料庫鎖定期限儲存設定變更。
+    /// </summary>
+    /// <param name="contentionDeadline">等待資料庫寫入鎖定解除的總期限。</param>
+    /// <param name="cancellationToken">取消開始新嘗試或重試等待的權杖。</param>
+    public void SaveInteractive(TimeSpan contentionDeadline, CancellationToken cancellationToken = default)
+    {
+        Guid persistedId = Id == Guid.Empty ? GetId() : Id;
+        int persistedSerial = Serial;
+        DatabaseInstance.ExecuteInteractiveInTransaction(
+            (_, transaction) => persistedSerial = Save(transaction, persistedId),
+            contentionDeadline,
+            cancellationToken);
+        Id = persistedId;
+        Serial = persistedSerial;
+        OnStatisticsUpdated();
+    }
+
+    private int Save(IDbTransaction trans, Guid persistedId)
+    {
+        string agentIdStr = persistedId.ToString();
+        string updateSql = @"UPDATE SecurityAgents SET
                 AssemblyName = @p1, HardLockAttempts = @p2, HardLockTimeHours = @p3,
                 LockForever = @p4, SoftLockAttempts = @p5, SoftLockTimeMinutes = @p6,
                 OverwriteConfiguration = @p7, DisplayName = @p8, Enabled = @p9, Name = @p10
                 WHERE AgentId = @p0";
 
-            DatabaseInstance.ExecuteNonQuery(updateSql, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
-                LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
+        DatabaseInstance.ExecuteNonQuery(updateSql, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
+            LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
 
-            object? checkExists = DatabaseInstance.ExecuteScalar("SELECT count(*) FROM SecurityAgents WHERE AgentId = @p0", trans, agentIdStr);
-            if (Shared.Db.DbValueConverter.ToInt(checkExists) == 0)
-            {
-                string insertSql = @"INSERT INTO SecurityAgents(AgentId, AssemblyName, HardLockAttempts, HardLockTimeHours,
+        object? checkExists = DatabaseInstance.ExecuteScalar("SELECT count(*) FROM SecurityAgents WHERE AgentId = @p0", trans, agentIdStr);
+        if (Shared.Db.DbValueConverter.ToInt(checkExists) == 0)
+        {
+            string insertSql = @"INSERT INTO SecurityAgents(AgentId, AssemblyName, HardLockAttempts, HardLockTimeHours,
                     LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverwriteConfiguration, DisplayName, Enabled, Name, Serial)
                     VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, 0)";
-                DatabaseInstance.ExecuteNonQuery(insertSql, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
-                    LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
-            }
+            DatabaseInstance.ExecuteNonQuery(insertSql, trans, agentIdStr, AssemblyName, HardLockAttempts, HardLockTimeHours,
+                LockForever, SoftLockAttempts, SoftLockTimeMinutes, OverrideConfig, DisplayName, Enabled, Name);
+        }
 
-            DatabaseInstance.ExecuteNonQuery("UPDATE SecurityAgents SET Serial = Serial + 1 WHERE AgentId = @p0", trans, agentIdStr);
-            Serial++;
-            SaveCustomConfig(trans);
-        });
-        OnStatisticsUpdated();
+        DatabaseInstance.ExecuteNonQuery("UPDATE SecurityAgents SET Serial = Serial + 1 WHERE AgentId = @p0", trans, agentIdStr);
+        SaveCustomConfig(trans, agentIdStr);
+        object? serial = DatabaseInstance.ExecuteScalar("SELECT Serial FROM SecurityAgents WHERE AgentId = @p0", trans, agentIdStr);
+        return Shared.Db.DbValueConverter.ToInt(serial);
     }
 
     /// <summary>
@@ -310,14 +335,14 @@ public Image Icon
     /// <summary>
     /// 儲存自訂 Agent 設定。
     /// </summary>
-    public void SaveCustomConfig() => DatabaseInstance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction));
+    public void SaveCustomConfig() => DatabaseInstance.ExecuteInTransaction((_, transaction) => SaveCustomConfig(transaction, Id.ToString()));
     /// <summary>
     /// 使用呼叫者擁有的交易持久化自訂 Agent 設定。
     /// </summary>
     /// <param name="transaction">擁有資料庫連線的交易物件。</param>
-    private void SaveCustomConfig(IDbTransaction transaction)
+    /// <param name="agentIdStr">已解析且與主設定列一致的 Agent 識別碼。</param>
+    private void SaveCustomConfig(IDbTransaction transaction, string agentIdStr)
     {
-        string agentIdStr = Id.ToString();
         if (CustomConfigurationTypes.Count > 0)
         {
             IEnumerable<string> storedKeys = DatabaseInstance.Query<string>(

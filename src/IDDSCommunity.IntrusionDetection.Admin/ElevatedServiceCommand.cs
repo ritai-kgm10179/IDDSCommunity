@@ -63,8 +63,10 @@ internal static class ElevatedServiceCommand
         startInfo.ArgumentList.Add(serviceName);
         startInfo.ArgumentList.Add(command);
 
-        using Process process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException(Strings.Get("The elevated service command could not be started."));
+        using Process process = await Task.Run(
+            () => Process.Start(startInfo)
+                ?? throw new InvalidOperationException(Strings.Get("The elevated service command could not be started.")),
+            cancellationToken).ConfigureAwait(false);
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         if (process.ExitCode != 0)
             throw new InvalidOperationException(Strings.Format("The elevated service command failed with exit code {0}.", process.ExitCode));

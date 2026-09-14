@@ -30,6 +30,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
     private readonly System.Threading.SemaphoreSlim lifecycleLock = new(1, 1);
     private readonly Database database;
     private readonly object firewallMutationGate = new();
+    private readonly object threatBatchGate = new();
     private readonly IddsConfig configuration;
     private readonly NotificationSettings notificationSettings;
     private readonly NotificationDispatcher notificationDispatcher;
@@ -1337,7 +1338,7 @@ public bool LimitMailSent { get; set; }
     /// <param name="items">威脅情資項目清單。</param>
     private void HandleClusterThreatsReceived(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
     {
-        lock (firewallMutationGate) HandleClusterThreatsReceivedCore(items);
+        lock (threatBatchGate) HandleClusterThreatsReceivedCore(items);
     }
 
     private void HandleClusterThreatsReceivedCore(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
@@ -1358,10 +1359,14 @@ public bool LimitMailSent { get; set; }
         if (validThreats.Count == 0) return;
 
         HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
+        HashSet<string> pendingDbLocks = Locks.GetPendingLocks()
+            .Select(item => item.IpAddress)
+            .Where(validThreats.ContainsKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         List<string> candidateIps = [];
         foreach (string ip in validThreats.Keys)
         {
-            if (!existingDbLocked.Contains(ip))
+            if (!existingDbLocked.Contains(ip) || pendingDbLocks.Contains(ip))
             {
                 candidateIps.Add(ip);
             }
@@ -1369,12 +1374,16 @@ public bool LimitMailSent { get; set; }
 
         if (candidateIps.Count == 0) return;
 
-        HashSet<string> existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+        HashSet<string> existingFwLocked;
+        lock (firewallMutationGate)
+        {
+            existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+        }
 
         List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
         foreach (string ip in candidateIps)
         {
-            if (!existingFwLocked.Contains(ip) && validThreats.TryGetValue(ip, out var item))
+            if (validThreats.TryGetValue(ip, out var item))
             {
                 toLock.Add((ip, item));
             }
@@ -1414,6 +1423,7 @@ public bool LimitMailSent { get; set; }
 
                     foreach (var (ip, item) in chunk)
                     {
+                        if (existingDbLocked.Contains(ip)) continue;
                         pLogTime.Value = nowUtc;
                         pLogAgent.Value = WellKnownAgentIds.ClusterThreatHub.ToString();
                         pLogIp.Value = ip;
@@ -1426,7 +1436,7 @@ public bool LimitMailSent { get; set; }
                         pLockDate.Value = nowUtc;
                         pUnlockDate.Value = item.ExpiresUtc;
                         pTrigger.Value = incidentId;
-                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK_REQUESTED;
                         pPort.Value = 0;
                         pIp.Value = ip;
                         pLastUpdate.Value = nowUtc;
@@ -1435,8 +1445,16 @@ public bool LimitMailSent { get; set; }
                     }
                 });
 
-                List<string> chunkIps = chunk.Select(t => t.Ip).ToList();
-                firewallPolicy.BatchBlock(chunkIps);
+                List<string> chunkIps = chunk.Select(t => t.Ip).Where(ip => !existingFwLocked.Contains(ip)).ToList();
+                if (chunkIps.Count > 0)
+                {
+                    lock (firewallMutationGate)
+                    {
+                        firewallPolicy.BatchBlock(chunkIps);
+                    }
+                }
+
+                ConfirmThreatLocks(chunk.Select(t => t.Ip));
             }
 
             TryRecordAudit("Firewall.ClusterLock", "Succeeded", sourceNode, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
@@ -1470,7 +1488,7 @@ public bool LimitMailSent { get; set; }
     /// <param name="items">外部威脅情報項目清單。</param>
     private void HandleExternalThreatFeedsDiscovered(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
     {
-        lock (firewallMutationGate) HandleExternalThreatFeedsDiscoveredCore(items);
+        lock (threatBatchGate) HandleExternalThreatFeedsDiscoveredCore(items);
     }
 
     private void HandleExternalThreatFeedsDiscoveredCore(IReadOnlyList<Shared.ThreatIntelligence.ThreatIntelligenceItem> items)
@@ -1492,10 +1510,14 @@ public bool LimitMailSent { get; set; }
         threatHubServer?.IngestLocalThreatsBatch(validThreats.Values);
 
         HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
+        HashSet<string> pendingDbLocks = Locks.GetPendingLocks()
+            .Select(item => item.IpAddress)
+            .Where(validThreats.ContainsKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         List<string> candidateIps = [];
         foreach (string ip in validThreats.Keys)
         {
-            if (!existingDbLocked.Contains(ip))
+            if (!existingDbLocked.Contains(ip) || pendingDbLocks.Contains(ip))
             {
                 candidateIps.Add(ip);
             }
@@ -1503,12 +1525,16 @@ public bool LimitMailSent { get; set; }
 
         if (candidateIps.Count == 0) return;
 
-        HashSet<string> existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+        HashSet<string> existingFwLocked;
+        lock (firewallMutationGate)
+        {
+            existingFwLocked = firewallPolicy.FilterLockedIps(candidateIps);
+        }
 
         List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
         foreach (string ip in candidateIps)
         {
-            if (!existingFwLocked.Contains(ip) && validThreats.TryGetValue(ip, out var item))
+            if (validThreats.TryGetValue(ip, out var item))
             {
                 toLock.Add((ip, item));
             }
@@ -1548,6 +1574,7 @@ public bool LimitMailSent { get; set; }
 
                     foreach (var (ip, item) in chunk)
                     {
+                        if (existingDbLocked.Contains(ip)) continue;
                         pLogTime.Value = nowUtc;
                         pLogAgent.Value = WellKnownAgentIds.ExternalThreatFeed.ToString();
                         pLogIp.Value = ip;
@@ -1560,7 +1587,7 @@ public bool LimitMailSent { get; set; }
                         pLockDate.Value = nowUtc;
                         pUnlockDate.Value = item.ExpiresUtc;
                         pTrigger.Value = incidentId;
-                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK;
+                        pStatus.Value = Lock.LOCK_STATUS_HARDLOCK_REQUESTED;
                         pPort.Value = 0;
                         pIp.Value = ip;
                         pLastUpdate.Value = nowUtc;
@@ -1569,8 +1596,16 @@ public bool LimitMailSent { get; set; }
                     }
                 });
 
-                List<string> chunkIps = chunk.Select(t => t.Ip).ToList();
-                firewallPolicy.BatchBlock(chunkIps);
+                List<string> chunkIps = chunk.Select(t => t.Ip).Where(ip => !existingFwLocked.Contains(ip)).ToList();
+                if (chunkIps.Count > 0)
+                {
+                    lock (firewallMutationGate)
+                    {
+                        firewallPolicy.BatchBlock(chunkIps);
+                    }
+                }
+
+                ConfirmThreatLocks(chunk.Select(t => t.Ip));
             }
 
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Succeeded", sourceFeedName, $"Locked: {toLock.Count}, Evaluated: {items.Count}");
@@ -1584,6 +1619,29 @@ public bool LimitMailSent { get; set; }
             TryRecordAudit("Firewall.ExternalThreatFeedLock", "Failed", sourceFeedName, ex.GetType().Name);
             throw;
         }
+    }
+
+    private void ConfirmThreatLocks(IEnumerable<string> ipAddresses)
+    {
+        DateTime confirmedUtc = DateTime.UtcNow;
+        database.ExecuteInTransaction((connection, transaction) =>
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = "UPDATE Locks SET Status=@status,LastUpdate=@updated WHERE IpAddress=@ip AND Status=@requested";
+            var status = command.Parameters.Add("@status", Microsoft.Data.Sqlite.SqliteType.Integer);
+            var updated = command.Parameters.Add("@updated", Microsoft.Data.Sqlite.SqliteType.Text);
+            var ip = command.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+            var requested = command.Parameters.Add("@requested", Microsoft.Data.Sqlite.SqliteType.Integer);
+            status.Value = Lock.LOCK_STATUS_HARDLOCK;
+            updated.Value = confirmedUtc;
+            requested.Value = Lock.LOCK_STATUS_HARDLOCK_REQUESTED;
+            foreach (string address in ipAddresses)
+            {
+                ip.Value = address;
+                command.ExecuteNonQuery();
+            }
+        });
     }
 
     /// <summary>

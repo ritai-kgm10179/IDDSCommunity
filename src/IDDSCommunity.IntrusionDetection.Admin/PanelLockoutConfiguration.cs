@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
@@ -9,6 +10,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class PanelLockoutConfiguration : UserControl
 {
+    private long editGeneration;
     /// <summary>
     /// 當 LockoutConfigurationChanged 時引發之事件。
     /// </summary>
@@ -26,6 +28,13 @@ public partial class PanelLockoutConfiguration : UserControl
             Shared.Localization.Strings.Get("Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist."));
 
         LoadData();
+        foreach (Control control in tableLayoutMain.Controls)
+        {
+            if (control is TextBoxBase text) text.TextChanged += (_, _) => editGeneration++;
+            if (control is CheckBox check) check.CheckedChanged += (_, _) => editGeneration++;
+            if (control is ComboBox combo) combo.SelectedIndexChanged += (_, _) => editGeneration++;
+            if (control is NumericUpDown numeric) numeric.ValueChanged += (_, _) => editGeneration++;
+        }
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, container: headerPanel);
     }
 
@@ -62,7 +71,7 @@ public partial class PanelLockoutConfiguration : UserControl
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void pictureBoxSave_Click(object sender, EventArgs e)
+    private async void pictureBoxSave_Click(object sender, EventArgs e)
     {
         bool hasError = false;
         ClearErrors();
@@ -98,25 +107,49 @@ public partial class PanelLockoutConfiguration : UserControl
             MessageBox.Show(this, exception.Message, Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
-        IddsConfig.Instance.LockForever = checkBoxLockForever.Checked;
-        IddsConfig.Instance.HardLockAttempts = hardLocks;
-        IddsConfig.Instance.HardLockTimeHours = hardLockDuration;
-        IddsConfig.Instance.SoftLockAttempts = softLocks;
-        IddsConfig.Instance.SoftLockTimeMinutes = softLockDuration;
-        IddsConfig.Instance.Save();
-        IddsConfig.Instance.FirewallBlockMode = comboBoxFirewallMode.SelectedIndex == 1
-            ? FirewallBlockMode.Bidirectional
-            : FirewallBlockMode.Inbound;
-        IddsConfig.Instance.CrossAgentSemanticDeduplicationSeconds = decimal.ToInt32(numericSemanticDeduplicationSeconds.Value);
-        IddsConfig.Instance.EnableCrossAgentCorrelation = checkBoxEnableCrossAgentCorrelation.Checked;
-        IddsConfig.Instance.CrossAgentSprayAccountThreshold = decimal.ToInt32(numericSprayAccountThreshold.Value);
-        IddsConfig.Instance.CrossAgentSprayIpThreshold = decimal.ToInt32(numericSprayIpThreshold.Value);
-        IddsConfig.Instance.CrossAgentSlidingWindowMinutes = decimal.ToInt32(numericSlidingWindowMinutes.Value);
-        IddsConfig.Instance.TrustedProxyCidrs = normalizedTrustedProxies;
-        IddsConfig.Instance.SaveAppConfig();
-        MessageBox.Show(Shared.Localization.Strings.Get("Configuration was saved successfully."), Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-        OnLockoutConfigurationChanged();
+        long generation = editGeneration;
+        LockoutSnapshot snapshot = new(checkBoxLockForever.Checked, hardLocks, hardLockDuration, softLocks, softLockDuration,
+            comboBoxFirewallMode.SelectedIndex == 1 ? FirewallBlockMode.Bidirectional : FirewallBlockMode.Inbound,
+            decimal.ToInt32(numericSemanticDeduplicationSeconds.Value), checkBoxEnableCrossAgentCorrelation.Checked,
+            decimal.ToInt32(numericSprayAccountThreshold.Value), decimal.ToInt32(numericSprayIpThreshold.Value),
+            decimal.ToInt32(numericSlidingWindowMinutes.Value), normalizedTrustedProxies);
+        buttonSave.Enabled = false;
+        try
+        {
+            await Task.Run(() => Persist(snapshot));
+            if (generation == editGeneration)
+                MessageBox.Show(Shared.Localization.Strings.Get("Configuration was saved successfully."), Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            OnLockoutConfigurationChanged();
+        }
+        catch (Exception exception)
+        {
+            MessageBox.Show(this, exception.Message, Shared.Localization.Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally { if (!IsDisposed) buttonSave.Enabled = true; }
     }
+
+    private static void Persist(LockoutSnapshot value)
+    {
+        IddsConfig config = IddsConfig.Instance;
+        config.LockForever = value.LockForever;
+        config.HardLockAttempts = value.HardLocks;
+        config.HardLockTimeHours = value.HardLockDuration;
+        config.SoftLockAttempts = value.SoftLocks;
+        config.SoftLockTimeMinutes = value.SoftLockDuration;
+        config.FirewallBlockMode = value.FirewallMode;
+        config.CrossAgentSemanticDeduplicationSeconds = value.SemanticDeduplicationSeconds;
+        config.EnableCrossAgentCorrelation = value.EnableCorrelation;
+        config.CrossAgentSprayAccountThreshold = value.SprayAccountThreshold;
+        config.CrossAgentSprayIpThreshold = value.SprayIpThreshold;
+        config.CrossAgentSlidingWindowMinutes = value.SlidingWindowMinutes;
+        config.TrustedProxyCidrs = value.TrustedProxyCidrs;
+        config.Save();
+        config.SaveAppConfig();
+    }
+
+    private sealed record LockoutSnapshot(bool LockForever, int HardLocks, int HardLockDuration, int SoftLocks,
+        int SoftLockDuration, FirewallBlockMode FirewallMode, int SemanticDeduplicationSeconds, bool EnableCorrelation,
+        int SprayAccountThreshold, int SprayIpThreshold, int SlidingWindowMinutes, string TrustedProxyCidrs);
     /// <summary>
     /// Processes the lockout configuration changed notification.
     /// </summary>

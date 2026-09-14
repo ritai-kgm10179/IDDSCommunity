@@ -1,4 +1,4 @@
-# 並行處理、背壓與 UI 執行緒架構
+﻿# 並行處理、背壓與 UI 執行緒架構
 
 ## 官方設計依據
 
@@ -42,7 +42,7 @@ Runtime health check 會回報 `unfinished_security_events`；未完成數超過
 
 ## SQLite 並行與交易
 
-同步與非同步的一般查詢各自使用短生命週期、具 pooling 的獨立連線，避免多執行緒共用同一 `SqliteConnection`。需要原子性的設定、Agent 與 lock 寫入則由 `ExecuteInTransaction` 明確擁有連線與 transaction，所有 transaction 內 command 都使用同一連線。測試涵蓋並行讀寫以及例外時 rollback。
+同步與非同步的一般查詢各自使用短生命週期、具 pooling 的獨立連線，避免多執行緒共用同一 `SqliteConnection`。需要原子性的設定、Agent 與 lock 寫入則由 `ExecuteInTransaction` 明確擁有連線與 transaction，所有 transaction 內 command 都使用同一連線。互動式設定儲存使用獨立連線、短 `busy_timeout` 與 3 秒總競爭期限；逾時後保留畫面 dirty 狀態，避免以長時間重試阻塞 UI。Threat Hub 匯入每 500 筆提交，更新項目取得新 sequence，no-op 批次不寫入也不推進 cursor。測試涵蓋並行讀寫、例外 rollback、更新重新傳遞與批次邊界。
 
 ## 封包擷取
 
@@ -58,7 +58,7 @@ FTP、SMTP、POP3 與 Terminal Server 的舊式啟動 `Thread` 已移除。Sniff
 
 ## WinForms UI
 
-Admin 的 intrusion log、locks、dashboard statistics 與 Service 狀態查詢會在背景工作取得不可變 snapshot，再透過 .NET 10 `Control.InvokeAsync` 封送至 UI thread。手動解除封鎖的資料庫寫入，以及 Windows Service 的 Start、Stop 與 WaitForStatus 也在背景工作執行。UI callback 僅更新控制項，不執行資料庫或 ServiceController I/O。每次 timer refresh 以 `IsUpdating` 防止重疊，並在 `finally` 恢復狀態。
+Admin 的 intrusion log、locks、dashboard statistics、system operations 與 Service 狀態查詢會在背景工作取得不可變 snapshot，再透過 .NET 10 `Control.InvokeAsync` 封送至 UI thread。設定面板以 snapshot 和序列化背景交易儲存，generation 檢查確保較早完成的工作不會清除較新的異動；儲存失敗時保留 dirty 狀態。手動解除封鎖的資料庫寫入，以及 Windows Service 的 Start、Stop、Restart 與 WaitForStatus 也在背景工作執行。連續設定異動造成的重啟要求會合併為目前一次與最多一次後續執行。UI callback 僅更新控制項，不執行資料庫、UAC 或 ServiceController I/O。週期工作採單一 `PeriodicTimer` loop 或 latest-only generation，避免 callback 重疊。
 
 SMTP 測試仍由 UI `async` event handler 執行非同步 MailKit API；一般 `await` 會返回 WinForms synchronization context，控制項更新保留在 UI thread。
 

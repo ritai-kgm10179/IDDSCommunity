@@ -92,6 +92,7 @@ public sealed class ThreatHubStoreTest
             int inserted = store.UpsertBatch(batch1);
             Assert.AreEqual(100, inserted);
             Assert.AreEqual(100, store.ActiveThreatCount);
+            ThreatHubSyncResponse initialPage = store.ReadPage(0, string.Empty);
 
             // 重複送出相同資料應被跳過（不觸發無效寫入）
             int skipped = store.UpsertBatch(batch1);
@@ -114,6 +115,14 @@ public sealed class ThreatHubStoreTest
             var updatedItem = store.LookupThreat("198.51.100.60");
             Assert.IsNotNull(updatedItem);
             Assert.AreEqual("BRUTE_FORCE", updatedItem.ThreatCategory);
+
+            ThreatHubSyncResponse changedPage = store.ReadPage(initialPage.NextCursor, initialPage.Generation);
+            Assert.AreEqual(100, changedPage.ActiveThreats.Count);
+            Assert.AreEqual(100, changedPage.ActiveThreats.Count(item => item.ThreatCategory == "BRUTE_FORCE"));
+
+            long settledCursor = changedPage.NextCursor;
+            Assert.AreEqual(0, store.UpsertBatch(batch2));
+            Assert.AreEqual(0, store.ReadPage(settledCursor, changedPage.Generation).ActiveThreats.Count);
         }
         finally
         {
@@ -121,4 +130,4 @@ public sealed class ThreatHubStoreTest
             Directory.Delete(directory, true);
         }
     }
-}
+}

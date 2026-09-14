@@ -15,6 +15,7 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 {
     private const string DefaultUserAgent = "IDDSCommunity-ThreatFeed-Subscriber/3.0 (+https://github.com/ritai-kgm10179/IDDSCommunity)";
+    internal const int DeliveryBatchSize = 500;
     private readonly IddsConfig config;
     private readonly Action<IReadOnlyList<ThreatIntelligenceItem>> onThreatsBatchDiscovered;
     private readonly Action<string> logInformation;
@@ -23,7 +24,8 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     private readonly HttpClient httpClient;
     private readonly bool ownClient;
 
-    private System.Threading.Timer? refreshTimer;
+    private Task? refreshLoopTask;
+    private Task? commandListenerTask;
     private readonly SemaphoreSlim refreshGate = new(1, 1);
     private readonly CancellationTokenSource stopping = new();
     private volatile bool disposed;
@@ -104,15 +106,36 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     /// </summary>
     public void Start()
     {
-        if (disposed) return;
+        if (disposed || refreshLoopTask is not null) return;
         int intervalHours = Math.Max(1, config.ThreatFeedUpdateIntervalHours);
-        refreshTimer = new System.Threading.Timer(
-            async _ => await RefreshFeedsAsync().ConfigureAwait(false),
-            null,
-            TimeSpan.FromSeconds(5),
-            TimeSpan.FromHours(intervalHours));
+        refreshLoopTask = RunRefreshLoopAsync(TimeSpan.FromHours(intervalHours));
+        commandListenerTask = RunCommandListenerAsync();
+    }
 
-        _ = ThreatFeedCommandChannel.StartCommandListenerAsync(RefreshFeedsAsync, stopping.Token);
+    private async Task RunRefreshLoopAsync(TimeSpan interval)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), stopping.Token).ConfigureAwait(false);
+            using PeriodicTimer timer = new(interval);
+            do
+            {
+                await RefreshFeedsAsync().ConfigureAwait(false);
+            }
+            while (await timer.WaitForNextTickAsync(stopping.Token).ConfigureAwait(false));
+        }
+        catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
+        catch (Exception ex) { logWarning("Threat feed refresh loop failed.", ex); }
+    }
+
+    private async Task RunCommandListenerAsync()
+    {
+        try
+        {
+            await ThreatFeedCommandChannel.StartCommandListenerAsync(RefreshFeedsAsync, stopping.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
+        catch (Exception ex) { logWarning("Threat feed command listener failed.", ex); }
     }
 
     /// <summary>
@@ -265,7 +288,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
             if (validItems.Count > 0)
             {
-                onThreatsBatchDiscovered(validItems);
+                DispatchThreatItems(validItems);
             }
 
             recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", feedName, $"Ingested: {validItems.Count}, Evaluated: {ips.Count}");
@@ -315,7 +338,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
             if (validItems.Count > 0)
             {
-                onThreatsBatchDiscovered(validItems);
+                DispatchThreatItems(validItems);
             }
 
             recordAudit?.Invoke("ThreatFeed.Download", "Succeeded", "AbuseIPDB Blacklist", $"Ingested: {validItems.Count}, Evaluated: {ips.Count}");
@@ -325,6 +348,20 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         {
             recordAudit?.Invoke("ThreatFeed.Download", "Failed", "AbuseIPDB Blacklist", ex.Message);
             throw;
+        }
+    }
+
+    private void DispatchThreatItems(IReadOnlyList<ThreatIntelligenceItem> items)
+    {
+        for (int offset = 0; offset < items.Count; offset += DeliveryBatchSize)
+        {
+            int count = Math.Min(DeliveryBatchSize, items.Count - offset);
+            List<ThreatIntelligenceItem> batch = new(count);
+            for (int index = 0; index < count; index++)
+            {
+                batch.Add(items[offset + index]);
+            }
+            onThreatsBatchDiscovered(batch);
         }
     }
 
@@ -462,9 +499,8 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     public void Stop()
     {
         stopping.Cancel();
-        refreshTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-        refreshTimer?.Dispose();
-        refreshTimer = null;
+        try { Task.WaitAll([refreshLoopTask ?? Task.CompletedTask, commandListenerTask ?? Task.CompletedTask], TimeSpan.FromSeconds(5)); }
+        catch (AggregateException ex) when (System.Linq.Enumerable.All(ex.InnerExceptions, e => e is OperationCanceledException)) { }
     }
 
     /// <summary>

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -360,6 +361,68 @@ public static Database Instance
             }
         });
     }
+
+    /// <summary>
+    /// 在互動式操作的總等待期限內，以獨立 SQLite 連線執行同步交易。
+    /// </summary>
+    /// <param name="operation">交易操作。</param>
+    /// <param name="contentionDeadline">等待資料庫寫入鎖定解除的總期限。</param>
+    /// <param name="cancellationToken">取消開始新嘗試或重試等待的權杖。</param>
+    /// <exception cref="ArgumentOutOfRangeException">當期限不是正值時拋出。</exception>
+    /// <exception cref="SqliteException">當期限內仍無法取得 SQLite 寫入鎖定時拋出。</exception>
+    public void ExecuteInteractiveInTransaction(
+        Action<SqliteConnection, SqliteTransaction> operation,
+        TimeSpan contentionDeadline,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (contentionDeadline <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(contentionDeadline));
+
+        Stopwatch elapsed = Stopwatch.StartNew();
+        int attempt = 0;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            TimeSpan remaining = contentionDeadline - elapsed.Elapsed;
+            if (remaining <= TimeSpan.Zero)
+                throw new SqliteException(Localization.Strings.Get("The interactive database operation exceeded its contention deadline."), 5);
+
+            try
+            {
+                using SqliteConnection connection = OpenInteractiveConnection(remaining);
+                using SqliteTransaction transaction = connection.BeginTransaction(deferred: false);
+                try
+                {
+                    operation(connection, transaction);
+                    transaction.Commit();
+                    return;
+                }
+                catch
+                {
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        Trace.TraceWarning("Failed to rollback interactive SQLite transaction: {0}", rollbackEx.Message);
+                    }
+                    throw;
+                }
+            }
+            catch (SqliteException exception) when (IsTransient(exception))
+            {
+                remaining = contentionDeadline - elapsed.Elapsed;
+                if (remaining <= TimeSpan.Zero)
+                    throw;
+
+                TimeSpan delay = TimeSpan.FromMilliseconds(Math.Min(GetRetryDelay(attempt++).TotalMilliseconds, remaining.TotalMilliseconds));
+                if (cancellationToken.WaitHandle.WaitOne(delay))
+                    cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+    }
     /// <summary>
     /// Opens and configures an independently owned pooled SQLite connection.
     /// </summary>
@@ -386,6 +449,30 @@ public static Database Instance
             roConn.Open();
             ConfigureConnection(roConn);
             return roConn;
+        }
+        catch
+        {
+            connection.Dispose();
+            throw;
+        }
+    }
+
+    private SqliteConnection OpenInteractiveConnection(TimeSpan remaining)
+    {
+        if (!_isConfigured)
+            throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
+
+        SqliteConnectionStringBuilder interactiveBuilder = new(connBuilder.ConnectionString)
+        {
+            DefaultTimeout = 1
+        };
+        SqliteConnection connection = new(interactiveBuilder.ConnectionString);
+        try
+        {
+            connection.Open();
+            int busyTimeoutMilliseconds = (int)Math.Clamp(remaining.TotalMilliseconds, 1, 500);
+            ConfigureConnection(connection, busyTimeoutMilliseconds);
+            return connection;
         }
         catch
         {
@@ -431,10 +518,12 @@ public static Database Instance
     /// Applies connection-local integrity and contention settings.
     /// </summary>
     /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
-    private static void ConfigureConnection(SqliteConnection connection)
+    private static void ConfigureConnection(SqliteConnection connection) => ConfigureConnection(connection, 30000);
+
+    private static void ConfigureConnection(SqliteConnection connection, int busyTimeoutMilliseconds)
     {
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=30000; PRAGMA memory_security=ON;";
+        command.CommandText = $"PRAGMA foreign_keys=ON; PRAGMA busy_timeout={busyTimeoutMilliseconds}; PRAGMA memory_security=ON;";
         command.ExecuteNonQuery();
     }
 

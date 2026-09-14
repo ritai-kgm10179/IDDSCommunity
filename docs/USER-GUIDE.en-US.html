@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en-US">
 <head>
   <meta charset="utf-8" />
@@ -629,6 +629,8 @@ footer p {
   <li><code>NPS / RADIUS Server</code> & <code>Windows DNS Server</code> & <code>Technitium DNS Security</code> & <code>FileMaker Server</code></li>
   <li><strong>Threshold Tuning</strong>:</li>
   <li>Independently configure each agent's "failure threshold" (e.g. <code>5 attempts</code>) and "detection window" (e.g. <code>300 seconds</code>).</li>
+  <li><strong>Non-blocking Saves</strong>: Settings are serialized through background transactions. If SQLite is temporarily busy, the console remains responsive; after a maximum three-second lock wait it reports the error and keeps the settings dirty so the user can retry.</li>
+  <li><strong>Coalesced Service Restarts</strong>: When several settings are saved in quick succession, duplicate restart requests are combined to avoid repeatedly loading agents and firewall rules.</li>
 </ul>
 <h3 id="sec-3-7-lockout-policy">3.7 🚨 Lockout Policy</h3>
 <p>Controls the escalating defensive response after an attack is triggered:</p>

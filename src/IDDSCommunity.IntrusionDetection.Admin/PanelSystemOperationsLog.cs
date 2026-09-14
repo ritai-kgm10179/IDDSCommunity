@@ -31,8 +31,8 @@ public sealed class PanelSystemOperationsLog : UserControl
     private readonly Label labelRecordCount;
     private readonly DataGridView dataGridViewLogs;
 
-    private readonly SemaphoreSlim queryLock = new(1, 1);
     private CancellationTokenSource? currentQueryCts;
+    private long queryGeneration;
     private bool isResizingColumns;
 
     /// <summary>
@@ -575,28 +575,40 @@ public sealed class PanelSystemOperationsLog : UserControl
         if (!Database.Instance.IsConfigured)
             return;
 
-        currentQueryCts?.Cancel();
+        CancellationTokenSource? previous = currentQueryCts;
         CancellationTokenSource cts = new();
+        CancellationToken token = cts.Token;
         currentQueryCts = cts;
-
-        await queryLock.WaitAsync(cts.Token).ConfigureAwait(false);
+        previous?.Cancel();
+        long generation = Interlocked.Increment(ref queryGeneration);
+        string categoryPrefix = comboBoxCategory.SelectedItem is CategoryItem catItem ? catItem.Prefix : string.Empty;
+        string outcomeFilter = comboBoxOutcome.SelectedIndex switch { 1 => "Succeeded", 2 => "Failed", _ => string.Empty };
+        string searchKeyword = textBoxSearch.Text.Trim();
+        buttonRefresh.Enabled = false;
         try
         {
-            string categoryPrefix = string.Empty;
-            string outcomeFilter = string.Empty;
-            string searchKeyword = string.Empty;
+            List<AuditDisplayRow> rows = await Task.Run(() => QueryRows(categoryPrefix, outcomeFilter, searchKeyword, token), token);
+            if (token.IsCancellationRequested || generation != Interlocked.Read(ref queryGeneration) || IsDisposed)
+                return;
+            ApplyRows(rows);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            if (!IsDisposed && generation == Interlocked.Read(ref queryGeneration))
+                buttonRefresh.Enabled = true;
+            _ = RollingDiagnosticLog.Write("PanelSystemOperationsLog", "Failed to load audit logs", ex);
+        }
+        finally
+        {
+            if (ReferenceEquals(currentQueryCts, cts))
+                currentQueryCts = null;
+            cts.Dispose();
+        }
+    }
 
-            Invoke(() =>
-            {
-                if (comboBoxCategory.SelectedItem is CategoryItem catItem)
-                    categoryPrefix = catItem.Prefix;
-                int outcomeIndex = comboBoxOutcome.SelectedIndex;
-                if (outcomeIndex == 1) outcomeFilter = "Succeeded";
-                else if (outcomeIndex == 2) outcomeFilter = "Failed";
-                searchKeyword = textBoxSearch.Text.Trim();
-                buttonRefresh.Enabled = false;
-            });
-
+    private static List<AuditDisplayRow> QueryRows(string categoryPrefix, string outcomeFilter, string searchKeyword, CancellationToken cancellationToken)
+    {
             StringBuilder sql = new("SELECT Id, OccurredUtc, EventType, Outcome, Actor, Subject, Details FROM ProtectionAuditLog WHERE 1=1");
             List<object> parameters = [];
             int paramIndex = 0;
@@ -624,12 +636,12 @@ public sealed class PanelSystemOperationsLog : UserControl
 
             sql.Append(" ORDER BY Id DESC LIMIT 1000");
 
-            List<AuditDisplayRow> rows = [];
+            List<AuditDisplayRow> rows = new(1000);
             using (IDataReader reader = Database.Instance.ExecuteReader(sql.ToString(), [.. parameters]))
             {
                 while (reader.Read())
                 {
-                    if (cts.Token.IsCancellationRequested) return;
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     string occurredUtcStr = Shared.Db.DbValueConverter.ToString(reader["OccurredUtc"]);
                     DateTime localTime = DateTime.TryParse(occurredUtcStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime parsed)
@@ -655,50 +667,44 @@ public sealed class PanelSystemOperationsLog : UserControl
                         rawSubject));
                 }
             }
+            return rows;
+    }
 
-            if (cts.Token.IsCancellationRequested) return;
-
-            Invoke(() =>
-            {
-                if (IsDisposed) return;
+    private void ApplyRows(List<AuditDisplayRow> rows)
+    {
                 dataGridViewLogs.SuspendLayout();
-                dataGridViewLogs.Rows.Clear();
-                DataGridViewRow[] rowArray = new DataGridViewRow[rows.Count];
-                for (int i = 0; i < rows.Count; i++)
+                try
                 {
-                    AuditDisplayRow r = rows[i];
-                    DataGridViewRow row = (DataGridViewRow)dataGridViewLogs.RowTemplate.Clone();
-                    row.CreateCells(dataGridViewLogs);
-                    row.Cells[0].Value = r.Time;
-                    row.Cells[1].Value = r.EventType;
-                    row.Cells[2].Value = r.Outcome;
-                    row.Cells[3].Value = r.Actor;
-                    row.Cells[4].Value = r.Subject;
-                    row.Cells[5].Value = r.Details;
-                    row.Tag = r;
-                    rowArray[i] = row;
-                }
-                dataGridViewLogs.Rows.AddRange(rowArray);
-                dataGridViewLogs.ResumeLayout();
-                labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
-                buttonRefresh.Enabled = true;
-                AutoResizeGridColumns();
-            });
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            Invoke(() =>
-            {
-                if (!IsDisposed)
+                    dataGridViewLogs.Rows.Clear();
+                    DataGridViewRow[] rowArray = new DataGridViewRow[rows.Count];
+                    for (int i = 0; i < rows.Count; i++)
+                    {
+                        AuditDisplayRow r = rows[i];
+                        DataGridViewRow row = (DataGridViewRow)dataGridViewLogs.RowTemplate.Clone();
+                        row.CreateCells(dataGridViewLogs);
+                        row.SetValues(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
+                        row.Tag = r;
+                        rowArray[i] = row;
+                    }
+                    dataGridViewLogs.Rows.AddRange(rowArray);
+                    labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
                     buttonRefresh.Enabled = true;
-            });
-            _ = RollingDiagnosticLog.Write("PanelSystemOperationsLog", "Failed to load audit logs", ex);
-        }
-        finally
+                }
+                finally { dataGridViewLogs.ResumeLayout(); }
+    }
+
+    /// <summary>
+    /// 釋放查詢取消資源與控制項所使用的資源。
+    /// </summary>
+    /// <param name="disposing">是否釋放受控資源。</param>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
         {
-            queryLock.Release();
+            currentQueryCts?.Cancel();
+            currentQueryCts?.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     private void ExportCsv()

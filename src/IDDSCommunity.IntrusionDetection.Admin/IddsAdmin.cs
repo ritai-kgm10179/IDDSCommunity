@@ -10,6 +10,56 @@ using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
 
+internal sealed class CoalescingAsyncOperation
+{
+    private readonly object sync = new();
+    private readonly Func<Task> operation;
+    private Task worker = Task.CompletedTask;
+    private bool running;
+    private bool requested;
+
+    internal CoalescingAsyncOperation(Func<Task> operation) => this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+
+    internal Task RequestAsync()
+    {
+        lock (sync)
+        {
+            requested = true;
+            if (!running)
+            {
+                running = true;
+                worker = RunAsync();
+            }
+            return worker;
+        }
+    }
+
+    private async Task RunAsync()
+    {
+        while (true)
+        {
+            lock (sync)
+            {
+                if (!requested)
+                {
+                    running = false;
+                    return;
+                }
+                requested = false;
+            }
+            try
+            {
+                await operation().ConfigureAwait(false);
+            }
+            catch
+            {
+                lock (sync) running = false;
+                throw;
+            }
+        }
+    }
+}
+
 /// <summary>
 /// IDDS 社群版主管理主控台視窗。
 /// </summary>
@@ -37,6 +87,9 @@ public partial class IddsAdmin : Form
     private EventLog? eventLogIDDSCommunity;
     private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
     private readonly System.Threading.SemaphoreSlim serviceOperationGate = new(1, 1);
+    private readonly CoalescingAsyncOperation restartOperation;
+    private bool closeAfterAgentSave;
+    private bool closeSaveInProgress;
     private int serviceRefreshActive;
     private Bitmap? disabledStartServiceImage;
     private Bitmap? disabledStopServiceImage;
@@ -46,6 +99,7 @@ public partial class IddsAdmin : Form
     /// </summary>
     public IddsAdmin()
     {
+        restartOperation = new CoalescingAsyncOperation(RestartServiceOnceAsync);
         InitializeComponent();
         UpdateMenuPositions();
         UpdateTitleBarPositions();
@@ -210,6 +264,9 @@ public partial class IddsAdmin : Form
     /// 執行 restart service 作業。
     /// </summary>
     public async Task RestartServiceAsync()
+        => await restartOperation.RequestAsync();
+
+    private async Task RestartServiceOnceAsync()
     {
         bool gateEntered = false;
         try
@@ -971,8 +1028,32 @@ public partial class IddsAdmin : Form
     {
         logReader?.Stop();
         timerRefreshServiceStatus?.Stop();
-        _panelAgentConfiguration?.FlushUnsavedChanges();
+        if (!closeAfterAgentSave && _panelAgentConfiguration is not null)
+        {
+            e.Cancel = true;
+            if (!closeSaveInProgress)
+            {
+                closeSaveInProgress = true;
+                _ = FlushAgentSettingsAndCloseAsync();
+            }
+        }
         base.OnFormClosing(e);
+    }
+
+    private async Task FlushAgentSettingsAndCloseAsync()
+    {
+        try
+        {
+            if (_panelAgentConfiguration is null || await _panelAgentConfiguration.FlushUnsavedChangesAsync())
+            {
+                closeAfterAgentSave = true;
+                Close();
+            }
+        }
+        finally
+        {
+            closeSaveInProgress = false;
+        }
     }
 
     /// <summary>
@@ -981,7 +1062,6 @@ public partial class IddsAdmin : Form
     /// <param name="newMenu">new menu 的值。</param>
     private void ShowMenu(SmartLabel newMenu)
     {
-        _panelAgentConfiguration?.FlushUnsavedChanges();
         //if (newMenu == CurrentMenu) return;
         if (CurrentMenu != null && newMenu != CurrentMenu)
         {

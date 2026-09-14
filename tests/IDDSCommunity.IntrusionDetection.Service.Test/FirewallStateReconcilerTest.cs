@@ -55,10 +55,67 @@ public sealed class FirewallStateReconcilerTest
         Assert.AreEqual(1, failures);
     }
 
+    /// <summary>
+    /// 驗證已收斂且非待處理的位址不會反覆產生稽核紀錄。
+    /// </summary>
+    [TestMethod]
+    public void Reconcile_UnchangedState_DoesNotCreateAuditChurn()
+    {
+        FakeFirewallPolicy firewall = new(["192.0.2.30"]);
+        Lock existing = new() { IpAddress = "192.0.2.30", Status = Lock.LOCK_STATUS_HARDLOCK };
+        int audits = 0;
+        FirewallStateReconciler reconciler = new(
+            firewall, () => [existing], _ => Assert.Fail(), (_, _, _, _) => audits++, (_, exception) => Assert.Fail(exception.Message));
+
+        reconciler.Reconcile();
+
+        Assert.AreEqual(0, audits);
+    }
+
+    /// <summary>
+    /// 驗證批次部分成功時只完成已套用位址，其餘位址保留供下次重試。
+    /// </summary>
+    [TestMethod]
+    public void Reconcile_PartialBlockFailure_FinalizesAppliedAddressOnly()
+    {
+        FakeFirewallPolicy firewall = new([]) { FailAfterFirstBlock = true };
+        Lock first = new() { IpAddress = "192.0.2.40", Status = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED };
+        Lock second = new() { IpAddress = "192.0.2.41", Status = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED };
+        List<Lock> saved = [];
+        List<string> failures = [];
+        FirewallStateReconciler reconciler = new(
+            firewall, () => [first, second], saved.Add, (_, _, _, _) => { }, (address, _) => failures.Add(address));
+
+        reconciler.Reconcile();
+
+        Assert.AreEqual(Lock.LOCK_STATUS_SOFTLOCK, first.Status);
+        Assert.AreEqual(Lock.LOCK_STATUS_SOFTLOCK_REQUESTED, second.Status);
+        CollectionAssert.AreEqual(new[] { first }, saved);
+        CollectionAssert.AreEqual(new[] { "192.0.2.41" }, failures);
+    }
+
+    /// <summary>
+    /// 驗證只存在單一方向的過期規則仍會被清除。
+    /// </summary>
+    [TestMethod]
+    public void Reconcile_DirectionalOrphan_RemovesStaleAddress()
+    {
+        FakeFirewallPolicy firewall = new([]) { AnyDirectionAddresses = ["192.0.2.50"] };
+        FirewallStateReconciler reconciler = new(
+            firewall, () => [], _ => Assert.Fail(), (_, _, _, _) => { }, (_, exception) => Assert.Fail(exception.Message));
+
+        reconciler.Reconcile();
+
+        CollectionAssert.AreEqual(new[] { "192.0.2.50" }, firewall.RemovedAddresses);
+    }
+
     private sealed class FakeFirewallPolicy(IEnumerable<string> initialAddresses) : IFirewallPolicy
     {
         private readonly HashSet<string> addresses = new(initialAddresses, StringComparer.Ordinal);
         internal bool FailBlock { get; init; }
+        internal bool FailAfterFirstBlock { get; init; }
+        internal IReadOnlyCollection<string>? AnyDirectionAddresses { get; init; }
+        internal List<string> RemovedAddresses { get; } = [];
 
         public void Block(string ipAddress)
         {
@@ -71,8 +128,14 @@ public sealed class FirewallStateReconcilerTest
         {
             if (FailBlock)
                 throw new InvalidOperationException("expected");
+            int applied = 0;
             foreach (string ip in ipAddresses)
+            {
                 addresses.Add(ip);
+                applied++;
+                if (FailAfterFirstBlock && applied == 1)
+                    throw new InvalidOperationException("expected partial failure");
+            }
         }
 
         public bool IsLocked(string ipAddress) => addresses.Contains(ipAddress);
@@ -87,11 +150,15 @@ public sealed class FirewallStateReconcilerTest
             return result;
         }
         public IReadOnlyCollection<string> GetBlockedAddresses() => addresses;
+        public FirewallBlockState GetBlockState() => new(addresses, AnyDirectionAddresses ?? addresses);
         public void RemoveIpAddressFromBlockList(string ipAddress) => addresses.Remove(ipAddress);
         public void BatchRemove(IReadOnlyCollection<string> ipAddresses)
         {
             foreach (string ip in ipAddresses)
+            {
                 addresses.Remove(ip);
+                RemovedAddresses.Add(ip);
+            }
         }
         public void CompactBlockRules(IEnumerable<string>? safeNetworks = null) { }
         public List<FirewallInboundRuleDefinition> ReconciledRules { get; } = [];

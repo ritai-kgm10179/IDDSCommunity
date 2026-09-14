@@ -77,4 +77,27 @@ public sealed class DatabaseConcurrencyTest
 
         Assert.AreEqual(0L, Convert.ToInt64(database.ExecuteScalar("SELECT COUNT(*) FROM ProtectionAuditLog")));
     }
+
+    /// <summary>
+    /// 驗證 Agent 交易失敗時不會提前改變記憶體中的識別碼或序號。
+    /// </summary>
+    [TestMethod]
+    public void SecurityAgent_SaveFailure_DoesNotAdvanceInMemoryIdentityOrSerial()
+    {
+        database.ExecuteNonQuery("DROP TABLE SecurityAgentConfig");
+        SecurityAgent agent = new()
+        {
+            DatabaseInstance = database,
+            Name = "retry-safe-agent",
+            DisplayName = "retry-safe-agent",
+            Serial = 7,
+            CustomConfiguration = new System.Collections.Generic.Dictionary<string, string> { ["Port"] = "25" }
+        };
+
+        Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => agent.Save());
+
+        Assert.AreEqual(Guid.Empty, agent.Id);
+        Assert.AreEqual(7, agent.Serial);
+        Assert.AreEqual(0L, Convert.ToInt64(database.ExecuteScalar("SELECT COUNT(*) FROM SecurityAgents")));
+    }
 }

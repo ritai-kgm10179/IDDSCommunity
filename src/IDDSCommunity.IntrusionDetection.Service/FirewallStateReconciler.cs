@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using IDDSCommunity.IntrusionDetection.Shared;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
@@ -19,57 +20,70 @@ internal sealed class FirewallStateReconciler(
     internal void Reconcile()
     {
         IReadOnlyList<Lock> desiredLocks = readDesiredLocks();
-        HashSet<string> desiredAddresses = new(StringComparer.Ordinal);
-        HashSet<string> currentBlocked = new(firewallPolicy.GetBlockedAddresses(), StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, Lock> desiredByAddress = new(StringComparer.OrdinalIgnoreCase);
+        FirewallBlockState blockState = firewallPolicy.GetBlockState();
+        HashSet<string> currentBlocked = new(blockState.EffectiveAddresses, StringComparer.OrdinalIgnoreCase);
+        HashSet<string> currentAnyDirection = new(blockState.AnyDirectionAddresses, StringComparer.OrdinalIgnoreCase);
 
-        List<Lock> missingLocks = [];
         foreach (Lock desiredLock in desiredLocks)
         {
-            desiredAddresses.Add(desiredLock.IpAddress);
-            if (!currentBlocked.Contains(desiredLock.IpAddress))
-            {
-                missingLocks.Add(desiredLock);
-            }
+            string? normalized = FirewallPolicyManager.NormalizeRemoteAddressEntry(desiredLock.IpAddress);
+            if (normalized is not null)
+                desiredByAddress[normalized] = desiredLock;
         }
+
+        List<Lock> missingLocks = desiredByAddress
+            .Where(pair => !currentBlocked.Contains(pair.Key))
+            .Select(pair => pair.Value)
+            .ToList();
 
         if (missingLocks.Count > 0)
         {
             try
             {
                 firewallPolicy.BatchBlock(missingLocks.ConvertAll(l => l.IpAddress));
-                foreach (Lock missing in missingLocks)
-                {
-                    currentBlocked.Add(missing.IpAddress);
-                }
+                blockState = firewallPolicy.GetBlockState();
+                currentBlocked = new HashSet<string>(blockState.EffectiveAddresses, StringComparer.OrdinalIgnoreCase);
+                currentAnyDirection = new HashSet<string>(blockState.AnyDirectionAddresses, StringComparer.OrdinalIgnoreCase);
             }
             catch (Exception ex)
             {
+                blockState = firewallPolicy.GetBlockState();
+                currentBlocked = new HashSet<string>(blockState.EffectiveAddresses, StringComparer.OrdinalIgnoreCase);
+                currentAnyDirection = new HashSet<string>(blockState.AnyDirectionAddresses, StringComparer.OrdinalIgnoreCase);
                 foreach (Lock missing in missingLocks)
                 {
+                    string? normalized = FirewallPolicyManager.NormalizeRemoteAddressEntry(missing.IpAddress);
+                    if (normalized is not null && currentBlocked.Contains(normalized))
+                        continue;
                     recordAudit("Firewall.Reconcile", "Failed", missing.IpAddress, ex.GetType().Name);
                     reportFailure(missing.IpAddress, ex);
                 }
             }
         }
 
-        foreach (Lock desiredLock in desiredLocks)
+        foreach (var (address, desiredLock) in desiredByAddress)
         {
-            if (!currentBlocked.Contains(desiredLock.IpAddress))
+            if (!currentBlocked.Contains(address))
                 continue;
 
             try
             {
+                bool changed = false;
                 if (desiredLock.Status == Lock.LOCK_STATUS_SOFTLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_SOFTLOCK;
                     saveLock(desiredLock);
+                    changed = true;
                 }
                 else if (desiredLock.Status == Lock.LOCK_STATUS_HARDLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_HARDLOCK;
                     saveLock(desiredLock);
+                    changed = true;
                 }
-                recordAudit("Firewall.Reconcile", "Succeeded", desiredLock.IpAddress, "AddOrVerify");
+                if (changed || missingLocks.Contains(desiredLock))
+                    recordAudit("Firewall.Reconcile", "Succeeded", address, "AddOrVerify");
             }
             catch (Exception ex)
             {
@@ -79,9 +93,9 @@ internal sealed class FirewallStateReconciler(
         }
 
         List<string> staleAddresses = [];
-        foreach (string actualAddress in currentBlocked)
+        foreach (string actualAddress in currentAnyDirection)
         {
-            if (!desiredAddresses.Contains(actualAddress))
+            if (!desiredByAddress.ContainsKey(actualAddress))
             {
                 staleAddresses.Add(actualAddress);
             }

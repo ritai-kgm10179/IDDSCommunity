@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
@@ -13,6 +14,30 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 [TestClass]
 public sealed class ExternalThreatFeedSubscriberTest
 {
+    [TestMethod]
+    public async Task RefreshFeedsAsync_DeliversLargeFeedsInBoundedBatches()
+    {
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.EnableExternalThreatFeeds = true;
+        config.EnableDynamicBogonUpdate = false;
+        config.ThreatFeedMinLevel = 3;
+
+        string content = string.Join("\n", Enumerable.Range(0, 1201)
+            .Select(index => $"8.{index / 256}.{index % 256}.1\t5"));
+        using HttpClient httpClient = new(new MockHttpMessageHandler((_, _) => Task.FromResult(
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(content) })));
+        List<int> batchSizes = [];
+        using ExternalThreatFeedSubscriberService subscriber = new(
+            config,
+            (IReadOnlyList<ThreatIntelligenceItem> batch) => batchSizes.Add(batch.Count),
+            httpClient: httpClient);
+
+        int ingested = await subscriber.RefreshFeedsAsync().ConfigureAwait(false);
+
+        Assert.AreEqual(1201, ingested);
+        CollectionAssert.AreEqual(new[] { 500, 500, 201 }, batchSizes);
+    }
+
     [TestMethod]
     public async Task RefreshFeedsAsync_IngestsValidPublicIpsAndFiltersBogonAndWhitelist()
     {

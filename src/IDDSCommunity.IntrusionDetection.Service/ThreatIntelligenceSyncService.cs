@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -26,7 +25,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     private readonly CancellationTokenSource stopping = new();
     private readonly SemaphoreSlim syncGate = new(1, 1);
 
-    private System.Threading.Timer? syncTimer;
+    private Task? syncLoopTask;
     private bool disposed;
     private DateTime lastSyncUtc = DateTime.MinValue;
 
@@ -128,13 +127,31 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     /// </summary>
     public void Start()
     {
-        if (disposed) return;
+        if (disposed || syncLoopTask is not null) return;
         int intervalSeconds = Math.Max(5, config.ThreatHubSyncIntervalSeconds);
-        syncTimer = new System.Threading.Timer(
-            async _ => await SynchronizeNowAsync().ConfigureAwait(false),
-            null,
-            TimeSpan.FromSeconds(3),
-            TimeSpan.FromSeconds(intervalSeconds));
+        syncLoopTask = RunSyncLoopAsync(TimeSpan.FromSeconds(intervalSeconds));
+    }
+
+    private async Task RunSyncLoopAsync(TimeSpan interval)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3), stopping.Token).ConfigureAwait(false);
+            using PeriodicTimer timer = new(interval);
+            do
+            {
+                try
+                {
+                    await SynchronizeNowAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    logWarning("Threat Hub synchronization cycle failed.", ex);
+                }
+            }
+            while (await timer.WaitForNextTickAsync(stopping.Token).ConfigureAwait(false));
+        }
+        catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
     }
 
     /// <summary>
@@ -245,9 +262,8 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     public void Stop()
     {
         stopping.Cancel();
-        syncTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-        syncTimer?.Dispose();
-        syncTimer = null;
+        try { syncLoopTask?.Wait(TimeSpan.FromSeconds(5)); }
+        catch (AggregateException ex) when (System.Linq.Enumerable.All(ex.InnerExceptions, e => e is OperationCanceledException)) { }
         try
         {
             if (syncGate.Wait(TimeSpan.FromSeconds(5)))

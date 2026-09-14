@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Net.Mail;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using MailKit.Security;
@@ -13,6 +14,7 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class PanelSmtpSettings : UserControl
 {
+    private long editGeneration;
 
         /// <summary>
     /// 當 SmtpSettingsChanged 時引發之事件。
@@ -24,6 +26,10 @@ public event EventHandler? SmtpSettingsChanged;
     public PanelSmtpSettings()
     {
         InitializeComponent();
+        foreach (Control control in new Control[] { textBoxSender, textBoxRecipient, textBoxSmtpServer, textBoxSmtpPort, textBoxUsername, textBoxPassword })
+            control.TextChanged += (_, _) => editGeneration++;
+        checkBoxUseSSL.CheckedChanged += (_, _) => editGeneration++;
+        checkBoxAuthentication.CheckedChanged += (_, _) => editGeneration++;
         Load += new EventHandler(PanelSmtpSettings_Load);
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, container: headerPanel);
     }
@@ -192,25 +198,47 @@ public bool IsInEditMode { get; set; }
     /// </summary>
     /// <param name="sender">事件來源物件。</param>
     /// <param name="e">事件資料。</param>
-    private void buttonSave_Click(object sender, EventArgs e)
+    private async void buttonSave_Click(object sender, EventArgs e)
     {
         bool isOk = CheckFormData();
         if (isOk)
         {
-            IddsConfig.Instance.SenderEmailAddress = textBoxSender.Text;
-            IddsConfig.Instance.NotificationEmailAddress = textBoxRecipient.Text;
-            IddsConfig.Instance.SmtpServer = textBoxSmtpServer.Text;
-            IddsConfig.Instance.SmtpPort = int.Parse(textBoxSmtpPort.Text);
-            IddsConfig.Instance.SmtpSslRequired = checkBoxUseSSL.Checked;
-            IddsConfig.Instance.SmtpRequiresAuthentication = checkBoxAuthentication.Checked;
-            IddsConfig.Instance.SmtpUsername = textBoxUsername.Text;
-            IddsConfig.Instance.SetSmtpPassword(textBoxPassword.Text);
-            IddsConfig.Instance.Save();
-
-            MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            OnSmtpSettingsChanged();
+            long generation = editGeneration;
+            SmtpSnapshot snapshot = new(textBoxSender.Text, textBoxRecipient.Text, textBoxSmtpServer.Text,
+                int.Parse(textBoxSmtpPort.Text), checkBoxUseSSL.Checked, checkBoxAuthentication.Checked,
+                textBoxUsername.Text, textBoxPassword.Text);
+            buttonSave.Enabled = false;
+            try
+            {
+                await Task.Run(() => Persist(snapshot));
+                if (generation == editGeneration)
+                    MessageBox.Show(Strings.Get("Configuration was saved successfully."), Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                OnSmtpSettingsChanged();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(this, exception.Message, Strings.AppTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally { if (!IsDisposed) buttonSave.Enabled = true; }
         }
     }
+
+    private static void Persist(SmtpSnapshot value)
+    {
+        IddsConfig config = IddsConfig.Instance;
+        config.SenderEmailAddress = value.Sender;
+        config.NotificationEmailAddress = value.Recipient;
+        config.SmtpServer = value.Server;
+        config.SmtpPort = value.Port;
+        config.SmtpSslRequired = value.UseSsl;
+        config.SmtpRequiresAuthentication = value.Authentication;
+        config.SmtpUsername = value.Username;
+        config.SetSmtpPassword(value.Password);
+        config.Save();
+    }
+
+    private sealed record SmtpSnapshot(string Sender, string Recipient, string Server, int Port, bool UseSsl,
+        bool Authentication, string Username, string Password);
     private void ResetDefaults_Click(object? sender, EventArgs e)
     {
         IddsConfig defaults = IddsConfig.GetDefaultConfiguration();

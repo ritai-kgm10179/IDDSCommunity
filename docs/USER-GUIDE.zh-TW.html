@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="utf-8" />
@@ -629,6 +629,8 @@ footer p {
   <li><code>NPS / RADIUS Server</code> & <code>Windows DNS Server</code> & <code>Technitium DNS Security</code> & <code>FileMaker Server</code></li>
   <li><strong>門檻調校</strong>：</li>
   <li>可獨立設定個別 Agent 之「失敗次數上限」（例如 <code>5 次</code>）與「計算時間窗」（例如 <code>300 秒</code>）。</li>
+  <li><strong>非阻塞儲存</strong>：設定以背景交易依序寫入；SQLite 暫時繁忙時，介面仍可操作，等待寫入鎖最多 3 秒後會顯示錯誤並保留未儲存狀態，供使用者再次儲存。</li>
+  <li><strong>服務重啟合併</strong>：短時間內連續儲存多項設定時，系統會合併重複的服務重啟要求，避免反覆載入 Agent 與防火牆規則。</li>
 </ul>
 <h3 id="sec-3-7-防護政策設定-lockout-policy">3.7 🚨 防護政策設定 (Lockout Policy)</h3>
 <p>控制攻擊觸發後的階梯式防禦反應：</p>
