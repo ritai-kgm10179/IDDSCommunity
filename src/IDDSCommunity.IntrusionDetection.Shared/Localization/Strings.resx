@@ -848,6 +848,14 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Occurred" xml:space="preserve"><value>Occurred</value></data>
   <data name="Subject" xml:space="preserve"><value>Subject</value></data>
   <data name="Details" xml:space="preserve"><value>Details</value></data>
+  <data name="No cross-agent password-spray alerts detected." xml:space="preserve"><value>No cross-agent password-spray alerts detected.</value></data>
+  <data name="No events recorded during this period." xml:space="preserve"><value>No events recorded during this period.</value></data>
+  <data name="No intrusion attempts recorded." xml:space="preserve"><value>No intrusion attempts recorded.</value></data>
+  <data name="No soft locks recorded." xml:space="preserve"><value>No soft locks recorded.</value></data>
+  <data name="No hard locks recorded." xml:space="preserve"><value>No hard locks recorded.</value></data>
+  <data name="(No additional details)" xml:space="preserve"><value>(No additional details)</value></data>
+  <data name="(Not specified)" xml:space="preserve"><value>(Not specified)</value></data>
+  <data name="(Unknown)" xml:space="preserve"><value>(Unknown)</value></data>
   <data name="The specified encrypted database was not found." xml:space="preserve"><value>The specified encrypted database was not found.</value></data>
   <data name="The diagnostic output path must not overwrite the database." xml:space="preserve"><value>The diagnostic output path must not overwrite the database.</value></data>
   <data name="Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'." xml:space="preserve"><value>Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'.</value></data>

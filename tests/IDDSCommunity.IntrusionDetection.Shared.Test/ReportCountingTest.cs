@@ -61,6 +61,45 @@ public sealed class ReportCountingTest
         }
     }
 
+    /// <summary>
+    /// 驗證當指定區間內查無任何攻擊或告警資料時，報表能正確渲染結構完整之跨欄佔位列，杜絕表格塌陷。
+    /// </summary>
+    [TestMethod]
+    public void Report_EmptyData_RendersCleanPlaceholders()
+    {
+        Localization.LanguageManager.Instance.Initialize("zh-TW");
+        string directory = Path.Combine(Path.GetTempPath(), "idds-report-empty-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            DateTime start = new(2026, 8, 1, 0, 0, 0, DateTimeKind.Local);
+            DateTime end = start.AddDays(1);
+
+            string report = ReportGenerator.Instance.GetReport("每日安全報表", "無攻擊測試", "伺服器資訊", start, end);
+
+            // 驗證各區塊均有友善之 Empty State 佔位列
+            StringAssert.Contains(report, "期間內未偵測到跨代理程式密碼噴灑攻擊警告。");
+            StringAssert.Contains(report, "期間內無事件記錄。");
+            StringAssert.Contains(report, "無入侵嘗試記錄。");
+            StringAssert.Contains(report, "無軟封鎖記錄。");
+            StringAssert.Contains(report, "無硬封鎖記錄。");
+
+            // 總計列仍維持 0
+            Assert.AreEqual(0L, ReportGenerator.Instance.TotalIntrusionAttempts);
+            Assert.AreEqual(0L, ReportGenerator.Instance.TotalSoftLocks);
+            Assert.AreEqual(0L, ReportGenerator.Instance.TotalHardLocks);
+        }
+        finally
+        {
+            database.Close();
+            try { Directory.Delete(directory, true); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+    }
+
     private static void InsertAgent(Database database, Guid id, string name, string displayName) =>
         database.ExecuteNonQuery(
             "INSERT INTO SecurityAgents(AgentId,Name,AssemblyName,HardLockAttempts,HardLockTimeHours,LockForever,SoftLockAttempts,SoftLockTimeMinutes,OverwriteConfiguration,DisplayName,Enabled,Serial) VALUES(@p0,@p1,@p2,20,1,0,10,1,0,@p3,1,0)",

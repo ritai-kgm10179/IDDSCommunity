@@ -105,6 +105,9 @@ public static class WebhookPayloadBuilder
             .Replace("@here", "@\u200bhere");
     }
 
+    private static string NormalizeFallback(string? value, string fallbackResourceKey) =>
+        string.IsNullOrWhiteSpace(value) ? Localization.Strings.Get(fallbackResourceKey) : value.Trim();
+
     private static string TruncateText(string? input, int maxLength)
     {
         if (string.IsNullOrEmpty(input) || input.Length <= maxLength)
@@ -134,11 +137,11 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
-        string safeTitle = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250)));
-        string safeDetails = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(details, 4000)));
-        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
-        string safeStatus = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(statusName, 100)));
-        string safeAgent = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(agentName, 100)));
+        string safeTitle = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle, 250)));
+        string safeDetails = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(details, "(No additional details)"), 4000)));
+        string safeIp = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)"));
+        string safeStatus = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(statusName, "(Not specified)"), 100)));
+        string safeAgent = EscapeMarkdownLinks(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(agentName, "(Unknown)"), 100)));
         var cardContent = new Dictionary<string, object>
         {
             ["type"] = "AdaptiveCard",
@@ -251,11 +254,11 @@ public static class WebhookPayloadBuilder
         string? managementApiBaseUrl = null,
         string? managementApiKey = null)
     {
-        string cleanTitle = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(eventTitle));
-        string cleanStatus = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(statusName));
-        string cleanAgent = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(agentName));
-        string cleanDetails = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(TruncateText(details, 3000)));
-        string cleanIp = SanitizeBidiAndControlCharacters(ipAddress);
+        string cleanTitle = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle));
+        string cleanStatus = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(NormalizeFallback(statusName, "(Not specified)")));
+        string cleanAgent = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(NormalizeFallback(agentName, "(Unknown)")));
+        string cleanDetails = EscapeSlackMrkdwn(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(details, "(No additional details)"), 3000)));
+        string cleanIp = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)"));
 
         var blocks = new List<object>
         {
@@ -352,11 +355,11 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildDiscordPayload(string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp, int colorHex = 0xDC2626)
     {
-        string safeTitle = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250)));
-        string safeDetails = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(details, 4000)));
-        string safeStatus = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(statusName, 100)));
-        string safeAgent = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(agentName, 100)));
-        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
+        string safeTitle = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle, 250)));
+        string safeDetails = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(details, "(No additional details)"), 4000)));
+        string safeStatus = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(statusName, "(Not specified)"), 100)));
+        string safeAgent = SanitizeDiscordMarkdown(SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(agentName, "(Unknown)"), 100)));
+        string safeIp = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)"));
         var discordMessage = new Dictionary<string, object>
         {
             ["username"] = "IDDS Community",
@@ -387,11 +390,11 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildTelegramPayload(string chatId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
-        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(details, 4000));
-        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 250));
-        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
-        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(statusName, 100));
-        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(agentName, 100));
+        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(details, "(No additional details)"), 4000));
+        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle, 250));
+        string safeIp = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)"));
+        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(statusName, "(Not specified)"), 100));
+        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(agentName, "(Unknown)"), 100));
         string text = $"<b>🛡️ IDDS Community 警報</b>\n\n" +
                       $"<b>事件:</b> {WebUtility.HtmlEncode(safeTitle)}\n" +
                       $"<b>IP 位址:</b> <code>{WebUtility.HtmlEncode(safeIp)}</code>\n" +
@@ -418,11 +421,11 @@ public static class WebhookPayloadBuilder
         var genericMessage = new Dictionary<string, object>
         {
             ["system"] = "IDDS Community",
-            ["event_title"] = SanitizeBidiAndControlCharacters(eventTitle),
-            ["ip_address"] = SanitizeBidiAndControlCharacters(ipAddress),
-            ["status"] = SanitizeBidiAndControlCharacters(statusName),
-            ["agent"] = SanitizeBidiAndControlCharacters(agentName),
-            ["details"] = SanitizeBidiAndControlCharacters(details),
+            ["event_title"] = SanitizeBidiAndControlCharacters(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle),
+            ["ip_address"] = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)")),
+            ["status"] = SanitizeBidiAndControlCharacters(NormalizeFallback(statusName, "(Not specified)")),
+            ["agent"] = SanitizeBidiAndControlCharacters(NormalizeFallback(agentName, "(Unknown)")),
+            ["details"] = SanitizeBidiAndControlCharacters(NormalizeFallback(details, "(No additional details)")),
             ["timestamp_utc"] = timestamp.ToString("o")
         };
 
@@ -434,11 +437,11 @@ public static class WebhookPayloadBuilder
     /// </summary>
     public static string BuildLineMessagingPayload(string toUserIdOrGroupId, string eventTitle, string ipAddress, string statusName, string agentName, string details, DateTime timestamp)
     {
-        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(details, 4000));
-        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(eventTitle, 200));
-        string safeIp = SanitizeBidiAndControlCharacters(ipAddress);
-        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(statusName, 100));
-        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(agentName, 100));
+        string safeDetails = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(details, "(No additional details)"), 4000));
+        string safeTitle = SanitizeBidiAndControlCharacters(TruncateText(string.IsNullOrWhiteSpace(eventTitle) ? Localization.Strings.AppTitle : eventTitle, 200));
+        string safeIp = SanitizeBidiAndControlCharacters(NormalizeFallback(ipAddress, "(Not specified)"));
+        string safeStatus = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(statusName, "(Not specified)"), 100));
+        string safeAgent = SanitizeBidiAndControlCharacters(TruncateText(NormalizeFallback(agentName, "(Unknown)"), 100));
 
         string text = $"🛡️【IDDS Community 警報】\n" +
                       $"• 事件：{safeTitle}\n" +

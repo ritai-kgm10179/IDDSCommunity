@@ -87,16 +87,26 @@ public sealed class EmailNotificationService
         string message,
         DateTime? timestampUtc = null)
     {
-        string encodedSubject = System.Net.WebUtility.HtmlEncode(subject);
-        string encodedIp = System.Net.WebUtility.HtmlEncode(ipAddress);
-        string encodedAgent = System.Net.WebUtility.HtmlEncode(agentName);
-        string encodedMessage = System.Net.WebUtility.HtmlEncode(message);
+        string displaySubject = string.IsNullOrWhiteSpace(subject) ? Strings.AppTitle : subject;
+        string displayIp = string.IsNullOrWhiteSpace(ipAddress) ? Strings.Get("(Not specified)") : ipAddress;
+        string displayAgent = string.IsNullOrWhiteSpace(agentName) ? Strings.Get("(Unknown)") : agentName;
+        bool hasMessage = !string.IsNullOrWhiteSpace(message);
+        string displayMessage = hasMessage ? message! : Strings.Get("(No additional details)");
+
+        string encodedSubject = System.Net.WebUtility.HtmlEncode(displaySubject);
+        string encodedIp = System.Net.WebUtility.HtmlEncode(displayIp);
+        string encodedAgent = System.Net.WebUtility.HtmlEncode(displayAgent);
+        string encodedMessage = System.Net.WebUtility.HtmlEncode(displayMessage);
         string encodedSourceIpLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Source IP address:"));
         string encodedAgentLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Security agent:"));
         string encodedTimeLabel = System.Net.WebUtility.HtmlEncode(Strings.Get("Event time (UTC):"));
         string footerText = Strings.Format(Strings.Get("EmailNotification.Footer"), Strings.AppTitle);
         string encodedFooter = System.Net.WebUtility.HtmlEncode(footerText);
         DateTime time = timestampUtc ?? DateTime.UtcNow;
+
+        string messageStyle = hasMessage
+            ? "font-size:14px;color:#334155;"
+            : "font-size:14px;color:#64788b;font-style:italic;";
 
         return $$"""
         <!DOCTYPE html>
@@ -110,7 +120,7 @@ public sealed class EmailNotificationService
             <p><strong>{{encodedSourceIpLabel}}</strong> <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;color:#0284c7;">{{encodedIp}}</code></p>
             <p><strong>{{encodedAgentLabel}}</strong> {{encodedAgent}}</p>
             <p><strong>{{encodedTimeLabel}}</strong> {{time:yyyy-MM-dd HH:mm:ss}}</p>
-            <div style="background:#f8fafc;border-left:4px solid #0ea5e9;padding:12px;margin:16px 0;font-size:14px;color:#334155;">
+            <div style="background:#f8fafc;border-left:4px solid #0ea5e9;padding:12px;margin:16px 0;{{messageStyle}}">
               {{encodedMessage}}
             </div>
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>

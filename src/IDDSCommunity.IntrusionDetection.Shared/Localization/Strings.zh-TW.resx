@@ -848,6 +848,14 @@
   <data name="Occurred" xml:space="preserve"><value>發生時間</value></data>
   <data name="Subject" xml:space="preserve"><value>目標</value></data>
   <data name="Details" xml:space="preserve"><value>詳細資訊</value></data>
+  <data name="No cross-agent password-spray alerts detected." xml:space="preserve"><value>期間內未偵測到跨代理程式密碼噴灑攻擊警告。</value></data>
+  <data name="No events recorded during this period." xml:space="preserve"><value>期間內無事件記錄。</value></data>
+  <data name="No intrusion attempts recorded." xml:space="preserve"><value>無入侵嘗試記錄。</value></data>
+  <data name="No soft locks recorded." xml:space="preserve"><value>無軟封鎖記錄。</value></data>
+  <data name="No hard locks recorded." xml:space="preserve"><value>無硬封鎖記錄。</value></data>
+  <data name="(No additional details)" xml:space="preserve"><value>（無附加詳細資訊）</value></data>
+  <data name="(Not specified)" xml:space="preserve"><value>（未指定）</value></data>
+  <data name="(Unknown)" xml:space="preserve"><value>（未知）</value></data>
   <data name="The specified encrypted database was not found." xml:space="preserve"><value>找不到指定的加密資料庫。</value></data>
   <data name="The diagnostic output path must not overwrite the database." xml:space="preserve"><value>診斷輸出路徑不得覆寫資料庫。</value></data>
   <data name="Two populated data directories were detected. Automatic merging was refused to prevent separating the database and encryption key: '{0}', '{1}'." xml:space="preserve"><value>偵測到兩個非空白資料目錄。為避免資料庫與加密金鑰分離，已拒絕自動合併：'{0}'、'{1}'。</value></data>

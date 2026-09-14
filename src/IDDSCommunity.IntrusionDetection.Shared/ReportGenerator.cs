@@ -124,6 +124,12 @@ public long TotalHardLocks { get; private set; }
         {
             sb.AppendLine(SetEventsPerAgentCore(currentAgent, intrusionAttempts, softLocks, hardLocks));
         }
+        else
+        {
+            sb.Append("<tr><td colspan=\"4\" align=\"center\" style=\"text-align:center;padding:12px 8px;color:#64788b;font-style:italic;\">")
+                .Append(WebUtility.HtmlEncode(Strings.Get("No events recorded during this period.")))
+                .AppendLine("</td></tr>");
+        }
         return sb.ToString();
     }
     /// <summary>
@@ -156,6 +162,18 @@ public long TotalHardLocks { get; private set; }
             result = result.Replace("[%INTRUSION_ATTEMPTS%]", incidents.ToString());
             sb.AppendLine(result);
         }
+        if (sb.Length == 0)
+        {
+            string emptyMessage = action switch
+            {
+                IntrusionLog.STATUS_SOFT_LOCKED => Strings.Get("No soft locks recorded."),
+                IntrusionLog.STATUS_HARD_LOCKED => Strings.Get("No hard locks recorded."),
+                _ => Strings.Get("No intrusion attempts recorded.")
+            };
+            sb.Append("<tr><td colspan=\"2\" align=\"center\" style=\"text-align:center;padding:12px 8px;color:#64788b;font-style:italic;\">")
+                .Append(WebUtility.HtmlEncode(emptyMessage))
+                .AppendLine("</td></tr>");
+        }
         return sb.ToString();
     }
 
@@ -179,6 +197,12 @@ public long TotalHardLocks { get; private set; }
                 .Append(WebUtility.HtmlEncode(Db.DbValueConverter.ToString(reader["Subject"])))
                 .Append("</td><td>")
                 .Append(WebUtility.HtmlEncode(Db.DbValueConverter.ToString(reader["Details"])))
+                .AppendLine("</td></tr>");
+        }
+        if (result.Length == 0)
+        {
+            result.Append("<tr><td colspan=\"3\" align=\"center\" style=\"text-align:center;padding:16px 8px;color:#64788b;font-style:italic;\">")
+                .Append(WebUtility.HtmlEncode(Strings.Get("No cross-agent password-spray alerts detected.")))
                 .AppendLine("</td></tr>");
         }
         return result.ToString();

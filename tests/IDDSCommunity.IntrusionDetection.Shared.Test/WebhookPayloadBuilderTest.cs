@@ -343,4 +343,63 @@ public sealed class WebhookPayloadBuilderTest
         Assert.IsTrue(messageText.Length <= 5000);
         Assert.IsTrue(messageText.EndsWith("...", StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// 驗證當 Webhook 欄位或詳細說明為空時，各平台自動套用防禦性佔位文字且符合 API 規範。
+    /// </summary>
+    [TestMethod]
+    public void BuildPayload_EmptyFields_ProvidesFallbackPlaceholders()
+    {
+        Localization.LanguageManager.Instance.Initialize("zh-TW");
+
+        // 1. Teams
+        string teamsJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.MicrosoftTeams, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp);
+        using var teamsDoc = JsonDocument.Parse(teamsJson);
+        var teamsBody = teamsDoc.RootElement.GetProperty("attachments")[0].GetProperty("content").GetProperty("body");
+        string teamsDetailsText = teamsBody[3].GetProperty("text").GetString()!;
+        Assert.AreEqual("（無附加詳細資訊）", teamsDetailsText);
+
+        // 2. Discord - 驗證 description 與 fields[].value 非空，杜絕 Discord API 400 錯誤
+        string discordJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.Discord, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp);
+        using var discordDoc = JsonDocument.Parse(discordJson);
+        var embed = discordDoc.RootElement.GetProperty("embeds")[0];
+        string description = embed.GetProperty("description").GetString()!;
+        Assert.IsFalse(string.IsNullOrWhiteSpace(description));
+        Assert.AreEqual("（無附加詳細資訊）", description);
+        foreach (var field in embed.GetProperty("fields").EnumerateArray())
+        {
+            string fieldValue = field.GetProperty("value").GetString()!;
+            Assert.IsFalse(string.IsNullOrWhiteSpace(fieldValue));
+        }
+
+        // 3. Slack
+        string slackJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.Slack, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp);
+        using var slackDoc = JsonDocument.Parse(slackJson);
+        var slackBlocks = slackDoc.RootElement.GetProperty("blocks");
+        string slackDetailsText = slackBlocks[2].GetProperty("text").GetProperty("text").GetString()!;
+        StringAssert.Contains(slackDetailsText, "（無附加詳細資訊）");
+
+        // 4. Telegram
+        string telegramJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.Telegram, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp, "12345");
+        using var tgDoc = JsonDocument.Parse(telegramJson);
+        string tgText = tgDoc.RootElement.GetProperty("text").GetString()!;
+        StringAssert.Contains(tgText, "（無附加詳細資訊）");
+
+        // 5. LINE
+        string lineJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.LineMessagingApi, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp, "U12345");
+        using var lineDoc = JsonDocument.Parse(lineJson);
+        string lineText = lineDoc.RootElement.GetProperty("messages")[0].GetProperty("text").GetString()!;
+        StringAssert.Contains(lineText, "（無附加詳細資訊）");
+
+        // 6. Generic JSON
+        string genericJson = WebhookPayloadBuilder.BuildPayload(
+            WebhookPlatform.GenericJson, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, TestTimestamp);
+        using var genericDoc = JsonDocument.Parse(genericJson);
+        Assert.AreEqual("（無附加詳細資訊）", genericDoc.RootElement.GetProperty("details").GetString());
+    }
 }
