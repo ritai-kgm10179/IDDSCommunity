@@ -18,7 +18,12 @@ public partial class PanelNotificationSettings : UserControl
     private const string DefaultMetricsListenIp = "0.0.0.0";
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
     private static readonly Color AccentColor = Color.FromArgb(15, 118, 110);
-    private static readonly HttpClient SharedWebhookTestClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
+    private readonly TextBox textBoxWebhookPrivateDestinations = new()
+    {
+        Name = "textBoxWebhookPrivateDestinations", Multiline = true, ScrollBars = ScrollBars.Vertical,
+        Height = 80, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
+        Margin = new Padding(0, 0, 0, 14)
+    };
 
     /// <summary>
     /// 當 NotificationSettingsChanged 時引發之事件。
@@ -31,6 +36,23 @@ public partial class PanelNotificationSettings : UserControl
     public PanelNotificationSettings()
     {
         InitializeComponent();
+        for (int i = tableLayoutMain.Controls.Count - 1; i >= 0; i--)
+        {
+            Control control = tableLayoutMain.Controls[i];
+            int row = tableLayoutMain.GetRow(control);
+            if (row >= 19) tableLayoutMain.SetRow(control, row + 2);
+        }
+        tableLayoutMain.RowCount += 2;
+        tableLayoutMain.RowStyles.Insert(19, new RowStyle(SizeType.AutoSize));
+        tableLayoutMain.RowStyles.Insert(20, new RowStyle(SizeType.AutoSize));
+        tableLayoutMain.Controls.Add(new Label
+        {
+            Name = "labelWebhookPrivateDestinations", AutoSize = true,
+            Text = Strings.Get("Allowed private Webhook destinations (HTTPS origin | IP or CIDR, one per line)"),
+            Font = new Font("Segoe UI", 9F), ForeColor = BodyTextColor,
+            Margin = new Padding(0, 0, 0, 4)
+        }, 0, 19);
+        tableLayoutMain.Controls.Add(textBoxWebhookPrivateDestinations, 0, 20);
 
         comboBoxWebhookPlatform.Items.AddRange([
             Strings.Get("None"),
@@ -98,7 +120,9 @@ public partial class PanelNotificationSettings : UserControl
             }
 
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using var response = await SharedWebhookTestClient.PostAsync(targetUrl, content);
+            using HttpClient guardedClient = IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.CreateClient(
+                targetUrl, IddsConfig.Instance.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10));
+            using var response = await guardedClient.PostAsync(targetUrl, content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -228,6 +252,7 @@ public partial class PanelNotificationSettings : UserControl
         checkBoxEnableWebhook.Checked = settings.EnableWebhook;
         comboBoxWebhookPlatform.SelectedIndex = (int)settings.WebhookPlatform;
         textBoxWebhookUrl.Text = settings.WebhookUrl;
+        textBoxWebhookPrivateDestinations.Text = IddsConfig.Instance.WebhookAllowedPrivateDestinations;
         textBoxTelegramToken.Text = settings.TelegramBotToken;
         textBoxTelegramChatId.Text = settings.TelegramChatId;
         checkBoxWebhookSoftLock.Checked = settings.WebhookOnSoftLock;
@@ -265,6 +290,7 @@ public partial class PanelNotificationSettings : UserControl
         settings.EnableWebhook = checkBoxEnableWebhook.Checked;
         settings.WebhookPlatform = (WebhookPlatform)Math.Clamp(comboBoxWebhookPlatform.SelectedIndex, 0, 5);
         settings.WebhookUrl = textBoxWebhookUrl.Text.Trim();
+        IddsConfig.Instance.WebhookAllowedPrivateDestinations = textBoxWebhookPrivateDestinations.Text.Trim();
         settings.TelegramBotToken = textBoxTelegramToken.Text.Trim();
         settings.TelegramChatId = textBoxTelegramChatId.Text.Trim();
         settings.WebhookOnSoftLock = checkBoxWebhookSoftLock.Checked;
@@ -302,6 +328,7 @@ public partial class PanelNotificationSettings : UserControl
         checkBoxEnableWebhook.Checked = false;
         comboBoxWebhookPlatform.SelectedIndex = 0;
         textBoxWebhookUrl.Text = string.Empty;
+        textBoxWebhookPrivateDestinations.Text = string.Empty;
         textBoxTelegramToken.Text = string.Empty;
         textBoxTelegramChatId.Text = string.Empty;
         checkBoxWebhookSoftLock.Checked = false;

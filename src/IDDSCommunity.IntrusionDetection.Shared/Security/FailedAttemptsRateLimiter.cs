@@ -144,12 +144,12 @@ public sealed class FailedAttemptsRateLimiter
 
     private void CleanupExpiredRecordsIfNeeded(DateTime now)
     {
-        if (now - lastCleanupUtc < TimeSpan.FromMinutes(5) && records.Count < 5000)
+        if (now - lastCleanupUtc < TimeSpan.FromMinutes(5))
             return;
 
         lock (cleanupLock)
         {
-            if (now - lastCleanupUtc < TimeSpan.FromMinutes(5) && records.Count < 5000)
+            if (now - lastCleanupUtc < TimeSpan.FromMinutes(5))
                 return;
 
             lastCleanupUtc = now;

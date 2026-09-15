@@ -29,7 +29,7 @@ public static class CloudPerimeterProviderFactory
             CloudPerimeterType.Gcp => new GcpCloudArmorPerimeterProvider(httpClient) { BearerToken = settings.ApiKey, SecurityPolicyName = settings.ResourceId, ProjectId = settings.SecondaryId },
             CloudPerimeterType.Cloudflare => new CloudflareWafPerimeterProvider(httpClient) { ApiToken = settings.ApiKey, ZoneId = settings.ResourceId },
             CloudPerimeterType.ChunghwaTelecomHiCloud => new ChunghwaHiCloudPerimeterProvider(httpClient),
-            CloudPerimeterType.GenericWebhook => new GenericPerimeterWebhookProvider(httpClient) { WebhookUrl = settings.EndpointUrl, AuthHeader = settings.ApiKey },
+            CloudPerimeterType.GenericWebhook => new GenericPerimeterWebhookProvider(httpClient) { WebhookUrl = settings.EndpointUrl, AuthHeader = settings.ApiKey, AllowedPrivateDestinations = settings.WebhookAllowedPrivateDestinations },
             _ => null
         };
     }

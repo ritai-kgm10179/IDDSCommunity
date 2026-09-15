@@ -14,6 +14,12 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
 {
     private static readonly Color AccentColor = Color.FromArgb(15, 118, 110);
     private static readonly Color BodyTextColor = Color.FromArgb(102, 102, 102);
+    private readonly NumericUpDown numGrpcPort = new()
+    {
+        Name = "numGrpcPort", Minimum = 1, Maximum = 65535, Value = 8445,
+        Size = new Size(180, 23), Font = new Font("Segoe UI", 9F),
+        ForeColor = BodyTextColor, Margin = new Padding(0, 0, 0, 14)
+    };
 
     /// <summary>
     /// 當威脅情報與叢集聯防設定變更並儲存時引發之事件。
@@ -26,6 +32,23 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
     public PanelThreatIntelligenceSettings()
     {
         InitializeComponent();
+        for (int i = tableLayoutMain.Controls.Count - 1; i >= 0; i--)
+        {
+            Control control = tableLayoutMain.Controls[i];
+            int row = tableLayoutMain.GetRow(control);
+            if (row >= 10) tableLayoutMain.SetRow(control, row + 2);
+        }
+        tableLayoutMain.RowCount += 2;
+        tableLayoutMain.RowStyles.Insert(10, new RowStyle(SizeType.AutoSize));
+        tableLayoutMain.RowStyles.Insert(11, new RowStyle(SizeType.AutoSize));
+        Label lblGrpcPort = new()
+        {
+            Name = "lblGrpcPort", Text = Strings.Get("Threat Hub gRPC port"),
+            AutoSize = true, Font = new Font("Segoe UI", 9F),
+            ForeColor = BodyTextColor, Margin = new Padding(0, 0, 0, 4)
+        };
+        tableLayoutMain.Controls.Add(lblGrpcPort, 0, 10);
+        tableLayoutMain.Controls.Add(numGrpcPort, 0, 11);
 
         comboClusterRole.Items.AddRange([
             Strings.Get("Standalone"),
@@ -171,6 +194,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtHubEndpoint.Text = config.ThreatHubEndpoint;
         txtHubApiKey.Text = config.ThreatHubApiKey;
         numHubPort.Value = Math.Clamp(config.ThreatHubPort, 1, 65535);
+        numGrpcPort.Value = Math.Clamp(config.ThreatHubGrpcPort, 1, 65535);
         chkThreatHubReverseProxy.Checked = config.ThreatHubUseReverseProxy;
         chkThreatHubLoopbackOnly.Checked = config.ThreatHubReverseProxyLoopbackOnly;
         numSyncInterval.Value = Math.Clamp(config.ThreatHubSyncIntervalSeconds, 5, 3600);
@@ -218,6 +242,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 txtHubEndpoint.Enabled = false;
                 txtHubApiKey.Enabled = false;
                 numHubPort.Enabled = false;
+                numGrpcPort.Enabled = false;
                 chkThreatHubReverseProxy.Enabled = false;
                 chkThreatHubLoopbackOnly.Enabled = false;
                 numSyncInterval.Enabled = false;
@@ -226,6 +251,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 txtHubEndpoint.Enabled = true;
                 txtHubApiKey.Enabled = true;
                 numHubPort.Enabled = false;
+                numGrpcPort.Enabled = true;
                 chkThreatHubReverseProxy.Enabled = false;
                 chkThreatHubLoopbackOnly.Enabled = false;
                 numSyncInterval.Enabled = true;
@@ -234,6 +260,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 txtHubEndpoint.Enabled = false;
                 txtHubApiKey.Enabled = true;
                 numHubPort.Enabled = true;
+                numGrpcPort.Enabled = true;
                 chkThreatHubReverseProxy.Enabled = true;
                 chkThreatHubLoopbackOnly.Enabled = true;
                 numSyncInterval.Enabled = false;
@@ -272,12 +299,19 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
 
     private void SaveSettings(object? sender, EventArgs e)
     {
+        if (comboClusterRole.SelectedIndex == (int)ThreatHubRole.ThreatHub && numHubPort.Value == numGrpcPort.Value)
+        {
+            MessageBox.Show(this, Strings.Get("Threat Hub REST and gRPC ports must be different."),
+                Strings.Get("Threat intelligence and cluster"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
         IddsConfig config = IddsConfig.Instance;
 
         config.ThreatHubRole = (ThreatHubRole)Math.Clamp(comboClusterRole.SelectedIndex, 0, 2);
         config.ThreatHubEndpoint = txtHubEndpoint.Text.Trim();
         config.ThreatHubApiKey = txtHubApiKey.Text.Trim();
         config.ThreatHubPort = (int)numHubPort.Value;
+        config.ThreatHubGrpcPort = (int)numGrpcPort.Value;
         config.ThreatHubUseReverseProxy = chkThreatHubReverseProxy.Checked;
         config.ThreatHubReverseProxyLoopbackOnly = chkThreatHubLoopbackOnly.Checked;
         config.ThreatHubSyncIntervalSeconds = (int)numSyncInterval.Value;
@@ -321,6 +355,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         txtHubEndpoint.Text = string.Empty;
         txtHubApiKey.Text = Guid.NewGuid().ToString("N");
         numHubPort.Value = 8443;
+        numGrpcPort.Value = 8445;
         chkThreatHubReverseProxy.Checked = true;
         chkThreatHubLoopbackOnly.Checked = false;
         numSyncInterval.Value = 60;

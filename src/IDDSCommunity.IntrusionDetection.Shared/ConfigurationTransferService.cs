@@ -404,11 +404,11 @@ VALUES(@Now,@HardLockAttempts,@HardLockTimeHours,@LockForever,@SoftLockAttempts,
         IddsConfig.CONFIG_VALUE_CROSS_AGENT_SLIDING_WINDOW_MINUTES,
         IddsConfig.CONFIG_VALUE_CROSS_AGENT_SEMANTIC_DEDUPLICATION_SECONDS,
         IddsConfig.CONFIG_VALUE_TRUSTED_PROXY_CIDRS,
-        "Configuration.Language", "ThreatHubRole", "ThreatHubPort", "ThreatHubUseReverseProxy", "ThreatHubReverseProxyLoopbackOnly", "ThreatHubSyncIntervalSeconds", "ProbationDecayDays",
+        "Configuration.Language", "ThreatHubRole", "ThreatHubPort", "ThreatHubGrpcPort", "EnableThreatHubGrpc", "ThreatHubUseReverseProxy", "ThreatHubReverseProxyLoopbackOnly", "ThreatHubSyncIntervalSeconds", "ProbationDecayDays",
         "DynamicDnsIntervalMinutes", "EnableExternalThreatFeeds", "ThreatFeedUpdateIntervalHours",
         "ThreatFeedMinLevel", "ThreatFeedTtlDays", "AbuseIpDbMinConfidence", "EnableDynamicBogonFiltering",
         "EnableCloudPerimeter", "CloudPerimeterType", "EnableSelfServicePortal", "SelfServicePortalPort",
-        "SelfServicePortalListenIp", "EnableManagementApi", "ManagementApiPort", "AutoManageFirewallInboundRules"
+        "SelfServicePortalListenIp", "EnableManagementApi", "ManagementApiPort", "AutoManageFirewallInboundRules", "Webhooks.AllowedPrivateDestinations"
     };
 
     private static bool IsPublicSetting(string key) => PublicSettings.Contains(key);

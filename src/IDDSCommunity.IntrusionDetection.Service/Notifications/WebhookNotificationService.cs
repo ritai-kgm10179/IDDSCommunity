@@ -14,8 +14,7 @@ namespace IDDSCommunity.IntrusionDetection.Service.Notifications;
 /// </summary>
 public sealed class WebhookNotificationService : IDisposable
 {
-    private readonly HttpClient _httpClient;
-    private readonly bool _ownsHttpClient;
+    private readonly HttpClient? _httpClient;
     private readonly NotificationSettings _settings;
     private readonly IddsConfig _config;
 
@@ -32,12 +31,10 @@ public sealed class WebhookNotificationService : IDisposable
         if (httpClient != null)
         {
             _httpClient = httpClient;
-            _ownsHttpClient = false;
         }
         else
         {
-            _httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
-            _ownsHttpClient = true;
+            _httpClient = null;
         }
     }
 
@@ -130,7 +127,10 @@ public sealed class WebhookNotificationService : IDisposable
                 managementApiKey);
 
             using var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            using var response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+            using HttpClient? guardedClient = _httpClient is null
+                ? IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.CreateClient(
+                    url, _config.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10)) : null;
+            using var response = await (_httpClient ?? guardedClient!).PostAsync(url, content, cancellationToken).ConfigureAwait(false);
 
             return response.IsSuccessStatusCode;
         }
@@ -158,9 +158,6 @@ public sealed class WebhookNotificationService : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_ownsHttpClient)
-        {
-            _httpClient.Dispose();
-        }
+        // 注入的用戶端由呼叫端管理；預設用戶端於每次派送後釋放。
     }
 }

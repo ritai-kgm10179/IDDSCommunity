@@ -165,6 +165,16 @@ public sealed class UiScreenshotTest
                 using Bitmap bmp = CaptureForm(admin);
                 string safeItemName = itemKey.Replace(" ", "_").Replace("&", "and");
                 bmp.Save(Path.Combine(OutputDir, $"{prefix}_settings_{index:D2}_{safeItemName}.png"), System.Drawing.Imaging.ImageFormat.Png);
+                if (itemKey == IDDSCommunityApplicationSettings.MENU_NOTIFICATION_SETTINGS)
+                {
+                    PanelNotificationSettings notificationPanel = admin.PanelApplicationSettings.PanelNotificationSettings;
+                    Control[] fields = notificationPanel.Controls.Find("textBoxWebhookPrivateDestinations", true);
+                    Assert.HasCount(1, fields);
+                    notificationPanel.ScrollControlIntoView(fields[0]);
+                    Application.DoEvents();
+                    using Bitmap scrolled = CaptureForm(admin);
+                    scrolled.Save(Path.Combine(OutputDir, $"{prefix}_notification_private_destinations_scrolled.png"), System.Drawing.Imaging.ImageFormat.Png);
+                }
                 index++;
             }
         }

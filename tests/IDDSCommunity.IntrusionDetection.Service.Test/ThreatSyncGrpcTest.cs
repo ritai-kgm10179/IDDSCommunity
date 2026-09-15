@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
 using Grpc.Core;
 using IDDSCommunity.IntrusionDetection.Service;
 using IDDSCommunity.IntrusionDetection.Service.Protos;
@@ -19,6 +21,36 @@ namespace IDDSCommunity.IntrusionDetection.Service.Test;
 [TestClass]
 public sealed class ThreatSyncGrpcTest
 {
+    [TestMethod]
+    public async Task CustomGrpcPort_UsesHttp2BeforeRestFallback()
+    {
+        static int FreePort()
+        {
+            using TcpListener socket = new(IPAddress.Loopback, 0);
+            socket.Start();
+            return ((IPEndPoint)socket.LocalEndpoint).Port;
+        }
+        int restPort = FreePort();
+        int grpcPort = FreePort();
+        IddsConfig hubConfig = IddsConfig.GetDefaultConfiguration();
+        hubConfig.ThreatHubPort = restPort;
+        hubConfig.ThreatHubGrpcPort = grpcPort;
+        hubConfig.ThreatHubApiKey = "port-test-key";
+        hubConfig.ThreatHubUseReverseProxy = true;
+        hubConfig.ThreatHubReverseProxyLoopbackOnly = true;
+        hubConfig.EnableThreatHubGrpc = true;
+        using ThreatIntelligenceHubServer hub = new(hubConfig, _ => { }, allowLoopbackHttp: true);
+        hub.Start();
+        IddsConfig edgeConfig = IddsConfig.GetDefaultConfiguration();
+        edgeConfig.EnableThreatHubGrpc = true;
+        edgeConfig.ThreatHubGrpcPort = grpcPort;
+        List<string> messages = [];
+        using ThreatSyncClientHandler client = new(edgeConfig, logInformation: messages.Add);
+        ThreatHubSyncResponse reply = await client.SynchronizeAsync($"http://localhost:{restPort}",
+            "port-test-key", new ThreatHubSyncPayload { NodeId = "edge-port-test", NewThreats = [] });
+        Assert.IsTrue(reply.Success);
+        Assert.IsFalse(messages.Any(message => message.Contains("falling back", StringComparison.OrdinalIgnoreCase)));
+    }
     private sealed class TestServerStreamWriter<T> : IServerStreamWriter<T>
     {
         public List<T> WrittenItems { get; } = [];

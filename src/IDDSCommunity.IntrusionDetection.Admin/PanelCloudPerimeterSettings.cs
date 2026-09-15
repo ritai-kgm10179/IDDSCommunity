@@ -93,6 +93,7 @@ public sealed partial class PanelCloudPerimeterSettings : UserControl
                 ProviderType = (CloudPerimeterType)Math.Max(0, comboProviderType.SelectedIndex),
                 ApiKey = txtApiKey.Text,
                 EndpointUrl = txtEndpointUrl.Text,
+                WebhookAllowedPrivateDestinations = IddsConfig.Instance.WebhookAllowedPrivateDestinations,
                 ResourceId = txtResourceId.Text,
                 SecondaryId = txtSecondaryId.Text,
                 TertiaryId = txtTertiaryId.Text

@@ -29,6 +29,11 @@ public sealed class CloudPerimeterSettings
     public string EndpointUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// 取得或設定 Generic Webhook 使用之專用內網目的地允許清單。
+    /// </summary>
+    public string WebhookAllowedPrivateDestinations { get; set; } = string.Empty;
+
+    /// <summary>
     /// 取得或設定資源識別碼 (例如 Security Group ID, WAF IPSet ID, Resource Group 等)。
     /// </summary>
     public string ResourceId { get; set; } = string.Empty;

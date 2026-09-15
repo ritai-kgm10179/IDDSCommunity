@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -711,6 +711,15 @@ public CSafeNetworks SafeNetworks
     {
         get => int.TryParse(GetConfigValue("ThreatHubGrpcPort"), out int port) && port > 0 ? port : 8445;
         set => SetConfigValue("ThreatHubGrpcPort", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定可設定 Webhook 的專用內網目的地允許清單。
+    /// </summary>
+    public string WebhookAllowedPrivateDestinations
+    {
+        get => GetConfigValue("Webhooks.AllowedPrivateDestinations");
+        set => SetConfigValue("Webhooks.AllowedPrivateDestinations", value ?? string.Empty);
     }
 
     /// <summary>

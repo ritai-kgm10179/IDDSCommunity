@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -215,20 +215,29 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 int grpcPort = config.ThreatHubGrpcPort > 0 ? config.ThreatHubGrpcPort : (port == 8443 ? 8445 : port + 2);
                 var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
                 IPAddress listenAddress = loopbackOnly ? IPAddress.Loopback : IPAddress.Any;
-                builder.WebHost.UseKestrel(kestrelOptions =>
+                if (useReverseProxy)
                 {
-                    kestrelOptions.Listen(listenAddress, grpcPort, listenOptions =>
+                    builder.WebHost.UseKestrel(kestrelOptions =>
                     {
-                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                        kestrelOptions.Listen(listenAddress, grpcPort, listenOptions =>
+                        {
+                            listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+                        });
                     });
-                });
+                }
+                else
+                {
+                    builder.WebHost.UseHttpSys(options => options.UrlPrefixes.Add($"https://+:{grpcPort}/"));
+                }
                 builder.Services.AddGrpc();
                 builder.Services.AddSingleton(new ThreatSyncServiceImpl(config, store, onThreatReceived, logInformation, logError, TryRegisterNode, authRateLimiter));
                 var app = builder.Build();
                 app.MapGrpcService<ThreatSyncServiceImpl>();
                 app.StartAsync(cts.Token).GetAwaiter().GetResult();
                 grpcApp = app;
-                logInformation($"Threat Intelligence Hub gRPC server started listening on {listenAddress}:{grpcPort}.");
+                logInformation(useReverseProxy
+                    ? $"Threat Intelligence Hub gRPC HTTP/2 upstream started listening on {listenAddress}:{grpcPort}."
+                    : $"Threat Intelligence Hub gRPC HTTPS server started listening on port {grpcPort}.");
             }
             catch (Exception ex)
             {

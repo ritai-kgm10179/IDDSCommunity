@@ -131,6 +131,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。
   - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443`、反代 `http://hub.internal:8080` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。用戶端優先採用基於 HTTP/2 之 **gRPC 雙向微批次串流**（自動映射對應之 gRPC 埠，預設 TCP 8445）建立長連線同步；若連線失敗或中間代理不支援，系統會自動平滑降級為 REST HTTP (8443) 定時輪詢。
   - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443，可自訂）、gRPC 連接埠（預設 TCP 8445，可自訂）與叢集 API Key；負責集中對外訂閱全球情報，分配單調遞增序號並透過 gRPC/REST 雙軌即時推播給全網邊緣節點。
+  - 在管理工具的「威脅情報」頁面，可分別設定 Hub 的 REST 連接埠及 gRPC 連接埠；Edge Node 的 gRPC 連接埠須填入與 Hub 對外端點一致的值。gRPC 上游使用 HTTP/2，跨主機部署須由支援 gRPC 的 TLS 反向代理提供 HTTPS 入口；未能建立 gRPC 連線時會回退 REST。
   - **預設通訊埠規劃與防火牆自動放行**：
     - `TCP 8443`：Threat Hub REST HTTP/HTTPS 伺服器與 Web 戰情儀表板（`/dashboard`）。
     - `TCP 8444`：合法使用者 TOTP 雙因素驗證自助解鎖入口網站（Self-Service Portal）。
@@ -158,6 +159,7 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 - **支援平台**：Microsoft Teams（Adaptive Cards 1.6 格式）、Slack（Block Kit 格式）、Discord（Rich Embed 嵌入卡片）、Telegram（Bot API `sendMessage`）、Generic JSON（標準 RESTful Webhook）。
 - **細緻事件觸發**：可獨立勾選軟封鎖、硬封鎖與解除封鎖事件。
 - **一鍵連通性測試**：於管理控制台「設定 → 通知」中提供「傳送測試 Webhook」功能，快速驗證 Webhook 端點與網路連通性。
+- **內網目的地授權**：可設定 Webhook 預設封鎖私有、迴路、CGNAT、Link-local 與 IMDS 位址；「允許的內網 Webhook 目的地（HTTPS 主機及埠｜IP 或 CIDR，每行一筆）」每行填寫 `https://hooks.example.com:9443|192.168.1.0/24`。欄位標籤使用全形分隔符；設定值使用半形 `|` 分隔 HTTPS 目的地與 IP/CIDR。主機、連接埠及 IP/CIDR 均須符合，且 IMDS 與 Link-local 不可授權。測試 Webhook 與服務派送使用相同規則，並不跟隨重新導向。
 
 ### 3.12 🍯 誘餌蜜罐主動防禦 (Honeypot Decoy Agent)
 主動部署於未使用的通訊埠（預設 TCP 23 Telnet、2222 替代 SSH、33890 替代 RDP），引誘攻擊者探測：
@@ -238,9 +240,10 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
      netsh http add sslcert ipport=0.0.0.0:8443 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
      ```
    - 若為 Threat Hub（預設 8443）或自助解鎖入口網站（預設 8444），請將 `ipport` 替換為對應連接埠號。
-   - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8443`。
+   - 直連 HTTPS Threat Hub 須為 REST 與 gRPC 各自的連接埠綁定憑證（預設 8443、8445）；若已自訂埠，請將 `ipport` 改為實際值。HTTP.sys gRPC 另需 Windows 11 或 Windows Server 2022 以上與 TLS 1.2 以上。
+   - 驗證綁定狀態：`netsh http show sslcert ipport=0.0.0.0:8443`，並對 gRPC 埠再執行一次。
 
-若使用反向代理模式，Threat Hub 不需要在 Windows `HTTP.sys` 綁定憑證；跨主機模式請將反向代理的上游設定為 `http://<Threat-Hub內部IP>:8443`，同機模式則使用 `http://127.0.0.1:8443`。反向代理必須轉送原始請求方法、路徑與 `X-IDDS-ThreatHub-ApiKey` 標頭，並以防火牆限制 8443 僅接受反向代理主機。
+若使用反向代理模式，Threat Hub 不需要在 Windows `HTTP.sys` 綁定憑證；REST 上游使用 `http://<Threat-Hub內部IP>:8443`（同機可使用 `127.0.0.1`），gRPC 上游使用支援 HTTP/2 明文轉送的 `http://<Threat-Hub內部IP>:8445`。反向代理對 Edge 提供 HTTPS 與 HTTP/2，並將上游埠改為實際自訂值。代理須轉送原始請求方法、路徑與 API Key，並以防火牆限制上游埠僅接受代理主機。
 
 ---
 

@@ -133,6 +133,7 @@ Local backups are intended for rapid recovery on the local machine and do not re
   - `Standalone`: Single-host independent defense and threat subscription without cluster synchronization.
   - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443`, reverse proxy `http://hub.internal:8080`, or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub. The client prioritizes **gRPC bidirectional micro-batch streaming** (HTTP/2, mapped automatically to the corresponding gRPC port, default TCP 8445); if connection fails or is blocked by an intermediate proxy, it seamlessly falls back to REST HTTP (8443) polling.
   - `ThreatHub`: **Does NOT require specifying an endpoint URL (ignored if provided)**; only requires configuring the listening "Threat Hub Port" (default TCP 8443), gRPC Port (default TCP 8445), and Cluster API Key; centrally fetches external feeds, assigns monotonic sequence numbers, and broadcasts threat updates in real-time across edge nodes.
+  - Configure the REST and gRPC ports separately on the Admin Threat Intelligence page. Set the Edge Node gRPC port to match the Hub's externally reachable port. The gRPC upstream uses HTTP/2; cross-host deployments need a TLS reverse proxy that supports gRPC. If the gRPC connection fails, synchronization falls back to REST.
   - **Default Port Mapping & Self-Managing Firewall Rules**:
     - `TCP 8443`: Threat Hub REST HTTP/HTTPS server and Web Dashboard (`/dashboard`).
     - `TCP 8444`: Legitimate user TOTP two-factor authentication Self-Service Unblock Portal.
@@ -160,6 +161,7 @@ Enables real-time push alerts to enterprise messaging platforms and automated SO
 - **Supported Platforms**: Microsoft Teams (Adaptive Cards 1.6), Slack (Block Kit), Discord (Rich Embed), Telegram (Bot API `sendMessage`), Generic JSON (RESTful Webhook).
 - **Granular Event Triggers**: Independently trigger on Soft Lock, Hard Lock, and Unlock events.
 - **Connectivity Testing**: Provides a "Test Webhook" button in "Settings -> Notifications" for instant endpoint verification.
+- **Private destination authorization**: Configurable Webhooks block private, loopback, CGNAT, link-local and IMDS addresses by default. Enter one destination per line in "Allowed private Webhook destinations (HTTPS origin | IP or CIDR, one per line)", for example `https://hooks.example.com:9443|192.168.1.0/24`. The label uses a spaced separator; the configuration value uses the literal `|` between the HTTPS destination and IP/CIDR. The HTTPS host, port and IP/CIDR must all match. IMDS and link-local cannot be allowed. Test dispatch and service dispatch use the same policy and do not follow redirects.
 
 ### 3.12 🍯 Honeypot Decoy Agent
 Active deception deployed on unused ports (default TCP 23 Telnet, 2222 alternate SSH, 33890 alternate RDP) to catch threat actors early:
@@ -240,9 +242,10 @@ The embedded HTTP listeners (RESTful Management API, Threat Hub, and Self-Servic
      netsh http add sslcert ipport=0.0.0.0:8443 certhash=585947f104b5bce53239f02d1c6fed06832f47dc appid={b5cfc79e-4e89-4e78-bc4a-9b77d6ee2c85}
      ```
    - If configuring the Threat Hub (default 8443) or Self-Service Portal (default 8444), replace `ipport` with the respective port number.
-   - Verify the binding: `netsh http show sslcert ipport=0.0.0.0:8443`.
+   - A direct HTTPS Threat Hub needs a certificate binding on both its REST and gRPC ports (defaults 8443 and 8445). Replace `ipport` with each configured port. HTTP.sys gRPC also requires Windows 11 or Windows Server 2022 or later and TLS 1.2 or later.
+   - Verify the binding: `netsh http show sslcert ipport=0.0.0.0:8443`, then repeat for the gRPC port.
 
-When operating behind a reverse proxy, the Threat Hub does not require an `HTTP.sys` certificate binding. For cross-host proxies, point the upstream to `http://<Threat-Hub-Internal-IP>:8443`, or `http://127.0.0.1:8443` for colocated proxies. The reverse proxy must forward the original HTTP method, URI, and `X-IDDS-ThreatHub-ApiKey` header, and firewall rules should restrict port 8443 access solely to the reverse proxy host.
+Behind a reverse proxy, the Threat Hub does not need `HTTP.sys` certificate bindings. Route REST to `http://<Threat-Hub-Internal-IP>:8443` (or `127.0.0.1` when colocated) and gRPC to the HTTP/2 cleartext upstream `http://<Threat-Hub-Internal-IP>:8445`. The proxy must present HTTPS and HTTP/2 to Edge Nodes; replace both upstream ports with the configured values. Forward the original method, path and API key, and restrict upstream ports to the proxy host.
 
 ---
 

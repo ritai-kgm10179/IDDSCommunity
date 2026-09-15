@@ -877,6 +877,13 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="Threat Hub endpoint URL" xml:space="preserve"><value>Threat Hub endpoint URL</value></data>
   <data name="Cluster API key" xml:space="preserve"><value>Cluster API key</value></data>
   <data name="Threat Hub port" xml:space="preserve"><value>Threat Hub port</value></data>
+  <data name="Threat Hub gRPC port" xml:space="preserve"><value>Threat Hub gRPC port</value></data>
+  <data name="Threat Hub REST and gRPC ports must be different." xml:space="preserve"><value>Threat Hub REST and gRPC ports must be different.</value></data>
+  <data name="Webhook URL must be an absolute HTTP or HTTPS URL." xml:space="preserve"><value>Webhook URL must be an absolute HTTP or HTTPS URL.</value></data>
+  <data name="Webhook destination changed." xml:space="preserve"><value>Webhook destination changed.</value></data>
+  <data name="Webhook destination resolves to a restricted address." xml:space="preserve"><value>Webhook destination resolves to a restricted address.</value></data>
+  <data name="Webhook connection failed." xml:space="preserve"><value>Webhook connection failed.</value></data>
+  <data name="Allowed private Webhook destinations (HTTPS origin | IP or CIDR, one per line)" xml:space="preserve"><value>Allowed private Webhook destinations (HTTPS origin | IP or CIDR, one per line)</value></data>
   <data name="Cluster sync interval (seconds)" xml:space="preserve"><value>Cluster sync interval (seconds)</value></data>
   <data name="External threat feeds subscription" xml:space="preserve"><value>External threat feeds subscription</value></data>
   <data name="Enable automated threat feed subscription" xml:space="preserve"><value>Enable automated threat feed subscription</value></data>

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading;
+using System.Reflection;
+using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared.Security;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -8,6 +10,27 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [TestClass]
 public sealed class FailedAttemptsRateLimiterTest
 {
+    [TestMethod]
+    public void Cleanup_DoesNotRescanWithinFiveMinutes_WhenMoreThanFiveThousandSourcesExist()
+    {
+        FailedAttemptsRateLimiter limiter = new();
+        FieldInfo field = typeof(FailedAttemptsRateLimiter).GetField("lastCleanupUtc", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        DateTime before = (DateTime)field.GetValue(limiter)!;
+        for (int i = 0; i < 6001; i++) limiter.RecordFailedAttempt($"source-{i}");
+        for (int i = 0; i < 100; i++) limiter.RecordFailedAttempt($"extra-{i}");
+        Assert.AreEqual(before, (DateTime)field.GetValue(limiter)!);
+    }
+
+    [TestMethod]
+    public void ParallelFailures_ReachThresholdAndLockExpires()
+    {
+        FailedAttemptsRateLimiter limiter = new(maxFailedAttempts: 10,
+            windowDuration: TimeSpan.FromSeconds(2), lockDuration: TimeSpan.FromMilliseconds(100));
+        Parallel.For(0, 40, _ => limiter.RecordFailedAttempt("198.51.100.77"));
+        Assert.IsTrue(limiter.IsBlocked("198.51.100.77", out _));
+        Thread.Sleep(150);
+        Assert.IsFalse(limiter.IsBlocked("198.51.100.77", out _));
+    }
     [TestMethod]
     public void IsBlocked_AllowsWithinThreshold_BlocksWhenExceeded()
     {

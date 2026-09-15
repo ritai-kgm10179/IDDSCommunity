@@ -14,8 +14,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.CloudPerimeter.Providers;
 /// </summary>
 public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, IDisposable
 {
-    private readonly HttpClient httpClient;
-    private readonly bool ownsClient;
+    private readonly HttpClient? httpClient;
 
     /// <summary>
     /// 取得提供者類型。
@@ -33,6 +32,11 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
     public string WebhookUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// 取得或設定專用內網目的地允許清單。
+    /// </summary>
+    public string AllowedPrivateDestinations { get; set; } = string.Empty;
+
+    /// <summary>
     /// 取得或設定自訂授權標頭 (例如 Bearer Token, API Key 等)。
     /// </summary>
     public string AuthHeader { get; set; } = string.Empty;
@@ -43,8 +47,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
     /// <param name="httpClient">選用的自訂 HTTP 用戶端。</param>
     public GenericPerimeterWebhookProvider(HttpClient? httpClient = null)
     {
-        ownsClient = httpClient is null;
-        this.httpClient = httpClient ?? HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(10));
+        this.httpClient = httpClient;
     }
 
     /// <summary>
@@ -72,7 +75,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
                 request.Headers.TryAddWithoutValidation("Authorization", AuthHeader);
             request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            using var response = await httpClient.SendAsync(request, cancellationToken);
+            using var response = await SendGuardedAsync(request, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch
@@ -105,7 +108,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
                 request.Headers.TryAddWithoutValidation("Authorization", AuthHeader);
             request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            using var response = await httpClient.SendAsync(request, cancellationToken);
+            using var response = await SendGuardedAsync(request, cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch
@@ -140,7 +143,7 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
                 request.Headers.TryAddWithoutValidation("Authorization", AuthHeader);
             request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-            using var response = await httpClient.SendAsync(request, cancellationToken);
+            using var response = await SendGuardedAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode)
                 return (true, "Generic perimeter webhook verified successfully.");
 
@@ -152,14 +155,19 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
         }
     }
 
+    private async Task<HttpResponseMessage> SendGuardedAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (httpClient is not null) return await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        using HttpClient guarded = WebhookConnectionPolicy.CreateClient(
+            WebhookUrl, AllowedPrivateDestinations, TimeSpan.FromSeconds(10));
+        return await guarded.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// 釋放由 <see cref="GenericPerimeterWebhookProvider"/> 使用的未受控與受控資源。
     /// </summary>
     public void Dispose()
     {
-        if (ownsClient)
-        {
-            httpClient.Dispose();
-        }
+        // 注入的用戶端由呼叫端管理。
     }
 }

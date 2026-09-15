@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Globalization;
 using System.Threading;
@@ -16,6 +16,35 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 [TestClass]
 public sealed class ThreatIntelligenceUiLayoutTest
 {
+    [STATestMethod]
+    [DataRow("zh-TW")]
+    [DataRow("en-US")]
+    public void CustomGrpcPort_ControlFitsAndCanBeChangedInBothCultures(string cultureName)
+    {
+        string previous = LanguageManager.Instance.CurrentCulture.Name;
+        try
+        {
+            LanguageManager.Instance.Initialize(cultureName);
+            using Form form = new() { ClientSize = new Size(640, 700) };
+            using PanelThreatIntelligenceSettings panel = new() { Dock = DockStyle.Fill };
+            form.Controls.Add(panel);
+            form.Show();
+            Application.DoEvents();
+            Label label = Assert.IsInstanceOfType<Label>(panel.Controls.Find("lblGrpcPort", true)[0]);
+            NumericUpDown grpc = Assert.IsInstanceOfType<NumericUpDown>(panel.Controls.Find("numGrpcPort", true)[0]);
+            NumericUpDown rest = Assert.IsInstanceOfType<NumericUpDown>(panel.Controls.Find("numHubPort", true)[0]);
+            Assert.IsTrue(label.PreferredWidth <= panel.Width);
+            Assert.IsTrue(label.Bottom <= grpc.Top);
+            Assert.IsTrue(rest.Bottom <= label.Top);
+            grpc.Value = 9445;
+            Assert.AreEqual(9445m, grpc.Value);
+            ComboBox role = Assert.IsInstanceOfType<ComboBox>(panel.Controls.Find("comboClusterRole", true)[0]);
+            role.SelectedIndex = (int)ThreatHubRole.EdgeNode;
+            Assert.IsTrue(grpc.Enabled);
+            form.Close();
+        }
+        finally { LanguageManager.Instance.Initialize(previous); }
+    }
     private string _tempDir = null!;
 
     /// <summary>

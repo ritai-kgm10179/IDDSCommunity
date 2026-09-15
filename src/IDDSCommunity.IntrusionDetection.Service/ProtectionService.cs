@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -140,6 +140,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             ProviderType = configuration.CloudPerimeterType,
             ApiKey = configuration.CloudPerimeterApiKey,
             EndpointUrl = configuration.CloudPerimeterEndpoint,
+            WebhookAllowedPrivateDestinations = configuration.WebhookAllowedPrivateDestinations,
             ResourceId = configuration.CloudPerimeterResourceId,
             SecondaryId = configuration.CloudPerimeterSecondaryId,
             TertiaryId = configuration.CloudPerimeterTertiaryId
