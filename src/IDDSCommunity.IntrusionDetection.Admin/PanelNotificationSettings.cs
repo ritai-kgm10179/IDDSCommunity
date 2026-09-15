@@ -119,10 +119,12 @@ public partial class PanelNotificationSettings : UserControl
                 return;
             }
 
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            using HttpClient guardedClient = IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.CreateClient(
-                targetUrl, IddsConfig.Instance.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10));
-            using var response = await guardedClient.PostAsync(targetUrl, content);
+            using var request = new HttpRequestMessage(HttpMethod.Post, targetUrl)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            using var response = await IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.SendAsync(
+                request, targetUrl, IddsConfig.Instance.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10));
 
             if (response.IsSuccessStatusCode)
             {

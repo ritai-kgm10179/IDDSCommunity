@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AWSSDK.WAFV2" Version="4.0.101.8" />
+    <PackageVersion Include="AWSSDK.WAFV2" Version="4.0.101.9" />
     <PackageVersion Include="Dapper" Version="2.1.86" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.83.0" />
@@ -16,9 +16,10 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Resilience" Version="10.10.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.333" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.4.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.4.0" />

@@ -158,9 +158,8 @@ public sealed class GenericPerimeterWebhookProvider : ICloudPerimeterProvider, I
     private async Task<HttpResponseMessage> SendGuardedAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         if (httpClient is not null) return await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        using HttpClient guarded = WebhookConnectionPolicy.CreateClient(
-            WebhookUrl, AllowedPrivateDestinations, TimeSpan.FromSeconds(10));
-        return await guarded.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        return await WebhookConnectionPolicy.SendAsync(
+            request, WebhookUrl, AllowedPrivateDestinations, TimeSpan.FromSeconds(10), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

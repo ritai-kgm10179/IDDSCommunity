@@ -19,6 +19,7 @@
     <PackageReference Include="SharpPcap" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     <PackageReference Include="Microsoft.Extensions.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="System.Management" />
     <PackageReference Include="System.Configuration.ConfigurationManager" />
     <PackageReference Include="System.Diagnostics.EventLog" />

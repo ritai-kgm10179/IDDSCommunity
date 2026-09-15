@@ -126,11 +126,14 @@ public sealed class WebhookNotificationService : IDisposable
                 managementBaseUrl,
                 managementApiKey);
 
-            using var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            using HttpClient? guardedClient = _httpClient is null
-                ? IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.CreateClient(
-                    url, _config.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10)) : null;
-            using var response = await (_httpClient ?? guardedClient!).PostAsync(url, content, cancellationToken).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+            };
+            using var response = _httpClient is not null
+                ? await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false)
+                : await IDDSCommunity.IntrusionDetection.Shared.Network.WebhookConnectionPolicy.SendAsync(
+                    request, url, _config.WebhookAllowedPrivateDestinations, TimeSpan.FromSeconds(10), cancellationToken).ConfigureAwait(false);
 
             return response.IsSuccessStatusCode;
         }
@@ -158,6 +161,6 @@ public sealed class WebhookNotificationService : IDisposable
     /// </summary>
     public void Dispose()
     {
-        // 注入的用戶端由呼叫端管理；預設用戶端於每次派送後釋放。
+        // 注入的用戶端由呼叫端管理；預設用戶端由共用工廠管理。
     }
 }

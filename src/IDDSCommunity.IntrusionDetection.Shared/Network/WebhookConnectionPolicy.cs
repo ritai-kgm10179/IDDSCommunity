@@ -35,51 +35,74 @@ public static class WebhookConnectionPolicy
     public static HttpClient CreateClient(string destinationUrl, string? privateDestinations = null, TimeSpan? timeout = null)
         => CreateClientForTests(destinationUrl, privateDestinations, timeout, ResolveAddressesAsync, ConnectAddressAsync);
 
-    internal static HttpClient CreateClientForTests(string destinationUrl, string? privateDestinations, TimeSpan? timeout,
-        Func<string, AddressFamily, CancellationToken, Task<IPAddress[]>> resolver,
-        Func<IPAddress, int, CancellationToken, Task<Stream>> connector)
+    /// <summary>
+    /// 透過共用 HTTP 用戶端工廠派送 Webhook 要求，並於實際連線前檢查目的地。
+    /// </summary>
+    /// <param name="request">要派送的 HTTP 要求。</param>
+    /// <param name="destinationUrl">已設定的 Webhook 目的地網址。</param>
+    /// <param name="privateDestinations">專用內網目的地允許清單。</param>
+    /// <param name="timeout">要求逾時時間。</param>
+    /// <param name="cancellationToken">取消權杖。</param>
+    /// <returns>HTTP 回應；呼叫端須釋放此物件。</returns>
+    public static Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, string destinationUrl,
+        string? privateDestinations = null, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        => WebhookHttpClientFactory.Shared.SendAsync(request, destinationUrl, privateDestinations, timeout, cancellationToken);
+
+    internal static Uri ParseDestination(string destinationUrl)
     {
         if (!Uri.TryCreate(destinationUrl, UriKind.Absolute, out Uri? destination)
             || destination.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(destination.UserInfo))
             throw new ArgumentException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook URL must be an absolute HTTP or HTTPS URL."), nameof(destinationUrl));
+        return destination;
+    }
+
+    internal static HttpClient CreateClientForTests(string destinationUrl, string? privateDestinations, TimeSpan? timeout,
+        Func<string, AddressFamily, CancellationToken, Task<IPAddress[]>> resolver,
+        Func<IPAddress, int, CancellationToken, Task<Stream>> connector)
+    {
+        Uri destination = ParseDestination(destinationUrl);
         SocketsHttpHandler handler = new()
         {
             AllowAutoRedirect = false, UseProxy = false, PooledConnectionLifetime = TimeSpan.Zero,
             ConnectCallback = async (context, cancellationToken) =>
             {
-                Uri? requestUri = context.InitialRequestMessage.RequestUri;
-                if (requestUri is null || requestUri.Scheme != destination.Scheme
-                    || !string.Equals(requestUri.IdnHost, destination.IdnHost, StringComparison.OrdinalIgnoreCase)
-                    || requestUri.Port != destination.Port
-                    || !string.Equals(context.DnsEndPoint.Host, destination.IdnHost, StringComparison.OrdinalIgnoreCase)
-                    || context.DnsEndPoint.Port != destination.Port)
-                    throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook destination changed."));
-                IPAddress[] addresses = await resolver(context.DnsEndPoint.Host, context.DnsEndPoint.AddressFamily, cancellationToken).ConfigureAwait(false);
-                if (addresses.Length == 0 || addresses.Any(address => !IsAllowed(destination, address, privateDestinations)))
-                    throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook destination resolves to a restricted address."));
-                Exception? lastError = null;
-                foreach (IPAddress address in addresses)
-                {
-                    try
-                    {
-                        return await connector(address, context.DnsEndPoint.Port, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception ex) when (ex is SocketException or OperationCanceledException)
-                    {
-                        lastError = ex;
-                        if (cancellationToken.IsCancellationRequested) throw;
-                    }
-                }
-                throw lastError ?? new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook connection failed."));
+                return await ConnectCheckedAsync(context, destination, privateDestinations, resolver, connector, cancellationToken).ConfigureAwait(false);
             }
         };
         return new HttpClient(handler, disposeHandler: true) { Timeout = timeout ?? TimeSpan.FromSeconds(10) };
     }
 
-    private static Task<IPAddress[]> ResolveAddressesAsync(string host, AddressFamily family, CancellationToken cancellationToken)
+    internal static async Task<Stream> ConnectCheckedAsync(SocketsHttpConnectionContext context, Uri destination,
+        string? privateDestinations, Func<string, AddressFamily, CancellationToken, Task<IPAddress[]>> resolver,
+        Func<IPAddress, int, CancellationToken, Task<Stream>> connector, CancellationToken cancellationToken)
+    {
+        Uri? requestUri = context.InitialRequestMessage.RequestUri;
+        if (requestUri is null || requestUri.Scheme != destination.Scheme
+            || !string.Equals(requestUri.IdnHost, destination.IdnHost, StringComparison.OrdinalIgnoreCase)
+            || requestUri.Port != destination.Port
+            || !string.Equals(context.DnsEndPoint.Host, destination.IdnHost, StringComparison.OrdinalIgnoreCase)
+            || context.DnsEndPoint.Port != destination.Port)
+            throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook destination changed."));
+        IPAddress[] addresses = await resolver(context.DnsEndPoint.Host, context.DnsEndPoint.AddressFamily, cancellationToken).ConfigureAwait(false);
+        if (addresses.Length == 0 || addresses.Any(address => !IsAllowed(destination, address, privateDestinations)))
+            throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook destination resolves to a restricted address."));
+        Exception? lastError = null;
+        foreach (IPAddress address in addresses)
+        {
+            try { return await connector(address, context.DnsEndPoint.Port, cancellationToken).ConfigureAwait(false); }
+            catch (Exception ex) when (ex is SocketException or OperationCanceledException)
+            {
+                lastError = ex;
+                if (cancellationToken.IsCancellationRequested) throw;
+            }
+        }
+        throw lastError ?? new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Webhook connection failed."));
+    }
+
+    internal static Task<IPAddress[]> ResolveAddressesAsync(string host, AddressFamily family, CancellationToken cancellationToken)
         => Dns.GetHostAddressesAsync(host, family, cancellationToken);
 
-    private static async Task<Stream> ConnectAddressAsync(IPAddress address, int port, CancellationToken cancellationToken)
+    internal static async Task<Stream> ConnectAddressAsync(IPAddress address, int port, CancellationToken cancellationToken)
     {
         Socket socket = new(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
         try
@@ -111,6 +134,21 @@ public static class WebhookConnectionPolicy
                 || origin.Port != destination.Port || origin.AbsolutePath != "/" || !string.IsNullOrEmpty(origin.Query) || !string.IsNullOrEmpty(origin.UserInfo)) continue;
             if (IPAddress.TryParse(parts[1], out IPAddress? allowedIp) && allowedIp.Equals(address)) return true;
             if (IPNetwork.TryParse(parts[1], out IPNetwork network) && network.Contains(address)) return true;
+        }
+        return false;
+    }
+
+    internal static bool HasPrivateAllowanceFor(Uri destination, string? privateDestinations)
+    {
+        if (destination.Scheme != Uri.UriSchemeHttps || string.IsNullOrWhiteSpace(privateDestinations)) return false;
+        foreach (string line in privateDestinations.Split(['\r', '\n', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string[] parts = line.Split('|', 2, StringSplitOptions.TrimEntries);
+            if (parts.Length != 2 || !Uri.TryCreate(parts[0], UriKind.Absolute, out Uri? origin)
+                || origin.Scheme != Uri.UriSchemeHttps || !string.Equals(origin.IdnHost, destination.IdnHost, StringComparison.OrdinalIgnoreCase)
+                || origin.Port != destination.Port || origin.AbsolutePath != "/" || !string.IsNullOrEmpty(origin.Query)
+                || !string.IsNullOrEmpty(origin.UserInfo)) continue;
+            if (IPAddress.TryParse(parts[1], out _) || IPNetwork.TryParse(parts[1], out _)) return true;
         }
         return false;
     }
