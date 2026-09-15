@@ -32,9 +32,14 @@ internal static class RuntimeServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         services.TryAddSingleton<IWindowsEventLog, WindowsEventLog>();
         services.TryAddSingleton<IRuntimeLog, WindowsLogManager>();
-        services.TryAddSingleton<IFirewallPolicy>(provider => new FirewallPolicyManager(
-            provider.GetRequiredService<IRuntimeLog>(),
-            provider.GetRequiredService<IddsConfig>().FirewallBlockMode));
+        services.TryAddSingleton<FirewallPacedQueueDispatcher>(provider =>
+        {
+            var logManager = provider.GetRequiredService<IRuntimeLog>();
+            var config = provider.GetRequiredService<IddsConfig>();
+            var inner = new FirewallPolicyManager(logManager, config.FirewallBlockMode);
+            return new FirewallPacedQueueDispatcher(inner, logManager, config.FirewallPacingOptions);
+        });
+        services.TryAddSingleton<IFirewallPolicy>(provider => provider.GetRequiredService<FirewallPacedQueueDispatcher>());
         services.AddSingleton<Database>();
         services.AddSingleton<IddsConfig>();
         services.AddSingleton<NotificationSettings>();

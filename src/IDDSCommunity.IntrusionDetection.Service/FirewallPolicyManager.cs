@@ -921,7 +921,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     /// <param name="maskText">IPv4 子網路遮罩。</param>
     /// <param name="prefixLength">轉換成功時的 CIDR 前綴長度。</param>
     /// <returns>遮罩有效且位元連續時傳回 <see langword="true"/>。</returns>
-    private static bool TryConvertSubnetMaskToPrefixLength(string maskText, out int prefixLength)
+    internal static bool TryConvertSubnetMaskToPrefixLength(string maskText, out int prefixLength)
     {
         prefixLength = 0;
         if (!System.Net.IPAddress.TryParse(maskText, out System.Net.IPAddress? mask)
@@ -945,13 +945,13 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         return true;
     }
     /// <summary>
-    /// Determines whether an IP address belongs to a CIDR network.
+    /// 判斷指定之 IP 位址是否屬於特定 CIDR 網段。
     /// </summary>
-    /// <param name="candidate">The address being tested.</param>
-    /// <param name="network">The network address.</param>
-    /// <param name="prefixLength">The CIDR prefix length.</param>
-    /// <returns><see langword="true"/> when the candidate belongs to the network.</returns>
-    private static bool IsInSubnet(System.Net.IPAddress candidate, System.Net.IPAddress network, int prefixLength)
+    /// <param name="candidate">欲測試之 IP 位址。</param>
+    /// <param name="network">網段之網路位址。</param>
+    /// <param name="prefixLength">CIDR 前綴長度。</param>
+    /// <returns>若候選位址屬於該網段則傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    internal static bool IsInSubnet(System.Net.IPAddress candidate, System.Net.IPAddress network, int prefixLength)
     {
         byte[] candidateBytes = candidate.GetAddressBytes();
         byte[] networkBytes = network.GetAddressBytes();

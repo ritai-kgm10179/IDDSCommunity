@@ -78,6 +78,21 @@ public const string CONFIG_VALUE_LANGUAGE = "Configuration.Language";
     public const string CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES = "Configuration.AutoManageFirewallInboundRules";
 
     /// <summary>
+    /// 定義 CONFIG_VALUE_FIREWALL_PACING_MAX_BATCH_SIZE 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_FIREWALL_PACING_MAX_BATCH_SIZE = "Configuration.FirewallPacingMaxBatchSize";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_FIREWALL_PACING_COALESCING_WINDOW_MS 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_FIREWALL_PACING_COALESCING_WINDOW_MS = "Configuration.FirewallPacingCoalescingWindowMs";
+
+    /// <summary>
+    /// 定義 CONFIG_VALUE_FIREWALL_PACING_MIN_INTERVAL_MS 之數值。
+    /// </summary>
+    public const string CONFIG_VALUE_FIREWALL_PACING_MIN_INTERVAL_MS = "Configuration.FirewallPacingMinIntervalMs";
+
+    /// <summary>
     /// 定義 CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION 之數值。
     /// </summary>
     public const string CONFIG_VALUE_ENABLE_CROSS_AGENT_CORRELATION = "Configuration.EnableCrossAgentCorrelation";
@@ -1219,6 +1234,25 @@ public string Language
     {
         get => !bool.TryParse(GetConfigValue(CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES), out bool enabled) || enabled;
         set => SetConfigValue(CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES, value.ToString());
+    }
+
+    /// <summary>
+    /// 取得 Windows 防火牆調步佇列與批次聚合器組態設定。
+    /// </summary>
+    public FirewallPacingOptions FirewallPacingOptions
+    {
+        get
+        {
+            int maxBatch = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_MAX_BATCH_SIZE), out int b) && b > 0 ? b : 500;
+            int window = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_COALESCING_WINDOW_MS), out int w) && w >= 0 ? w : 50;
+            int interval = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_MIN_INTERVAL_MS), out int i) && i >= 0 ? i : 25;
+            return new FirewallPacingOptions
+            {
+                MaxBatchSize = maxBatch,
+                CoalescingWindowMs = window,
+                MinPacingIntervalMs = interval
+            };
+        }
     }
 
     /// <summary>
