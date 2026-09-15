@@ -135,4 +135,10 @@
 - **Webhook 全平台雙向控制字元防偽與文字截斷 (Webhook Visual Spoofing & Boundary Defense)**：
   - 派送至 Slack、Discord、Teams、Telegram、LINE 等協同平台之 Webhook 負載，一律過濾 Unicode 雙向控制字元（`\u202A`~`\u202E`、`\u2066`~`\u2069`）以杜絕文字方向偽冒（Bidi / RLO 攻擊）。
   - Teams 與 Discord 訊息中強制跳脫方括號以防止非預期 Markdown 釣魚超連結；各平台嚴格遵守其長度限制（如 LINE 5,000 字元截斷與接收者空白清理）。
+- **百萬級防火牆分片與穩態差量調和規範 (Million-Scale Firewall Sharding & Delta Reconciliation)**：
+  - 單條 Windows 防火牆規則遠端位址上限嚴格約束於 1,000 筆以內（`MaxAddressesPerRule = 1000`），杜絕底層 COM 序列化與驗證效能劣化。
+  - 採用 256 個穩定分桶（FNV-1a 雜湊）搭配序列分片機制（`BlockAttacker_b{bucket:D3}_s{sequence:D4}`），平滑支援百萬級大量 IP 封鎖擴展。
+  - 服務啟動與排程檢查強制實施期望狀態差量調和（$\Delta$ 穩態調和），一致狀態下對 Windows 防火牆的 COM 寫入與刪除呼叫嚴格為 0 次。
+  - 差量調和計劃自動比對現存託管規則，將不在必要清單中的孤兒規則（含歷史舊版未分片或簡易序號規則）與已清空 Shard 自動列入刪除清單清除。
+  - 實作持久化異動日誌（[`FirewallStateStore`](src/IDDSCommunity.IntrusionDetection.Shared/FirewallStateStore.cs)）與租約領取機制，確保多程序與異常中斷重試之原子性。
 

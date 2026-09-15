@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en-US">
 <head>
   <meta charset="utf-8" />
@@ -636,7 +636,8 @@ footer p {
 <p>Controls the escalating defensive response after an attack is triggered:</p>
 <ul>
   <li><strong>Soft Lock</strong>: Once the initial threshold is reached, the offending IP is held in an in-memory lock for a configured duration (e.g. <code>15 minutes</code>), during which requests to the affected service from that IP are rejected.</li>
-  <li><strong>Hard Lock</strong>: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (the rule name includes the <code>Blocked by IDDS Community</code> prefix and belongs to the <code>IDDS Community</code> firewall rule group).</li>
+  <li><strong>Hard Lock</strong>: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (named <code>IDDSCommunity_BlockAttacker_AllPorts_b{bucket}_s{sequence}</code> with description <code>Blocked by IDDS Community</code>, assigned to the <code>IDDS Community</code> firewall rule group).</li>
+  <li><strong>Million-Scale Sharding</strong>: Built-in dynamic sharding engine strictly caps the IP count per rule at 1,000 entries to prevent Windows Firewall COM degradation; startup and periodic passes enforce &Delta; steady-state reconciliation (zero COM writes in steady state) while automatically identifying and removing legacy batch rules or empty shards.</li>
 </ul>
 <h3 id="sec-3-8-smtp-notifications">3.8 📧 SMTP Notifications</h3>
 <p>Automatically send email alerts when a hard lock or a critical event is triggered:</p>

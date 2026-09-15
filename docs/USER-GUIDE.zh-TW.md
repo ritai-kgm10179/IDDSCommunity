@@ -1,4 +1,4 @@
-﻿# IDDS 社群版 - 使用與安裝說明文件
+# IDDS 社群版 - 使用與安裝說明文件
 
 歡迎使用 **IDDS 社群版**！本文件提供系統安裝、管理控制台 (Admin Console) 介面操作、SIEM 搜尋過濾、代理程式配置與安全網路設定之完整導覽。
 
@@ -110,7 +110,8 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 ### 3.7 🚨 防護政策設定 (Lockout Policy)
 控制攻擊觸發後的階梯式防禦反應：
 - **軟鎖定 (Soft Lock)**：當達到初級門檻時，暫時記憶體鎖定該 IP 一定時間（如 `15 分鐘`），期間拒絕該 IP 的特定服務請求。
-- **硬鎖定 (Hard Lock)**：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱包含 `Blocked by IDDS Community` 前綴，並歸屬於 `IDDS Community` 防火牆規則群組）。
+- **硬鎖定 (Hard Lock)**：當累積失敗達到硬鎖定門檻或軟鎖定期間持續攻擊時，觸發 Windows 防火牆 API 建立實體封鎖規則（規則名稱為 `IDDSCommunity_BlockAttacker_AllPorts_b{bucket}_s{sequence}`，規則描述為 `Blocked by IDDS Community`，並歸屬於 `IDDS Community` 防火牆規則群組）。
+- **百萬級動態分片擴展 (Million-Scale Sharding)**：內建自動分桶分片引擎，單條規則 IP 數量嚴格約束於 1,000 筆以內以確保 COM 效能；服務啟動與定時檢查實施 $\Delta$ 穩態差量調和（一致狀態下 0 次 COM 寫入），並自動辨識與清除舊版批次規則或已清空的廢棄 Shard。
 
 ### 3.8 📧 SMTP 告警與通知 (SMTP Notifications)
 當系統觸發硬鎖定或嚴重事件時自動傳送 Email 告警：

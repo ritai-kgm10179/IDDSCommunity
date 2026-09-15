@@ -1,4 +1,4 @@
-﻿# IDDS Community - Installation and User Guide
+# IDDS Community - Installation and User Guide
 
 Welcome to **IDDS Community**! This document provides a comprehensive guide for installation, Admin Console interface operations, SIEM search filtering, security agent configuration, and safe network management.
 
@@ -110,7 +110,8 @@ Configure failure thresholds and the sliding detection window per service:
 ### 3.7 🚨 Lockout Policy
 Controls the escalating defensive response after an attack is triggered:
 - **Soft Lock**: Once the initial threshold is reached, the offending IP is held in an in-memory lock for a configured duration (e.g. `15 minutes`), during which requests to the affected service from that IP are rejected.
-- **Hard Lock**: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (the rule name includes the `Blocked by IDDS Community` prefix and belongs to the `IDDS Community` firewall rule group).
+- **Hard Lock**: Once accumulated failures reach the hard-lock threshold, or an attack continues through a soft lock, a Windows Firewall API call creates a physical block rule (named `IDDSCommunity_BlockAttacker_AllPorts_b{bucket}_s{sequence}` with description `Blocked by IDDS Community`, assigned to the `IDDS Community` firewall rule group).
+- **Million-Scale Sharding**: Built-in dynamic sharding engine strictly caps the IP count per rule at 1,000 entries to prevent Windows Firewall COM degradation; startup and periodic passes enforce $\Delta$ steady-state reconciliation (zero COM writes in steady state) while automatically identifying and removing legacy batch rules or empty shards.
 
 ### 3.8 📧 SMTP Notifications
 Automatically send email alerts when a hard lock or a critical event is triggered:
