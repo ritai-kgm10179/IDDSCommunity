@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -1014,6 +1014,16 @@ public bool LimitMailSent { get; set; }
                     configuration.ThreatHubPort,
                     "TCP",
                     "Inbound allow rule for IDDS Community Threat Intelligence Cluster Hub"));
+
+                if (configuration.EnableThreatHubGrpc && configuration.ThreatHubGrpcPort > 0)
+                {
+                    targetRules.Add(new FirewallInboundRuleDefinition(
+                        "ThreatHubGrpc",
+                        $"IDDS Community - Allow Threat Hub gRPC (TCP {configuration.ThreatHubGrpcPort})",
+                        configuration.ThreatHubGrpcPort,
+                        "TCP",
+                        "Inbound allow rule for IDDS Community Threat Intelligence Cluster Hub gRPC Stream"));
+                }
             }
 
             // 4. 蜜罐誘捕代理程式 (Honeypot Decoy Ports)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -705,6 +705,24 @@ public CSafeNetworks SafeNetworks
     }
 
     /// <summary>
+    /// 取得或設定 Threat Hub gRPC 服務監聽之連接埠（預設 8445，避開自助解鎖入口網站預設之 8444）。
+    /// </summary>
+    public int ThreatHubGrpcPort
+    {
+        get => int.TryParse(GetConfigValue("ThreatHubGrpcPort"), out int port) && port > 0 ? port : 8445;
+        set => SetConfigValue("ThreatHubGrpcPort", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 是否啟用 Threat Hub gRPC 高效同步通道（預設 true）。
+    /// </summary>
+    public bool EnableThreatHubGrpc
+    {
+        get => bool.TryParse(GetConfigValue("EnableThreatHubGrpc"), out bool enabled) ? enabled : true;
+        set => SetConfigValue("EnableThreatHubGrpc", value.ToString());
+    }
+
+    /// <summary>
     /// 取得或設定 Threat Hub 是否由反向代理終止 TLS。
     /// </summary>
     public bool ThreatHubUseReverseProxy
@@ -729,6 +747,15 @@ public CSafeNetworks SafeNetworks
     {
         get => int.TryParse(GetConfigValue("ThreatHubSyncIntervalSeconds"), out int s) && s > 0 ? s : 60;
         set => SetConfigValue("ThreatHubSyncIntervalSeconds", value.ToString());
+    }
+
+    /// <summary>
+    /// 取得或設定 Threat Hub 允許註冊之邊緣節點上限（預設 20,000）。
+    /// </summary>
+    public int ThreatHubMaxRegisteredNodes
+    {
+        get => int.TryParse(GetConfigValue("ThreatHubMaxRegisteredNodes"), out int n) && n > 0 ? n : 20000;
+        set => SetConfigValue("ThreatHubMaxRegisteredNodes", value.ToString());
     }
 
     /// <summary>

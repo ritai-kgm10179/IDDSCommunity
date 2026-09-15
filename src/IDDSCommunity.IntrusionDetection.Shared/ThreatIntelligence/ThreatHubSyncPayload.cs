@@ -78,4 +78,9 @@ public sealed class ThreatHubSyncResponse
     /// 取得或設定 叢集目前所有生效中之聯防威脅 IP 清單。
     /// </summary>
     public List<ThreatIntelligenceItem> ActiveThreats { get; set; } = [];
+
+    /// <summary>
+    /// 取得或設定 增量同步模式下回傳之日誌事件（包含新增、假釋與撤銷墓碑）。
+    /// </summary>
+    public List<ThreatHubJournalEntry> DeltaEvents { get; set; } = [];
 }

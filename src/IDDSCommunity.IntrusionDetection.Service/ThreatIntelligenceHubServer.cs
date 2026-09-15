@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +8,9 @@ using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Security;
 using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
@@ -29,13 +32,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     private readonly Action<string, Exception> logError;
     private readonly ThreatHubStore store;
     private readonly bool allowLoopbackHttp;
-    private readonly object nodeGate = new();
     private readonly ConcurrentDictionary<string, EdgeNodeState> registeredNodes = new(StringComparer.OrdinalIgnoreCase);
 
     private HttpListener? listener;
     private BoundedHttpDispatcher? dispatcher;
     private CancellationTokenSource? cts;
     private Task? listenTask;
+    private Task? staleNodeCleanupTask;
+    private WebApplication? grpcApp;
+    private readonly TimeSpan staleNodeCleanupInterval = TimeSpan.FromMinutes(5);
     private bool disposed;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -123,6 +128,11 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     public IReadOnlyList<ThreatIntelligenceItem> ActiveThreats => store.ReadPage(0, string.Empty).ActiveThreats;
 
     /// <summary>
+    /// 取得中繼中心內部威脅存儲執行個體。
+    /// </summary>
+    internal ThreatHubStore Store => store;
+
+    /// <summary>
     /// 取得目前已連線註冊之邊緣節點清單。
     /// </summary>
     public IReadOnlyList<EdgeNodeState> RegisteredNodes => [.. registeredNodes.Values];
@@ -190,12 +200,41 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             }
             throw;
         }
-        dispatcher = new BoundedHttpDispatcher(HandleRequestAsync);
+        dispatcher = new BoundedHttpDispatcher(HandleRequestAsync, capacity: 2048);
         cts = new CancellationTokenSource();
         listenTask = ListenLoopAsync(listener, cts.Token);
+        staleNodeCleanupTask = StaleNodeCleanupLoopAsync(cts.Token);
         logInformation(useReverseProxy
             ? $"Threat Intelligence Hub server started on {(loopbackOnly ? "loopback" : "all interfaces")} HTTP port {port}; TLS must be terminated by a trusted reverse proxy."
             : $"Threat Intelligence Hub server started listening on HTTPS port {port}.");
+
+        if (config.EnableThreatHubGrpc)
+        {
+            try
+            {
+                int grpcPort = config.ThreatHubGrpcPort > 0 ? config.ThreatHubGrpcPort : (port == 8443 ? 8445 : port + 2);
+                var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
+                IPAddress listenAddress = loopbackOnly ? IPAddress.Loopback : IPAddress.Any;
+                builder.WebHost.UseKestrel(kestrelOptions =>
+                {
+                    kestrelOptions.Listen(listenAddress, grpcPort, listenOptions =>
+                    {
+                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                    });
+                });
+                builder.Services.AddGrpc();
+                builder.Services.AddSingleton(new ThreatSyncServiceImpl(config, store, onThreatReceived, logInformation, logError, TryRegisterNode, authRateLimiter));
+                var app = builder.Build();
+                app.MapGrpcService<ThreatSyncServiceImpl>();
+                app.StartAsync(cts.Token).GetAwaiter().GetResult();
+                grpcApp = app;
+                logInformation($"Threat Intelligence Hub gRPC server started listening on {listenAddress}:{grpcPort}.");
+            }
+            catch (Exception ex)
+            {
+                logError("Threat Hub failed to start gRPC listener; continuing in REST-only mode.", ex);
+            }
+        }
     }
 
     private static readonly string[] SuspiciousProbePatterns =
@@ -232,6 +271,59 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                 logError("Threat Hub listener exception in accept loop", ex);
             }
         }
+    }
+
+    private async Task StaleNodeCleanupLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using PeriodicTimer timer = new(staleNodeCleanupInterval);
+            while (!cancellationToken.IsCancellationRequested && await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                CleanStaleNodes();
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            logError("Threat Hub exception in stale node cleanup loop", ex);
+        }
+    }
+
+    /// <summary>
+    /// 清理超過一小時未連線活動之過期邊緣節點。
+    /// </summary>
+    internal void CleanStaleNodes()
+    {
+        DateTime threshold = DateTime.UtcNow.AddHours(-1);
+        foreach (var kvp in registeredNodes)
+        {
+            if (kvp.Value.LastSeenUtc < threshold)
+            {
+                registeredNodes.TryRemove(kvp.Key, out _);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 嘗試註冊或更新邊緣節點之即時活動狀態，並檢查是否超過中繼中心允許之節點容量上限。
+    /// </summary>
+    /// <param name="nodeId">節點唯一識別碼。</param>
+    /// <param name="nodeName">節點主機名稱。</param>
+    /// <param name="nodeIp">節點來源 IP 位址。</param>
+    /// <param name="threatCount">本次回報之威脅情資數量。</param>
+    /// <param name="generation">節點已同步之世代識別碼。</param>
+    /// <returns>若成功註冊傳回 <see langword="true"/>；若已達上限且為新節點則傳回 <see langword="false"/>。</returns>
+    public bool TryRegisterNode(string? nodeId, string? nodeName, string nodeIp, int threatCount, string? generation)
+    {
+        string id = string.IsNullOrWhiteSpace(nodeId) ? nodeIp : nodeId;
+        int maxNodes = config.ThreatHubMaxRegisteredNodes > 0 ? config.ThreatHubMaxRegisteredNodes : 20000;
+        if (!registeredNodes.ContainsKey(id) && registeredNodes.Count >= maxNodes)
+        {
+            return false;
+        }
+        registeredNodes[id] = new EdgeNodeState(id, nodeName ?? string.Empty, nodeIp, DateTime.UtcNow, threatCount, generation ?? string.Empty);
+        return true;
     }
 
     private async Task HandleRequestAsync(HttpListenerContext context)
@@ -326,12 +418,10 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     return;
                 }
 
-                string nodeId = string.IsNullOrWhiteSpace(payload.NodeId) ? clientIp : payload.NodeId;
-                lock (nodeGate)
+                if (!TryRegisterNode(payload.NodeId, payload.NodeName, clientIp, payload.NewThreats.Count, payload.Generation))
                 {
-                    foreach (var node in registeredNodes.Where(p => p.Value.LastSeenUtc < DateTime.UtcNow.AddHours(-1)).ToArray()) registeredNodes.TryRemove(node.Key, out _);
-                    if (!registeredNodes.ContainsKey(nodeId) && registeredNodes.Count >= 1024) { resp.StatusCode = 503; return; }
-                    registeredNodes[nodeId] = new EdgeNodeState(nodeId, payload.NodeName ?? string.Empty, clientIp, DateTime.UtcNow, payload.NewThreats.Count, payload.Generation ?? string.Empty);
+                    resp.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    return;
                 }
                 foreach (ThreatIntelligenceItem threat in payload.NewThreats)
                 {
@@ -1679,6 +1769,12 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
             listener?.Close();
         }
         catch { }
+        if (grpcApp != null)
+        {
+            try { grpcApp.StopAsync().GetAwaiter().GetResult(); } catch { }
+            try { grpcApp.DisposeAsync().AsTask().GetAwaiter().GetResult(); } catch { }
+            grpcApp = null;
+        }
         listener = null;
         dispatcher?.Dispose();
         dispatcher = null;

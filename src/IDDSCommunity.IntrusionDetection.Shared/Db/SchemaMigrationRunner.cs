@@ -141,6 +141,9 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(15,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(16,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(17,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubJournal (Sequence INTEGER PRIMARY KEY AUTOINCREMENT, EventType INTEGER NOT NULL, SourceIp TEXT NOT NULL, Payload TEXT NOT NULL, CreatedTicks INTEGER NOT NULL)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ThreatHubJournal_CreatedTicks ON ThreatHubJournal(CreatedTicks)");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(18,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";

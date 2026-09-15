@@ -82,10 +82,14 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17)";
-            Assert.AreEqual(17L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)";
+            Assert.AreEqual(18L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(17L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(18L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ThreatHubJournal'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_ThreatHubJournal_CreatedTicks'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ThreatHubCursors'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ObservationWatermarks'";
@@ -363,6 +367,42 @@ public class DatabaseUpgradeTest
         finally
         {
             Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 驗證既有版本 17 資料庫可升級至版本 18，正確建立 ThreatHubJournal 資料表與 CreatedTicks 索引，且既有資料完整保留。
+    /// </summary>
+    [TestMethod]
+    public void ExistingVersion17Database_IsUpgradedToVersion18WithoutDataLoss()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            database.ExecuteNonQuery("INSERT INTO AppConfig(ConfigKey, ConfigValue) VALUES ('v17-upgrade-marker', 'preserved-17')");
+            database.ExecuteNonQuery("DROP TABLE IF EXISTS ThreatHubJournal");
+            database.ExecuteNonQuery("DROP INDEX IF EXISTS IX_ThreatHubJournal_CreatedTicks");
+            database.ExecuteNonQuery("DELETE FROM SchemaMigrations WHERE Version = 18");
+            database.Close();
+
+            database.Configure(directory);
+            using Microsoft.Data.Sqlite.SqliteCommand command = database.Connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version = 18";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ThreatHubJournal'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_ThreatHubJournal_CreatedTicks'";
+            Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'v17-upgrade-marker'";
+            Assert.AreEqual("preserved-17", Convert.ToString(command.ExecuteScalar()));
+        }
+        finally
+        {
+            database.Close();
             if (Directory.Exists(directory))
                 Directory.Delete(directory, recursive: true);
         }

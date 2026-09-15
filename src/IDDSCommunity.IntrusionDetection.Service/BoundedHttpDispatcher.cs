@@ -8,23 +8,36 @@ using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
 
+/// <summary>
+/// 提供具備容量約束與工作者並行池之 HTTP 請求非同步分派器。
+/// </summary>
 internal sealed class BoundedHttpDispatcher : IDisposable
 {
-    private readonly Channel<HttpListenerContext> requests = Channel.CreateBounded<HttpListenerContext>(new BoundedChannelOptions(32)
-    {
-        FullMode = BoundedChannelFullMode.Wait,
-        SingleWriter = false
-    });
+    private readonly Channel<HttpListenerContext> requests;
     private readonly CancellationTokenSource stopping = new();
     private readonly Task[] workers;
     private int disposed;
 
-    internal BoundedHttpDispatcher(Func<HttpListenerContext, Task> handler)
+    /// <summary>
+    /// 初始化 <see cref="BoundedHttpDispatcher"/> 類別之新執行個體。
+    /// </summary>
+    /// <param name="handler">處理個別 HTTP 請求之非同步委派。</param>
+    /// <param name="capacity">有界通道容量上限（預設 2,048）。</param>
+    /// <param name="workerCount">背景工作者工作數量；若為 null 則依處理器核心數動態配置。</param>
+    internal BoundedHttpDispatcher(Func<HttpListenerContext, Task> handler, int capacity = 2048, int? workerCount = null)
     {
-        workers = new Task[4];
+        int effectiveCapacity = capacity > 0 ? capacity : 2048;
+        requests = Channel.CreateBounded<HttpListenerContext>(new BoundedChannelOptions(effectiveCapacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleWriter = false
+        });
+
+        int effectiveWorkers = workerCount ?? Math.Clamp(Environment.ProcessorCount * 4, 16, 128);
+        workers = new Task[effectiveWorkers];
         for (int i = 0; i < workers.Length; i++) workers[i] = Task.Run(async () =>
         {
-            await foreach (HttpListenerContext context in requests.Reader.ReadAllAsync())
+            await foreach (HttpListenerContext context in requests.Reader.ReadAllAsync().ConfigureAwait(false))
             {
                 if (stopping.IsCancellationRequested) { Abort(context); continue; }
                 using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
@@ -39,6 +52,10 @@ internal sealed class BoundedHttpDispatcher : IDisposable
         });
     }
 
+    /// <summary>
+    /// 將 HTTP 請求上下文提交至分派佇列。
+    /// </summary>
+    /// <param name="context">傳入之 HTTP 監聽器上下文。</param>
     internal void Submit(HttpListenerContext context)
     {
         if (requests.Writer.TryWrite(context)) return;
@@ -52,6 +69,13 @@ internal sealed class BoundedHttpDispatcher : IDisposable
         catch { }
     }
 
+    /// <summary>
+    /// 讀取 HTTP 請求內文並限制其最大位元組數。
+    /// </summary>
+    /// <param name="request">HTTP 請求執行個體。</param>
+    /// <param name="maximumBytes">允許之最大位元組數限制。</param>
+    /// <returns>以 UTF-8 解碼之字串內容。</returns>
+    /// <exception cref="RequestBodyTooLargeException">當請求內文大小超過上限時擲出。</exception>
     internal static async Task<string> ReadBodyAsync(HttpListenerRequest request, int maximumBytes = 65536)
     {
         if (request.ContentLength64 > maximumBytes) throw new RequestBodyTooLargeException();
@@ -72,6 +96,9 @@ internal sealed class BoundedHttpDispatcher : IDisposable
         try { context.Response.Abort(); } catch (Exception) { }
     }
 
+    /// <summary>
+    /// 釋放分派器所佔用之資源並等待工作者完成。
+    /// </summary>
     public void Dispose()
     {
         if (Interlocked.Exchange(ref disposed, 1) != 0) return;

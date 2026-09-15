@@ -20,6 +20,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     private readonly Action<string, Exception> logWarning;
     private readonly Action<string, string, string, string?>? recordAudit;
     private readonly ThreatHubClient client;
+    private readonly ThreatSyncClientHandler clientHandler;
     private readonly ThreatHubStore localStore;
     private readonly Dictionary<string, (long Cursor, string Generation, long LocalCursor)> cursors = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource stopping = new();
@@ -52,6 +53,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logWarning = logWarning ?? ((msg, ex) => System.Diagnostics.Trace.TraceWarning("{0}: {1}", msg, ex.Message));
         this.client = client ?? new ThreatHubClient();
+        this.clientHandler = new ThreatSyncClientHandler(this.config, this.client, this.logInformation, this.logWarning);
         this.recordAudit = recordAudit;
         this.database = database;
         localStore = new ThreatHubStore(database);
@@ -137,19 +139,25 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         try
         {
             await Task.Delay(TimeSpan.FromSeconds(3), stopping.Token).ConfigureAwait(false);
-            using PeriodicTimer timer = new(interval);
-            do
+            while (!stopping.IsCancellationRequested)
             {
                 try
                 {
                     await SynchronizeNowAsync().ConfigureAwait(false);
                 }
+                catch (OperationCanceledException) when (stopping.IsCancellationRequested)
+                {
+                    break;
+                }
                 catch (Exception ex)
                 {
                     logWarning("Threat Hub synchronization cycle failed.", ex);
                 }
+
+                double jitter = 0.8 + (Random.Shared.NextDouble() * 0.4);
+                TimeSpan delay = TimeSpan.FromMilliseconds(interval.TotalMilliseconds * jitter);
+                await Task.Delay(delay, stopping.Token).ConfigureAwait(false);
             }
-            while (await timer.WaitForNextTickAsync(stopping.Token).ConfigureAwait(false));
         }
         catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
     }
@@ -191,7 +199,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                             Generation = previous.Item2,
                             NewThreats = localPage.ActiveThreats
                         };
-                        ThreatHubSyncResponse response = await client.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
+                        ThreatHubSyncResponse response = await clientHandler.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
                         if (!response.Success) break;
                         if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
                             || response.Generation.Length > 128 || response.NextCursor < 0
@@ -215,6 +223,28 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                             {
                                 foreach (var threat in validThreats)
                                     onClusterThreatReceived(threat);
+                            }
+                        }
+
+                        if (response.DeltaEvents != null && response.DeltaEvents.Count > 0)
+                        {
+                            foreach (var delta in response.DeltaEvents)
+                            {
+                                if (delta.EventType == ThreatHubJournalEventType.Revoked)
+                                {
+                                    if (IpAddressCanonicalizer.TryCanonicalize(delta.SourceIp, out string canonicalIp))
+                                    {
+                                        localStore.Revoke(canonicalIp, delta.Payload);
+                                        try { Locks.UnlockIp(canonicalIp); } catch { }
+                                    }
+                                }
+                                else if (delta.EventType == ThreatHubJournalEventType.Probation)
+                                {
+                                    if (IpAddressCanonicalizer.TryCanonicalize(delta.SourceIp, out string canonicalIp))
+                                    {
+                                        localStore.RecordProbation(canonicalIp, delta.Payload);
+                                    }
+                                }
                             }
                         }
                         cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
@@ -285,10 +315,11 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
             Stop();
             if (syncGate.Wait(TimeSpan.FromSeconds(5)))
             {
-                try { client.Dispose(); } finally { syncGate.Release(); }
+                try { clientHandler.Dispose(); client.Dispose(); } finally { syncGate.Release(); }
             }
             else
             {
+                clientHandler.Dispose();
                 client.Dispose();
             }
             syncGate.Dispose();

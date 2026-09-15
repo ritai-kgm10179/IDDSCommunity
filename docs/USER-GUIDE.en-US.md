@@ -131,8 +131,14 @@ Local backups are intended for rapid recovery on the local machine and do not re
 ### 3.10 🌐 Threat Intelligence & Distributed Cluster Defense
 - **Distributed Cluster Defense Topology (Edge / Hub)**:
   - `Standalone`: Single-host independent defense and threat subscription without cluster synchronization.
-  - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443`, reverse proxy `http://hub.internal:8080`, or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub.
-  - `ThreatHub`: **Does NOT require specifying an endpoint URL (ignored if provided)**; only requires configuring the listening "Threat Hub Port" (default TCP 8443) and Cluster API Key; centrally fetches external feeds and broadcasts intelligence to connected edge nodes.
+  - `EdgeNode`: **Requires specifying the "Threat Hub Endpoint URL"** (e.g. `https://hub.example.com:8443`, reverse proxy `http://hub.internal:8080`, or multiple failover endpoints separated by commas/semicolons) and Cluster API Key; periodically synchronizes high-confidence global threat lists and pushes local hard-lock events to the Hub. The client prioritizes **gRPC bidirectional micro-batch streaming** (HTTP/2, mapped automatically to the corresponding gRPC port, default TCP 8445); if connection fails or is blocked by an intermediate proxy, it seamlessly falls back to REST HTTP (8443) polling.
+  - `ThreatHub`: **Does NOT require specifying an endpoint URL (ignored if provided)**; only requires configuring the listening "Threat Hub Port" (default TCP 8443), gRPC Port (default TCP 8445), and Cluster API Key; centrally fetches external feeds, assigns monotonic sequence numbers, and broadcasts threat updates in real-time across edge nodes.
+  - **Default Port Mapping & Self-Managing Firewall Rules**:
+    - `TCP 8443`: Threat Hub REST HTTP/HTTPS server and Web Dashboard (`/dashboard`).
+    - `TCP 8444`: Legitimate user TOTP two-factor authentication Self-Service Unblock Portal.
+    - `TCP 8445`: Threat Hub gRPC HTTP/2 bidirectional micro-batch streaming service.
+    - **All listening ports enabled by the system are automatically managed and opened in Windows Firewall by the IDDS Community service reconciliation engine; administrators do not need to manually create firewall allow rules.**
+  - **Event Journal & Tombstone Revocation Synchronization**: The Threat Hub tracks cluster state via a monotonic journal table. When an administrator manually unlocks an IP or an IP is released via self-service, the system immediately dispatches a `REVOKED` tombstone event via gRPC streaming to purge the block from all edge Windows Firewalls within milliseconds, preventing orphan misblocks.
   - After the Threat Hub starts, open `https://<hub-host>:<port>/dashboard` to view node status, active threat counts, and last heartbeat times. The page shell is public, but the Cluster API Key is required before querying data; upon key entry, an "Authenticated" badge is displayed alongside a "Logout" button to clear the key from `sessionStorage`.
   - The War Room Dashboard supports:
     - **Theme Toggle**: Switch between automatic OS preference (Auto), Light mode, or Dark mode.
@@ -252,3 +258,9 @@ When operating behind a reverse proxy, the Threat Hub does not require an `HTTP.
   - **A**: No. The Threat Hub functions as the server listener and only requires configuring the listening port (e.g. 8443) and Cluster API Key for edge nodes to connect. Only Edge Nodes need to provide the Threat Hub Endpoint URL. If an endpoint URL is entered on a Threat Hub, it is safely ignored and will cause no errors.
 - **Q: How do I safely back up and migrate my configuration?**
   - **A**: In the Admin Console, click "Settings > Export Configuration" to produce an encrypted `.json` package. After installing on the new server, choose "Import Configuration" to restore it in seconds.
+- **Q: What are ports 8443, 8444, and 8445 used for? Do I need to open them manually in the Windows Firewall?**
+  - **A**: The port roles are designated as follows:
+    - `8443`: Threat Hub native REST HTTP/HTTPS server and Web Dashboard (`/dashboard`).
+    - `8444`: Legitimate user TOTP two-factor authentication Self-Service Unblock Portal.
+    - `8445`: Threat Hub gRPC HTTP/2 bidirectional micro-batch streaming service.
+    - **No manual firewall configuration is required.** When IDDS Community starts, its inbound rule reconciliation engine automatically creates and maintains the necessary inbound allow rules in the Windows Firewall, and removes them when disabled.

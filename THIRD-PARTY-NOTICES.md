@@ -133,6 +133,39 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+## Grpc.AspNetCore 與 Grpc.Net.Client
+
+- 著作權：Copyright 2019 The gRPC Authors
+- 授權條款：Apache License 2.0
+- 原始碼：https://github.com/grpc/grpc-dotnet
+- 套件：https://www.nuget.org/packages/Grpc.AspNetCore/
+- 套件：https://www.nuget.org/packages/Grpc.Net.Client/
+
+本套件群提供 Threat Hub 與邊緣防禦節點（Edge Nodes）間之 gRPC HTTP/2 高效能微批次威脅情資雙向同步通道與串流機制。
+
+Apache License 2.0 授權條款：https://www.apache.org/licenses/LICENSE-2.0
+
+## Google.Protobuf
+
+- 著作權：Copyright 2008 Google Inc.
+- 授權條款：BSD 3-Clause License
+- 原始碼：https://github.com/protocolbuffers/protobuf
+- 套件：https://www.nuget.org/packages/Google.Protobuf/
+
+本套件提供分散式威脅情資交換合約之二進位通訊協定緩衝區（Protocol Buffers）結構定義與高密度序列化支援。
+
+BSD 3-Clause License 全文：
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 ## 外部威脅情報來源與清單訂閱（External Threat Feeds & Intelligence Sources）
 
 IDDS 社群版支援自動訂閱外部威脅情報來源以進行主動防禦 IP 封鎖。系統支援利用下列開放與社群威脅情報清單：

@@ -14,11 +14,11 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 
 - Windows 服務型防護核心與 WinForms 管理介面（含「威脅情報與叢集聯防」專屬視覺化設定面板）。
 - 硬封鎖、軟封鎖、安全網路允許清單（支援 IPv4、IPv6、CIDR 與動態 DNS FQDN 解析）與自動解除封鎖。
-- 分散式跨主機威脅情資聯防（Edge / Hub 節點拓撲）與動態 IP 智慧假釋／一擊立即硬封鎖機制（Probation & One-Strike Relock）。
+- 分散式跨主機威脅情資聯防（Edge / Hub 節點拓撲）、gRPC HTTP/2 雙向微批次串流同步、全網墓碑撤銷機制與動態 IP 智慧假釋／一擊立即硬封鎖機制（Probation & One-Strike Relock）。
 - Threat Hub 提供內建 `/dashboard` 節點戰情頁面，支援正體中文（`zh-Hant-TW`）與英文（`en-US`）、瀏覽器語言自動判斷與手動切換、亮暗主題自動/手動切換、認證狀態管理（金鑰套用與登出），以及 Hub 自身遙測指標與階梯式防禦狀態總覽。
 - 主動式外部威脅情報自動訂閱（支援 IPsum 分級清單、AbuseIPDB API、Spamhaus DROP 與自訂黑名單 URL）及情資 TTL 生命週期淘汰機制。
 - 雙層雙軌 Bogon 防禦體系（RFC 1918 靜態極速硬過濾 + Team Cymru Fullbogons IPv4/IPv6 動態前綴定期同步），杜絕誤封與自鎖。
-- Windows 防火牆規則管理（支援 Inbound 與 Bidirectional 雙向阻絕）、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
+- Windows 防火牆規則管理（支援 Inbound 與 Bidirectional 雙向阻絕、COM 併發調步佇列與百萬級穩定分片調和、服務入站通訊埠自動調和放行）、事件記錄、SMTP 通知，以及每日、每週與每月 HTML 報表。
 - 有界 `Channel`、背壓、取消權杖、非同步服務生命週期及 UI 執行緒安全更新。
 - 代理程式外掛：通用 FTP、FileZilla Server、POP3/SMTP/IMAP、Microsoft SQL Server、MySQL／MariaDB、PostgreSQL、FileMaker、遠端桌面、Windows OpenSSH、Windows 網路登入、NPS/RADIUS、IIS 驗證、Web Security、Windows DNS Server、Technitium DNS Security 與 Honeypot 誘餌蜜罐主動防禦。
 - 多渠道資安整合：支援 Microsoft Teams、Slack、Discord、Telegram 與 Generic RESTful Webhook 即時告警推播；支援 RFC 5424、RFC 3164 與 ArcSight CEF 之 Syslog 即時轉送；內建 OpenMetrics / Prometheus `/metrics` 監控端點與官方 Grafana 儀表板範本。

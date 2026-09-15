@@ -141,4 +141,15 @@
   - 服務啟動與排程檢查強制實施期望狀態差量調和（$\Delta$ 穩態調和），一致狀態下對 Windows 防火牆的 COM 寫入與刪除呼叫嚴格為 0 次。
   - 差量調和計劃自動比對現存託管規則，將不在必要清單中的孤兒規則（含歷史舊版未分片或簡易序號規則）與已清空 Shard 自動列入刪除清單清除。
   - 實作持久化異動日誌（[`FirewallStateStore`](src/IDDSCommunity.IntrusionDetection.Shared/FirewallStateStore.cs)）與租約領取機制，確保多程序與異常中斷重試之原子性。
-
+- **gRPC 雙向微批次串流與雙軌容錯移轉 (gRPC Bidirectional Micro-Batch Streaming & Dual-Track Fallback)**：
+  - Threat Hub 與 Edge 節點支援基於 gRPC HTTP/2 之雙向微批次串流同步（預設 TCP 8445），以毫秒級延遲推播全網高危情資。
+  - 單次批次訊息長度嚴格受限於大型物件堆疊（LOH）85 KB 門檻以內（預設 50~200 筆威脅微批次），杜絕記憶體碎片化與 Gen 2 GC 停頓。
+  - 邊緣節點具備自動容錯移轉機制；當遭遇不支援 HTTP/2 之企業反向代理或 RPC 通訊中斷時，自動平滑降級為 REST HTTP（預設 TCP 8443）定時輪詢。
+- **變更日誌定序與墓碑同步規範 (Event Journal & Tombstone Synchronization)**：
+  - Threat Hub 作為全網單一定序權威（Single-Sequencer），所有狀態異動依序寫入日誌表（`ThreatHubJournal`），並分配單調遞增之序號（`Sequence`）。
+  - 手動解鎖或誤報撤銷操作強制寫入 `REVOKED` 墓碑事件，確保全網邊緣節點即時同步解除本地 Windows 防火牆封鎖，杜絕孤兒誤封。
+- **服務入站通訊埠自動調和放行規範 (Self-Managing Inbound Firewall Rules)**：
+  - 所有由系統服務啟用之監聽通訊埠（包括 Threat Hub REST 8443、Threat Hub gRPC 8445、TOTP 自助解鎖入口網站 8444、Management API 等），一律由服務層入站規則調和機制（[`ProtectionService`](src/IDDSCommunity.IntrusionDetection.Service/ProtectionService.cs)）在 Windows 防火牆自動放行與清理，禁止要求使用者或管理者手動配置防火牆入站規則。
+- **COM 併發調步佇列與記憶體快取追蹤規範 (COM Pacing Queue & In-Memory Locked Tracker)**：
+  - 藉由非同步有界通道（`Channel.CreateBounded`）實施背壓保護，將多 Agent 併發封鎖請求透過微批次聚合（Coalescing）與速率調步（Pacing Rate-Limiter）消除底層 Windows 防火牆 COM 全域互斥鎖（`_firewallLock`）之爭奪瓶頸。
+  - 實作無鎖極速記憶體快取追蹤器（`FirewallLockedAddressTracker`），支援 CIDR 網段、子網局部放行（Carve-out）、萬用字元 `*` 與 IPv6 格式正規化，使重複 IP 判定與查詢在微秒級記憶體速度完成，並具備 COM 寫入失敗之原子狀態回滾機制。

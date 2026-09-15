@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+option csharp_namespace = "IDDSCommunity.IntrusionDetection.Service.Protos";
+
+package iddscommunity.threatsync;
+
+enum ThreatJournalEventType {
+  EVENT_TYPE_UNKNOWN = 0;
+  EVENT_TYPE_BLOCKED = 1;
+  EVENT_TYPE_PROBATION = 2;
+  EVENT_TYPE_REVOKED = 3;
+}
+
+message ThreatRecord {
+  string source_ip = 1;
+  string threat_category = 2;
+  double confidence_score = 3;
+  int64 reported_ticks = 4;
+  int64 expires_ticks = 5;
+  string reporter_node_id = 6;
+  string reporter_node_name = 7;
+  string reason = 8;
+}
+
+message ThreatDeltaEvent {
+  int64 sequence = 1;
+  ThreatJournalEventType event_type = 2;
+  string source_ip = 3;
+  string payload = 4;
+  int64 created_ticks = 5;
+}
+
+message ThreatDeltaBatch {
+  string generation = 1;
+  int64 from_cursor = 2;
+  int64 to_cursor = 3;
+  bool has_more = 4;
+  repeated ThreatDeltaEvent events = 5;
+}
+
+message ThreatSnapshotChunk {
+  string generation = 1;
+  int32 chunk_index = 2;
+  int32 total_chunks = 3;
+  bool is_last_chunk = 4;
+  repeated ThreatRecord threats = 5;
+}
+
+message SyncRequest {
+  string node_id = 1;
+  string node_name = 2;
+  string api_key = 3;
+  int64 cursor = 4;
+  string generation = 5;
+  repeated ThreatRecord new_threats = 6;
+}
+
+message SyncResponse {
+  bool success = 1;
+  string error_message = 2;
+  string generation = 3;
+  int64 next_cursor = 4;
+  bool has_more = 5;
+  repeated ThreatRecord active_threats = 6;
+  ThreatDeltaBatch delta_batch = 7;
+}
+
+message StreamDeltasRequest {
+  string node_id = 1;
+  string node_name = 2;
+  string api_key = 3;
+  int64 cursor = 4;
+  string generation = 5;
+}
+
+service ThreatSyncService {
+  rpc Sync (SyncRequest) returns (SyncResponse);
+  rpc PullDeltas (StreamDeltasRequest) returns (stream ThreatDeltaBatch);
+  rpc StreamSnapshot (StreamDeltasRequest) returns (stream ThreatSnapshotChunk);
+}

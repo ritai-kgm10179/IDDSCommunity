@@ -15,6 +15,9 @@
     <ProjectReference Include="..\..\agents\IDDSCommunity.Agents.TerminalServer\IDDSCommunity.Agents.TerminalServer.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="MSTest.TestFramework" />
     <PackageReference Include="MSTest.TestAdapter" />

@@ -129,8 +129,14 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
 ### 3.10 🌐 威脅情報與跨主機叢集聯防 (Threat Intelligence & Cluster Defense)
 - **分散式叢集聯防架構 (Edge / Hub Topology)**：
   - `Standalone`（獨立單機）：單機獨立防禦與訂閱情資，無需設定叢集連線。
-  - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443`、反代 `http://hub.internal:8080` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。
-  - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443）與叢集 API Key；負責集中對外訂閱全球情報，並接收各邊緣主機連入回報與秒級情資廣播。
+  - `EdgeNode`（邊緣防禦節點）：**需填寫「Threat Hub 端點網址」**（如 `https://hub.example.com:8443`、反代 `http://hub.internal:8080` 或多個備援端點）與叢集 API Key；定時向 Threat Hub 雙向同步全網高危威脅清單，並主動回報本機永久封鎖事件。用戶端優先採用基於 HTTP/2 之 **gRPC 雙向微批次串流**（自動映射對應之 gRPC 埠，預設 TCP 8445）建立長連線同步；若連線失敗或中間代理不支援，系統會自動平滑降級為 REST HTTP (8443) 定時輪詢。
+  - `ThreatHub`（威脅情資中繼中心）：**無需填寫端點網址（若填寫會被系統安全忽略）**，僅需設定監聽「Threat Hub 連接埠」（預設 TCP 8443，可自訂）、gRPC 連接埠（預設 TCP 8445，可自訂）與叢集 API Key；負責集中對外訂閱全球情報，分配單調遞增序號並透過 gRPC/REST 雙軌即時推播給全網邊緣節點。
+  - **預設通訊埠規劃與防火牆自動放行**：
+    - `TCP 8443`：Threat Hub REST HTTP/HTTPS 伺服器與 Web 戰情儀表板（`/dashboard`）。
+    - `TCP 8444`：合法使用者 TOTP 雙因素驗證自助解鎖入口網站（Self-Service Portal）。
+    - `TCP 8445`：Threat Hub gRPC HTTP/2 雙向微批次串流同步服務。
+    - **所有由系統啟用之通訊埠，均由 IDDS Community 服務於 Windows 防火牆自動註冊入站放行規則，管理者完全不需要手動配置防火牆。**
+  - **變更日誌與墓碑撤銷同步 (Tombstone Synchronization)**：Threat Hub 透過單調遞增的事件日誌表追蹤全網狀態。當管理者手動解除特定 IP 封鎖或自解鎖入口放行時，系統即刻發布 `REVOKED` 墓碑事件，透過 gRPC 串流秒級推播至全網各節點，同步自各地 Windows 防火牆清除封鎖，杜絕誤封與孤兒封鎖。
   - Threat Hub 啟動後可開啟 `https://<Hub 主機>:<連接埠>/dashboard` 檢視節點狀態、活動情資數與最後心跳。頁面本身可公開載入，但查詢資料前仍須輸入叢集 API Key；套用金鑰後頁面會即時顯示「已認證」標章並提供「登出」按鈕，金鑰僅安全保存在目前瀏覽器分頁的 `sessionStorage`。
   - 戰情儀表板支援：
     - **亮暗主題切換**：可選擇自動跟隨作業系統偏好（Auto），或手動強制切換淺色（Light）與深色（Dark）佈景主題。
@@ -250,3 +256,9 @@ IDDS 社群版為基於 .NET 10 構建之高效能 Windows 主機層級入侵偵
   - **A**: 不需要。Threat Hub 是服務監聽端（Server），只需設定監聽連接埠（如 8443）與 API Key 供邊緣節點連入；只有邊緣節點（EdgeNode）才需要填寫 Threat Hub 的連線網址。若在 Threat Hub 誤填了網址，系統會安全忽略，不會產生任何異常。
 - **Q: 如何安全備份與轉移設定檔？**
   - **A**: 在管理控制台中點擊「設定 > 匯出設定」，系統會產生加密的 `.json` 套件；至新伺服器安裝後選擇「匯入設定」即可在一秒內完成復原。
+- **Q: Threat Hub 的 8443、8444、8445 通訊埠分別是什麼用途？需要手動在 Windows 防火牆開 Port 嗎？**
+  - **A**: 各連接埠用途如下：
+    - `8443`：Threat Hub 原生 REST HTTP/HTTPS 伺服器與 Web 戰情儀表板（`/dashboard`）。
+    - `8444`：TOTP 雙因素驗證之合法使用者網頁自助解鎖入口網站（Self-Service Portal）。
+    - `8445`：Threat Hub gRPC HTTP/2 雙向微批次串流同步服務（提供毫秒級全網聯防）。
+    - **完全不需要手動開 Port**。IDDS Community 服務啟動時會透過入站規則調和機制，自動在 Windows 防火牆建立並管理對應的入站放行規則；當功能停用時亦會自動清理，杜絕通訊埠衝突與遺漏。
