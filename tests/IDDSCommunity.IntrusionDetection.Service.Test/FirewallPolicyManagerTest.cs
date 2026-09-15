@@ -1,10 +1,103 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using System.Linq;
+using IDDSCommunity.IntrusionDetection.Shared;
+
 namespace IDDSCommunity.IntrusionDetection.Service.Test;
 
 [TestClass]
 public sealed class FirewallPolicyManagerTest
 {
+    [TestMethod]
+    public void BuildBlockReconciliationPlan_OneHundredThousandUnchanged_HasNoOperations()
+    {
+        string[] desired = System.Linq.Enumerable.Range(0, 100_000)
+            .Select(index => $"10.{index / 65536}.{index / 256 % 256}.{index % 256}")
+            .ToArray();
+        FirewallBlockReconciliationPlan initial = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            desired, [], FirewallBlockMode.Inbound);
+        FirewallManagedRuleSnapshot[] snapshots = initial.RulesToCreate
+            .Select(rule => new FirewallManagedRuleSnapshot(
+                rule.Name, rule.Direction, rule.Action, rule.Protocol, rule.Enabled, rule.RemoteAddresses))
+            .ToArray();
+
+        FirewallBlockReconciliationPlan unchanged = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            desired, snapshots, FirewallBlockMode.Inbound);
+
+        Assert.IsEmpty(unchanged.RulesToCreate);
+        Assert.IsEmpty(unchanged.RulesToPatch);
+        Assert.IsEmpty(unchanged.RulesToDelete);
+    }
+
+    [TestMethod]
+    public void BuildBlockReconciliationPlan_SingleAddressDelta_ChangesOneStableShard()
+    {
+        string[] desired = System.Linq.Enumerable.Range(0, 100_000)
+            .Select(index => $"10.{index / 65536}.{index / 256 % 256}.{index % 256}")
+            .ToArray();
+        FirewallBlockReconciliationPlan initial = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            desired, [], FirewallBlockMode.Inbound);
+        FirewallManagedRuleSnapshot[] snapshots = initial.RulesToCreate
+            .Select(rule => new FirewallManagedRuleSnapshot(
+                rule.Name, rule.Direction, rule.Action, rule.Protocol, rule.Enabled, rule.RemoteAddresses))
+            .ToArray();
+
+        FirewallBlockReconciliationPlan changed = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            [.. desired, "203.0.113.250"], snapshots, FirewallBlockMode.Inbound);
+
+        Assert.AreEqual(1, changed.RulesToCreate.Count + changed.RulesToPatch.Count);
+        Assert.IsEmpty(changed.RulesToDelete);
+    }
+
+    [TestMethod]
+    public void BuildBlockReconciliationPlan_OneMillionRemove_PreservesFollowingShardMembership()
+    {
+        string[] desired = System.Linq.Enumerable.Range(0, 1_000_000)
+            .Select(index => $"10.{index / 65536}.{index / 256 % 256}.{index % 256}")
+            .ToArray();
+        FirewallBlockReconciliationPlan initial = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            desired, [], FirewallBlockMode.Inbound);
+        FirewallManagedRuleSnapshot[] snapshots = initial.RulesToCreate
+            .Select(rule => new FirewallManagedRuleSnapshot(
+                rule.Name, rule.Direction, rule.Action, rule.Protocol, rule.Enabled, rule.RemoteAddresses))
+            .ToArray();
+        System.Collections.Generic.Dictionary<string, string> assignments = initial.Assignments
+            .ToDictionary(item => item.Address, item => item.ShardId, System.StringComparer.OrdinalIgnoreCase);
+
+        FirewallBlockReconciliationPlan changed = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            desired.Skip(1).ToArray(), snapshots, FirewallBlockMode.Inbound, assignments);
+
+        Assert.IsEmpty(changed.RulesToCreate);
+        Assert.HasCount(1, changed.RulesToPatch);
+        Assert.IsEmpty(changed.RulesToDelete);
+    }
+
+    [TestMethod]
+    public void BuildBlockReconciliationPlan_ExplicitCidr_RemainsExactPrefix()
+    {
+        FirewallBlockReconciliationPlan plan = FirewallPolicyManager.BuildBlockReconciliationPlan(
+            ["198.51.100.0/24", "2001:db8::/32"], [], FirewallBlockMode.Inbound);
+
+        string[] entries = plan.RulesToCreate
+            .SelectMany(rule => rule.RemoteAddresses.Split(','))
+            .ToArray();
+        CollectionAssert.Contains(entries, "198.51.100.0/24");
+        CollectionAssert.Contains(entries, "2001:db8::/32");
+        Assert.HasCount(2, entries);
+    }
+
+    [TestMethod]
+    public void StableShardParserAndComparer_UseNumericSequence()
+    {
+        const string baseName = "IDDSCommunity_BlockAttacker_AllPorts";
+        string shard = FirewallPolicyManager.GetStableShardName(baseName, 7, 10);
+
+        Assert.IsTrue(FirewallPolicyManager.TryParseStableShardName(baseName, shard, out int bucket, out int sequence));
+        Assert.AreEqual(7, bucket);
+        Assert.AreEqual(10, sequence);
+        Assert.IsLessThan(0, FirewallPolicyManager.CompareShardNames(baseName + "_2", baseName + "_10"));
+    }
+
     [TestMethod]
     public void RemoteAddressMergeRemainsSingleRuleAndRejectsDuplicates()
     {

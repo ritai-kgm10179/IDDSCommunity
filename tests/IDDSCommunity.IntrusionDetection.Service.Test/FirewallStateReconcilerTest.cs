@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using IDDSCommunity.IntrusionDetection.Shared;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -73,6 +74,32 @@ public sealed class FirewallStateReconcilerTest
     }
 
     /// <summary>
+    /// 驗證十萬筆一致狀態只讀取一次狀態，而且不執行任何防火牆寫入作業。
+    /// </summary>
+    [TestMethod]
+    public void Reconcile_OneHundredThousandUnchanged_PerformsNoFirewallWrites()
+    {
+        string[] addresses = System.Linq.Enumerable.Range(0, 100_000)
+            .Select(index => $"10.{index / 65536}.{index / 256 % 256}.{index % 256}")
+            .ToArray();
+        FakeFirewallPolicy firewall = new(addresses);
+        Lock[] locks = addresses.Select(address => new Lock
+        {
+            IpAddress = address,
+            Status = Lock.LOCK_STATUS_HARDLOCK
+        }).ToArray();
+        FirewallStateReconciler reconciler = new(
+            firewall, () => locks, _ => Assert.Fail(), (_, _, _, _) => Assert.Fail(),
+            (_, exception) => Assert.Fail(exception.Message));
+
+        reconciler.Reconcile();
+
+        Assert.AreEqual(1, firewall.StateReadCount);
+        Assert.AreEqual(0, firewall.BatchBlockCount);
+        Assert.AreEqual(0, firewall.BatchRemoveCount);
+    }
+
+    /// <summary>
     /// 驗證批次部分成功時只完成已套用位址，其餘位址保留供下次重試。
     /// </summary>
     [TestMethod]
@@ -116,6 +143,9 @@ public sealed class FirewallStateReconcilerTest
         internal bool FailAfterFirstBlock { get; init; }
         internal IReadOnlyCollection<string>? AnyDirectionAddresses { get; init; }
         internal List<string> RemovedAddresses { get; } = [];
+        internal int StateReadCount { get; private set; }
+        internal int BatchBlockCount { get; private set; }
+        internal int BatchRemoveCount { get; private set; }
 
         public void Block(string ipAddress)
         {
@@ -126,6 +156,7 @@ public sealed class FirewallStateReconcilerTest
 
         public void BatchBlock(IReadOnlyCollection<string> ipAddresses)
         {
+            BatchBlockCount++;
             if (FailBlock)
                 throw new InvalidOperationException("expected");
             int applied = 0;
@@ -150,10 +181,15 @@ public sealed class FirewallStateReconcilerTest
             return result;
         }
         public IReadOnlyCollection<string> GetBlockedAddresses() => addresses;
-        public FirewallBlockState GetBlockState() => new(addresses, AnyDirectionAddresses ?? addresses);
+        public FirewallBlockState GetBlockState()
+        {
+            StateReadCount++;
+            return new(addresses, AnyDirectionAddresses ?? addresses);
+        }
         public void RemoveIpAddressFromBlockList(string ipAddress) => addresses.Remove(ipAddress);
         public void BatchRemove(IReadOnlyCollection<string> ipAddresses)
         {
+            BatchRemoveCount++;
             foreach (string ip in ipAddresses)
             {
                 addresses.Remove(ip);

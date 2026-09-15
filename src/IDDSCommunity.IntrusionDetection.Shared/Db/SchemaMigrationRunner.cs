@@ -127,8 +127,20 @@ internal static class SchemaMigrationRunner
         if (!MigrationApplied(connection, transaction, 15) && ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
             Execute(connection, transaction, "INSERT OR IGNORE INTO IpAttackActivity(IpAddress,LastAttackTicks) SELECT DISTINCT IpAddress, CAST((julianday('now')-1721425.5)*864000000000 AS INTEGER) FROM Locks WHERE Status IN (300,310)");
         Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubCursors (Endpoint TEXT PRIMARY KEY NOT NULL, Cursor INTEGER NOT NULL, Generation TEXT NOT NULL, LocalCursor INTEGER NOT NULL, UpdatedUtc TEXT NOT NULL)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS FirewallDesiredAddress (AddressKey TEXT NOT NULL, AddressFamily INTEGER NOT NULL, NetworkBytes BLOB NOT NULL, PrefixLength INTEGER NOT NULL, DesiredState INTEGER NOT NULL, Source TEXT NOT NULL, Revision INTEGER NOT NULL, StableBucket INTEGER NOT NULL, AssignedShard TEXT NULL, LastChangedUtc TEXT NOT NULL, PRIMARY KEY(AddressKey,Source)) WITHOUT ROWID");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallDesiredAddress_StateBucketKey ON FirewallDesiredAddress(DesiredState,StableBucket,AddressKey)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallDesiredAddress_ShardKey ON FirewallDesiredAddress(AssignedShard,AddressKey)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallDesiredAddress_StateKeyRevision ON FirewallDesiredAddress(DesiredState,AddressKey,Revision)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS FirewallAppliedShard (Direction INTEGER NOT NULL, ShardId TEXT NOT NULL, ContentHash TEXT NOT NULL, AddressCount INTEGER NOT NULL, SerializedBytes INTEGER NOT NULL, AppliedRevision INTEGER NOT NULL, BackendRuleId TEXT NULL, LastVerifiedUtc TEXT NULL, PRIMARY KEY(Direction,ShardId))");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallAppliedShard_Revision ON FirewallAppliedShard(AppliedRevision)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS FirewallChangeJournal (Sequence INTEGER PRIMARY KEY AUTOINCREMENT, LockId INTEGER NULL, AddressKey TEXT NOT NULL, Operation INTEGER NOT NULL, DesiredRevision INTEGER NOT NULL, ProcessingState INTEGER NOT NULL DEFAULT 0, CreatedUtc TEXT NOT NULL, UpdatedUtc TEXT NOT NULL, FailureDetails TEXT NULL, ClaimOwner TEXT NULL, LeaseUntilUtc TEXT NULL, AttemptCount INTEGER NOT NULL DEFAULT 0, NextAttemptUtc TEXT NULL)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallChangeJournal_StateSequence ON FirewallChangeJournal(ProcessingState,Sequence)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallChangeJournal_AddressRevision ON FirewallChangeJournal(AddressKey,DesiredRevision)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallChangeJournal_Claim ON FirewallChangeJournal(ProcessingState,NextAttemptUtc,LeaseUntilUtc,Sequence)");
+        Execute(connection, transaction, "CREATE UNIQUE INDEX IF NOT EXISTS UX_FirewallChangeJournal_PendingAddress ON FirewallChangeJournal(AddressKey) WHERE ProcessingState=0");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(15,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(16,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(17,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";

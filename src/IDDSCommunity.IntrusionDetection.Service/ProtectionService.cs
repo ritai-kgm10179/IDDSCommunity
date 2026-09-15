@@ -515,10 +515,6 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
 
             // 定期校準 Windows 防火牆傳入放行規則以防外部異動
             ReconcileFirewallInboundRules();
-            lock (firewallMutationGate)
-            {
-                firewallPolicy.CompactBlockRules();
-            }
         }
         catch (Exception ex)
         {
@@ -550,24 +546,40 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             return;
         try
         {
-            foreach (Lock pending in Locks.GetPendingLocks())
+            const int pendingPageSize = 1000;
+            long pendingCursor = 0;
+            while (true)
             {
-                try
+                IReadOnlyList<Lock> pendingPage = Locks.ReadActiveLockPage(pendingCursor, pendingPageSize, pendingOnly: true);
+                if (pendingPage.Count == 0)
+                    break;
+                pendingCursor = pendingPage[^1].Id;
+                List<Lock> applicable = new(pendingPage.Count);
+                foreach (Lock pending in pendingPage)
                 {
                     if (configuration.IsInSafeNetwork(pending.IpAddress))
                     {
                         Locks.UnlockIp(pending.IpAddress);
                         continue;
                     }
-                    firewallPolicy.Block(pending.IpAddress);
-                    int applied = pending.Status == Lock.LOCK_STATUS_HARDLOCK_REQUESTED ? Lock.LOCK_STATUS_HARDLOCK : Lock.LOCK_STATUS_SOFTLOCK;
-                    database.ExecuteNonQuery("UPDATE Locks SET Status=@p0,LastUpdate=@p1 WHERE LockId=@p2 AND Status=@p3", applied, DateTime.UtcNow, pending.Id, pending.Status);
-                    TryRecordAudit("Firewall.Request", "Succeeded", pending.IpAddress);
-                    if (applied == Lock.LOCK_STATUS_HARDLOCK) _ = cloudPerimeterService.NotifyBlockAsync(pending.IpAddress, "Management request");
+                    applicable.Add(pending);
+                }
+                if (applicable.Count == 0)
+                    continue;
+                try
+                {
+                    firewallPolicy.BatchBlock(applicable.ConvertAll(static pending => pending.IpAddress));
+                    Locks.ConfirmRequestedLocks(applicable.ConvertAll(static pending => pending.Id));
+                    TryRecordAudit("Firewall.Request.Batch", "Succeeded", applicable.Count.ToString(System.Globalization.CultureInfo.InvariantCulture), "ApplyPending");
+                    foreach (Lock pending in applicable)
+                    {
+                        if (pending.Status == Lock.LOCK_STATUS_HARDLOCK_REQUESTED)
+                            _ = cloudPerimeterService.NotifyBlockAsync(pending.IpAddress, "Management request");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    TryRecordAudit("Firewall.Request", "Failed", pending.IpAddress, ex.GetType().Name);
+                    TryRecordAudit("Firewall.Request.Batch", "Failed", applicable.Count.ToString(System.Globalization.CultureInfo.InvariantCulture), ex.GetType().Name);
                 }
             }
             List<Lock> timedOutLocks = Locks.GetUnlockList();
@@ -1359,18 +1371,7 @@ public bool LimitMailSent { get; set; }
         if (validThreats.Count == 0) return;
 
         HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
-        HashSet<string> pendingDbLocks = Locks.GetPendingLocks()
-            .Select(item => item.IpAddress)
-            .Where(validThreats.ContainsKey)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        List<string> candidateIps = [];
-        foreach (string ip in validThreats.Keys)
-        {
-            if (!existingDbLocked.Contains(ip) || pendingDbLocks.Contains(ip))
-            {
-                candidateIps.Add(ip);
-            }
-        }
+        List<string> candidateIps = [.. validThreats.Keys];
 
         if (candidateIps.Count == 0) return;
 
@@ -1383,7 +1384,8 @@ public bool LimitMailSent { get; set; }
         List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
         foreach (string ip in candidateIps)
         {
-            if (validThreats.TryGetValue(ip, out var item))
+            if ((!existingDbLocked.Contains(ip) || !existingFwLocked.Contains(ip))
+                && validThreats.TryGetValue(ip, out var item))
             {
                 toLock.Add((ip, item));
             }
@@ -1510,18 +1512,7 @@ public bool LimitMailSent { get; set; }
         threatHubServer?.IngestLocalThreatsBatch(validThreats.Values);
 
         HashSet<string> existingDbLocked = Locks.GetExistingLockedIps(validThreats.Keys);
-        HashSet<string> pendingDbLocks = Locks.GetPendingLocks()
-            .Select(item => item.IpAddress)
-            .Where(validThreats.ContainsKey)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        List<string> candidateIps = [];
-        foreach (string ip in validThreats.Keys)
-        {
-            if (!existingDbLocked.Contains(ip) || pendingDbLocks.Contains(ip))
-            {
-                candidateIps.Add(ip);
-            }
-        }
+        List<string> candidateIps = [.. validThreats.Keys];
 
         if (candidateIps.Count == 0) return;
 
@@ -1534,7 +1525,8 @@ public bool LimitMailSent { get; set; }
         List<(string Ip, Shared.ThreatIntelligence.ThreatIntelligenceItem Item)> toLock = [];
         foreach (string ip in candidateIps)
         {
-            if (validThreats.TryGetValue(ip, out var item))
+            if ((!existingDbLocked.Contains(ip) || !existingFwLocked.Contains(ip))
+                && validThreats.TryGetValue(ip, out var item))
             {
                 toLock.Add((ip, item));
             }
@@ -1626,21 +1618,30 @@ public bool LimitMailSent { get; set; }
         DateTime confirmedUtc = DateTime.UtcNow;
         database.ExecuteInTransaction((connection, transaction) =>
         {
-            using var command = connection.CreateCommand();
-            command.Transaction = transaction;
-            command.CommandText = "UPDATE Locks SET Status=@status,LastUpdate=@updated WHERE IpAddress=@ip AND Status=@requested";
-            var status = command.Parameters.Add("@status", Microsoft.Data.Sqlite.SqliteType.Integer);
-            var updated = command.Parameters.Add("@updated", Microsoft.Data.Sqlite.SqliteType.Text);
-            var ip = command.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
-            var requested = command.Parameters.Add("@requested", Microsoft.Data.Sqlite.SqliteType.Integer);
-            status.Value = Lock.LOCK_STATUS_HARDLOCK;
-            updated.Value = confirmedUtc;
-            requested.Value = Lock.LOCK_STATUS_HARDLOCK_REQUESTED;
+            using var create = connection.CreateCommand();
+            create.Transaction = transaction;
+            create.CommandText = "CREATE TEMP TABLE IF NOT EXISTS ThreatLockConfirmationAddresses(IpAddress TEXT PRIMARY KEY) WITHOUT ROWID; DELETE FROM ThreatLockConfirmationAddresses;";
+            create.ExecuteNonQuery();
+
+            using var insert = connection.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText = "INSERT OR IGNORE INTO ThreatLockConfirmationAddresses(IpAddress) VALUES(@ip)";
+            var ip = insert.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+            insert.Prepare();
             foreach (string address in ipAddresses)
             {
                 ip.Value = address;
-                command.ExecuteNonQuery();
+                insert.ExecuteNonQuery();
             }
+
+            using var update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE Locks SET Status=@status,LastUpdate=@updated WHERE Status=@requested AND IpAddress IN (SELECT IpAddress FROM ThreatLockConfirmationAddresses)";
+            update.Parameters.AddWithValue("@status", Lock.LOCK_STATUS_HARDLOCK);
+            update.Parameters.AddWithValue("@updated", confirmedUtc);
+            update.Parameters.AddWithValue("@requested", Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
+            update.Prepare();
+            update.ExecuteNonQuery();
         });
     }
 
@@ -1777,7 +1778,6 @@ public bool LimitMailSent { get; set; }
                 Globals.IDDSCOMMUNITY_EVENT_ID_CONFIGURATION_ERROR,
                 Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME));
         reconciler.Reconcile();
-        firewallPolicy.CompactBlockRules();
     }
 
 

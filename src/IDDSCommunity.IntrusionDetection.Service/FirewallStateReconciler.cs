@@ -36,6 +36,10 @@ internal sealed class FirewallStateReconciler(
             .Where(pair => !currentBlocked.Contains(pair.Key))
             .Select(pair => pair.Value)
             .ToList();
+        HashSet<string> missingAddresses = new(
+            missingLocks.Select(lockEntry => FirewallPolicyManager.NormalizeRemoteAddressEntry(lockEntry.IpAddress))
+                .OfType<string>(),
+            StringComparer.OrdinalIgnoreCase);
 
         if (missingLocks.Count > 0)
         {
@@ -82,7 +86,7 @@ internal sealed class FirewallStateReconciler(
                     saveLock(desiredLock);
                     changed = true;
                 }
-                if (changed || missingLocks.Contains(desiredLock))
+                if (changed || missingAddresses.Contains(address))
                     recordAudit("Firewall.Reconcile", "Succeeded", address, "AddOrVerify");
             }
             catch (Exception ex)

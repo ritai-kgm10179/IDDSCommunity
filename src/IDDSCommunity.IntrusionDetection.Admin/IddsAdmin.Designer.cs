@@ -9,8 +9,9 @@
         /// </summary>
         /// <param name="disposing">若要釋放受控資源則為 true；否則為 false。</param>
         protected override void Dispose(bool disposing) {
-            if (disposing && (components != null)) {
-                components.Dispose();
+            if (disposing) {
+                DisposeManagedLifetime();
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }

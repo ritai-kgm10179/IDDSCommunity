@@ -556,6 +556,14 @@ public SecurityAgent Agent
     }
 
     /// <summary>
+    /// 取得目前是否有尚未完成的編輯或持久化工作。
+    /// </summary>
+    public bool HasUnsavedOrPendingChanges =>
+        _hasUnsavedChanges || (_pendingSaveTask is not null && !_pendingSaveTask.IsCompleted);
+
+    internal bool IsCurrentAgent(SecurityAgent agent) => ReferenceEquals(_agent, agent);
+
+    /// <summary>
     /// 先非同步儲存目前 Agent 的待存異動，再切換至指定 Agent。
     /// </summary>
     /// <param name="agent">要顯示的 Agent。</param>

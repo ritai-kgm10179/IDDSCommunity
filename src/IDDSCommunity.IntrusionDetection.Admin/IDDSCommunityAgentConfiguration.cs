@@ -2,6 +2,7 @@
 using System.Drawing;
 using IDDSCommunity.IntrusionDetection.Shared;
 using System.Windows.Forms;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
@@ -11,6 +12,11 @@ namespace IDDSCommunity.IntrusionDetection.Admin;
 /// </summary>
 public partial class IDDSCommunityAgentConfiguration : UserControl
 {
+    private readonly CancellationTokenSource _agentSwitchLifetime = new();
+    private readonly SemaphoreSlim _agentSwitchGate = new(1, 1);
+    private CancellationTokenSource? _agentSwitchCancellation;
+    private long _agentSwitchGeneration;
+
         /// <summary>
     /// 當 AgentSettingsChanged 時引發之事件。
     /// </summary>
@@ -22,6 +28,13 @@ public event EventHandler? AgentSettingsChanged;
     {
         InitializeComponent();
         BackColor = Color.White;
+        Disposed += (_, _) =>
+        {
+            _agentSwitchLifetime.Cancel();
+            Interlocked.Exchange(ref _agentSwitchCancellation, null)?.Cancel();
+            _agentSwitchLifetime.Dispose();
+            _pluginConfigPanel?.Dispose();
+        };
     }
     /// <summary>
     /// 手動排列導覽清單與設定內容面板。AutoScaleMode.Font 會依實際字型度量放大
@@ -90,6 +103,12 @@ public PanelPluginConfiguration PluginConfigPanel
     /// 自動刷寫並持久化當前控制項中尚未儲存的 Agent 設定變更。
     /// </summary>
     public Task<bool> FlushUnsavedChangesAsync() => PluginConfigPanel.FlushUnsavedChangesAsync();
+
+    /// <summary>
+    /// 取得目前是否有尚未完成的 Agent 設定變更。
+    /// </summary>
+    public bool HasUnsavedOrPendingChanges =>
+        _pluginConfigPanel is not null && _pluginConfigPanel.HasUnsavedOrPendingChanges;
     /// <summary>
     /// Clears security agents.
     /// </summary>
@@ -106,14 +125,45 @@ public PanelPluginConfiguration PluginConfigPanel
     public async Task<bool> ShowAgentConfigAsync(SecurityAgent agent)
     {
         ArgumentNullException.ThrowIfNull(agent);
-        if (!await PluginConfigPanel.FlushUnsavedChangesAsync()) return false;
-        await Task.Run(() =>
+        long generation = Interlocked.Increment(ref _agentSwitchGeneration);
+        CancellationTokenSource cancellation = CancellationTokenSource.CreateLinkedTokenSource(_agentSwitchLifetime.Token);
+        CancellationTokenSource? previous = Interlocked.Exchange(ref _agentSwitchCancellation, cancellation);
+        previous?.Cancel();
+
+        bool gateEntered = false;
+        try
         {
-            if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
-        });
-        if (!await PluginConfigPanel.SwitchAgentAsync(agent)) return false;
-        iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName);
-        return true;
+            await _agentSwitchGate.WaitAsync(cancellation.Token);
+            gateEntered = true;
+            if (_pluginConfigPanel is not null && _pluginConfigPanel.IsCurrentAgent(agent))
+            {
+                iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName, notify: false);
+                return true;
+            }
+            if (!await PluginConfigPanel.FlushUnsavedChangesAsync()) return false;
+            cancellation.Token.ThrowIfCancellationRequested();
+            await Task.Run(() =>
+            {
+                if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
+            }, cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            if (generation != Interlocked.Read(ref _agentSwitchGeneration)) return false;
+            if (!await PluginConfigPanel.SwitchAgentAsync(agent)) return false;
+            cancellation.Token.ThrowIfCancellationRequested();
+            if (generation != Interlocked.Read(ref _agentSwitchGeneration)) return false;
+            iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName, notify: false);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            return false;
+        }
+        finally
+        {
+            if (gateEntered) _agentSwitchGate.Release();
+            Interlocked.CompareExchange(ref _agentSwitchCancellation, null, cancellation);
+            cancellation.Dispose();
+        }
     }
 
     /// <summary>
@@ -123,9 +173,12 @@ public PanelPluginConfiguration PluginConfigPanel
     public void ShowAgentConfig(SecurityAgent agent)
     {
         ArgumentNullException.ThrowIfNull(agent);
+        Interlocked.Increment(ref _agentSwitchGeneration);
+        CancellationTokenSource? previous = Interlocked.Exchange(ref _agentSwitchCancellation, null);
+        previous?.Cancel();
         if (!agent.CheckConfigVersionById()) agent.CheckConfigVersionByName();
         PluginConfigPanel.Agent = agent;
-        iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName);
+        iddscommunitySettingsNavigation.SetSelectedItem(agent.DisplayName, notify: false);
     }
     /// <summary>
     /// 處理 navigation changed 事件。
@@ -137,8 +190,9 @@ public PanelPluginConfiguration PluginConfigPanel
         if (iddscommunitySettingsNavigation.SelectedItem != null && !string.IsNullOrEmpty(iddscommunitySettingsNavigation.SelectedItem.DisplayName))
         {
             SecurityAgent? agent = SecurityAgents.Instance.FindByDisplayName(iddscommunitySettingsNavigation.SelectedItem.DisplayName);
-            if (agent is not null && !await ShowAgentConfigAsync(agent))
-                iddscommunitySettingsNavigation.SetSelectedItem(PluginConfigPanel.Agent.DisplayName);
+            if (agent is not null && !await ShowAgentConfigAsync(agent) && !IsDisposed && !Disposing
+                && iddscommunitySettingsNavigation.SelectedName.Equals(agent.DisplayName, StringComparison.Ordinal))
+                iddscommunitySettingsNavigation.SetSelectedItem(PluginConfigPanel.Agent.DisplayName, notify: false);
         }
     }
 }

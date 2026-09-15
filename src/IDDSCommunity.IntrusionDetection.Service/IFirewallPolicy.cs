@@ -56,3 +56,27 @@ internal interface IFirewallPolicy
 internal sealed record FirewallBlockState(
     System.Collections.Generic.IReadOnlyCollection<string> EffectiveAddresses,
     System.Collections.Generic.IReadOnlyCollection<string> AnyDirectionAddresses);
+
+internal sealed record FirewallManagedRuleSnapshot(
+    string Name,
+    int Direction,
+    int Action,
+    int Protocol,
+    bool Enabled,
+    string RemoteAddresses);
+
+internal sealed record FirewallBlockRuleTarget(
+    string Name,
+    int Direction,
+    int Action,
+    int Protocol,
+    bool Enabled,
+    string RemoteAddresses);
+
+internal sealed record FirewallBlockReconciliationPlan(
+    System.Collections.Generic.IReadOnlyList<FirewallBlockRuleTarget> RulesToCreate,
+    System.Collections.Generic.IReadOnlyList<FirewallBlockRuleTarget> RulesToPatch,
+    System.Collections.Generic.IReadOnlyList<string> RulesToDelete,
+    System.Collections.Generic.IReadOnlyList<FirewallShardAssignment> Assignments);
+
+internal sealed record FirewallShardAssignment(string Address, string ShardId);

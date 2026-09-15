@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using Microsoft.Data.Sqlite;
 
 
 namespace IDDSCommunity.IntrusionDetection.Shared;
@@ -11,6 +13,93 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// </summary>
 public class Locks
 {
+
+    /// <summary>
+    /// 以固定上限及識別碼游標讀取有效或待套用的封鎖記錄，避免一次將完整資料集載入記憶體。
+    /// </summary>
+    /// <param name="afterLockId">只傳回識別碼大於此值的記錄；第一頁請傳入零。</param>
+    /// <param name="maximumRows">本頁最多傳回的記錄數。</param>
+    /// <param name="pendingOnly">是否只讀取待套用的封鎖要求。</param>
+    /// <returns>依識別碼遞增排序的封鎖記錄頁面。</returns>
+    /// <exception cref="ArgumentOutOfRangeException">當識別碼或頁面大小超出允許範圍時拋出。</exception>
+    public static IReadOnlyList<Lock> ReadActiveLockPage(long afterLockId, int maximumRows, bool pendingOnly = false)
+    {
+        if (afterLockId < 0)
+            throw new ArgumentOutOfRangeException(nameof(afterLockId));
+        if (maximumRows is < 1 or > 10000)
+            throw new ArgumentOutOfRangeException(nameof(maximumRows));
+
+        List<Lock> result = new(maximumRows);
+        using IDataReader reader = Database.Instance.ExecuteReader(
+            "select LockId,IpAddress,LockDate,Port,Status,TriggerIncident,UnlockDate from Locks where LockId>@p0 and Status in (@p1,@p2,@p3,@p4) order by LockId limit @p5",
+            afterLockId,
+            pendingOnly ? Lock.LOCK_STATUS_HARDLOCK_REQUESTED : Lock.LOCK_STATUS_HARDLOCK,
+            pendingOnly ? Lock.LOCK_STATUS_SOFTLOCK_REQUESTED : Lock.LOCK_STATUS_SOFTLOCK,
+            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED,
+            maximumRows);
+        while (reader.Read())
+        {
+            result.Add(new Lock
+            {
+                Id = Db.DbValueConverter.ToInt64(reader["LockId"]),
+                IpAddress = Db.DbValueConverter.ToString(reader["IpAddress"]),
+                LockDate = Db.DbValueConverter.ToDateTime(reader["LockDate"]),
+                Port = Db.DbValueConverter.ToInt(reader["Port"]),
+                Status = Db.DbValueConverter.ToInt(reader["Status"]),
+                TriggerIncident = Db.DbValueConverter.ToInt64(reader["TriggerIncident"]),
+                UnlockDate = Db.DbValueConverter.ToDateTime(reader["UnlockDate"])
+            });
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// 在單一交易內批次確認已成功套用至防火牆的封鎖要求。
+    /// </summary>
+    /// <param name="lockIds">已確認套用成功的封鎖識別碼。</param>
+    /// <param name="confirmedUtc">確認時間；省略時使用目前 UTC 時間。</param>
+    /// <param name="cancellationToken">取消建立暫存集合或提交狀態更新的權杖。</param>
+    /// <returns>實際由要求狀態轉為已套用狀態的記錄數。</returns>
+    public static int ConfirmRequestedLocks(IEnumerable<long> lockIds, DateTime? confirmedUtc = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(lockIds);
+        int affected = 0;
+        Database.Instance.ExecuteInTransaction((connection, transaction) =>
+        {
+            using SqliteCommand create = connection.CreateCommand();
+            create.Transaction = transaction;
+            create.CommandText = "CREATE TEMP TABLE IF NOT EXISTS RequestedLockConfirmationIds(LockId INTEGER PRIMARY KEY) WITHOUT ROWID; DELETE FROM RequestedLockConfirmationIds;";
+            create.ExecuteNonQuery();
+
+            using SqliteCommand insert = connection.CreateCommand();
+            insert.Transaction = transaction;
+            insert.CommandText = "INSERT OR IGNORE INTO RequestedLockConfirmationIds(LockId) VALUES($lockId)";
+            SqliteParameter lockIdParameter = insert.Parameters.Add("$lockId", SqliteType.Integer);
+            insert.Prepare();
+            foreach (long lockId in lockIds)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (lockId <= 0)
+                    continue;
+                lockIdParameter.Value = lockId;
+                insert.ExecuteNonQuery();
+            }
+
+            using SqliteCommand update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = "update Locks set Status=case Status when $softRequested then $softLocked when $hardRequested then $hardLocked end, LastUpdate=$confirmedUtc where Status in ($softRequested,$hardRequested) and LockId in (select LockId from RequestedLockConfirmationIds)";
+            update.Parameters.AddWithValue("$softRequested", Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
+            update.Parameters.AddWithValue("$softLocked", Lock.LOCK_STATUS_SOFTLOCK);
+            update.Parameters.AddWithValue("$hardRequested", Lock.LOCK_STATUS_HARDLOCK_REQUESTED);
+            update.Parameters.AddWithValue("$hardLocked", Lock.LOCK_STATUS_HARDLOCK);
+            update.Parameters.AddWithValue("$confirmedUtc", (confirmedUtc ?? DateTime.UtcNow).ToUniversalTime());
+            update.Prepare();
+            cancellationToken.ThrowIfCancellationRequested();
+            affected = update.ExecuteNonQuery();
+        });
+        return affected;
+    }
 
 
     /// <summary>

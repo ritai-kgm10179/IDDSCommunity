@@ -14,6 +14,7 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
     private readonly FirewallBlockMode blockMode;
     private static FirewallPolicyManager? _instance;
     private static readonly object _firewallLock = new();
+    private const int StableBucketCount = 256;
 
     internal static FirewallPolicyManager Instance
     {
@@ -287,6 +288,234 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             }
             return false;
         }
+    }
+
+    internal static FirewallBlockReconciliationPlan BuildBlockReconciliationPlan(
+        IReadOnlyCollection<string> desiredAddresses,
+        IReadOnlyCollection<FirewallManagedRuleSnapshot> managedRules,
+        FirewallBlockMode mode,
+        IReadOnlyDictionary<string, string>? persistedAssignments = null)
+    {
+        ArgumentNullException.ThrowIfNull(desiredAddresses);
+        ArgumentNullException.ThrowIfNull(managedRules);
+
+        HashSet<string> desired = new(StringComparer.OrdinalIgnoreCase);
+        foreach (string value in desiredAddresses)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+            string? normalized = NormalizeRemoteAddressEntry(value);
+            if (normalized is not null)
+                desired.Add(normalized);
+        }
+
+        Dictionary<string, FirewallManagedRuleSnapshot> currentByName = new(StringComparer.Ordinal);
+        List<string> duplicates = [];
+        foreach (FirewallManagedRuleSnapshot rule in managedRules)
+        {
+            if (!currentByName.TryAdd(rule.Name, rule))
+                duplicates.Add(rule.Name);
+        }
+
+        Dictionary<string, (int Bucket, int Sequence)> assignments = BuildStableAssignments(
+            desired, managedRules, persistedAssignments);
+        List<FirewallBlockRuleTarget> targets = [];
+        AddStableTargets(targets, assignments, GetRuleName("BlockAttacker", 0),
+            (int)NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN);
+        if (mode == FirewallBlockMode.Bidirectional)
+        {
+            AddStableTargets(targets, assignments, GetRuleName("BlockAttackerOutbound", 0),
+                (int)NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_OUT);
+        }
+
+        List<FirewallBlockRuleTarget> create = [];
+        List<FirewallBlockRuleTarget> patch = [];
+        HashSet<string> requiredNames = new(StringComparer.Ordinal);
+        foreach (FirewallBlockRuleTarget target in targets)
+        {
+            requiredNames.Add(target.Name);
+            if (!currentByName.TryGetValue(target.Name, out FirewallManagedRuleSnapshot? current))
+                create.Add(target);
+            else if (!RuleMatches(current, target))
+                patch.Add(target);
+        }
+
+        List<string> delete = duplicates;
+        foreach (string currentName in currentByName.Keys)
+        {
+            if (IsManagedBlockRuleName(currentName) && !requiredNames.Contains(currentName))
+                delete.Add(currentName);
+        }
+        delete.Sort(CompareShardNames);
+        List<FirewallShardAssignment> persisted = assignments
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => new FirewallShardAssignment(
+                pair.Key, GetStableShardId(pair.Value.Bucket, pair.Value.Sequence)))
+            .ToList();
+        return new FirewallBlockReconciliationPlan(create, patch, delete, persisted);
+    }
+
+    private static Dictionary<string, (int Bucket, int Sequence)> BuildStableAssignments(
+        HashSet<string> desired,
+        IReadOnlyCollection<FirewallManagedRuleSnapshot> managedRules,
+        IReadOnlyDictionary<string, string>? persistedAssignments)
+    {
+        Dictionary<string, (int Bucket, int Sequence)> assignments = new(StringComparer.OrdinalIgnoreCase);
+        if (persistedAssignments is not null)
+        {
+            foreach ((string rawAddress, string shardId) in persistedAssignments)
+            {
+                string? address = NormalizeRemoteAddressEntry(rawAddress);
+                if (address is not null && desired.Contains(address)
+                    && TryParseStableShardId(shardId, out int bucket, out int sequence)
+                    && bucket == GetStableBucket(address))
+                {
+                    assignments.TryAdd(address, (bucket, sequence));
+                }
+            }
+        }
+
+        string inboundBase = GetRuleName("BlockAttacker", 0);
+        string outboundBase = GetRuleName("BlockAttackerOutbound", 0);
+        foreach (FirewallManagedRuleSnapshot rule in managedRules)
+        {
+            bool parsed = TryParseStableShardName(inboundBase, rule.Name, out int bucket, out int sequence)
+                || TryParseStableShardName(outboundBase, rule.Name, out bucket, out sequence);
+            if (!parsed)
+                continue;
+            foreach (string entry in rule.RemoteAddresses.Split(',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                string? address = NormalizeRemoteAddressEntry(entry);
+                if (address is not null && desired.Contains(address) && bucket == GetStableBucket(address))
+                    assignments.TryAdd(address, (bucket, sequence));
+            }
+        }
+
+        Dictionary<(int Bucket, int Sequence), int> loads = [];
+        foreach ((int bucket, int sequence) in assignments.Values)
+        {
+            var key = (bucket, sequence);
+            loads[key] = loads.GetValueOrDefault(key) + 1;
+        }
+        foreach (string address in desired.Where(address => !assignments.ContainsKey(address)).Order(StringComparer.Ordinal))
+        {
+            int bucket = GetStableBucket(address);
+            int sequence = 0;
+            while (loads.GetValueOrDefault((bucket, sequence)) >= MaxAddressesPerRule)
+                sequence++;
+            assignments.Add(address, (bucket, sequence));
+            loads[(bucket, sequence)] = loads.GetValueOrDefault((bucket, sequence)) + 1;
+        }
+        return assignments;
+    }
+
+    private static void AddStableTargets(List<FirewallBlockRuleTarget> targets,
+        Dictionary<string, (int Bucket, int Sequence)> assignments,
+        string baseRuleName, int direction)
+    {
+        Dictionary<(int Bucket, int Sequence), List<string>> shards = [];
+        foreach ((string address, (int bucket, int sequence)) in assignments)
+        {
+            var key = (bucket, sequence);
+            if (!shards.TryGetValue(key, out List<string>? values))
+            {
+                values = [];
+                shards.Add(key, values);
+            }
+            values.Add(address);
+        }
+
+        foreach (((int bucket, int sequence), List<string> values) in shards
+            .OrderBy(pair => pair.Key.Bucket).ThenBy(pair => pair.Key.Sequence))
+        {
+            values.Sort(StringComparer.Ordinal);
+            targets.Add(new FirewallBlockRuleTarget(
+                GetStableShardName(baseRuleName, bucket, sequence), direction,
+                (int)NET_FW_ACTION.NET_FW_ACTION_BLOCK, 256, true,
+                string.Join(',', values)));
+        }
+    }
+
+    private static bool RuleMatches(FirewallManagedRuleSnapshot current, FirewallBlockRuleTarget target) =>
+        current.Direction == target.Direction
+        && current.Action == target.Action
+        && current.Protocol == target.Protocol
+        && current.Enabled == target.Enabled
+        && StringComparer.Ordinal.Equals(current.RemoteAddresses, target.RemoteAddresses);
+
+    internal static int GetStableBucket(string normalizedAddress)
+    {
+        uint hash = 2166136261;
+        foreach (char value in normalizedAddress)
+        {
+            hash ^= value;
+            hash *= 16777619;
+        }
+        return (int)(hash % StableBucketCount);
+    }
+
+    internal static string GetStableShardName(string baseRuleName, int bucket, int sequence) =>
+        $"{baseRuleName}_b{bucket:D3}_s{sequence:D4}";
+
+    internal static string GetStableShardId(int bucket, int sequence) => $"b{bucket:D3}-s{sequence:D4}";
+
+    internal static bool TryParseStableShardId(string shardId, out int bucket, out int sequence)
+    {
+        bucket = 0;
+        sequence = 0;
+        if (string.IsNullOrWhiteSpace(shardId) || shardId[0] != 'b')
+            return false;
+        int separator = shardId.IndexOf("-s", StringComparison.Ordinal);
+        return separator > 1
+            && int.TryParse(shardId.AsSpan(1, separator - 1), System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out bucket)
+            && bucket >= 0 && bucket < StableBucketCount
+            && int.TryParse(shardId.AsSpan(separator + 2), System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out sequence)
+            && sequence >= 0;
+    }
+
+    internal static bool TryParseStableShardName(string baseRuleName, string ruleName, out int bucket, out int sequence)
+    {
+        bucket = 0;
+        sequence = 0;
+        string prefix = baseRuleName + "_b";
+        if (!ruleName.StartsWith(prefix, StringComparison.Ordinal))
+            return false;
+        ReadOnlySpan<char> suffix = ruleName.AsSpan(prefix.Length);
+        int separator = suffix.IndexOf("_s", StringComparison.Ordinal);
+        return separator > 0
+            && int.TryParse(suffix[..separator], System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out bucket)
+            && bucket >= 0 && bucket < StableBucketCount
+            && int.TryParse(suffix[(separator + 2)..], System.Globalization.NumberStyles.None,
+                System.Globalization.CultureInfo.InvariantCulture, out sequence)
+            && sequence >= 0;
+    }
+
+    internal static int CompareShardNames(string left, string right)
+    {
+        int leftSeparator = left.LastIndexOf('_');
+        int rightSeparator = right.LastIndexOf('_');
+        if (leftSeparator >= 0 && rightSeparator >= 0
+            && int.TryParse(left.AsSpan(leftSeparator + 1), out int leftIndex)
+            && int.TryParse(right.AsSpan(rightSeparator + 1), out int rightIndex))
+        {
+            int prefixComparison = left.AsSpan(0, leftSeparator).SequenceCompareTo(right.AsSpan(0, rightSeparator));
+            return prefixComparison != 0 ? prefixComparison : leftIndex.CompareTo(rightIndex);
+        }
+        return StringComparer.Ordinal.Compare(left, right);
+    }
+
+    private static bool IsManagedBlockRuleName(string name)
+    {
+        string inboundBase = GetRuleName("BlockAttacker", 0);
+        string outboundBase = GetRuleName("BlockAttackerOutbound", 0);
+        return name.Equals(inboundBase, StringComparison.Ordinal)
+            || name.StartsWith(inboundBase + "_", StringComparison.Ordinal)
+            || name.Equals(outboundBase, StringComparison.Ordinal)
+            || name.StartsWith(outboundBase + "_", StringComparison.Ordinal);
     }
     /// <summary>
     /// Returns the exact addresses currently present in the IDDSCommunity block rule.

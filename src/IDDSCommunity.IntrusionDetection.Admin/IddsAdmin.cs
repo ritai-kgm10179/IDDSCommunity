@@ -2,10 +2,13 @@
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
+using Lock = IDDSCommunity.IntrusionDetection.Shared.Lock;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.Localization;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IDDSCommunity.IntrusionDetection.Admin;
@@ -60,11 +63,82 @@ internal sealed class CoalescingAsyncOperation
     }
 }
 
+internal sealed class OperationDrain
+{
+    private sealed class Lease(OperationDrain owner) : IDisposable
+    {
+        private OperationDrain? owner = owner;
+
+        public void Dispose() => Interlocked.Exchange(ref owner, null)?.Release();
+    }
+
+    private readonly object sync = new();
+    private int active;
+    private bool stopping;
+    private Action? drained;
+
+    internal bool TryEnter(out IDisposable? lease)
+    {
+        lock (sync)
+        {
+            if (stopping)
+            {
+                lease = null;
+                return false;
+            }
+            active++;
+            lease = new Lease(this);
+            return true;
+        }
+    }
+
+    internal void Stop(Action onDrained)
+    {
+        ArgumentNullException.ThrowIfNull(onDrained);
+        Action? callback = null;
+        lock (sync)
+        {
+            if (stopping) return;
+            stopping = true;
+            drained = onDrained;
+            if (active == 0)
+            {
+                callback = drained;
+                drained = null;
+            }
+        }
+        callback?.Invoke();
+    }
+
+    private void Release()
+    {
+        Action? callback = null;
+        lock (sync)
+        {
+            active--;
+            if (stopping && active == 0)
+            {
+                callback = drained;
+                drained = null;
+            }
+        }
+        callback?.Invoke();
+    }
+}
+
 /// <summary>
 /// IDDS 社群版主管理主控台視窗。
 /// </summary>
 public partial class IddsAdmin : Form
 {
+    private enum CloseState
+    {
+        Open,
+        SavingAgentSettings,
+        FinalClose,
+        Disposed
+    }
+
     private const string ServiceName = Globals.WINDOWS_SERVICE_NAME;
     private static readonly TimeSpan SecurityLogWindow = TimeSpan.FromDays(30);
     private static readonly TimeSpan SecurityLogRefreshInterval = TimeSpan.FromSeconds(30);
@@ -87,9 +161,9 @@ public partial class IddsAdmin : Form
     private EventLog? eventLogIDDSCommunity;
     private readonly System.Threading.CancellationTokenSource uiRefreshCancellation = new();
     private readonly System.Threading.SemaphoreSlim serviceOperationGate = new(1, 1);
+    private readonly OperationDrain serviceOperationLifetime = new();
     private readonly CoalescingAsyncOperation restartOperation;
-    private bool closeAfterAgentSave;
-    private bool closeSaveInProgress;
+    private CloseState closeState;
     private int serviceRefreshActive;
     private Bitmap? disabledStartServiceImage;
     private Bitmap? disabledStopServiceImage;
@@ -170,16 +244,38 @@ public partial class IddsAdmin : Form
     /// <param name="e">The form-close event data.</param>
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
-        uiRefreshCancellation.Cancel();
+        CancelBackgroundOperations();
+        closeState = CloseState.Disposed;
         logReader?.Dispose();
         timerRefreshServiceStatus?.Dispose();
         eventLogIDDSCommunity?.Dispose();
-        uiRefreshCancellation.Dispose();
-        serviceOperationGate.Dispose();
         disabledStartServiceImage?.Dispose();
         disabledStopServiceImage?.Dispose();
-        serviceController?.Dispose();
+        serviceOperationLifetime.Stop(DisposeServiceOperationResources);
         base.OnFormClosed(e);
+    }
+
+    private void CancelBackgroundOperations()
+    {
+        logReader?.Stop();
+        timerRefreshServiceStatus?.Stop();
+        if (!uiRefreshCancellation.IsCancellationRequested)
+            uiRefreshCancellation.Cancel();
+    }
+
+    private void DisposeManagedLifetime()
+    {
+        if (closeState == CloseState.Disposed) return;
+        closeState = CloseState.Disposed;
+        CancelBackgroundOperations();
+        serviceOperationLifetime.Stop(DisposeServiceOperationResources);
+        _panelAgentConfiguration?.Dispose();
+    }
+
+    private void DisposeServiceOperationResources()
+    {
+        Interlocked.Exchange(ref serviceController, null)?.Dispose();
+        serviceOperationGate.Dispose();
     }
 
     private static IddsAdmin? _instance;
@@ -268,9 +364,12 @@ public partial class IddsAdmin : Form
 
     private async Task RestartServiceOnceAsync()
     {
-        bool gateEntered = false;
-        try
+        if (!serviceOperationLifetime.TryEnter(out IDisposable? operation)) return;
+        using (operation)
         {
+            bool gateEntered = false;
+            try
+            {
             await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
             gateEntered = true;
             System.ServiceProcess.ServiceController? controller = serviceController;
@@ -287,10 +386,10 @@ public partial class IddsAdmin : Form
                 return controller.Status;
             }, uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
-        }
-        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
-        catch (Exception ex)
-        {
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
             System.ServiceProcess.ServiceController? controller = serviceController;
             MarkServiceUnavailable(controller, ex);
             if (!IsDisposed && IsHandleCreated)
@@ -300,10 +399,11 @@ public partial class IddsAdmin : Form
                     MessageBox.Show(this, Strings.Get("The service change could not be completed."),
                         Strings.Get("Service operation failed"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 });
-        }
-        finally
-        {
-            if (gateEntered) serviceOperationGate.Release();
+            }
+            finally
+            {
+                if (gateEntered) serviceOperationGate.Release();
+            }
         }
     }
 
@@ -485,9 +585,16 @@ public partial class IddsAdmin : Form
     {
         if (System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 1) != 0)
             return;
-        bool gateEntered = false;
-        try
+        if (!serviceOperationLifetime.TryEnter(out IDisposable? operation))
         {
+            Interlocked.Exchange(ref serviceRefreshActive, 0);
+            return;
+        }
+        using (operation)
+        {
+            bool gateEntered = false;
+            try
+            {
             await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
             gateEntered = true;
             System.ServiceProcess.ServiceControllerStatus? status = await Task.Run(ReadServiceStatus, uiRefreshCancellation.Token).ConfigureAwait(false);
@@ -496,18 +603,19 @@ public partial class IddsAdmin : Form
                 {
                     ApplyServiceStatus(status);
                 }, uiRefreshCancellation.Token);
-        }
-        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
-        catch (Exception exception)
-        {
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (Exception exception)
+            {
             Trace.TraceError("Service status refresh failed: {0}", exception);
             ServiceError = true;
-        }
-        finally
-        {
-            if (gateEntered)
-                serviceOperationGate.Release();
-            System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 0);
+            }
+            finally
+            {
+                if (gateEntered)
+                    serviceOperationGate.Release();
+                System.Threading.Interlocked.Exchange(ref serviceRefreshActive, 0);
+            }
         }
     }
 
@@ -1028,31 +1136,59 @@ public partial class IddsAdmin : Form
     {
         logReader?.Stop();
         timerRefreshServiceStatus?.Stop();
-        if (!closeAfterAgentSave && _panelAgentConfiguration is not null)
+        if (closeState == CloseState.FinalClose || closeState == CloseState.Disposed)
         {
-            e.Cancel = true;
-            if (!closeSaveInProgress)
-            {
-                closeSaveInProgress = true;
-                _ = FlushAgentSettingsAndCloseAsync();
-            }
+            CancelBackgroundOperations();
+            base.OnFormClosing(e);
+            return;
+        }
+
+        if (_panelAgentConfiguration is null || !_panelAgentConfiguration.HasUnsavedOrPendingChanges)
+        {
+            closeState = CloseState.FinalClose;
+            CancelBackgroundOperations();
+            base.OnFormClosing(e);
+            return;
+        }
+
+        e.Cancel = true;
+        if (closeState == CloseState.Open)
+        {
+            closeState = CloseState.SavingAgentSettings;
+            _ = FlushAgentSettingsAndCloseAsync();
         }
         base.OnFormClosing(e);
     }
 
     private async Task FlushAgentSettingsAndCloseAsync()
     {
-        try
+        bool saved = _panelAgentConfiguration is null || await _panelAgentConfiguration.FlushUnsavedChangesAsync();
+        if (closeState != CloseState.SavingAgentSettings || IsDisposed || Disposing)
+            return;
+
+        if (!saved)
         {
-            if (_panelAgentConfiguration is null || await _panelAgentConfiguration.FlushUnsavedChangesAsync())
-            {
-                closeAfterAgentSave = true;
-                Close();
-            }
+            closeState = CloseState.Open;
+            logReader?.Start();
+            timerRefreshServiceStatus?.Start();
+            return;
         }
-        finally
+
+        closeState = CloseState.FinalClose;
+        CancelBackgroundOperations();
+        if (IsHandleCreated)
         {
-            closeSaveInProgress = false;
+            try
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (closeState == CloseState.FinalClose && !IsDisposed && !Disposing)
+                        Close();
+                }));
+            }
+            catch (InvalidOperationException) when (IsDisposed || Disposing || !IsHandleCreated)
+            {
+            }
         }
     }
 
@@ -1621,28 +1757,36 @@ public partial class IddsAdmin : Form
             return;
 
         buttonManageService.Enabled = false;
-        bool gateEntered = false;
-        try
+        if (!serviceOperationLifetime.TryEnter(out IDisposable? operation))
         {
+            buttonManageService.Enabled = true;
+            return;
+        }
+        using (operation)
+        {
+            bool gateEntered = false;
+            try
+            {
             await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token).ConfigureAwait(false);
             gateEntered = true;
             install = serviceController is null;
             await ElevatedServiceCommand.RunElevatedAsync(ServiceName, install ? "install" : "uninstall", uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ResetServiceController(), uiRefreshCancellation.Token);
-        }
-        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
-        catch (Exception exception)
-        {
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (Exception exception)
+            {
             Trace.TraceError("Service installation state change failed: {0}", exception);
             if (!IsDisposed && IsHandleCreated)
                 await this.InvokeAsync(() => MessageBox.Show(this, Strings.Get("The service change could not be completed."),
                     Strings.Get("Service operation failed"), MessageBoxButtons.OK, MessageBoxIcon.Error));
-        }
-        finally
-        {
-            if (gateEntered) serviceOperationGate.Release();
-            if (!IsDisposed && IsHandleCreated)
-                await this.InvokeAsync(() => buttonManageService.Enabled = true);
+            }
+            finally
+            {
+                if (gateEntered) serviceOperationGate.Release();
+                if (!IsDisposed && IsHandleCreated)
+                    await this.InvokeAsync(() => buttonManageService.Enabled = true);
+            }
         }
     }
 
@@ -1672,9 +1816,12 @@ public partial class IddsAdmin : Form
     /// <returns>表示非同步工作完成的 Task。</returns>
     private async Task ChangeServiceStateAsync(bool start)
     {
-        bool gateEntered = false;
-        try
+        if (!serviceOperationLifetime.TryEnter(out IDisposable? operation)) return;
+        using (operation)
         {
+            bool gateEntered = false;
+            try
+            {
             await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token);
             gateEntered = true;
             smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
@@ -1690,18 +1837,19 @@ public partial class IddsAdmin : Form
                 return (System.ServiceProcess.ServiceControllerStatus?)controller.Status;
             }, uiRefreshCancellation.Token).ConfigureAwait(false);
             await this.InvokeAsync(() => ApplyServiceStatus(status), uiRefreshCancellation.Token);
-        }
-        catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
-        catch (Exception ex)
-        {
+            }
+            catch (OperationCanceledException) when (uiRefreshCancellation.IsCancellationRequested) { }
+            catch (Exception ex)
+            {
             System.ServiceProcess.ServiceController? controller = serviceController;
             MarkServiceUnavailable(controller, ex);
             if (!IsDisposed && IsHandleCreated)
                 await this.InvokeAsync(() => ApplyServiceStatus(null));
-        }
-        finally
-        {
-            if (gateEntered) serviceOperationGate.Release();
+            }
+            finally
+            {
+                if (gateEntered) serviceOperationGate.Release();
+            }
         }
     }
     /// <summary>

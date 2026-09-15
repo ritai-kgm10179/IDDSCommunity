@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IDDSCommunity.IntrusionDetection.Shared.Test;
@@ -10,6 +12,64 @@ public class LocksTest
     /// 初始化 <see cref="LocksTest"/> 類別的新執行個體。
     /// </summary>
     public LocksTest() => Database.Instance.Configure(System.Windows.Forms.Application.StartupPath);
+
+    /// <summary>
+    /// 驗證批次確認只更新指定且仍處於要求狀態的記錄，並正確保留未成功及既有已套用記錄。
+    /// </summary>
+    [TestMethod]
+    public void ConfirmRequestedLocks_UpdatesOnlySelectedRequestedRows()
+    {
+        string prefix = $"198.51.100.{Random.Shared.Next(10, 200)}";
+        Lock soft = new() { IpAddress = prefix, LockDate = DateTime.UtcNow, UnlockDate = DateTime.UtcNow.AddHours(1), Status = Lock.LOCK_STATUS_SOFTLOCK_REQUESTED };
+        Lock hard = new() { IpAddress = $"{prefix}/32", LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK_REQUESTED };
+        Lock pending = new() { IpAddress = $"203.0.113.{Random.Shared.Next(10, 200)}", LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK_REQUESTED };
+        Lock unchanged = new() { IpAddress = $"192.0.2.{Random.Shared.Next(10, 200)}", LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK };
+        soft.Id = Locks.CreateLock(soft);
+        hard.Id = Locks.CreateLock(hard);
+        pending.Id = Locks.CreateLock(pending);
+        unchanged.Id = Locks.CreateLock(unchanged);
+        try
+        {
+            DateTime confirmedUtc = new(2026, 9, 15, 1, 2, 3, DateTimeKind.Utc);
+            int affected = Locks.ConfirmRequestedLocks([soft.Id, hard.Id, soft.Id, unchanged.Id], confirmedUtc);
+
+            Assert.AreEqual(2, affected);
+            Assert.AreEqual(Lock.LOCK_STATUS_SOFTLOCK, Locks.GetLockById(soft.Id).Status);
+            Assert.AreEqual(Lock.LOCK_STATUS_HARDLOCK, Locks.GetLockById(hard.Id).Status);
+            Assert.AreEqual(Lock.LOCK_STATUS_HARDLOCK_REQUESTED, Locks.GetLockById(pending.Id).Status);
+            Assert.AreEqual(Lock.LOCK_STATUS_HARDLOCK, Locks.GetLockById(unchanged.Id).Status);
+        }
+        finally
+        {
+            Database.Instance.ExecuteNonQuery("delete from Locks where LockId in (@p0,@p1,@p2,@p3)", soft.Id, hard.Id, pending.Id, unchanged.Id);
+        }
+    }
+
+    /// <summary>
+    /// 驗證有效封鎖頁面使用識別碼游標，且待處理模式不會傳回已套用記錄。
+    /// </summary>
+    [TestMethod]
+    public void ReadActiveLockPage_UsesStableKeysetCursor()
+    {
+        Lock applied = new() { IpAddress = $"192.0.2.{Random.Shared.Next(10, 200)}", LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK };
+        Lock pending = new() { IpAddress = $"203.0.113.{Random.Shared.Next(10, 200)}", LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK_REQUESTED };
+        applied.Id = Locks.CreateLock(applied);
+        pending.Id = Locks.CreateLock(pending);
+        try
+        {
+            IReadOnlyList<Lock> activePage = Locks.ReadActiveLockPage(applied.Id - 1, 1);
+            Assert.AreEqual(applied.Id, activePage[0].Id);
+            IReadOnlyList<Lock> nextPage = Locks.ReadActiveLockPage(applied.Id, 10);
+            Assert.IsTrue(nextPage.Any(item => item.Id == pending.Id));
+            IReadOnlyList<Lock> pendingPage = Locks.ReadActiveLockPage(applied.Id - 1, 10, pendingOnly: true);
+            Assert.IsFalse(pendingPage.Any(item => item.Id == applied.Id));
+            Assert.IsTrue(pendingPage.Any(item => item.Id == pending.Id));
+        }
+        finally
+        {
+            Database.Instance.ExecuteNonQuery("delete from Locks where LockId in (@p0,@p1)", applied.Id, pending.Id);
+        }
+    }
 
     /// <summary>
     /// 驗證近期攻擊與有限期限封鎖均不會進入永久封鎖假釋候選。

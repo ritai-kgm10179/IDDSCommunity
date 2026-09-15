@@ -14,8 +14,185 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Test;
 /// 驗證 Admin 設定頁的恢復預設值互動不會略過儲存與取消流程。
 /// </summary>
 [TestClass]
+[DoNotParallelize]
 public sealed class SettingsResetUiTest
 {
+    [TestInitialize]
+    public void Init()
+    {
+        SynchronizationContext.SetSynchronizationContext(null);
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        SynchronizationContext.SetSynchronizationContext(null);
+    }
+    /// <summary>
+    /// 驗證程式化同步選取 Agent 時不會再次引發導覽事件。
+    /// </summary>
+    [STATestMethod]
+    public void SettingsNavigation_SilentSelection_DoesNotRaiseNavigationChanged()
+    {
+        using IDDSCommunitySettingsNavigation navigation = new();
+        navigation.AddNavigationItem("first", null, null);
+        navigation.AddNavigationItem("second", null, null);
+        int notifications = 0;
+        navigation.NavigationChanged += (_, _) => notifications++;
+
+        navigation.SetSelectedItem("second", notify: false);
+
+        Assert.AreEqual("second", navigation.SelectedName);
+        Assert.AreEqual(0, notifications);
+    }
+
+    /// <summary>
+    /// 驗證重複選取目前項目時不會再次引發導覽事件。
+    /// </summary>
+    [STATestMethod]
+    public void SettingsNavigation_SelectCurrentItem_DoesNotRaiseDuplicateEvent()
+    {
+        using IDDSCommunitySettingsNavigation navigation = new();
+        navigation.AddNavigationItem("first", null, null);
+        int notifications = 0;
+        navigation.NavigationChanged += (_, _) => notifications++;
+
+        navigation.SetSelectedItem("first");
+        navigation.SetSelectedItem("first");
+
+        Assert.AreEqual(0, notifications);
+    }
+
+    /// <summary>
+    /// 驗證大量程式化切換只在明確要求通知時引發一次事件。
+    /// </summary>
+    [STATestMethod]
+    public void SettingsNavigation_RapidProgrammaticSelections_DoNotCreateEventStorm()
+    {
+        using IDDSCommunitySettingsNavigation navigation = new();
+        navigation.AddNavigationItem("first", null, null);
+        navigation.AddNavigationItem("second", null, null);
+        int notifications = 0;
+        navigation.NavigationChanged += (_, _) => notifications++;
+
+        for (int index = 0; index < 1_000; index++)
+            navigation.SetSelectedItem(index % 2 == 0 ? "second" : "first", notify: false);
+        navigation.SetSelectedItem("second");
+
+        Assert.AreEqual("second", navigation.SelectedName);
+        Assert.AreEqual(1, notifications);
+    }
+
+    /// <summary>
+    /// 驗證停止服務操作時會等待既有操作離開，且拒絕後續操作。
+    /// </summary>
+    [TestMethod]
+    public void OperationDrain_Stop_DefersCleanupUntilLastOperationCompletes()
+    {
+        OperationDrain drain = new();
+        Assert.IsTrue(drain.TryEnter(out IDisposable? first));
+        Assert.IsTrue(drain.TryEnter(out IDisposable? second));
+        int cleanupCalls = 0;
+
+        drain.Stop(() => Interlocked.Increment(ref cleanupCalls));
+
+        Assert.IsFalse(drain.TryEnter(out _));
+        first!.Dispose();
+        Assert.AreEqual(0, cleanupCalls);
+        second!.Dispose();
+        Assert.AreEqual(1, cleanupCalls);
+        second.Dispose();
+        Assert.AreEqual(1, cleanupCalls);
+    }
+
+    /// <summary>
+    /// 驗證沒有執行中操作時，停止要求會立即且只清理一次。
+    /// </summary>
+    [TestMethod]
+    public void OperationDrain_StopWhenIdle_CleansUpOnce()
+    {
+        OperationDrain drain = new();
+        int cleanupCalls = 0;
+
+        drain.Stop(() => Interlocked.Increment(ref cleanupCalls));
+        drain.Stop(() => Interlocked.Increment(ref cleanupCalls));
+
+        Assert.AreEqual(1, cleanupCalls);
+        Assert.IsFalse(drain.TryEnter(out _));
+    }
+
+    /// <summary>
+    /// 驗證沒有待存設定時，第一次關閉不會被非同步流程取消。
+    /// </summary>
+    [STATestMethod]
+    public void IddsAdmin_CloseWithoutPendingAgentSave_AllowsFirstClose()
+    {
+        using IddsAdmin admin = new();
+        FormClosingEventArgs closing = new(CloseReason.UserClosing, cancel: false);
+
+        InvokeFormClosing(admin, closing);
+
+        Assert.IsFalse(closing.Cancel);
+        CancellationTokenSource cancellation = Assert.IsInstanceOfType<CancellationTokenSource>(
+            typeof(IddsAdmin).GetField("uiRefreshCancellation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(admin));
+        Assert.IsTrue(cancellation.IsCancellationRequested);
+    }
+
+    /// <summary>
+    /// 驗證待存設定期間只取消關閉一次，Dispose 會取消持久化 continuation。
+    /// </summary>
+    [TestMethod]
+    public async Task IddsAdmin_DisposeDuringPendingAgentSave_CancelsContinuationSafely()
+    {
+        TaskCompletionSource saveStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource saveCanceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        PanelPluginConfiguration pluginPanel = new(null, async (snapshot, cancellationToken) =>
+        {
+            saveStarted.SetResult();
+            try
+            {
+                await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+                return new AgentSettingsSaveResult(snapshot, snapshot.Id, snapshot.Serial);
+            }
+            catch (OperationCanceledException)
+            {
+                saveCanceled.SetResult();
+                throw;
+            }
+        }, (_, _, _) => { })
+        {
+            Agent = new SecurityAgent { Name = "test", DisplayName = "test", HardLockAttempts = 5 }
+        };
+        TextBox hardLocks = Assert.IsInstanceOfType<TextBox>(pluginPanel.Controls.Find("textBoxHardLocks", true)[0]);
+        hardLocks.Text = "6";
+
+        IDDSCommunityAgentConfiguration agentConfiguration = new();
+        typeof(IDDSCommunityAgentConfiguration).GetField("_pluginConfigPanel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(agentConfiguration, pluginPanel);
+        agentConfiguration.Controls.Add(pluginPanel);
+
+        IddsAdmin admin = new();
+        typeof(IddsAdmin).GetField("_panelAgentConfiguration", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .SetValue(admin, agentConfiguration);
+        admin.Controls.Add(agentConfiguration);
+
+        FormClosingEventArgs firstClosing = new(CloseReason.UserClosing, cancel: false);
+        InvokeFormClosing(admin, firstClosing);
+        await saveStarted.Task.WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+        FormClosingEventArgs secondClosing = new(CloseReason.UserClosing, cancel: false);
+        InvokeFormClosing(admin, secondClosing);
+
+        Assert.IsTrue(firstClosing.Cancel);
+        Assert.IsTrue(secondClosing.Cancel);
+        admin.Dispose();
+        await saveCanceled.Task.WaitAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+        Assert.IsTrue(admin.IsDisposed);
+    }
+
+    private static void InvokeFormClosing(IddsAdmin admin, FormClosingEventArgs closing) =>
+        typeof(IddsAdmin).GetMethod("OnFormClosing", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .Invoke(admin, [closing]);
+
     /// <summary>
     /// 驗證操作執行期間的多次重新要求只會合併成一次後續執行。
     /// </summary>

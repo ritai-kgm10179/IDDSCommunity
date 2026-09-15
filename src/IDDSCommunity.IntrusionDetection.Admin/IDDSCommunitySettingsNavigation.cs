@@ -197,16 +197,30 @@ public IDDSCommunitySettingsNavigationItem? SelectedItem
     /// </summary>
     /// <param name="name">name 的值。</param>
     public void SetSelectedItem(string name)
+        => SetSelectedItem(name, notify: true);
+
+    /// <summary>
+    /// 設定選取項目，並指定是否引發導覽變更事件。
+    /// </summary>
+    /// <param name="name">要選取的顯示名稱。</param>
+    /// <param name="notify">是否引發 <see cref="NavigationChanged"/> 事件。</param>
+    public void SetSelectedItem(string name, bool notify)
     {
         foreach (Control c in flowLayoutPanelNavigationItems.Controls)
         {
             if (c is IDDSCommunitySettingsNavigationItem item && item.DisplayName.Equals(name, StringComparison.Ordinal))
             {
+                if (item.IsSelected)
+                {
+                    flowLayoutPanelNavigationItems.ScrollControlIntoView(item);
+                    return;
+                }
                 UnselectAll();
                 item.IsSelected = true;
                 flowLayoutPanelNavigationItems.ScrollControlIntoView(item);
                 flowLayoutPanelNavigationItems.AutoScrollPosition = new Point(0, flowLayoutPanelNavigationItems.VerticalScroll.Value);
-                OnNavigationChanged(item);
+                if (notify) OnNavigationChanged(item);
+                return;
             }
         }
     }
