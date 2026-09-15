@@ -532,9 +532,12 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
             HashSet<string> outbound = new(StringComparer.OrdinalIgnoreCase);
             string inboundBase = GetRuleName("BlockAttacker", 0);
             string outboundBase = GetRuleName("BlockAttackerOutbound", 0);
-            foreach (INetFwRule rule in FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME))
+            List<INetFwRule> rules = FindRules(Globals.IDDSCOMMUNITY_WINDOWS_IDS_RULE_NAME);
+            try
             {
-                string ruleName = FirewallComString.Get(rule.Name);
+                foreach (INetFwRule rule in rules)
+                {
+                    string ruleName = FirewallComString.Get(rule.Name);
                 HashSet<string>? target = ruleName.StartsWith(inboundBase, StringComparison.Ordinal)
                     && IsEffectiveRule(rule, NET_FW_RULE_DIRECTION.NET_FW_RULE_DIR_IN)
                     ? inbound
@@ -550,6 +553,11 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                     if (normalized is not null)
                         target.Add(normalized);
                 }
+            }
+            }
+            finally
+            {
+                foreach (INetFwRule rule in rules) ReleaseRule(rule);
             }
             HashSet<string> anyDirection = new(inbound, StringComparer.OrdinalIgnoreCase);
             anyDirection.UnionWith(outbound);
@@ -596,19 +604,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 INetFwRule? rule = GetRule(ruleName);
                 if (rule is null)
                     continue;
-                string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
-                if (!ContainsAddress(remoteAddresses, ipAddress))
-                    continue;
-                string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ipAddress.Trim() });
-                if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+                try
                 {
-                    RemoveRuleIfPresent(ruleName);
+                    string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
+                    if (!ContainsAddress(remoteAddresses, ipAddress))
+                        continue;
+                    string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ipAddress.Trim() });
+                    if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+                    {
+                        RemoveRuleIfPresent(ruleName);
+                    }
+                    else
+                    {
+                        FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+                    }
+                    removed = true;
                 }
-                else
+                finally
                 {
-                    FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+                    ReleaseRule(rule);
                 }
-                removed = true;
             }
             if (!removed)
                 throw new ArgumentException(string.Format(
@@ -633,19 +648,26 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
                 INetFwRule? rule = GetRule(ruleName);
                 if (rule is null)
                     continue;
-                string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
-                bool hasMatch = removeSet.Any(address => ContainsAddress(remoteAddresses, address));
-                if (!hasMatch)
-                    continue;
+                try
+                {
+                    string remoteAddresses = FirewallComString.Get(rule.RemoteAddresses);
+                    bool hasMatch = removeSet.Any(address => ContainsAddress(remoteAddresses, address));
+                    if (!hasMatch)
+                        continue;
 
-                string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, removeSet);
-                if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
-                {
-                    RemoveRuleIfPresent(ruleName);
+                    string cleanedAddresses = GetCleanedRemoteAddresses(remoteAddresses, removeSet);
+                    if (string.IsNullOrWhiteSpace(cleanedAddresses.Replace(',', ' ')))
+                    {
+                        RemoveRuleIfPresent(ruleName);
+                    }
+                    else
+                    {
+                        FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+                    }
                 }
-                else
+                finally
                 {
-                    FirewallComString.Set(cleanedAddresses.TrimEnd(','), value => rule.RemoteAddresses = value);
+                    ReleaseRule(rule);
                 }
             }
         }
@@ -705,16 +727,19 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         NET_FW_ACTION action, IReadOnlyList<string> addresses)
     {
         string baseRuleName = GetRuleName(name, port);
+        List<INetFwRule> allRules = FindRules(baseRuleName);
         List<INetFwRule> existingShards = [];
-        foreach (INetFwRule r in FindRules(baseRuleName))
+        try
         {
-            string rName = FirewallComString.Get(r.Name);
-            if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+            foreach (INetFwRule r in allRules)
             {
-                existingShards.Add(r);
+                string rName = FirewallComString.Get(r.Name);
+                if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+                {
+                    existingShards.Add(r);
+                }
             }
-        }
-        existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
+            existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
 
         int chunkCount = addresses.Count == 0 ? 0 : (addresses.Count + MaxAddressesPerRule - 1) / MaxAddressesPerRule;
 
@@ -756,6 +781,11 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             string excessName = FirewallComString.Get(existingShards[i].Name);
             RemoveRuleIfPresent(excessName);
+        }
+        }
+        finally
+        {
+            foreach (INetFwRule r in allRules) ReleaseRule(r);
         }
     }
 
@@ -1014,16 +1044,19 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
 
         string baseRuleName = GetRuleName(name, port);
+        List<INetFwRule> allRules = FindRules(baseRuleName);
         List<INetFwRule> existingShards = [];
-        foreach (INetFwRule r in FindRules(baseRuleName))
+        try
         {
-            string rName = FirewallComString.Get(r.Name);
-            if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+            foreach (INetFwRule r in allRules)
             {
-                existingShards.Add(r);
+                string rName = FirewallComString.Get(r.Name);
+                if (rName == baseRuleName || rName.StartsWith(baseRuleName + "_", StringComparison.Ordinal))
+                {
+                    existingShards.Add(r);
+                }
             }
-        }
-        existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
+            existingShards.Sort((left, right) => StringComparer.Ordinal.Compare(FirewallComString.Get(left.Name), FirewallComString.Get(right.Name)));
 
         foreach (INetFwRule shard in existingShards)
         {
@@ -1069,6 +1102,11 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         FirewallComString.Set(newRuleName, value => newRule.Name = value);
         FirewallComString.Set(remoteAddress, value => newRule.RemoteAddresses = value);
         firewallPolicyManager.Rules.Add(newRule);
+        }
+        finally
+        {
+            foreach (INetFwRule r in allRules) ReleaseRule(r);
+        }
     }
 
     /// <summary>
@@ -1221,7 +1259,20 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         {
             foreach (INetFwRule rule in (dynamic)firewallPolicyManager.Rules)
             {
-                if (FirewallComString.Get(rule.Name) == name) return rule;
+                bool matches = false;
+                try
+                {
+                    if (FirewallComString.Get(rule.Name) == name)
+                    {
+                        matches = true;
+                        return rule;
+                    }
+                }
+                finally
+                {
+                    if (!matches && System.Runtime.InteropServices.Marshal.IsComObject(rule))
+                        System.Runtime.InteropServices.Marshal.FinalReleaseComObject(rule);
+                }
             }
             return null;
         }
@@ -1236,13 +1287,22 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         List<INetFwRule> rules = [];
         foreach (INetFwRule rule in (dynamic)firewallPolicyManager.Rules)
         {
-            string candidate = FirewallComString.Get(rule.Name);
-            bool matches = candidate.Equals(name, StringComparison.Ordinal)
-                || (name.EndsWith('_')
-                    ? candidate.StartsWith(name, StringComparison.Ordinal)
-                    : candidate.StartsWith(name + "_", StringComparison.Ordinal));
-            if (matches)
-                rules.Add(rule);
+            bool matches = false;
+            try
+            {
+                string candidate = FirewallComString.Get(rule.Name);
+                matches = candidate.Equals(name, StringComparison.Ordinal)
+                    || (name.EndsWith('_')
+                        ? candidate.StartsWith(name, StringComparison.Ordinal)
+                        : candidate.StartsWith(name + "_", StringComparison.Ordinal));
+                if (matches)
+                    rules.Add(rule);
+            }
+            finally
+            {
+                if (!matches && System.Runtime.InteropServices.Marshal.IsComObject(rule))
+                    System.Runtime.InteropServices.Marshal.FinalReleaseComObject(rule);
+            }
         }
         return rules;
     }
@@ -1470,5 +1530,15 @@ internal sealed class FirewallPolicyManager : IFirewallPolicy, IDisposable
         }
     }
 
+
+    /// <summary>
+    /// 釋放單一 Windows 防火牆規則之 COM RCW 資源。
+    /// </summary>
+    /// <param name="rule">欲釋放之防火牆規則 COM 物件。</param>
+    private static void ReleaseRule(INetFwRule? rule)
+    {
+        if (rule is not null && System.Runtime.InteropServices.Marshal.IsComObject(rule))
+            System.Runtime.InteropServices.Marshal.FinalReleaseComObject(rule);
+    }
 }
 #pragma warning restore CA1416

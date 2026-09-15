@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -98,6 +98,7 @@ public sealed class SqliteMaintenanceService(Database database)
 
         using SqliteConnection destination = database.CreateEncryptedConnection(destinationPath, SqliteOpenMode.ReadWriteCreate);
         destination.Open();
+        Database.ConfigureConnection(destination);
         database.Connection.BackupDatabase(destination);
         using SqliteCommand check = destination.CreateCommand();
         check.CommandText = "PRAGMA integrity_check";

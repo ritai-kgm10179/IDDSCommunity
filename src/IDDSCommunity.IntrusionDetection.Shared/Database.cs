@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -518,12 +518,12 @@ public static Database Instance
     /// Applies connection-local integrity and contention settings.
     /// </summary>
     /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
-    private static void ConfigureConnection(SqliteConnection connection) => ConfigureConnection(connection, 30000);
+    internal static void ConfigureConnection(SqliteConnection connection) => ConfigureConnection(connection, 30000);
 
-    private static void ConfigureConnection(SqliteConnection connection, int busyTimeoutMilliseconds)
+    internal static void ConfigureConnection(SqliteConnection connection, int busyTimeoutMilliseconds)
     {
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA foreign_keys=ON; PRAGMA busy_timeout={busyTimeoutMilliseconds}; PRAGMA memory_security=ON;";
+        command.CommandText = $"PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout={busyTimeoutMilliseconds}; PRAGMA memory_security=ON;";
         command.ExecuteNonQuery();
     }
 

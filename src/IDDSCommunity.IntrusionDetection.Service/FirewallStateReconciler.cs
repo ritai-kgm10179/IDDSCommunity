@@ -52,9 +52,17 @@ internal sealed class FirewallStateReconciler(
             }
             catch (Exception ex)
             {
-                blockState = firewallPolicy.GetBlockState();
-                currentBlocked = new HashSet<string>(blockState.EffectiveAddresses, StringComparer.OrdinalIgnoreCase);
-                currentAnyDirection = new HashSet<string>(blockState.AnyDirectionAddresses, StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    blockState = firewallPolicy.GetBlockState();
+                    currentBlocked = new HashSet<string>(blockState.EffectiveAddresses, StringComparer.OrdinalIgnoreCase);
+                    currentAnyDirection = new HashSet<string>(blockState.AnyDirectionAddresses, StringComparer.OrdinalIgnoreCase);
+                }
+                catch
+                {
+                    currentBlocked = [];
+                    currentAnyDirection = [];
+                }
                 foreach (Lock missing in missingLocks)
                 {
                     string? normalized = FirewallPolicyManager.NormalizeRemoteAddressEntry(missing.IpAddress);

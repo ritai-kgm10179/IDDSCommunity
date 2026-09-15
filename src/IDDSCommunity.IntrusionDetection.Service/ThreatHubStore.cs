@@ -226,7 +226,8 @@ internal sealed class ThreatHubStore(Database? database = null)
                     var item = JsonSerializer.Deserialize<ThreatIntelligenceItem>(r.Payload);
                     if (item != null) list.Add(item);
                 }
-                catch { }
+                catch (JsonException) { }
+                catch (NotSupportedException) { }
             }
             return list;
         }
@@ -275,7 +276,8 @@ internal sealed class ThreatHubStore(Database? database = null)
                         if (item == null || string.IsNullOrWhiteSpace(item.ReporterNodeId)) ext++;
                         else cluster++;
                     }
-                    catch { ext++; }
+                    catch (JsonException) { ext++; }
+                    catch (NotSupportedException) { ext++; }
                 }
                 return (ext, cluster);
             }
