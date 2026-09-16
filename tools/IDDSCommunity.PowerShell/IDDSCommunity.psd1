@@ -1,4 +1,4 @@
-@{
+﻿@{
     RootModule = 'IDDSCommunity.psm1'
     ModuleVersion = '1.0.0'
     GUID = 'a8f1234b-8422-4917-a63e-63f5383f982a'

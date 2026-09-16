@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     IDDS Community 官方自動化管理 PowerShell 模組。
 .DESCRIPTION
