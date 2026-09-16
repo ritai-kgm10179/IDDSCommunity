@@ -27,6 +27,8 @@ public sealed partial class PanelDeceptionAndApiSettings : UserControl
     {
         InitializeComponent();
 
+        chkEnableHoneyAccounts.CheckedChanged += (_, _) => UpdateControlsState();
+        chkEnableManagementApi.CheckedChanged += (_, _) => UpdateControlsState();
         btnBrowseScript.Click += (s, e) => BrowseScript();
         btnGenApiKey.Click += (s, e) => GenerateNewApiKey();
         btnSave.Click += (s, e) => SaveSettings();
@@ -46,6 +48,16 @@ public sealed partial class PanelDeceptionAndApiSettings : UserControl
         chkEnableManagementApi.Checked = config.EnableManagementApi;
         numApiPort.Value = config.ManagementApiPort is >= 1 and <= 65535 ? config.ManagementApiPort : 8443;
         txtApiKey.Text = config.ManagementApiKey;
+        UpdateControlsState();
+    }
+
+    private void UpdateControlsState()
+    {
+        txtHoneyAccounts.Enabled = chkEnableHoneyAccounts.Checked;
+        bool apiEnabled = chkEnableManagementApi.Checked;
+        numApiPort.Enabled = apiEnabled;
+        txtApiKey.Enabled = apiEnabled;
+        btnGenApiKey.Enabled = apiEnabled;
     }
 
     /// <summary>

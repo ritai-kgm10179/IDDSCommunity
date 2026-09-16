@@ -56,8 +56,11 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
             Strings.Get("Threat Hub")
         ]);
         comboClusterRole.SelectedIndexChanged += (_, _) => UpdateClusterControlsState();
+        chkThreatHubReverseProxy.CheckedChanged += (_, _) => UpdateClusterControlsState();
         chkEnableFeeds.CheckedChanged += (_, _) => UpdateExternalFeedsControlsState();
         chkEnableDynamicBogon.CheckedChanged += (_, _) => UpdateExternalFeedsControlsState();
+        chkEnableGeoBlocking.CheckedChanged += (_, _) => UpdateGeoControlsState();
+        chkEnableGeoIpAutoUpdate.CheckedChanged += (_, _) => UpdateGeoControlsState();
 
         btnBrowseGeoIpFile.Click += (_, _) =>
         {
@@ -231,6 +234,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
         }
 
         UpdateClusterControlsState();
+        UpdateGeoControlsState();
     }
 
     private void UpdateClusterControlsState()
@@ -251,7 +255,7 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 txtHubEndpoint.Enabled = true;
                 txtHubApiKey.Enabled = true;
                 numHubPort.Enabled = false;
-                numGrpcPort.Enabled = true;
+                numGrpcPort.Enabled = false;
                 chkThreatHubReverseProxy.Enabled = false;
                 chkThreatHubLoopbackOnly.Enabled = false;
                 numSyncInterval.Enabled = true;
@@ -262,12 +266,18 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 numHubPort.Enabled = true;
                 numGrpcPort.Enabled = true;
                 chkThreatHubReverseProxy.Enabled = true;
-                chkThreatHubLoopbackOnly.Enabled = true;
+                chkThreatHubLoopbackOnly.Enabled = chkThreatHubReverseProxy.Checked;
                 numSyncInterval.Enabled = false;
                 break;
         }
 
         UpdateExternalFeedsControlsState();
+    }
+
+    private void UpdateGeoControlsState()
+    {
+        txtBlockedCountries.Enabled = chkEnableGeoBlocking.Checked;
+        numGeoIpUpdateDays.Enabled = chkEnableGeoIpAutoUpdate.Checked;
     }
 
     private void UpdateExternalFeedsControlsState()

@@ -27,6 +27,8 @@ public partial class PanelLockoutConfiguration : UserControl
             textBoxTrustedProxyCidrs,
             Shared.Localization.Strings.Get("Used only to validate Forwarded/X-Forwarded-For and resolve the real client IP. This does not add addresses to the safe-network allowlist."));
 
+        checkBoxLockForever.CheckedChanged += (_, _) => UpdateLockoutControlsState();
+        checkBoxEnableCrossAgentCorrelation.CheckedChanged += (_, _) => UpdateLockoutControlsState();
         LoadData();
         foreach (Control control in tableLayoutMain.Controls)
         {
@@ -55,6 +57,16 @@ public partial class PanelLockoutConfiguration : UserControl
         numericSprayIpThreshold.Value = IddsConfig.Instance.CrossAgentSprayIpThreshold;
         numericSlidingWindowMinutes.Value = IddsConfig.Instance.CrossAgentSlidingWindowMinutes;
         textBoxTrustedProxyCidrs.Text = IddsConfig.Instance.TrustedProxyCidrs;
+        UpdateLockoutControlsState();
+    }
+
+    private void UpdateLockoutControlsState()
+    {
+        textBoxHardLockDuration.Enabled = !checkBoxLockForever.Checked;
+        bool correlationEnabled = checkBoxEnableCrossAgentCorrelation.Checked;
+        numericSprayAccountThreshold.Enabled = correlationEnabled;
+        numericSprayIpThreshold.Enabled = correlationEnabled;
+        numericSlidingWindowMinutes.Enabled = correlationEnabled;
     }
     /// <summary>
     /// Clears errors.
@@ -80,10 +92,18 @@ public partial class PanelLockoutConfiguration : UserControl
             errHardLocks.Visible = true;
             hasError = true;
         }
-        if (!int.TryParse(textBoxHardLockDuration.Text, out int hardLockDuration))
+        int hardLockDuration = 0;
+        if (!checkBoxLockForever.Checked)
         {
-            errHardLockDuration.Visible = true;
-            hasError = true;
+            if (!int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration))
+            {
+                errHardLockDuration.Visible = true;
+                hasError = true;
+            }
+        }
+        else
+        {
+            _ = int.TryParse(textBoxHardLockDuration.Text, out hardLockDuration);
         }
         if (!int.TryParse(textBoxSoftLockDuration.Text, out int softLockDuration))
         {
@@ -169,6 +189,7 @@ public partial class PanelLockoutConfiguration : UserControl
         numericSprayIpThreshold.Value = 5;
         numericSlidingWindowMinutes.Value = 10;
         textBoxTrustedProxyCidrs.Clear();
+        UpdateLockoutControlsState();
     }
 
     private static string NormalizeTrustedProxyEntries(string value)

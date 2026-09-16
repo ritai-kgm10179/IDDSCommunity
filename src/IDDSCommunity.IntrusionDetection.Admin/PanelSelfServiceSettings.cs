@@ -30,6 +30,7 @@ public sealed partial class PanelSelfServiceSettings : UserControl
 
         txtListenIp.Text = AnyIpv4Address;
 
+        chkEnablePortal.CheckedChanged += (_, _) => UpdatePortalControlsState();
         btnGenerate.Click += (s, e) => GenerateNewSecret();
         btnVerify.Click += (s, e) => VerifyCode();
         btnSave.Click += (s, e) => SaveSettings();
@@ -47,6 +48,18 @@ public sealed partial class PanelSelfServiceSettings : UserControl
         numPort.Value = config.SelfServicePortalPort is >= 1 and <= 65535 ? config.SelfServicePortalPort : 8444;
         txtListenIp.Text = string.IsNullOrWhiteSpace(config.SelfServicePortalListenIp) ? "0.0.0.0" : config.SelfServicePortalListenIp;
         txtTotpSecret.Text = config.SelfServiceTotpSecret;
+        UpdatePortalControlsState();
+    }
+
+    private void UpdatePortalControlsState()
+    {
+        bool enabled = chkEnablePortal.Checked;
+        numPort.Enabled = enabled;
+        txtListenIp.Enabled = enabled;
+        txtTotpSecret.Enabled = enabled;
+        btnGenerate.Enabled = enabled;
+        txtTestCode.Enabled = enabled;
+        btnVerify.Enabled = enabled;
     }
 
     /// <summary>

@@ -39,6 +39,8 @@ public sealed partial class PanelCloudPerimeterSettings : UserControl
         ]);
         comboProviderType.SelectedIndex = 0;
 
+        chkEnableCloudPerimeter.CheckedChanged += (_, _) => UpdateCloudPerimeterControlsState();
+        comboProviderType.SelectedIndexChanged += (_, _) => UpdateCloudPerimeterControlsState();
         btnTestConnection.Click += async (s, e) => await TestConnectionAsync().ConfigureAwait(true);
         btnSave.Click += (s, e) => SaveSettings();
 
@@ -58,6 +60,20 @@ public sealed partial class PanelCloudPerimeterSettings : UserControl
         txtResourceId.Text = config.CloudPerimeterResourceId;
         txtSecondaryId.Text = config.CloudPerimeterSecondaryId;
         txtTertiaryId.Text = config.CloudPerimeterTertiaryId;
+        UpdateCloudPerimeterControlsState();
+    }
+
+    private void UpdateCloudPerimeterControlsState()
+    {
+        bool perimeterEnabled = chkEnableCloudPerimeter.Checked;
+        comboProviderType.Enabled = perimeterEnabled;
+        bool hasProvider = perimeterEnabled && comboProviderType.SelectedIndex > 0;
+        txtApiKey.Enabled = hasProvider;
+        txtEndpointUrl.Enabled = hasProvider;
+        txtResourceId.Enabled = hasProvider;
+        txtSecondaryId.Enabled = hasProvider;
+        txtTertiaryId.Enabled = hasProvider;
+        btnTestConnection.Enabled = hasProvider;
     }
 
     /// <summary>
@@ -127,7 +143,7 @@ public sealed partial class PanelCloudPerimeterSettings : UserControl
         }
         finally
         {
-            btnTestConnection.Enabled = true;
+            btnTestConnection.Enabled = chkEnableCloudPerimeter.Checked && comboProviderType.SelectedIndex > 0;
         }
     }
 }

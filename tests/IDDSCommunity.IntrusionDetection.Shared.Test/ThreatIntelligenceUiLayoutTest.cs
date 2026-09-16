@@ -39,8 +39,12 @@ public sealed class ThreatIntelligenceUiLayoutTest
             grpc.Value = 9445;
             Assert.AreEqual(9445m, grpc.Value);
             ComboBox role = Assert.IsInstanceOfType<ComboBox>(panel.Controls.Find("comboClusterRole", true)[0]);
-            role.SelectedIndex = (int)ThreatHubRole.EdgeNode;
+            role.SelectedIndex = (int)ThreatHubRole.ThreatHub;
             Assert.IsTrue(grpc.Enabled);
+            role.SelectedIndex = (int)ThreatHubRole.EdgeNode;
+            Assert.IsFalse(grpc.Enabled);
+            role.SelectedIndex = (int)ThreatHubRole.Standalone;
+            Assert.IsFalse(grpc.Enabled);
             form.Close();
         }
         finally { LanguageManager.Instance.Initialize(previous); }

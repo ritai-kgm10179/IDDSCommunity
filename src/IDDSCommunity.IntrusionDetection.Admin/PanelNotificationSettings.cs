@@ -64,23 +64,64 @@ public partial class PanelNotificationSettings : UserControl
         ]);
         comboBoxWebhookPlatform.SelectedIndexChanged += (_, _) => UpdateWebhookControlsState();
         checkBoxEnableWebhook.CheckedChanged += (_, _) => UpdateWebhookControlsState();
+        checkBoxEnableSyslog.CheckedChanged += (_, _) => UpdateSyslogControlsState();
+        checkBoxEnableMetrics.CheckedChanged += (_, _) => UpdateMetricsControlsState();
         buttonTestWebhook.Click += async (_, _) => await RunTestWebhookAsync();
         buttonTestSyslog.Click += async (_, _) => await RunTestSyslogAsync();
 
         Load += new EventHandler(PanelNotificationSettings_Load);
         UpdateWebhookControlsState();
+        UpdateSyslogControlsState();
+        UpdateMetricsControlsState();
         SettingsResetButtonFactory.AddTo(this, ResetDefaults_Click, container: headerPanel);
     }
 
     private void UpdateWebhookControlsState()
     {
+        bool webhookEnabled = checkBoxEnableWebhook.Checked;
+        comboBoxWebhookPlatform.Enabled = webhookEnabled;
         bool isTelegram = comboBoxWebhookPlatform.SelectedIndex == (int)WebhookPlatform.Telegram;
+        bool hasPlatform = webhookEnabled && comboBoxWebhookPlatform.SelectedIndex > 0;
+
         labelWebhookUrl.Visible = !isTelegram;
         textBoxWebhookUrl.Visible = !isTelegram;
+        textBoxWebhookUrl.Enabled = hasPlatform && !isTelegram;
+
+        textBoxWebhookPrivateDestinations.Enabled = hasPlatform;
+
         labelTelegramToken.Visible = isTelegram;
         textBoxTelegramToken.Visible = isTelegram;
+        textBoxTelegramToken.Enabled = hasPlatform && isTelegram;
+
         labelTelegramChatId.Visible = isTelegram;
         textBoxTelegramChatId.Visible = isTelegram;
+        textBoxTelegramChatId.Enabled = hasPlatform && isTelegram;
+
+        checkBoxWebhookSoftLock.Enabled = hasPlatform;
+        checkBoxWebhookHardLocks.Enabled = hasPlatform;
+        checkBoxWebhookOnUnlock.Enabled = hasPlatform;
+        buttonTestWebhook.Enabled = hasPlatform;
+    }
+
+    private void UpdateSyslogControlsState()
+    {
+        bool enabled = checkBoxEnableSyslog.Checked;
+        textBoxSyslogHost.Enabled = enabled;
+        numSyslogPort.Enabled = enabled;
+        comboBoxSyslogProtocol.Enabled = enabled;
+        comboBoxSyslogFormat.Enabled = enabled;
+        checkBoxSyslogSoftLock.Enabled = enabled;
+        checkBoxSyslogHardLocks.Enabled = enabled;
+        checkBoxSyslogOnUnlock.Enabled = enabled;
+        buttonTestSyslog.Enabled = enabled;
+    }
+
+    private void UpdateMetricsControlsState()
+    {
+        bool enabled = checkBoxEnableMetrics.Checked;
+        textBoxMetricsListenIp.Enabled = enabled;
+        numMetricsPort.Enabled = enabled;
+        textBoxMetricsAllowedNetworks.Enabled = enabled;
     }
 
     private async Task RunTestWebhookAsync()
@@ -153,7 +194,7 @@ public partial class PanelNotificationSettings : UserControl
         }
         finally
         {
-            buttonTestWebhook.Enabled = true;
+            buttonTestWebhook.Enabled = checkBoxEnableWebhook.Checked && comboBoxWebhookPlatform.SelectedIndex > 0;
         }
     }
 
@@ -225,7 +266,7 @@ public partial class PanelNotificationSettings : UserControl
         }
         finally
         {
-            buttonTestSyslog.Enabled = true;
+            buttonTestSyslog.Enabled = checkBoxEnableSyslog.Checked;
         }
     }
 
@@ -276,6 +317,8 @@ public partial class PanelNotificationSettings : UserControl
         textBoxMetricsAllowedNetworks.Text = settings.MetricsAllowedNetworks;
 
         UpdateWebhookControlsState();
+        UpdateSyslogControlsState();
+        UpdateMetricsControlsState();
     }
 
     private void buttonSave_Click(object? sender, EventArgs e)
@@ -350,6 +393,10 @@ public partial class PanelNotificationSettings : UserControl
         textBoxMetricsListenIp.Text = DefaultMetricsListenIp;
         numMetricsPort.Value = 9100;
         textBoxMetricsAllowedNetworks.Text = string.Empty;
+
+        UpdateWebhookControlsState();
+        UpdateSyslogControlsState();
+        UpdateMetricsControlsState();
     }
 
     private void OnNotificationSettingsChanged() => NotificationSettingsChanged?.Invoke(this, EventArgs.Empty);
