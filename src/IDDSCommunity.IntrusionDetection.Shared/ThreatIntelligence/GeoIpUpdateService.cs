@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -51,7 +52,7 @@ public sealed class GeoIpUpdateService : IDisposable
         }
         else
         {
-            this.httpClient = Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(45), userAgent: DefaultUserAgent);
+            this.httpClient = Network.HttpClientHelper.CreatePooledClient(TimeSpan.FromSeconds(180), userAgent: DefaultUserAgent);
             ownClient = true;
         }
     }
@@ -155,21 +156,24 @@ public sealed class GeoIpUpdateService : IDisposable
             string v4Url = config.GeoIpDatabaseIpv4Url;
             string v6Url = config.GeoIpDatabaseIpv6Url;
 
-            // 並行下載 IPv4 與 IPv6 GeoIP 數據
-            Task<string?> v4Task = DownloadGeoIpFeedAsync(v4Url, "IPv4");
-            Task<string?> v6Task = DownloadGeoIpFeedAsync(v6Url, "IPv6");
+            // 循序下載 IPv4 與 IPv6 GeoIP 數據，避免大型檔案並行爭搶頻寬
+            var (v4Success, v4Content, v4Error) = await DownloadGeoIpFeedAsync(v4Url, "IPv4").ConfigureAwait(false);
+            stopping.Token.ThrowIfCancellationRequested();
+            var (v6Success, v6Content, v6Error) = await DownloadGeoIpFeedAsync(v6Url, "IPv6").ConfigureAwait(false);
 
-            await Task.WhenAll(v4Task, v6Task).ConfigureAwait(false);
-
-            string? v4Content = await v4Task.ConfigureAwait(false);
-            string? v6Content = await v6Task.ConfigureAwait(false);
-
-            if ((!string.IsNullOrWhiteSpace(v4Url) && string.IsNullOrWhiteSpace(v4Content)) ||
+            if (!v4Success || !v6Success ||
+                (!string.IsNullOrWhiteSpace(v4Url) && string.IsNullOrWhiteSpace(v4Content)) ||
                 (!string.IsNullOrWhiteSpace(v6Url) && string.IsNullOrWhiteSpace(v6Content)) ||
                 (string.IsNullOrWhiteSpace(v4Content) && string.IsNullOrWhiteSpace(v6Content)))
             {
-                recordAudit?.Invoke("GeoIp.Update", "Failed", "GeoIP Database", "Failed to download GeoIP feeds from configured URLs.");
-                return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, "Failed to download GeoIP feeds from configured URLs.");
+                List<string> errors = [];
+                if (!v4Success && !string.IsNullOrWhiteSpace(v4Error)) errors.Add(v4Error);
+                if (!v6Success && !string.IsNullOrWhiteSpace(v6Error)) errors.Add(v6Error);
+                string failDetails = errors.Count > 0
+                    ? string.Join("; ", errors)
+                    : "Failed to download GeoIP feeds from configured URLs.";
+                recordAudit?.Invoke("GeoIp.Update", "Failed", "GeoIP Database", failDetails);
+                return (false, GeoIpLookupService.TotalLoadedRecords, GeoIpLookupService.TotalLoadedCountries, failDetails);
             }
 
             stopping.Token.ThrowIfCancellationRequested();
@@ -220,34 +224,37 @@ public sealed class GeoIpUpdateService : IDisposable
         }
     }
 
-    private async Task<string?> DownloadGeoIpFeedAsync(string? url, string label)
+    private async Task<(bool Success, string? Content, string? ErrorMessage)> DownloadGeoIpFeedAsync(string? url, string label)
     {
-        if (string.IsNullOrWhiteSpace(url)) return null;
+        if (string.IsNullOrWhiteSpace(url)) return (true, null, null);
         if (Network.NetworkEndpointValidator.IsBlockedImdsOrLinkLocal(url))
         {
             logWarning($"Blocked unsafe or IMDS-suspect {label} GeoIP URL: '{url}'", new InvalidOperationException("IMDS or Link-Local URL blocked"));
-            return null;
+            return (false, null, $"Blocked unsafe or IMDS-suspect {label} GeoIP URL");
         }
 
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-            cts.CancelAfter(TimeSpan.FromSeconds(60));
+            cts.CancelAfter(TimeSpan.FromSeconds(180));
             using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
-                return await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 64 * 1024 * 1024, cts.Token).ConfigureAwait(false);
+                string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(
+                    response.Content, 64 * 1024 * 1024, cts.Token, TimeSpan.FromSeconds(180)).ConfigureAwait(false);
+                return (true, content, null);
             }
             else
             {
-                logWarning($"{label} GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                return null;
+                string errorMsg = $"HTTP {(int)response.StatusCode}";
+                logWarning($"{label} GeoIP feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException(errorMsg));
+                return (false, null, $"{label}: {errorMsg}");
             }
         }
         catch (Exception ex)
         {
             logWarning($"Failed to download {label} GeoIP database", ex);
-            return null;
+            return (false, null, $"{label}: {ex.Message}");
         }
     }
 

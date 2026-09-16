@@ -94,7 +94,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         else
         {
             this.httpClient = IDDSCommunity.IntrusionDetection.Shared.Network.HttpClientHelper.CreatePooledClient(
-                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(120),
                 userAgent: DefaultUserAgent,
                 customBlockFilter: BogonIpFilter.IsBogonOrReserved);
             ownClient = true;
@@ -269,7 +269,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(120));
             using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
@@ -315,7 +315,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(120));
             using HttpRequestMessage request = new(HttpMethod.Get, url);
             request.Headers.Add("Key", apiKey);
             request.Headers.Add("Accept", "application/json");
@@ -411,7 +411,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-            cts.CancelAfter(TimeSpan.FromSeconds(60));
+            cts.CancelAfter(TimeSpan.FromSeconds(120));
             using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
@@ -489,7 +489,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         try
         {
             using var dnsCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            dnsCts.CancelAfter(TimeSpan.FromSeconds(5));
+            dnsCts.CancelAfter(TimeSpan.FromSeconds(10));
             IPAddress[] resolved = await Dns.GetHostAddressesAsync(host, dnsCts.Token).ConfigureAwait(false);
             if (resolved.Length == 0)
                 return false;

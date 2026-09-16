@@ -18,15 +18,21 @@ public static class BoundedHttpContent
     /// <param name="content">HTTP 回應內容。</param>
     /// <param name="maximumBytes">允許的最大位元組數。</param>
     /// <param name="cancellationToken">包含下載期限的取消權杖。</param>
+    /// <param name="readTimeout">選擇性的自訂讀取逾時時間，若未指定則預設為 180 秒。</param>
     /// <returns>完整的 UTF-8 文字。</returns>
     /// <exception cref="InvalidDataException">內容超出允許長度。</exception>
-    public static async Task<string> ReadAsync(HttpContent content, int maximumBytes, CancellationToken cancellationToken = default)
+    public static async Task<string> ReadAsync(
+        HttpContent content,
+        int maximumBytes,
+        CancellationToken cancellationToken = default,
+        TimeSpan? readTimeout = null)
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumBytes);
         if (content.Headers.ContentLength > maximumBytes) throw new InvalidDataException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("HTTP content exceeds the size limit."));
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        deadline.CancelAfter(TimeSpan.FromSeconds(30));
+        TimeSpan effectiveTimeout = readTimeout ?? TimeSpan.FromSeconds(180);
+        deadline.CancelAfter(effectiveTimeout);
         using Stream source = await content.ReadAsStreamAsync(deadline.Token).ConfigureAwait(false);
         using MemoryStream destination = new();
         byte[] buffer = new byte[16384];
