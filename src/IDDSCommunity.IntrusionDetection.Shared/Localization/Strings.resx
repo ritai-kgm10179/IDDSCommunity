@@ -1063,6 +1063,7 @@ This may be due to insufficient permissions. Would you like to restart as Admini
   <data name="ThreatFeed.BogonDownload" xml:space="preserve"><value>Bogon Prefix Feed Download</value></data>
   <data name="ThreatFeed.GeoIpDownload" xml:space="preserve"><value>GeoIP Feed Download</value></data>
   <data name="Bogon.Sync" xml:space="preserve"><value>Bogon Prefix Sync</value></data>
+  <data name="Bogon.Update" xml:space="preserve"><value>Bogon Prefix Update</value></data>
   <data name="DynamicDns.Resolve" xml:space="preserve"><value>Dynamic DNS Resolve</value></data>
   <data name="Cluster.Sync" xml:space="preserve"><value>Cluster Threat Sync</value></data>
   <data name="Firewall.Probation" xml:space="preserve"><value>Firewall Probation Release</value></data>

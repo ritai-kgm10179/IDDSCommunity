@@ -865,7 +865,9 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("DynamicBogonIpv4Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt" : url;
+            if (string.IsNullOrWhiteSpace(url) || url.Equals("https://www.team-cymru.com/Services/Bogons/fullbogons-ipv4.txt", StringComparison.OrdinalIgnoreCase))
+                return "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv4.txt";
+            return url;
         }
         set => SetConfigValue("DynamicBogonIpv4Url", value ?? string.Empty);
     }
@@ -878,7 +880,9 @@ public CSafeNetworks SafeNetworks
         get
         {
             string url = GetConfigValue("DynamicBogonIpv6Url");
-            return string.IsNullOrWhiteSpace(url) ? "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv6.txt" : url;
+            if (string.IsNullOrWhiteSpace(url) || url.Equals("https://www.team-cymru.com/Services/Bogons/fullbogons-ipv6.txt", StringComparison.OrdinalIgnoreCase))
+                return "https://www.team-cymru.org/Services/Bogons/fullbogons-ipv6.txt";
+            return url;
         }
         set => SetConfigValue("DynamicBogonIpv6Url", value ?? string.Empty);
     }

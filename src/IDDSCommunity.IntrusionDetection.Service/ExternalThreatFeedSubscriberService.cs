@@ -120,6 +120,7 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
             using PeriodicTimer timer = new(interval);
             do
             {
+                try { config.LoadAppConfig(); } catch { }
                 await RefreshFeedsAsync().ConfigureAwait(false);
             }
             while (await timer.WaitForNextTickAsync(stopping.Token).ConfigureAwait(false));
@@ -132,7 +133,11 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
     {
         try
         {
-            await ThreatFeedCommandChannel.StartCommandListenerAsync(RefreshFeedsAsync, stopping.Token).ConfigureAwait(false);
+            await ThreatFeedCommandChannel.StartCommandListenerAsync(async () =>
+            {
+                try { config.LoadAppConfig(); } catch { }
+                return await RefreshFeedsAsync().ConfigureAwait(false);
+            }, stopping.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (stopping.IsCancellationRequested) { }
         catch (Exception ex) { logWarning("Threat feed command listener failed.", ex); }
@@ -367,20 +372,29 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
 
     private async Task RefreshDynamicBogonsAsync()
     {
-        Task<(bool Success, List<System.Net.IPNetwork>? Networks)> v4Task = DownloadBogonFeedAsync(config.DynamicBogonIpv4Url, "IPv4");
-        Task<(bool Success, List<System.Net.IPNetwork>? Networks)> v6Task = DownloadBogonFeedAsync(config.DynamicBogonIpv6Url, "IPv6");
+        Task<(bool Success, List<System.Net.IPNetwork>? Networks, string? ErrorMessage)> v4Task = DownloadBogonFeedAsync(config.DynamicBogonIpv4Url, "IPv4");
+        Task<(bool Success, List<System.Net.IPNetwork>? Networks, string? ErrorMessage)> v6Task = DownloadBogonFeedAsync(config.DynamicBogonIpv6Url, "IPv6");
 
         await Task.WhenAll(v4Task, v6Task).ConfigureAwait(false);
 
-        var (v4Success, v4Networks) = await v4Task.ConfigureAwait(false);
-        var (v6Success, v6Networks) = await v6Task.ConfigureAwait(false);
+        var (v4Success, v4Networks, v4Error) = await v4Task.ConfigureAwait(false);
+        var (v6Success, v6Networks, v6Error) = await v6Task.ConfigureAwait(false);
 
-        if (!v4Success || !v6Success || stopping.IsCancellationRequested)
+        if (stopping.IsCancellationRequested)
             return;
 
+        if (!v4Success || !v6Success)
+        {
+            List<string> errors = [];
+            if (!v4Success && !string.IsNullOrWhiteSpace(v4Error)) errors.Add(v4Error);
+            if (!v6Success && !string.IsNullOrWhiteSpace(v6Error)) errors.Add(v6Error);
+            string failDetails = string.Join("; ", errors);
+            recordAudit?.Invoke("Bogon.Update", "Failed", "Team Cymru Fullbogons", failDetails);
+        }
+
         List<System.Net.IPNetwork> aggregatedNetworks = [];
-        if (v4Networks != null) aggregatedNetworks.AddRange(v4Networks);
-        if (v6Networks != null) aggregatedNetworks.AddRange(v6Networks);
+        if (v4Success && v4Networks != null) aggregatedNetworks.AddRange(v4Networks);
+        if (v6Success && v6Networks != null) aggregatedNetworks.AddRange(v6Networks);
 
         if (aggregatedNetworks.Count > 0)
         {
@@ -390,32 +404,33 @@ internal sealed class ExternalThreatFeedSubscriberService : IDisposable
         }
     }
 
-    private async Task<(bool Success, List<System.Net.IPNetwork>? Networks)> DownloadBogonFeedAsync(string? url, string label)
+    private async Task<(bool Success, List<System.Net.IPNetwork>? Networks, string? ErrorMessage)> DownloadBogonFeedAsync(string? url, string label)
     {
-        if (string.IsNullOrWhiteSpace(url)) return (true, null);
+        if (string.IsNullOrWhiteSpace(url)) return (true, null, null);
 
         try
         {
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
-            cts.CancelAfter(TimeSpan.FromSeconds(30));
+            cts.CancelAfter(TimeSpan.FromSeconds(60));
             using HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 string content = await IDDSCommunity.IntrusionDetection.Shared.Network.BoundedHttpContent.ReadAsync(response.Content, 8 * 1024 * 1024, cts.Token).ConfigureAwait(false);
                 var parsed = BogonIpFilter.ParseBogonList(content);
-                if (parsed.Count == 0) return (false, null);
-                return (true, parsed);
+                if (parsed.Count == 0) return (false, null, $"{label} list is empty");
+                return (true, parsed, null);
             }
             else
             {
-                logWarning($"Dynamic {label} Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException($"HTTP {(int)response.StatusCode}"));
-                return (false, null);
+                string errorMsg = $"HTTP {(int)response.StatusCode}";
+                logWarning($"Dynamic {label} Bogon feed returned HTTP status {(int)response.StatusCode}", new HttpRequestException(errorMsg));
+                return (false, null, $"{label}: {errorMsg}");
             }
         }
         catch (Exception ex)
         {
             logWarning($"Failed to download dynamic {label} Bogon feed", ex);
-            return (false, null);
+            return (false, null, $"{label}: {ex.Message}");
         }
     }
 

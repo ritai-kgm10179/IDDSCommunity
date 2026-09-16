@@ -1063,6 +1063,7 @@
   <data name="ThreatFeed.BogonDownload" xml:space="preserve"><value>Bogon 前綴下載</value></data>
   <data name="ThreatFeed.GeoIpDownload" xml:space="preserve"><value>GeoIP 情報下載</value></data>
   <data name="Bogon.Sync" xml:space="preserve"><value>Bogon 前綴同步</value></data>
+  <data name="Bogon.Update" xml:space="preserve"><value>Bogon 前綴更新</value></data>
   <data name="DynamicDns.Resolve" xml:space="preserve"><value>動態 DNS 解析</value></data>
   <data name="Cluster.Sync" xml:space="preserve"><value>跨主機情報同步</value></data>
   <data name="Firewall.Probation" xml:space="preserve"><value>智慧假釋放行</value></data>

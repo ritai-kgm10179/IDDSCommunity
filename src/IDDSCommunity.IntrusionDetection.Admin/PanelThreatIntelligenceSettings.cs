@@ -130,6 +130,11 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
                 cfg.AbuseIpDbApiKey = txtAbuseApiKey.Text.Trim();
                 cfg.AbuseIpDbMinConfidence = (int)numAbuseMinConfidence.Value;
                 cfg.ThreatFeedCustomUrls = txtCustomUrls.Text.Trim();
+
+                cfg.EnableDynamicBogonUpdate = chkEnableDynamicBogon.Checked;
+                cfg.DynamicBogonIpv4Url = txtBogonIpv4Url.Text.Trim();
+                cfg.DynamicBogonIpv6Url = txtBogonIpv6Url.Text.Trim();
+                cfg.ProbationDecayDays = (int)numProbationDays.Value;
                 cfg.SaveAppConfig();
 
                 // 檢查 Windows 服務是否處於執行狀態 (模式 B)
