@@ -11,8 +11,8 @@
     <AssemblyName>Setup</AssemblyName>
     <Product>IDDS Community</Product>
     <Company>IDDS Community contributors</Company>
-    <Version>3.0.0</Version>
-    <InformationalVersion>3.0.0</InformationalVersion>
+    <Version>3.0.1</Version>
+    <InformationalVersion>3.0.1</InformationalVersion>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>

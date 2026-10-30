@@ -181,7 +181,7 @@ public partial class IddsAdmin : Form
         panelWindowGrip.Resize += (s, e) => UpdateTitleBarPositions();
         Icon = BrandingIcons.CreateIcon();
         BrandingIcons.ApplyTo(pictureBox1);
-        string version = typeof(IddsAdmin).Assembly.GetName().Version?.ToString(3) ?? "3.0.0";
+        string version = typeof(IddsAdmin).Assembly.GetName().Version?.ToString(3) ?? "3.0.1";
         Text = Strings.Format("IDDSCommunity Intrusion Detection - Version {0}", version);
         labelFormText.Text = Text;
 

@@ -5,7 +5,7 @@
       "IDDSCommunity.Authentication.Common": {
         "type": "Project",
         "dependencies": {
-          "IDDSCommunity.IntrusionDetection.Api": "[3.0.0, )"
+          "IDDSCommunity.IntrusionDetection.Api": "[3.0.1, )"
         }
       },
       "iddscommunity.intrusiondetection.api": {

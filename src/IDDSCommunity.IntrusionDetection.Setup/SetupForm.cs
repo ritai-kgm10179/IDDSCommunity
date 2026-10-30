@@ -172,7 +172,7 @@ internal sealed class SetupForm : Form
         }
         else if (action == SetupOperations.InstallAction.Upgrade)
         {
-            statusLabel.Text = SetupText.Format("StatusUpgradeAvailable", installedVer?.ToString(3) ?? "3.0.0", setupVer.ToString(3));
+            statusLabel.Text = SetupText.Format("StatusUpgradeAvailable", installedVer?.ToString(3) ?? "3.0.1", setupVer.ToString(3));
             statusLabel.ForeColor = Teal;
             SetInstallButton(SetupText.Get("Upgrade"), Teal, Color.White);
         }
@@ -184,7 +184,7 @@ internal sealed class SetupForm : Form
         }
         else
         {
-            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? "3.0.0");
+            statusLabel.Text = SetupText.Format("StatusInstalledWithVersion", installedVer?.ToString(3) ?? "3.0.1");
             statusLabel.ForeColor = Teal;
             SetInstallButton(SetupText.Get("Reinstall"), Color.White, Navy);
         }

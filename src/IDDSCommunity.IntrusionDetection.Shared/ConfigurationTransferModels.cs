@@ -31,7 +31,7 @@ public sealed class ConfigurationTransferPackage
     /// <summary>
     /// 取得或設定匯出時的產品版本字串。
     /// </summary>
-    public string ProductVersion { get; set; } = "3.0.0";
+    public string ProductVersion { get; set; } = "3.0.1";
 
     /// <summary>
     /// 取得或設定匯出作業發生的 UTC 時間戳記。

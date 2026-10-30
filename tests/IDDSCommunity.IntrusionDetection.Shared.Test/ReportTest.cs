@@ -69,7 +69,7 @@ public class ReportTest
 
         string result = ReportGenerator.Instance.GetReport("Last three days report", "This report contains data of the last three days and is for testing only. If you got this report without running the unit test before, data might be outdated.",
             string.Format(@"Server name: {0} <br/>
-                        IP addresses: <br/>{1}<br/>IDDS Version: {2}", System.Net.Dns.GetHostName(), ipAddresses, "3.0.0"), DateTime.Now.AddDays(-3), DateTime.Now);
+                        IP addresses: <br/>{1}<br/>IDDS Version: {2}", System.Net.Dns.GetHostName(), ipAddresses, "3.0.1"), DateTime.Now.AddDays(-3), DateTime.Now);
         string outputPath = Path.Combine(TestContext.TestRunDirectory ?? TestContext.DeploymentDirectory ?? AppDomain.CurrentDomain.BaseDirectory, "testreportrun.htm");
         File.WriteAllText(outputPath, result);
         Assert.IsTrue(File.Exists(outputPath));
