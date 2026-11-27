@@ -1135,4 +1135,11 @@
   <data name="Database is currently busy. Please wait a moment and try saving again." xml:space="preserve"><value>資料庫目前繁忙或正在進行同步，請稍候再重新儲存。</value></data>
   <data name="The configuration could not be saved. Please try again." xml:space="preserve"><value>無法儲存設定，請再試一次。</value></data>
   <data name="The interactive database operation exceeded its contention deadline." xml:space="preserve"><value>互動式資料庫操作已超過等待寫入鎖定的期限。</value></data>
+  <data name="Firewall.Request.Batch" xml:space="preserve"><value>防火牆批次封鎖請求</value></data>
+  <data name="ApplyPending" xml:space="preserve"><value>套用待處理請求</value></data>
+  <data name="Pages: {0}, Pushed: {1}, Pulled: {2}" xml:space="preserve"><value>頁數：{0}，推送：{1}，拉取：{2}</value></data>
+  <data name="CrossAgentSprayDetected" xml:space="preserve"><value>偵測到跨代理程式密碼噴灑攻擊</value></data>
+  <data name="Blocked" xml:space="preserve"><value>已阻絕</value></data>
+  <data name="AlertOnly" xml:space="preserve"><value>僅告警</value></data>
+  <data name="Configuration" xml:space="preserve"><value>系統設定</value></data>
 </root>

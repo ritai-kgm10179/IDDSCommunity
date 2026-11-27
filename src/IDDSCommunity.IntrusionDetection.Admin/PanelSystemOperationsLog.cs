@@ -92,6 +92,8 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
         comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
         comboBoxOutcome.Items.Add(Strings.Get("Failed"));
+        comboBoxOutcome.Items.Add(Strings.Get("Blocked"));
+        comboBoxOutcome.Items.Add(Strings.Get("AlertOnly"));
         comboBoxOutcome.SelectedIndex = 0;
         comboBoxOutcome.SelectedIndexChanged += (_, _) =>
         {
@@ -297,6 +299,8 @@ public sealed class PanelSystemOperationsLog : UserControl
                 comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
                 comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
                 comboBoxOutcome.Items.Add(Strings.Get("Failed"));
+                comboBoxOutcome.Items.Add(Strings.Get("Blocked"));
+                comboBoxOutcome.Items.Add(Strings.Get("AlertOnly"));
                 if (prevOutcomeIndex >= 0 && prevOutcomeIndex < comboBoxOutcome.Items.Count)
                     comboBoxOutcome.SelectedIndex = prevOutcomeIndex;
                 else if (comboBoxOutcome.Items.Count > 0)
@@ -327,6 +331,7 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Database maintenance"), "Database."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Service Runtime"), "Runtime."));
         comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("System Reports"), "Report."));
+        comboBoxCategory.Items.Add(new CategoryItem(Strings.Get("Configuration"), "Configuration."));
     }
 
     private void BuildGridColumns()
@@ -413,9 +418,17 @@ public sealed class PanelSystemOperationsLog : UserControl
                 e.CellStyle.Font = GetOutcomeBoldFont();
             }
             else if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(outcome, Strings.Get("Failed"), StringComparison.OrdinalIgnoreCase))
+                     string.Equals(outcome, Strings.Get("Failed"), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(outcome, "Blocked", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(outcome, Strings.Get("Blocked"), StringComparison.OrdinalIgnoreCase))
             {
                 e.CellStyle!.ForeColor = Color.FromArgb(185, 28, 28); // 深紅色
+                e.CellStyle.Font = GetOutcomeBoldFont();
+            }
+            else if (string.Equals(outcome, "AlertOnly", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(outcome, Strings.Get("AlertOnly"), StringComparison.OrdinalIgnoreCase))
+            {
+                e.CellStyle!.ForeColor = Color.FromArgb(180, 83, 9); // 深琥珀色
                 e.CellStyle.Font = GetOutcomeBoldFont();
             }
         }
@@ -427,6 +440,10 @@ public sealed class PanelSystemOperationsLog : UserControl
             return Strings.Get("Succeeded");
         if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase))
             return Strings.Get("Failed");
+        if (string.Equals(outcome, "Blocked", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Blocked");
+        if (string.Equals(outcome, "AlertOnly", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("AlertOnly");
         return outcome;
     }
 
@@ -450,6 +467,8 @@ public sealed class PanelSystemOperationsLog : UserControl
         if (string.IsNullOrWhiteSpace(subject)) return subject;
         if (string.Equals(subject, "GeoIP Database", StringComparison.OrdinalIgnoreCase))
             return Strings.Get("GeoIP Database");
+        if (string.Equals(subject, "Configuration", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("Configuration");
         return subject;
     }
 
@@ -469,6 +488,20 @@ public sealed class PanelSystemOperationsLog : UserControl
             catch
             {
                 // 若 SecurityAgents 尚未初始化，安全略過
+            }
+        }
+
+        // Pages: {pages}, Pushed: {pushed}, Pulled: {pulled}
+        if (rawDetails.StartsWith("Pages: ", StringComparison.OrdinalIgnoreCase))
+        {
+            int pushedIndex = rawDetails.IndexOf(", Pushed: ", StringComparison.OrdinalIgnoreCase);
+            int pulledIndex = pushedIndex > 0 ? rawDetails.IndexOf(", Pulled: ", pushedIndex + ", Pushed: ".Length, StringComparison.OrdinalIgnoreCase) : -1;
+            if (pushedIndex > 0 && pulledIndex > pushedIndex)
+            {
+                string pages = rawDetails["Pages: ".Length..pushedIndex].Trim();
+                string pushed = rawDetails[(pushedIndex + ", Pushed: ".Length)..pulledIndex].Trim();
+                string pulled = rawDetails[(pulledIndex + ", Pulled: ".Length)..].Trim();
+                return string.Format(Strings.Get("Pages: {0}, Pushed: {1}, Pulled: {2}"), pages, pushed, pulled);
             }
         }
 
@@ -548,6 +581,10 @@ public sealed class PanelSystemOperationsLog : UserControl
         if (string.Equals(rawDetails, "RemoveStale", StringComparison.OrdinalIgnoreCase))
             return Strings.Get("RemoveStale");
 
+        // ApplyPending
+        if (string.Equals(rawDetails, "ApplyPending", StringComparison.OrdinalIgnoreCase))
+            return Strings.Get("ApplyPending");
+
         // Score: {score}, UniqueAccounts: {accounts}
         if (rawDetails.StartsWith("Score: ", StringComparison.OrdinalIgnoreCase))
         {
@@ -615,7 +652,7 @@ public sealed class PanelSystemOperationsLog : UserControl
         previous?.Cancel();
         long generation = Interlocked.Increment(ref queryGeneration);
         string categoryPrefix = comboBoxCategory.SelectedItem is CategoryItem catItem ? catItem.Prefix : string.Empty;
-        string outcomeFilter = comboBoxOutcome.SelectedIndex switch { 1 => "Succeeded", 2 => "Failed", _ => string.Empty };
+        string outcomeFilter = comboBoxOutcome.SelectedIndex switch { 1 => "Succeeded", 2 => "Failed", 3 => "Blocked", 4 => "AlertOnly", _ => string.Empty };
         string searchKeyword = textBoxSearch.Text.Trim();
         buttonRefresh.Enabled = false;
         try

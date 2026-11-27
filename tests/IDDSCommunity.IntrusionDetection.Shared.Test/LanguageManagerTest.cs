@@ -177,6 +177,38 @@ public class LanguageManagerTest
         Assert.IsEmpty(missing, string.Join(Environment.NewLine, missing));
     }
     /// <summary>
+    /// 驗證系統操作日誌面板之事件類別、執行結果、目標主體與詳細內容於英文與正體中文語系下皆正確格式化與在地化。
+    /// </summary>
+    [TestMethod]
+    public void SystemOperationsLog_Localization_FormatsAuditEventsAndDetailsInChineseAndEnglish()
+    {
+        Type panelType = typeof(IDDSCommunity.IntrusionDetection.Admin.PanelSystemOperationsLog);
+        System.Reflection.MethodInfo formatEventType = panelType.GetMethod("FormatEventType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        System.Reflection.MethodInfo formatOutcome = panelType.GetMethod("FormatOutcome", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        System.Reflection.MethodInfo formatSubject = panelType.GetMethod("FormatSubject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        System.Reflection.MethodInfo formatDetails = panelType.GetMethod("FormatDetails", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+
+        LanguageManager.Instance.Initialize("zh-TW");
+        Assert.AreEqual("防火牆批次封鎖請求", formatEventType.Invoke(null, ["Firewall.Request.Batch"]));
+        Assert.AreEqual("偵測到跨代理程式密碼噴灑攻擊", formatEventType.Invoke(null, ["CrossAgentSprayDetected"]));
+        Assert.AreEqual("已阻絕", formatOutcome.Invoke(null, ["Blocked"]));
+        Assert.AreEqual("僅告警", formatOutcome.Invoke(null, ["AlertOnly"]));
+        Assert.AreEqual("系統設定", formatSubject.Invoke(null, ["Configuration"]));
+        Assert.AreEqual("套用待處理請求", formatDetails.Invoke(null, ["ApplyPending"]));
+        Assert.AreEqual("頁數：3，推送：2，拉取：120", formatDetails.Invoke(null, ["Pages: 3, Pushed: 2, Pulled: 120"]));
+        Assert.AreEqual("推送：2，拉取：10", formatDetails.Invoke(null, ["Pushed: 2, Pulled: 10"]));
+
+        LanguageManager.Instance.Initialize("en-US");
+        Assert.AreEqual("Firewall Batch Block Request", formatEventType.Invoke(null, ["Firewall.Request.Batch"]));
+        Assert.AreEqual("Cross-Agent Password Spray Detected", formatEventType.Invoke(null, ["CrossAgentSprayDetected"]));
+        Assert.AreEqual("Blocked", formatOutcome.Invoke(null, ["Blocked"]));
+        Assert.AreEqual("Alert Only", formatOutcome.Invoke(null, ["AlertOnly"]));
+        Assert.AreEqual("Configuration", formatSubject.Invoke(null, ["Configuration"]));
+        Assert.AreEqual("Apply pending requests", formatDetails.Invoke(null, ["ApplyPending"]));
+        Assert.AreEqual("Pages: 3, Pushed: 2, Pulled: 120", formatDetails.Invoke(null, ["Pages: 3, Pushed: 2, Pulled: 120"]));
+        Assert.AreEqual("Pushed: 2, Pulled: 10", formatDetails.Invoke(null, ["Pushed: 2, Pulled: 10"]));
+    }
+    /// <summary>
     /// Verifies that the removed licensing feature is not exposed by application UI or command sources.
     /// </summary>
     [TestMethod]
