@@ -193,7 +193,7 @@ public IDDSCommunitySecurityLog()
         string query = searchQuery?.Trim() ?? string.Empty;
         if (!string.IsNullOrEmpty(query))
         {
-            if (query.Contains('/') && CidrMatcher.TryMatchCidr(query, "127.0.0.1"))
+            if (query.Contains('/') && System.Net.IPNetwork.TryParse(query, out System.Net.IPNetwork searchNetwork))
             {
                 DataTable table = DataSetIntrusionLog.Tables["IntrusionLog"]!;
                 HashSet<string> distinctIps = new(StringComparer.Ordinal);
@@ -206,7 +206,11 @@ public IDDSCommunitySecurityLog()
                 List<string> matchedIps = [];
                 foreach (string ip in distinctIps)
                 {
-                    if (CidrMatcher.TryMatchCidr(query, ip)) matchedIps.Add(ip);
+                    if (System.Net.IPAddress.TryParse(ip, out System.Net.IPAddress? parsedIp) &&
+                        searchNetwork.Contains(IpAddressCanonicalizer.Canonicalize(parsedIp)))
+                    {
+                        matchedIps.Add(ip);
+                    }
                 }
 
                 if (matchedIps.Count > 0)
@@ -316,35 +320,38 @@ public IDDSCommunitySecurityLog()
         int maxId = 0;
         int totalEvents = 0;
 
-        table.BeginLoadData();
-        try
+        using (dataGridViewIntrusionLog.SuspendPainting(LayoutSuspendTraversal.TargetOnly))
         {
-            table.Clear();
-            if (items != null)
+            table.BeginLoadData();
+            try
             {
-                for (int i = 0; i < items.Count; i++)
+                table.Clear();
+                if (items != null)
                 {
-                    AdminSecurityLogGridItem item = items[i];
-                    if (maxId < item.Id) maxId = item.Id;
-                    totalEvents += item.NumberOfEvents;
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        AdminSecurityLogGridItem item = items[i];
+                        if (maxId < item.Id) maxId = item.Id;
+                        totalEvents += item.NumberOfEvents;
 
-                    table.Rows.Add(
-                        item.Id,
-                        item.Action,
-                        SecurityAgents.Instance.GetDisplayName(item.AgentId),
-                        item.LogIcon,
-                        item.LogType,
-                        item.EventDate,
-                        item.IpAddress,
-                        item.Message,
-                        item.AgentId,
-                        item.NumberOfEvents);
+                        table.Rows.Add(
+                            item.Id,
+                            item.Action,
+                            SecurityAgents.Instance.GetDisplayName(item.AgentId),
+                            item.LogIcon,
+                            item.LogType,
+                            item.EventDate,
+                            item.IpAddress,
+                            item.Message,
+                            item.AgentId,
+                            item.NumberOfEvents);
+                    }
                 }
             }
-        }
-        finally
-        {
-            table.EndLoadData();
+            finally
+            {
+                table.EndLoadData();
+            }
         }
 
         MaxLogId = maxId;

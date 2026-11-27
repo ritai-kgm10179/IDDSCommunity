@@ -34,6 +34,9 @@ public sealed class PanelSystemOperationsLog : UserControl
     private CancellationTokenSource? currentQueryCts;
     private long queryGeneration;
     private bool isResizingColumns;
+    private bool isUpdatingLanguage;
+    private Font? cachedOutcomeBoldFont;
+    private Font? outcomeFontSource;
 
     /// <summary>
     /// 初始化 <see cref="PanelSystemOperationsLog"/> 類別之新執行個體。
@@ -69,7 +72,10 @@ public sealed class PanelSystemOperationsLog : UserControl
         };
         PopulateCategories();
         comboBoxCategory.SelectedIndex = 0;
-        comboBoxCategory.SelectedIndexChanged += (_, _) => _ = LoadLogsAsync();
+        comboBoxCategory.SelectedIndexChanged += (_, _) =>
+        {
+            if (!isUpdatingLanguage) _ = LoadLogsAsync();
+        };
 
         labelOutcome = new Label
         {
@@ -87,7 +93,10 @@ public sealed class PanelSystemOperationsLog : UserControl
         comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
         comboBoxOutcome.Items.Add(Strings.Get("Failed"));
         comboBoxOutcome.SelectedIndex = 0;
-        comboBoxOutcome.SelectedIndexChanged += (_, _) => _ = LoadLogsAsync();
+        comboBoxOutcome.SelectedIndexChanged += (_, _) =>
+        {
+            if (!isUpdatingLanguage) _ = LoadLogsAsync();
+        };
 
         labelSearch = new Label
         {
@@ -270,25 +279,37 @@ public sealed class PanelSystemOperationsLog : UserControl
         buttonRefresh.Text = Strings.Get("Refresh");
         buttonExport.Text = Strings.Get("Export CSV");
 
-        int prevCategoryIndex = comboBoxCategory.SelectedIndex;
-        PopulateCategories();
-        if (prevCategoryIndex >= 0 && prevCategoryIndex < comboBoxCategory.Items.Count)
-            comboBoxCategory.SelectedIndex = prevCategoryIndex;
-        else if (comboBoxCategory.Items.Count > 0)
-            comboBoxCategory.SelectedIndex = 0;
+        isUpdatingLanguage = true;
+        using (panelFilterBar.SuspendPainting(LayoutSuspendTraversal.TargetAndDescendants))
+        using (dataGridViewLogs.SuspendPainting(LayoutSuspendTraversal.TargetOnly))
+        {
+            try
+            {
+                int prevCategoryIndex = comboBoxCategory.SelectedIndex;
+                PopulateCategories();
+                if (prevCategoryIndex >= 0 && prevCategoryIndex < comboBoxCategory.Items.Count)
+                    comboBoxCategory.SelectedIndex = prevCategoryIndex;
+                else if (comboBoxCategory.Items.Count > 0)
+                    comboBoxCategory.SelectedIndex = 0;
 
-        int prevOutcomeIndex = comboBoxOutcome.SelectedIndex;
-        comboBoxOutcome.Items.Clear();
-        comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
-        comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
-        comboBoxOutcome.Items.Add(Strings.Get("Failed"));
-        if (prevOutcomeIndex >= 0 && prevOutcomeIndex < comboBoxOutcome.Items.Count)
-            comboBoxOutcome.SelectedIndex = prevOutcomeIndex;
-        else if (comboBoxOutcome.Items.Count > 0)
-            comboBoxOutcome.SelectedIndex = 0;
+                int prevOutcomeIndex = comboBoxOutcome.SelectedIndex;
+                comboBoxOutcome.Items.Clear();
+                comboBoxOutcome.Items.Add(Strings.Get("All Outcomes"));
+                comboBoxOutcome.Items.Add(Strings.Get("Succeeded"));
+                comboBoxOutcome.Items.Add(Strings.Get("Failed"));
+                if (prevOutcomeIndex >= 0 && prevOutcomeIndex < comboBoxOutcome.Items.Count)
+                    comboBoxOutcome.SelectedIndex = prevOutcomeIndex;
+                else if (comboBoxOutcome.Items.Count > 0)
+                    comboBoxOutcome.SelectedIndex = 0;
+            }
+            finally
+            {
+                isUpdatingLanguage = false;
+            }
 
-        BuildGridColumns();
-        LayoutFilterBar();
+            BuildGridColumns();
+            LayoutFilterBar();
+        }
         _ = LoadLogsAsync();
     }
 
@@ -367,6 +388,18 @@ public sealed class PanelSystemOperationsLog : UserControl
         });
     }
 
+    private Font GetOutcomeBoldFont()
+    {
+        Font baseFont = dataGridViewLogs.Font ?? Font;
+        if (cachedOutcomeBoldFont is not null && ReferenceEquals(outcomeFontSource, baseFont))
+            return cachedOutcomeBoldFont;
+
+        cachedOutcomeBoldFont?.Dispose();
+        outcomeFontSource = baseFont;
+        cachedOutcomeBoldFont = new Font(baseFont, FontStyle.Bold);
+        return cachedOutcomeBoldFont;
+    }
+
     private void DataGridViewLogs_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
     {
         if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
@@ -377,13 +410,13 @@ public sealed class PanelSystemOperationsLog : UserControl
                 string.Equals(outcome, Strings.Get("Succeeded"), StringComparison.OrdinalIgnoreCase))
             {
                 e.CellStyle!.ForeColor = Color.FromArgb(22, 101, 52); // 深綠色
-                e.CellStyle.Font = new Font(dataGridViewLogs.Font, FontStyle.Bold);
+                e.CellStyle.Font = GetOutcomeBoldFont();
             }
             else if (string.Equals(outcome, "Failed", StringComparison.OrdinalIgnoreCase) ||
                      string.Equals(outcome, Strings.Get("Failed"), StringComparison.OrdinalIgnoreCase))
             {
                 e.CellStyle!.ForeColor = Color.FromArgb(185, 28, 28); // 深紅色
-                e.CellStyle.Font = new Font(dataGridViewLogs.Font, FontStyle.Bold);
+                e.CellStyle.Font = GetOutcomeBoldFont();
             }
         }
     }
@@ -672,25 +705,28 @@ public sealed class PanelSystemOperationsLog : UserControl
 
     private void ApplyRows(List<AuditDisplayRow> rows)
     {
-                dataGridViewLogs.SuspendLayout();
-                try
+        using (dataGridViewLogs.SuspendPainting(LayoutSuspendTraversal.TargetOnly))
+        {
+            dataGridViewLogs.SuspendLayout();
+            try
+            {
+                dataGridViewLogs.Rows.Clear();
+                DataGridViewRow[] rowArray = new DataGridViewRow[rows.Count];
+                for (int i = 0; i < rows.Count; i++)
                 {
-                    dataGridViewLogs.Rows.Clear();
-                    DataGridViewRow[] rowArray = new DataGridViewRow[rows.Count];
-                    for (int i = 0; i < rows.Count; i++)
-                    {
-                        AuditDisplayRow r = rows[i];
-                        DataGridViewRow row = (DataGridViewRow)dataGridViewLogs.RowTemplate.Clone();
-                        row.CreateCells(dataGridViewLogs);
-                        row.SetValues(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
-                        row.Tag = r;
-                        rowArray[i] = row;
-                    }
-                    dataGridViewLogs.Rows.AddRange(rowArray);
-                    labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
-                    buttonRefresh.Enabled = true;
+                    AuditDisplayRow r = rows[i];
+                    DataGridViewRow row = (DataGridViewRow)dataGridViewLogs.RowTemplate.Clone();
+                    row.CreateCells(dataGridViewLogs);
+                    row.SetValues(r.Time, r.EventType, r.Outcome, r.Actor, r.Subject, r.Details);
+                    row.Tag = r;
+                    rowArray[i] = row;
                 }
-                finally { dataGridViewLogs.ResumeLayout(); }
+                dataGridViewLogs.Rows.AddRange(rowArray);
+                labelRecordCount.Text = string.Format(Strings.Get("Total records: {0}"), rows.Count);
+                buttonRefresh.Enabled = true;
+            }
+            finally { dataGridViewLogs.ResumeLayout(); }
+        }
     }
 
     /// <summary>
@@ -703,6 +739,9 @@ public sealed class PanelSystemOperationsLog : UserControl
         {
             currentQueryCts?.Cancel();
             currentQueryCts?.Dispose();
+            cachedOutcomeBoldFont?.Dispose();
+            cachedOutcomeBoldFont = null;
+            outcomeFontSource = null;
         }
         base.Dispose(disposing);
     }

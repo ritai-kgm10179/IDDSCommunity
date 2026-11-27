@@ -167,6 +167,8 @@ public partial class IddsAdmin : Form
     private int serviceRefreshActive;
     private Bitmap? disabledStartServiceImage;
     private Bitmap? disabledStopServiceImage;
+    private Font? serviceStatusBoldFont;
+    private string? lastAppliedServiceStatusKey;
     private DateTime lastSecurityLogRefresh = DateTime.MinValue;
     /// <summary>
     /// 初始化 <see cref="IddsAdmin"/> 類別的新執行個體。
@@ -251,6 +253,8 @@ public partial class IddsAdmin : Form
         eventLogIDDSCommunity?.Dispose();
         disabledStartServiceImage?.Dispose();
         disabledStopServiceImage?.Dispose();
+        serviceStatusBoldFont?.Dispose();
+        serviceStatusBoldFont = null;
         serviceOperationLifetime.Stop(DisposeServiceOperationResources);
         base.OnFormClosed(e);
     }
@@ -685,7 +689,19 @@ public partial class IddsAdmin : Form
     /// <param name="status">The status read by the background operation.</param>
     private void ApplyServiceStatus(System.ServiceProcess.ServiceControllerStatus? status)
     {
-        smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        serviceStatusBoldFont ??= new Font("Segoe UI", 9.5F, FontStyle.Bold);
+        string statusKey = ServiceError
+            ? $"ERR|{Strings.Get("Service not found!")}|{Strings.Get("Install service")}"
+            : $"{(int?)status ?? -1}|{Strings.Get("Uninstall service")}|{Strings.Get("Service is running")}|{Strings.Get("Service is stopped")}|{Strings.Get("reading status....")}";
+        if (string.Equals(lastAppliedServiceStatusKey, statusKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(smartLabelServiceStatus.Font, serviceStatusBoldFont))
+        {
+            smartLabelServiceStatus.Font = serviceStatusBoldFont;
+        }
         if (ServiceError)
         {
             string notFound = Strings.Get("Service not found!");
@@ -698,6 +714,7 @@ public partial class IddsAdmin : Form
             pictureBoxStopService.Enabled = false;
             pictureBoxStartService.Cursor = Cursors.Default;
             pictureBoxStopService.Cursor = Cursors.Default;
+            lastAppliedServiceStatusKey = statusKey;
             UpdateMenuPositions();
             return;
         }
@@ -736,11 +753,13 @@ public partial class IddsAdmin : Form
                 smartLabelServiceStatus.Text = StatusDot + " " + reading;
                 smartLabelServiceStatus.ForeColor = Color.FromArgb(146, 64, 14); // Dark amber (WCAG AA-safe on white, ~7.1:1)
             }
+            lastAppliedServiceStatusKey = statusKey;
         }
         catch (Exception exception)
         {
             Trace.TraceError("Applying service status failed: {0}", exception);
             ServiceError = true;
+            lastAppliedServiceStatusKey = null;
         }
         UpdateMenuPositions();
     }
@@ -901,7 +920,7 @@ public partial class IddsAdmin : Form
             DateTime nowUtc = DateTime.UtcNow;
             int currentLogId = IntrusionLog.GetLastLogId();
             bool shouldRefreshDashboard = lastDashboardLogId < 0
-                || currentLogId != lastDashboardLogId
+                || (currentLogId != lastDashboardLogId && (nowUtc - lastDashboardRefresh) >= TimeSpan.FromSeconds(5))
                 || (nowUtc - lastDashboardRefresh) >= DashboardRefreshInterval;
 
             if (shouldRefreshDashboard)
@@ -1824,7 +1843,12 @@ public partial class IddsAdmin : Form
             {
             await serviceOperationGate.WaitAsync(uiRefreshCancellation.Token);
             gateEntered = true;
-            smartLabelServiceStatus.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lastAppliedServiceStatusKey = null;
+            serviceStatusBoldFont ??= new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            if (!ReferenceEquals(smartLabelServiceStatus.Font, serviceStatusBoldFont))
+            {
+                smartLabelServiceStatus.Font = serviceStatusBoldFont;
+            }
             string pending = Strings.Get(start ? "Starting service..." : "Stopping service...");
             smartLabelServiceStatus.Text = StatusDot + " " + pending;
             smartLabelServiceStatus.ForeColor = Color.FromArgb(146, 64, 14);

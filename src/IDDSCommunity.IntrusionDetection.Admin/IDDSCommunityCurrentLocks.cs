@@ -124,35 +124,38 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     /// <param name="items">封鎖資料列集合。</param>
     public void SetLocks(IReadOnlyList<AdminLockGridItem> items)
     {
-        dataGridViewLocks.SuspendLayout();
-        try
+        using (dataGridViewLocks.SuspendPainting(LayoutSuspendTraversal.TargetOnly))
         {
-            dataGridViewLocks.Rows.Clear();
-            if (items == null || items.Count == 0)
-                return;
-
-            DataGridViewRow[] rows = new DataGridViewRow[items.Count];
-            for (int i = 0; i < items.Count; i++)
+            dataGridViewLocks.SuspendLayout();
+            try
             {
-                AdminLockGridItem item = items[i];
-                DataGridViewRow row = (DataGridViewRow)dataGridViewLocks.RowTemplate.Clone();
-                row.CreateCells(dataGridViewLocks);
-                row.Cells[0].Value = false;
-                if (row.Cells[1] is DataGridViewImageCell imageCell) imageCell.Value = item.Icon;
-                row.Cells[2].Value = item.StatusName;
-                row.Cells[3].Value = item.ClientIp;
-                row.Cells[4].Value = item.DisplayName;
-                row.Cells[5].Value = item.LockDate;
-                row.Cells[6].Value = item.UnlockDate;
-                row.Cells[7].Value = item.Id.ToString();
-                row.Cells[8].Value = item.Status;
-                rows[i] = row;
+                dataGridViewLocks.Rows.Clear();
+                if (items == null || items.Count == 0)
+                    return;
+
+                DataGridViewRow[] rows = new DataGridViewRow[items.Count];
+                for (int i = 0; i < items.Count; i++)
+                {
+                    AdminLockGridItem item = items[i];
+                    DataGridViewRow row = (DataGridViewRow)dataGridViewLocks.RowTemplate.Clone();
+                    row.CreateCells(dataGridViewLocks);
+                    row.Cells[0].Value = false;
+                    if (row.Cells[1] is DataGridViewImageCell imageCell) imageCell.Value = item.Icon;
+                    row.Cells[2].Value = item.StatusName;
+                    row.Cells[3].Value = item.ClientIp;
+                    row.Cells[4].Value = item.DisplayName;
+                    row.Cells[5].Value = item.LockDate;
+                    row.Cells[6].Value = item.UnlockDate;
+                    row.Cells[7].Value = item.Id.ToString();
+                    row.Cells[8].Value = item.Status;
+                    rows[i] = row;
+                }
+                dataGridViewLocks.Rows.AddRange(rows);
             }
-            dataGridViewLocks.Rows.AddRange(rows);
-        }
-        finally
-        {
-            dataGridViewLocks.ResumeLayout();
+            finally
+            {
+                dataGridViewLocks.ResumeLayout();
+            }
         }
     }
 
@@ -278,22 +281,57 @@ public partial class IDDSCommunityCurrentLocks : UserControl
     private static HashSet<long> RequestUnlocks(IReadOnlyList<long> lockIds)
     {
         HashSet<long> completed = [];
-        ProtectionAuditTrail auditTrail = new(Database.Instance, TimeProvider.System);
-        foreach (long lockId in lockIds)
+        if (lockIds.Count == 0 || !Database.Instance.IsConfigured)
+            return completed;
+
+        string actor = Environment.UserDomainName + "\\" + Environment.UserName;
+        DateTime nowUtc = DateTime.UtcNow;
+        string nowAuditUtc = nowUtc.ToString("O");
+
+        Database.Instance.ExecuteInTransaction((connection, transaction) =>
         {
-            Lock l = Locks.GetLockById(lockId);
-            if (l is null)
-                continue;
-            l.Status = Lock.LOCK_STATUS_UNLOCK_REQUESTED;
-            l.Save();
-            auditTrail.Record(
-                "Firewall.ManualUnlockRequested",
-                "Succeeded",
-                Environment.UserDomainName + "\\" + Environment.UserName,
-                l.IpAddress,
-                lockId.ToString(System.Globalization.CultureInfo.InvariantCulture));
-            completed.Add(lockId);
-        }
+            using var selectCmd = connection.CreateCommand();
+            selectCmd.Transaction = transaction;
+            selectCmd.CommandText = "SELECT IpAddress FROM Locks WHERE LockId=@id AND Status IN (200,210,300,310)";
+            var pSelectId = selectCmd.Parameters.Add("@id", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+            using var updateCmd = connection.CreateCommand();
+            updateCmd.Transaction = transaction;
+            updateCmd.CommandText = "UPDATE Locks SET Status=@status, LastUpdate=@lastUpdate WHERE LockId=@id AND Status IN (200,210,300,310)";
+            updateCmd.Parameters.AddWithValue("@status", Lock.LOCK_STATUS_UNLOCK_REQUESTED);
+            updateCmd.Parameters.AddWithValue("@lastUpdate", nowUtc);
+            var pUpdateId = updateCmd.Parameters.Add("@id", Microsoft.Data.Sqlite.SqliteType.Integer);
+
+            using var auditCmd = connection.CreateCommand();
+            auditCmd.Transaction = transaction;
+            auditCmd.CommandText = "INSERT INTO ProtectionAuditLog(OccurredUtc, EventType, Outcome, Actor, Subject, Details) VALUES (@occurredUtc, @eventType, @outcome, @actor, @subject, @details)";
+            auditCmd.Parameters.AddWithValue("@occurredUtc", nowAuditUtc);
+            auditCmd.Parameters.AddWithValue("@eventType", "Firewall.ManualUnlockRequested");
+            auditCmd.Parameters.AddWithValue("@outcome", "Succeeded");
+            auditCmd.Parameters.AddWithValue("@actor", actor);
+            var pSubject = auditCmd.Parameters.Add("@subject", Microsoft.Data.Sqlite.SqliteType.Text);
+            var pDetails = auditCmd.Parameters.Add("@details", Microsoft.Data.Sqlite.SqliteType.Text);
+
+            foreach (long lockId in lockIds)
+            {
+                if (lockId <= 0)
+                    continue;
+                pSelectId.Value = lockId;
+                object? rawIp = selectCmd.ExecuteScalar();
+                if (rawIp is null || rawIp is DBNull)
+                    continue;
+
+                pUpdateId.Value = lockId;
+                if (updateCmd.ExecuteNonQuery() > 0)
+                {
+                    pSubject.Value = rawIp.ToString() ?? string.Empty;
+                    pDetails.Value = lockId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    auditCmd.ExecuteNonQuery();
+                    completed.Add(lockId);
+                }
+            }
+        });
+
         return completed;
     }
 }
