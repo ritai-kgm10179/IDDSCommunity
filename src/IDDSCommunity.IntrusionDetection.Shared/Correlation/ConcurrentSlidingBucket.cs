@@ -22,6 +22,8 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     private readonly object capacitySync = new();
     private long totalItemsAdded;
     private long totalEvictions;
+    private long lastPruneTicks;
+    private int activeKeyCount;
 
     /// <summary>
     /// 初始化 <see cref="ConcurrentSlidingBucket{TKey, TItem}"/> 類別的新執行個體。
@@ -48,7 +50,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
     /// <summary>
     /// 取得目前活動中的聚合鍵數量。
     /// </summary>
-    public int ActiveKeyCount => buckets.Count;
+    public int ActiveKeyCount => Volatile.Read(ref activeKeyCount);
 
     /// <summary>
     /// 取得累計已加入的項目總數。
@@ -80,13 +82,29 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
                 {
                     if (!buckets.TryGetValue(key, out state))
                     {
-                        PruneExpiredKeys(cutoff);
-                        while (buckets.Count >= maxKeyCapacity)
+                        long nowTicks = now.UtcTicks;
+                        if (Volatile.Read(ref activeKeyCount) >= maxKeyCapacity ||
+                            nowTicks - Interlocked.Read(ref lastPruneTicks) >= TimeSpan.TicksPerSecond * 10)
+                        {
+                            PruneExpiredKeys(cutoff);
+                            Interlocked.Exchange(ref lastPruneTicks, nowTicks);
+                        }
+
+                        while (Volatile.Read(ref activeKeyCount) >= maxKeyCapacity)
                         {
                             EvictLeastRecentlyUsedKey();
                         }
 
-                        state = buckets.GetOrAdd(key, new BucketState());
+                        BucketState created = new();
+                        if (buckets.TryAdd(key, created))
+                        {
+                            Interlocked.Increment(ref activeKeyCount);
+                            state = created;
+                        }
+                        else if (!buckets.TryGetValue(key, out state))
+                        {
+                            continue;
+                        }
                     }
                 }
             }
@@ -213,7 +231,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         DateTimeOffset effectiveCutoff = cutoff ?? (timeProvider.GetUtcNow() - windowDuration);
         lock (capacitySync)
         {
-            foreach (KeyValuePair<TKey, BucketState> pair in buckets.ToArray())
+            foreach (KeyValuePair<TKey, BucketState> pair in buckets)
             {
                 lock (pair.Value.SyncRoot)
                 {
@@ -226,7 +244,10 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
 
                     if (pair.Value.Items.Count == 0 && pair.Value.LastActivityUtc < effectiveCutoff)
                     {
-                        buckets.TryRemove(pair);
+                        if (buckets.TryRemove(pair))
+                        {
+                            Interlocked.Decrement(ref activeKeyCount);
+                        }
                     }
                 }
             }
@@ -241,6 +262,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         lock (capacitySync)
         {
             buckets.Clear();
+            Interlocked.Exchange(ref activeKeyCount, 0);
             Interlocked.Exchange(ref totalItemsAdded, 0);
             Interlocked.Exchange(ref totalEvictions, 0);
         }
@@ -273,6 +295,7 @@ public sealed class ConcurrentSlidingBucket<TKey, TItem>
         {
             if (buckets.TryRemove(victim.Value))
             {
+                Interlocked.Decrement(ref activeKeyCount);
                 Interlocked.Add(ref totalEvictions, victim.Value.Value.Items.Count);
             }
         }

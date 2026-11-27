@@ -9,7 +9,9 @@ namespace IDDSCommunity.IntrusionDetection.Service;
 internal static class RollingFallbackLog
 {
     private const int RetentionDays = 14;
+    private static readonly System.Text.Encoding Utf8NoBom = new System.Text.UTF8Encoding(false);
     private static readonly object SyncRoot = new();
+    private static long nextCleanupTicks;
 
     internal static void Write(Exception eventLogFailure, string message)
     {
@@ -19,19 +21,24 @@ internal static class RollingFallbackLog
             {
                 string directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "IDDS Community", "Logs");
                 Directory.CreateDirectory(directory);
-                string path = Path.Combine(directory, $"runtime-{DateTime.UtcNow:yyyyMMdd}.log");
+                DateTime utcNow = DateTime.UtcNow;
+                string path = Path.Combine(directory, $"runtime-{utcNow:yyyyMMdd}.log");
                 File.AppendAllText(path, string.Format(CultureInfo.InvariantCulture,
-                    "{0:O}\t{1}\tEventLogFailure={2}{3}", DateTime.UtcNow, LogSanitizer.Sanitize(message), eventLogFailure, Environment.NewLine));
-                DateTime boundary = DateTime.UtcNow.AddDays(-RetentionDays);
-                foreach (string candidate in Directory.EnumerateFiles(directory, "runtime-*.log"))
+                    "{0:O}\t{1}\tEventLogFailure={2}{3}", utcNow, LogSanitizer.Sanitize(message), eventLogFailure, Environment.NewLine), Utf8NoBom);
+                if (utcNow.Ticks >= nextCleanupTicks)
                 {
-                    try
+                    nextCleanupTicks = utcNow.AddHours(1).Ticks;
+                    DateTime boundary = utcNow.AddDays(-RetentionDays);
+                    foreach (string candidate in Directory.EnumerateFiles(directory, "runtime-*.log"))
                     {
-                        if (File.GetLastWriteTimeUtc(candidate) < boundary) File.Delete(candidate);
-                    }
-                    catch
-                    {
-                        // 個別日誌檔遭外部鎖定時不中斷其餘過期檔案之清除
+                        try
+                        {
+                            if (File.GetLastWriteTimeUtc(candidate) < boundary) File.Delete(candidate);
+                        }
+                        catch
+                        {
+                            // 個別日誌檔遭外部鎖定時不中斷其餘過期檔案之清除
+                        }
                     }
                 }
             }

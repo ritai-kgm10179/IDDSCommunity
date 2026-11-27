@@ -82,10 +82,10 @@ public class DatabaseUpgradeTest
             Database.Instance.Configure(directory);
             Assert.AreEqual(1, Database.Instance.DatabaseVersion);
             using Microsoft.Data.Sqlite.SqliteCommand command = Database.Instance.Connection.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18)";
-            Assert.AreEqual(18L, Convert.ToInt64(command.ExecuteScalar()));
+            command.CommandText = "SELECT COUNT(*) FROM SchemaMigrations WHERE Version IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)";
+            Assert.AreEqual(19L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT MAX(Version) FROM SchemaMigrations";
-            Assert.AreEqual(18L, Convert.ToInt64(command.ExecuteScalar()));
+            Assert.AreEqual(19L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='ThreatHubJournal'";
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='IX_ThreatHubJournal_CreatedTicks'";
@@ -399,6 +399,60 @@ public class DatabaseUpgradeTest
             Assert.AreEqual(1L, Convert.ToInt64(command.ExecuteScalar()));
             command.CommandText = "SELECT ConfigValue FROM AppConfig WHERE ConfigKey = 'v17-upgrade-marker'";
             Assert.AreEqual("preserved-17", Convert.ToString(command.ExecuteScalar()));
+        }
+        finally
+        {
+            database.Close();
+            if (Directory.Exists(directory))
+                Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// 驗證版本 19 資料庫遷移正確建立 9 組效能索引與 ThreatHubCursors.JournalCursor 欄位。
+    /// </summary>
+    [TestMethod]
+    public void Version19Migration_CreatesAllPerformanceIndexesAndJournalCursorColumn()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "IDDSCommunityTests", Guid.NewGuid().ToString("N"));
+        Database database = new();
+        try
+        {
+            database.Configure(directory);
+            string[] expectedIndexes =
+            [
+                "IX_Locks_TriggerIncident",
+                "IX_Locks_LastUpdate",
+                "IX_Locks_LockDate",
+                "IX_Locks_Status_LockDate",
+                "IX_IntrusionLog_ClientIP_AgentId_IncidentTime",
+                "IX_ProtectionEventInbox_Status_UpdatedUtc",
+                "IX_ProtectionAuditLog_EventType_OccurredUtc",
+                "IX_CloudPerimeterOutbox_DueTicks",
+                "IX_SecurityObservationEvents_PendingCorrelation"
+            ];
+
+            foreach (string indexName in expectedIndexes)
+            {
+                long exists = Convert.ToInt64(database.ExecuteScalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name=@p0",
+                    indexName));
+                Assert.AreEqual(1L, exists, $"缺少效能索引 {indexName}");
+            }
+
+            bool hasJournalCursor = false;
+            using (System.Data.IDataReader reader = database.ExecuteReader("PRAGMA table_info(ThreatHubCursors)"))
+            {
+                while (reader.Read())
+                {
+                    if (string.Equals(Db.DbValueConverter.ToString(reader["name"]), "JournalCursor", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasJournalCursor = true;
+                        break;
+                    }
+                }
+            }
+            Assert.IsTrue(hasJournalCursor, "ThreatHubCursors 應包含 JournalCursor 欄位");
         }
         finally
         {

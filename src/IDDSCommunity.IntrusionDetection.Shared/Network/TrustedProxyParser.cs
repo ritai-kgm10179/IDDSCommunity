@@ -218,28 +218,33 @@ public static partial class TrustedProxyParser
         }
 
         // IPv4 附帶埠號 (e.g. "192.0.2.1:5000")
-        int colonCount = 0;
-        foreach (char c in trimmed) if (c == ':') colonCount++;
-
-        if (colonCount == 1)
+        ReadOnlySpan<char> trimmedSpan = trimmed.AsSpan();
+        int firstColon = trimmedSpan.IndexOf(':');
+        if (firstColon > 0 && trimmedSpan[(firstColon + 1)..].IndexOf(':') < 0)
         {
-            int colonIdx = trimmed.IndexOf(':');
-            string ipPart = trimmed[..colonIdx];
-            if (IPAddress.TryParse(ipPart, out address) && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            if (IPAddress.TryParse(trimmedSpan[..firstColon], out address) && address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
             {
                 return true;
             }
         }
 
-        return IPAddress.TryParse(trimmed, out address);
+        return IPAddress.TryParse(trimmedSpan, out address);
     }
 
     private static bool IsIpInCidr(IPAddress address, IPAddress network, int prefixLength)
     {
-        byte[] addressBytes = address.GetAddressBytes();
-        byte[] networkBytes = network.GetAddressBytes();
+        if (address.AddressFamily != network.AddressFamily) return false;
+        Span<byte> addressBytes = stackalloc byte[16];
+        Span<byte> networkBytes = stackalloc byte[16];
+        if (!address.TryWriteBytes(addressBytes, out int addrLen) ||
+            !network.TryWriteBytes(networkBytes, out int netLen) ||
+            addrLen != netLen ||
+            prefixLength < 0 ||
+            prefixLength > addrLen * 8)
+        {
+            return false;
+        }
 
-        if (addressBytes.Length != networkBytes.Length) return false;
         int bitsToCheck = prefixLength;
         int byteIndex = 0;
 

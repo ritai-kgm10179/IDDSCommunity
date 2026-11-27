@@ -188,7 +188,7 @@ public sealed class SqliteMaintenanceService(Database database)
     {
         EnsureConfigured();
         if (maximumRows is < 1 or > 500) throw new ArgumentOutOfRangeException(nameof(maximumRows));
-        return database.Connection.Query<DatabaseMaintenanceHistoryRow>(
+        return database.Query<DatabaseMaintenanceHistoryRow>(
             "SELECT OccurredUtc,EventType,Outcome,Subject,Details FROM ProtectionAuditLog WHERE EventType LIKE 'Database.%' ORDER BY OccurredUtc DESC LIMIT @MaximumRows",
             new { MaximumRows = maximumRows })
             .Select(row => new DatabaseMaintenanceHistory(
@@ -225,12 +225,25 @@ public IReadOnlyDictionary<string, int> PurgeExpired(DatabaseRetentionPolicy pol
             results["IntrusionLog"] = DeleteBatch(connection, transaction,
                 "DELETE FROM IntrusionLog WHERE Id IN (SELECT i.Id FROM IntrusionLog i WHERE i.IncidentTime < @Boundary AND NOT EXISTS (SELECT 1 FROM Locks l WHERE l.TriggerIncident=i.Id) ORDER BY i.IncidentTime LIMIT @BatchSize)",
                 current.AddDays(-policy.IntrusionLogDays), policy.BatchSize);
-            results["ProtectionAuditLog"] = DeleteBatch(connection, transaction,
+            results["ProtectionAuditLog"] = DeleteIsoBatch(connection, transaction,
                 "DELETE FROM ProtectionAuditLog WHERE Id IN (SELECT Id FROM ProtectionAuditLog WHERE OccurredUtc < @Boundary ORDER BY OccurredUtc LIMIT @BatchSize)",
                 current.AddDays(-policy.AuditDays), policy.BatchSize);
-            results["ProtectionEventInbox"] = DeleteBatch(connection, transaction,
+            results["ProtectionEventInbox"] = DeleteIsoBatch(connection, transaction,
                 "DELETE FROM ProtectionEventInbox WHERE Id IN (SELECT Id FROM ProtectionEventInbox WHERE Status=2 AND UpdatedUtc < @Boundary ORDER BY UpdatedUtc LIMIT @BatchSize)",
                 current.AddDays(-policy.CompletedInboxDays), policy.BatchSize);
+            results["SecurityObservationEvents"] = DeleteIsoBatch(connection, transaction,
+                "DELETE FROM SecurityObservationEvents WHERE Id IN (SELECT Id FROM SecurityObservationEvents WHERE CorrelationProcessed=1 AND EventTimeUtc < @Boundary ORDER BY EventTimeUtc LIMIT @BatchSize)",
+                current.AddDays(-policy.CompletedInboxDays), policy.BatchSize);
+            results["ObservationAlertOutbox"] = DeleteIsoBatch(connection, transaction,
+                "DELETE FROM ObservationAlertOutbox WHERE AlertId IN (SELECT AlertId FROM ObservationAlertOutbox WHERE Status=1 AND DispatchedUtc < @Boundary ORDER BY DispatchedUtc LIMIT @BatchSize)",
+                current.AddDays(-policy.CompletedInboxDays), policy.BatchSize);
+            results["FirewallChangeJournal"] = DeleteIsoBatch(connection, transaction,
+                "DELETE FROM FirewallChangeJournal WHERE Sequence IN (SELECT Sequence FROM FirewallChangeJournal WHERE ProcessingState=2 AND UpdatedUtc < @Boundary ORDER BY Sequence LIMIT @BatchSize)",
+                current.AddDays(-policy.CompletedInboxDays), policy.BatchSize);
+            results["ThreatHubJournal"] = connection.Execute(
+                "DELETE FROM ThreatHubJournal WHERE Sequence IN (SELECT Sequence FROM ThreatHubJournal WHERE CreatedTicks < @BoundaryTicks ORDER BY Sequence LIMIT @BatchSize)",
+                new { BoundaryTicks = current.AddDays(-policy.CompletedInboxDays).UtcTicks, policy.BatchSize },
+                transaction);
         });
         RecordAudit("Database.RetentionCleanup", database.DataSource, string.Join(",", results));
         return results;
@@ -346,6 +359,11 @@ public IReadOnlyDictionary<string, int> PurgeExpired(DatabaseRetentionPolicy pol
     private static int DeleteBatch(SqliteConnection connection, SqliteTransaction transaction, string sql, DateTimeOffset boundary, int batchSize, int? unlocked = null)
     {
         return connection.Execute(sql, new { Boundary = boundary.UtcDateTime, BatchSize = batchSize, Unlocked = unlocked }, transaction);
+    }
+
+    private static int DeleteIsoBatch(SqliteConnection connection, SqliteTransaction transaction, string sql, DateTimeOffset boundary, int batchSize)
+    {
+        return connection.Execute(sql, new { Boundary = boundary.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture), BatchSize = batchSize }, transaction);
     }
 
     private static void ValidatePolicy(DatabaseRetentionPolicy policy)

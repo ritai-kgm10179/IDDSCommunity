@@ -27,7 +27,7 @@ internal static class PacketCaptureHub
         return string.Create(CultureInfo.InvariantCulture, $"{ipProto} and host {address} and {portFilter}");
     }
 
-    internal static IDisposable Subscribe(IPAddress address, int? tcpPort, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed)
+    internal static IDisposable Subscribe(IPAddress address, int? tcpPort, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed, bool outboundOnly = false)
     {
         ArgumentNullException.ThrowIfNull(address);
         ArgumentNullException.ThrowIfNull(packetSent);
@@ -40,7 +40,7 @@ internal static class PacketCaptureHub
             {
                 entry = new CaptureEntry(address);
                 Captures.Add(address, entry);
-                PacketSubscription firstSubscription = new(entry, tcpPort, packetSent, packetReceived, captureFailed);
+                PacketSubscription firstSubscription = new(entry, tcpPort, outboundOnly, packetSent, packetReceived, captureFailed);
                 entry.Add(firstSubscription);
                 try
                 {
@@ -55,7 +55,7 @@ internal static class PacketCaptureHub
                 return firstSubscription;
             }
 
-            PacketSubscription subscription = new(entry, tcpPort, packetSent, packetReceived, captureFailed);
+            PacketSubscription subscription = new(entry, tcpPort, outboundOnly, packetSent, packetReceived, captureFailed);
             entry.Add(subscription);
             entry.RestartForFilterChange();
             return subscription;
@@ -180,8 +180,14 @@ internal static class PacketCaptureHub
             PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
             bool matched = false;
             foreach (PacketSubscription subscription in snapshot)
-                matched |= subscription.Matches(route.SourcePort, route.DestinationPort);
-            if (!matched)
+            {
+                if (subscription.Matches(route.SourcePort, route.DestinationPort))
+                {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched || !route.HasPayload)
                 return;
 
             if (!IPHeader.TryParse(eventArgs.Packet, eventArgs.Packet.Length, out IPHeader? parsedIpHeader) || parsedIpHeader is not IPHeader ipHeader ||
@@ -197,7 +203,7 @@ internal static class PacketCaptureHub
 
         private bool ShouldCapture(ReadOnlySpan<byte> packet)
         {
-            if (!TryReadRoute(packet, out PacketRoute route))
+            if (!TryReadRoute(packet, out PacketRoute route) || !route.HasPayload)
                 return false;
             PacketSubscription[] snapshot = Volatile.Read(ref subscriptionSnapshot);
             foreach (PacketSubscription subscription in snapshot)
@@ -262,7 +268,8 @@ internal static class PacketCaptureHub
                 int tcpHeaderLength = (tcp[12] >> 4) * 4;
                 if (tcpHeaderLength < 20 || ipHeaderLength + tcpHeaderLength > totalLength)
                     return false;
-                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
+                bool hasPayload = totalLength > ipHeaderLength + tcpHeaderLength;
+                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]), hasPayload);
                 return true;
             }
             else if (version == 6)
@@ -277,7 +284,8 @@ internal static class PacketCaptureHub
                 int tcpHeaderLength = (tcp[12] >> 4) * 4;
                 if (tcpHeaderLength < 20 || 40 + tcpHeaderLength > candidateTotalLength)
                     return false;
-                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]));
+                bool hasPayload = candidateTotalLength > 40 + tcpHeaderLength;
+                route = new PacketRoute(BinaryPrimitives.ReadUInt16BigEndian(tcp), BinaryPrimitives.ReadUInt16BigEndian(tcp[2..]), hasPayload);
                 return true;
             }
 
@@ -289,15 +297,17 @@ internal static class PacketCaptureHub
     {
         private readonly CaptureEntry owner;
         private readonly int? tcpPort;
+        private readonly bool outboundOnly;
         private readonly Action<IPHeader, TCPHeader> packetSent;
         private readonly Action<IPHeader, TCPHeader> packetReceived;
         private readonly Action<RawSocketErrorEventArgs> captureFailed;
         private volatile bool disposed;
 
-        internal PacketSubscription(CaptureEntry owner, int? tcpPort, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed)
+        internal PacketSubscription(CaptureEntry owner, int? tcpPort, bool outboundOnly, Action<IPHeader, TCPHeader> packetSent, Action<IPHeader, TCPHeader> packetReceived, Action<RawSocketErrorEventArgs> captureFailed)
         {
             this.owner = owner;
             this.tcpPort = tcpPort;
+            this.outboundOnly = outboundOnly;
             this.packetSent = packetSent;
             this.packetReceived = packetReceived;
             this.captureFailed = captureFailed;
@@ -309,11 +319,11 @@ internal static class PacketCaptureHub
                 return;
             if (ipHeader.SourceAddress.Equals(localAddress))
                 packetSent(ipHeader, tcpHeader);
-            if (ipHeader.DestinationAddress.Equals(localAddress))
+            if (!outboundOnly && ipHeader.DestinationAddress.Equals(localAddress))
                 packetReceived(ipHeader, tcpHeader);
         }
 
-        internal bool Matches(ushort sourcePort, ushort destinationPort) => tcpPort is not int port || sourcePort == port || destinationPort == port;
+        internal bool Matches(ushort sourcePort, ushort destinationPort) => tcpPort is not int port || (outboundOnly ? sourcePort == port : sourcePort == port || destinationPort == port);
 
         internal int? TcpPort => tcpPort;
 
@@ -335,5 +345,5 @@ internal static class PacketCaptureHub
         }
     }
 
-    private readonly record struct PacketRoute(ushort SourcePort, ushort DestinationPort);
+    private readonly record struct PacketRoute(ushort SourcePort, ushort DestinationPort, bool HasPayload);
 }

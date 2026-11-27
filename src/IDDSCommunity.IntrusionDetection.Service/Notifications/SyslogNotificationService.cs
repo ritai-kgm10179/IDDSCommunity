@@ -17,6 +17,10 @@ public sealed class SyslogNotificationService : IDisposable
 {
     private readonly NotificationSettings settings;
     private readonly SemaphoreSlim sendLock = new(1, 1);
+    private UdpClient? cachedUdpClient;
+    private TcpClient? cachedTcpClient;
+    private Stream? cachedTcpTransportStream;
+    private string? cachedEndpointKey;
     private bool disposed;
 
     /// <summary>
@@ -113,37 +117,35 @@ public sealed class SyslogNotificationService : IDisposable
             byte[] data = Encoding.UTF8.GetBytes(message + "\n");
             string host = settings.SyslogHost.Trim();
             int port = settings.SyslogPort > 0 ? settings.SyslogPort : 514;
+            string endpointKey = $"{(int)settings.SyslogProtocol}:{host}:{port}:{settings.SyslogAllowSelfSignedCertificate}";
+            if (!string.Equals(cachedEndpointKey, endpointKey, StringComparison.Ordinal))
+            {
+                ResetCachedConnections();
+                cachedEndpointKey = endpointKey;
+            }
 
             if (settings.SyslogProtocol == SyslogProtocol.Udp)
             {
-                using var udpClient = new UdpClient();
-                await udpClient.SendAsync(data.AsMemory(), host, port, effectiveToken).ConfigureAwait(false);
+                cachedUdpClient ??= new UdpClient();
+                await cachedUdpClient.SendAsync(data.AsMemory(), host, port, effectiveToken).ConfigureAwait(false);
                 return true;
             }
-            else if (settings.SyslogProtocol == SyslogProtocol.Tcp)
+            else if (settings.SyslogProtocol is SyslogProtocol.Tcp or SyslogProtocol.Tls)
             {
-                using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(host, port, effectiveToken).ConfigureAwait(false);
-                using var stream = tcpClient.GetStream();
-                await stream.WriteAsync(data, effectiveToken).ConfigureAwait(false);
-                await stream.FlushAsync(effectiveToken).ConfigureAwait(false);
-                return true;
-            }
-            else if (settings.SyslogProtocol == SyslogProtocol.Tls)
-            {
-                using var tcpClient = new TcpClient();
-                await tcpClient.ConnectAsync(host, port, effectiveToken).ConfigureAwait(false);
-                using var sslStream = settings.SyslogAllowSelfSignedCertificate
-                    ? new SslStream(tcpClient.GetStream(), false, (_, _, _, _) => true)
-                    : new SslStream(tcpClient.GetStream(), false);
-                var authOptions = new SslClientAuthenticationOptions
+                for (int attempt = 0; attempt < 2; attempt++)
                 {
-                    TargetHost = host
-                };
-                await sslStream.AuthenticateAsClientAsync(authOptions, effectiveToken).ConfigureAwait(false);
-                await sslStream.WriteAsync(data, effectiveToken).ConfigureAwait(false);
-                await sslStream.FlushAsync(effectiveToken).ConfigureAwait(false);
-                return true;
+                    try
+                    {
+                        Stream stream = await EnsureTcpOrTlsStreamAsync(host, port, settings.SyslogProtocol == SyslogProtocol.Tls, effectiveToken).ConfigureAwait(false);
+                        await stream.WriteAsync(data, effectiveToken).ConfigureAwait(false);
+                        await stream.FlushAsync(effectiveToken).ConfigureAwait(false);
+                        return true;
+                    }
+                    catch (Exception) when (attempt == 0 && !cancellationToken.IsCancellationRequested)
+                    {
+                        ResetCachedTcpConnections();
+                    }
+                }
             }
 
             return false;
@@ -154,6 +156,7 @@ public sealed class SyslogNotificationService : IDisposable
         }
         catch (Exception ex)
         {
+            ResetCachedTcpConnections();
             System.Diagnostics.Trace.TraceWarning("Failed to send Syslog to {0}:{1} - {2}", settings.SyslogHost, settings.SyslogPort, ex.Message);
             return false;
         }
@@ -163,6 +166,59 @@ public sealed class SyslogNotificationService : IDisposable
         }
     }
 
+    private async Task<Stream> EnsureTcpOrTlsStreamAsync(string host, int port, bool useTls, CancellationToken cancellationToken)
+    {
+        if (cachedTcpClient is { Connected: true } && cachedTcpTransportStream is not null)
+        {
+            return cachedTcpTransportStream;
+        }
+
+        ResetCachedTcpConnections();
+        TcpClient tcpClient = new() { NoDelay = true };
+        try
+        {
+            await tcpClient.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+            if (!useTls)
+            {
+                cachedTcpClient = tcpClient;
+                cachedTcpTransportStream = tcpClient.GetStream();
+                return cachedTcpTransportStream;
+            }
+
+            SslStream sslStream = settings.SyslogAllowSelfSignedCertificate
+                ? new SslStream(tcpClient.GetStream(), false, (_, _, _, _) => true)
+                : new SslStream(tcpClient.GetStream(), false);
+            var authOptions = new SslClientAuthenticationOptions
+            {
+                TargetHost = host
+            };
+            await sslStream.AuthenticateAsClientAsync(authOptions, cancellationToken).ConfigureAwait(false);
+            cachedTcpClient = tcpClient;
+            cachedTcpTransportStream = sslStream;
+            return sslStream;
+        }
+        catch
+        {
+            tcpClient.Dispose();
+            throw;
+        }
+    }
+
+    private void ResetCachedConnections()
+    {
+        cachedUdpClient?.Dispose();
+        cachedUdpClient = null;
+        ResetCachedTcpConnections();
+    }
+
+    private void ResetCachedTcpConnections()
+    {
+        try { cachedTcpTransportStream?.Dispose(); } catch { }
+        cachedTcpTransportStream = null;
+        try { cachedTcpClient?.Dispose(); } catch { }
+        cachedTcpClient = null;
+    }
+
     /// <summary>
     /// 釋放非受控資源。
     /// </summary>
@@ -170,6 +226,7 @@ public sealed class SyslogNotificationService : IDisposable
     {
         if (disposed) return;
         disposed = true;
+        ResetCachedConnections();
         sendLock.Dispose();
     }
 }

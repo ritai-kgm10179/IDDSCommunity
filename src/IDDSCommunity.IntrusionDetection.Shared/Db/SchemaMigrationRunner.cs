@@ -6,6 +6,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared.Db;
 
 internal static class SchemaMigrationRunner
 {
+    private const int LatestSchemaVersion = 19;
     private const string CreateJournal = "CREATE TABLE IF NOT EXISTS SchemaMigrations (Version INTEGER PRIMARY KEY NOT NULL, AppliedUtc TEXT NOT NULL)";
     /// <summary>
     /// 原子化地套用所有未處理的結構描述移轉並紀錄其版本。
@@ -14,6 +15,9 @@ internal static class SchemaMigrationRunner
     internal static void Migrate(SqliteConnection connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
+        if (IsUpToDate(connection))
+            return;
+
         using SqliteTransaction transaction = connection.BeginTransaction();
         Execute(connection, transaction, CreateJournal);
 
@@ -126,7 +130,9 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, "CREATE TRIGGER IF NOT EXISTS TR_IntrusionLog_AttackActivity AFTER INSERT ON IntrusionLog WHEN NEW.Action IN (100,200,210,300,310,600) BEGIN INSERT INTO IpAttackActivity(IpAddress,LastAttackTicks) VALUES(NEW.ClientIP, CAST((COALESCE(julianday(NEW.IncidentTime),julianday('now'))-1721425.5)*864000000000 AS INTEGER)) ON CONFLICT(IpAddress) DO UPDATE SET LastAttackTicks=MAX(LastAttackTicks,excluded.LastAttackTicks); END");
         if (!MigrationApplied(connection, transaction, 15) && ColumnExists(connection, transaction, "Locks", "IpAddress") && ColumnExists(connection, transaction, "Locks", "Status"))
             Execute(connection, transaction, "INSERT OR IGNORE INTO IpAttackActivity(IpAddress,LastAttackTicks) SELECT DISTINCT IpAddress, CAST((julianday('now')-1721425.5)*864000000000 AS INTEGER) FROM Locks WHERE Status IN (300,310)");
-        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubCursors (Endpoint TEXT PRIMARY KEY NOT NULL, Cursor INTEGER NOT NULL, Generation TEXT NOT NULL, LocalCursor INTEGER NOT NULL, UpdatedUtc TEXT NOT NULL)");
+        Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubCursors (Endpoint TEXT PRIMARY KEY NOT NULL, Cursor INTEGER NOT NULL, Generation TEXT NOT NULL, LocalCursor INTEGER NOT NULL, JournalCursor INTEGER NOT NULL DEFAULT 0, UpdatedUtc TEXT NOT NULL)");
+        if (TableExists(connection, transaction, "ThreatHubCursors") && !ColumnExists(connection, transaction, "ThreatHubCursors", "JournalCursor"))
+            Execute(connection, transaction, "ALTER TABLE ThreatHubCursors ADD COLUMN JournalCursor INTEGER NOT NULL DEFAULT 0");
         Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS FirewallDesiredAddress (AddressKey TEXT NOT NULL, AddressFamily INTEGER NOT NULL, NetworkBytes BLOB NOT NULL, PrefixLength INTEGER NOT NULL, DesiredState INTEGER NOT NULL, Source TEXT NOT NULL, Revision INTEGER NOT NULL, StableBucket INTEGER NOT NULL, AssignedShard TEXT NULL, LastChangedUtc TEXT NOT NULL, PRIMARY KEY(AddressKey,Source)) WITHOUT ROWID");
         Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallDesiredAddress_StateBucketKey ON FirewallDesiredAddress(DesiredState,StableBucket,AddressKey)");
         Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_FirewallDesiredAddress_ShardKey ON FirewallDesiredAddress(AssignedShard,AddressKey)");
@@ -144,6 +150,29 @@ internal static class SchemaMigrationRunner
         Execute(connection, transaction, "CREATE TABLE IF NOT EXISTS ThreatHubJournal (Sequence INTEGER PRIMARY KEY AUTOINCREMENT, EventType INTEGER NOT NULL, SourceIp TEXT NOT NULL, Payload TEXT NOT NULL, CreatedTicks INTEGER NOT NULL)");
         Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ThreatHubJournal_CreatedTicks ON ThreatHubJournal(CreatedTicks)");
         Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(18,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
+        if (TableExists(connection, transaction, "Locks"))
+        {
+            if (ColumnExists(connection, transaction, "Locks", "TriggerIncident"))
+                Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_TriggerIncident ON Locks(TriggerIncident)");
+            if (ColumnExists(connection, transaction, "Locks", "LastUpdate"))
+                Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_LastUpdate ON Locks(LastUpdate)");
+            if (ColumnExists(connection, transaction, "Locks", "LockDate"))
+                Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_LockDate ON Locks(LockDate)");
+            if (ColumnExists(connection, transaction, "Locks", "Status") && ColumnExists(connection, transaction, "Locks", "LockDate"))
+                Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_Locks_Status_LockDate ON Locks(Status, LockDate DESC)");
+        }
+        if (TableExists(connection, transaction, "IntrusionLog")
+            && ColumnExists(connection, transaction, "IntrusionLog", "ClientIP")
+            && ColumnExists(connection, transaction, "IntrusionLog", "AgentId")
+            && ColumnExists(connection, transaction, "IntrusionLog", "IncidentTime"))
+        {
+            Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_IntrusionLog_ClientIP_AgentId_IncidentTime ON IntrusionLog(ClientIP, AgentId, IncidentTime)");
+        }
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ProtectionEventInbox_Status_UpdatedUtc ON ProtectionEventInbox(Status, UpdatedUtc)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_ProtectionAuditLog_EventType_OccurredUtc ON ProtectionAuditLog(EventType, OccurredUtc)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_CloudPerimeterOutbox_DueTicks ON CloudPerimeterOutbox(DueTicks, IpAddress)");
+        Execute(connection, transaction, "CREATE INDEX IF NOT EXISTS IX_SecurityObservationEvents_PendingCorrelation ON SecurityObservationEvents(ReceivedUtc, Id) WHERE CorrelationProcessed = 0");
+        Execute(connection, transaction, "INSERT OR IGNORE INTO SchemaMigrations(Version,AppliedUtc) VALUES(19,strftime('%Y-%m-%dT%H:%M:%fZ','now'))");
         using SqliteCommand journal = connection.CreateCommand();
         journal.Transaction = transaction;
         journal.CommandText = "INSERT OR IGNORE INTO SchemaMigrations(Version, AppliedUtc) VALUES (1, $appliedUtc)";
@@ -563,6 +592,22 @@ internal static class SchemaMigrationRunner
             update.Parameters.AddWithValue("$key", key);
             update.ExecuteNonQuery();
         }
+    }
+
+    private static bool IsUpToDate(SqliteConnection connection)
+    {
+        using (SqliteCommand existsCommand = connection.CreateCommand())
+        {
+            existsCommand.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('SchemaMigrations', 'DbConfig')";
+            object? tableCount = existsCommand.ExecuteScalar();
+            if (tableCount is null || Convert.ToInt32(tableCount) != 2)
+                return false;
+        }
+
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(DISTINCT Version) FROM SchemaMigrations WHERE Version BETWEEN 1 AND 19";
+        object? count = command.ExecuteScalar();
+        return count is not null && Convert.ToInt32(count) == LatestSchemaVersion;
     }
 
     private static bool MigrationApplied(SqliteConnection connection, SqliteTransaction transaction, int version)

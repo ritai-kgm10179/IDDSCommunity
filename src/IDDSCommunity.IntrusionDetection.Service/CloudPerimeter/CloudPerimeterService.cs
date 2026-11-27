@@ -17,6 +17,7 @@ public sealed class CloudPerimeterService : IDisposable
     private readonly Database database;
     private readonly CancellationTokenSource stopping = new();
     private readonly SemaphoreSlim providerGate = new(1, 1);
+    private readonly SemaphoreSlim wakeSignal = new(0, 1);
     private readonly Task worker;
     private ICloudPerimeterProvider? activeProvider;
     private bool isDisposed;
@@ -58,6 +59,7 @@ public sealed class CloudPerimeterService : IDisposable
             activeProvider = CloudPerimeterProviderFactory.Create(settings);
         }
         finally { providerGate.Release(); }
+        SignalWake();
     }
 
     /// <summary>
@@ -114,7 +116,23 @@ public sealed class CloudPerimeterService : IDisposable
             connection.Execute("INSERT INTO CloudPerimeterOutbox(IpAddress,Version,ShouldBlock,Reason) VALUES(@ip,@version,@block,@reason) ON CONFLICT(IpAddress) DO UPDATE SET Version=excluded.Version,ShouldBlock=excluded.ShouldBlock,Reason=excluded.Reason,Attempts=0,DueTicks=0",
                 new { ip, version = Guid.NewGuid().ToString("N"), block, reason = reason.Length > 512 ? reason[..512] : reason }, transaction);
         });
+        SignalWake();
         return true;
+    }
+
+    private void SignalWake()
+    {
+        try
+        {
+            if (wakeSignal.CurrentCount == 0)
+                wakeSignal.Release();
+        }
+        catch (SemaphoreFullException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
     }
 
     private async Task RunAsync()
@@ -177,9 +195,36 @@ public sealed class CloudPerimeterService : IDisposable
                 catch (OperationCanceledException) when (stopping.IsCancellationRequested) { break; }
                 catch (Exception ex) { System.Diagnostics.Trace.TraceError("Cloud perimeter outbox: {0}", ex.GetType().Name); }
 
-                if (!processedAny)
+                if (!IsEnabled)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), stopping.Token).ConfigureAwait(false);
+                    await wakeSignal.WaitAsync(stopping.Token).ConfigureAwait(false);
+                }
+                else if (!processedAny)
+                {
+                    TimeSpan idleWait = TimeSpan.FromSeconds(15);
+                    if (database.IsConfigured)
+                    {
+                        try
+                        {
+                            object? minDueObj = database.ExecuteScalar("SELECT MIN(DueTicks) FROM CloudPerimeterOutbox");
+                            if (minDueObj is not null && minDueObj != DBNull.Value)
+                            {
+                                long remainingTicks = Convert.ToInt64(minDueObj) - DateTime.UtcNow.Ticks;
+                                idleWait = remainingTicks <= 0
+                                    ? TimeSpan.FromMilliseconds(50)
+                                    : TimeSpan.FromTicks(Math.Min(TimeSpan.FromSeconds(15).Ticks, Math.Max(TimeSpan.FromMilliseconds(50).Ticks, remainingTicks)));
+                            }
+                            else
+                            {
+                                idleWait = TimeSpan.FromSeconds(30);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            idleWait = TimeSpan.FromSeconds(15);
+                        }
+                    }
+                    await wakeSignal.WaitAsync(idleWait, stopping.Token).ConfigureAwait(false);
                 }
                 else
                 {
@@ -203,6 +248,7 @@ public sealed class CloudPerimeterService : IDisposable
         activeProvider = null;
         stopping.Dispose();
         providerGate.Dispose();
+        wakeSignal.Dispose();
     }
 
     private sealed class Pending

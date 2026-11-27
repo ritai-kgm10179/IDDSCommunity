@@ -494,6 +494,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                             if (Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND Status IN (200,210,300,310))", l.IpAddress)) == 0)
                             {
                                 firewallPolicy.RemoveIpAddressFromBlockList(l.IpAddress);
+                                threatHubServer?.Store.RecordProbation(l.IpAddress, "Probation decay");
                                 _ = cloudPerimeterService.NotifyUnblockAsync(l.IpAddress);
                             }
                         }
@@ -561,6 +562,7 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                     if (configuration.IsInSafeNetwork(pending.IpAddress))
                     {
                         Locks.UnlockIp(pending.IpAddress);
+                        threatHubServer?.Store.Revoke(pending.IpAddress, "Safe network exemption");
                         continue;
                     }
                     applicable.Add(pending);
@@ -586,26 +588,36 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
             List<Lock> timedOutLocks = Locks.GetUnlockList();
             if (timedOutLocks.Count > 0)
             {
-                List<string> ipsToUnblock = [];
-                Dictionary<long, bool> otherLockMap = [];
                 DateTime now = DateTime.UtcNow;
-
+                HashSet<string> candidateIps = new(StringComparer.OrdinalIgnoreCase);
+                List<long> timedOutIds = new(timedOutLocks.Count);
                 foreach (Lock l in timedOutLocks)
                 {
-                    bool otherLock = Convert.ToInt32(database.ExecuteScalar("SELECT EXISTS(SELECT 1 FROM Locks WHERE IpAddress=@p0 AND LockId<>@p1 AND Status IN (200,210,300,310) AND UnlockDate>@p2)", l.IpAddress, l.Id, now)) != 0;
-                    otherLockMap[l.Id] = otherLock;
-                    if (!otherLock && !ipsToUnblock.Contains(l.IpAddress))
+                    if (!string.IsNullOrWhiteSpace(l.IpAddress))
+                        candidateIps.Add(l.IpAddress);
+                    timedOutIds.Add(l.Id);
+                }
+
+                HashSet<string> ipsWithOtherLocks = Locks.GetIpsWithOtherActiveLocks(candidateIps, timedOutIds, now);
+                HashSet<string> ipsToUnblock = new(StringComparer.OrdinalIgnoreCase);
+                List<Lock> unlockedWithoutOther = [];
+                foreach (Lock l in timedOutLocks)
+                {
+                    if (!ipsWithOtherLocks.Contains(l.IpAddress))
                     {
                         ipsToUnblock.Add(l.IpAddress);
+                        unlockedWithoutOther.Add(l);
                     }
                 }
 
                 if (ipsToUnblock.Count > 0)
                 {
-                    firewallPolicy.BatchRemove(ipsToUnblock);
+                    firewallPolicy.BatchRemove(ipsToUnblock.ToList());
                 }
 
                 DateTime nowUtc = DateTime.UtcNow;
+                string actor = Environment.UserDomainName + "\\" + Environment.UserName;
+                string nowAuditUtc = nowUtc.ToString("O");
                 database.ExecuteInTransaction((connection, transaction) =>
                 {
                     using var updateCmd = connection.CreateCommand();
@@ -616,6 +628,15 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                     var pId = updateCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Integer);
                     var pCurStatus = updateCmd.Parameters.Add("@p3", Microsoft.Data.Sqlite.SqliteType.Integer);
                     var pUnlockDate = updateCmd.Parameters.Add("@p4", Microsoft.Data.Sqlite.SqliteType.Text);
+                    updateCmd.Prepare();
+
+                    using var auditCmd = connection.CreateCommand();
+                    auditCmd.Transaction = transaction;
+                    auditCmd.CommandText = "INSERT INTO ProtectionAuditLog(AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details) VALUES (NULL, @p0, 'Firewall.Unlock', 'Succeeded', @p1, @p2, '')";
+                    var pAuditTime = auditCmd.Parameters.Add("@p0", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pAuditActor = auditCmd.Parameters.Add("@p1", Microsoft.Data.Sqlite.SqliteType.Text);
+                    var pAuditSubject = auditCmd.Parameters.Add("@p2", Microsoft.Data.Sqlite.SqliteType.Text);
+                    auditCmd.Prepare();
 
                     foreach (Lock l in timedOutLocks)
                     {
@@ -625,14 +646,19 @@ public sealed class Service : IIntrusionDetectionRuntime, IDisposable
                         pCurStatus.Value = l.Status;
                         pUnlockDate.Value = l.UnlockDate;
                         updateCmd.ExecuteNonQuery();
+
+                        pAuditTime.Value = nowAuditUtc;
+                        pAuditActor.Value = actor;
+                        pAuditSubject.Value = l.IpAddress;
+                        auditCmd.ExecuteNonQuery();
                     }
                 });
 
-                foreach (Lock l in timedOutLocks)
+                foreach (Lock l in unlockedWithoutOther)
                 {
-                    bool otherLock = otherLockMap.TryGetValue(l.Id, out bool o) && o;
-                    TryRecordAudit("Firewall.Unlock", "Succeeded", l.IpAddress);
-                    if (!otherLock) OnClientIpAddressUnlocked(l, null);
+                    if (l.Status == Lock.LOCK_STATUS_UNLOCK_REQUESTED)
+                        threatHubServer?.Store.Revoke(l.IpAddress, "Unlocked on Hub");
+                    OnClientIpAddressUnlocked(l, null);
                 }
             }
         }
@@ -665,7 +691,6 @@ public bool LimitMailSent { get; set; }
 
     void LockDownIpCore(Lock lockItem, LockType lockType, SecurityAgent reportingAgent)
     {
-        int locksForToday = Locks.Today();
         LimitMailSent = false;
         try
         {
@@ -796,7 +821,9 @@ public bool LimitMailSent { get; set; }
                     configuration,
                     HandleClusterThreatReceived,
                     msg => logManager.WriteEntry(msg, EventLogEntryType.Information, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
-                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME), database: database);
+                    (msg, ex) => logManager.WriteEntry(msg + ": " + ex.Message, EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_RUNTIME),
+                    database: database,
+                    onThreatsBatchReceived: HandleClusterThreatsReceived);
                 threatHubServer.Start();
             }
             else if (configuration.ThreatHubRole == Shared.ThreatIntelligence.ThreatHubRole.EdgeNode)
@@ -1243,16 +1270,19 @@ public bool LimitMailSent { get; set; }
 
                             bool isGeoBlocked = false;
                             if (configuration.EnableGeoBlocking &&
-                                System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? targetIp))
+                                System.Net.IPAddress.TryParse(notificationEventArgs.IpAddress, out System.Net.IPAddress? targetIp) &&
+                                Shared.ThreatIntelligence.GeoIpLookupService.TryLookup(targetIp, out string geoCode, out string geoName))
                             {
-                                var blockedList = configuration.BlockedCountryCodes.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                                if (Shared.ThreatIntelligence.GeoIpLookupService.IsCountryBlocked(targetIp, blockedList))
+                                foreach (string blocked in configuration.BlockedCountryCodes.Split([',', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
                                 {
-                                    isGeoBlocked = true;
-                                    Shared.ThreatIntelligence.GeoIpLookupService.TryLookup(targetIp, out string geoCode, out string geoName);
-                                    logManager.WriteEntry(
-                                        string.Format("IP address {0} from blocked country [{1} - {2}] violated Geo-fencing policy. Executing immediate permanent hard lock.", notificationEventArgs.IpAddress, geoCode, geoName),
-                                        EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+                                    if (string.Equals(blocked, geoCode, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        isGeoBlocked = true;
+                                        logManager.WriteEntry(
+                                            string.Format("IP address {0} from blocked country [{1} - {2}] violated Geo-fencing policy. Executing immediate permanent hard lock.", notificationEventArgs.IpAddress, geoCode, geoName),
+                                            EventLogEntryType.Warning, Globals.IDDSCOMMUNITY_EVENT_ID_INFORMATION, Globals.IDDSCOMMUNITY_LOG_CATEGORY_SECURITY);
+                                        break;
+                                    }
                                 }
                             }
 

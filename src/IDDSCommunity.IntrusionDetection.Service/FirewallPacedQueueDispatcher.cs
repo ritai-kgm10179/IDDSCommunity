@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using IDDSCommunity.IntrusionDetection.Shared;
+using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 
 namespace IDDSCommunity.IntrusionDetection.Service;
 
@@ -765,6 +767,8 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
         private readonly HashSet<string> exactAddresses = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<IPAddress> exactIpObjects = [];
         private readonly HashSet<(IPAddress Network, int PrefixLength)> subnets = [];
+        private readonly Dictionary<int, Dictionary<UInt128, int>> v4SubnetPrefixes = [];
+        private readonly Dictionary<int, Dictionary<UInt128, int>> v6SubnetPrefixes = [];
         private readonly HashSet<IPAddress> excludedIpObjects = [];
         private readonly IFirewallPolicy fallbackPolicy;
         private bool wildcard;
@@ -939,6 +943,8 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
                 exactAddresses.Clear();
                 exactIpObjects.Clear();
                 subnets.Clear();
+                v4SubnetPrefixes.Clear();
+                v6SubnetPrefixes.Clear();
                 excludedIpObjects.Clear();
                 wildcard = false;
                 initialized = true;
@@ -960,15 +966,66 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
 
         private bool IsInAnySubnet(IPAddress ip)
         {
-            foreach (var (network, prefixLength) in subnets)
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
             {
-                if (network.AddressFamily == ip.AddressFamily
-                    && FirewallPolicyManager.IsInSubnet(ip, network, prefixLength))
+                if (v4SubnetPrefixes.Count == 0) return false;
+                UInt128 value = IpPrefixIndex.Number(ip);
+                foreach (KeyValuePair<int, Dictionary<UInt128, int>> entry in v4SubnetPrefixes)
                 {
-                    return true;
+                    UInt128 masked = entry.Key == 0 ? 0 : (value >> (32 - entry.Key)) << (32 - entry.Key);
+                    if (entry.Value.ContainsKey(masked)) return true;
                 }
+                return false;
             }
+
+            if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                if (v6SubnetPrefixes.Count == 0) return false;
+                UInt128 value = IpPrefixIndex.Number(ip);
+                foreach (KeyValuePair<int, Dictionary<UInt128, int>> entry in v6SubnetPrefixes)
+                {
+                    UInt128 masked = entry.Key == 0 ? 0 : (value >> (128 - entry.Key)) << (128 - entry.Key);
+                    if (entry.Value.ContainsKey(masked)) return true;
+                }
+                return false;
+            }
+
             return false;
+        }
+
+        private void AddSubnetPrefix(IPAddress network, int prefixLength)
+        {
+            bool ipv4 = network.AddressFamily == AddressFamily.InterNetwork;
+            int totalBits = ipv4 ? 32 : 128;
+            if (prefixLength < 0 || prefixLength > totalBits) return;
+            Dictionary<int, Dictionary<UInt128, int>> map = ipv4 ? v4SubnetPrefixes : v6SubnetPrefixes;
+            if (!map.TryGetValue(prefixLength, out Dictionary<UInt128, int>? prefixes))
+            {
+                map[prefixLength] = prefixes = [];
+            }
+            UInt128 masked = prefixLength == 0 ? 0 : (IpPrefixIndex.Number(network) >> (totalBits - prefixLength)) << (totalBits - prefixLength);
+            prefixes.TryGetValue(masked, out int count);
+            prefixes[masked] = count + 1;
+        }
+
+        private void RemoveSubnetPrefix(IPAddress network, int prefixLength)
+        {
+            bool ipv4 = network.AddressFamily == AddressFamily.InterNetwork;
+            int totalBits = ipv4 ? 32 : 128;
+            if (prefixLength < 0 || prefixLength > totalBits) return;
+            Dictionary<int, Dictionary<UInt128, int>> map = ipv4 ? v4SubnetPrefixes : v6SubnetPrefixes;
+            if (!map.TryGetValue(prefixLength, out Dictionary<UInt128, int>? prefixes)) return;
+            UInt128 masked = prefixLength == 0 ? 0 : (IpPrefixIndex.Number(network) >> (totalBits - prefixLength)) << (totalBits - prefixLength);
+            if (!prefixes.TryGetValue(masked, out int count)) return;
+            if (count <= 1)
+            {
+                prefixes.Remove(masked);
+                if (prefixes.Count == 0) map.Remove(prefixLength);
+            }
+            else
+            {
+                prefixes[masked] = count - 1;
+            }
         }
 
         private void AddInternal(string raw)
@@ -998,7 +1055,10 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
                 if (int.TryParse(parts[1], out int prefixLength)
                     || FirewallPolicyManager.TryConvertSubnetMaskToPrefixLength(parts[1], out prefixLength))
                 {
-                    subnets.Add((network, prefixLength));
+                    if (subnets.Add((network, prefixLength)))
+                    {
+                        AddSubnetPrefix(network, prefixLength);
+                    }
                     exactAddresses.Add($"{network}/{prefixLength}");
                     exactAddresses.Add(trimmed);
                     excludedIpObjects.RemoveWhere(ip => ip.AddressFamily == network.AddressFamily && FirewallPolicyManager.IsInSubnet(ip, network, prefixLength));
@@ -1016,6 +1076,8 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
                 exactAddresses.Clear();
                 exactIpObjects.Clear();
                 subnets.Clear();
+                v4SubnetPrefixes.Clear();
+                v6SubnetPrefixes.Clear();
                 excludedIpObjects.Clear();
                 return;
             }
@@ -1039,7 +1101,10 @@ internal sealed class FirewallPacedQueueDispatcher : IFirewallPolicy, IDisposabl
                 if (int.TryParse(parts[1], out int prefixLength)
                     || FirewallPolicyManager.TryConvertSubnetMaskToPrefixLength(parts[1], out prefixLength))
                 {
-                    subnets.Remove((network, prefixLength));
+                    if (subnets.Remove((network, prefixLength)))
+                    {
+                        RemoveSubnetPrefix(network, prefixLength);
+                    }
                     exactAddresses.Remove($"{network}/{prefixLength}");
                     exactAddresses.Remove(trimmed);
                 }

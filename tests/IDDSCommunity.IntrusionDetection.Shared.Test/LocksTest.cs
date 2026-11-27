@@ -326,4 +326,29 @@ public class LocksTest
             Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress IN (@p0, @p1, @p2)", lockedIp1, lockedIp2, unlockedIp);
         }
     }
+
+    /// <summary>
+    /// 驗證 CountActiveLocks 僅統計處於有效或請求鎖定中之記錄，排除已解鎖與假釋記錄。
+    /// </summary>
+    [TestMethod]
+    public void CountActiveLocks_CountsActiveAndRequestedOnly()
+    {
+        string ip1 = $"198.51.100.{Random.Shared.Next(10, 80)}";
+        string ip2 = $"198.51.100.{Random.Shared.Next(81, 150)}";
+        string ip3 = $"198.51.100.{Random.Shared.Next(151, 220)}";
+        Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress IN (@p0, @p1, @p2)", ip1, ip2, ip3);
+        try
+        {
+            int baseline = Locks.CountActiveLocks();
+            Locks.CreateLock(new Lock { IpAddress = ip1, LockDate = DateTime.UtcNow, UnlockDate = DateTime.UtcNow.AddHours(1), Status = Lock.LOCK_STATUS_SOFTLOCK });
+            Locks.CreateLock(new Lock { IpAddress = ip2, LockDate = DateTime.UtcNow, UnlockDate = DateTime.MaxValue, Status = Lock.LOCK_STATUS_HARDLOCK_REQUESTED });
+            Locks.CreateLock(new Lock { IpAddress = ip3, LockDate = DateTime.UtcNow, UnlockDate = DateTime.UtcNow.AddHours(1), Status = Lock.LOCK_STATUS_UNLOCKED });
+
+            Assert.AreEqual(baseline + 2, Locks.CountActiveLocks());
+        }
+        finally
+        {
+            Database.Instance.ExecuteNonQuery("delete from Locks where IpAddress IN (@p0, @p1, @p2)", ip1, ip2, ip3);
+        }
+    }
 }

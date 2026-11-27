@@ -65,9 +65,9 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
             {
                 Mode = DeviceModes.None,
                 ReadTimeout = 500,
-                Snaplen = 65535,
+                Snaplen = 2048,
                 Immediate = false,
-                KernelBufferSize = 1_048_576
+                KernelBufferSize = 4_194_304
             });
             device.Filter = filter;
             device.StartCapture();
@@ -121,7 +121,7 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
     /// <param name="packet">接收到的封包資料。</param>
     private void DispatchToSubscribers(RawPacketEventArgs packet)
     {
-        foreach (EventHandler<RawPacketEventArgs> handler in PacketReceived?.GetInvocationList() ?? [])
+        foreach (EventHandler<RawPacketEventArgs> handler in Delegate.EnumerateInvocationList(PacketReceived))
         {
             try
             {

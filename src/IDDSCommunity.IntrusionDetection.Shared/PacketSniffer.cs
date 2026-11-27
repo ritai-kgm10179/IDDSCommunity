@@ -51,7 +51,8 @@ public IPAddress IPAddress { get; private set; } = IPAddress.Loopback;
         IPAddress = address;
         if (subscription is not null)
             throw new InvalidOperationException(Localization.Strings.Get("Packet capture has already started."));
-        subscription = PacketCaptureHub.Subscribe(address, TcpPort, OnPacketSent, OnPacketReceived, eventArgs => OnCaptureFailed(this, eventArgs));
+        bool outboundOnly = TcpPacketReceived is null && IpPacketReceived is null;
+        subscription = PacketCaptureHub.Subscribe(address, TcpPort, OnPacketSent, OnPacketReceived, eventArgs => OnCaptureFailed(this, eventArgs), outboundOnly);
     }
 
     /// <summary>

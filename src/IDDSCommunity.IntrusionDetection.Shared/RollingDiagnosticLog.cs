@@ -12,7 +12,9 @@ public static class RollingDiagnosticLog
 {
     private const int RetentionDays = 14;
     private const long MaximumFileBytes = 5 * 1024 * 1024;
+    private static readonly System.Text.Encoding Utf8NoBom = new System.Text.UTF8Encoding(false);
     private static readonly object SyncRoot = new();
+    private static long nextCleanupTicks;
 
     /// <summary>
     /// 寫入包含完整例外狀況資訊的診斷記錄，並清除逾期檔案。
@@ -33,8 +35,9 @@ public static class RollingDiagnosticLog
                     Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                     "IDDS Community", "Logs");
                 Directory.CreateDirectory(directory);
+                DateTime utcNow = DateTime.UtcNow;
                 string prefix = SanitizeComponent(component);
-                string path = SelectPath(directory, prefix, DateTime.UtcNow);
+                string path = SelectPath(directory, prefix, utcNow);
                 string entry = JsonSerializer.Serialize(new DiagnosticEntry(
                     DateTimeOffset.UtcNow,
                     component,
@@ -42,8 +45,12 @@ public static class RollingDiagnosticLog
                     exception.GetType().FullName ?? exception.GetType().Name,
                     exception.Message,
                     exception.ToString()));
-                File.AppendAllText(path, entry + Environment.NewLine, new System.Text.UTF8Encoding(false));
-                DeleteExpiredFiles(directory, prefix, DateTime.UtcNow.AddDays(-RetentionDays));
+                File.AppendAllText(path, entry + Environment.NewLine, Utf8NoBom);
+                if (utcNow.Ticks >= nextCleanupTicks)
+                {
+                    nextCleanupTicks = utcNow.AddHours(1).Ticks;
+                    DeleteExpiredFiles(directory, prefix, utcNow.AddDays(-RetentionDays));
+                }
                 return path;
             }
         }

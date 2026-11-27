@@ -16,6 +16,9 @@ public sealed class ObservationIdempotencyFilter
     private readonly ConcurrentDictionary<string, long> seenKeys;
     private long totalAccepted;
     private long totalDuplicates;
+    private int activeKeyCount;
+    private long lastPruneTicks;
+    private int pruning;
 
     /// <summary>
     /// 初始化 <see cref="ObservationIdempotencyFilter"/> 類別的新執行個體。
@@ -38,7 +41,7 @@ public sealed class ObservationIdempotencyFilter
     /// <summary>
     /// 取得目前已記錄之去重鍵值數量。
     /// </summary>
-    public int ActiveKeyCount => seenKeys.Count;
+    public int ActiveKeyCount => Volatile.Read(ref activeKeyCount);
 
     /// <summary>
     /// 取得歷來成功接受的新事件總數。
@@ -64,15 +67,30 @@ public sealed class ObservationIdempotencyFilter
         long nowTicks = timeProvider.GetUtcNow().UtcTicks;
         long expireTicks = nowTicks + retentionPeriod.Ticks;
 
-        // 若容量超限，執行清理過期項目
-        if (seenKeys.Count >= maxCapacity)
+        // 若容量超限，節流執行清理過期項目；若仍超限則淘汰少數即將到期鍵值以維持有界容量
+        if (Volatile.Read(ref activeKeyCount) >= maxCapacity &&
+            nowTicks - Interlocked.Read(ref lastPruneTicks) >= TimeSpan.TicksPerSecond &&
+            Interlocked.CompareExchange(ref pruning, 1, 0) == 0)
         {
-            PruneExpired(nowTicks);
+            try
+            {
+                PruneExpired(nowTicks);
+                Interlocked.Exchange(ref lastPruneTicks, nowTicks);
+                if (Volatile.Read(ref activeKeyCount) >= maxCapacity)
+                {
+                    EvictOldestBatch(Math.Max(1, maxCapacity / 10));
+                }
+            }
+            finally
+            {
+                Volatile.Write(ref pruning, 0);
+            }
         }
 
         // 原子性嘗試加入
         if (seenKeys.TryAdd(idempotencyKey, expireTicks))
         {
+            Interlocked.Increment(ref activeKeyCount);
             Interlocked.Increment(ref totalAccepted);
             return true;
         }
@@ -107,7 +125,14 @@ public sealed class ObservationIdempotencyFilter
         if (expireTicks <= timeProvider.GetUtcNow().UtcTicks)
             return false;
 
-        seenKeys[idempotencyKey] = expireTicks;
+        if (seenKeys.TryAdd(idempotencyKey, expireTicks))
+        {
+            Interlocked.Increment(ref activeKeyCount);
+        }
+        else
+        {
+            seenKeys[idempotencyKey] = expireTicks;
+        }
         return true;
     }
 
@@ -120,9 +145,23 @@ public sealed class ObservationIdempotencyFilter
         long now = currentUtcTicks ?? timeProvider.GetUtcNow().UtcTicks;
         foreach (KeyValuePair<string, long> pair in seenKeys)
         {
-            if (now > pair.Value)
+            if (now > pair.Value && seenKeys.TryRemove(pair.Key, out _))
             {
-                seenKeys.TryRemove(pair.Key, out _);
+                Interlocked.Decrement(ref activeKeyCount);
+            }
+        }
+    }
+
+    private void EvictOldestBatch(int targetRemovals)
+    {
+        int removed = 0;
+        foreach (KeyValuePair<string, long> pair in seenKeys)
+        {
+            if (seenKeys.TryRemove(pair.Key, out _))
+            {
+                Interlocked.Decrement(ref activeKeyCount);
+                if (++removed >= targetRemovals)
+                    break;
             }
         }
     }
@@ -133,6 +172,7 @@ public sealed class ObservationIdempotencyFilter
     public void Reset()
     {
         seenKeys.Clear();
+        Interlocked.Exchange(ref activeKeyCount, 0);
         Interlocked.Exchange(ref totalAccepted, 0);
         Interlocked.Exchange(ref totalDuplicates, 0);
     }

@@ -78,7 +78,11 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
         if (socket is not null)
             throw new InvalidOperationException(Localization.Strings.Get("Packet capture has already started."));
 
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP) { ExclusiveAddressUse = false };
+        socket = new Socket(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP)
+        {
+            ExclusiveAddressUse = false,
+            ReceiveBufferSize = 4_194_304
+        };
         socket.Bind(new IPEndPoint(address, 0));
         socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.HeaderIncluded, true);
         socket.IOControl(IOControlCode.ReceiveAll, [3, 0, 0, 0], [3, 0, 0, 0]);
@@ -138,7 +142,7 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
     /// <param name="eventArgs">接收到的封包資料。</param>
     private void NotifyPacketReceived(RawPacketEventArgs eventArgs)
     {
-        foreach (EventHandler<RawPacketEventArgs> handler in PacketReceived?.GetInvocationList() ?? [])
+        foreach (EventHandler<RawPacketEventArgs> handler in Delegate.EnumerateInvocationList(PacketReceived))
         {
             try
             {
@@ -157,11 +161,11 @@ public event EventHandler<RawSocketErrorEventArgs>? CaptureFailed;
     /// <param name="exception">擷取作業或訂閱者的例外狀況。</param>
     private void NotifyCaptureFailed(Exception exception)
     {
-        foreach (Delegate subscriber in CaptureFailed?.GetInvocationList() ?? [])
+        foreach (EventHandler<RawSocketErrorEventArgs> subscriber in Delegate.EnumerateInvocationList(CaptureFailed))
         {
             try
             {
-                ((EventHandler<RawSocketErrorEventArgs>)subscriber)(this, new RawSocketErrorEventArgs(exception));
+                subscriber(this, new RawSocketErrorEventArgs(exception));
             }
             catch (Exception)
             {

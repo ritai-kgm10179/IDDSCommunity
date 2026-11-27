@@ -1276,6 +1276,8 @@ public string Language
         set => SetConfigValue(CONFIG_VALUE_AUTO_MANAGE_FIREWALL_INBOUND_RULES, value.ToString());
     }
 
+    private volatile FirewallPacingOptions? _cachedFirewallPacingOptions;
+
     /// <summary>
     /// 取得 Windows 防火牆調步佇列與批次聚合器組態設定。
     /// </summary>
@@ -1286,12 +1288,22 @@ public string Language
             int maxBatch = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_MAX_BATCH_SIZE), out int b) && b > 0 ? b : 500;
             int window = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_COALESCING_WINDOW_MS), out int w) && w >= 0 ? w : 50;
             int interval = int.TryParse(GetConfigValue(CONFIG_VALUE_FIREWALL_PACING_MIN_INTERVAL_MS), out int i) && i >= 0 ? i : 25;
-            return new FirewallPacingOptions
+            FirewallPacingOptions? cached = _cachedFirewallPacingOptions;
+            if (cached is not null &&
+                cached.MaxBatchSize == maxBatch &&
+                cached.CoalescingWindowMs == window &&
+                cached.MinPacingIntervalMs == interval)
+            {
+                return cached;
+            }
+            FirewallPacingOptions created = new()
             {
                 MaxBatchSize = maxBatch,
                 CoalescingWindowMs = window,
                 MinPacingIntervalMs = interval
             };
+            _cachedFirewallPacingOptions = created;
+            return created;
         }
     }
 
@@ -1398,19 +1410,142 @@ public string Language
         }
         return smtpPassword;
     }
+    private sealed record SafeNetworkSnapshot(
+        CSafeNetworks ListRef,
+        int Count,
+        int Fingerprint,
+        ThreatIntelligence.IpPrefixIndex PrefixIndex,
+        HashSet<IPAddress> ExactIps,
+        string[] DdnsHosts);
+
+    private volatile SafeNetworkSnapshot? _safeNetworkSnapshot;
+
+    private SafeNetworkSnapshot GetSafeNetworkSnapshot()
+    {
+        CSafeNetworks nets = SafeNetworks;
+        int count = nets.Count;
+        int fingerprint = ComputeSafeNetworkFingerprint(nets);
+        SafeNetworkSnapshot? cached = _safeNetworkSnapshot;
+        if (cached is not null &&
+            ReferenceEquals(cached.ListRef, nets) &&
+            cached.Count == count &&
+            cached.Fingerprint == fingerprint)
+        {
+            return cached;
+        }
+
+        List<IPNetwork> networks = [];
+        HashSet<IPAddress> exactIps = [];
+        List<string> ddnsHosts = [];
+
+        foreach (CSafeNetwork net in nets)
+        {
+            string entry = net.IpAddress?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(entry))
+                continue;
+
+            if (IPAddress.TryParse(entry, out IPAddress? rawNetAddress))
+            {
+                IPAddress networkAddress = IpAddressCanonicalizer.Canonicalize(rawNetAddress);
+                try
+                {
+                    if (networkAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        int prefixBits = GetSubnetMaskBits(net.SubnetMask);
+                        if (prefixBits == 32)
+                        {
+                            exactIps.Add(networkAddress);
+                        }
+                        else
+                        {
+                            networks.Add(new IPNetwork(MaskBaseAddress(networkAddress, prefixBits), prefixBits));
+                        }
+                    }
+                    else if (networkAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                    {
+                        int prefixBits = int.Parse(net.SubnetMask);
+                        if (prefixBits is < 0 or > 128)
+                            throw new ArgumentOutOfRangeException(nameof(net.SubnetMask));
+                        if (prefixBits == 128)
+                        {
+                            exactIps.Add(networkAddress);
+                        }
+                        else
+                        {
+                            networks.Add(new IPNetwork(MaskBaseAddress(networkAddress, prefixBits), prefixBits));
+                        }
+                    }
+                }
+                catch (Exception exception)
+                {
+                    System.Diagnostics.Trace.TraceWarning("Invalid safe-network entry {0}/{1}: {2}", net.IpAddress, net.SubnetMask, exception.Message);
+                }
+            }
+            else
+            {
+                ddnsHosts.Add(entry);
+            }
+        }
+
+        SafeNetworkSnapshot rebuilt = new(
+            nets,
+            count,
+            fingerprint,
+            new ThreatIntelligence.IpPrefixIndex(networks),
+            exactIps,
+            [.. ddnsHosts]);
+        _safeNetworkSnapshot = rebuilt;
+        return rebuilt;
+    }
+
+    private static int ComputeSafeNetworkFingerprint(CSafeNetworks nets)
+    {
+        HashCode hc = new();
+        hc.Add(nets.Count);
+        for (int i = 0; i < nets.Count; i++)
+        {
+            CSafeNetwork net = nets[i];
+            hc.Add(net.IpAddress, StringComparer.Ordinal);
+            hc.Add(net.SubnetMask, StringComparer.Ordinal);
+        }
+        return hc.ToHashCode();
+    }
+
+    private static IPAddress MaskBaseAddress(IPAddress address, int prefixBits)
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        address.TryWriteBytes(bytes, out int length);
+        int fullBytes = prefixBits / 8;
+        int remainingBits = prefixBits % 8;
+        if (fullBytes < length)
+        {
+            if (remainingBits > 0)
+            {
+                byte mask = (byte)(0xFF << (8 - remainingBits));
+                bytes[fullBytes] &= mask;
+                bytes[(fullBytes + 1)..length].Clear();
+            }
+            else
+            {
+                bytes[fullBytes..length].Clear();
+            }
+        }
+        return new IPAddress(bytes[..length]);
+    }
+
     /// <summary>
-    /// Determines whether in safe network.
+    /// 判斷指定的 IP 位址是否屬於安全網路或動態 DNS 白名單。
     /// </summary>
-    /// <param name="ipAddress">ip address參數。</param>
-    /// <returns>若in safe network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
+    /// <param name="ipAddress">待檢查的 IP 位址或 CIDR 字串。</param>
+    /// <returns>若位於安全網路清單內傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public bool IsInSafeNetwork(string ipAddress)
     {
-        bool result = false;
         try
         {
-            string trimmed = ipAddress.Trim();
+            ReadOnlySpan<char> trimmed = ipAddress.AsSpan().Trim();
             IPAddress address;
-            if (trimmed.Contains('/'))
+            int slashIndex = trimmed.IndexOf('/');
+            if (slashIndex >= 0)
             {
                 if (!IPNetwork.TryParse(trimmed, out IPNetwork network))
                     return false;
@@ -1420,46 +1555,25 @@ public string Language
             {
                 address = IpAddressCanonicalizer.Canonicalize(IPAddress.Parse(trimmed));
             }
-            foreach (CSafeNetwork net in SafeNetworks)
-            {
-                try
-                {
-                    if (ThreatIntelligence.DynamicDnsCache.IsIpInDdns(address, net.IpAddress))
-                    {
-                        return true;
-                    }
 
-                    if (IPAddress.TryParse(net.IpAddress, out IPAddress? rawNetAddress))
-                    {
-                        IPAddress networkAddress = IpAddressCanonicalizer.Canonicalize(rawNetAddress);
-                        if (networkAddress.AddressFamily.Equals(address.AddressFamily))
-                        {
-                            switch (address.AddressFamily)
-                            {
-                                case System.Net.Sockets.AddressFamily.InterNetwork:
-                                    result = IsIp4InNetwork(address, networkAddress, net.SubnetMask);
-                                    break;
-                                case System.Net.Sockets.AddressFamily.InterNetworkV6:
-                                    result = IsIp6InNetwork(address, networkAddress, int.Parse(net.SubnetMask));
-                                    break;
-                            }
-                        }
-                        if (result) return true;
-                    }
-                }
-                catch (Exception exception)
-                {
-                    System.Diagnostics.Trace.TraceWarning("Invalid safe-network entry {0}/{1}: {2}", net.IpAddress, net.SubnetMask, exception.Message);
-                }
+            SafeNetworkSnapshot snap = GetSafeNetworkSnapshot();
+            foreach (string ddnsHost in snap.DdnsHosts)
+            {
+                if (ThreatIntelligence.DynamicDnsCache.IsIpInDdns(address, ddnsHost))
+                    return true;
             }
 
+            if (snap.ExactIps.Contains(address))
+                return true;
+
+            if (snap.PrefixIndex.Count > 0 && snap.PrefixIndex.Contains(address))
+                return true;
         }
         catch (Exception exception)
         {
             System.Diagnostics.Trace.TraceWarning("Invalid address supplied to safe-network evaluation: {0}", exception.Message);
         }
         return false;
-
     }
 
     /// <summary>
@@ -1480,9 +1594,12 @@ public string Language
     /// <returns>若ip in network傳回 <see langword="true"/>；否則傳回 <see langword="false"/>。</returns>
     public static bool IsIpInNetwork(IPAddress address, IPAddress networkAddress, int maskBits, int addressLength)
     {
-        byte[] addressBytes = address.GetAddressBytes();
-        byte[] networkBytes = networkAddress.GetAddressBytes();
-        if (addressBytes.Length != addressLength || networkBytes.Length != addressLength)
+        Span<byte> addressBytes = stackalloc byte[16];
+        Span<byte> networkBytes = stackalloc byte[16];
+        if (!address.TryWriteBytes(addressBytes, out int actualAddrLen) ||
+            !networkAddress.TryWriteBytes(networkBytes, out int actualNetLen) ||
+            actualAddrLen != addressLength ||
+            actualNetLen != addressLength)
         {
             return false;
         }
@@ -1493,7 +1610,7 @@ public string Language
 
         int fullBytes = maskBits / 8;
         int remainingBits = maskBits % 8;
-        if (!addressBytes.AsSpan(0, fullBytes).SequenceEqual(networkBytes.AsSpan(0, fullBytes))) return false;
+        if (!addressBytes[..fullBytes].SequenceEqual(networkBytes[..fullBytes])) return false;
         if (remainingBits == 0) return true;
 
         int mask = 0xFF << (8 - remainingBits);

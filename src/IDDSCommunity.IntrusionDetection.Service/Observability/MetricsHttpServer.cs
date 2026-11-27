@@ -282,7 +282,7 @@ public sealed class MetricsHttpServer : IDisposable
         sb.AppendLine("# HELP idds_active_firewall_blocks Current number of active IP blocking rules in Windows Firewall.");
         sb.AppendLine("# TYPE idds_active_firewall_blocks gauge");
         int activeBlocks = 0;
-        try { activeBlocks = Locks.GetActiveLocks().Count; }
+        try { activeBlocks = Locks.CountActiveLocks(); }
         catch { }
         sb.AppendLine($"idds_active_firewall_blocks {activeBlocks}");
         sb.AppendLine();

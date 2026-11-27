@@ -36,7 +36,8 @@ public static class HttpClientHelper
     {
         var handler = new SocketsHttpHandler
         {
-            PooledConnectionLifetime = pooledLifetime ?? DefaultPooledConnectionLifetime
+            PooledConnectionLifetime = pooledLifetime ?? DefaultPooledConnectionLifetime,
+            AutomaticDecompression = DecompressionMethods.All
         };
 
         if (blockImdsAndLinkLocal || customBlockFilter != null)

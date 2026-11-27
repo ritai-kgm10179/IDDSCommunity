@@ -140,8 +140,19 @@ public static class SecurityObservationStore
     {
         ArgumentNullException.ThrowIfNull(observation);
         ArgumentNullException.ThrowIfNull(database);
-        using SqliteCommand command = CreateCorrelationCompletionCommand(observation, database.Connection, transaction: null);
-        if (command.ExecuteNonQuery() != 1)
+        int affected = 0;
+        database.ExecuteInTransaction((conn, tx) =>
+        {
+            using SqliteCommand cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "UPDATE SecurityObservationEvents SET CorrelationGroupId = @correlationGroupId, IsCrossSourceDuplicate = @isDuplicate, DuplicateOfObservationId = @duplicateOfId, CorrelationProcessed = 1 WHERE Id = @id";
+            cmd.Parameters.AddWithValue("@correlationGroupId", observation.CorrelationGroupId.HasValue ? (object)observation.CorrelationGroupId.Value.ToString("D") : DBNull.Value);
+            cmd.Parameters.AddWithValue("@isDuplicate", observation.IsCrossSourceDuplicate ? 1 : 0);
+            cmd.Parameters.AddWithValue("@duplicateOfId", observation.DuplicateOfObservationId.HasValue ? (object)observation.DuplicateOfObservationId.Value.ToString("D") : DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", observation.Id.ToString("D"));
+            affected = cmd.ExecuteNonQuery();
+        });
+        if (affected != 1)
         {
             throw new InvalidDataException($"找不到待完成的安全性觀察事件：{observation.Id:D}");
         }
@@ -464,69 +475,67 @@ public static class SecurityObservationStore
     {
         ArgumentNullException.ThrowIfNull(database);
 
-        SqliteConnection conn = database.Connection;
-        List<AlertOutboxRow> pending = [];
-
-        using (SqliteCommand selectCmd = conn.CreateCommand())
-        {
-            selectCmd.CommandText = "SELECT AlertId, ObservationId, OccurredUtc, EventType, Outcome, Actor, Subject, Details FROM ObservationAlertOutbox WHERE Status = 0 ORDER BY CreatedUtc, AlertId";
-            using SqliteDataReader reader = selectCmd.ExecuteReader();
-            while (reader.Read())
-            {
-                pending.Add(new AlertOutboxRow
-                {
-                    AlertId = reader.GetString(0),
-                    ObservationId = reader.GetString(1),
-                    OccurredUtc = reader.GetString(2),
-                    EventType = reader.GetString(3),
-                    Outcome = reader.GetString(4),
-                    Actor = reader.GetString(5),
-                    Subject = reader.GetString(6),
-                    Details = reader.GetString(7)
-                });
-            }
-        }
-
         int dispatchedCount = 0;
-        string nowUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
-
-        foreach (AlertOutboxRow row in pending)
+        const int batchLimit = 500;
+        while (true)
         {
+            List<AlertOutboxRow> pending = database.Query<AlertOutboxRow>(
+                "SELECT AlertId, ObservationId, OccurredUtc, EventType, Outcome, Actor, Subject, Details FROM ObservationAlertOutbox WHERE Status = 0 ORDER BY CreatedUtc, AlertId LIMIT @Limit",
+                new { Limit = batchLimit }).ToList();
+
+            if (pending.Count == 0)
+                break;
+
+            string nowUtc = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+            int batchDispatched = 0;
             database.ExecuteInTransaction((conn, tx) =>
             {
-                using (SqliteCommand auditCmd = conn.CreateCommand())
+                using SqliteCommand auditCmd = conn.CreateCommand();
+                auditCmd.Transaction = tx;
+                auditCmd.CommandText = """
+                    INSERT INTO ProtectionAuditLog (AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details)
+                    VALUES ($alertId, $occurred, $evtType, $outcome, $actor, $subject, $details)
+                    ON CONFLICT(AlertId) DO NOTHING
+                    """;
+                var pAuditId = auditCmd.Parameters.Add("$alertId", SqliteType.Text);
+                var pAuditOccurred = auditCmd.Parameters.Add("$occurred", SqliteType.Text);
+                var pAuditEvtType = auditCmd.Parameters.Add("$evtType", SqliteType.Text);
+                var pAuditOutcome = auditCmd.Parameters.Add("$outcome", SqliteType.Text);
+                var pAuditActor = auditCmd.Parameters.Add("$actor", SqliteType.Text);
+                var pAuditSubject = auditCmd.Parameters.Add("$subject", SqliteType.Text);
+                var pAuditDetails = auditCmd.Parameters.Add("$details", SqliteType.Text);
+                auditCmd.Prepare();
+
+                using SqliteCommand updateCmd = conn.CreateCommand();
+                updateCmd.Transaction = tx;
+                updateCmd.CommandText = "UPDATE ObservationAlertOutbox SET Status = 1, DispatchedUtc = $dispatched WHERE AlertId = $alertId AND Status = 0";
+                var pUpdDispatched = updateCmd.Parameters.Add("$dispatched", SqliteType.Text);
+                var pUpdAlertId = updateCmd.Parameters.Add("$alertId", SqliteType.Text);
+                updateCmd.Prepare();
+
+                foreach (AlertOutboxRow row in pending)
                 {
-                    auditCmd.Transaction = tx;
-                    auditCmd.CommandText = """
-                        INSERT INTO ProtectionAuditLog (AlertId, OccurredUtc, EventType, Outcome, Actor, Subject, Details)
-                        VALUES ($alertId, $occurred, $evtType, $outcome, $actor, $subject, $details)
-                        ON CONFLICT(AlertId) DO NOTHING
-                        """;
-                    auditCmd.Parameters.AddWithValue("$alertId", row.AlertId);
-                    auditCmd.Parameters.AddWithValue("$occurred", row.OccurredUtc);
-                    auditCmd.Parameters.AddWithValue("$evtType", Limit(row.EventType));
-                    auditCmd.Parameters.AddWithValue("$outcome", Limit(row.Outcome));
-                    auditCmd.Parameters.AddWithValue("$actor", Limit(row.Actor));
-                    auditCmd.Parameters.AddWithValue("$subject", Limit(row.Subject));
-                    auditCmd.Parameters.AddWithValue("$details", Limit(row.Details));
+                    pAuditId.Value = row.AlertId;
+                    pAuditOccurred.Value = row.OccurredUtc;
+                    pAuditEvtType.Value = Limit(row.EventType);
+                    pAuditOutcome.Value = Limit(row.Outcome);
+                    pAuditActor.Value = Limit(row.Actor);
+                    pAuditSubject.Value = Limit(row.Subject);
+                    pAuditDetails.Value = Limit(row.Details);
                     auditCmd.ExecuteNonQuery();
-                }
 
-                afterAuditInsertCallback?.Invoke();
+                    afterAuditInsertCallback?.Invoke();
 
-                using (SqliteCommand updateCmd = conn.CreateCommand())
-                {
-                    updateCmd.Transaction = tx;
-                    updateCmd.CommandText = "UPDATE ObservationAlertOutbox SET Status = 1, DispatchedUtc = $dispatched WHERE AlertId = $alertId AND Status = 0";
-                    updateCmd.Parameters.AddWithValue("$dispatched", nowUtc);
-                    updateCmd.Parameters.AddWithValue("$alertId", row.AlertId);
-                    int affected = updateCmd.ExecuteNonQuery();
-                    if (affected > 0)
-                    {
-                        dispatchedCount++;
-                    }
+                    pUpdDispatched.Value = nowUtc;
+                    pUpdAlertId.Value = row.AlertId;
+                    if (updateCmd.ExecuteNonQuery() > 0)
+                        batchDispatched++;
                 }
             });
+
+            dispatchedCount += batchDispatched;
+            if (pending.Count < batchLimit)
+                break;
         }
 
         return dispatchedCount;

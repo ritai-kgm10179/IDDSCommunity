@@ -16,13 +16,14 @@ public static class CidrMatcher
     /// <returns>若符合 CIDR 範圍則傳回 true，否則傳回 false。</returns>
     public static bool TryMatchCidr(string cidrCandidate, string targetIp)
     {
-        if (string.IsNullOrWhiteSpace(cidrCandidate) || !cidrCandidate.Contains('/')) return false;
-        string[] parts = cidrCandidate.Split('/');
-        if (parts.Length != 2) return false;
-        if (!IPAddress.TryParse(parts[0].Trim(), out IPAddress? networkIp) ||
-            !int.TryParse(parts[1].Trim(), out int maskBits)) return false;
+        if (string.IsNullOrWhiteSpace(cidrCandidate) || string.IsNullOrWhiteSpace(targetIp)) return false;
+        ReadOnlySpan<char> span = cidrCandidate.AsSpan();
+        int slashIndex = span.IndexOf('/');
+        if (slashIndex <= 0 || span[(slashIndex + 1)..].Contains('/')) return false;
+        if (!IPAddress.TryParse(span[..slashIndex].Trim(), out IPAddress? networkIp) ||
+            !int.TryParse(span[(slashIndex + 1)..].Trim(), out int maskBits)) return false;
         if (networkIp.AddressFamily != AddressFamily.InterNetwork) return false;
-        if (!IPAddress.TryParse(targetIp.Trim(), out IPAddress? target)) return false;
+        if (!IPAddress.TryParse(targetIp.AsSpan().Trim(), out IPAddress? target)) return false;
         if (target.AddressFamily != AddressFamily.InterNetwork) return false;
 
         uint networkInt = IpToUint(networkIp);
@@ -35,7 +36,8 @@ public static class CidrMatcher
 
     private static uint IpToUint(IPAddress ip)
     {
-        byte[] bytes = ip.GetAddressBytes();
+        Span<byte> bytes = stackalloc byte[4];
+        ip.TryWriteBytes(bytes, out _);
         return (uint)(bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3]);
     }
 }

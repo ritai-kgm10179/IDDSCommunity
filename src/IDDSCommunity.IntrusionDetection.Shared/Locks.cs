@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace IDDSCommunity.IntrusionDetection.Shared;
 /// </summary>
 public class Locks
 {
+    private static readonly ConcurrentDictionary<string, Guid> AgentIdResolutionCache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// 以固定上限及識別碼游標讀取有效或待套用的封鎖記錄，避免一次將完整資料集載入記憶體。
@@ -111,20 +113,72 @@ public class Locks
     {
         if (Database.Instance.IsConfigured)
         {
-            object? result = Database.Instance.ExecuteScalar("select count(*) from Locks where coalesce(LastUpdate, LockDate)>@p0", lastUpdate);
-            if (result != null && int.TryParse(result.ToString(), out int count))
-            {
-                return count > 0;
-            }
-            else
-            {
-                return false;
-            }
+            object? result = Database.Instance.ExecuteScalar(
+                "select exists(select 1 from Locks where LastUpdate>@p0) or exists(select 1 from Locks where LastUpdate is null and LockDate>@p0)",
+                lastUpdate);
+            return Db.DbValueConverter.ToInt(result) > 0;
         }
         else
         {
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database not initialized"));
         }
+    }
+
+    /// <summary>
+    /// 計算目前所有期望狀態為有效防火牆封鎖的資料庫鎖定總筆數。
+    /// </summary>
+    /// <returns>有效封鎖記錄總筆數。</returns>
+    public static int CountActiveLocks()
+    {
+        if (!Database.Instance.IsConfigured)
+            return 0;
+
+        object? result = Database.Instance.ExecuteScalar(
+            "select count(*) from Locks where Status in (@p0,@p1,@p2,@p3)",
+            Lock.LOCK_STATUS_HARDLOCK,
+            Lock.LOCK_STATUS_SOFTLOCK,
+            Lock.LOCK_STATUS_HARDLOCK_REQUESTED,
+            Lock.LOCK_STATUS_SOFTLOCK_REQUESTED);
+        return Db.DbValueConverter.ToInt(result);
+    }
+
+    /// <summary>
+    /// 批次查詢指定的 IP 清單中，哪些 IP 仍存在於排除清單以外的有效封鎖記錄。
+    /// </summary>
+    /// <param name="ipAddresses">欲檢查之 IP 位址集合。</param>
+    /// <param name="excludedLockIds">應排除之鎖定記錄識別碼。</param>
+    /// <param name="nowUtc">目前 UTC 時間。</param>
+    /// <returns>仍具其他有效鎖定之 IP 位址集合。</returns>
+    public static HashSet<string> GetIpsWithOtherActiveLocks(
+        IEnumerable<string> ipAddresses,
+        IReadOnlyCollection<long> excludedLockIds,
+        DateTime nowUtc)
+    {
+        HashSet<string> result = new(StringComparer.OrdinalIgnoreCase);
+        if (!Database.Instance.IsConfigured || ipAddresses is null)
+            return result;
+
+        string[] distinctIps = ipAddresses
+            .Where(ip => !string.IsNullOrWhiteSpace(ip))
+            .Select(IpAddressCanonicalizer.Canonicalize)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (distinctIps.Length == 0)
+            return result;
+
+        HashSet<long> excludedSet = [.. excludedLockIds];
+        foreach (string[] chunk in distinctIps.Chunk(500))
+        {
+            var rows = Database.Instance.Query<(long LockId, string IpAddress)>(
+                "SELECT LockId, IpAddress FROM Locks WHERE IpAddress IN @ips AND Status IN (200,210,300,310) AND UnlockDate>@now",
+                new { ips = chunk, now = nowUtc });
+            foreach ((long lockId, string ipAddress) in rows)
+            {
+                if (!excludedSet.Contains(lockId))
+                    result.Add(IpAddressCanonicalizer.Canonicalize(ipAddress));
+            }
+        }
+        return result;
     }
     /// <summary>
     /// Returns every database lock whose desired state is an active firewall block.
@@ -173,7 +227,7 @@ public class Locks
         {
             return Database.Instance.ExecuteReader(@"select l.LockId, coalesce(nullif(l.IpAddress, ''), i.ClientIp, '') as ClientIp, l.LockDate, l.UnlockDate, coalesce(i.IncidentTime, l.LockDate) as IncidentTime, coalesce(a.DisplayName, '') as DisplayName, coalesce(i.AgentId, '') as AgentId, l.status
                                                         from Locks l left join IntrusionLog i on l.TriggerIncident = i.Id
-                                                            left join SecurityAgents a on lower(i.AgentId) = lower(a.AgentId)
+                                                            left join SecurityAgents a on i.AgentId = a.AgentId COLLATE NOCASE
                                                         where l.status in (@p0,@p1) order by l.LockDate desc", Lock.LOCK_STATUS_HARDLOCK, Lock.LOCK_STATUS_SOFTLOCK);
         }
         else
@@ -315,6 +369,9 @@ public class Locks
             WellKnownAgentIds.IsWellKnown(agentId))
             return true;
 
+        if (AgentIdResolutionCache.TryGetValue(persistedAgentId, out agentId))
+            return agentId != Guid.Empty;
+
         // 2. 若為資料庫中舊記錄之 AgentId，透過 SecurityAgents 資料表查詢其 Name / DisplayName / AssemblyName 並映射至 Canonical GUID
         try
         {
@@ -333,12 +390,11 @@ public class Locks
                     string assemblyName = Db.DbValueConverter.ToString(reader["AssemblyName"]);
                     if (WellKnownAgentIds.TryResolveCanonicalGuid(name, out agentId) ||
                         WellKnownAgentIds.TryResolveCanonicalGuid(displayName, out agentId) ||
-                        WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out agentId))
+                        WellKnownAgentIds.TryResolveCanonicalGuid(assemblyName, out agentId) ||
+                        Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out agentId))
                     {
-                        return true;
-                    }
-                    if (Guid.TryParse(Db.DbValueConverter.ToString(reader["AgentId"]), out agentId))
-                    {
+                        if (AgentIdResolutionCache.Count < 512)
+                            AgentIdResolutionCache.TryAdd(persistedAgentId, agentId);
                         return true;
                     }
                 }
@@ -351,7 +407,11 @@ public class Locks
 
         // 3. 回退至原始 GUID
         if (Guid.TryParse(persistedAgentId, out agentId))
+        {
+            if (AgentIdResolutionCache.Count < 512)
+                AgentIdResolutionCache.TryAdd(persistedAgentId, agentId);
             return true;
+        }
 
         return false;
     }
@@ -369,9 +429,13 @@ public class Locks
 
         ipAddress = IpAddressCanonicalizer.Canonicalize(ipAddress);
         object? result = Database.Instance.ExecuteScalar(
-            @"select count(*) from Locks l
-              where (l.IpAddress=@p0 or exists (select 1 from IntrusionLog i where l.TriggerIncident = i.Id and i.ClientIP=@p0 and i.AgentId=@p1))
-                and l.LockDate>=@p2",
+            @"select count(*) from (
+                select LockId from Locks where IpAddress=@p0 and LockDate>=@p2
+                union
+                select l.LockId from IntrusionLog i
+                inner join Locks l on l.TriggerIncident = i.Id
+                where i.ClientIP=@p0 and i.AgentId=@p1 and l.LockDate>=@p2
+              )",
             ipAddress,
             agentId,
             startDate);

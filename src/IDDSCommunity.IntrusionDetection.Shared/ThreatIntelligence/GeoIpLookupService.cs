@@ -2,7 +2,6 @@
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -14,20 +13,64 @@ namespace IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 public static class GeoIpLookupService
 {
     private static volatile Snapshot snapshot = new([], []);
-    private sealed class Snapshot(List<GeoIpEntry> ipv4, List<GeoIpEntry> ipv6)
+    private readonly record struct CountryInfo(string CountryCode, string CountryName);
+    private readonly record struct CompactSegment(UInt128 Start, int CountryIndex);
+
+    private sealed class Snapshot
     {
-        internal readonly IntervalIndex V4 = new(ipv4, 32);
-        internal readonly IntervalIndex V6 = new(ipv6, 128);
-        internal readonly int Count = ipv4.Count + ipv6.Count;
-        internal readonly int Countries = ipv4.Concat(ipv6).Select(e => e.CountryCode).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        internal readonly CountryInfo[] CountriesTable;
+        internal readonly IntervalIndex V4;
+        internal readonly IntervalIndex V6;
+        internal readonly int Count;
+        internal readonly int Countries;
+
+        internal Snapshot(List<GeoIpEntry> ipv4, List<GeoIpEntry> ipv6)
+        {
+            Dictionary<(string Code, string Name), int> countryMap = [];
+            List<CountryInfo> countryList = [];
+            HashSet<string> distinctCodes = new(StringComparer.OrdinalIgnoreCase);
+
+            int[] v4CountryIndices = BuildCountryIndices(ipv4, countryMap, countryList, distinctCodes);
+            int[] v6CountryIndices = BuildCountryIndices(ipv6, countryMap, countryList, distinctCodes);
+
+            CountriesTable = [.. countryList];
+            V4 = new IntervalIndex(ipv4, v4CountryIndices, 32);
+            V6 = new IntervalIndex(ipv6, v6CountryIndices, 128);
+            Count = ipv4.Count + ipv6.Count;
+            Countries = distinctCodes.Count;
+        }
+
+        private static int[] BuildCountryIndices(
+            List<GeoIpEntry> entries,
+            Dictionary<(string Code, string Name), int> countryMap,
+            List<CountryInfo> countryList,
+            HashSet<string> distinctCodes)
+        {
+            int[] indices = new int[entries.Count];
+            for (int i = 0; i < entries.Count; i++)
+            {
+                string code = entries[i].CountryCode;
+                string name = entries[i].CountryName;
+                distinctCodes.Add(code);
+                if (!countryMap.TryGetValue((code, name), out int idx))
+                {
+                    idx = countryList.Count;
+                    countryList.Add(new CountryInfo(code, name));
+                    countryMap[(code, name)] = idx;
+                }
+                indices[i] = idx;
+            }
+            return indices;
+        }
     }
+
     private sealed class IntervalIndex
     {
-        private readonly (UInt128 Start, GeoIpEntry? Entry)[] segments;
-        internal IntervalIndex(List<GeoIpEntry> entries, int bits)
+        private readonly CompactSegment[] segments;
+        internal IntervalIndex(List<GeoIpEntry> entries, int[] countryIndices, int bits)
         {
             UInt128 maximum = bits == 32 ? uint.MaxValue : UInt128.MaxValue;
-            List<(UInt128 Point, int Index, bool Add)> events = [];
+            List<(UInt128 Point, int Index, bool Add)> events = new(entries.Count * 2);
             for (int i = 0; i < entries.Count; i++)
             {
                 GeoIpEntry entry = entries[i];
@@ -46,7 +89,7 @@ public static class GeoIpLookupService
             }
             events.Sort((a, b) => a.Point.CompareTo(b.Point));
             SortedSet<int> active = [];
-            List<(UInt128, GeoIpEntry?)> result = [];
+            List<CompactSegment> result = [];
             for (int i = 0; i < events.Count;)
             {
                 UInt128 point = events[i].Point;
@@ -55,12 +98,15 @@ public static class GeoIpLookupService
                     var change = events[i++];
                     if (change.Add) active.Add(change.Index); else active.Remove(change.Index);
                 } while (i < events.Count && events[i].Point == point);
-                GeoIpEntry? match = active.Count == 0 ? null : entries[active.Min];
-                if (result.Count == 0 || !ReferenceEquals(result[^1].Item2, match)) result.Add((point, match));
+                int matchIndex = active.Count == 0 ? -1 : countryIndices[active.Min];
+                if (result.Count == 0 || result[^1].CountryIndex != matchIndex)
+                {
+                    result.Add(new CompactSegment(point, matchIndex));
+                }
             }
             segments = [.. result];
         }
-        internal GeoIpEntry? Find(UInt128 address)
+        internal int FindCountryIndex(UInt128 address)
         {
             int low = 0, high = segments.Length - 1;
             while (low <= high)
@@ -68,7 +114,7 @@ public static class GeoIpLookupService
                 int mid = low + (high - low) / 2;
                 if (segments[mid].Start <= address) low = mid + 1; else high = mid - 1;
             }
-            return high < 0 ? null : segments[high].Entry;
+            return high < 0 ? -1 : segments[high].CountryIndex;
         }
     }
     private sealed class GeoIpEntry
@@ -365,11 +411,12 @@ public static class GeoIpLookupService
         address = IpAddressCanonicalizer.Canonicalize(address);
 
         Snapshot current = snapshot;
-        GeoIpEntry? entry = (address.AddressFamily == AddressFamily.InterNetwork ? current.V4 : current.V6).Find(IpPrefixIndex.Number(address));
-        if (entry is not null)
+        int countryIndex = (address.AddressFamily == AddressFamily.InterNetwork ? current.V4 : current.V6).FindCountryIndex(IpPrefixIndex.Number(address));
+        if (countryIndex >= 0)
         {
-            countryCode = entry.CountryCode;
-            countryName = entry.CountryName;
+            CountryInfo info = current.CountriesTable[countryIndex];
+            countryCode = info.CountryCode;
+            countryName = info.CountryName;
             return true;
         }
         countryCode = "ZZ";
@@ -388,13 +435,16 @@ public static class GeoIpLookupService
         if (address is null || blockedCountries is null)
             return false;
 
-        var set = new HashSet<string>(blockedCountries.Select(c => c.Trim().ToUpperInvariant()), StringComparer.OrdinalIgnoreCase);
-        if (set.Count == 0)
+        if (!TryLookup(address, out string countryCode, out _))
             return false;
 
-        if (TryLookup(address, out string countryCode, out _))
+        foreach (string blocked in blockedCountries)
         {
-            return set.Contains(countryCode);
+            if (!string.IsNullOrWhiteSpace(blocked) &&
+                blocked.AsSpan().Trim().Equals(countryCode.AsSpan(), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
         }
 
         return false;

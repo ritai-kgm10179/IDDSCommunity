@@ -74,6 +74,8 @@ internal sealed class FirewallStateReconciler(
             }
         }
 
+        List<Lock> confirmedLocks = [];
+        List<long> requestedIdsToConfirm = [];
         foreach (var (address, desiredLock) in desiredByAddress)
         {
             if (!currentBlocked.Contains(address))
@@ -85,13 +87,15 @@ internal sealed class FirewallStateReconciler(
                 if (desiredLock.Status == Lock.LOCK_STATUS_SOFTLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_SOFTLOCK;
-                    saveLock(desiredLock);
+                    confirmedLocks.Add(desiredLock);
+                    if (desiredLock.Id > 0) requestedIdsToConfirm.Add(desiredLock.Id);
                     changed = true;
                 }
                 else if (desiredLock.Status == Lock.LOCK_STATUS_HARDLOCK_REQUESTED)
                 {
                     desiredLock.Status = Lock.LOCK_STATUS_HARDLOCK;
-                    saveLock(desiredLock);
+                    confirmedLocks.Add(desiredLock);
+                    if (desiredLock.Id > 0) requestedIdsToConfirm.Add(desiredLock.Id);
                     changed = true;
                 }
                 if (changed || missingAddresses.Contains(address))
@@ -101,6 +105,45 @@ internal sealed class FirewallStateReconciler(
             {
                 recordAudit("Firewall.Reconcile", "Failed", desiredLock.IpAddress, ex.GetType().Name);
                 reportFailure(desiredLock.IpAddress, ex);
+            }
+        }
+
+        if (confirmedLocks.Count > 0)
+        {
+            List<Lock> fallbackLocks = [];
+            if (Database.Instance.IsConfigured && requestedIdsToConfirm.Count > 0)
+            {
+                try
+                {
+                    Locks.ConfirmRequestedLocks(requestedIdsToConfirm);
+                    foreach (Lock confirmed in confirmedLocks)
+                    {
+                        if (confirmed.Id <= 0)
+                            fallbackLocks.Add(confirmed);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    fallbackLocks.AddRange(confirmedLocks);
+                    recordAudit("Firewall.Reconcile", "Failed", requestedIdsToConfirm.Count.ToString(System.Globalization.CultureInfo.InvariantCulture), ex.GetType().Name);
+                }
+            }
+            else
+            {
+                fallbackLocks.AddRange(confirmedLocks);
+            }
+
+            foreach (Lock fallback in fallbackLocks)
+            {
+                try
+                {
+                    saveLock(fallback);
+                }
+                catch (Exception ex)
+                {
+                    recordAudit("Firewall.Reconcile", "Failed", fallback.IpAddress, ex.GetType().Name);
+                    reportFailure(fallback.IpAddress, ex);
+                }
             }
         }
 

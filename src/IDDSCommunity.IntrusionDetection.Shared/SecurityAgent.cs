@@ -145,7 +145,7 @@ public event EventHandler? StatisticsUpdated;
                 CustomConfiguration.Remove(key);
         }
 
-        using IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId like @p0", Id.ToString());
+        using IDataReader rdr = DatabaseInstance.ExecuteReader("select PropertyName,PropertyValueString from SecurityAgentConfig where AgentId = @p0", Id.ToString());
         while (rdr.Read())
         {
             string propName = Shared.Db.DbValueConverter.ToString(rdr["PropertyName"]);
@@ -360,12 +360,12 @@ public Image Icon
         }
         foreach (string key in CustomConfiguration.Keys)
         {
-            object? dbResult = DatabaseInstance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId like @p0 and PropertyName like @p1", transaction, agentIdStr, key);
+            object? dbResult = DatabaseInstance.ExecuteScalar("select count(*) from SecurityAgentConfig where AgentId = @p0 and PropertyName = @p1", transaction, agentIdStr, key);
             int found = Shared.Db.DbValueConverter.ToInt(dbResult);
             string sql;
             if (found > 0)
             {
-                sql = "update SecurityAgentConfig set PropertyValueString = @p0 where AgentId like @p1 and PropertyName like @p2";
+                sql = "update SecurityAgentConfig set PropertyValueString = @p0 where AgentId = @p1 and PropertyName = @p2";
             }
             else
             {
@@ -383,7 +383,7 @@ public Image Icon
         int hardLocks, failedLogins, softLocks;
         try
         {
-            IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Id);
+            using IDataReader rdr = Database.Instance.ExecuteReader(sqlString, Id);
             if (rdr.Read())
             {
                 hardLocks = Db.DbValueConverter.ToInt(rdr["HardLocks"]);
@@ -403,8 +403,6 @@ public Image Icon
                 FailedLogins = 0;
                 SoftLocks = 0;
             }
-            rdr.Close();
-
         }
         catch (Exception exception)
         {

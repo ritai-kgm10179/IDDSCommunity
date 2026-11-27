@@ -224,4 +224,26 @@ public class IddsConfigTest
 
         Assert.AreEqual(42L, value);
     }
+
+    /// <summary>
+    /// 驗證 IsInSafeNetwork 快取在清單內容直接異動後可即時重建並支援 IPv4 與 IPv6 CIDR。
+    /// </summary>
+    [TestMethod]
+    public void IsInSafeNetwork_RebuildsSnapshotAfterDirectListMutation()
+    {
+        IddsConfig config = new(Database.Instance)
+        {
+            SafeNetworks = [new IddsConfig.CSafeNetwork("198.51.100.0", "255.255.255.0")]
+        };
+
+        Assert.IsTrue(config.IsInSafeNetwork("198.51.100.42"));
+        Assert.IsFalse(config.IsInSafeNetwork("203.0.113.5"));
+
+        config.SafeNetworks.Add(new IddsConfig.CSafeNetwork("203.0.113.0", "24"));
+        config.SafeNetworks.Add(new IddsConfig.CSafeNetwork("2001:db8:abcd::", "48"));
+
+        Assert.IsTrue(config.IsInSafeNetwork("203.0.113.5"));
+        Assert.IsTrue(config.IsInSafeNetwork("2001:db8:abcd:1234::1"));
+        Assert.IsFalse(config.IsInSafeNetwork("2001:db8:ffff::1"));
+    }
 }

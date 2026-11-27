@@ -43,6 +43,11 @@ public bool IsConfigured => _isConfigured;
     private readonly SqliteConnectionStringBuilder connBuilder = [];
     private SqliteConnection? _connection;
     private string databasePassword = string.Empty;
+    private string cachedConnectionString = string.Empty;
+    private string cachedInteractiveConnectionString = string.Empty;
+    private string cachedReadOnlyConnectionString = string.Empty;
+    private static readonly object ConfiguredHandleMarker = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<SQLitePCL.sqlite3, object> ConfiguredHandles = new();
     private static int sqliteInitialized;
     /// <summary>
     /// 取得 absolute path of the configured SQLite database.
@@ -64,8 +69,12 @@ public bool IsConfigured => _isConfigured;
         _connection.Dispose();
         _connection = null;
         SqliteConnection.ClearAllPools();
+        ConfiguredHandles.Clear();
         connBuilder.Password = string.Empty;
         databasePassword = string.Empty;
+        cachedConnectionString = string.Empty;
+        cachedInteractiveConnectionString = string.Empty;
+        cachedReadOnlyConnectionString = string.Empty;
         _isConfigured = false;
     }
     /// <summary>
@@ -107,10 +116,19 @@ public bool IsConfigured => _isConfigured;
         if (isPlaintext)
             MigratePlaintextDatabase(connBuilder.DataSource, databasePassword);
         connBuilder.Password = databasePassword;
+        cachedConnectionString = connBuilder.ConnectionString;
+        cachedInteractiveConnectionString = new SqliteConnectionStringBuilder(cachedConnectionString)
+        {
+            DefaultTimeout = 1
+        }.ConnectionString;
+        cachedReadOnlyConnectionString = new SqliteConnectionStringBuilder(cachedConnectionString)
+        {
+            Mode = SqliteOpenMode.ReadOnly
+        }.ConnectionString;
 
         try
         {
-            _connection = new SqliteConnection(connBuilder.ConnectionString);
+            _connection = new SqliteConnection(cachedConnectionString);
             _connection.Open();
             ConfigureConnection(_connection);
             _connection.StateChange += _connection_StateChange;
@@ -122,7 +140,8 @@ public bool IsConfigured => _isConfigured;
         {
             _connection?.Dispose();
             connBuilder.Mode = SqliteOpenMode.ReadOnly;
-            _connection = new SqliteConnection(connBuilder.ConnectionString);
+            cachedConnectionString = cachedReadOnlyConnectionString;
+            _connection = new SqliteConnection(cachedConnectionString);
             _connection.Open();
             ConfigureConnection(_connection);
             _connection.StateChange += _connection_StateChange;
@@ -291,12 +310,13 @@ public static Database Instance
     /// <param name="parameters">The named parameter values, or <see langword="null"/> when none are required.</param>
     /// <param name="cancellationToken">A token that cancels opening the connection and query execution.</param>
     /// <returns>包含實體化資料列集合的非同步 Task。</returns>
-    public async Task<IEnumerable<T>> QueryAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default)
-    {
-        await using SqliteConnection connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        CommandDefinition command = new(sqlString, parameters, cancellationToken: cancellationToken);
-        return await connection.QueryAsync<T>(command).ConfigureAwait(false);
-    }
+    public async Task<IEnumerable<T>> QueryAsync<T>(string sqlString, object? parameters = null, CancellationToken cancellationToken = default) =>
+        await SqlitePipeline.ExecuteAsync(async token =>
+        {
+            await using SqliteConnection connection = await OpenConnectionAsync(token).ConfigureAwait(false);
+            CommandDefinition command = new(sqlString, parameters, cancellationToken: token);
+            return await connection.QueryAsync<T>(command).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
     /// <summary>
     /// Executes an asynchronous unit of work inside an independently owned SQLite transaction.
     /// </summary>
@@ -431,7 +451,7 @@ public static Database Instance
     {
         if (!_isConfigured)
             throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
-        SqliteConnection connection = new(connBuilder.ConnectionString);
+        SqliteConnection connection = new(cachedConnectionString);
         try
         {
             connection.Open();
@@ -441,11 +461,7 @@ public static Database Instance
         catch (SqliteException ex) when (ex.SqliteErrorCode == 8) // SQLITE_READONLY
         {
             connection.Dispose();
-            SqliteConnectionStringBuilder roBuilder = new(connBuilder.ConnectionString)
-            {
-                Mode = SqliteOpenMode.ReadOnly
-            };
-            SqliteConnection roConn = new(roBuilder.ConnectionString);
+            SqliteConnection roConn = new(cachedReadOnlyConnectionString);
             roConn.Open();
             ConfigureConnection(roConn);
             return roConn;
@@ -462,11 +478,7 @@ public static Database Instance
         if (!_isConfigured)
             throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
 
-        SqliteConnectionStringBuilder interactiveBuilder = new(connBuilder.ConnectionString)
-        {
-            DefaultTimeout = 1
-        };
-        SqliteConnection connection = new(interactiveBuilder.ConnectionString);
+        SqliteConnection connection = new(cachedInteractiveConnectionString);
         try
         {
             connection.Open();
@@ -489,7 +501,7 @@ public static Database Instance
     {
         if (!_isConfigured)
             throw new InvalidOperationException(Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
-        SqliteConnection connection = new(connBuilder.ConnectionString);
+        SqliteConnection connection = new(cachedConnectionString);
         try
         {
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -499,11 +511,7 @@ public static Database Instance
         catch (SqliteException ex) when (ex.SqliteErrorCode == 8) // SQLITE_READONLY
         {
             await connection.DisposeAsync().ConfigureAwait(false);
-            SqliteConnectionStringBuilder roBuilder = new(connBuilder.ConnectionString)
-            {
-                Mode = SqliteOpenMode.ReadOnly
-            };
-            SqliteConnection roConn = new(roBuilder.ConnectionString);
+            SqliteConnection roConn = new(cachedReadOnlyConnectionString);
             await roConn.OpenAsync(cancellationToken).ConfigureAwait(false);
             ConfigureConnection(roConn);
             return roConn;
@@ -518,13 +526,28 @@ public static Database Instance
     /// Applies connection-local integrity and contention settings.
     /// </summary>
     /// <param name="connection">已開啟的 SQLite 資料庫連線。</param>
-    internal static void ConfigureConnection(SqliteConnection connection) => ConfigureConnection(connection, 30000);
+    internal static void ConfigureConnection(SqliteConnection connection)
+    {
+        if (connection.Handle is SQLitePCL.sqlite3 handle && ConfiguredHandles.TryGetValue(handle, out _))
+            return;
+
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "PRAGMA foreign_keys=ON; PRAGMA busy_timeout=30000; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-32768; PRAGMA temp_store=MEMORY; PRAGMA memory_security=ON;";
+        command.ExecuteNonQuery();
+
+        if (connection.Handle is SQLitePCL.sqlite3 configuredHandle)
+            ConfiguredHandles.AddOrUpdate(configuredHandle, ConfiguredHandleMarker);
+    }
 
     internal static void ConfigureConnection(SqliteConnection connection, int busyTimeoutMilliseconds)
     {
-        using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout={busyTimeoutMilliseconds}; PRAGMA memory_security=ON;";
-        command.ExecuteNonQuery();
+        ConfigureConnection(connection);
+        if (busyTimeoutMilliseconds != 30000)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA busy_timeout={busyTimeoutMilliseconds};";
+            command.ExecuteNonQuery();
+        }
     }
 
     /// <summary>

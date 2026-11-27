@@ -15,6 +15,7 @@ public class SecurityAgents : List<SecurityAgent>
 {
     private readonly Database database;
     private readonly IddsConfig configuration;
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> displayNameCache = new(StringComparer.OrdinalIgnoreCase);
     /// <summary>
     /// 初始化 <see cref="SecurityAgents"/> class的新執行個體。
     /// </summary>
@@ -57,6 +58,7 @@ public static SecurityAgents Instance
     public void InitializeAgents()
     {
         Clear();
+        displayNameCache.Clear();
         if (!database.IsConfigured)
         {
             throw new ApplicationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Database is not configured yet. Please configure database and re-try this operation!"));
@@ -201,6 +203,12 @@ public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
             if (!string.IsNullOrEmpty(agent.DisplayName) && string.Equals(agent.DisplayName, agentId, StringComparison.OrdinalIgnoreCase)) return agent.DisplayName;
         }
 
+        if (displayNameCache.TryGetValue(agentId, out string? cachedDisplayName))
+        {
+            return cachedDisplayName;
+        }
+
+        bool dbFailed = false;
         try
         {
             if (database != null && database.IsConfigured)
@@ -208,34 +216,50 @@ public AppDomain CurrentDomain { get; set; } = AppDomain.CurrentDomain;
                 object? dbDisplayName = database.ExecuteScalar("SELECT DisplayName FROM SecurityAgents WHERE AgentId = @p0 OR Name = @p0", agentId);
                 if (dbDisplayName != null && !string.IsNullOrWhiteSpace(dbDisplayName.ToString()))
                 {
-                    return dbDisplayName.ToString()!;
+                    string resolved = dbDisplayName.ToString()!;
+                    if (displayNameCache.Count < 1024)
+                        displayNameCache.TryAdd(agentId, resolved);
+                    return resolved;
                 }
             }
         }
         catch (Exception exception)
         {
+            dbFailed = true;
             const string component = "SecurityAgents-DisplayNameLookup";
             const string summary = "Unable to resolve an Agent display name from the configuration database.";
             System.Diagnostics.Trace.TraceWarning("{0}: {1}", summary, exception);
             _ = RollingDiagnosticLog.Write(component, summary, exception);
         }
 
+        string fallback;
         if (isGuid)
         {
             if (WellKnownAgentIds.TryGetDisplayName(targetGuid, out string? knownDisplayName))
             {
-                return Localization.Strings.Get(knownDisplayName);
+                fallback = Localization.Strings.Get(knownDisplayName);
             }
-            return Localization.Strings.Format("Historical agent ({0})", agentId);
+            else
+            {
+                fallback = Localization.Strings.Format("Historical agent ({0})", agentId);
+            }
         }
-
-        if (WellKnownAgentIds.TryResolveCanonicalGuid(agentId, out Guid canonicalGuid) &&
-            WellKnownAgentIds.TryGetDisplayName(canonicalGuid, out string? resolvedDisplayName))
+        else if (WellKnownAgentIds.TryResolveCanonicalGuid(agentId, out Guid canonicalGuid) &&
+                 WellKnownAgentIds.TryGetDisplayName(canonicalGuid, out string? resolvedDisplayName))
         {
-            return Localization.Strings.Get(resolvedDisplayName);
+            fallback = Localization.Strings.Get(resolvedDisplayName);
+        }
+        else
+        {
+            fallback = Localization.Strings.Format("Agent {0} is not registered.", agentId);
         }
 
-        return Localization.Strings.Format("Agent {0} is not registered.", agentId);
+        if (!dbFailed && displayNameCache.Count < 1024)
+        {
+            displayNameCache.TryAdd(agentId, fallback);
+        }
+
+        return fallback;
     }
     /// <summary>
     /// 執行register security agents作業。
@@ -479,6 +503,7 @@ public Dictionary<SecurityAgent, AgentProxy> LoadedAgents { get; set; } = [];
         }
         AddRange(result);
         SortAgents();
+        displayNameCache.Clear();
         return this;
     }
 

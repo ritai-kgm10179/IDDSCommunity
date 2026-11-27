@@ -129,7 +129,18 @@ public string Checksum => $"0x{checksum:x2}";
         /// <summary>
     /// 取得或設定 承載資料位元組陣列。
     /// </summary>
-public byte[] Data => materializedPayload ??= payload.ToArray();
+    public byte[] Data => materializedPayload ??= payload.ToArray();
+
+    /// <summary>
+    /// 取得承載資料的唯讀位元組區段（無記憶體配置）。
+    /// </summary>
+    public ReadOnlySpan<byte> PayloadSpan => payload.Span;
+
+    /// <summary>
+    /// 取得承載資料的唯讀記憶體檢視（無記憶體配置）。
+    /// </summary>
+    public ReadOnlyMemory<byte> PayloadMemory => payload;
+
         /// <summary>
     /// 取得或設定 訊息資料長度。
     /// </summary>
