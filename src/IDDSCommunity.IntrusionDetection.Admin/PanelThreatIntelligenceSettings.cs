@@ -32,6 +32,10 @@ public sealed partial class PanelThreatIntelligenceSettings : UserControl
     public PanelThreatIntelligenceSettings()
     {
         InitializeComponent();
+        for (int i = 0; i < 54; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
         for (int i = tableLayoutMain.Controls.Count - 1; i >= 0; i--)
         {
             Control control = tableLayoutMain.Controls[i];

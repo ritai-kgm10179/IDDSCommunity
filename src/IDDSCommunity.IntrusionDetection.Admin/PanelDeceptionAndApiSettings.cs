@@ -26,6 +26,10 @@ public sealed partial class PanelDeceptionAndApiSettings : UserControl
     public PanelDeceptionAndApiSettings()
     {
         InitializeComponent();
+        for (int i = 0; i < 14; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
 
         chkEnableHoneyAccounts.CheckedChanged += (_, _) => UpdateControlsState();
         chkEnableManagementApi.CheckedChanged += (_, _) => UpdateControlsState();

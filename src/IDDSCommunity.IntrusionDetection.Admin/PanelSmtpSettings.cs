@@ -26,6 +26,10 @@ public event EventHandler? SmtpSettingsChanged;
     public PanelSmtpSettings()
     {
         InitializeComponent();
+        for (int i = 0; i < 18; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
         foreach (Control control in new Control[] { textBoxSender, textBoxRecipient, textBoxSmtpServer, textBoxSmtpPort, textBoxUsername, textBoxPassword })
             control.TextChanged += (_, _) => editGeneration++;
         checkBoxUseSSL.CheckedChanged += (_, _) => editGeneration++;

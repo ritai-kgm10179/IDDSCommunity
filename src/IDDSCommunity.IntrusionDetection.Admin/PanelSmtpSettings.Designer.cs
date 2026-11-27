@@ -88,10 +88,6 @@ partial class PanelSmtpSettings
         this.tableLayoutMain.Name = "tableLayoutMain";
         this.tableLayoutMain.Padding = new System.Windows.Forms.Padding(15);
         this.tableLayoutMain.RowCount = 18;
-        for (int i = 0; i < 18; i++)
-        {
-            this.tableLayoutMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-        }
         //
         // headerPanel
         //

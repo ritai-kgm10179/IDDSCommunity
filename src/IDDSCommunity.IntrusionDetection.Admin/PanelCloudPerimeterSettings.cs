@@ -27,6 +27,10 @@ public sealed partial class PanelCloudPerimeterSettings : UserControl
     public PanelCloudPerimeterSettings()
     {
         InitializeComponent();
+        for (int i = 0; i < 16; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
 
         comboProviderType.Items.AddRange([
             Strings.Get("None"),

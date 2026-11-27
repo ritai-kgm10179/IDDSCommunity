@@ -30,7 +30,7 @@ public class UnitTest1
                 string.Format(eventLogQuery));
             EventLogReader rdr = new(query);
 
-            EventRecord eventRecord = rdr.ReadEvent();
+            EventRecord? eventRecord = rdr.ReadEvent();
             if (eventRecord != null)
             {
                 foreach (string s in eventRecord.KeywordsDisplayNames)
@@ -41,9 +41,9 @@ public class UnitTest1
                 string[] xPathProperties = [@"Event/EventData/Data[@Name=""IpAddress""]"];
 
                 EventLogPropertySelector props = new(xPathProperties);
-                System.Diagnostics.Debug.Print(((EventLogRecord)eventRecord).GetPropertyValues(props)[0].ToString());
+                System.Diagnostics.Debug.Print(((EventLogRecord)eventRecord).GetPropertyValues(props)[0]?.ToString() ?? string.Empty);
 
-                System.Diagnostics.Debug.Print(eventRecord.Properties[0].Value.ToString());
+                System.Diagnostics.Debug.Print(eventRecord.Properties[0].Value?.ToString() ?? string.Empty);
             }
         }
         catch (UnauthorizedAccessException)

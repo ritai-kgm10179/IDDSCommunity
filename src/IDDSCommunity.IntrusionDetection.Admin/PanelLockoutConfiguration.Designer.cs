@@ -110,10 +110,6 @@ partial class PanelLockoutConfiguration
         this.tableLayoutMain.Name = "tableLayoutMain";
         this.tableLayoutMain.Padding = new System.Windows.Forms.Padding(15);
         this.tableLayoutMain.RowCount = 25;
-        for (int i = 0; i < 25; i++)
-        {
-            this.tableLayoutMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-        }
         //
         // headerPanel
         //

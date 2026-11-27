@@ -1,5 +1,7 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
+    <LangVersion>15</LangVersion>
+    <Features>$(Features);runtime-async=on</Features>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <SupportedOSPlatform>windows</SupportedOSPlatform>

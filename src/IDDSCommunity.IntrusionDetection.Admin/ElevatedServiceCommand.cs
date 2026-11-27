@@ -141,7 +141,7 @@ internal static class ElevatedServiceCommand
 #else
             "Release",
 #endif
-            "net10.0-windows", executableName));
+            "net11.0-windows", executableName));
         if (File.Exists(developmentPath)) return developmentPath;
         throw new FileNotFoundException(Strings.Get("The IDDSCommunity service executable could not be found."), installedPath);
     }

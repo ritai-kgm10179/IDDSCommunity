@@ -123,6 +123,10 @@ public event EventHandler? AgentConfigurationChanged;
         this.saveErrorPresenter = saveErrorPresenter;
         _saveQueue = new AgentSettingsSaveQueue(saveOperation ?? PersistSnapshotAsync);
         InitializeComponent();
+        for (int i = 0; i < 16; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
         textBoxHardLocks.TextChanged += textBox_TextChanged;
         textBoxHardLockDuration.TextChanged += textBox_TextChanged;
         textBoxSoftLocks.TextChanged += textBox_TextChanged;

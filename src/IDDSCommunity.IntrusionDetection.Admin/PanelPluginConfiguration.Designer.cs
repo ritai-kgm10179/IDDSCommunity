@@ -87,10 +87,6 @@ partial class PanelPluginConfiguration
         this.tableLayoutMain.Name = "tableLayoutMain";
         this.tableLayoutMain.Padding = new System.Windows.Forms.Padding(15);
         this.tableLayoutMain.RowCount = 16;
-        for (int i = 0; i < 16; i++)
-        {
-            this.tableLayoutMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
-        }
         //
         // headerPanel
         //

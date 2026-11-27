@@ -27,6 +27,10 @@ public sealed partial class PanelSelfServiceSettings : UserControl
     public PanelSelfServiceSettings()
     {
         InitializeComponent();
+        for (int i = 0; i < 12; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
 
         txtListenIp.Text = AnyIpv4Address;
 

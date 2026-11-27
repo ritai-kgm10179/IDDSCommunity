@@ -22,6 +22,10 @@ public partial class PanelLockoutConfiguration : UserControl
     public PanelLockoutConfiguration()
     {
         InitializeComponent();
+        for (int i = 0; i < 25; i++)
+        {
+            tableLayoutMain.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        }
 
         trustedProxyToolTip.SetToolTip(
             textBoxTrustedProxyCidrs,

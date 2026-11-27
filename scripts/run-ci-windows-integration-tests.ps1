@@ -14,7 +14,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $serviceName = 'IDDSCommunity Integration Test Runtime'
-$serviceExecutable = Join-Path $repositoryRoot "src\IDDSCommunity.IntrusionDetection.Service\bin\$Configuration\net10.0-windows\$RuntimeIdentifier\IDDSCommunity.IntrusionDetection.Service.exe"
+$serviceExecutable = Join-Path $repositoryRoot "src\IDDSCommunity.IntrusionDetection.Service\bin\$Configuration\net11.0-windows\$RuntimeIdentifier\IDDSCommunity.IntrusionDetection.Service.exe"
 $eventSource = 'IDDS Community'
 $eventLogName = 'Application'
 $createdEventSource = $false

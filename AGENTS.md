@@ -6,7 +6,7 @@
 
 ## 1. 目標框架與專案結構
 
-- **目標框架 (.NET 10.0)**：所有 C# 專案均須採用 SDK-Style 結構，並指定目標框架為 `<TargetFramework>net10.0-windows</TargetFramework>`。
+- **目標框架 (.NET 11.0 / C# 15)**：所有 C# 專案均須採用 SDK-Style 結構，指定目標框架為 `<TargetFramework>net11.0-windows</TargetFramework>`，並於 [`Directory.Build.props`](Directory.Build.props) 統一設定 `<LangVersion>15</LangVersion>` 與 `<Features>$(Features);runtime-async=on</Features>`（.NET 11 Runtime Async）。部署環境之 x64 處理器須支援 `x86-64-v2` 指令集基線（或使用 `win-arm64`）。
 - **解決方案格式 (`.slnx`)**：統一採用現代化 XML 格式之 [`IDDSCommunity.slnx`](IDDSCommunity.slnx) 作為主要解決方案檔案。
 - **專案相依性**：專案間互相關聯統一使用 SDK-Style `<ProjectReference>`，禁止使用舊型 GUID 專案參考。
 
@@ -33,8 +33,8 @@
 - **零警告零錯誤建置**：專案建置 `dotnet build IDDSCommunity.slnx` 必須達到 **0 個警告 (0 Warnings)、0 個錯誤 (0 Errors)**。
 - **例外狀況處理**：
   - 重新拋出捕捉到的例外狀況時，必須使用 `throw;`，嚴禁使用 `throw ex;` 以避免破壞堆疊追蹤資訊 (CA2200)。
-- **.NET 10 相容性與跨平台安全**：
-  - 由於 .NET 10 不支援 secondary `AppDomain`，動態載入組件時須針對 .NET 10 提供單一 `AppDomain.CurrentDomain` 之相容邏輯，舊型 `AppDomain.CreateDomain` 與 `AppDomain.Unload` 須加上 `#if NETFRAMEWORK` 保護。
+- **.NET 11 相容性與跨平台安全**：
+  - 由於 .NET 11 不支援 secondary `AppDomain`，動態載入組件時須針對 .NET 11 提供單一 `AppDomain.CurrentDomain` 之相容邏輯，舊型 `AppDomain.CreateDomain` 與 `AppDomain.Unload` 須加上 `#if NETFRAMEWORK` 保護。
   - 防火牆等系統 COM 操作須優先使用 Microsoft 維護的 `Microsoft.Windows.CsWin32` 原始碼產生器，避免提交或散布預先產生的 Interop 二進位檔，並提供權限與例外備援機制。
 - **XML 文件註解規範**：
   - 所有 `public` 與 `protected` 之類別、介面、屬性、方法與事件，均必須補齊完整之 XML 文件註解 (`/// <summary>`, `<param>`, `<returns>`, `<exception>`)。
@@ -61,7 +61,7 @@
 
 ## 6. 單元測試驗證
 
-- **單元測試整合**：所有測試專案（`*.Test.csproj`）均採用 MSTest V4 / .NET 10 Test SDK，執行 `dotnet test IDDSCommunity.slnx` 必須全數綠燈通過。
+- **單元測試整合**：所有測試專案（`*.Test.csproj`）均採用 MSTest V4 / .NET 11 Test SDK，執行 `dotnet test IDDSCommunity.slnx` 必須全數綠燈通過。
 - **環境獨立性**：測試腳本需具備環境獨立性，避免硬編碼絕對路徑或特定本機名稱；需適當處理非系統管理者權限（如 Windows EventLog 寫入與 Socket 監聽之例外捕捉）。
 
 ---

@@ -30,7 +30,7 @@ UI 圖資採可重現的程式化原創產製流程，詳見 [`ASSET-PROVENANCE.
 
 ## 支援界線
 
-- 目標平台為 Windows，所有專案使用 .NET 10 `net10.0-windows`。
+- 目標平台為 Windows，所有專案使用 .NET 11 (`net11.0-windows`) 與 C# 15；x64 執行環境須支援 `x86-64-v2` 指令集基線（另提供 `win-arm64`）。
 - 加密維護備份只能由持有相同 DPAPI 金鑰檔的同一 Windows 安裝環境還原；僅複製 `.db` 備份到另一台主機並不足以復原。此機制保護離線複製的資料檔，不宣稱能抵抗已取得本機系統管理權限或可讀取執行中程序記憶體的攻擊者。
 - FTP 與明文郵件 Agent 解析設定連接埠上的協定回應，不是只要連接埠開放就能保護任意服務。TLS/SSL 或 STARTTLS 升級後的加密內容不會被封包解析器解密；應優先使用伺服器原生稽核記錄整合。
 - Windows DNS Agent 專門訂閱 `Microsoft-Windows-DNSServer/Analytical` 與 `Audit`；另提供 Technitium DNS Security Agent 專屬監控 Technitium DNS 日誌。
@@ -53,7 +53,7 @@ English documentation is also available: [User Guide (Markdown)](docs/USER-GUIDE
 
 ## 建置與測試
 
-需求：Windows、.NET 10 SDK，以及可使用 Windows 特定 API 的建置環境。
+需求：Windows、.NET 11 SDK，以及可使用 Windows 特定 API 的建置環境。
 
 ```powershell
 dotnet build IDDSCommunity.slnx
