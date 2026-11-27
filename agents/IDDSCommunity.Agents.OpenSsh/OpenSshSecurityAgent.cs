@@ -34,8 +34,19 @@ public sealed partial class OpenSshSecurityAgent : AuthenticationAgentBase<OpenS
 
     internal static AuthenticationFailureEvent? Parse(EventRecord record)
     {
+        DateTimeOffset occurredAt = record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow;
+        foreach (EventProperty property in record.Properties)
+        {
+            string? text = property.Value?.ToString();
+            if (string.IsNullOrEmpty(text))
+                continue;
+            AuthenticationFailureEvent? parsed = TryParseMessage(text, occurredAt, record.Id);
+            if (parsed is not null)
+                return parsed;
+        }
+
         string description = record.FormatDescription() ?? string.Empty;
-        return TryParseMessage(description, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
+        return string.IsNullOrEmpty(description) ? null : TryParseMessage(description, occurredAt, record.Id);
     }
 
     internal static AuthenticationFailureEvent? TryParseMessage(string message, DateTimeOffset occurredAt, int eventId = 4)

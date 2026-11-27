@@ -121,13 +121,9 @@ public class SmtpAgent : AgentPlugin, IExtendedInformation
                 {
                     OnTrace(ipHeader);
                 }
-                if (tcp.MessageLength > 0)
+                if (tcp.MessageLength >= 3 && AppLayerSmtp.IsAuthenticationFailurePayload(tcp.PayloadSpan))
                 {
-                    AppLayerSmtp smtp = new(tcp.Data, tcp.MessageLength);
-                    if (smtp.SmtpReplyCode == AppLayerSmtp.SMTP_REPLY_CODE_LOGIN_DENIED)
-                    {
-                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                    }
+                    UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                 }
             }
         }

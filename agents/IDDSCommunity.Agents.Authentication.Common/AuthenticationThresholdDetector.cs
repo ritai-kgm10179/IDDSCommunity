@@ -13,6 +13,7 @@ public sealed class AuthenticationThresholdDetector
     private readonly TimeProvider timeProvider;
     private readonly Dictionary<IPAddress, SourceState> sources = [];
     private readonly LinkedList<IPAddress> recency = [];
+    private readonly List<FailureIdentity> expiredIdentityScratch = [];
     private readonly object sync = new();
 
     /// <summary>
@@ -72,10 +73,33 @@ public sealed class AuthenticationThresholdDetector
             recency.AddLast(state.RecencyNode);
         }
         DateTimeOffset cutoff = occurredAt.AddSeconds(-configuration.WindowSeconds);
-        // 以完整篩選（而非只檢查佇列前端）移除逾期時間戳記，因為跨多個輪詢檔案來源時
-        // 事件抵達順序不保證單調遞增，僅檢查前端可能永久遺漏埋在佇列中段的逾期項目。
-        state.Timestamps.RemoveAll(timestamp => timestamp < cutoff);
-        state.Identities.RemoveWhere(item => item.OccurredAt < cutoff);
+        // 以無閉包 swap-remove 移除逾期時間戳記（跨來源事件不保證單調遞增，因此需掃描全部）。
+        List<DateTimeOffset> timestamps = state.Timestamps;
+        for (int i = timestamps.Count - 1; i >= 0; i--)
+        {
+            if (timestamps[i] < cutoff)
+            {
+                int last = timestamps.Count - 1;
+                timestamps[i] = timestamps[last];
+                timestamps.RemoveAt(last);
+            }
+        }
+        if (state.Identities.Count > 0)
+        {
+            expiredIdentityScratch.Clear();
+            foreach (FailureIdentity item in state.Identities)
+            {
+                if (item.OccurredAt < cutoff)
+                {
+                    expiredIdentityScratch.Add(item);
+                }
+            }
+            for (int i = 0; i < expiredIdentityScratch.Count; i++)
+            {
+                state.Identities.Remove(expiredIdentityScratch[i]);
+            }
+            expiredIdentityScratch.Clear();
+        }
         FailureIdentity identity = new(occurredAt, failure.EventId, failure.Category, failure.AccountName);
         if (!state.Identities.Add(identity)) return false;
         state.Timestamps.Add(occurredAt);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.IO;
 
 namespace IDDSCommunity.Agents.FtpServer;
 
@@ -27,38 +26,46 @@ public class AppLayerFtp
     /// 取得回覆是否明確表示認證失敗。
     /// </summary>
     public bool IsAuthenticationFailure => FtpReplyCode == FTP_REPLY_CODE_LOGIN_DENIED &&
-        (ReplyText.Contains("login incorrect", StringComparison.OrdinalIgnoreCase) ||
-         ReplyText.Contains("cannot log in", StringComparison.OrdinalIgnoreCase) ||
-         ReplyText.Contains("authentication failed", StringComparison.OrdinalIgnoreCase) ||
-         ReplyText.Contains("password incorrect", StringComparison.OrdinalIgnoreCase));
+        IsAuthenticationFailureText(ReplyText.AsSpan());
+
+    /// <summary>
+    /// 以零記憶體配置快速檢查原始 ASCII 負載是否為 FTP 530 登入認證失敗回覆。
+    /// </summary>
+    /// <param name="payload">原始 TCP 應用層負載。</param>
+    /// <returns>若符合 530 認證失敗特徵則傳回 <see langword="true"/>。</returns>
+    public static bool IsAuthenticationFailurePayload(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length < 3 || payload[0] != (byte)'5' || payload[1] != (byte)'3' || payload[2] != (byte)'0')
+            return false;
+
+        Span<char> stackChars = payload.Length <= 512 ? stackalloc char[payload.Length] : new char[payload.Length];
+        int chars = Encoding.ASCII.GetChars(payload, stackChars);
+        return IsAuthenticationFailureText(stackChars[..chars]);
+    }
+
+    private static bool IsAuthenticationFailureText(ReadOnlySpan<char> text) =>
+        text.Contains("login incorrect", StringComparison.OrdinalIgnoreCase) ||
+        text.Contains("cannot log in", StringComparison.OrdinalIgnoreCase) ||
+        text.Contains("authentication failed", StringComparison.OrdinalIgnoreCase) ||
+        text.Contains("password incorrect", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
     /// 初始化 <see cref="AppLayerFtp"/> 類別的新執行個體。
     /// </summary>
     /// <param name="byBuffer">緩衝區位元組陣列。</param>
     /// <param name="nReceived">接收到的位元組數量。</param>
     public AppLayerFtp(byte[] byBuffer, int nReceived)
+        : this(byBuffer is null ? throw new ArgumentNullException(nameof(byBuffer)) : byBuffer.AsSpan(0, nReceived))
     {
-        try
-        {
-            //Create MemoryStream out of the received bytes
-            MemoryStream memoryStream = new(byBuffer, 0, nReceived);
-            //Next we create a BinaryReader out of the MemoryStream
-            BinaryReader binaryReader = new(memoryStream);
-            char[] replyCodeChars = binaryReader.ReadChars(3);
-            StringBuilder replyCode = new();
+    }
 
-            if (replyCodeChars.Length == 3)
-            {
-                for (int i = 0; i < 3; i++) replyCode.Append(replyCodeChars[i]);
-            }
-            FtpReplyCode = replyCode.ToString();
-            ReplyText = Encoding.ASCII.GetString(byBuffer, 0, nReceived);
-
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-            throw;
-        }
+    /// <summary>
+    /// 以唯讀位元組區段初始化 <see cref="AppLayerFtp"/> 類別的新執行個體。
+    /// </summary>
+    /// <param name="payload">原始應用層位元組區段。</param>
+    public AppLayerFtp(ReadOnlySpan<byte> payload)
+    {
+        FtpReplyCode = payload.Length >= 3 ? Encoding.ASCII.GetString(payload[..3]) : Encoding.ASCII.GetString(payload);
+        ReplyText = Encoding.ASCII.GetString(payload);
     }
 }

@@ -173,6 +173,26 @@ public sealed class WindowsDnsSecurityAgentTest
         Assert.AreEqual("Windows DNS 安全性代理程式", agent.DisplayName);
     }
 
+    /// <summary>
+    /// 驗證 DnsThreatDetector 在超過用戶端追蹤容量上限時會淘汰過期或最舊項目以維持容量有界。
+    /// </summary>
+    [TestMethod]
+    public void DnsThreatDetector_EvictsWhenOverCapacity()
+    {
+        ManualTimeProvider time = new(new DateTimeOffset(2026, 8, 5, 0, 0, 0, TimeSpan.Zero));
+        WindowsDnsConfiguration config = CreateConfiguration();
+        config.MaximumTrackedClients = 3;
+        DnsThreatDetector detector = new(config, time);
+
+        for (int i = 1; i <= 5; i++)
+        {
+            time.UtcNow = time.UtcNow.AddSeconds(5);
+            _ = detector.Analyze(new DnsEventRecord(257, time.UtcNow, IPAddress.Parse($"192.0.2.{i}"), DnsActivityKind.Query, "example.com", "A", "0"));
+        }
+
+        Assert.IsTrue(detector.TrackedClientCount <= 3);
+    }
+
     private static WindowsDnsConfiguration CreateConfiguration() => new()
     {
         WindowSeconds = 60,

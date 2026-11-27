@@ -60,6 +60,15 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
         watcher = null;
         query = null;
     }
+    private static readonly EventLogPropertySelector FailurePropertySelector = new(
+    [
+        @"Event/EventData/Data[@Name=""IpAddress""]",
+        @"Event/EventData/Data[@Name=""TargetUserName""]",
+        @"Event/EventData/Data[@Name=""TargetDomainName""]",
+        @"Event/EventData/Data[@Name=""TargetUserSid""]",
+        @"Event/EventData/Data[@Name=""SubStatus""]"
+    ]);
+
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -69,18 +78,10 @@ public class WindowsSecurityBase : AgentPlugin, IExtendedInformation
     {
         try
         {
-            string[] xPathProperties =
-            [
-                @"Event/EventData/Data[@Name=""IpAddress""]",
-                @"Event/EventData/Data[@Name=""TargetUserName""]",
-                @"Event/EventData/Data[@Name=""TargetDomainName""]",
-                @"Event/EventData/Data[@Name=""TargetUserSid""]",
-                @"Event/EventData/Data[@Name=""SubStatus""]"
-            ];
-            EventLogPropertySelector props = new(xPathProperties);
-            if (e.EventRecord is not EventLogRecord record)
+            using EventRecord? eventRecord = e.EventRecord;
+            if (eventRecord is not EventLogRecord record)
                 return;
-            IList<object> values = record.GetPropertyValues(props);
+            IList<object?> values = record.GetPropertyValues(FailurePropertySelector);
             string ipAddress = values[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
             if (!System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? address) || System.Net.IPAddress.IsLoopback(address)) return;
             AuthenticationNotificationEventArgs args = new()

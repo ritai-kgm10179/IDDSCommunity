@@ -24,6 +24,14 @@ public static partial class FileZillaLogParser
     public static AuthenticationFailureEvent? TryParseMessage(string line, DateTimeOffset occurredAt)
     {
         if (string.IsNullOrWhiteSpace(line)) return null;
+        if (line.IndexOf("authentication failed", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("login failed", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("password incorrect", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("530 login incorrect", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("530 authentication failed", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return null;
+        }
 
         Match match;
         try

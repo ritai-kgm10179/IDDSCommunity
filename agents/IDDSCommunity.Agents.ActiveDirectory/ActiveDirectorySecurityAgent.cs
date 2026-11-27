@@ -37,9 +37,41 @@ public sealed class ActiveDirectorySecurityAgent : AuthenticationAgentBase<Authe
     /// </summary>
     public override Guid Id => WellKnownAgentIds.AdCredentialValidation;
 
+    private static readonly string[] SelectedFieldNames =
+    [
+        "IpAddress",
+        "ClientAddress",
+        "SourceNetworkAddress",
+        "TargetUserName",
+        "TargetName",
+        "ServiceName",
+        "TicketOptions",
+        "TicketEncryptionType",
+        "Status",
+        "FailureCode",
+        "ResultCode",
+        "TargetDomainName"
+    ];
+
+    private static readonly EventLogPropertySelector AdPropertySelector = new(
+    [
+        @"Event/EventData/Data[@Name=""IpAddress""]",
+        @"Event/EventData/Data[@Name=""ClientAddress""]",
+        @"Event/EventData/Data[@Name=""SourceNetworkAddress""]",
+        @"Event/EventData/Data[@Name=""TargetUserName""]",
+        @"Event/EventData/Data[@Name=""TargetName""]",
+        @"Event/EventData/Data[@Name=""ServiceName""]",
+        @"Event/EventData/Data[@Name=""TicketOptions""]",
+        @"Event/EventData/Data[@Name=""TicketEncryptionType""]",
+        @"Event/EventData/Data[@Name=""Status""]",
+        @"Event/EventData/Data[@Name=""FailureCode""]",
+        @"Event/EventData/Data[@Name=""ResultCode""]",
+        @"Event/EventData/Data[@Name=""TargetDomainName""]"
+    ]);
+
     internal static AuthenticationFailureEvent? Parse(EventRecord record)
     {
-        IReadOnlyDictionary<string, string> fields = EventRecordFields.Read(record);
+        IReadOnlyDictionary<string, string> fields = ReadFieldsFast(record);
         AuthenticationFailureEvent? failure = TryParseFields(fields, record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow, record.Id);
         return failure is null
             ? null
@@ -49,6 +81,25 @@ public sealed class ActiveDirectorySecurityAgent : AuthenticationAgentBase<Authe
                 ComputerName = record.MachineName ?? string.Empty,
                 SourceEventRecordId = record.RecordId
             };
+    }
+
+    private static IReadOnlyDictionary<string, string> ReadFieldsFast(EventRecord record)
+    {
+        if (record is EventLogRecord logRecord)
+        {
+            IList<object?> values = logRecord.GetPropertyValues(AdPropertySelector);
+            Dictionary<string, string> fields = new(SelectedFieldNames.Length, StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < SelectedFieldNames.Length && i < values.Count; i++)
+            {
+                string? value = values[i]?.ToString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    fields[SelectedFieldNames[i]] = value;
+                }
+            }
+            return fields;
+        }
+        return EventRecordFields.Read(record);
     }
 
     internal static AuthenticationFailureEvent? TryParseFields(IReadOnlyDictionary<string, string> fields, DateTimeOffset occurredAt, int eventId)

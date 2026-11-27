@@ -55,12 +55,32 @@ public sealed class MySqlFailedLoginWatcher : AuthenticationAgentBase<Authentica
     /// <returns>解析成功時傳回驗證失敗事件，否則傳回 <see langword="null"/>。</returns>
     internal static AuthenticationFailureEvent? Parse(EventRecord record)
     {
-        List<string?> messages = [];
-        foreach (EventProperty property in record.Properties) messages.Add(property.Value?.ToString());
-        try { messages.Add(record.FormatDescription()); }
-        catch (EventLogException exception) { Trace.TraceWarning("Unable to format MySQL/MariaDB event {0}: {1}", record.Id, exception.Message); }
+        IList<EventProperty> properties = record.Properties;
+        List<string?> messages = new(properties.Count + 1);
+        foreach (EventProperty property in properties) messages.Add(property.Value?.ToString());
 
-        if (!MySqlMariaDbAuthenticationParser.TryParse(record.ProviderName, messages, out IPAddress address)) return null;
+        if (!MySqlMariaDbAuthenticationParser.TryParse(record.ProviderName, messages, out IPAddress address))
+        {
+            try
+            {
+                string? formatted = record.FormatDescription();
+                if (!string.IsNullOrEmpty(formatted))
+                {
+                    messages.Add(formatted);
+                    if (!MySqlMariaDbAuthenticationParser.TryParse(record.ProviderName, messages, out address))
+                        return null;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (EventLogException exception)
+            {
+                Trace.TraceWarning("Unable to format MySQL/MariaDB event {0}: {1}", record.Id, exception.Message);
+                return null;
+            }
+        }
         DateTimeOffset occurredAt = record.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow;
         return new AuthenticationFailureEvent(occurredAt, address, record.Id, "MySQL/MariaDB", string.Empty, "Access denied");
     }

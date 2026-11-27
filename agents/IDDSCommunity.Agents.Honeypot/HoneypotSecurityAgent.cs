@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Net;
@@ -21,6 +22,7 @@ namespace IDDSCommunity.Agents.Honeypot;
 public sealed class HoneypotSecurityAgent : AgentPlugin, IExtendedInformation
 {
     private readonly List<TcpListener> listeners = [];
+    private readonly ConcurrentDictionary<IPAddress, long> recentProbeCooldowns = new();
     private CancellationTokenSource? cts;
 
     /// <summary>
@@ -112,11 +114,14 @@ public sealed class HoneypotSecurityAgent : AgentPlugin, IExtendedInformation
 
     private async Task ListenAsync(TcpListener listener, int port, CancellationToken token)
     {
+        int consecutiveFailures = 0;
         while (!token.IsCancellationRequested)
         {
             try
             {
                 using TcpClient client = await listener.AcceptTcpClientAsync(token).ConfigureAwait(false);
+                consecutiveFailures = 0;
+                client.LingerState = new LingerOption(true, 0);
                 if (client.Client.RemoteEndPoint is IPEndPoint remoteEndPoint)
                 {
                     IPAddress remoteIp = remoteEndPoint.Address;
@@ -125,7 +130,7 @@ public sealed class HoneypotSecurityAgent : AgentPlugin, IExtendedInformation
                     if (remoteIp.IsIPv4MappedToIPv6)
                         remoteIp = remoteIp.MapToIPv4();
 
-                    if (!BogonIpFilter.IsBogonOrReserved(remoteIp))
+                    if (!BogonIpFilter.IsBogonOrReserved(remoteIp) && TryConsumeProbeQuota(remoteIp))
                     {
                         string message = Strings.Format("Honeypot decoy port probe detected on TCP port {0}.", port);
                         NotificationEventArgs args = new()
@@ -149,7 +154,32 @@ public sealed class HoneypotSecurityAgent : AgentPlugin, IExtendedInformation
                 if (token.IsCancellationRequested)
                     break;
                 System.Diagnostics.Trace.TraceWarning("Honeypot accept exception on port {0}: {1}", port, ex.Message);
+                int delayMs = Math.Min(10_000, 100 * (1 << Math.Min(consecutiveFailures, 6)));
+                consecutiveFailures++;
+                try { await Task.Delay(delayMs, token).ConfigureAwait(false); }
+                catch (OperationCanceledException) { break; }
             }
         }
+    }
+
+    private bool TryConsumeProbeQuota(IPAddress ip)
+    {
+        long nowTicks = Environment.TickCount64;
+        if (recentProbeCooldowns.TryGetValue(ip, out long blockedUntilTicks) && blockedUntilTicks > nowTicks)
+            return false;
+
+        if (recentProbeCooldowns.Count >= 2048)
+        {
+            foreach (KeyValuePair<IPAddress, long> entry in recentProbeCooldowns)
+            {
+                if (entry.Value <= nowTicks || recentProbeCooldowns.Count >= 2048)
+                    recentProbeCooldowns.TryRemove(entry.Key, out _);
+                if (recentProbeCooldowns.Count < 1024)
+                    break;
+            }
+        }
+
+        recentProbeCooldowns[ip] = nowTicks + 10_000;
+        return true;
     }
 }

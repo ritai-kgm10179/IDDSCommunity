@@ -66,14 +66,15 @@ public partial class RrasSecurityAgent : AgentPlugin, IExtendedInformation
     {
         try
         {
-            if (e.EventRecord is not EventRecord record)
+            using EventRecord? record = e.EventRecord;
+            if (record is null)
                 return;
             foreach (EventProperty prop in record.Properties)
             {
                 string propertyValue = prop.Value?.ToString() ?? string.Empty;
-                if (MyRegex().IsMatch(propertyValue))
+                Match ipAddress = MyRegex().Match(propertyValue);
+                if (ipAddress.Success)
                 {
-                    Match ipAddress = MyRegex().Match(propertyValue);
                     NotificationEventArgs args = new()
                     {
                         CreateDate = record.TimeCreated ?? DateTime.Now,

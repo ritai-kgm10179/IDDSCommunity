@@ -81,13 +81,10 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
 
     internal void RemoveExpiredClients(DateTime now)
     {
-        //for (int i = CurrentClients.Keys.Max(); i > 0; i--) {
-        //    if (CurrentClients.ContainsKey(i) && CurrentClients[i].LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < DateTime.Now) CurrentClients.Remove(i);
-        //}
-        foreach (int key in CurrentClients.Keys)
+        foreach (KeyValuePair<int, Pop3Client> pair in _currentClients)
         {
-            if (CurrentClients.TryGetValue(key, out Pop3Client? client) && client.LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < now)
-                _currentClients.TryRemove(key, out _);
+            if (pair.Value.LastInteraction.AddMinutes(CLEANUP_INTERVAL_MINS) < now)
+                _currentClients.TryRemove(pair.Key, out _);
         }
     }
     /// <summary>
@@ -182,28 +179,37 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
         {
             int sourcePort = tcp.SourcePortValue;
             int destinationPort = tcp.DestinationPortValue;
-            if (Configuration.AgentSettings is Pop3Config settings && destinationPort == settings.Pop3Port)
+            if (Configuration.AgentSettings is Pop3Config settings && destinationPort == settings.Pop3Port && tcp.MessageLength > 3)
             {
-                if (tcp.MessageLength > 0)
+                ReadOnlySpan<byte> payload = tcp.PayloadSpan;
+                if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_QUIT))
                 {
-                    AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
-                    Pop3Client client = _currentClients.GetOrAdd(sourcePort, _ => new Pop3Client());
-                    client.LastInteraction = DateTime.Now;
-                    switch (pop3.Pop3Code.ToUpper())
-                    {
-                        case AppLayerPop3.POP3_INTERACTION_CODE_LIST: client.LastMessage = Pop3Message.LIST; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_DELE: client.LastMessage = Pop3Message.DELE; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_NOOP: client.LastMessage = Pop3Message.NOOP; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_PASS: client.LastMessage = Pop3Message.PASS; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_QUIT: _currentClients.TryRemove(sourcePort, out _); break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_RETR: client.LastMessage = Pop3Message.RETR; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_RSET: client.LastMessage = Pop3Message.RSET; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_STAT: client.LastMessage = Pop3Message.STAT; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_TOP: client.LastMessage = Pop3Message.TOP; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_UIDL: client.LastMessage = Pop3Message.UIDL; break;
-                        case AppLayerPop3.POP3_INTERACTION_CODE_USER: client.LastMessage = Pop3Message.USER; break;
-                    }
+                    _currentClients.TryRemove(sourcePort, out _);
+                    return;
                 }
+
+                if (!_currentClients.TryGetValue(sourcePort, out Pop3Client? client))
+                {
+                    if (_currentClients.Count >= 4096)
+                    {
+                        RemoveExpiredClients(DateTime.Now);
+                        if (_currentClients.Count >= 4096)
+                            return;
+                    }
+                    client = _currentClients.GetOrAdd(sourcePort, static _ => new Pop3Client());
+                }
+
+                client.LastInteraction = DateTime.Now;
+                if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_PASS)) client.LastMessage = Pop3Message.PASS;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_USER)) client.LastMessage = Pop3Message.USER;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_LIST)) client.LastMessage = Pop3Message.LIST;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_DELE)) client.LastMessage = Pop3Message.DELE;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_NOOP)) client.LastMessage = Pop3Message.NOOP;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_RETR)) client.LastMessage = Pop3Message.RETR;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_RSET)) client.LastMessage = Pop3Message.RSET;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_STAT)) client.LastMessage = Pop3Message.STAT;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_TOP)) client.LastMessage = Pop3Message.TOP;
+                else if (AppLayerPop3.StartsWithUpperPrefix(payload, AppLayerPop3.POP3_INTERACTION_CODE_UIDL)) client.LastMessage = Pop3Message.UIDL;
             }
         }
         catch (Exception ex)
@@ -224,11 +230,10 @@ public class Pop3Agent : AgentPlugin, IExtendedInformation
         {
             int sourcePort = tcp.SourcePortValue;
             int destinationPort = tcp.DestinationPortValue;
-            if (Configuration.AgentSettings is Pop3Config settings && sourcePort == settings.Pop3Port && tcp.MessageLength > 0)
+            if (Configuration.AgentSettings is Pop3Config settings && sourcePort == settings.Pop3Port && tcp.MessageLength > 3)
             {
-                AppLayerPop3 pop3 = new(tcp.Data, tcp.Data.Length);
-                if (pop3.Pop3Code.Equals(AppLayerPop3.POP3_REPLY_CODE_ERROR, StringComparison.OrdinalIgnoreCase) &&
-                    CurrentClients.TryGetValue(destinationPort, out Pop3Client? value) && value.LastMessage == Pop3Message.PASS)
+                if (AppLayerPop3.StartsWithUpperPrefix(tcp.PayloadSpan, AppLayerPop3.POP3_REPLY_CODE_ERROR) &&
+                    _currentClients.TryGetValue(destinationPort, out Pop3Client? value) && value.LastMessage == Pop3Message.PASS)
                 {
                     if (Tracing)
                         OnTrace(ipHeader);

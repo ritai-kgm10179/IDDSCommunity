@@ -97,13 +97,9 @@ public class FtpAgent : AgentPlugin, IExtendedInformation
                 {
                     OnTrace(ipHeader);
                 }
-                if (tcp.MessageLength > 0)
+                if (tcp.MessageLength >= 3 && AppLayerFtp.IsAuthenticationFailurePayload(tcp.PayloadSpan))
                 {
-                    AppLayerFtp ftp = new(tcp.Data, tcp.MessageLength);
-                    if (ftp.IsAuthenticationFailure)
-                    {
-                        UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
-                    }
+                    UnsuccessfulLogin(ipHeader.DestinationAddress.ToString());
                 }
             }
         }

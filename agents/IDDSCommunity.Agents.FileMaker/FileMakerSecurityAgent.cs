@@ -104,7 +104,9 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
                     try
                     {
                         Match ipMatch = MyRegex().Match(propertyValue);
-                        if (ipMatch.Success)
+                        if (ipMatch.Success &&
+                            IPAddress.TryParse(ipMatch.Value, out IPAddress? ip) &&
+                            ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                         {
                             NotificationEventArgs args = new()
                             {
@@ -112,10 +114,8 @@ public partial class FileMakerSecurityAgent : AgentPlugin, IExtendedInformation
                                 EventId = record.Id,
                                 IpAddress = ipMatch.Value
                             };
-                            if (IPAddress.TryParse(args.IpAddress, out IPAddress? ip) && ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                            {
-                                OnAttackDetected(this, args);
-                            }
+                            OnAttackDetected(this, args);
+                            break;
                         }
                     }
                     catch (RegexMatchTimeoutException) { }

@@ -39,9 +39,13 @@ public sealed partial class PostgreSqlSecurityAgent : AuthenticationAgentBase<Po
     /// <returns>解析成功時傳回驗證失敗事件，否則傳回 <see langword="null"/>。</returns>
     internal static AuthenticationFailureEvent? TryParseLine(string line)
     {
+        if (string.IsNullOrWhiteSpace(line) ||
+            !line.Contains("password authentication failed", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
         AuthenticationFailureEvent? structured = TryParseJson(line);
         if (structured is not null) return structured;
-        if (!line.Contains("password authentication failed", StringComparison.OrdinalIgnoreCase)) return null;
         Match ip = IpAddressPattern().Match(line);
         Match user = UserPattern().Match(line);
         if (!ip.Success || !IPAddress.TryParse(ip.Groups["ip"].Value.Trim('[', ']'), out IPAddress? address)) return null;

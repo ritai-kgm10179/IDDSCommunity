@@ -68,35 +68,52 @@ public class AppLayerPop3
     /// 取得或設定解析出的 POP3 回覆碼或命令碼前綴。
     /// </summary>
     public string Pop3Code { get; set; } = string.Empty;
+
     /// <summary>
     /// 初始化 <see cref="AppLayerPop3"/> 類別的新執行個體。
     /// </summary>
     /// <param name="byBuffer">緩衝區位元組陣列。</param>
     /// <param name="nReceived">接收到的位元組數量。</param>
     public AppLayerPop3(byte[] byBuffer, int nReceived)
+        : this(byBuffer is null ? throw new ArgumentNullException(nameof(byBuffer)) : byBuffer.AsSpan(0, nReceived))
     {
-        try
-        {
-            if (nReceived > 3)
-            {
-                //Create MemoryStream out of the received bytes
-                MemoryStream memoryStream = new(byBuffer, 0, nReceived);
-                //Next we create a BinaryReader out of the MemoryStream
-                BinaryReader binaryReader = new(memoryStream);
-                char[] replyCodeChars = binaryReader.ReadChars(4);
-                StringBuilder replyCode = new();
+    }
 
-                if (replyCodeChars.Length == 4)
-                {
-                    for (int i = 0; i < 4; i++) replyCode.Append(replyCodeChars[i]);
-                }
-                Pop3Code = replyCode.ToString().ToUpper();
-            }
-        }
-        catch (Exception ex)
+    /// <summary>
+    /// 以唯讀位元組區段初始化 <see cref="AppLayerPop3"/> 類別的新執行個體。
+    /// </summary>
+    /// <param name="payload">原始應用層位元組區段。</param>
+    public AppLayerPop3(ReadOnlySpan<byte> payload)
+    {
+        if (payload.Length > 3)
         {
-            Console.WriteLine(ex.Message);
-            throw;
+            Span<char> chars = stackalloc char[4];
+            for (int i = 0; i < 4; i++)
+            {
+                byte b = payload[i];
+                chars[i] = b is >= (byte)'a' and <= (byte)'z' ? (char)(b - 32) : (char)b;
+            }
+            Pop3Code = new string(chars);
         }
+    }
+
+    /// <summary>
+    /// 以零配置快速辨識 POP3 負載之前 4 位元組命令或回覆碼是否與指定大寫 ASCII 前綴相符。
+    /// </summary>
+    /// <param name="payload">原始 TCP 應用層負載。</param>
+    /// <param name="expectedUpperPrefix">預期之 4 字元大寫 ASCII 前綴。</param>
+    /// <returns>相符時傳回 <see langword="true"/>。</returns>
+    public static bool StartsWithUpperPrefix(ReadOnlySpan<byte> payload, string expectedUpperPrefix)
+    {
+        if (payload.Length < 4 || expectedUpperPrefix.Length < 4)
+            return false;
+        for (int i = 0; i < 4; i++)
+        {
+            byte b = payload[i];
+            char upper = b is >= (byte)'a' and <= (byte)'z' ? (char)(b - 32) : (char)b;
+            if (upper != expectedUpperPrefix[i])
+                return false;
+        }
+        return true;
     }
 }

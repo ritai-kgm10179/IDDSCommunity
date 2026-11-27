@@ -57,16 +57,11 @@ public sealed class RdGatewaySecurityAgent : AuthenticationAgentBase<Authenticat
             TsGatewayQuery,
             record => RdGatewayEventParser.Parse(record, trustedProxies));
 
-        WindowsEventLogFailureSource gatewayAdminSource = new(
-            "Microsoft-Windows-TerminalServices-Gateway/Admin",
-            TsGatewayQuery,
-            record => RdGatewayEventParser.Parse(record, trustedProxies));
-
         WindowsEventLogFailureSource npsSource = new(
             "Security",
             NpsQuery,
             record => RdGatewayEventParser.Parse(record, trustedProxies));
 
-        return new CompositeAuthenticationEventSource(gatewayOpSource, gatewayAdminSource, npsSource);
+        return new CompositeAuthenticationEventSource(gatewayOpSource, npsSource);
     }
 }

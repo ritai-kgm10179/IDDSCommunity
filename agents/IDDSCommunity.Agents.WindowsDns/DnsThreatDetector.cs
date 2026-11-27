@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
+using System.Threading;
 
 namespace IDDSCommunity.Agents.WindowsDns;
 
 internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, TimeProvider timeProvider)
 {
     private readonly ConcurrentDictionary<IPAddress, ClientWindow> clients = new();
+    private int trackedCount;
+
     /// <summary>
     /// 取得目前記憶體中保留的用戶端視窗上限數量。
     /// </summary>
-    internal int TrackedClientCount => clients.Count;
+    internal int TrackedClientCount => Volatile.Read(ref trackedCount);
+
     /// <summary>
     /// 評估一項支援的 DNS 活動事件，僅於超越門檻值時引發通知。
     /// </summary>
@@ -21,13 +24,35 @@ internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, T
     internal DnsDetection? Analyze(DnsEventRecord record)
     {
         DateTimeOffset now = timeProvider.GetUtcNow();
-        EnsureCapacity(now);
-        ClientWindow window = clients.GetOrAdd(record.SourceAddress, _ => new ClientWindow(now));
+        long nowTicks = now.UtcTicks;
+        if (!clients.TryGetValue(record.SourceAddress, out ClientWindow? window))
+        {
+            if (Volatile.Read(ref trackedCount) >= configuration.MaximumTrackedClients)
+            {
+                EnsureCapacity(nowTicks);
+            }
+
+            ClientWindow created = new(now, nowTicks);
+            if (clients.TryAdd(record.SourceAddress, created))
+            {
+                Interlocked.Increment(ref trackedCount);
+                window = created;
+            }
+            else if (!clients.TryGetValue(record.SourceAddress, out window))
+            {
+                window = clients.GetOrAdd(record.SourceAddress, static (_, state) => state, created);
+                if (ReferenceEquals(window, created))
+                {
+                    Interlocked.Increment(ref trackedCount);
+                }
+            }
+        }
+
         lock (window)
         {
             if (now - window.StartedAt >= TimeSpan.FromSeconds(configuration.WindowSeconds))
-                window.Reset(now);
-            window.LastSeenAt = now;
+                window.Reset(now, nowTicks);
+            Volatile.Write(ref window.LastSeenTicks, nowTicks);
             switch (record.Kind)
             {
                 case DnsActivityKind.Query:
@@ -58,36 +83,63 @@ internal sealed class DnsThreatDetector(WindowsDnsConfiguration configuration, T
         return null;
     }
 
-    private void EnsureCapacity(DateTimeOffset now)
+    private void EnsureCapacity(long nowTicks)
     {
-        if (clients.Count < configuration.MaximumTrackedClients)
+        if (Volatile.Read(ref trackedCount) < configuration.MaximumTrackedClients)
             return;
-        DateTimeOffset staleBoundary = now - TimeSpan.FromSeconds(configuration.WindowSeconds * 2L);
+
+        long staleBoundaryTicks = nowTicks - TimeSpan.FromSeconds(configuration.WindowSeconds * 2L).Ticks;
+        IPAddress? oldestKey = null;
+        long oldestTicks = long.MaxValue;
+        int scanned = 0;
+
         foreach (KeyValuePair<IPAddress, ClientWindow> pair in clients)
         {
-            if (pair.Value.LastSeenAt < staleBoundary)
-                clients.TryRemove(pair.Key, out _);
+            long lastSeenTicks = Volatile.Read(ref pair.Value.LastSeenTicks);
+            if (lastSeenTicks < staleBoundaryTicks)
+            {
+                if (clients.TryRemove(pair.Key, out _))
+                {
+                    Interlocked.Decrement(ref trackedCount);
+                }
+                continue;
+            }
+
+            if (lastSeenTicks < oldestTicks)
+            {
+                oldestTicks = lastSeenTicks;
+                oldestKey = pair.Key;
+            }
+
+            if (++scanned >= 256 && Volatile.Read(ref trackedCount) < configuration.MaximumTrackedClients)
+            {
+                return;
+            }
         }
-        if (clients.Count < configuration.MaximumTrackedClients)
+
+        if (Volatile.Read(ref trackedCount) < configuration.MaximumTrackedClients)
             return;
-        KeyValuePair<IPAddress, ClientWindow> oldest = clients.OrderBy(pair => pair.Value.LastSeenAt).First();
-        clients.TryRemove(oldest.Key, out _);
+
+        if (oldestKey is not null && clients.TryRemove(oldestKey, out _))
+        {
+            Interlocked.Decrement(ref trackedCount);
+        }
     }
 
-    private sealed class ClientWindow(DateTimeOffset startedAt)
+    private sealed class ClientWindow(DateTimeOffset startedAt, long nowTicks)
     {
+        internal long LastSeenTicks = nowTicks;
         internal DateTimeOffset StartedAt { get; private set; } = startedAt;
-        internal DateTimeOffset LastSeenAt { get; set; } = startedAt;
         internal int QueryCount { get; set; }
         internal int NxDomainCount { get; set; }
         internal int AnyQueryCount { get; set; }
         internal int DynamicUpdateCount { get; set; }
         internal int ZoneTransferCount { get; set; }
 
-        internal void Reset(DateTimeOffset now)
+        internal void Reset(DateTimeOffset now, long ticks)
         {
             StartedAt = now;
-            LastSeenAt = now;
+            Volatile.Write(ref LastSeenTicks, ticks);
             QueryCount = 0;
             NxDomainCount = 0;
             AnyQueryCount = 0;

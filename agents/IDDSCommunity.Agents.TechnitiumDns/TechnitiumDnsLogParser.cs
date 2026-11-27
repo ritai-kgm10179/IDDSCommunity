@@ -24,6 +24,20 @@ public static partial class TechnitiumDnsLogParser
     public static AuthenticationFailureEvent? TryParseMessage(string line, DateTimeOffset occurredAt)
     {
         if (string.IsNullOrWhiteSpace(line)) return null;
+        if (line.IndexOf("Client", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("ip=", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return null;
+        }
+        if (line.IndexOf("Refused", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("Blocked", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("exceeded QPM limit", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("Rate limit", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("Dropped", StringComparison.OrdinalIgnoreCase) < 0 &&
+            line.IndexOf("Denied", StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return null;
+        }
 
         Match match;
         try

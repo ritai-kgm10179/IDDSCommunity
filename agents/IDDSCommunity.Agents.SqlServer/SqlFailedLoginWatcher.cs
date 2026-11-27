@@ -100,7 +100,9 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
                     try
                     {
                         Match ipMatch = MyRegex().Match(propertyValue);
-                        if (ipMatch.Success)
+                        if (ipMatch.Success &&
+                            System.Net.IPAddress.TryParse(ipMatch.Value, out System.Net.IPAddress? probe) &&
+                            (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6))
                         {
                             NotificationEventArgs args = new()
                             {
@@ -108,13 +110,8 @@ public partial class SqlFailedLoginWatcher : AgentPlugin, IExtendedInformation
                                 EventId = record.Id,
                                 IpAddress = ipMatch.Value
                             };
-                            if (System.Net.IPAddress.TryParse(ipMatch.Value, out System.Net.IPAddress? probe))
-                            {
-                                if (probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || probe.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
-                                {
-                                    OnAttackDetected(this, args);
-                                }
-                            }
+                            OnAttackDetected(this, args);
+                            break;
                         }
                     }
                     catch (RegexMatchTimeoutException) { }

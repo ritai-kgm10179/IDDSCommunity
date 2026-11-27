@@ -58,6 +58,14 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
         watcher = null;
         query = null;
     }
+    private static readonly EventLogPropertySelector KerberosPropertySelector = new(
+    [
+        @"Event/EventData/Data[@Name=""IpAddress""]",
+        @"Event/EventData/Data[@Name=""TargetUserName""]",
+        @"Event/EventData/Data[@Name=""TargetSid""]",
+        @"Event/EventData/Data[@Name=""Status""]"
+    ]);
+
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -67,17 +75,10 @@ public class KerberosSecurityAgent : AgentPlugin, IExtendedInformation
     {
         try
         {
-            string[] xPathProperties =
-            [
-                @"Event/EventData/Data[@Name=""IpAddress""]",
-                @"Event/EventData/Data[@Name=""TargetUserName""]",
-                @"Event/EventData/Data[@Name=""TargetSid""]",
-                @"Event/EventData/Data[@Name=""Status""]"
-            ];
-            EventLogPropertySelector props = new(xPathProperties);
-            if (e.EventRecord is not EventLogRecord record)
+            using EventRecord? eventRecord = e.EventRecord;
+            if (eventRecord is not EventLogRecord record)
                 return;
-            IList<object> values = record.GetPropertyValues(props);
+            IList<object?> values = record.GetPropertyValues(KerberosPropertySelector);
             string ipAddress = values[0]?.ToString()?.Trim('[', ']') ?? string.Empty;
             if (ipAddress.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase)) ipAddress = ipAddress[7..];
             if (!System.Net.IPAddress.TryParse(ipAddress, out System.Net.IPAddress? address) || System.Net.IPAddress.IsLoopback(address)) return;

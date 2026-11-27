@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
-using System.Linq;
 
 namespace IDDSCommunity.Agents.WindowsDns;
 
@@ -69,7 +68,12 @@ internal sealed class WindowsDnsEventLogSource : IWindowsDnsEventSource
         using EventRecord? eventRecord = args.EventRecord;
         if (eventRecord is null)
             return;
-        IReadOnlyList<object?> values = eventRecord.Properties.Select(property => property.Value).ToList();
+        IList<EventProperty> props = eventRecord.Properties;
+        object?[] values = new object?[props.Count];
+        for (int i = 0; i < props.Count; i++)
+        {
+            values[i] = props[i].Value;
+        }
         DateTimeOffset occurredAt = eventRecord.TimeCreated is DateTime time ? new DateTimeOffset(time) : DateTimeOffset.UtcNow;
         if (WindowsDnsEventParser.TryParse(eventRecord.Id, values, occurredAt, out DnsEventRecord? record) && record is not null)
             EventReceived?.Invoke(this, record);

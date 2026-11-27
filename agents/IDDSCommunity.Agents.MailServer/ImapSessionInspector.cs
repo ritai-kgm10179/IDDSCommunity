@@ -8,6 +8,7 @@ namespace IDDSCommunity.Agents.MailServer;
 public sealed class ImapSessionInspector
 {
     private const int MaximumBufferedCharacters = 8192;
+    private readonly object sync = new();
     private readonly StringBuilder clientBuffer = new();
     private readonly StringBuilder serverBuffer = new();
     private string? authenticationTag;
@@ -26,21 +27,24 @@ public sealed class ImapSessionInspector
     /// <param name="data">TCP 應用程式負載資料。</param>
     public void ProcessClientData(ReadOnlySpan<byte> data)
     {
-        LastInteraction = DateTime.UtcNow;
-        if (IsEncrypted) return;
-        AppendAscii(clientBuffer, data);
-        while (TryReadLine(clientBuffer, out string line))
+        lock (sync)
         {
-            string[] parts = line.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
-            if (parts[1].Equals("LOGIN", StringComparison.OrdinalIgnoreCase) ||
-                parts[1].Equals("AUTHENTICATE", StringComparison.OrdinalIgnoreCase))
+            LastInteraction = DateTime.UtcNow;
+            if (IsEncrypted) return;
+            AppendAscii(clientBuffer, data);
+            while (TryReadLine(clientBuffer, out string line))
             {
-                authenticationTag = parts[0];
-            }
-            else if (parts[1].Equals("STARTTLS", StringComparison.OrdinalIgnoreCase))
-            {
-                startTlsTag = parts[0];
+                string[] parts = line.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) continue;
+                if (parts[1].Equals("LOGIN", StringComparison.OrdinalIgnoreCase) ||
+                    parts[1].Equals("AUTHENTICATE", StringComparison.OrdinalIgnoreCase))
+                {
+                    authenticationTag = parts[0];
+                }
+                else if (parts[1].Equals("STARTTLS", StringComparison.OrdinalIgnoreCase))
+                {
+                    startTlsTag = parts[0];
+                }
             }
         }
     }
@@ -51,36 +55,39 @@ public sealed class ImapSessionInspector
     /// <returns>當未處理的 LOGIN 或 AUTHENTICATE 命令收到標記的 NO 回應時傳回 <see langword="true"/>。</returns>
     public bool ProcessServerData(ReadOnlySpan<byte> data)
     {
-        LastInteraction = DateTime.UtcNow;
-        if (IsEncrypted) return false;
-        AppendAscii(serverBuffer, data);
-        bool authenticationFailed = false;
-        while (TryReadLine(serverBuffer, out string line))
+        lock (sync)
         {
-            string[] parts = line.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
-            if (startTlsTag is not null && parts[0].Equals(startTlsTag, StringComparison.Ordinal) &&
-                parts[1].Equals("OK", StringComparison.OrdinalIgnoreCase))
+            LastInteraction = DateTime.UtcNow;
+            if (IsEncrypted) return false;
+            AppendAscii(serverBuffer, data);
+            bool authenticationFailed = false;
+            while (TryReadLine(serverBuffer, out string line))
             {
-                IsEncrypted = true;
-                authenticationTag = null;
-                startTlsTag = null;
-                clientBuffer.Clear();
-                serverBuffer.Clear();
-                break;
-            }
-            if (authenticationTag is not null && parts[0].Equals(authenticationTag, StringComparison.Ordinal))
-            {
-                authenticationFailed |= parts[1].Equals("NO", StringComparison.OrdinalIgnoreCase);
-                if (parts[1].Equals("NO", StringComparison.OrdinalIgnoreCase) ||
-                    parts[1].Equals("OK", StringComparison.OrdinalIgnoreCase) ||
-                    parts[1].Equals("BAD", StringComparison.OrdinalIgnoreCase))
+                string[] parts = line.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) continue;
+                if (startTlsTag is not null && parts[0].Equals(startTlsTag, StringComparison.Ordinal) &&
+                    parts[1].Equals("OK", StringComparison.OrdinalIgnoreCase))
                 {
+                    IsEncrypted = true;
                     authenticationTag = null;
+                    startTlsTag = null;
+                    clientBuffer.Clear();
+                    serverBuffer.Clear();
+                    break;
+                }
+                if (authenticationTag is not null && parts[0].Equals(authenticationTag, StringComparison.Ordinal))
+                {
+                    authenticationFailed |= parts[1].Equals("NO", StringComparison.OrdinalIgnoreCase);
+                    if (parts[1].Equals("NO", StringComparison.OrdinalIgnoreCase) ||
+                        parts[1].Equals("OK", StringComparison.OrdinalIgnoreCase) ||
+                        parts[1].Equals("BAD", StringComparison.OrdinalIgnoreCase))
+                    {
+                        authenticationTag = null;
+                    }
                 }
             }
+            return authenticationFailed;
         }
-        return authenticationFailed;
     }
 
     private static void AppendAscii(StringBuilder buffer, ReadOnlySpan<byte> data)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 
 namespace IDDSCommunity.Agents.WindowsDns;
@@ -42,7 +41,7 @@ internal static class WindowsDnsEventParser
         out DnsEventRecord? record)
     {
         record = null;
-        if (!TryGet(values, sourceIndex, out string source) || !IPAddress.TryParse(RemovePort(source), out IPAddress? address))
+        if (!TryGet(values, sourceIndex, out string source) || !IPAddress.TryParse(RemovePort(source.AsSpan()), out IPAddress? address))
             return false;
         record = new DnsEventRecord(
             eventId,
@@ -59,25 +58,28 @@ internal static class WindowsDnsEventParser
     /// 從事件負載欄位常見的端點字串移除連接埠，支援中括號 IPv6＋埠號（<c>[2001:db8::1]:53</c>）、
     /// 未加括號的裸 IPv6、以及 IPv4＋埠號（<c>1.2.3.4:53</c>）等格式。
     /// </summary>
-    /// <param name="value">欲移除連接埠的原始端點字串。</param>
-    /// <returns>移除連接埠後的位址字串；無法辨識埠號分隔時原樣傳回。</returns>
-    private static string RemovePort(string value)
+    /// <param name="value">欲移除連接埠的原始端點 Span。</param>
+    /// <returns>移除連接埠後的位址字元區段。</returns>
+    private static ReadOnlySpan<char> RemovePort(ReadOnlySpan<char> value)
     {
-        string candidate = value.Trim();
-        if (candidate.Length == 0)
+        ReadOnlySpan<char> candidate = value.Trim();
+        if (candidate.IsEmpty)
             return candidate;
 
         if (candidate[0] == '[')
         {
             int closingBracket = candidate.IndexOf(']');
-            return closingBracket > 0 ? candidate[1..closingBracket] : candidate.Trim('[', ']');
+            return closingBracket > 0 ? candidate[1..closingBracket] : candidate.Trim("[]");
         }
 
-        if (IPAddress.TryParse(candidate, out _))
-            return candidate;
+        int firstColon = candidate.IndexOf(':');
+        if (firstColon > 0 && candidate[(firstColon + 1)..].IndexOf(':') < 0)
+        {
+            // 僅含單一冒號：屬於 IPv4:port 格式。
+            return candidate[..firstColon];
+        }
 
-        int separator = candidate.LastIndexOf(':');
-        return separator > 0 && candidate.Count(character => character == ':') == 1 ? candidate[..separator] : candidate;
+        return candidate;
     }
 
     private static bool TryGet(IReadOnlyList<object?> values, int index, out string value)

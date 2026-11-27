@@ -62,16 +62,19 @@ public sealed class WebSecurityAgent : AuthenticationAgentBase<AuthenticationAge
         foreach (EventProperty property in record.Properties)
         {
             string? propertyValue = property.Value?.ToString();
-            if (propertyValue?.Contains(SEARCH_PATTERN_BEGIN, StringComparison.Ordinal) != true)
+            if (string.IsNullOrEmpty(propertyValue))
                 continue;
 
-            int start = propertyValue.IndexOf(SEARCH_PATTERN_BEGIN, StringComparison.Ordinal) + SEARCH_PATTERN_BEGIN.Length;
+            int markerIndex = propertyValue.IndexOf(SEARCH_PATTERN_BEGIN, StringComparison.Ordinal);
+            if (markerIndex < 0)
+                continue;
+
+            int start = markerIndex + SEARCH_PATTERN_BEGIN.Length;
             int end = propertyValue.IndexOf(SEARCH_PATTERN_END, start, StringComparison.Ordinal);
             if (end <= start)
                 continue;
 
-            string ipAddress = propertyValue[start..end];
-            if (!IPAddress.TryParse(ipAddress, out IPAddress? probe))
+            if (!IPAddress.TryParse(propertyValue.AsSpan(start, end - start), out IPAddress? probe))
                 continue;
             if (probe.AddressFamily != AddressFamily.InterNetwork && probe.AddressFamily != AddressFamily.InterNetworkV6)
                 continue;

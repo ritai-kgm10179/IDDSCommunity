@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using IDDSCommunity.IntrusionDetection.Api.Plugin;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Net;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace IDDSCommunity.IntrusionDetection.Base.Plugins;
 /// <summary>
@@ -61,6 +64,17 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
         watcher = null;
         query = null;
     }
+    private static readonly EventLogPropertySelector AdPropertySelector = new(
+    [
+        @"Event/EventData/Data[@Name=""Workstation""]",
+        @"Event/EventData/Data[@Name=""TargetUserName""]",
+        @"Event/EventData/Data[@Name=""Status""]"
+    ]);
+    private static readonly ConcurrentDictionary<string, (string[] Ips, long ExpiresAtTicks)> DnsCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly TimeSpan DnsCacheTtl = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DnsLookupTimeout = TimeSpan.FromSeconds(2);
+    private const int MaxDnsCacheEntries = 1024;
+
     /// <summary>
     /// 處理事件紀錄寫入事件。
     /// </summary>
@@ -70,17 +84,17 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     {
         try
         {
-            string[] xPathProperties =
-            [
-                @"Event/EventData/Data[@Name=""Workstation""]",
-                @"Event/EventData/Data[@Name=""TargetUserName""]",
-                @"Event/EventData/Data[@Name=""Status""]"
-            ];
-            EventLogPropertySelector props = new(xPathProperties);
-            if (e.EventRecord is not EventLogRecord record)
+            using EventRecord? eventRecord = e.EventRecord;
+            if (eventRecord is not EventLogRecord record)
                 return;
-            IList<object> values = record.GetPropertyValues(props);
-            string hostName = values[0]?.ToString() ?? string.Empty;
+            IList<object?> values = record.GetPropertyValues(AdPropertySelector);
+            string hostName = values[0]?.ToString()?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(hostName) ||
+                string.Equals(hostName, Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(hostName, "localhost", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
             string[] ipAddresses = ResolveIp(hostName);
             foreach (string ipAddress in ipAddresses)
             {
@@ -112,16 +126,60 @@ public class AdCredentialValidationSecurityAgent : AgentPlugin, IExtendedInforma
     /// <returns>傳回包含解析出的 IP 位址字串陣列。</returns>
     private static string[] ResolveIp(string hostname)
     {
-        List<string> result = [];
-        IPAddress[] addr = Dns.GetHostAddresses(hostname);
-        foreach (IPAddress ip in addr)
+        if (IPAddress.TryParse(hostname, out IPAddress? parsed))
         {
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            return (parsed.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6) && !IPAddress.IsLoopback(parsed)
+                ? [parsed.ToString()]
+                : [];
+        }
+
+        long nowTicks = Environment.TickCount64;
+        if (DnsCache.TryGetValue(hostname, out (string[] Ips, long ExpiresAtTicks) cached) && cached.ExpiresAtTicks > nowTicks)
+        {
+            return cached.Ips;
+        }
+
+        string[] resolved = [];
+        try
+        {
+            using CancellationTokenSource cts = new(DnsLookupTimeout);
+            IPAddress[] addr = Dns.GetHostAddressesAsync(hostname, cts.Token).GetAwaiter().GetResult();
+            if (addr.Length > 0)
             {
-                result.Add(ip.ToString());
+                List<string> list = new(addr.Length);
+                foreach (IPAddress ip in addr)
+                {
+                    if (ip.AddressFamily is AddressFamily.InterNetwork or AddressFamily.InterNetworkV6)
+                    {
+                        list.Add(ip.ToString());
+                    }
+                }
+                resolved = list.ToArray();
             }
         }
-        return result.ToArray();
+        catch
+        {
+            // DNS 解析失敗或逾時時短暫快取空結果，避免重複阻塞事件監聽執行緒。
+        }
+
+        if (DnsCache.Count >= MaxDnsCacheEntries)
+        {
+            foreach (KeyValuePair<string, (string[] Ips, long ExpiresAtTicks)> entry in DnsCache)
+            {
+                if (entry.Value.ExpiresAtTicks <= nowTicks || DnsCache.Count >= MaxDnsCacheEntries)
+                {
+                    DnsCache.TryRemove(entry.Key, out _);
+                }
+                if (DnsCache.Count < MaxDnsCacheEntries / 2)
+                {
+                    break;
+                }
+            }
+        }
+
+        long ttlMs = resolved.Length > 0 ? (long)DnsCacheTtl.TotalMilliseconds : 60_000;
+        DnsCache[hostname] = (resolved, nowTicks + ttlMs);
+        return resolved;
     }
     /// <summary>
     /// 取得 Agent 於管理介面中顯示的區段名稱。

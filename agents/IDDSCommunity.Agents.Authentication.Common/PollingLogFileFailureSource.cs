@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -83,10 +84,34 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         if (Interlocked.Exchange(ref reading, 1) != 0) return;
         try
         {
+            List<string> activePaths = [];
             foreach (string path in paths())
             {
+                activePaths.Add(path);
                 try { ReadFile(path); }
                 catch (Exception exception) { Error?.Invoke(new IOException($"Could not process authentication log '{path}'.", exception)); }
+            }
+
+            if (states.Count > activePaths.Count)
+            {
+                HashSet<string> activeSet = new(activePaths, StringComparer.OrdinalIgnoreCase);
+                List<string>? stalePaths = null;
+                foreach (string tracked in states.Keys)
+                {
+                    if (!activeSet.Contains(tracked))
+                    {
+                        stalePaths ??= [];
+                        stalePaths.Add(tracked);
+                    }
+                }
+                if (stalePaths is not null)
+                {
+                    foreach (string stale in stalePaths)
+                    {
+                        states.Remove(stale);
+                        resetParser?.Invoke(stale);
+                    }
+                }
             }
         }
         catch (Exception exception) { Error?.Invoke(exception); }
@@ -95,15 +120,29 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 
     private void ReadFile(string path)
     {
-        if (!File.Exists(path)) return;
+        FileInfo fileInfo = new(path);
+        if (!fileInfo.Exists) return;
+        DateTime creationTimeUtc = fileInfo.CreationTimeUtc;
+        DateTime lastWriteTimeUtc = fileInfo.LastWriteTimeUtc;
+        long currentLength = fileInfo.Length;
+
+        if (states.TryGetValue(path, out LogFileState? state) &&
+            state.Offset == currentLength &&
+            state.CreationTimeUtc == creationTimeUtc &&
+            state.LastWriteTimeUtc == lastWriteTimeUtc &&
+            state.LastObservedLength == currentLength)
+        {
+            return;
+        }
+
         using FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        DateTime creationTimeUtc = File.GetCreationTimeUtc(path);
-        if (!states.TryGetValue(path, out LogFileState? state))
+        creationTimeUtc = File.GetCreationTimeUtc(path);
+        if (state is null)
         {
             resetParser?.Invoke(path);
             PrimeMetadata(stream, path);
             long initialOffset = FindLastCompleteLineOffset(stream);
-            states[path] = new LogFileState(initialOffset, creationTimeUtc, ReadAnchor(stream, initialOffset));
+            states[path] = new LogFileState(initialOffset, creationTimeUtc, ReadAnchor(stream, initialOffset), stream.Length, lastWriteTimeUtc);
             return;
         }
         if (state.Offset > stream.Length)
@@ -120,37 +159,67 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         }
         stream.Position = offset;
         long committedOffset = offset;
-        byte[] readBuffer = new byte[4096];
+        byte[] readBuffer = ArrayPool<byte>.Shared.Rent(4096);
         using MemoryStream lineBuffer = new();
-        int bytesRead;
-        while ((bytesRead = stream.Read(readBuffer, 0, readBuffer.Length)) > 0)
+        try
         {
-            long bufferStart = stream.Position - bytesRead;
-            for (int index = 0; index < bytesRead; index++)
+            int bytesRead;
+            while ((bytesRead = stream.Read(readBuffer, 0, 4096)) > 0)
             {
-                if (readBuffer[index] != (byte)'\n')
+                long bufferStart = stream.Position - bytesRead;
+                int cursor = 0;
+                while (cursor < bytesRead)
                 {
-                    if (lineBuffer.Length < MaxLineLength)
-                        lineBuffer.WriteByte(readBuffer[index]);
-                    continue;
+                    ReadOnlySpan<byte> remaining = readBuffer.AsSpan(cursor, bytesRead - cursor);
+                    int newlineOffset = remaining.IndexOf((byte)'\n');
+                    if (newlineOffset < 0)
+                    {
+                        int available = MaxLineLength - (int)lineBuffer.Length;
+                        if (available > 0)
+                        {
+                            lineBuffer.Write(remaining[..Math.Min(available, remaining.Length)]);
+                        }
+                        break;
+                    }
+
+                    if (newlineOffset > 0)
+                    {
+                        int available = MaxLineLength - (int)lineBuffer.Length;
+                        if (available > 0)
+                        {
+                            lineBuffer.Write(remaining[..Math.Min(available, newlineOffset)]);
+                        }
+                    }
+
+                    ProcessCompleteLine(path, lineBuffer);
+                    lineBuffer.SetLength(0);
+                    cursor += newlineOffset + 1;
+                    committedOffset = bufferStart + cursor;
                 }
-                ProcessCompleteLine(path, lineBuffer);
-                lineBuffer.SetLength(0);
-                committedOffset = bufferStart + index + 1;
             }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(readBuffer);
+        }
+
+        if (!sameFile || committedOffset != state.Offset)
+        {
+            state.Anchor = ReadAnchor(stream, committedOffset);
         }
         state.Offset = committedOffset;
         state.CreationTimeUtc = creationTimeUtc;
-        state.Anchor = ReadAnchor(stream, committedOffset);
+        state.LastObservedLength = stream.Length;
+        state.LastWriteTimeUtc = lastWriteTimeUtc;
     }
 
     private void ProcessCompleteLine(string path, MemoryStream buffer)
     {
-        byte[] bytes = buffer.ToArray();
-        int start = bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
+        ReadOnlySpan<byte> bytes = buffer.GetBuffer().AsSpan(0, (int)buffer.Length);
+        int start = bytes.StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
         int length = bytes.Length - start;
         if (length > 0 && bytes[start + length - 1] == (byte)'\r') length--;
-        string line = SafeUtf8.GetString(bytes, start, length);
+        string line = SafeUtf8.GetString(bytes.Slice(start, length));
         AuthenticationFailureEvent? failure = parser(path, line);
         if (failure is not null) EventReceived?.Invoke(this, failure);
     }
@@ -172,19 +241,26 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
 
     private static long FindLastCompleteLineOffset(FileStream stream)
     {
-        byte[] buffer = new byte[4096];
-        long end = stream.Length;
-        while (end > 0)
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
+        try
         {
-            int length = (int)Math.Min(end, buffer.Length);
-            long start = end - length;
-            stream.Position = start;
-            stream.ReadExactly(buffer.AsSpan(0, length));
-            for (int index = length - 1; index >= 0; index--)
-                if (buffer[index] == (byte)'\n') return start + index + 1;
-            end = start;
+            long end = stream.Length;
+            while (end > 0)
+            {
+                int length = (int)Math.Min(end, 4096);
+                long start = end - length;
+                stream.Position = start;
+                stream.ReadExactly(buffer.AsSpan(0, length));
+                int index = buffer.AsSpan(0, length).LastIndexOf((byte)'\n');
+                if (index >= 0) return start + index + 1;
+                end = start;
+            }
+            return 0;
         }
-        return 0;
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     private static byte[] ReadAnchor(FileStream stream, long offset)
@@ -199,10 +275,12 @@ public sealed class PollingLogFileFailureSource : IAuthenticationEventSource
         return anchor;
     }
 
-    private sealed class LogFileState(long offset, DateTime creationTimeUtc, byte[] anchor)
+    private sealed class LogFileState(long offset, DateTime creationTimeUtc, byte[] anchor, long lastObservedLength, DateTime lastWriteTimeUtc)
     {
         internal long Offset { get; set; } = offset;
         internal DateTime CreationTimeUtc { get; set; } = creationTimeUtc;
         internal byte[] Anchor { get; set; } = anchor;
+        internal long LastObservedLength { get; set; } = lastObservedLength;
+        internal DateTime LastWriteTimeUtc { get; set; } = lastWriteTimeUtc;
     }
 }

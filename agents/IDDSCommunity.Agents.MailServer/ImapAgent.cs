@@ -56,10 +56,10 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
 
     internal void RemoveExpiredSessions(DateTime utcNow)
     {
-        foreach (int key in sessions.Keys)
+        foreach (KeyValuePair<int, ImapSessionInspector> pair in sessions)
         {
-            if (sessions.TryGetValue(key, out ImapSessionInspector? session) && session.LastInteraction.AddMinutes(CleanupIntervalMins) < utcNow)
-                sessions.TryRemove(key, out _);
+            if (pair.Value.LastInteraction.AddMinutes(CleanupIntervalMins) < utcNow)
+                sessions.TryRemove(pair.Key, out _);
         }
     }
 
@@ -135,7 +135,17 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         {
             int clientPort = tcp.SourcePortValue;
             if (tcp.MessageLength == 0) return;
-            sessions.GetOrAdd(clientPort, static _ => new ImapSessionInspector()).ProcessClientData(tcp.Data);
+            if (!sessions.TryGetValue(clientPort, out ImapSessionInspector? session))
+            {
+                if (sessions.Count >= 4096)
+                {
+                    RemoveExpiredSessions(DateTime.UtcNow);
+                    if (sessions.Count >= 4096)
+                        return;
+                }
+                session = sessions.GetOrAdd(clientPort, static _ => new ImapSessionInspector());
+            }
+            session.ProcessClientData(tcp.PayloadSpan);
         }
         catch (Exception exception)
         {
@@ -151,7 +161,7 @@ public sealed class ImapAgent : AgentPlugin, IExtendedInformation
         {
             int clientPort = tcp.DestinationPortValue;
             if (tcp.MessageLength == 0) return;
-            if (sessions.TryGetValue(clientPort, out ImapSessionInspector? session) && session.ProcessServerData(tcp.Data))
+            if (sessions.TryGetValue(clientPort, out ImapSessionInspector? session) && session.ProcessServerData(tcp.PayloadSpan))
             {
                 NotificationEventArgs notification = new()
                 {
