@@ -26,6 +26,8 @@ internal sealed class ThreatSyncClientHandler : IDisposable
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logWarning;
     private readonly ConcurrentDictionary<string, GrpcChannel> channelCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, long> grpcCooldownUntilTicks = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly long GrpcCooldownTicks = TimeSpan.FromMinutes(5).Ticks;
     private bool disposed;
 
     /// <summary>
@@ -134,7 +136,8 @@ internal sealed class ThreatSyncClientHandler : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKey);
         ArgumentNullException.ThrowIfNull(payload);
 
-        if (config.EnableThreatHubGrpc)
+        if (config.EnableThreatHubGrpc &&
+            (!grpcCooldownUntilTicks.TryGetValue(endpoint, out long cooldownUntil) || DateTime.UtcNow.Ticks >= cooldownUntil))
         {
             try
             {
@@ -147,6 +150,7 @@ internal sealed class ThreatSyncClientHandler : IDisposable
                     NodeName = payload.NodeName ?? string.Empty,
                     ApiKey = apiKey,
                     Cursor = payload.Cursor,
+                    JournalCursor = payload.JournalCursor,
                     Generation = payload.Generation ?? string.Empty
                 };
 
@@ -174,6 +178,7 @@ internal sealed class ThreatSyncClientHandler : IDisposable
 
                 if (grpcResponse.Success)
                 {
+                    grpcCooldownUntilTicks.TryRemove(endpoint, out _);
                     List<ThreatIntelligenceItem> activeThreats = [];
                     foreach (var record in grpcResponse.ActiveThreats)
                     {
@@ -206,11 +211,16 @@ internal sealed class ThreatSyncClientHandler : IDisposable
                         }
                     }
 
+                    long nextJournalCursor = grpcResponse.NextJournalCursor > 0
+                        ? grpcResponse.NextJournalCursor
+                        : (grpcResponse.DeltaBatch?.ToCursor ?? 0);
+
                     return new ThreatHubSyncResponse
                     {
                         Success = true,
                         Generation = grpcResponse.Generation,
                         NextCursor = grpcResponse.NextCursor,
+                        NextJournalCursor = nextJournalCursor,
                         HasMore = grpcResponse.HasMore,
                         ActiveThreats = activeThreats,
                         DeltaEvents = deltaEvents
@@ -223,6 +233,7 @@ internal sealed class ThreatSyncClientHandler : IDisposable
             }
             catch (Exception ex) when (ex is RpcException or HttpRequestException or TimeoutException or OperationCanceledException && !cancellationToken.IsCancellationRequested)
             {
+                grpcCooldownUntilTicks[endpoint] = DateTime.UtcNow.Ticks + GrpcCooldownTicks;
                 logInformation($"Threat Hub gRPC synchronization failed ({ex.GetType().Name}: {ex.Message}); automatically falling back to REST API.");
             }
         }

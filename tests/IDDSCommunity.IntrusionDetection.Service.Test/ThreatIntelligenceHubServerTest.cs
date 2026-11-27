@@ -568,4 +568,59 @@ public sealed class ThreatIntelligenceHubServerTest
         Assert.AreEqual(HttpStatusCode.TooManyRequests, blockedRes.StatusCode);
         Assert.IsNotNull(blockedRes.Headers.RetryAfter);
     }
+
+    /// <summary>
+    /// 驗證 REST /api/threat-hub/sync 端點回傳獨立的 NextCursor 與 NextJournalCursor 以及 DeltaEvents 墓碑事件。
+    /// </summary>
+    /// <returns>代表非同步測試作業的 Task。</returns>
+    [TestMethod]
+    public async Task ThreatHubServer_RestSync_ReturnsIndependentJournalCursorAndDeltaEvents()
+    {
+        int port = GetAvailablePort();
+        IddsConfig config = IddsConfig.GetDefaultConfiguration();
+        config.ThreatHubRole = ThreatHubRole.ThreatHub;
+        config.ThreatHubPort = port;
+        config.ThreatHubApiKey = "rest_sync_cursor_key";
+
+        using var server = new ThreatIntelligenceHubServer(config, _ => { }, allowLoopbackHttp: true);
+        server.Start();
+        if (!server.IsListening)
+        {
+            Assert.Inconclusive("無法於目前環境監聽本機通訊埠。");
+        }
+
+        DateTime future = DateTime.UtcNow.AddHours(2);
+        server.Store.Upsert(new ThreatIntelligenceItem { SourceIp = "203.0.113.101", ConfidenceScore = 0.95, ExpiresUtc = future });
+        server.Store.Upsert(new ThreatIntelligenceItem { SourceIp = "203.0.113.102", ConfidenceScore = 0.95, ExpiresUtc = future });
+        server.Store.Revoke("203.0.113.101", "revoked-on-hub");
+
+        var payload = new ThreatHubSyncPayload
+        {
+            NodeId = "rest-edge-node",
+            NodeName = "rest-edge",
+            Cursor = 0,
+            JournalCursor = 0,
+            Generation = string.Empty,
+            NewThreats = []
+        };
+
+        using var client = new HttpClient();
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"http://localhost:{port}/api/threat-hub/sync");
+        req.Headers.Add("X-IDDS-ThreatHub-ApiKey", "rest_sync_cursor_key");
+        req.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+        using var res = await client.SendAsync(req).ConfigureAwait(false);
+        Assert.AreEqual(HttpStatusCode.OK, res.StatusCode);
+
+        string json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+        ThreatHubSyncResponse? syncResp = JsonSerializer.Deserialize<ThreatHubSyncResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        Assert.IsNotNull(syncResp);
+        Assert.IsTrue(syncResp.Success);
+        Assert.AreEqual(1, syncResp.ActiveThreats.Count);
+        Assert.AreEqual("203.0.113.102", syncResp.ActiveThreats[0].SourceIp);
+        Assert.IsTrue(syncResp.NextCursor > 0);
+        Assert.IsTrue(syncResp.NextJournalCursor > 0);
+        Assert.AreEqual(3, syncResp.DeltaEvents.Count);
+        Assert.IsTrue(syncResp.DeltaEvents.Any(e => e.EventType == ThreatHubJournalEventType.Revoked && e.SourceIp == "203.0.113.101"));
+    }
 }

@@ -13,6 +13,10 @@ public sealed class ThreatHubSyncPayload
     /// </summary>
     public long Cursor { get; set; }
     /// <summary>
+    /// 取得或設定已處理的異動日誌序號；初次同步為零。
+    /// </summary>
+    public long JournalCursor { get; set; }
+    /// <summary>
     /// 取得或設定中繼資料庫的世代識別碼；更換資料庫時重新同步。
     /// </summary>
     public string Generation { get; set; } = string.Empty;
@@ -51,6 +55,10 @@ public sealed class ThreatHubSyncResponse
     /// 取得或設定本頁處理完成後應使用的游標。
     /// </summary>
     public long NextCursor { get; set; }
+    /// <summary>
+    /// 取得或設定本頁異動日誌處理完成後應使用的游標。
+    /// </summary>
+    public long NextJournalCursor { get; set; }
     /// <summary>
     /// 取得或設定中繼資料庫的世代識別碼。
     /// </summary>

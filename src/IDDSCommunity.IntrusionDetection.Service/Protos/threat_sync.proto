@@ -53,6 +53,7 @@ message SyncRequest {
   int64 cursor = 4;
   string generation = 5;
   repeated ThreatRecord new_threats = 6;
+  int64 journal_cursor = 7;
 }
 
 message SyncResponse {
@@ -63,6 +64,7 @@ message SyncResponse {
   bool has_more = 5;
   repeated ThreatRecord active_threats = 6;
   ThreatDeltaBatch delta_batch = 7;
+  int64 next_journal_cursor = 8;
 }
 
 message StreamDeltasRequest {

@@ -28,6 +28,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     private readonly Database? database;
     private readonly IddsConfig config;
     private readonly Action<ThreatIntelligenceItem> onThreatReceived;
+    private readonly Action<IReadOnlyList<ThreatIntelligenceItem>>? onThreatsBatchReceived;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logError;
     private readonly ThreatHubStore store;
@@ -63,17 +64,22 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     /// <param name="logError">錯誤日誌回報委派。</param>
     /// <param name="database">持久化資料庫；測試可省略以使用有限記憶體儲存。</param>
     /// <param name="allowLoopbackHttp">僅供本機測試使用的 HTTP 入口；正式服務固定採 HTTPS。</param>
+    /// <param name="onThreatsBatchReceived">可選之批次威脅接收回呼委派。</param>
     public ThreatIntelligenceHubServer(
         IddsConfig config,
         Action<ThreatIntelligenceItem> onThreatReceived,
         Action<string>? logInformation = null,
-        Action<string, Exception>? logError = null, Database? database = null, bool allowLoopbackHttp = false)
+        Action<string, Exception>? logError = null,
+        Database? database = null,
+        bool allowLoopbackHttp = false,
+        Action<IReadOnlyList<ThreatIntelligenceItem>>? onThreatsBatchReceived = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.database = database;
         store = new ThreatHubStore(database);
         this.allowLoopbackHttp = allowLoopbackHttp;
         this.onThreatReceived = onThreatReceived ?? throw new ArgumentNullException(nameof(onThreatReceived));
+        this.onThreatsBatchReceived = onThreatsBatchReceived;
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logError = logError ?? ((msg, ex) => System.Diagnostics.Trace.TraceError("{0}: {1}", msg, ex.Message));
     }
@@ -81,7 +87,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     private (int activeBlocks, int probationCount) GetLocalDefenseMetrics()
     {
         int activeBlocks = 0;
-        try { activeBlocks = Locks.GetActiveLocks().Count; }
+        try { activeBlocks = Locks.CountActiveLocks(); }
         catch { }
 
         int probationCount = 0;
@@ -155,14 +161,16 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     {
         if (items == null) return 0;
         List<ThreatIntelligenceItem> valid = [];
+        int maxTtlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365);
+        DateTime nowUtc = DateTime.UtcNow;
         foreach (var item in items)
         {
             if (!IsValidThreat(item)) continue;
-            ThreatIntelligenceItem normalized = JsonSerializer.Deserialize<ThreatIntelligenceItem>(JsonSerializer.Serialize(item))!;
+            ThreatIntelligenceItem normalized = CloneThreatItem(item);
             normalized.SourceIp = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
-            DateTime maximumExpiry = item.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
+            DateTime maximumExpiry = item.ReportedUtc.AddDays(maxTtlDays);
             if (normalized.ExpiresUtc > maximumExpiry) normalized.ExpiresUtc = maximumExpiry;
-            if (normalized.ExpiresUtc <= DateTime.UtcNow) continue;
+            if (normalized.ExpiresUtc <= nowUtc) continue;
             valid.Add(normalized);
         }
         return store.UpsertBatch(valid);
@@ -230,7 +238,15 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     builder.WebHost.UseHttpSys(options => options.UrlPrefixes.Add($"https://+:{grpcPort}/"));
                 }
                 builder.Services.AddGrpc();
-                builder.Services.AddSingleton(new ThreatSyncServiceImpl(config, store, onThreatReceived, logInformation, logError, TryRegisterNode, authRateLimiter));
+                builder.Services.AddSingleton(new ThreatSyncServiceImpl(
+                    config,
+                    store,
+                    onThreatReceived,
+                    logInformation,
+                    logError,
+                    TryRegisterNode,
+                    authRateLimiter,
+                    DispatchReceivedThreatsBatch));
                 var app = builder.Build();
                 app.MapGrpcService<ThreatSyncServiceImpl>();
                 app.StartAsync(cts.Token).GetAwaiter().GetResult();
@@ -432,16 +448,35 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
                     resp.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
                     return;
                 }
+                List<ThreatIntelligenceItem> validIncoming = [];
+                int maxTtlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365);
+                DateTime nowUtc = DateTime.UtcNow;
                 foreach (ThreatIntelligenceItem threat in payload.NewThreats)
                 {
                     if (!IsValidThreat(threat)) continue;
-                    if (!AcceptThreat(threat)) { resp.StatusCode = 503; return; }
-                    threat.SourceIp = IpAddressCanonicalizer.Canonicalize(threat.SourceIp);
-                    DateTime maximumExpiry = threat.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
-                    if (threat.ExpiresUtc > maximumExpiry) threat.ExpiresUtc = maximumExpiry;
-                    onThreatReceived(threat);
+                    ThreatIntelligenceItem normalized = CloneThreatItem(threat);
+                    normalized.SourceIp = IpAddressCanonicalizer.Canonicalize(threat.SourceIp);
+                    DateTime maximumExpiry = threat.ReportedUtc.AddDays(maxTtlDays);
+                    if (normalized.ExpiresUtc > maximumExpiry) normalized.ExpiresUtc = maximumExpiry;
+                    if (normalized.ExpiresUtc <= nowUtc) continue;
+                    validIncoming.Add(normalized);
                 }
-                ThreatHubSyncResponse syncResp = store.ReadPage(payload.Cursor, payload.Generation ?? string.Empty);
+                if (validIncoming.Count > 0)
+                {
+                    int written = store.UpsertBatch(validIncoming);
+                    if (written == 0 && store.ActiveThreatCount >= ThreatHubStore.MaximumEntries)
+                    {
+                        resp.StatusCode = 503;
+                        return;
+                    }
+                    DispatchReceivedThreatsBatch(validIncoming);
+                }
+                string clientGeneration = payload.Generation ?? string.Empty;
+                ThreatHubSyncResponse syncResp = store.ReadPage(payload.Cursor, clientGeneration);
+                var journalPage = store.ReadJournalPage(payload.JournalCursor, clientGeneration, ThreatHubStore.PageSize);
+                syncResp.DeltaEvents = [.. journalPage.Entries];
+                syncResp.NextJournalCursor = journalPage.NextJournalCursor;
+                syncResp.HasMore = syncResp.HasMore || journalPage.HasMore;
                 resp.StatusCode = (int)HttpStatusCode.OK;
                 await WriteJsonResponseAsync(resp, syncResp).ConfigureAwait(false);
                 return;
@@ -700,12 +735,38 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
     private bool AcceptThreat(ThreatIntelligenceItem item)
     {
         if (!IsValidThreat(item)) return false;
-        ThreatIntelligenceItem normalized = JsonSerializer.Deserialize<ThreatIntelligenceItem>(JsonSerializer.Serialize(item))!;
+        ThreatIntelligenceItem normalized = CloneThreatItem(item);
         normalized.SourceIp = IpAddressCanonicalizer.Canonicalize(item.SourceIp);
         DateTime maximumExpiry = item.ReportedUtc.AddDays(Math.Clamp(config.ThreatFeedTtlDays, 1, 365));
         if (normalized.ExpiresUtc > maximumExpiry) normalized.ExpiresUtc = maximumExpiry;
         if (normalized.ExpiresUtc <= DateTime.UtcNow) return false;
         return store.Upsert(normalized);
+    }
+
+    internal static ThreatIntelligenceItem CloneThreatItem(ThreatIntelligenceItem item) => new()
+    {
+        SourceIp = item.SourceIp,
+        ThreatCategory = item.ThreatCategory,
+        ConfidenceScore = item.ConfidenceScore,
+        ReportedUtc = item.ReportedUtc,
+        ExpiresUtc = item.ExpiresUtc,
+        ReporterNodeId = item.ReporterNodeId,
+        ReporterNodeName = item.ReporterNodeName,
+        Notes = item.Notes
+    };
+
+    private void DispatchReceivedThreatsBatch(IReadOnlyList<ThreatIntelligenceItem> items)
+    {
+        if (items.Count == 0) return;
+        if (onThreatsBatchReceived is not null)
+        {
+            onThreatsBatchReceived(items);
+            return;
+        }
+        foreach (ThreatIntelligenceItem item in items)
+        {
+            onThreatReceived(item);
+        }
     }
 
     private static void ConfigureHttpTimeouts(HttpListener listener)
@@ -1800,6 +1861,7 @@ internal sealed class ThreatIntelligenceHubServer : IDisposable
         {
             disposed = true;
             Stop();
+            store.Dispose();
         }
     }
 }

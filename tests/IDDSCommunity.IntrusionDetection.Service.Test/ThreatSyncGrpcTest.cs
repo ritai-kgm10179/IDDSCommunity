@@ -433,4 +433,82 @@ public sealed class ThreatSyncGrpcTest
         Assert.IsNull(localStore.LookupThreat("203.0.113.88"));
         await Task.CompletedTask;
     }
+
+    /// <summary>
+    /// 驗證 gRPC Sync 分離情資與異動日誌游標後，兩台邊緣節點同步可收斂至完全一致之活躍威脅清單與數量。
+    /// </summary>
+    /// <returns>表示非同步測試作業之工作。</returns>
+    [TestMethod]
+    public async Task ThreatSyncServiceImpl_SeparatesEntryAndJournalCursors_ConvergesTwoEdgeNodes()
+    {
+        var config = IddsConfig.GetDefaultConfiguration();
+        config.ThreatHubApiKey = "converge-key-123";
+        using var hubStore = new ThreatHubStore();
+        DateTime future = DateTime.UtcNow.AddHours(2);
+
+        hubStore.Upsert(new ThreatIntelligenceItem { SourceIp = "198.51.100.11", ConfidenceScore = 0.95, ExpiresUtc = future });
+        hubStore.Upsert(new ThreatIntelligenceItem { SourceIp = "198.51.100.12", ConfidenceScore = 0.95, ExpiresUtc = future });
+        hubStore.Upsert(new ThreatIntelligenceItem { SourceIp = "198.51.100.13", ConfidenceScore = 0.95, ExpiresUtc = future });
+        // 產生較多筆 Journal 異動，使 Journal Sequence 與 Entries Sequence 產生錯位
+        hubStore.RecordProbation("198.51.100.14", "probation-1");
+        hubStore.RecordProbation("198.51.100.15", "probation-2");
+        hubStore.Revoke("198.51.100.11", "false-positive");
+
+        List<ThreatIntelligenceItem> callbackBatch = [];
+        var service = new ThreatSyncServiceImpl(config, hubStore, item => callbackBatch.Add(item));
+
+        var req1 = new SyncRequest
+        {
+            ApiKey = "converge-key-123",
+            NodeId = "edge-node-1",
+            NodeName = "edge-1",
+            Cursor = 0,
+            JournalCursor = 0
+        };
+        var resp1 = await service.Sync(req1, new TestServerCallContext());
+
+        var req2 = new SyncRequest
+        {
+            ApiKey = "converge-key-123",
+            NodeId = "edge-node-2",
+            NodeName = "edge-2",
+            Cursor = 0,
+            JournalCursor = 0
+        };
+        var resp2 = await service.Sync(req2, new TestServerCallContext());
+
+        Assert.IsTrue(resp1.Success);
+        Assert.IsTrue(resp2.Success);
+        Assert.AreEqual(2, resp1.ActiveThreats.Count);
+        Assert.AreEqual(2, resp2.ActiveThreats.Count);
+        Assert.AreEqual(resp1.NextCursor, resp2.NextCursor);
+        Assert.AreEqual(resp1.NextJournalCursor, resp2.NextJournalCursor);
+        Assert.AreNotEqual(0L, resp1.NextJournalCursor);
+        Assert.IsNotNull(resp1.DeltaBatch);
+        Assert.AreEqual(6, resp1.DeltaBatch.Events.Count);
+        CollectionAssert.AreEquivalent(
+            resp1.ActiveThreats.Select(t => t.SourceIp).ToArray(),
+            resp2.ActiveThreats.Select(t => t.SourceIp).ToArray());
+    }
+
+    /// <summary>
+    /// 驗證 ThreatHubStore.ReadJournalPage 在 Generation 不符時重置游標從頭重播，相符時則接續游標增量讀取。
+    /// </summary>
+    [TestMethod]
+    public void ThreatHubStore_ReadJournalPage_RespectsGeneration()
+    {
+        using var store = new ThreatHubStore();
+        store.RecordProbation("203.0.113.50", "probation-entry-1");
+        store.RecordProbation("203.0.113.51", "probation-entry-2");
+
+        var reset = store.ReadJournalPage(999, "stale-generation", 10);
+        Assert.AreEqual(2, reset.Entries.Count);
+        Assert.AreEqual(store.Generation, reset.Generation);
+        Assert.AreEqual(2L, reset.NextJournalCursor);
+
+        var incremental = store.ReadJournalPage(1, store.Generation, 10);
+        Assert.AreEqual(1, incremental.Entries.Count);
+        Assert.AreEqual("203.0.113.51", incremental.Entries[0].SourceIp);
+        Assert.AreEqual(2L, incremental.NextJournalCursor);
+    }
 }

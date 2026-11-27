@@ -22,7 +22,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     private readonly ThreatHubClient client;
     private readonly ThreatSyncClientHandler clientHandler;
     private readonly ThreatHubStore localStore;
-    private readonly Dictionary<string, (long Cursor, string Generation, long LocalCursor)> cursors = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (long Cursor, string Generation, long LocalCursor, long JournalCursor)> cursors = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource stopping = new();
     private readonly SemaphoreSlim syncGate = new(1, 1);
 
@@ -61,10 +61,10 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         {
             try
             {
-                var saved = database.Query<CursorRow>("SELECT Endpoint, Cursor, Generation, LocalCursor FROM ThreatHubCursors");
+                var saved = database.Query<CursorRow>("SELECT Endpoint, Cursor, Generation, LocalCursor, JournalCursor FROM ThreatHubCursors");
                 foreach (var row in saved)
                 {
-                    cursors[row.Endpoint] = (row.Cursor, row.Generation, row.LocalCursor);
+                    cursors[row.Endpoint] = (row.Cursor, row.Generation, row.LocalCursor, row.JournalCursor);
                 }
             }
             catch (Exception ex)
@@ -104,6 +104,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
         public long Cursor { get; set; }
         public string Generation { get; set; } = string.Empty;
         public long LocalCursor { get; set; }
+        public long JournalCursor { get; set; }
     }
 
     /// <summary>
@@ -114,7 +115,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
     {
         if (item is null || !IPAddress.TryParse(item.SourceIp, out var ip) || BogonIpFilter.IsBogonOrReserved(ip)
             || config.IsInSafeNetwork(ip.ToString())) return;
-        var copy = System.Text.Json.JsonSerializer.Deserialize<ThreatIntelligenceItem>(System.Text.Json.JsonSerializer.Serialize(item))!;
+        var copy = ThreatIntelligenceHubServer.CloneThreatItem(item);
         copy.SourceIp = IpAddressCanonicalizer.Canonicalize(ip).ToString();
         int ttlDays = Math.Clamp(config.ThreatFeedTtlDays, 1, 365);
         if (copy.ExpiresUtc == default || copy.ExpiresUtc <= DateTime.UtcNow || copy.ExpiresUtc == DateTime.MaxValue)
@@ -179,15 +180,19 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
             {
                 try
                 {
-                    const int maxPagesPerSync = 8;
+                    const int maxPagesPerSync = 200;
+                    var syncBudget = System.Diagnostics.Stopwatch.StartNew();
                     int pagesSynced = 0;
                     int totalPushed = 0;
                     int totalPulled = 0;
 
-                    while (pagesSynced < maxPagesPerSync && !stopping.IsCancellationRequested)
+                    while (pagesSynced < maxPagesPerSync && syncBudget.Elapsed < TimeSpan.FromSeconds(25) && !stopping.IsCancellationRequested)
                     {
-                        var previous = cursors.GetValueOrDefault(endpoint, (0L, string.Empty, 0L));
-                        ThreatHubSyncResponse localPage = localStore.ReadPage(previous.Item3, localStore.Generation);
+                        if (!cursors.TryGetValue(endpoint, out (long Cursor, string Generation, long LocalCursor, long JournalCursor) previous))
+                        {
+                            previous = (0L, string.Empty, 0L, 0L);
+                        }
+                        ThreatHubSyncResponse localPage = localStore.ReadPage(previous.LocalCursor, localStore.Generation);
                         using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(stopping.Token);
                         deadline.CancelAfter(TimeSpan.FromSeconds(15));
                         var payload = new ThreatHubSyncPayload
@@ -195,15 +200,18 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                             NodeId = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Environment.MachineName))),
                             NodeName = Environment.MachineName,
                             LastSyncUtc = lastSyncUtc,
-                            Cursor = previous.Item1,
-                            Generation = previous.Item2,
+                            Cursor = previous.Cursor,
+                            JournalCursor = previous.JournalCursor,
+                            Generation = previous.Generation,
                             NewThreats = localPage.ActiveThreats
                         };
                         ThreatHubSyncResponse response = await clientHandler.SynchronizeAsync(endpoint, config.ThreatHubApiKey, payload, deadline.Token).ConfigureAwait(false);
                         if (!response.Success) break;
+                        bool sameGeneration = string.Equals(response.Generation, previous.Generation, StringComparison.Ordinal);
                         if (response.ActiveThreats is null || response.ActiveThreats.Count > ThreatHubStore.PageSize || string.IsNullOrWhiteSpace(response.Generation)
-                            || response.Generation.Length > 128 || response.NextCursor < 0
-                            || (response.Generation == previous.Item2 && response.NextCursor < previous.Item1)) throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
+                            || response.Generation.Length > 128 || response.NextCursor < 0 || response.NextJournalCursor < 0
+                            || (sameGeneration && (response.NextCursor < previous.Cursor || response.NextJournalCursor < previous.JournalCursor)))
+                            throw new InvalidOperationException(global::IDDSCommunity.IntrusionDetection.Shared.Localization.Strings.Get("Invalid Threat Hub page response."));
                         List<ThreatIntelligenceItem> validThreats = [];
                         foreach (ThreatIntelligenceItem threat in response.ActiveThreats)
                         {
@@ -247,14 +255,17 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                                 }
                             }
                         }
-                        cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor);
+                        long nextJournalCursor = response.NextJournalCursor > 0
+                            ? response.NextJournalCursor
+                            : (sameGeneration ? previous.JournalCursor : 0L);
+                        cursors[endpoint] = (response.NextCursor, response.Generation, localPage.NextCursor, nextJournalCursor);
                         if (database is not null && database.IsConfigured)
                         {
                             try
                             {
                                 database.ExecuteNonQuery(
-                                    "INSERT INTO ThreatHubCursors(Endpoint, Cursor, Generation, LocalCursor, UpdatedUtc) VALUES(@p0, @p1, @p2, @p3, @p4) ON CONFLICT(Endpoint) DO UPDATE SET Cursor=excluded.Cursor, Generation=excluded.Generation, LocalCursor=excluded.LocalCursor, UpdatedUtc=excluded.UpdatedUtc",
-                                    endpoint, response.NextCursor, response.Generation, localPage.NextCursor, DateTime.UtcNow.ToString("O"));
+                                    "INSERT INTO ThreatHubCursors(Endpoint, Cursor, Generation, LocalCursor, JournalCursor, UpdatedUtc) VALUES(@p0, @p1, @p2, @p3, @p4, @p5) ON CONFLICT(Endpoint) DO UPDATE SET Cursor=excluded.Cursor, Generation=excluded.Generation, LocalCursor=excluded.LocalCursor, JournalCursor=excluded.JournalCursor, UpdatedUtc=excluded.UpdatedUtc",
+                                    endpoint, response.NextCursor, response.Generation, localPage.NextCursor, nextJournalCursor, DateTime.UtcNow.ToString("O"));
                             }
                             catch (Exception ex)
                             {
@@ -323,6 +334,7 @@ internal sealed class ThreatIntelligenceSyncService : IDisposable
                 client.Dispose();
             }
             syncGate.Dispose();
+            localStore.Dispose();
             stopping.Dispose();
         }
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using Dapper;
 using IDDSCommunity.IntrusionDetection.Shared;
 using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
@@ -9,18 +10,31 @@ using IDDSCommunity.IntrusionDetection.Shared.ThreatIntelligence;
 namespace IDDSCommunity.IntrusionDetection.Service;
 
 
-internal sealed class ThreatHubStore(Database? database = null)
+internal sealed class ThreatHubStore(Database? database = null) : IDisposable
 {
     internal const int MaximumEntries = 100000;
     internal const int PageSize = 256;
     internal const int WriteBatchSize = 500;
-    private readonly object gate = new();
+    private readonly ReaderWriterLockSlim gate = new();
     private readonly Dictionary<string, Entry> memory = new(StringComparer.Ordinal);
     private readonly List<ThreatHubJournalEntry> memoryJournal = [];
     private long sequence;
     private long journalSequence;
     private readonly string memoryGeneration = Guid.NewGuid().ToString("N");
-    internal string Generation => database is null ? memoryGeneration : Convert.ToString(database.ExecuteScalar("SELECT Generation FROM ThreatHubIdentity WHERE Id=1"))!;
+    private string? cachedGeneration;
+
+    internal string Generation
+    {
+        get
+        {
+            if (database is null) return memoryGeneration;
+            string? current = Volatile.Read(ref cachedGeneration);
+            if (!string.IsNullOrEmpty(current)) return current;
+            string resolved = Convert.ToString(database.ExecuteScalar("SELECT Generation FROM ThreatHubIdentity WHERE Id=1")) ?? memoryGeneration;
+            Volatile.Write(ref cachedGeneration, resolved);
+            return resolved;
+        }
+    }
 
     /// <summary>
     /// 取得目前情資庫中尚未過期之活躍威脅情資總筆數。
@@ -30,12 +44,17 @@ internal sealed class ThreatHubStore(Database? database = null)
         get
         {
             long now = DateTime.UtcNow.Ticks;
-            lock (gate)
+            gate.EnterReadLock();
+            try
             {
                 if (database is null)
                     return memory.Values.Count(e => e.ExpiresTicks > now);
                 object? countObj = database.ExecuteScalar("SELECT COUNT(*) FROM ThreatHubEntries WHERE ExpiresTicks > @p0", now);
                 return countObj != null && int.TryParse(countObj.ToString(), out int c) ? c : 0;
+            }
+            finally
+            {
+                gate.ExitReadLock();
             }
         }
     }
@@ -47,7 +66,8 @@ internal sealed class ThreatHubStore(Database? database = null)
     {
         string json = JsonSerializer.Serialize(item);
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterWriteLock();
+        try
         {
             if (database is null)
             {
@@ -80,6 +100,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             });
             return accepted;
         }
+        finally
+        {
+            gate.ExitWriteLock();
+        }
     }
 
     /// <summary>
@@ -92,7 +116,8 @@ internal sealed class ThreatHubStore(Database? database = null)
         if (items == null) return 0;
         long now = DateTime.UtcNow.Ticks;
         int count = 0;
-        lock (gate)
+        gate.EnterWriteLock();
+        try
         {
             if (database is null)
             {
@@ -133,11 +158,13 @@ internal sealed class ThreatHubStore(Database? database = null)
                     readCmd.Transaction = transaction;
                     readCmd.CommandText = "SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip;";
                     var pReadIp = readCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+                    readCmd.Prepare();
 
                     using var deleteCmd = connection.CreateCommand();
                     deleteCmd.Transaction = transaction;
                     deleteCmd.CommandText = "DELETE FROM ThreatHubEntries WHERE SourceIp=@ip;";
                     var pDeleteIp = deleteCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
+                    deleteCmd.Prepare();
 
                     using var insertCmd = connection.CreateCommand();
                     insertCmd.Transaction = transaction;
@@ -145,6 +172,7 @@ internal sealed class ThreatHubStore(Database? database = null)
                     var pIp = insertCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
                     var pJson = insertCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
                     var pExpires = insertCmd.Parameters.Add("@expires", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    insertCmd.Prepare();
 
                     using var insertJournalCmd = connection.CreateCommand();
                     insertJournalCmd.Transaction = transaction;
@@ -153,6 +181,7 @@ internal sealed class ThreatHubStore(Database? database = null)
                     var pJournalIp = insertJournalCmd.Parameters.Add("@ip", Microsoft.Data.Sqlite.SqliteType.Text);
                     var pJournalJson = insertJournalCmd.Parameters.Add("@json", Microsoft.Data.Sqlite.SqliteType.Text);
                     var pJournalTicks = insertJournalCmd.Parameters.Add("@ticks", Microsoft.Data.Sqlite.SqliteType.Integer);
+                    insertJournalCmd.Prepare();
 
                     foreach (ThreatIntelligenceItem item in chunk)
                     {
@@ -194,6 +223,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             }
             return count;
         }
+        finally
+        {
+            gate.ExitWriteLock();
+        }
     }
 
     /// <summary>
@@ -207,7 +240,8 @@ internal sealed class ThreatHubStore(Database? database = null)
         if (string.IsNullOrWhiteSpace(sourceIp)) return false;
         if (!IpAddressCanonicalizer.TryCanonicalize(sourceIp, out string canonicalIp)) return false;
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterWriteLock();
+        try
         {
             if (database is null)
             {
@@ -225,6 +259,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             });
             return success;
         }
+        finally
+        {
+            gate.ExitWriteLock();
+        }
     }
 
     /// <summary>
@@ -238,7 +276,8 @@ internal sealed class ThreatHubStore(Database? database = null)
         if (string.IsNullOrWhiteSpace(sourceIp)) return false;
         if (!IpAddressCanonicalizer.TryCanonicalize(sourceIp, out string canonicalIp)) return false;
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterWriteLock();
+        try
         {
             if (database is null)
             {
@@ -252,6 +291,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             });
             return true;
         }
+        finally
+        {
+            gate.ExitWriteLock();
+        }
     }
 
     /// <summary>
@@ -263,7 +306,8 @@ internal sealed class ThreatHubStore(Database? database = null)
     internal IReadOnlyList<ThreatHubJournalEntry> ReadJournal(long cursor, int limit = 256)
     {
         if (limit <= 0) limit = PageSize;
-        lock (gate)
+        gate.EnterReadLock();
+        try
         {
             if (database is null)
             {
@@ -277,11 +321,59 @@ internal sealed class ThreatHubStore(Database? database = null)
                 "SELECT Sequence, EventType, SourceIp, Payload, CreatedTicks FROM ThreatHubJournal WHERE Sequence > @cursor ORDER BY Sequence LIMIT @limit",
                 new { cursor, limit }).ToList();
         }
+        finally
+        {
+            gate.ExitReadLock();
+        }
+    }
+
+    /// <summary>
+    /// 依據世代識別碼與異動日誌游標讀取分頁增量記錄與精確的下一頁游標。
+    /// </summary>
+    /// <param name="journalCursor">起始日誌序號游標。</param>
+    /// <param name="generation">呼叫端所持有的世代識別碼。</param>
+    /// <param name="limit">最大讀取筆數。</param>
+    /// <returns>包含增量清單、下一游標、是否仍有更多資料及目前世代之元組。</returns>
+    internal (IReadOnlyList<ThreatHubJournalEntry> Entries, long NextJournalCursor, bool HasMore, string Generation) ReadJournalPage(
+        long journalCursor,
+        string generation,
+        int limit = PageSize)
+    {
+        if (limit <= 0) limit = PageSize;
+        gate.EnterReadLock();
+        try
+        {
+            string currentGeneration = Generation;
+            if (!string.Equals(generation, currentGeneration, StringComparison.Ordinal) || journalCursor < 0)
+                journalCursor = 0;
+
+            List<ThreatHubJournalEntry> entries = database is null
+                ? memoryJournal
+                    .Where(j => j.Sequence > journalCursor)
+                    .OrderBy(j => j.Sequence)
+                    .Take(limit + 1)
+                    .ToList()
+                : database.Query<ThreatHubJournalEntry>(
+                    "SELECT Sequence, EventType, SourceIp, Payload, CreatedTicks FROM ThreatHubJournal WHERE Sequence > @cursor ORDER BY Sequence LIMIT @limit",
+                    new { cursor = journalCursor, limit = limit + 1 }).ToList();
+
+            bool hasMore = entries.Count > limit;
+            if (hasMore)
+                entries.RemoveAt(limit);
+
+            long nextCursor = entries.Count == 0 ? journalCursor : entries[^1].Sequence;
+            return (entries, nextCursor, hasMore, currentGeneration);
+        }
+        finally
+        {
+            gate.ExitReadLock();
+        }
     }
 
     internal ThreatHubSyncResponse ReadPage(long cursor, string generation)
     {
-        lock (gate)
+        gate.EnterReadLock();
+        try
         {
             string currentGeneration = Generation;
             if (generation != currentGeneration || cursor < 0) cursor = 0;
@@ -299,6 +391,10 @@ internal sealed class ThreatHubStore(Database? database = null)
                 ActiveThreats = entries.Select(e => JsonSerializer.Deserialize<ThreatIntelligenceItem>(e.Payload)!).ToList()
             };
         }
+        finally
+        {
+            gate.ExitReadLock();
+        }
     }
 
     /// <summary>
@@ -309,7 +405,8 @@ internal sealed class ThreatHubStore(Database? database = null)
     internal IReadOnlyList<ThreatIntelligenceItem> GetRecentThreats(int count = 10)
     {
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterReadLock();
+        try
         {
             if (database is null)
             {
@@ -335,6 +432,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             }
             return list;
         }
+        finally
+        {
+            gate.ExitReadLock();
+        }
     }
 
     /// <summary>
@@ -346,7 +447,8 @@ internal sealed class ThreatHubStore(Database? database = null)
     {
         if (string.IsNullOrWhiteSpace(ip)) return null;
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterReadLock();
+        try
         {
             if (database is null)
             {
@@ -357,6 +459,10 @@ internal sealed class ThreatHubStore(Database? database = null)
             string? payload = database.QueryFirstOrDefault<string>("SELECT Payload FROM ThreatHubEntries WHERE SourceIp=@ip AND ExpiresTicks>@now", new { ip, now });
             return !string.IsNullOrEmpty(payload) ? JsonSerializer.Deserialize<ThreatIntelligenceItem>(payload) : null;
         }
+        finally
+        {
+            gate.ExitReadLock();
+        }
     }
 
     /// <summary>
@@ -366,7 +472,8 @@ internal sealed class ThreatHubStore(Database? database = null)
     internal (int ExternalFeedCount, int ClusterNodeCount) GetFeedComposition()
     {
         long now = DateTime.UtcNow.Ticks;
-        lock (gate)
+        gate.EnterReadLock();
+        try
         {
             if (database is null)
             {
@@ -385,14 +492,31 @@ internal sealed class ThreatHubStore(Database? database = null)
                 }
                 return (ext, cluster);
             }
-            object? extObj = database.ExecuteScalar(
-                "SELECT COUNT(*) FROM ThreatHubEntries WHERE ExpiresTicks>@p0 AND (Payload LIKE '%\"ReporterNodeId\":\"\"%' OR Payload LIKE '%\"ReporterNodeId\":null%')",
-                now);
-            int externalCount = extObj != null && int.TryParse(extObj.ToString(), out int parsedExt) ? parsedExt : 0;
-            int total = ActiveThreatCount;
+            var row = database.QueryFirstOrDefault<FeedCompositionRow>(
+                """
+                SELECT COUNT(*) AS TotalCount,
+                       COALESCE(SUM(CASE WHEN Payload LIKE '%"ReporterNodeId":""%' OR Payload LIKE '%"ReporterNodeId":null%' THEN 1 ELSE 0 END), 0) AS ExternalCount
+                FROM ThreatHubEntries
+                WHERE ExpiresTicks>@now
+                """,
+                new { now });
+            int total = row?.TotalCount ?? 0;
+            int externalCount = row?.ExternalCount ?? 0;
             int clusterCount = Math.Max(0, total - externalCount);
             return (externalCount, clusterCount);
         }
+        finally
+        {
+            gate.ExitReadLock();
+        }
+    }
+
+    public void Dispose() => gate.Dispose();
+
+    private sealed class FeedCompositionRow
+    {
+        public int TotalCount { get; set; }
+        public int ExternalCount { get; set; }
     }
 
     private sealed class Entry

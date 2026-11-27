@@ -22,6 +22,7 @@ internal sealed class ThreatSyncServiceImpl : ThreatSyncService.ThreatSyncServic
     private readonly IddsConfig config;
     private readonly ThreatHubStore store;
     private readonly Action<ThreatIntelligenceItem> onThreatReceived;
+    private readonly Action<IReadOnlyList<ThreatIntelligenceItem>>? onThreatsBatchReceived;
     private readonly Action<string> logInformation;
     private readonly Action<string, Exception> logError;
     private readonly Func<string, string, string, int, string, bool>? tryRegisterNode;
@@ -37,6 +38,7 @@ internal sealed class ThreatSyncServiceImpl : ThreatSyncService.ThreatSyncServic
     /// <param name="logError">錯誤日誌回報委派。</param>
     /// <param name="tryRegisterNode">選擇性的節點註冊與容量檢查委派。</param>
     /// <param name="authRateLimiter">選擇性的 API 金鑰驗證失敗頻率限制器。</param>
+    /// <param name="onThreatsBatchReceived">選擇性的批次威脅接收回呼委派。</param>
     internal ThreatSyncServiceImpl(
         IddsConfig config,
         ThreatHubStore store,
@@ -44,11 +46,13 @@ internal sealed class ThreatSyncServiceImpl : ThreatSyncService.ThreatSyncServic
         Action<string>? logInformation = null,
         Action<string, Exception>? logError = null,
         Func<string, string, string, int, string, bool>? tryRegisterNode = null,
-        FailedAttemptsRateLimiter? authRateLimiter = null)
+        FailedAttemptsRateLimiter? authRateLimiter = null,
+        Action<IReadOnlyList<ThreatIntelligenceItem>>? onThreatsBatchReceived = null)
     {
         this.config = config ?? throw new ArgumentNullException(nameof(config));
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.onThreatReceived = onThreatReceived ?? throw new ArgumentNullException(nameof(onThreatReceived));
+        this.onThreatsBatchReceived = onThreatsBatchReceived;
         this.logInformation = logInformation ?? (msg => System.Diagnostics.Trace.TraceInformation(msg));
         this.logError = logError ?? ((msg, ex) => System.Diagnostics.Trace.TraceError("{0}: {1}", msg, ex.Message));
         this.tryRegisterNode = tryRegisterNode;
@@ -213,24 +217,36 @@ internal sealed class ThreatSyncServiceImpl : ThreatSyncService.ThreatSyncServic
                     Notes = threat.Reason ?? string.Empty
                 };
                 validThreats.Add(item);
-                onThreatReceived(item);
             }
             if (validThreats.Count > 0)
             {
                 store.UpsertBatch(validThreats);
+                if (onThreatsBatchReceived is not null)
+                {
+                    onThreatsBatchReceived(validThreats);
+                }
+                else
+                {
+                    foreach (var item in validThreats)
+                    {
+                        onThreatReceived(item);
+                    }
+                }
             }
         }
 
-        var deltaEntries = store.ReadJournal(request.Cursor, 256);
-        long nextJournalCursor = deltaEntries.Count > 0 ? deltaEntries[^1].Sequence : request.Cursor;
+        string clientGeneration = request.Generation ?? string.Empty;
+        var page = store.ReadPage(request.Cursor, clientGeneration);
+        var journalPage = store.ReadJournalPage(request.JournalCursor, clientGeneration, ThreatHubStore.PageSize);
+
         var deltaBatch = new ThreatDeltaBatch
         {
-            Generation = store.Generation,
-            FromCursor = request.Cursor,
-            ToCursor = nextJournalCursor,
-            HasMore = deltaEntries.Count >= 256
+            Generation = journalPage.Generation,
+            FromCursor = string.Equals(clientGeneration, journalPage.Generation, StringComparison.Ordinal) ? Math.Max(0, request.JournalCursor) : 0,
+            ToCursor = journalPage.NextJournalCursor,
+            HasMore = journalPage.HasMore
         };
-        foreach (var entry in deltaEntries)
+        foreach (var entry in journalPage.Entries)
         {
             deltaBatch.Events.Add(new ThreatDeltaEvent
             {
@@ -242,13 +258,13 @@ internal sealed class ThreatSyncServiceImpl : ThreatSyncService.ThreatSyncServic
             });
         }
 
-        var page = store.ReadPage(request.Cursor, request.Generation ?? string.Empty);
         var response = new SyncResponse
         {
             Success = true,
-            Generation = store.Generation,
-            NextCursor = nextJournalCursor > 0 ? nextJournalCursor : page.NextCursor,
-            HasMore = deltaBatch.HasMore || page.HasMore,
+            Generation = page.Generation,
+            NextCursor = page.NextCursor,
+            NextJournalCursor = journalPage.NextJournalCursor,
+            HasMore = page.HasMore || journalPage.HasMore,
             DeltaBatch = deltaBatch
         };
 
