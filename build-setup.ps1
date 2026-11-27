@@ -4,7 +4,7 @@ param(
     [string] $RuntimeIdentifier = 'win-x64',
     [string] $Configuration = 'Release',
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string] $Version = '3.0.1',
+    [string] $Version = '3.1.0',
     [switch] $Offline
 )
 

@@ -14,7 +14,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyProduct("IDDS Community")]
 [assembly: AssemblyCopyright("Original work copyright © isicore GmbH; community modifications copyright their contributors")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyInformationalVersion("3.0.1")]
+[assembly: AssemblyInformationalVersion("3.1.0")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -34,6 +34,6 @@ using System.Runtime.CompilerServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
-// Assembly version is fixed at 3.0.1 by project policy.
-[assembly: AssemblyVersion("3.0.1")]
-[assembly: AssemblyFileVersion("3.0.1")]
+// Assembly version is fixed at 3.1.0 by project policy.
+[assembly: AssemblyVersion("3.1.0")]
+[assembly: AssemblyFileVersion("3.1.0")]
